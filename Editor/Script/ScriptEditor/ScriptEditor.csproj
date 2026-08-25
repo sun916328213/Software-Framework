@@ -11,7 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Extension\Extension\Extension.csproj" />
-    <ProjectReference Include="..\..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
+    <ProjectReference Include="..\..\..\WPFCustomControls\WPFCustomControls.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />

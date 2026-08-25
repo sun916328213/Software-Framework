@@ -50,5 +50,4 @@ TestResults/
 *.pdb
 /Secs/Engine
 /Secs/State
-/Secs/Tool
 /Secs/Transport
