@@ -1,0 +1,105 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13.0</LangVersion>
+    <UseWindowsForms>True</UseWindowsForms>
+    <UseWPF>True</UseWPF>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="FarPoint.CalcEngine">
+      <HintPath>..\..\Dll\Print\Spread\FarPoint.CalcEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="FarPoint.Excel">
+      <HintPath>..\..\Dll\Print\Spread\FarPoint.Excel.dll</HintPath>
+    </Reference>
+    <Reference Include="FarPoint.PDF">
+      <HintPath>..\..\Dll\Print\Spread\FarPoint.PDF.dll</HintPath>
+    </Reference>
+    <Reference Include="FarPoint.PluginCalendar.WinForms">
+      <HintPath>..\..\Dll\Print\Spread\FarPoint.PluginCalendar.WinForms.dll</HintPath>
+    </Reference>
+    <Reference Include="FarPoint.Win">
+      <HintPath>..\..\Dll\Print\Spread\FarPoint.Win.dll</HintPath>
+    </Reference>
+    <Reference Include="FarPoint.Win.Chart">
+      <HintPath>..\..\Dll\Print\Spread\FarPoint.Win.Chart.dll</HintPath>
+    </Reference>
+    <Reference Include="FarPoint.Win.Chart.Design">
+      <HintPath>..\..\Dll\Print\Spread\FarPoint.Win.Chart.Design.dll</HintPath>
+    </Reference>
+    <Reference Include="FarPoint.Win.Design">
+      <HintPath>..\..\Dll\Print\Spread\FarPoint.Win.Design.dll</HintPath>
+    </Reference>
+    <Reference Include="FarPoint.Win.Ink">
+      <HintPath>..\..\Dll\Print\Spread\FarPoint.Win.Ink.dll</HintPath>
+    </Reference>
+    <Reference Include="FarPoint.Win.Spread">
+      <HintPath>..\..\Dll\Print\Spread\FarPoint.Win.Spread.dll</HintPath>
+    </Reference>
+    <Reference Include="FarPoint.Win.Spread.Design">
+      <HintPath>..\..\Dll\Print\Spread\FarPoint.Win.Spread.Design.dll</HintPath>
+    </Reference>
+    <Reference Include="FarPoint.Win.Spread.Html">
+      <HintPath>..\..\Dll\Print\Spread\FarPoint.Win.Spread.Html.dll</HintPath>
+    </Reference>
+    <Reference Include="FarPoint.Win.TextRenderer">
+      <HintPath>..\..\Dll\Print\Spread\FarPoint.Win.TextRenderer.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.ActProgType64Lib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActProgType64Lib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.ActProgTypeLib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActProgTypeLib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.ActSupportMsg64Lib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActSupportMsg64Lib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.ActSupportMsgLib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActSupportMsgLib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.ActUtlType64Lib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActUtlType64Lib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.ActUtlTypeLib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActUtlTypeLib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Miracom.CliFrx">
+      <HintPath>..\..\Dll\H101\Miracom.CliFrx.dll</HintPath>
+    </Reference>
+    <Reference Include="Miracom.H101Core">
+      <HintPath>..\..\Dll\H101\Miracom.H101Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Miracom.MESCore">
+      <HintPath>..\..\Dll\H101\Miracom.MESCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Miracom.MsgHandler">
+      <HintPath>..\..\Dll\H101\Miracom.MsgHandler.dll</HintPath>
+    </Reference>
+    <Reference Include="Miracom.TRSConvertor">
+      <HintPath>..\..\Dll\H101\Miracom.TRSConvertor.dll</HintPath>
+    </Reference>
+    <Reference Include="Miracom.TRSCore">
+      <HintPath>..\..\Dll\H101\Miracom.TRSCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Miracom.UI">
+      <HintPath>..\..\Dll\H101\Miracom.UI.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentModbus" />
+    <PackageReference Include="System.IO.Ports" />
+  </ItemGroup>
+</Project>

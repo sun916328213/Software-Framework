@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>c</RootNamespace>
+    <NoWarn>$(NoWarn);VSTHRD001;VSTHRD003;VSTHRD100;VSTHRD103;VSTHRD110</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Extension\Extension\Extension.csproj" />
+    <ProjectReference Include="..\..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="MaterialDesignThemes" />
+    <PackageReference Include="Prism.Core" />
+    <PackageReference Include="Prism.Wpf" />
+    <PackageReference Include="RoslynPad.Editor.Windows" />
+  </ItemGroup>
+</Project>

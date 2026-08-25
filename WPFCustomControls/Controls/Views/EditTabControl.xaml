@@ -1,0 +1,185 @@
+﻿<TabControl
+    x:Class="WPFCustomControls.Controls.EditTabControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:WPFCustomControls.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="300"
+    d:DesignWidth="400"
+    Style="{StaticResource MaterialDesignTabControlBase}"
+    mc:Ignorable="d">
+
+    <TabControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/WPFCustomControls;component/Resources/Resources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <DataTemplate x:Key="EditableHeader">
+                <DockPanel Margin="2,0" ctl:EditTabControl.IsHeaderEditable="True">
+                    <Grid>
+                        <TextBlock
+                            Padding="4,2"
+                            VerticalAlignment="Center"
+                            Text="{Binding Title}" />
+                        <TextBox
+                            MinWidth="60"
+                            Padding="2,1"
+                            VerticalAlignment="Center"
+                            Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
+                            Visibility="Collapsed" />
+                    </Grid>
+                </DockPanel>
+            </DataTemplate>
+
+            <DataTemplate x:Key="EditableHeaderWithClose">
+                <DockPanel Margin="2,0" ctl:EditTabControl.IsHeaderEditable="True">
+                    <Button
+                        Width="18"
+                        Height="18"
+                        Margin="4,0,0,0"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{Binding CloseTabCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ctl:EditTabControl}}}"
+                        CommandParameter="{Binding}"
+                        Cursor="Hand"
+                        DockPanel.Dock="Right"
+                        ToolTip="关闭">
+                        <materialDesign:PackIcon
+                            Width="14"
+                            Height="14"
+                            Foreground="{StaticResource Color_Red}"
+                            Kind="Close" />
+                    </Button>
+                    <Grid>
+                        <TextBlock
+                            Padding="4,2"
+                            VerticalAlignment="Center"
+                            Text="{Binding Title}" />
+                        <TextBox
+                            MinWidth="60"
+                            Padding="2,1"
+                            VerticalAlignment="Center"
+                            Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
+                            Visibility="Collapsed" />
+                    </Grid>
+                </DockPanel>
+            </DataTemplate>
+
+            <DataTemplate x:Key="EditableHeader_DisplayTitle">
+                <DockPanel Margin="2,0" ctl:EditTabControl.IsHeaderEditable="True">
+                    <Grid>
+                        <TextBlock
+                            Padding="4,2"
+                            VerticalAlignment="Center"
+                            Text="{Binding Model.DisplayTitle}" />
+                        <TextBox
+                            MinWidth="60"
+                            Padding="2,1"
+                            VerticalAlignment="Center"
+                            Text="{Binding Model.DisplayTitle, UpdateSourceTrigger=PropertyChanged}"
+                            Visibility="Collapsed" />
+                    </Grid>
+                </DockPanel>
+            </DataTemplate>
+
+            <DataTemplate x:Key="EditableHeaderWithClose_DisplayTitle">
+                <DockPanel Margin="2,0" ctl:EditTabControl.IsHeaderEditable="True">
+                    <Button
+                        Width="18"
+                        Height="18"
+                        Margin="4,0,0,0"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{Binding CloseTabCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ctl:EditTabControl}}}"
+                        CommandParameter="{Binding}"
+                        Cursor="Hand"
+                        DockPanel.Dock="Right"
+                        ToolTip="关闭">
+                        <materialDesign:PackIcon
+                            Width="14"
+                            Height="14"
+                            Foreground="{StaticResource Color_Red}"
+                            Kind="Close" />
+                    </Button>
+                    <Grid>
+                        <TextBlock
+                            Padding="4,2"
+                            VerticalAlignment="Center"
+                            Text="{Binding Model.DisplayTitle}" />
+                        <TextBox
+                            MinWidth="60"
+                            Padding="2,1"
+                            VerticalAlignment="Center"
+                            Text="{Binding Model.DisplayTitle, UpdateSourceTrigger=PropertyChanged}"
+                            Visibility="Collapsed" />
+                    </Grid>
+                </DockPanel>
+            </DataTemplate>
+
+            <DataTemplate x:Key="EditableHeader_TabTitle">
+                <DockPanel Margin="2,0" ctl:EditTabControl.IsHeaderEditable="True">
+                    <Grid>
+                        <TextBlock
+                            Padding="4,2"
+                            VerticalAlignment="Center"
+                            Text="{Binding Model.DisplayTitle}" />
+                        <TextBox
+                            MinWidth="60"
+                            Padding="2,1"
+                            VerticalAlignment="Center"
+                            Text="{Binding Model.TabTitle, UpdateSourceTrigger=PropertyChanged}"
+                            Visibility="Collapsed" />
+                    </Grid>
+                </DockPanel>
+            </DataTemplate>
+
+            <DataTemplate x:Key="EditableHeaderWithClose_TabTitle">
+                <DockPanel Margin="2,0" ctl:EditTabControl.IsHeaderEditable="True">
+                    <Button
+                        Width="18"
+                        Height="18"
+                        Margin="4,0,0,0"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{Binding CloseTabCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ctl:EditTabControl}}}"
+                        CommandParameter="{Binding}"
+                        Cursor="Hand"
+                        DockPanel.Dock="Right"
+                        ToolTip="关闭">
+                        <materialDesign:PackIcon
+                            Width="14"
+                            Height="14"
+                            Foreground="{StaticResource Color_Red}"
+                            Kind="Close" />
+                    </Button>
+                    <Grid>
+                        <TextBlock
+                            Padding="4,2"
+                            VerticalAlignment="Center"
+                            Text="{Binding Model.DisplayTitle}" />
+                        <TextBox
+                            MinWidth="60"
+                            Padding="2,1"
+                            VerticalAlignment="Center"
+                            Text="{Binding Model.TabTitle, UpdateSourceTrigger=PropertyChanged}"
+                            Visibility="Collapsed" />
+                    </Grid>
+                </DockPanel>
+            </DataTemplate>
+
+        </ResourceDictionary>
+    </TabControl.Resources>
+
+    <TabControl.ItemContainerStyle>
+        <Style BasedOn="{StaticResource MaterialDesignTabItem}" TargetType="TabItem">
+            <Setter Property="Header" Value="{Binding}" />
+        </Style>
+    </TabControl.ItemContainerStyle>
+
+</TabControl>

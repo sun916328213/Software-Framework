@@ -1,0 +1,10 @@
+https://gitee.com/sun_lei123/vision.git
+https://gitee.com/sun_lei123/secs.git
+https://gitee.com/sun_lei123/wpfcontrol.git
+https://gitee.com/sun_lei123/extension.git
+https://gitee.com/sun_lei123/device.git
+https://gitee.com/sun_lei123/data-manager.git
+https://gitee.com/sun_lei123/win-form-control.git
+https://gitee.com/sun_lei123/motion-control.git
+https://gitee.com/sun_lei123/flow-editor.git
+https://gitee.com/sun_lei123/communication.git

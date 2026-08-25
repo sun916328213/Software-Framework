@@ -1,0 +1,184 @@
+<Window
+    x:Class="DataManagerDemo.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:DataManagerDemo"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="DataManager Demo"
+    Width="1000"
+    Height="600"
+    mc:Ignorable="d">
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Width" Value="120" />
+            <Setter Property="Height" Value="38" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Margin" Value="5" />
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="150" />
+        </Grid.RowDefinitions>
+
+        <TabControl Grid.Row="0">
+            <TabItem Height="30" Header="EFCore">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="140" />
+                    </Grid.ColumnDefinitions>
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,10,0,0"
+                        Click="EFCore_Connect"
+                        Content="连接" />
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,53,0,0"
+                        Click="EFCore_Add"
+                        Content="添加" />
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,96,0,0"
+                        Click="EFCore_Delete"
+                        Content="删除" />
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,139,0,0"
+                        Click="EFCore_Query"
+                        Content="查询" />
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,182,0,0"
+                        Click="EFCore_Update"
+                        Content="修改" />
+
+                    <Button
+                        Grid.Column="1"
+                        Margin="10,10,0,0"
+                        Click="EFCore_AddRange"
+                        Content="批量添加" />
+                    <Button
+                        Grid.Column="1"
+                        Margin="10,53,0,0"
+                        Click="EFCore_QueryByCondition"
+                        Content="条件查询" />
+                </Grid>
+            </TabItem>
+
+            <TabItem Height="30" Header="SQLSugar">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="140" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,10,0,0"
+                        Click="SQLSugar_Connect"
+                        Content="连接" />
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,53,0,0"
+                        Click="SQLSugar_Add"
+                        Content="添加" />
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,96,0,0"
+                        Click="SQLSugar_Delete"
+                        Content="删除" />
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,139,0,0"
+                        Click="SQLSugar_Query"
+                        Content="查询" />
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,182,0,0"
+                        Click="SQLSugar_Update"
+                        Content="修改" />
+
+                    <Button
+                        Grid.Column="1"
+                        Margin="10,10,0,0"
+                        Click="SQLSugar_AddRange"
+                        Content="批量添加" />
+                    <Button
+                        Grid.Column="1"
+                        Margin="10,53,0,0"
+                        Click="SQLSugar_QueryByCondition"
+                        Content="条件查询" />
+                </Grid>
+            </TabItem>
+
+            <TabItem Height="30" Header="Dapper">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="140" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,10,0,0"
+                        Click="Dapper_Connect"
+                        Content="连接" />
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,53,0,0"
+                        Click="Dapper_Add"
+                        Content="添加" />
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,96,0,0"
+                        Click="Dapper_Delete"
+                        Content="删除" />
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,139,0,0"
+                        Click="Dapper_Query"
+                        Content="查询" />
+                    <Button
+                        Grid.Column="0"
+                        Margin="10,182,0,0"
+                        Click="Dapper_Update"
+                        Content="修改" />
+
+                    <Button
+                        Grid.Column="1"
+                        Margin="10,10,0,0"
+                        Click="Dapper_AddRange"
+                        Content="批量添加" />
+                    <Button
+                        Grid.Column="1"
+                        Margin="10,53,0,0"
+                        Click="Dapper_QueryByCondition"
+                        Content="条件查询" />
+                    <Button
+                        Grid.Column="1"
+                        Margin="10,96,0,0"
+                        Click="Dapper_GetSplitTables"
+                        Content="获取分表名" />
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <TextBox
+            x:Name="LogTextBox"
+            Grid.Row="1"
+            Margin="10"
+            IsReadOnly="True"
+            TextWrapping="Wrap"
+            VerticalScrollBarVisibility="Auto" />
+    </Grid>
+</Window>

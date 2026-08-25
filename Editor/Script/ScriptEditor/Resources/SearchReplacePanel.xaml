@@ -1,0 +1,206 @@
+<!--
+  SearchReplacePanel.xaml - 脚本编辑器查找/替换面板样式
+  用途：覆盖 RoslynPad.Editor.SearchReplacePanel 的默认模板，
+        面板内控件显式 Style="{x:Null}"，避免继承应用级 MaterialDesign
+        隐式样式导致查找栏 UI 混乱。
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+    xmlns:editor="clr-namespace:RoslynPad.Editor;assembly=RoslynPad.Editor.Windows"
+    xmlns:search="clr-namespace:ICSharpCode.AvalonEdit.Search;assembly=ICSharpCode.AvalonEdit">
+
+    <Style TargetType="{x:Type editor:SearchReplacePanel}">
+        <Setter Property="FontFamily" Value="{x:Static SystemFonts.MessageFontFamily}" />
+        <Setter Property="FontSize" Value="{x:Static SystemFonts.MessageFontSize}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type editor:SearchReplacePanel}">
+                    <Border
+                        Padding="3"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Background="#F2F2F2"
+                        BorderBrush="#C8C8C8"
+                        BorderThickness="1"
+                        Cursor="Arrow"
+                        SnapsToDevicePixels="True">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <!--  查找/替换模式切换  -->
+                            <ToggleButton
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Width="22"
+                                Height="24"
+                                Margin="2"
+                                Style="{x:Null}"
+                                ToolTip="切换查找/替换模式"
+                                IsChecked="{Binding IsReplaceMode, RelativeSource={RelativeSource TemplatedParent}}">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    Text="⇅" />
+                            </ToggleButton>
+
+                            <!--  查找输入框  -->
+                            <TextBox
+                                x:Name="PART_searchTextBox"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Width="180"
+                                Height="24"
+                                Margin="2"
+                                Padding="2,0"
+                                VerticalContentAlignment="Center"
+                                Style="{x:Null}"
+                                Text="{Binding SearchPattern, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True, RelativeSource={RelativeSource TemplatedParent}}" />
+
+                            <!--  替换输入框  -->
+                            <TextBox
+                                x:Name="ReplaceBox"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Width="180"
+                                Height="24"
+                                Margin="2"
+                                Padding="2,0"
+                                VerticalContentAlignment="Center"
+                                Visibility="Collapsed"
+                                Style="{x:Null}"
+                                Text="{Binding ReplacePattern, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True, RelativeSource={RelativeSource TemplatedParent}}" />
+
+                            <!--  查找按钮组  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Orientation="Horizontal">
+                                <search:DropDownButton
+                                    Width="24"
+                                    Height="24"
+                                    Margin="2"
+                                    ToolTip="查找选项">
+                                    <search:DropDownButton.DropDownContent>
+                                        <Popup StaysOpen="False">
+                                            <Border
+                                                Padding="4"
+                                                Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+                                                BorderBrush="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"
+                                                BorderThickness="1">
+                                                <StackPanel>
+                                                    <CheckBox
+                                                        Margin="2"
+                                                        Style="{x:Null}"
+                                                        Content="{Binding Localization.MatchCaseText, RelativeSource={RelativeSource TemplatedParent}}"
+                                                        IsChecked="{Binding MatchCase, RelativeSource={RelativeSource TemplatedParent}}" />
+                                                    <CheckBox
+                                                        Margin="2"
+                                                        Style="{x:Null}"
+                                                        Content="{Binding Localization.MatchWholeWordsText, RelativeSource={RelativeSource TemplatedParent}}"
+                                                        IsChecked="{Binding WholeWords, RelativeSource={RelativeSource TemplatedParent}}" />
+                                                    <CheckBox
+                                                        Margin="2"
+                                                        Style="{x:Null}"
+                                                        Content="{Binding Localization.UseRegexText, RelativeSource={RelativeSource TemplatedParent}}"
+                                                        IsChecked="{Binding UseRegex, RelativeSource={RelativeSource TemplatedParent}}" />
+                                                </StackPanel>
+                                            </Border>
+                                        </Popup>
+                                    </search:DropDownButton.DropDownContent>
+                                </search:DropDownButton>
+                                <Button
+                                    Width="24"
+                                    Height="24"
+                                    Margin="2"
+                                    Padding="0"
+                                    Style="{x:Null}"
+                                    Command="avalonedit:SearchCommands.FindPrevious"
+                                    ToolTip="{Binding Localization.FindPreviousText, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontSize="10"
+                                        Text="▲" />
+                                </Button>
+                                <Button
+                                    Width="24"
+                                    Height="24"
+                                    Margin="2"
+                                    Padding="0"
+                                    Style="{x:Null}"
+                                    Command="avalonedit:SearchCommands.FindNext"
+                                    ToolTip="{Binding Localization.FindNextText, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontSize="10"
+                                        Text="▼" />
+                                </Button>
+                                <Button
+                                    Width="20"
+                                    Height="24"
+                                    Margin="2"
+                                    Padding="0"
+                                    Focusable="False"
+                                    Style="{x:Null}"
+                                    Command="avalonedit:SearchCommands.CloseSearchPanel"
+                                    ToolTip="关闭查找">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Text="✕" />
+                                </Button>
+                            </StackPanel>
+
+                            <!--  替换按钮组  -->
+                            <StackPanel
+                                x:Name="ReplaceButtons"
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Orientation="Horizontal"
+                                Visibility="Collapsed">
+                                <Button
+                                    Height="24"
+                                    Margin="2"
+                                    Padding="6,0"
+                                    Style="{x:Null}"
+                                    Command="editor:SearchCommandsEx.ReplaceNext"
+                                    ToolTip="替换下一个 (Alt+R)">
+                                    <TextBlock Text="下一个" />
+                                </Button>
+                                <Button
+                                    Height="24"
+                                    Margin="2"
+                                    Padding="6,0"
+                                    Style="{x:Null}"
+                                    Command="editor:SearchCommandsEx.ReplaceAll"
+                                    ToolTip="全部替换 (Alt+A)">
+                                    <TextBlock Text="全部替换" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="editor:SearchReplacePanel.IsReplaceMode" Value="True">
+                            <Setter TargetName="ReplaceBox" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="ReplaceButtons" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

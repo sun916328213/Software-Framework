@@ -1,0 +1,40 @@
+﻿<UserControl
+    x:Class="WPFControl.ProgramControl.Views.DisplayView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:WPFControl.ProgramControl.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"     
+    xmlns:display="clr-namespace:WPFControl.CustomControl.Views.Display"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <!--<ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/WPFControl;component/Resources/Resources.xaml" />
+            </ResourceDictionary.MergedDictionaries>-->
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Style="{StaticResource Border_Style}">
+        <ItemsControl x:Name="MainGrid" ItemsSource="{Binding DisplayTitles}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="{Binding ColumnCount}" Rows="{Binding RowCount}" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <EventSetter Event="Loaded" Handler="OnItemLoaded" />
+                </Style>
+            </ItemsControl.ItemContainerStyle>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <display:DisplaySingleView_DP Title="{Binding}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Border>
+</UserControl>

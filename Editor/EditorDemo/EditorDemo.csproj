@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <LangVersion>13.0</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="MaterialDesignThemes" />
+    <PackageReference Include="Prism.Core" />
+    <PackageReference Include="Prism.DryIoc" />
+    <PackageReference Include="Prism.Wpf" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+    <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
+    <ProjectReference Include="..\Flow\FlowNodes\FlowNodes.csproj" />
+    <ProjectReference Include="..\Flow\FlowEditor\FlowEditor.csproj" />
+    <ProjectReference Include="..\Script\ScriptEditor\ScriptEditor.csproj" />
+  </ItemGroup>
+</Project>

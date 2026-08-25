@@ -1,0 +1,95 @@
+﻿<UserControl
+    x:Class="WPFControl.ProgramControl.Views.PrintManagerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:custm="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    xmlns:custview="clr-namespace:WPFControl.CustomControl.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:WPFControl.ProgramControl.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    xmlns:viewmodel="clr-namespace:WPFControl.ProgramControl.ViewModels"
+    x:Name="UserControl"
+    d:DataContext="{d:DesignInstance Type=viewmodel:PrintManagerViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/WPFControl;component/Resources/Resources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style BasedOn="{StaticResource MaterialDesignRaisedButton}" TargetType="{x:Type Button}">
+                <Setter Property="FontSize" Value="{Binding ElementName=UserControl, Path=FontSize}" />
+                <Setter Property="Width" Value="100" />
+                <Setter Property="Margin" Value="0,0,0,10" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border
+            Grid.Row="0"
+            Grid.Column="0"
+            Style="{StaticResource Border_Style}">
+            <custview:PrintView x:Name="view_Bartender" />
+        </Border>
+
+        <Border
+            Grid.Row="1"
+            Grid.Column="0"
+            Style="{StaticResource Border_Style}">
+            <Grid Background="White">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="120" />
+                </Grid.ColumnDefinitions>
+                <custm:DataGridView
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Background="{StaticResource Color_White}"
+                    FontSize="{Binding ElementName=UserControl, Path=FontSize}"
+                    IsReadOnly="True"
+                    ItemsSource="{Binding Datas.PrintInfos}"
+                    SelectedIndex="{Binding Datas.SelectPrintIndex}" />
+                <StackPanel
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    VerticalAlignment="Bottom">
+                    <Button
+                        Command="{Binding AddCommand}"
+                        CommandParameter="{Binding ElementName=view_Bartender, Path=(custview:PrintView.PrintInfo)}"
+                        Content="添加" />
+                    <Button Command="{Binding ClearCommand}" Content="删除" />
+                    <Button Command="{Binding UpCommand}" Content="上移" />
+                    <Button Command="{Binding DownCommand}" Content="下移" />
+                    <Button Command="{Binding PrintCommand}" Content="一键打印" />
+                    <Button Command="{Binding SettingCommand}" Content="一键清除" />
+                </StackPanel>
+
+            </Grid>
+        </Border>
+
+        <Border
+            Grid.Row="0"
+            Grid.RowSpan="2"
+            Grid.Column="1"
+            Style="{StaticResource Border_Style}">
+            <GroupBox Margin="8" Header="预览">
+                <Image Source="{Binding ElementName=view_Bartender, Path=(custview:PrintView.PreviewImage)}" />
+            </GroupBox>
+        </Border>
+    </Grid>
+</UserControl>

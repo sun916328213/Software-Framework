@@ -1,0 +1,80 @@
+﻿<UserControl
+    x:Class="WPFControl.CustomControl.Views.BulletinBoard.ProductionCapacityView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Charts="clr-namespace:WPFControl.CustomControl.Models.Charts"
+    xmlns:charts="clr-namespace:WPFControl.CustomControl.Views.Charts"
+    xmlns:custm="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    xmlns:cust="clr-namespace:WPFControl.CustomControl.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:WPFControl.CustomControl.Views.BulletinBoard"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="150"
+    d:DesignWidth="600"
+    Loaded="ProductionCapacityView_Loaded"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <!--<ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/WPFControl;component/Resources/Resources.xaml" />
+            </ResourceDictionary.MergedDictionaries>-->
+
+            <Style TargetType="{x:Type TextBlock}">
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="6" />
+            </Style>
+
+            <Style TargetType="{x:Type StackPanel}">
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Style="{StaticResource Border_Style}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="20" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock
+                Margin="0"
+                VerticalAlignment="Center"
+                Text="今日产量" />
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="2*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="良品数量" />
+                    <TextBlock x:Name="TB_OKCount" Text="{Binding OKCount, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="总数量" />
+                    <TextBlock x:Name="TB_Total" Text="{Binding TotalCount, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="不良品数量" />
+                    <TextBlock x:Name="TB_NGCount" Text="{Binding NGCount, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" />
+                </StackPanel>
+                <StackPanel Grid.Column="3">
+                    <TextBlock Text="良品率" />
+                    <custm:CircleProcessBar x:Name="TB_OKRate" />
+                </StackPanel>
+
+                <charts:ChartsMultipleGaugeView
+                    x:Name="PieChart"
+                    Grid.Column="4"
+                    DrawMargin="50,0,0,0"
+                    MaxValue="3600" />
+
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

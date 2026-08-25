@@ -1,0 +1,526 @@
+﻿namespace SecsDevice {
+    partial class Form1 {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing) {
+            if (disposing && (components != null)) {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            components = new System.ComponentModel.Container();
+            System.Windows.Forms.GroupBox groupBox1;
+            System.Windows.Forms.Label label3;
+            System.Windows.Forms.Label label2;
+            System.Windows.Forms.Label label1;
+            System.Windows.Forms.GroupBox groupBox4;
+            System.Windows.Forms.GroupBox groupBox2;
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.Windows.Forms.GroupBox groupBox5;
+            System.Windows.Forms.GroupBox groupBox3;
+            System.Windows.Forms.Button btnSendPrimary;
+            System.Windows.Forms.Button btnReplySecondary;
+            System.Windows.Forms.Button btnReplyS9F1;
+            label4 = new System.Windows.Forms.Label();
+            numBufferSize = new System.Windows.Forms.NumericUpDown();
+            numDeviceId = new System.Windows.Forms.NumericUpDown();
+            lbStatus = new System.Windows.Forms.Label();
+            btnDisable = new System.Windows.Forms.Button();
+            btnEnable = new System.Windows.Forms.Button();
+            numPort = new System.Windows.Forms.NumericUpDown();
+            txtAddress = new System.Windows.Forms.TextBox();
+            radioPassiveMode = new System.Windows.Forms.RadioButton();
+            radioActiveMode = new System.Windows.Forms.RadioButton();
+            txtRecvSecondary = new System.Windows.Forms.TextBox();
+            txtSendPrimary = new System.Windows.Forms.TextBox();
+            txtReplySeconary = new System.Windows.Forms.TextBox();
+            txtRecvPrimary = new System.Windows.Forms.TextBox();
+            lstUnreplyMsg = new System.Windows.Forms.ListBox();
+            recvMessageBindingSource = new System.Windows.Forms.BindingSource(components);
+            splitContainer1 = new System.Windows.Forms.SplitContainer();
+            splitContainer2 = new System.Windows.Forms.SplitContainer();
+            richTextBox1 = new System.Windows.Forms.RichTextBox();
+            groupBox1 = new System.Windows.Forms.GroupBox();
+            label3 = new System.Windows.Forms.Label();
+            label2 = new System.Windows.Forms.Label();
+            label1 = new System.Windows.Forms.Label();
+            groupBox4 = new System.Windows.Forms.GroupBox();
+            groupBox2 = new System.Windows.Forms.GroupBox();
+            groupBox5 = new System.Windows.Forms.GroupBox();
+            groupBox3 = new System.Windows.Forms.GroupBox();
+            btnSendPrimary = new System.Windows.Forms.Button();
+            btnReplySecondary = new System.Windows.Forms.Button();
+            btnReplyS9F1 = new System.Windows.Forms.Button();
+            groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)numBufferSize).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numDeviceId).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numPort).BeginInit();
+            groupBox4.SuspendLayout();
+            groupBox2.SuspendLayout();
+            groupBox5.SuspendLayout();
+            groupBox3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)recvMessageBindingSource).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
+            splitContainer1.Panel1.SuspendLayout();
+            splitContainer1.Panel2.SuspendLayout();
+            splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)splitContainer2).BeginInit();
+            splitContainer2.Panel1.SuspendLayout();
+            splitContainer2.Panel2.SuspendLayout();
+            splitContainer2.SuspendLayout();
+            SuspendLayout();
+            // 
+            // groupBox1
+            // 
+            groupBox1.Controls.Add(label4);
+            groupBox1.Controls.Add(numBufferSize);
+            groupBox1.Controls.Add(numDeviceId);
+            groupBox1.Controls.Add(label3);
+            groupBox1.Controls.Add(lbStatus);
+            groupBox1.Controls.Add(btnDisable);
+            groupBox1.Controls.Add(btnEnable);
+            groupBox1.Controls.Add(numPort);
+            groupBox1.Controls.Add(label2);
+            groupBox1.Controls.Add(label1);
+            groupBox1.Controls.Add(txtAddress);
+            groupBox1.Controls.Add(radioPassiveMode);
+            groupBox1.Controls.Add(radioActiveMode);
+            groupBox1.Dock = System.Windows.Forms.DockStyle.Top;
+            groupBox1.Location = new System.Drawing.Point(0, 0);
+            groupBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            groupBox1.Name = "groupBox1";
+            groupBox1.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            groupBox1.Size = new System.Drawing.Size(1416, 99);
+            groupBox1.TabIndex = 1;
+            groupBox1.TabStop = false;
+            groupBox1.Text = "Config";
+            // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Location = new System.Drawing.Point(549, 49);
+            label4.Name = "label4";
+            label4.Size = new System.Drawing.Size(70, 17);
+            label4.TabIndex = 12;
+            label4.Text = "Buffer Size";
+            // 
+            // numBufferSize
+            // 
+            numBufferSize.Location = new System.Drawing.Point(624, 43);
+            numBufferSize.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            numBufferSize.Maximum = new decimal(new int[] { 65535, 0, 0, 0 });
+            numBufferSize.Name = "numBufferSize";
+            numBufferSize.Size = new System.Drawing.Size(90, 23);
+            numBufferSize.TabIndex = 11;
+            numBufferSize.Value = new decimal(new int[] { 65535, 0, 0, 0 });
+            // 
+            // numDeviceId
+            // 
+            numDeviceId.Location = new System.Drawing.Point(473, 43);
+            numDeviceId.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            numDeviceId.Maximum = new decimal(new int[] { 65535, 0, 0, 0 });
+            numDeviceId.Name = "numDeviceId";
+            numDeviceId.Size = new System.Drawing.Size(50, 23);
+            numDeviceId.TabIndex = 10;
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new System.Drawing.Point(408, 49);
+            label3.Name = "label3";
+            label3.Size = new System.Drawing.Size(62, 17);
+            label3.TabIndex = 9;
+            label3.Text = "Device Id";
+            // 
+            // lbStatus
+            // 
+            lbStatus.AutoSize = true;
+            lbStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Bold);
+            lbStatus.Location = new System.Drawing.Point(1000, 36);
+            lbStatus.Name = "lbStatus";
+            lbStatus.Size = new System.Drawing.Size(114, 37);
+            lbStatus.TabIndex = 8;
+            lbStatus.Text = "Status";
+            // 
+            // btnDisable
+            // 
+            btnDisable.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            btnDisable.Enabled = false;
+            btnDisable.Location = new System.Drawing.Point(866, 43);
+            btnDisable.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            btnDisable.Name = "btnDisable";
+            btnDisable.Size = new System.Drawing.Size(87, 32);
+            btnDisable.TabIndex = 7;
+            btnDisable.Text = "Disable";
+            btnDisable.UseVisualStyleBackColor = true;
+            btnDisable.Click += btnDisable_Click;
+            // 
+            // btnEnable
+            // 
+            btnEnable.Location = new System.Drawing.Point(772, 43);
+            btnEnable.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            btnEnable.Name = "btnEnable";
+            btnEnable.Size = new System.Drawing.Size(87, 32);
+            btnEnable.TabIndex = 6;
+            btnEnable.Text = "Enable";
+            btnEnable.UseVisualStyleBackColor = true;
+            btnEnable.Click += btnEnable_Click;
+            // 
+            // numPort
+            // 
+            numPort.Location = new System.Drawing.Point(327, 43);
+            numPort.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            numPort.Maximum = new decimal(new int[] { 9999, 0, 0, 0 });
+            numPort.Minimum = new decimal(new int[] { 5000, 0, 0, 0 });
+            numPort.Name = "numPort";
+            numPort.Size = new System.Drawing.Size(61, 23);
+            numPort.TabIndex = 5;
+            numPort.Value = new decimal(new int[] { 5000, 0, 0, 0 });
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new System.Drawing.Point(292, 49);
+            label2.Name = "label2";
+            label2.Size = new System.Drawing.Size(32, 17);
+            label2.TabIndex = 4;
+            label2.Text = "Port";
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new System.Drawing.Point(93, 49);
+            label1.Name = "label1";
+            label1.Size = new System.Drawing.Size(19, 17);
+            label1.TabIndex = 3;
+            label1.Text = "IP";
+            // 
+            // txtAddress
+            // 
+            txtAddress.Location = new System.Drawing.Point(118, 43);
+            txtAddress.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            txtAddress.Name = "txtAddress";
+            txtAddress.Size = new System.Drawing.Size(166, 23);
+            txtAddress.TabIndex = 2;
+            txtAddress.Text = "127.0.0.1";
+            // 
+            // radioPassiveMode
+            // 
+            radioPassiveMode.AutoSize = true;
+            radioPassiveMode.Location = new System.Drawing.Point(14, 59);
+            radioPassiveMode.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            radioPassiveMode.Name = "radioPassiveMode";
+            radioPassiveMode.Size = new System.Drawing.Size(68, 21);
+            radioPassiveMode.TabIndex = 1;
+            radioPassiveMode.Text = "Passive";
+            radioPassiveMode.UseVisualStyleBackColor = true;
+            // 
+            // radioActiveMode
+            // 
+            radioActiveMode.AutoSize = true;
+            radioActiveMode.Checked = true;
+            radioActiveMode.Location = new System.Drawing.Point(14, 29);
+            radioActiveMode.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            radioActiveMode.Name = "radioActiveMode";
+            radioActiveMode.Size = new System.Drawing.Size(60, 21);
+            radioActiveMode.TabIndex = 0;
+            radioActiveMode.TabStop = true;
+            radioActiveMode.Text = "Active";
+            radioActiveMode.UseVisualStyleBackColor = true;
+            // 
+            // groupBox4
+            // 
+            groupBox4.Controls.Add(txtRecvSecondary);
+            groupBox4.Dock = System.Windows.Forms.DockStyle.Fill;
+            groupBox4.Location = new System.Drawing.Point(0, 425);
+            groupBox4.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            groupBox4.Name = "groupBox4";
+            groupBox4.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            groupBox4.Size = new System.Drawing.Size(522, 392);
+            groupBox4.TabIndex = 5;
+            groupBox4.TabStop = false;
+            groupBox4.Text = "Received Secondary Message";
+            // 
+            // txtRecvSecondary
+            // 
+            txtRecvSecondary.Dock = System.Windows.Forms.DockStyle.Fill;
+            txtRecvSecondary.Location = new System.Drawing.Point(3, 20);
+            txtRecvSecondary.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            txtRecvSecondary.Multiline = true;
+            txtRecvSecondary.Name = "txtRecvSecondary";
+            txtRecvSecondary.ReadOnly = true;
+            txtRecvSecondary.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            txtRecvSecondary.Size = new System.Drawing.Size(516, 368);
+            txtRecvSecondary.TabIndex = 0;
+            txtRecvSecondary.WordWrap = false;
+            // 
+            // groupBox2
+            // 
+            groupBox2.Controls.Add(txtSendPrimary);
+            groupBox2.Dock = System.Windows.Forms.DockStyle.Top;
+            groupBox2.Location = new System.Drawing.Point(0, 0);
+            groupBox2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            groupBox2.Name = "groupBox2";
+            groupBox2.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            groupBox2.Size = new System.Drawing.Size(522, 393);
+            groupBox2.TabIndex = 3;
+            groupBox2.TabStop = false;
+            groupBox2.Text = "Send Primary Message";
+            // 
+            // txtSendPrimary
+            // 
+            txtSendPrimary.AcceptsReturn = true;
+            txtSendPrimary.Dock = System.Windows.Forms.DockStyle.Fill;
+            txtSendPrimary.ImeMode = System.Windows.Forms.ImeMode.Disable;
+            txtSendPrimary.Location = new System.Drawing.Point(3, 20);
+            txtSendPrimary.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            txtSendPrimary.Multiline = true;
+            txtSendPrimary.Name = "txtSendPrimary";
+            txtSendPrimary.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            txtSendPrimary.Size = new System.Drawing.Size(516, 369);
+            txtSendPrimary.TabIndex = 1;
+            txtSendPrimary.Text = resources.GetString("txtSendPrimary.Text");
+            txtSendPrimary.WordWrap = false;
+            // 
+            // groupBox5
+            // 
+            groupBox5.Controls.Add(txtReplySeconary);
+            groupBox5.Dock = System.Windows.Forms.DockStyle.Fill;
+            groupBox5.Location = new System.Drawing.Point(0, 425);
+            groupBox5.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            groupBox5.Name = "groupBox5";
+            groupBox5.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            groupBox5.Size = new System.Drawing.Size(574, 360);
+            groupBox5.TabIndex = 2;
+            groupBox5.TabStop = false;
+            groupBox5.Text = "Reply Secondary Message";
+            // 
+            // txtReplySeconary
+            // 
+            txtReplySeconary.AcceptsReturn = true;
+            txtReplySeconary.Dock = System.Windows.Forms.DockStyle.Fill;
+            txtReplySeconary.ImeMode = System.Windows.Forms.ImeMode.Disable;
+            txtReplySeconary.Location = new System.Drawing.Point(3, 20);
+            txtReplySeconary.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            txtReplySeconary.Multiline = true;
+            txtReplySeconary.Name = "txtReplySeconary";
+            txtReplySeconary.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            txtReplySeconary.Size = new System.Drawing.Size(568, 336);
+            txtReplySeconary.TabIndex = 0;
+            txtReplySeconary.WordWrap = false;
+            // 
+            // groupBox3
+            // 
+            groupBox3.Controls.Add(txtRecvPrimary);
+            groupBox3.Controls.Add(lstUnreplyMsg);
+            groupBox3.Dock = System.Windows.Forms.DockStyle.Top;
+            groupBox3.Location = new System.Drawing.Point(0, 0);
+            groupBox3.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            groupBox3.Name = "groupBox3";
+            groupBox3.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            groupBox3.Size = new System.Drawing.Size(574, 425);
+            groupBox3.TabIndex = 0;
+            groupBox3.TabStop = false;
+            groupBox3.Text = "Received Primary Message";
+            // 
+            // txtRecvPrimary
+            // 
+            txtRecvPrimary.Dock = System.Windows.Forms.DockStyle.Fill;
+            txtRecvPrimary.Location = new System.Drawing.Point(242, 20);
+            txtRecvPrimary.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            txtRecvPrimary.Multiline = true;
+            txtRecvPrimary.Name = "txtRecvPrimary";
+            txtRecvPrimary.ReadOnly = true;
+            txtRecvPrimary.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            txtRecvPrimary.Size = new System.Drawing.Size(329, 401);
+            txtRecvPrimary.TabIndex = 1;
+            txtRecvPrimary.WordWrap = false;
+            // 
+            // lstUnreplyMsg
+            // 
+            lstUnreplyMsg.DataSource = recvMessageBindingSource;
+            lstUnreplyMsg.DisplayMember = "Message";
+            lstUnreplyMsg.Dock = System.Windows.Forms.DockStyle.Left;
+            lstUnreplyMsg.FormattingEnabled = true;
+            lstUnreplyMsg.ItemHeight = 17;
+            lstUnreplyMsg.Location = new System.Drawing.Point(3, 20);
+            lstUnreplyMsg.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            lstUnreplyMsg.Name = "lstUnreplyMsg";
+            lstUnreplyMsg.Size = new System.Drawing.Size(239, 401);
+            lstUnreplyMsg.TabIndex = 0;
+            lstUnreplyMsg.SelectedIndexChanged += lstUnreplyMsg_SelectedIndexChanged;
+            // 
+            // recvMessageBindingSource
+            // 
+            recvMessageBindingSource.DataSource = typeof(Secs4Net.PrimaryMessageWrapper);
+            recvMessageBindingSource.CurrentChanged += recvMessageBindingSource_CurrentChanged;
+            // 
+            // btnSendPrimary
+            // 
+            btnSendPrimary.Dock = System.Windows.Forms.DockStyle.Top;
+            btnSendPrimary.Location = new System.Drawing.Point(0, 393);
+            btnSendPrimary.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            btnSendPrimary.Name = "btnSendPrimary";
+            btnSendPrimary.Size = new System.Drawing.Size(522, 32);
+            btnSendPrimary.TabIndex = 4;
+            btnSendPrimary.Text = "Send";
+            btnSendPrimary.UseVisualStyleBackColor = true;
+            btnSendPrimary.Click += btnSendPrimary_Click;
+            // 
+            // btnReplySecondary
+            // 
+            btnReplySecondary.Dock = System.Windows.Forms.DockStyle.Bottom;
+            btnReplySecondary.Location = new System.Drawing.Point(0, 785);
+            btnReplySecondary.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            btnReplySecondary.Name = "btnReplySecondary";
+            btnReplySecondary.Size = new System.Drawing.Size(574, 32);
+            btnReplySecondary.TabIndex = 1;
+            btnReplySecondary.Text = "Reply";
+            btnReplySecondary.UseVisualStyleBackColor = true;
+            btnReplySecondary.Click += btnReplySecondary_Click;
+            // 
+            // btnReplyS9F1
+            // 
+            btnReplyS9F1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            btnReplyS9F1.Location = new System.Drawing.Point(0, 753);
+            btnReplyS9F1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            btnReplyS9F1.Name = "btnReplyS9F1";
+            btnReplyS9F1.Size = new System.Drawing.Size(574, 32);
+            btnReplyS9F1.TabIndex = 3;
+            btnReplyS9F1.Text = "Reply S9F7";
+            btnReplyS9F1.UseVisualStyleBackColor = true;
+            btnReplyS9F1.Click += btnReplyS9F7_Click;
+            // 
+            // splitContainer1
+            // 
+            splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            splitContainer1.Location = new System.Drawing.Point(0, 0);
+            splitContainer1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            splitContainer1.Panel1.Controls.Add(groupBox4);
+            splitContainer1.Panel1.Controls.Add(btnSendPrimary);
+            splitContainer1.Panel1.Controls.Add(groupBox2);
+            // 
+            // splitContainer1.Panel2
+            // 
+            splitContainer1.Panel2.Controls.Add(btnReplyS9F1);
+            splitContainer1.Panel2.Controls.Add(groupBox5);
+            splitContainer1.Panel2.Controls.Add(btnReplySecondary);
+            splitContainer1.Panel2.Controls.Add(groupBox3);
+            splitContainer1.Size = new System.Drawing.Size(1101, 817);
+            splitContainer1.SplitterDistance = 522;
+            splitContainer1.SplitterWidth = 5;
+            splitContainer1.TabIndex = 3;
+            // 
+            // splitContainer2
+            // 
+            splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
+            splitContainer2.Location = new System.Drawing.Point(0, 99);
+            splitContainer2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            splitContainer2.Name = "splitContainer2";
+            // 
+            // splitContainer2.Panel1
+            // 
+            splitContainer2.Panel1.Controls.Add(splitContainer1);
+            // 
+            // splitContainer2.Panel2
+            // 
+            splitContainer2.Panel2.Controls.Add(richTextBox1);
+            splitContainer2.Size = new System.Drawing.Size(1416, 817);
+            splitContainer2.SplitterDistance = 1101;
+            splitContainer2.SplitterWidth = 5;
+            splitContainer2.TabIndex = 11;
+            // 
+            // richTextBox1
+            // 
+            richTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            richTextBox1.Location = new System.Drawing.Point(0, 0);
+            richTextBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            richTextBox1.Name = "richTextBox1";
+            richTextBox1.ReadOnly = true;
+            richTextBox1.Size = new System.Drawing.Size(310, 817);
+            richTextBox1.TabIndex = 1;
+            richTextBox1.Text = "";
+            richTextBox1.WordWrap = false;
+            // 
+            // Form1
+            // 
+            AcceptButton = btnEnable;
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            CancelButton = btnDisable;
+            ClientSize = new System.Drawing.Size(1416, 916);
+            Controls.Add(splitContainer2);
+            Controls.Add(groupBox1);
+            Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            Name = "Form1";
+            Text = "SECS Device";
+            WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            groupBox1.ResumeLayout(false);
+            groupBox1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)numBufferSize).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numDeviceId).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numPort).EndInit();
+            groupBox4.ResumeLayout(false);
+            groupBox4.PerformLayout();
+            groupBox2.ResumeLayout(false);
+            groupBox2.PerformLayout();
+            groupBox5.ResumeLayout(false);
+            groupBox5.PerformLayout();
+            groupBox3.ResumeLayout(false);
+            groupBox3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)recvMessageBindingSource).EndInit();
+            splitContainer1.Panel1.ResumeLayout(false);
+            splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
+            splitContainer1.ResumeLayout(false);
+            splitContainer2.Panel1.ResumeLayout(false);
+            splitContainer2.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainer2).EndInit();
+            splitContainer2.ResumeLayout(false);
+            ResumeLayout(false);
+        }
+
+        #endregion
+
+        private System.Windows.Forms.RadioButton radioPassiveMode;
+        private System.Windows.Forms.RadioButton radioActiveMode;
+        private System.Windows.Forms.Button btnDisable;
+        private System.Windows.Forms.Button btnEnable;
+        private System.Windows.Forms.NumericUpDown numPort;
+        private System.Windows.Forms.TextBox txtAddress;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.TextBox txtSendPrimary;
+        private System.Windows.Forms.TextBox txtRecvSecondary;
+        private System.Windows.Forms.TextBox txtRecvPrimary;
+        private System.Windows.Forms.ListBox lstUnreplyMsg;
+        private System.Windows.Forms.TextBox txtReplySeconary;
+        private System.Windows.Forms.Label lbStatus;
+        private System.Windows.Forms.NumericUpDown numDeviceId;
+        private System.Windows.Forms.BindingSource recvMessageBindingSource;
+        private System.Windows.Forms.SplitContainer splitContainer2;
+        private System.Windows.Forms.RichTextBox richTextBox1;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.NumericUpDown numBufferSize;
+    }
+}
+
