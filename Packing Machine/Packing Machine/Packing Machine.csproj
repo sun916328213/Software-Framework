@@ -21,7 +21,6 @@
     <ProjectReference Include="..\..\Vision\Ctr_WPF_F48\Ctr_WPF_F48.csproj" />
     <ProjectReference Include="..\..\Vision\DPLibrary_Base_F48\DPLibrary_Base_F48.csproj" />
     <ProjectReference Include="..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj" />
-    <ProjectReference Include="..\..\Vision\Vision\Vision.csproj" />
     <ProjectReference Include="..\..\Editor\Flow\FlowNodes\FlowNodes.csproj" />
     <ProjectReference Include="..\..\WPFControl\WPFControl\WPFControl.csproj" />
     <ProjectReference Include="..\..\Editor\Script\ScriptEditor\ScriptEditor.csproj" />
@@ -79,6 +78,8 @@
     <None Include="Config\BagType.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Config\Flow\ShutdownFlow.taskproj" />
+    <None Include="Config\Flow\StartupFlow.taskproj" />
     <None Include="Config\FOSBName.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

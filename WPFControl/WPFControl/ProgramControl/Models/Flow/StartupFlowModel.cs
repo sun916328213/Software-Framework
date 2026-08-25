@@ -10,7 +10,7 @@ namespace WPFControl.ProgramControl.Models
         /// <summary>
         /// 启动流程文件路径
         /// </summary>
-        public string FilePath { get; set; } = "Config";
+        public string FilePath { get; set; } = "Config\\Flow";
 
         /// <summary>
         /// 启动流程文件名

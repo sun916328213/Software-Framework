@@ -32,7 +32,7 @@ public enum NodeStatus
 /// 每个节点强制内置 4 个固定属性：Name、Value、IN、Out。
 /// 支持自定义端口动态增删、底部按钮自动扫描、权限控制。
 /// </summary>
-public abstract partial class NodeModel : ObservableObject, IPortConfigurable, IPortManageable, IDataBindingProvider, INodeExecutable
+public abstract partial class NodeModel : ObservableObject, IPortConfigurable, IPortManageable, IDataBindingProvider, INodeExecutable, INodeFaultPolicy
 {
     protected NodeModel()
     {
@@ -132,6 +132,40 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
     {
         get => _permission;
         set => SetProperty(ref _permission, value);
+    }
+
+    // ── 容错策略（P2）──
+
+    private NodeErrorPolicy _errorPolicy = NodeErrorPolicy.FailFast;
+    /// <summary>失败处理策略：FailFast / ContinueOnError / RouteToErrorPort。</summary>
+    public NodeErrorPolicy ErrorPolicy
+    {
+        get => _errorPolicy;
+        set => SetProperty(ref _errorPolicy, value);
+    }
+
+    private int _retryCount;
+    /// <summary>失败自动重试次数（0 = 不重试，最大 10）。</summary>
+    public int RetryCount
+    {
+        get => _retryCount;
+        set => SetProperty(ref _retryCount, Math.Clamp(value, 0, 10));
+    }
+
+    private int _retryDelayMs;
+    /// <summary>重试间隔（毫秒，最大 60000）。</summary>
+    public int RetryDelayMs
+    {
+        get => _retryDelayMs;
+        set => SetProperty(ref _retryDelayMs, Math.Clamp(value, 0, 60_000));
+    }
+
+    private int _timeoutMs;
+    /// <summary>单次执行超时（毫秒），0 = 不限制。超时按失败处理并计入重试。</summary>
+    public int TimeoutMs
+    {
+        get => _timeoutMs;
+        set => SetProperty(ref _timeoutMs, Math.Clamp(value, 0, 3_600_000));
     }
 
     /// <summary>是否可编辑（非只读且非禁用）。</summary>

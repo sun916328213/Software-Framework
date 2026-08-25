@@ -52,3 +52,23 @@ public interface INodeExecutable
     /// <summary>控制流端口名列表；非控制流节点返回 null。</summary>
     IReadOnlyList<string>? ControlFlowPorts { get; }
 }
+
+/// <summary>
+/// 节点容错策略能力接口（P2，可选实现）。
+/// 引擎对实现了此接口的节点应用重试/超时/失败策略；
+/// 仅实现 INodeExecutable 的节点按默认 FailFast、不重试、不限制超时处理。
+/// </summary>
+public interface INodeFaultPolicy
+{
+    /// <summary>失败处理策略。</summary>
+    NodeErrorPolicy ErrorPolicy { get; }
+
+    /// <summary>失败自动重试次数（0 = 不重试）。</summary>
+    int RetryCount { get; }
+
+    /// <summary>重试间隔（毫秒）。</summary>
+    int RetryDelayMs { get; }
+
+    /// <summary>单次执行超时（毫秒），0 = 不限制。</summary>
+    int TimeoutMs { get; }
+}

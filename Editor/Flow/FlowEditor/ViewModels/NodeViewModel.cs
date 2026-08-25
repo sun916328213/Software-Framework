@@ -12,7 +12,7 @@ namespace FlowEditor.ViewModels;
 /// 节点 ViewModel。
 /// 持有 NodeModel 引用，管理拖拽、选中、端口状态等 UI 逻辑。
 /// </summary>
-public class NodeViewModel : ObservableObject, INodeExecutable
+public class NodeViewModel : ObservableObject, INodeExecutable, INodeFaultPolicy
 {
     /// <summary>底层节点模型。</summary>
     public NodeModel Model { get; }
@@ -183,6 +183,18 @@ public class NodeViewModel : ObservableObject, INodeExecutable
         => ((INodeExecutable)Model).GetActivatedOutputNames();
 
     IReadOnlyList<string>? INodeExecutable.ControlFlowPorts => Model.ControlFlowPorts;
+
+    #endregion
+
+    #region INodeFaultPolicy 显式实现（转发至 Model）
+
+    NodeErrorPolicy INodeFaultPolicy.ErrorPolicy => Model.ErrorPolicy;
+
+    int INodeFaultPolicy.RetryCount => Model.RetryCount;
+
+    int INodeFaultPolicy.RetryDelayMs => Model.RetryDelayMs;
+
+    int INodeFaultPolicy.TimeoutMs => Model.TimeoutMs;
 
     #endregion
 

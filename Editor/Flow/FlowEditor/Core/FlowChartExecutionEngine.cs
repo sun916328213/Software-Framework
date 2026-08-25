@@ -91,18 +91,30 @@ public class FlowChartExecutionEngine
 
     #region 单节点执行核心（三种模式共享）
 
+    /// <summary>单节点执行结果。</summary>
+    /// <param name="ActivatedIds">显式激活的输出端口 ID；null = 全部出边放行。</param>
+    /// <param name="Failed">是否执行失败。</param>
+    /// <param name="FailureSwallowed">失败是否被容错策略吞掉（下游照常/按 Error 边调度）。</param>
+    private sealed record NodeRunResult(
+        IReadOnlySet<string>? ActivatedIds,
+        bool Failed,
+        bool FailureSwallowed);
+
     /// <summary>
-    /// 执行单个节点：状态切换、日志、输入填充、执行、输出同步、计时、激活端口解析。
-    /// 异常统一在此记录日志并设置 Error 状态后原样抛出，由各调度器决定传播策略。
+    /// 执行单个节点：状态切换、日志、输入填充、执行、输出同步、计时、激活端口解析，
+    /// 以及超时控制 / 失败重试 / 容错策略（FailFast / ContinueOnError / RouteToErrorPort）。
+    /// FailFast 策略或父级取消时抛出异常，由各调度器决定传播；
+    /// ContinueOnError 与 RouteToErrorPort 不抛出，通过返回值表达失败。
     /// </summary>
-    /// <returns>本节点显式激活的输出端口 ID 集合；未声明激活时返回 null（全部出边放行）。</returns>
-    private async Task<IReadOnlySet<string>?> ExecuteSingleNodeAsync<TNode>(
+    /// <param name="enforceFailFast">强制快速失败（调试串行模式使用），忽略节点的容错策略。</param>
+    private async Task<NodeRunResult> ExecuteSingleNodeAsync<TNode>(
         TNode nodeVm,
         CompiledFlowGraph<TNode> graph,
         CancellationToken ct,
         Action<string> log,
         ConcurrentQueue<TNode>? orderBag,
-        Func<string>? onExecuted) where TNode : INodeExecutable
+        Func<string>? onExecuted,
+        bool enforceFailFast = false) where TNode : INodeExecutable
     {
         var startWallTime = DateTime.Now;
         var startTimestamp = Timestamp();
@@ -110,24 +122,100 @@ public class FlowChartExecutionEngine
         orderBag?.Enqueue(nodeVm);
         log($"[开始] {nodeVm.Name} ({startWallTime:HH:mm:ss.fff})");
 
+        // 容错参数（未实现 INodeFaultPolicy 的执行面按默认处理）
+        var policyNode = nodeVm as INodeFaultPolicy;
+        var errorPolicy = enforceFailFast ? NodeErrorPolicy.FailFast : policyNode?.ErrorPolicy ?? NodeErrorPolicy.FailFast;
+        var retryCount = Math.Max(0, policyNode?.RetryCount ?? 0);
+        var retryDelayMs = Math.Max(0, policyNode?.RetryDelayMs ?? 0);
+        var timeoutMs = Math.Max(0, policyNode?.TimeoutMs ?? 0);
+        var maxAttempts = 1 + retryCount;
+
         try
         {
             ct.ThrowIfCancellationRequested();
-            nodeVm.ResetActivation();
-            FillInputPorts(nodeVm, graph);
-            nodeVm.SyncInputValues();
-            await nodeVm.ExecuteAsync(ct);
-            nodeVm.SyncOutputValues();
 
-            if (nodeVm.Status != NodeStatus.Error)
-                nodeVm.Status = NodeStatus.Success;
+            Exception? failure = null;
+            for (var attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                if (attempt > 1)
+                {
+                    nodeVm.Status = NodeStatus.Running;
+                    if (retryDelayMs > 0)
+                        await Task.Delay(retryDelayMs, ct);
+                    log($"[重试] {nodeVm.Name} 第 {attempt - 1}/{maxAttempts - 1} 次");
+                }
 
-            var elapsed = ElapsedMs(startTimestamp);
-            nodeVm.LastElapsedMs = (long)elapsed;
-            var extra = onExecuted?.Invoke() ?? "";
-            log($"[完成] {nodeVm.Name} - 耗时 {elapsed:F1}ms{extra}");
+                nodeVm.ResetActivation();
+                using var timeoutCts = timeoutMs > 0
+                    ? CancellationTokenSource.CreateLinkedTokenSource(ct)
+                    : null;
+                timeoutCts?.CancelAfter(timeoutMs);
 
-            return ResolveActivatedPortIds(nodeVm, graph);
+                try
+                {
+                    FillInputPorts(nodeVm, graph);
+                    nodeVm.SyncInputValues();
+                    await nodeVm.ExecuteAsync(timeoutCts?.Token ?? ct);
+                    nodeVm.SyncOutputValues();
+                    failure = null;
+                    break;
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                    throw; // 父级取消：不重试、不容错
+                }
+                catch (OperationCanceledException) when (timeoutCts is { IsCancellationRequested: true })
+                {
+                    failure = new NodeTimeoutException($"节点 [{nodeVm.Name}] 执行超时（限制 {timeoutMs}ms）");
+                }
+                catch (Exception ex)
+                {
+                    failure = ex;
+                }
+            }
+
+            if (failure == null)
+            {
+                if (nodeVm.Status != NodeStatus.Error)
+                    nodeVm.Status = NodeStatus.Success;
+
+                var elapsedOk = ElapsedMs(startTimestamp);
+                nodeVm.LastElapsedMs = (long)elapsedOk;
+                var extra = onExecuted?.Invoke() ?? "";
+                log($"[完成] {nodeVm.Name} - 耗时 {elapsedOk:F1}ms{extra}");
+
+                return new NodeRunResult(ResolveActivatedPortIds(nodeVm, graph), false, false);
+            }
+
+            // ── 失败处理（已耗尽重试）──
+            nodeVm.LastElapsedMs = (long)ElapsedMs(startTimestamp);
+            nodeVm.Status = NodeStatus.Error;
+            var prefix = failure is FlowChartTypeMismatchException or NodeTimeoutException ? "[错误]" : "[错误]";
+            prefix = failure is FlowChartTypeMismatchException ? "[类型错误]" : prefix;
+
+            switch (errorPolicy)
+            {
+                case NodeErrorPolicy.RouteToErrorPort:
+                    var errPortId = TryRouteToErrorPort(nodeVm, graph, failure.Message);
+                    if (errPortId != null)
+                    {
+                        log($"{prefix} {nodeVm.Name}: {failure.Message}");
+                        log($"[容错] [{nodeVm.Name}] 失败已路由至 Error 端口，仅沿 Error 连线继续");
+                        return new NodeRunResult(new HashSet<string> { errPortId }, true, true);
+                    }
+                    log($"[容错] [{nodeVm.Name}] 未接线 Error 端口，按继续执行处理");
+                    goto case NodeErrorPolicy.ContinueOnError;
+
+                case NodeErrorPolicy.ContinueOnError:
+                    log($"{prefix} {nodeVm.Name}: {failure.Message}");
+                    log($"[容错] 策略为继续执行，[{nodeVm.Name}] 的下游将以上游遗留输入值继续调度");
+                    return new NodeRunResult(null, true, true);
+
+                default: // FailFast
+                    log($"{prefix} {nodeVm.Name}: {failure.Message}");
+                    log($"[堆栈] {failure.StackTrace}");
+                    throw failure;
+            }
         }
         catch (OperationCanceledException)
         {
@@ -135,15 +223,23 @@ public class FlowChartExecutionEngine
             nodeVm.Status = NodeStatus.Error;
             throw;
         }
-        catch (Exception ex)
-        {
-            nodeVm.LastElapsedMs = (long)ElapsedMs(startTimestamp);
-            nodeVm.Status = NodeStatus.Error;
-            var prefix = ex is FlowChartTypeMismatchException ? "[类型错误]" : "[错误]";
-            log($"{prefix} {nodeVm.Name}: {ex.Message}");
-            log($"[堆栈] {ex.StackTrace}");
-            throw;
-        }
+    }
+
+    /// <summary>查找名为 "Error" 且已有出线的输出端口，将异常消息写入端口值并返回其 ID；不满足时返回 null。</summary>
+    private static string? TryRouteToErrorPort<TNode>(
+        TNode nodeVm,
+        CompiledFlowGraph<TNode> graph,
+        string errorMessage) where TNode : INodeExecutable
+    {
+        var errPort = nodeVm.OutputPorts.FirstOrDefault(p => p.Name == "Error");
+        if (errPort == null)
+            return null;
+        var connected = graph.SuccessorConnections.TryGetValue(nodeVm.Id, out var conns)
+                        && conns.Any(c => c.SourcePortId == errPort.Id);
+        if (!connected)
+            return null;
+        errPort.Value = errorMessage; // 携带异常消息供下游节点消费
+        return errPort.Id;
     }
 
     /// <summary>
@@ -257,15 +353,18 @@ public class FlowChartExecutionEngine
         CancellationTokenSource linkedCts) where TNode : INodeExecutable
     {
         IReadOnlySet<string>? activated = null;
+        bool propagateFailure = false;
+        NodeRunResult? result = null;
         try
         {
-            activated = await ExecuteSingleNodeAsync(nodeVm, graph, ct, log, orderBag,
+            result = await ExecuteSingleNodeAsync(nodeVm, graph, ct, log, orderBag,
                 onExecuted: () =>
                 {
                     var executed = Interlocked.Increment(ref counter.Value);
                     nodeVm.Count = executed;
                     return $" ({executed}/{totalCount})";
                 });
+            activated = result.ActivatedIds;
         }
         catch (OperationCanceledException ex)
         {
@@ -275,12 +374,12 @@ public class FlowChartExecutionEngine
         catch (FlowChartTypeMismatchException ex)
         {
             exceptionList.Add(ex);
-            MarkNodeFailed(nodeVm.Id, graph, failedPredecessorCount);
+            propagateFailure = true; // FailFast：由下游调度统一标记
         }
         catch (Exception ex)
         {
             exceptionList.Add(ex);
-            MarkNodeFailed(nodeVm.Id, graph, failedPredecessorCount);
+            propagateFailure = true;
         }
         finally
         {
@@ -290,7 +389,7 @@ public class FlowChartExecutionEngine
             {
                 foreach (var conn in outConns)
                 {
-                    ScheduleSuccessorDag(conn, activated, graph, ct, log,
+                    ScheduleSuccessorDag(conn, propagateFailure, result, graph, ct, log,
                         completionSources, remainingPredecessors, failedPredecessorCount,
                         exceptionList, counter, totalCount, orderBag, linkedCts);
                 }
@@ -299,12 +398,14 @@ public class FlowChartExecutionEngine
     }
 
     /// <summary>
-    /// DAG 下游调度：激活过滤（未激活 = 软失败，计入 failedPredecessorCount）→
-    /// 前驱归零时按失败/正常分别跳过或调度。与纯失败路径共用同一套记账，天然处理多前驱混合场景。
+    /// DAG 下游调度：FailFast 失败与激活边过滤（未激活 = 软失败）计入 failedPredecessorCount；
+    /// 被容错策略吞掉的失败不标记，下游照常调度（ErrorPort 路由已通过 ActivatedIds 表达走向）。
+    /// 前驱归零时按失败/正常分别跳过或调度，共用同一套记账，天然处理多前驱混合场景。
     /// </summary>
     private void ScheduleSuccessorDag<TNode>(
         ConnectionModel conn,
-        IReadOnlySet<string>? activated,
+        bool propagateFailure,
+        NodeRunResult? result,
         CompiledFlowGraph<TNode> graph,
         CancellationToken ct,
         Action<string> log,
@@ -319,12 +420,19 @@ public class FlowChartExecutionEngine
     {
         var succId = conn.TargetNodeId;
 
-        // 激活边过滤：源端口未被激活 → 该连线视同上游失效
-        if (activated != null && !activated.Contains(conn.SourcePortId))
+        if (propagateFailure)
         {
+            // FailFast 失败：下游全部标记待跳过
+            failedPredecessorCount.AddOrUpdate(succId, 1, (_, v) => v + 1);
+        }
+        else if (result?.ActivatedIds != null && !result.ActivatedIds.Contains(conn.SourcePortId))
+        {
+            // 激活边过滤：源端口未被激活 → 该连线视同上游失效。
+            // 对成功节点是分支剪枝；对 RouteToErrorPort 失败节点则是"仅沿 Error 边继续"的实现。
             failedPredecessorCount.AddOrUpdate(succId, 1, (_, v) => v + 1);
             log($"[分支] [{graph.NodeMap[conn.SourceNodeId].Name}] 未激活端口连线，[{graph.NodeMap[succId].Name}] 及其下游将被跳过");
         }
+        // 其余情况（成功全放行 / ContinueOnError 吞掉且未声明激活）：不标记，下游照常调度
 
         var remaining = remainingPredecessors.AddOrUpdate(succId, _ => 0, (_, c) => c - 1);
         if (remaining != 0) return;
@@ -447,15 +555,17 @@ public class FlowChartExecutionEngine
 
             executionOrder?.Add(nodeVm);
 
-            var activated = await ExecuteSingleNodeAsync(nodeVm, graph, ct, log, orderBag: null,
+            var result = await ExecuteSingleNodeAsync(nodeVm, graph, ct, log, orderBag: null,
                 onExecuted: () =>
                 {
                     seq[0]++;
                     nodeVm.Count = seq[0];
                     return $" (#{seq[0]})";
                 });
+            var activated = result.ActivatedIds;
 
-            // 通知后继（激活边过滤：未激活的出边直接剪枝，包括回边——这是环路自然终止的关键）
+            // 通知后继（激活边过滤：未激活的出边直接剪枝，包括回边——这是环路自然终止的关键；
+            // 容错吞掉的失败经 ErrorPort 路由或全放行表达走向）
             foreach (var conn in graph.SuccessorConnections[nodeId])
             {
                 var succId = conn.TargetNodeId;
@@ -539,12 +649,14 @@ public class FlowChartExecutionEngine
                 await onBeforeNode(nodeVm);
                 executionOrder?.Add(nodeVm);
 
+                // 调试模式强制 FailFast：失败立即中断步进（重试/超时仍然生效）
                 await ExecuteSingleNodeAsync(nodeVm, graph, ct, log, orderBag: null,
                     onExecuted: () =>
                     {
                         nodeVm.Count++;
                         return "";
-                    });
+                    },
+                    enforceFailFast: true);
             }
 
             // 无环路：一轮就结束

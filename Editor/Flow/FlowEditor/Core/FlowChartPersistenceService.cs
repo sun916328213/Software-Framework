@@ -88,6 +88,10 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
                 IsInEnabled = nodeModel.IsInEnabled,
                 IsOutEnabled = nodeModel.IsOutEnabled,
                 Permission = nodeModel.Permission,
+                ErrorPolicy = nodeModel.ErrorPolicy,
+                RetryCount = nodeModel.RetryCount,
+                RetryDelayMs = nodeModel.RetryDelayMs,
+                TimeoutMs = nodeModel.TimeoutMs,
                 Properties = SerializeNodeProperties(nodeModel),
                 PortIdMap = BuildPortIdMap(nodeModel)
             };
@@ -130,6 +134,10 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
             IsInEnabled = nodeModel.IsInEnabled,
             IsOutEnabled = nodeModel.IsOutEnabled,
             Permission = nodeModel.Permission,
+            ErrorPolicy = nodeModel.ErrorPolicy,
+            RetryCount = nodeModel.RetryCount,
+            RetryDelayMs = nodeModel.RetryDelayMs,
+            TimeoutMs = nodeModel.TimeoutMs,
             Properties = SerializeNodeProperties(nodeModel),
             PortIdMap = BuildPortIdMap(nodeModel)
         };
@@ -176,6 +184,10 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
         node.IsInEnabled = doc.IsInEnabled;
         node.IsOutEnabled = doc.IsOutEnabled;
         node.Permission = doc.Permission;
+        node.ErrorPolicy = doc.ErrorPolicy;
+        node.RetryCount = doc.RetryCount;
+        node.RetryDelayMs = doc.RetryDelayMs;
+        node.TimeoutMs = doc.TimeoutMs;
 
         // 还原自定义端口（使用保存的 ID）
         foreach (var portDoc in doc.CustomInputPorts)

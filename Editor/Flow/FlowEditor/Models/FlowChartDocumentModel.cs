@@ -1,5 +1,7 @@
 namespace FlowEditor.Models;
 
+using FlowEditor.Core;
+
 /// <summary>
 /// 流程图文档模型（序列化根对象）。
 /// 完整存储画布全局配置、所有节点、所有连线，支持 1:1 还原。
@@ -54,6 +56,18 @@ public class NodeDocumentModel
 
     /// <summary>节点权限。</summary>
     public NodePermission Permission { get; set; } = NodePermission.Normal;
+
+    /// <summary>失败处理策略。</summary>
+    public NodeErrorPolicy ErrorPolicy { get; set; } = NodeErrorPolicy.FailFast;
+
+    /// <summary>失败自动重试次数。</summary>
+    public int RetryCount { get; set; }
+
+    /// <summary>重试间隔（毫秒）。</summary>
+    public int RetryDelayMs { get; set; }
+
+    /// <summary>单次执行超时（毫秒），0 = 不限制。</summary>
+    public int TimeoutMs { get; set; }
 
     /// <summary>自定义输入端口列表。</summary>
     public List<CustomPortDocument> CustomInputPorts { get; set; } = new();

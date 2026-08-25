@@ -86,15 +86,9 @@ public class FlowChartService : IFlowChartService
     {
         if (Model.IsRunning) return;
 
-        // 前置校验：所有勾选 IN 的节点必须存在 Next_IN 有效连线
-        var validationError = ValidateINConnections();
-        if (validationError != null)
-        {
-            logCallback($"[校验失败] {validationError}");
-            Model.StatusText = "校验失败：存在未连线的 IN 端口";
-            FlushLog();
+        // 前置校验：静态分析一次性报告（IN 连线 / 类型兼容 / 孤立节点 / 绑定有效性）
+        if (!RunPreValidation(logCallback))
             return;
-        }
 
         Model.IsRunning = true;
         Model.IsDebugMode = debugMode;
@@ -181,15 +175,9 @@ public class FlowChartService : IFlowChartService
     {
         if (Model.IsRunning || Model.IsLoopRunning) return;
 
-        // 前置校验
-        var validationError = ValidateINConnections();
-        if (validationError != null)
-        {
-            logCallback($"[校验失败] {validationError}");
-            Model.StatusText = "校验失败：存在未连线的 IN 端口";
-            FlushLog();
+        // 前置校验：静态分析一次性报告
+        if (!RunPreValidation(logCallback))
             return;
-        }
 
         Model.IsLoopRunning = true;
         Model.IsRunning = true;
@@ -282,25 +270,34 @@ public class FlowChartService : IFlowChartService
         FlushLog();
     }
 
-    // ── IN 连线校验 ──
+    // ── 静态校验（P2）──
 
     /// <summary>
-    /// 校验所有勾选 IN 的节点是否存在有效的 Next_IN 连线。
-    /// 返回 null 表示校验通过，否则返回错误消息。
+    /// 运行前静态分析：一次性输出全部诊断（错误/警告/提示）。
+    /// 存在错误时阻止执行并返回 false；警告与提示仅记录，不阻止执行。
     /// </summary>
-    private string? ValidateINConnections()
+    private bool RunPreValidation(Action<string> logCallback)
     {
-        foreach (var nodeVm in Nodes)
+        var report = FlowValidator.Analyze(Nodes.ToList(), Connections.ToList());
+        foreach (var diag in report.Diagnostics)
         {
-            if (!nodeVm.Model.IsInEnabled) continue;
-            var inPort = nodeVm.Model.InputPorts.FirstOrDefault(p => p.Name == "Next_IN");
-            if (inPort == null) continue;
-
-            var hasConnection = Connections.Any(c => c.TargetPortId == inPort.Id);
-            if (!hasConnection)
-                return $"节点 [{nodeVm.Name}] 的 IN 端口未连接，请先连线";
+            var tag = diag.Severity switch
+            {
+                FlowDiagnosticSeverity.Error => "错误",
+                FlowDiagnosticSeverity.Warning => "警告",
+                _ => "提示"
+            };
+            logCallback($"[校验][{tag}] {diag.Message}");
         }
-        return null;
+
+        if (report.HasErrors)
+        {
+            Model.StatusText = $"校验失败：{report.ErrorCount} 个错误";
+            logCallback($"=== 校验失败，共 {report.ErrorCount} 个错误 ===");
+            FlushLog();
+            return false;
+        }
+        return true;
     }
 
     // ── 持久化 ──
