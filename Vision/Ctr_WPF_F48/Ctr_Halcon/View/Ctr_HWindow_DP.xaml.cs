@@ -20,9 +20,19 @@ namespace Ctr_WPF_F48.Ctr_Halcon.View
     /// </summary>
     public partial class Ctr_HWindow_DP : UserControl, IDisposable
     {
+        /// <summary>
+        /// Halcon 显示窗口（来自内嵌的 HSmartWindowView，含右键菜单）
+        /// </summary>
+        public HSmartWindowControlWPF HWindow1 { get; private set; }
+
         public Ctr_HWindow_DP()
         {
             InitializeComponent();
+
+            HWindow1 = HSWindowView.HSmart;
+            HWindow1.HMouseDown += HWindow1_HMouseDown;
+            HWindow1.HMouseUp += HWindow1_HMouseUp;
+
             foreach (E_ROIType item in Enum.GetValues(typeof(E_ROIType)))
             {
                 if (item == E_ROIType.Null)

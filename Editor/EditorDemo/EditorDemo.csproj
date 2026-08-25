@@ -16,7 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
-    <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
+    <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls.csproj" />
     <ProjectReference Include="..\Flow\FlowNodes\FlowNodes.csproj" />
     <ProjectReference Include="..\Flow\FlowEditor\FlowEditor.csproj" />
     <ProjectReference Include="..\Script\ScriptEditor\ScriptEditor.csproj" />

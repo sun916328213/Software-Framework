@@ -100,5 +100,10 @@ namespace Device
         /// </summary>
         /// <returns></returns>
         public List<string> DeviceNameCollection() => Devices.Select(x=>x.Name).ToList();
+
+        /// <summary>
+        /// 设备数量
+        /// </summary>
+        public int Count => Devices.Count;
     }
 }

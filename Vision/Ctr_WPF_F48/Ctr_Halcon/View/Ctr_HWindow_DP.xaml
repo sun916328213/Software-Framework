@@ -51,10 +51,7 @@
         </Menu>
 
         <Border Margin="-2,0"   Style="{StaticResource Border_Style}">
-        <HalconDotNet:HSmartWindowControlWPF
-            x:Name="HWindow1"
-            HMouseDown="HWindow1_HMouseDown"
-            HMouseUp="HWindow1_HMouseUp" />
+            <local:HSmartWindowView x:Name="HSWindowView" />
         </Border>
     </DockPanel>
 </UserControl>

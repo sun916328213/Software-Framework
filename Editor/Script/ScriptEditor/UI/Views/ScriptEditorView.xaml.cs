@@ -712,10 +712,12 @@ public partial class ScriptEditorView : UserControl
             Debug.WriteLine($"[ScriptEditor] Service.Initialize: {sw.ElapsedMilliseconds}ms");
 
             sw.Restart();
-            // 替换 CompletionProvider 为自定义实现，修复预处理器指令（#Region 等）的文本替换 Bug
+            // 替换 CompletionProvider 为自定义实现：
+            // 1) 修复预处理器指令（#Region 等）的文本替换 Bug；
+            // 2) 仅在输入以 # 开头时才提示预处理器指令，避免输入 if 等字母时出现 #if
             if (scriptEditor!.CompletionProvider is RoslynCodeEditorCompletionProvider roslynProvider)
             {
-                scriptEditor.CompletionProvider = new FixedCodeEditorCompletionProvider(roslynProvider);
+                scriptEditor.CompletionProvider = CreateFixedCompletionProvider(roslynProvider);
             }
             else if (scriptEditor.CompletionProvider == null)
             {
@@ -723,7 +725,7 @@ public partial class ScriptEditorView : UserControl
                 scriptEditor.Loaded += (_, __) =>
                 {
                     if (scriptEditor.CompletionProvider is RoslynCodeEditorCompletionProvider provider)
-                        scriptEditor.CompletionProvider = new FixedCodeEditorCompletionProvider(provider);
+                        scriptEditor.CompletionProvider = CreateFixedCompletionProvider(provider);
                 };
             }
 
@@ -810,6 +812,15 @@ public partial class ScriptEditorView : UserControl
             _viewModel.StatusText = "初始化失败";
             return false;
         }
+    }
+
+    /// <summary>
+    /// 创建包装后的补全提供者。
+    /// textProvider 提供编辑器实时文本，用于判定光标是否处于 # 指令输入上下文。
+    /// </summary>
+    private FixedCodeEditorCompletionProvider CreateFixedCompletionProvider(RoslynCodeEditorCompletionProvider original)
+    {
+        return new FixedCodeEditorCompletionProvider(original, () => scriptEditor?.Document?.Text ?? string.Empty);
     }
 
     /// <summary>通知当前关联的 ScriptItem 关闭 FileLoading 窗口。</summary>

@@ -11,19 +11,42 @@ namespace ScriptEditor.Services;
 /// 原 RoslynCompletionData.Complete() 使用 CompletionChange.Span，
 /// 对 # 开头的预处理器指令计算错误（Span 不包含 #），导致在光标处插入而非替换已输入文本。
 /// 本类接管预处理器指令的文本替换。
+/// 仅在指令上下文（输入以 # 开头）时才按指令处理；普通补全一律走原始逻辑，
+/// 防止附近无关的 # 字符（十六进制颜色、格式化字符串等）导致误插 # 前缀。
 /// </summary>
 public class FixedCompletionData : ICompletionDataEx
 {
-    private readonly ICompletionDataEx _original;
+    /// <summary>C# 预处理器指令名集合（小写），用于指令上下文中的显示与判定。</summary>
+    private static readonly HashSet<string> DirectiveNames = new(StringComparer.Ordinal)
+    {
+        "if", "else", "elif", "endif", "define", "undef", "region", "endregion",
+        "error", "warning", "line", "nullable", "pragma", "r", "load",
+        "checksum", "file", "reset", "hidden", "default", "disable", "restore"
+    };
 
-    public FixedCompletionData(ICompletionDataEx original)
+    private readonly ICompletionDataEx _original;
+    private readonly bool _directiveContext;
+
+    public FixedCompletionData(ICompletionDataEx original, bool directiveContext = true)
     {
         _original = original;
+        _directiveContext = directiveContext;
     }
 
     public string Text => _original.Text;
 
-    public object Content => _original.Content;
+    public object Content
+    {
+        get
+        {
+            // 指令上下文中显示带 # 的名称，与实际插入结果保持一致
+            if (_directiveContext && TryGetDirectiveDisplayName(out string displayName))
+            {
+                return displayName;
+            }
+            return _original.Content;
+        }
+    }
 
     public object? Description => _original.Description;
 
@@ -49,23 +72,70 @@ public class FixedCompletionData : ICompletionDataEx
 
     /// <summary>
     /// 判断是否应该由我们处理预处理器指令补全。
-    /// 条件：Text 以 # 开头，或在 completionSegment 附近找到 # 字符。
+    /// 条件：处于指令上下文，且 Text 以 # 开头，
+    /// 或在 completionSegment 附近找到 # 且 # 到补全段之间是连续的指令名单词。
     /// </summary>
     private bool ShouldHandlePreprocessorDirective(TextArea textArea, ISegment completionSegment)
     {
+        // 非指令上下文（输入不以 # 开头）一律走原始补全逻辑
+        if (!_directiveContext)
+        {
+            return false;
+        }
+
         // 快速路径：Text 以 # 开头
         if (!string.IsNullOrEmpty(Text) && Text.StartsWith('#'))
+        {
             return true;
+        }
 
-        // 兼容性路径：Text 不以 # 开头（如 Roslyn 将 Region 作为 Text），
-        // 但在文档中 completionSegment 附近存在 # 字符
+        // 兼容性路径：Text 不带 #（如 Roslyn 将 Region 作为 Text），
+        // 但文档中光标前存在以 # 开头的连续指令名
         if (!string.IsNullOrEmpty(Text))
         {
             int hashPos = FindHashPosition(textArea.Document, completionSegment.Offset);
-            if (hashPos >= 0)
+            if (hashPos >= 0 && IsContiguousDirectiveWord(textArea.Document, hashPos, completionSegment.Offset + completionSegment.Length))
+            {
                 return true;
+            }
         }
 
+        return false;
+    }
+
+    /// <summary>
+    /// 校验 '#' 与补全段末尾之间全部是单词字符（字母/数字/下划线），
+    /// 防止把附近无关的 #（十六进制颜色、格式化字符串等）误判为指令补全。
+    /// </summary>
+    private static bool IsContiguousDirectiveWord(TextDocument document, int hashPos, int endPos)
+    {
+        int end = Math.Min(endPos, document.TextLength);
+        for (int i = hashPos + 1; i < end; i++)
+        {
+            char c = document.GetCharAt(i);
+            if (c != '_' && !char.IsLetterOrDigit(c))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// 判断当前项在指令上下文中是否应显示为 "#名称" 形式。
+    /// </summary>
+    private bool TryGetDirectiveDisplayName(out string displayName)
+    {
+        displayName = GetFirstLine(Text ?? string.Empty).Trim();
+        if (displayName.Length == 0 || displayName.StartsWith('#'))
+        {
+            return false;
+        }
+        if (DirectiveNames.Contains(displayName.ToLowerInvariant()))
+        {
+            displayName = "#" + displayName;
+            return true;
+        }
         return false;
     }
 

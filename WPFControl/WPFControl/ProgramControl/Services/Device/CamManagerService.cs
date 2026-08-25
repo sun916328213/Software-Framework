@@ -1,4 +1,5 @@
-﻿using DataManager.Log;
+﻿using Ctr_WPF_F48.Ctr_Halcon.View;
+using DataManager.Log;
 using Device.Camera;
 using Device.Camera.Gige;
 using Device.Camera.Gige.Definition;
@@ -13,7 +14,6 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Vision.Control;
 using WPFControl.Helper;
 using WPFControl.ProgramControl.Models;
 

@@ -78,8 +78,12 @@
     <None Include="Config\BagType.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Config\Flow\ShutdownFlow.taskproj" />
-    <None Include="Config\Flow\StartupFlow.taskproj" />
+    <None Include="Config\Flow\ShutdownFlow.taskproj">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\Flow\StartupFlow.taskproj">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Config\FOSBName.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -100,6 +104,14 @@
     </None>
     <None Include="Config\SecsJson\VID\SVID.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Config\Flow\AutoFlow.flow">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\Flow\InitializeFlow.flow">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 </Project>
