@@ -1,0 +1,60 @@
+﻿<UserControl
+    x:Class="Ctr_WPF_F48.Ctr_Halcon.View.Ctr_HWindow_DP"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:HalconDotNet="clr-namespace:HalconDotNet;assembly=HalconDotNet"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Ctr_WPF_F48.Ctr_Halcon.View"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    HorizontalAlignment="Stretch"
+    VerticalAlignment="Stretch"
+    d:DesignHeight="450"
+    d:DesignWidth="400"
+    mc:Ignorable="d">
+    <DockPanel>
+        <Menu
+            x:Name="menu"
+            Grid.Row="0"
+            materialDesign:MenuAssist.MenuItemsPresenterMargin="-10,10"
+            materialDesign:MenuAssist.TopLevelMenuItemHeight="30"
+            DockPanel.Dock="Top"
+            Visibility="{Binding IsShowMenu, RelativeSource={RelativeSource AncestorType=local:Ctr_HWindow_DP}}">
+            <MenuItem
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Header="文件">
+                <MenuItem
+                    Click="LoadImage"
+                    Header="打开"
+                    Icon="{materialDesign:PackIcon Kind=FolderFileOutline}" />
+                <MenuItem
+                    Click="SaveImage"
+                    Header="保存"
+                    Icon="{materialDesign:PackIcon Kind=ContentSave}" />
+            </MenuItem>
+            <MenuItem
+                x:Name="mi_Function"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Header="功能"
+                Visibility="{Binding IsShowFunctionMenu, RelativeSource={RelativeSource AncestorType=local:Ctr_HWindow_DP}}">
+                <MenuItem
+                    x:Name="mu_Control"
+                    Header=" ROI"
+                    Icon="{materialDesign:PackIcon Kind=EyePlusOutline}" />
+                <MenuItem
+                    x:Name="mu_Measure"
+                    Header="卡尺"
+                    Icon="{materialDesign:PackIcon Kind=Ruler}" />
+            </MenuItem>
+        </Menu>
+
+        <Border Margin="-2,0"   Style="{StaticResource Border_Style}">
+        <HalconDotNet:HSmartWindowControlWPF
+            x:Name="HWindow1"
+            HMouseDown="HWindow1_HMouseDown"
+            HMouseUp="HWindow1_HMouseUp" />
+        </Border>
+    </DockPanel>
+</UserControl>

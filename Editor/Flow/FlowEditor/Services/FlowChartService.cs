@@ -1,0 +1,582 @@
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Windows;
+using FlowEditor.Core;
+using FlowEditor.Interfaces;
+using FlowEditor.Models;
+using FlowEditor.Nodes;
+using FlowEditor.ViewModels;
+using Prism.Ioc;
+
+namespace FlowEditor.Services;
+
+/// <summary>
+/// 流程图服务。
+/// 声明并持有 FlowChartModel，提供节点/连线集合访问及核心业务方法。
+/// 依赖通过构造器注入（IoC），不直接创建依赖对象，便于测试与解耦。
+/// </summary>
+public class FlowChartService : IFlowChartService
+{
+    private static readonly JsonSerializerOptions SnapshotJsonOptions = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Converters = { new JsonStringEnumConverter() }
+    };
+
+    /// <summary>流程图运行时模型。ViewModel 和 View 直接绑定到此模型属性。</summary>
+    public FlowChartModel Model { get; } = new();
+
+    /// <summary>画布上所有节点。</summary>
+    public ObservableCollection<NodeViewModel> Nodes { get; } = new();
+
+    /// <summary>所有连线。</summary>
+    public ObservableCollection<ConnectionModel> Connections { get; } = new();
+
+    /// <summary>撤销/重做服务。</summary>
+    public IUndoRedoService UndoRedo { get; }
+
+    private readonly FlowChartExecutionEngine _engine;
+    private readonly IFlowChartPersistenceService _persistence;
+    private readonly IDialogService _dialogService;
+    private CancellationTokenSource? _executionCts;
+    private readonly List<NodeViewModel> _executionOrder = new();
+
+    // ── 日志缓冲（P0 性能优化）──
+    // OutputText 直接绑定到 UI，逐行字符串拼接会导致 O(n²) 拷贝且长循环运行时无限膨胀。
+    // 改为 StringBuilder 缓冲 + 超长截断 + 节流推送（默认 100ms），执行结束时 FlushLog 保证完整。
+
+    /// <summary>日志缓冲锁（AppendLog 可能从多线程调用）。</summary>
+    private readonly object _logGate = new();
+    private readonly StringBuilder _logBuilder = new();
+    private long _lastLogFlushTimestamp;
+
+    /// <summary>日志缓冲最大字符数，超过后丢弃较早的一半。</summary>
+    private const int MaxLogChars = 200_000;
+
+    /// <summary>输出面板最小刷新间隔（毫秒）。</summary>
+    private const int LogFlushIntervalMs = 100;
+
+    /// <summary>容器提供器（用于在 ToolBlock 内部编辑器创建新的 ViewModel 实例）。</summary>
+    public IContainerProvider? ContainerProvider { get; }
+
+    public FlowChartService(
+        IFlowChartPersistenceService persistence,
+        FlowChartExecutionEngine engine,
+        IDialogService dialogService,
+        IContainerProvider? containerProvider = null)
+    {
+        _persistence = persistence;
+        _engine = engine;
+        _dialogService = dialogService;
+        ContainerProvider = containerProvider;
+        UndoRedo = new UndoRedoService();
+    }
+
+    /// <summary>当前执行节点索引（用于单步调试）。</summary>
+    public int CurrentExecutionIndex { get; private set; }
+
+    // ── 执行流程 ──
+
+    /// <summary>执行流程图。</summary>
+    public async Task RunAsync(Action<string> logCallback, bool debugMode = false)
+    {
+        if (Model.IsRunning) return;
+
+        // 前置校验：所有勾选 IN 的节点必须存在 Next_IN 有效连线
+        var validationError = ValidateINConnections();
+        if (validationError != null)
+        {
+            logCallback($"[校验失败] {validationError}");
+            Model.StatusText = "校验失败：存在未连线的 IN 端口";
+            FlushLog();
+            return;
+        }
+
+        Model.IsRunning = true;
+        Model.IsDebugMode = debugMode;
+        _executionCts = new CancellationTokenSource();
+        _executionOrder.Clear();
+        CurrentExecutionIndex = 0;
+
+        try
+        {
+            // 重置所有节点状态
+            foreach (var n in Nodes)
+                n.ResetStatus();
+
+            ClearLog();
+            logCallback("=== 开始执行流程 ===");
+
+            using (ConsoleOutputRouter.EnterScope(msg => Application.Current?.Dispatcher.Invoke(() => logCallback(msg))))
+            {
+                await _engine.ExecuteAsync(
+                    Nodes.ToList(),
+                    Connections.ToList(),
+                    _executionCts.Token,
+                    msg => Application.Current?.Dispatcher.Invoke(() => logCallback(msg)),
+                    Model.IsDebugMode ? OnBeforeNodeExecute : null,
+                    _executionOrder);
+            }
+
+            logCallback("=== 执行完成 ===");
+            Model.StatusText = "执行完成";
+        }
+        catch (OperationCanceledException)
+        {
+            logCallback("=== 已取消执行 ===");
+            Model.StatusText = "已取消";
+        }
+        catch (Exception ex)
+        {
+            logCallback($"[错误] {ex.Message}");
+            Model.StatusText = "执行出错";
+        }
+        finally
+        {
+            FlushLog();
+            Model.IsRunning = false;
+            Model.IsDebugMode = false;
+            Model.IsPaused = false;
+            _executionCts?.Dispose();
+            _executionCts = null;
+        }
+    }
+
+    /// <summary>单步执行回调：在执行每个节点前暂停。</summary>
+    private async Task OnBeforeNodeExecute(NodeViewModel node)
+    {
+        _executionOrder.Add(node);
+        Model.IsPaused = true;
+        // 等待用户点击"继续"或"停止"
+        while (Model.IsPaused && Model.IsRunning)
+        {
+            await Task.Delay(100, _executionCts?.Token ?? CancellationToken.None);
+        }
+    }
+
+    /// <summary>单步继续（调试模式）。</summary>
+    public void StepContinue()
+    {
+        Model.IsPaused = false;
+    }
+
+    /// <summary>停止执行。</summary>
+    public void Stop()
+    {
+        if (!Model.IsRunning) return;
+        _executionCts?.Cancel();
+        Model.IsRunning = false;
+        Model.IsPaused = false;
+        Model.IsLoopRunning = false;
+        Model.StatusText = "正在停止...";
+        FlushLog();
+    }
+
+    /// <summary>循环执行流程图（无限循环，直到手动停止）。</summary>
+    public async Task RunLoopAsync(Action<string> logCallback)
+    {
+        if (Model.IsRunning || Model.IsLoopRunning) return;
+
+        // 前置校验
+        var validationError = ValidateINConnections();
+        if (validationError != null)
+        {
+            logCallback($"[校验失败] {validationError}");
+            Model.StatusText = "校验失败：存在未连线的 IN 端口";
+            FlushLog();
+            return;
+        }
+
+        Model.IsLoopRunning = true;
+        Model.IsRunning = true;
+        Model.CurrentLoopIndex = 0;
+        _executionCts = new CancellationTokenSource();
+
+        try
+        {
+            ClearLog();
+            logCallback("=== 开始循环执行 ===");
+            logCallback($"循环模式：间隔 {Model.LoopInterval}ms");
+
+            var iteration = 0;
+            using (ConsoleOutputRouter.EnterScope(msg => Application.Current?.Dispatcher.Invoke(() => logCallback(msg))))
+            {
+                while (true)
+                {
+                    _executionCts.Token.ThrowIfCancellationRequested();
+
+                    iteration++;
+                    Model.CurrentLoopIndex = iteration;
+                    logCallback($"--- 第 {iteration} 次循环开始 ---");
+                    Model.StatusText = $"循环执行中... 第 {iteration} 次";
+
+                    // 重置所有节点状态
+                    foreach (var n in Nodes)
+                        n.ResetStatus();
+
+                    _executionOrder.Clear();
+                    CurrentExecutionIndex = 0;
+
+                    await _engine.ExecuteAsync(
+                        Nodes.ToList(),
+                        Connections.ToList(),
+                        _executionCts.Token,
+                        msg => Application.Current?.Dispatcher.Invoke(() => logCallback(msg)),
+                        Model.IsDebugMode ? OnBeforeNodeExecute : null,
+                        _executionOrder);
+
+                    logCallback($"--- 第 {iteration} 次循环完成 ---");
+
+                    // 等待间隔时间
+                    var interval = Model.LoopInterval;
+                    if (interval > 0)
+                    {
+                        logCallback($"[等待 {interval}ms 后开始下一次循环...]");
+                        try
+                        {
+                            await Task.Delay(interval, _executionCts.Token);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            logCallback("=== 已停止循环执行 ===");
+            Model.StatusText = "循环执行已停止";
+        }
+        catch (Exception ex)
+        {
+            logCallback($"[错误] {ex.Message}");
+            Model.StatusText = "循环执行出错";
+        }
+        finally
+        {
+            FlushLog();
+            Model.IsRunning = false;
+            Model.IsLoopRunning = false;
+            Model.IsDebugMode = false;
+            Model.IsPaused = false;
+            _executionCts?.Dispose();
+            _executionCts = null;
+        }
+    }
+
+    /// <summary>停止循环执行。</summary>
+    public void StopLoop()
+    {
+        if (!Model.IsLoopRunning) return;
+        _executionCts?.Cancel();
+        Model.IsLoopRunning = false;
+        Model.IsRunning = false;
+        Model.IsPaused = false;
+        Model.StatusText = "正在停止循环执行...";
+        FlushLog();
+    }
+
+    // ── IN 连线校验 ──
+
+    /// <summary>
+    /// 校验所有勾选 IN 的节点是否存在有效的 Next_IN 连线。
+    /// 返回 null 表示校验通过，否则返回错误消息。
+    /// </summary>
+    private string? ValidateINConnections()
+    {
+        foreach (var nodeVm in Nodes)
+        {
+            if (!nodeVm.Model.IsInEnabled) continue;
+            var inPort = nodeVm.Model.InputPorts.FirstOrDefault(p => p.Name == "Next_IN");
+            if (inPort == null) continue;
+
+            var hasConnection = Connections.Any(c => c.TargetPortId == inPort.Id);
+            if (!hasConnection)
+                return $"节点 [{nodeVm.Name}] 的 IN 端口未连接，请先连线";
+        }
+        return null;
+    }
+
+    // ── 持久化 ──
+
+    /// <summary>当前文件路径。</summary>
+    public string? CurrentFilePath
+    {
+        get => Model.CurrentFilePath;
+        set => Model.CurrentFilePath = value;
+    }
+
+    /// <inheritdoc />
+    public bool IsBatchOperation { get; set; }
+
+    /// <summary>保存流程图到文件。</summary>
+    public bool Save(string? filePath = null)
+    {
+        var path = filePath ?? CurrentFilePath;
+        if (string.IsNullOrEmpty(path))
+            return false;
+
+        try
+        {
+            var doc = _persistence.BuildDocument(Model.TabTitle, Nodes, Connections, Model);
+            _persistence.Save(path, doc);
+            CurrentFilePath = path;
+            Model.IsModified = false;
+            Model.StatusText = $"已保存：{path}";
+
+            // 保存节点各自的外部数据（如视觉工具的参数文件）
+            foreach (var vm in Nodes)
+                vm.Model.OnFlowSaved();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _dialogService.ShowError($"保存失败：{ex.Message}");
+            Model.StatusText = "保存失败";
+            return false;
+        }
+    }
+
+    /// <summary>从文件加载流程图。</summary>
+    public bool Load(string filePath)
+    {
+        try
+        {
+            var doc = _persistence.Load(filePath);
+
+            // 清空当前画布
+        Connections.Clear();
+        ClearNodes();
+            UndoRedo.Clear();
+
+            // 重建节点
+            foreach (var nodeDoc in doc.Nodes)
+            {
+                var node = _persistence.RebuildNode(nodeDoc);
+                AddNode(node);
+            }
+
+            // 还原连线
+            foreach (var connDoc in doc.Connections)
+            {
+                Connections.Add(new ConnectionModel
+                {
+                    Id = connDoc.Id,
+                    SourceNodeId = connDoc.SourceNodeId,
+                    SourcePortId = connDoc.SourcePortId,
+                    TargetNodeId = connDoc.TargetNodeId,
+                    TargetPortId = connDoc.TargetPortId
+                });
+            }
+
+            // 还原画布配置
+            Model.ZoomLevel = doc.ZoomLevel;
+            CurrentFilePath = filePath;
+            Model.IsModified = false;
+            Model.TabTitle = doc.Name;
+            Model.StatusText = $"已加载：{filePath}";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _dialogService.ShowError($"加载失败：{ex.Message}");
+            Model.StatusText = "加载失败";
+            return false;
+        }
+    }
+
+    // ── 撤销/重做快照 ──
+
+    /// <summary>捕获当前画布状态快照（JSON 文档），用于撤销/重做。</summary>
+    public string CaptureSnapshot()
+    {
+        var doc = _persistence.BuildDocument(Model.TabTitle, Nodes, Connections, Model);
+        return JsonSerializer.Serialize(doc, SnapshotJsonOptions);
+    }
+
+    /// <summary>应用画布状态快照（JSON 文档），用于撤销/重做还原。</summary>
+    public void ApplySnapshot(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return;
+        var doc = JsonSerializer.Deserialize<FlowChartDocumentModel>(json, SnapshotJsonOptions);
+        if (doc == null) return;
+
+        Connections.Clear();
+        ClearNodes();
+
+        foreach (var nodeDoc in doc.Nodes)
+        {
+            var node = _persistence.RebuildNode(nodeDoc);
+            AddNode(node);
+        }
+
+        foreach (var connDoc in doc.Connections)
+        {
+            Connections.Add(new ConnectionModel
+            {
+                Id = connDoc.Id,
+                SourceNodeId = connDoc.SourceNodeId,
+                SourcePortId = connDoc.SourcePortId,
+                TargetNodeId = connDoc.TargetNodeId,
+                TargetPortId = connDoc.TargetPortId
+            });
+        }
+
+        Model.ZoomLevel = doc.ZoomLevel;
+        Model.TabTitle = doc.Name;
+        Model.IsModified = true;
+    }
+
+    // ── 缩放 ──
+
+    public void ZoomIn()
+    {
+        Model.ZoomLevel = Math.Round(Model.ZoomLevel + FlowChartModel.ZoomStep, 2);
+    }
+
+    public void ZoomOut()
+    {
+        Model.ZoomLevel = Math.Round(Model.ZoomLevel - FlowChartModel.ZoomStep, 2);
+    }
+
+    public void ZoomReset()
+    {
+        Model.ZoomLevel = 1.0;
+    }
+
+    public void ZoomToFit()
+    {
+        if (Nodes.Count == 0)
+        {
+            ZoomReset();
+            return;
+        }
+
+        var minX = Nodes.Min(n => n.X);
+        var minY = Nodes.Min(n => n.Y);
+        var maxX = Nodes.Max(n => n.X + FlowChartModel.NodeWidth);
+        var maxY = Nodes.Max(n => n.Y + FlowChartModel.NodeHeight);
+
+        var contentWidth = maxX - minX + 200;
+        var contentHeight = maxY - minY + 200;
+
+        ZoomToFitRequested?.Invoke(this, (contentWidth, contentHeight, minX - 100, minY - 100));
+    }
+
+    public event EventHandler<(double contentWidth, double contentHeight, double offsetX, double offsetY)>? ZoomToFitRequested;
+
+    // ── 辅助 ──
+
+    /// <summary>追加日志到输出面板（写入缓冲，按 LogFlushIntervalMs 节流刷新 UI）。</summary>
+    public void AppendLog(string message)
+    {
+        bool shouldFlush;
+        lock (_logGate)
+        {
+            _logBuilder.AppendLine(message);
+            if (_logBuilder.Length > MaxLogChars)
+                _logBuilder.Remove(0, _logBuilder.Length / 2);
+
+            shouldFlush = Stopwatch.GetElapsedTime(_lastLogFlushTimestamp).TotalMilliseconds >= LogFlushIntervalMs;
+            if (shouldFlush)
+                _lastLogFlushTimestamp = Stopwatch.GetTimestamp();
+        }
+        if (shouldFlush)
+            FlushLog();
+    }
+
+    /// <summary>立即将日志缓冲冲刷到输出面板（节流期间的最后一批日志在执行结束时调用）。</summary>
+    public void FlushLog()
+    {
+        string text;
+        lock (_logGate)
+        {
+            text = _logBuilder.ToString();
+            _lastLogFlushTimestamp = Stopwatch.GetTimestamp();
+        }
+        Model.OutputText = text;
+    }
+
+    /// <summary>清空日志缓冲与输出面板。</summary>
+    private void ClearLog()
+    {
+        lock (_logGate)
+            _logBuilder.Clear();
+        Model.OutputText = string.Empty;
+    }
+
+    /// <summary>查找节点。</summary>
+    public NodeViewModel? FindNode(string nodeId)
+        => Nodes.FirstOrDefault(n => n.Id == nodeId);
+
+    /// <summary>清空画布。</summary>
+    public void ClearAll()
+    {
+        Connections.Clear();
+        ClearNodes();
+        UndoRedo.Clear();
+        ClearLog();
+        Model.StatusText = "已清空";
+        Model.CurrentFilePath = null;
+        Model.IsModified = false;
+    }
+
+    // ── ToolBlock 辅助方法 ──
+
+    /// <summary>从节点文档重建节点模型（用于 ToolBlock 内部节点还原）。</summary>
+    public NodeModel RebuildNodeFromDocument(NodeDocumentModel doc)
+        => _persistence.RebuildNode(doc);
+
+    /// <summary>从节点模型构建节点文档（用于 ToolBlock 内部节点序列化）。</summary>
+    public NodeDocumentModel BuildNodeDocument(NodeModel node)
+        => _persistence.BuildNodeDocument(node);
+
+    // ── 节点管理 ──
+
+    /// <summary>添加节点并设置其 Service 属性。</summary>
+    public void AddNode(NodeViewModel nodeVm)
+    {
+        nodeVm.Model.Service = this;
+        Nodes.Add(nodeVm);
+        nodeVm.Model.OnAttached(this);
+    }
+
+    /// <summary>添加节点模型并返回 NodeViewModel。</summary>
+    public NodeViewModel AddNode(NodeModel model)
+    {
+        model.Service = this;
+        var vm = new NodeViewModel(model);
+        Nodes.Add(vm);
+        model.OnAttached(this);
+        return vm;
+    }
+
+    /// <summary>从画布移除节点，并通知节点生命周期回调。</summary>
+    public void RemoveNode(NodeViewModel nodeVm)
+    {
+        nodeVm.Model.OnDetached();
+        Nodes.Remove(nodeVm);
+    }
+
+    /// <summary>清空画布上的全部节点，并逐个触发卸载回调。作为批量操作期间禁止移除共享资源（如视觉工具）。</summary>
+    public void ClearNodes()
+    {
+        IsBatchOperation = true;
+        try
+        {
+            foreach (var vm in Nodes.ToList())
+                RemoveNode(vm);
+        }
+        finally
+        {
+            IsBatchOperation = false;
+        }
+    }
+}

@@ -1,0 +1,104 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon>Resources\图标.ico</ApplicationIcon>
+    <LangVersion>13.0</LangVersion>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Resources\图标.ico" />
+    <Resource Include="Resources\secote.jpeg" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
+    <ProjectReference Include="..\..\Device\Device\Device.csproj" />
+    <ProjectReference Include="..\..\Editor\Flow\FlowEditor\FlowEditor.csproj" />
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+    <ProjectReference Include="..\..\Secs\Secs\Secs.csproj" />
+    <ProjectReference Include="..\..\Vision\Ctr_WPF_F48\Ctr_WPF_F48.csproj" />
+    <ProjectReference Include="..\..\Vision\DPLibrary_Base_F48\DPLibrary_Base_F48.csproj" />
+    <ProjectReference Include="..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj" />
+    <ProjectReference Include="..\..\Vision\Vision\Vision.csproj" />
+    <ProjectReference Include="..\..\Editor\Flow\FlowNodes\FlowNodes.csproj" />
+    <ProjectReference Include="..\..\WPFControl\WPFControl\WPFControl.csproj" />
+    <ProjectReference Include="..\..\Editor\Script\ScriptEditor\ScriptEditor.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.2" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="HarfBuzzSharp" Version="8.3.1.1" />
+    <PackageReference Include="Mapster" Version="7.3.0" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.1" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.11.0.20250507" />
+    <PackageReference Include="PooledAwait" Version="1.0.49" />
+    <PackageReference Include="Prism.Core" Version="8.1.97" />
+    <PackageReference Include="Prism.DryIoc" Version="8.1.97" />
+    <PackageReference Include="Prism.Wpf" Version="8.1.97" />
+    <PackageReference Include="Serilog" Version="4.3.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="halcondotnet">
+      <HintPath>..\..\Dll\Vision\Halcon\halcondotnet.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.ActProgType64Lib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActProgType64Lib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.ActProgTypeLib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActProgTypeLib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.ActSupportMsg64Lib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActSupportMsg64Lib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.ActSupportMsgLib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActSupportMsgLib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.ActUtlType64Lib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActUtlType64Lib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.ActUtlTypeLib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActUtlTypeLib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Config\Alarm.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\BagType.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\FOSBName.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\PLCIO.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\SecsJson\CEID\CEID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\SecsJson\ReportID\ReportID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\SecsJson\VID\DVID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\SecsJson\VID\ECID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\SecsJson\VID\SVID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

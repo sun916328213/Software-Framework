@@ -1,0 +1,15 @@
+ID,Name,VID_Collection
+1,Clock,"101"
+2,FOSBInfo,"5,6"
+3,RecipeInfo,"7,8"
+
+5,LabelInfo,"4,10,11"
+6,VisionResult,"23"
+7,HeatSeal Info,"22,15,16,17,18,19,20,21"
+8,DesiccantInfo,"24,25"
+9,LabelPosInfo,"4,10"
+11,DeviceMode,"102"
+12,DeviceStatus,"103"
+13,DeviceInfo,"104,105"
+14,LoadInfo,"12"
+15,UnLoadInfo,"13"

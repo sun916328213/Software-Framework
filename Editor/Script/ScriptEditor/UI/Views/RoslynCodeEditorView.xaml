@@ -1,0 +1,52 @@
+<!--
+  RoslynCodeEditorView.xaml - RoslynPad 代码编辑器包装控件
+  职责：封装 RoslynPad.RoslynCodeEditor，配置默认样式和智能提示
+-->
+<editor:RoslynCodeEditor
+    x:Class="ScriptEditor.Views.RoslynCodeEditorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:editor="clr-namespace:RoslynPad.Editor;assembly=RoslynPad.Editor.Windows"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <!-- 智能提示 ToolTip 样式 -->
+    <editor:RoslynCodeEditor.Resources>
+        <Style TargetType="ToolTip">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Foreground" Value="#333" />
+            <Setter Property="BorderBrush" Value="#AAA" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Placement" Value="Mouse" />
+            <Setter Property="ToolTipService.InitialShowDelay" Value="50" />
+            <Setter Property="ToolTipService.BetweenShowDelay" Value="20" />
+            <Setter Property="ToolTipService.ShowDuration" Value="5000" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToolTip">
+                        <Border
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </editor:RoslynCodeEditor.Resources>
+
+    <!-- 默认字体配置 -->
+    <editor:RoslynCodeEditor.Style>
+        <Style TargetType="editor:RoslynCodeEditor">
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+    </editor:RoslynCodeEditor.Style>
+
+</editor:RoslynCodeEditor>

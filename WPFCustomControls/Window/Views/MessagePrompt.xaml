@@ -1,0 +1,89 @@
+﻿<Window
+    x:Class="WPFCustomControls.Window.Views.MessagePrompt"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Name="RootWindow"
+    Width="350"
+    Height="230"
+    Background="Transparent"
+    Style="{DynamicResource DialogWindowStyle}"
+    Topmost="True"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <!--<ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/WPFCustomControls;component/Resources/Resources.xaml" />
+            </ResourceDictionary.MergedDictionaries>-->
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Border
+        Background="{StaticResource Color_White}"
+        BorderBrush="{StaticResource MaterialDesign.Brush.Primary}"
+        BorderThickness="2"
+        CornerRadius="20">
+
+        <materialDesign:Card
+            Padding="8,0,8,0"
+            Background="Transparent"
+            Foreground="{DynamicResource MaterialDesign.Brush.Primary.Dark.Foreground}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30" />
+                    <RowDefinition Height="130" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="50" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="1" Orientation="Vertical">
+                <TextBlock
+                    Margin="16,4,16,4"
+                    Foreground="{Binding ElementName=RootWindow, Path=TitleForeground}"
+                    Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                    Text="{Binding ElementName=RootWindow, Path=Title}" />
+                <TextBlock
+                    Margin="16,16,16,4"
+                    Foreground="{Binding ElementName=RootWindow, Path=MessageForeground}"
+                    Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                    Text="{Binding ElementName=RootWindow, Path=Message}"
+                    TextWrapping="WrapWithOverflow" />
+                </StackPanel>
+
+                <Separator
+                    Grid.Row="2"
+                    Margin="0,0,0,0"
+                    Style="{StaticResource MaterialDesignSeparator}" />
+
+                <Grid Grid.Row="3">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button
+                        Grid.Column="1"
+                        Width="100"
+                        HorizontalAlignment="Center"
+                        materialDesign:ButtonAssist.CornerRadius="6"
+                        Click="Button_Click"
+                        Content="OK"
+                        Style="{StaticResource MaterialDesignOutlinedButton}" />
+                    <Button
+                        Grid.Column="0"
+                        Width="100"
+                        HorizontalAlignment="Center"
+                        materialDesign:ButtonAssist.CornerRadius="6"
+                        Click="Button_Click_1"
+                        Content="Cancel"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Visibility="{Binding ElementName=RootWindow, Path=Visibility_Cancel}" />
+                </Grid>
+            </Grid>
+        </materialDesign:Card>
+    </Border>
+</Window>

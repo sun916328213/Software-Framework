@@ -1,0 +1,52 @@
+# 编译产物
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+artifacts/
+
+# IDE 缓存
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Rider
+*.DotSettings.user
+
+# WPF 临时工程
+*_wpftmp.csproj
+*_wpftmp.xaml
+
+# 测试结果
+[Tt]est[Rr]esult*/
+[TestResults]
+*.trx
+
+# NuGet
+*.nupkg
+packages/
+*.nuget.props
+*.nuget.targets
+
+# 备份文件
+*.bak
+
+# 日志与运行时输出
+*.log
+Logs/
+
+
+_archive_patches/
+Dll/
+.git
+.qoder/
+.trae/
+.workbuddy/
+.zcode/
+.config/
+Dll/
+*.dll

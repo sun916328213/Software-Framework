@@ -1,0 +1,3 @@
+﻿Secs4Net.dll在程序内部实现S9F1和S9F7功能
+1.S9F1 Host和Device的DeviceID不一致即可
+2.S9F7 反馈回去的数据是null即可

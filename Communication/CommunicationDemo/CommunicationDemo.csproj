@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <LangVersion>13.0</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+    <ProjectReference Include="..\Communication1\Communication1.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentModbus" Version="5.3.2" />
+    <PackageReference Include="HPSocket.Net" Version="6.0.3.1" />
+    <PackageReference Include="Prism.DryIoc" Version="8.1.97" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Interop.ActProgTypeLib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActProgTypeLib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.ActSupportMsg64Lib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActSupportMsg64Lib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.ActUtlType64Lib">
+      <HintPath>..\..\Dll\Mitsubishi\Interop.ActUtlType64Lib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+  </ItemGroup>
+</Project>

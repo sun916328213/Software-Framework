@@ -1,0 +1,193 @@
+﻿<Window
+    x:Class="H_Test.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Ctr="clr-namespace:Ctr_WPF_F48.Ctr_Halcon.View;assembly=Ctr_WPF_F48"
+    xmlns:HalconDotNet="clr-namespace:HalconDotNet;assembly=HalconDotNet"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
+    xmlns:local="clr-namespace:H_Test"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="MainWindow"
+    Width="1083"
+    Height="1012"
+    mc:Ignorable="d">
+    <Window.DataContext>
+        <local:ViewModelT />
+    </Window.DataContext>
+    <Grid Margin="0">
+        <TabControl
+            x:Name="tabControl"
+            Margin="0"
+            TabStripPlacement="Right">
+            <TabItem Header="TabItem">
+                <Grid Margin="0" Background="#FFE5E5E5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="771*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Ctr:Ctr_HWindow_DP
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        DispMessageDatas="{Binding ListMessages}"
+                        DispRegionDatas="{Binding ListRegion}"
+                        DispXLDDatas="{Binding ListXLD}"
+                        ImageSource="{Binding Himage}" />
+                    <Button
+                        x:Name="button"
+                        Margin="10,10,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Command="{Binding AddImageCommand}"
+                        Content="Button" />
+                    <Button
+                        x:Name="button复制__C_"
+                        Margin="96,10,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Command="{Binding AddMessageCommand}"
+                        Content="Button" />
+                    <Button
+                        x:Name="button复制__C_复制__C_"
+                        Margin="169,10,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Command="{Binding RemoveMessageCommand}"
+                        Content="Button" />
+                    <Button
+                        x:Name="button复制__C_复制__C_复制__C_"
+                        Margin="661,8,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Command="{Binding AddMinCommand}"
+                        Content="Button" />
+                    <Button
+                        x:Name="button复制__C_复制__C_复制__C_复制__C_"
+                        Margin="251,10,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Command="{Binding ClearMessageCommand}"
+                        Content="Button" />
+                    <Button
+                        x:Name="button复制__C_复制__C_复制__C_复制__C_1"
+                        Margin="661,44,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Command="{Binding ReadCodeCommand}"
+                        Content="Button" />
+                    <Button
+                        x:Name="button复制__C_复制__C_复制__C_复制__C_2"
+                        Margin="661,81,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Command="{Binding MoveRCommand}"
+                        Content="Button" />
+                    <Button
+                        x:Name="button复制__C_复制__C_复制__C_复制__C_2复制__C_"
+                        Margin="661,119,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Command="{Binding IsRoiCommand}"
+                        Content="ROI生成" />
+                    <Ctr:Ctr_HVisionTool_DP
+                        Title="wwwww"
+                        Width="764"
+                        Height="516"
+                        Margin="10,199,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        HTool="{Binding BarcodeReader}"
+                        RenderTransformOrigin="0.437,-0.132" />
+                    <Button
+                        x:Name="button复制__C_复制__C_复制__C_复制__C_2复制__C_复制__C_"
+                        Margin="661,156,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Command="{Binding SaveCommand}"
+                        Content="保存数据" />
+
+                    <ListView
+                        x:Name="listView"
+                        Grid.Column="1"
+                        d:ItemsSource="{d:SampleData ItemCount=5}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn />
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+
+                </Grid>
+            </TabItem>
+            <TabItem Header="自动识别">
+                <Ctr:Ctr_HVisionTool_DP
+                    Width="764"
+                    Height="516"
+                    HTool="{Binding BarcodeReader2}" />
+            </TabItem>
+            <TabItem Header="2D">
+                <Ctr:Ctr_HVisionTool_DP
+                    Width="764"
+                    Height="516"
+                    HTool="{Binding BarcodeReader3}" />
+            </TabItem>
+            <TabItem Header="模板匹配—基于形状">
+                <Ctr:Ctr_HVisionTool_DP
+                    Width="764"
+                    Height="516"
+                    HTool="{Binding template}" />
+
+            </TabItem>
+            <TabItem Header="标定">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Ctr:Ctr_ToolOnlyData_DP
+                        Height="600"
+                        Margin="10"
+                        Tool="{Binding nPoints}" />
+                    <Ctr:Ctr_ToolOnlyData_DP
+                        Grid.Column="1"
+                        Height="600"
+                        Margin="10"
+                        Tool="{Binding tp}" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="找线">
+                <Ctr:Ctr_HVisionTool_DP
+                    Width="764"
+                    Height="516"
+                    HTool="{Binding findLineCanny}" />
+            </TabItem>
+            <TabItem Header="模板匹配—基于形状2">
+                <Ctr:Ctr_HVisionTool_DP
+                    Width="764"
+                    Height="516"
+                    HTool="{Binding template2}" />
+            </TabItem>
+            <TabItem Header="AI">
+                <Ctr:Ctr_HVisionTool_DP
+                    Width="764"
+                    Height="516"
+                    HTool="{Binding aITool}" />
+            </TabItem>
+            <TabItem Header="Blob">
+                <Ctr:Ctr_HVisionTool_DP
+                    Width="764"
+                    Height="516"
+                    HTool="{Binding hTool_Blob}" />
+            </TabItem>
+        </TabControl>
+        <Button
+            x:Name="button1"
+            Width="57"
+            Margin="44,914,906,23"
+            Command="{Binding testCommand}"
+            Content="test"
+            RenderTransformOrigin="0.614,0.836" />
+    </Grid>
+</Window>

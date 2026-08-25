@@ -1,0 +1,19 @@
+﻿using Device.Light;
+using Device.Light.Definition;
+using Device.RFID;
+using Device.RFID.Definition;
+using Device.Scan.Definition;
+using WPFControl.CustomControl.Models;
+
+namespace WPFControl.ProgramControl.Models
+{
+    public class ScanManagerModel : ManagerModel<ScanParam >
+    {
+        public ScanManagerModel()
+        {
+            Name = "Scan";
+            FilePath = "Config//";
+            FileName = "ScanParam.json";
+        }
+    }
+}

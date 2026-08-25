@@ -1,0 +1,199 @@
+﻿<UserControl
+    x:Class="WPFCustomControls.PropertyGrid.Views.PropertyGridHost"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="clr-namespace:WPFCustomControls.ValueConvert"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!--  渲染模板（分组/属性编辑器/端口管理）由独立的资源字典提供，本 View 只负责绑定  -->
+                <ResourceDictionary Source="BuiltinPropertyGridResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <SolidColorBrush x:Key="PG_HeaderBg" Color="#F8F9FA" />
+            <SolidColorBrush x:Key="PG_HeaderBorder" Color="#E2E6EA" />
+            <SolidColorBrush x:Key="PG_HeaderText" Color="#2D3436" />
+            <SolidColorBrush x:Key="PG_ButtonBg" Color="#4A90D9" />
+            <SolidColorBrush x:Key="PG_ButtonText" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="PG_ButtonHoverBg" Color="#357ABD" />
+
+            <BooleanToVisibilityConverter x:Key="PG_BoolToVis" />
+            <conv:BoolInverseToVisibilityConverter x:Key="PG_InverseBoolToVis" />
+            <conv:StringNotEmptyToVisibilityConverter x:Key="PG_StringNotEmptyToVis" />
+
+            <Style x:Key="PG_HeaderTitle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Foreground" Value="{StaticResource PG_HeaderText}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="PG_PlaceholderText" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="Foreground" Value="{StaticResource PG_HeaderText}" />
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style
+                x:Key="PG_SearchBox"
+                BasedOn="{StaticResource MaterialDesignFloatingHintTextBox}"
+                TargetType="TextBox">
+                <Setter Property="Height" Value="24" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Padding" Value="6,1" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="PG_ClearButton" TargetType="Button">
+                <Setter Property="Width" Value="20" />
+                <Setter Property="Height" Value="20" />
+                <Setter Property="Margin" Value="4,0,0,0" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="ToolTip" Value="清除搜索" />
+            </Style>
+
+            <Style x:Key="PG_ActionButton" TargetType="Button">
+                <Setter Property="Height" Value="30" />
+                <Setter Property="Padding" Value="12,0" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Foreground" Value="{StaticResource PG_ButtonText}" />
+                <Setter Property="Background" Value="{StaticResource PG_ButtonBg}" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="Margin" Value="0,2" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border
+                                x:Name="border"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5">
+                                <ContentPresenter
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    RecognizesAccessKey="True"
+                                    TextElement.Foreground="{TemplateBinding Foreground}" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource PG_ButtonHoverBg}" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background" Value="#2D6BA0" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border
+            Grid.Row="0"
+            Padding="10,6"
+            Background="{StaticResource PG_HeaderBg}"
+            BorderBrush="{StaticResource PG_HeaderBorder}"
+            BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource PG_HeaderTitle}"
+                    Text="属性面板" />
+
+                <StackPanel
+                    Grid.Column="1"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Visibility="{Binding HasSelection, Converter={StaticResource PG_BoolToVis}}">
+                    <Grid>
+                        <TextBox
+                            Width="140"
+                            Style="{StaticResource PG_SearchBox}"
+                            Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                            ToolTip="按显示名或属性名过滤属性" />
+                        <TextBlock
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{StaticResource PG_HeaderText}"
+                            IsHitTestVisible="False"
+                            Opacity="0.45"
+                            Text="搜索属性..."
+                            Visibility="{Binding HasSearchText, Converter={StaticResource PG_InverseBoolToVis}}" />
+                    </Grid>
+                    <Button
+                        Command="{Binding ClearSearchCommand}"
+                        Style="{StaticResource PG_ClearButton}"
+                        Visibility="{Binding HasSearchText, Converter={StaticResource PG_BoolToVis}}">
+                        <materialDesign:PackIcon
+                            Width="12"
+                            Height="12"
+                            Kind="CloseCircle" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!--  有选中节点时显示属性分组 + 自定义端口管理  -->
+        <ScrollViewer
+            Grid.Row="1"
+            VerticalScrollBarVisibility="Auto"
+            Visibility="{Binding HasSelection, Converter={StaticResource PG_BoolToVis}}">
+            <StackPanel>
+                <ItemsControl
+                    ItemTemplate="{StaticResource PG_GroupTemplate}"
+                    ItemsSource="{Binding Groups}"
+                    SnapsToDevicePixels="True" />
+                <ContentControl Content="{Binding PortManagement}" ContentTemplate="{StaticResource PG_PortManagementTemplate}" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!--  无选中节点时显示提示文字  -->
+        <TextBlock
+            Grid.Row="1"
+            Style="{StaticResource PG_PlaceholderText}"
+            Text="未选中任何节点"
+            Visibility="{Binding HasSelection, Converter={StaticResource PG_InverseBoolToVis}}" />
+
+        <ItemsControl
+            Grid.Row="2"
+            Margin="20"
+            ItemsSource="{Binding ExtraActions}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button
+                        Command="{Binding Command}"
+                        Content="{Binding DisplayName}"
+                        Style="{StaticResource PG_ActionButton}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</UserControl>

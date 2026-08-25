@@ -1,0 +1,40 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET
+
+on:
+  push:
+    branches: [ "base" ]
+  pull_request:
+    branches: [ "base" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal --collect "Code Coverage"
+    - name: Install dotnet-coverage
+      run: dotnet tool install -g dotnet-coverage
+    - name: Convert .coverage report to cobertura
+      run: dotnet-coverage merge $GITHUB_WORKSPACE/test/**/TestResults/**/*.coverage -f cobertura -o $GITHUB_WORKSPACE/report.cobertura.xml
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    - name: Pack
+      run: dotnet pack -c Release 
+    - name: Push
+      run: dotnet nuget push "**/*.nupkg" --skip-duplicate -k ${{ secrets.NUGET }} -s https://api.nuget.org/v3/index.json

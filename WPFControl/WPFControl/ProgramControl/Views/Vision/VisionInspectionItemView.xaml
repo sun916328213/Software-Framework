@@ -1,0 +1,144 @@
+﻿<UserControl
+    x:Class="WPFControl.ProgramControl.Views.VisionInspectionItemView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:WPFControl.ValueConvert"
+    xmlns:cust="clr-namespace:WPFControl.CustomControl.Views"
+    xmlns:custm="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:WPFControl.ProgramControl.Views"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="clr-namespace:Device.Camera.Gige.Definition;assembly=Device"
+    xmlns:prism="http://prismlibrary.com/"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:viewmodels="clr-namespace:WPFControl.ProgramControl.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:VisionInspectionItemViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <!--<ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/WPFControl;component/Resources/Resources.xaml" />
+            </ResourceDictionary.MergedDictionaries>-->
+
+            <converters:IsReadToIsEnableConverter x:Key="IsReadToIsEnableConverter" />
+
+            <DiscreteObjectKeyFrame x:Key="DataContextProxy" Value="{Binding}" />
+
+            <ObjectDataProvider
+                x:Key="TriggerModeEnum"
+                MethodName="GetValues"
+                ObjectType="{x:Type sys:Enum}">
+                <ObjectDataProvider.MethodParameters>
+                    <x:Type TypeName="model:ETriggerMode" />
+                </ObjectDataProvider.MethodParameters>
+            </ObjectDataProvider>
+
+            <Style BasedOn="{StaticResource MaterialDesignDataGridCell}" TargetType="DataGridCell">
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style BasedOn="{StaticResource MaterialDesignRaisedButton}" TargetType="Button">
+                <Setter Property="Margin" Value="8" />
+            </Style>
+
+            <Style TargetType="DataGridColumnHeader">
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+
+        <cust:DeviceManagerView
+            x:Name="deviceManagerView"
+            DeviceName="{Binding Datas.Name}"
+            FileName="{Binding Datas.FileName}"
+            FilePath="{Binding Datas.FilePath}"
+            IsReadOnly="True"
+            ItemsSource="{Binding Datas.DataCollection}"
+            SelectItem="{Binding Datas.CurVisionInspectionItem, Mode=TwoWay}">
+
+            <cust:DeviceManagerView.DataGridColumns>
+                <DataGridTextColumn
+                    MinWidth="100"
+                    Binding="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    Header="Name" />
+
+                <DataGridComboBoxColumn
+                    MinWidth="100"
+                    Header="CamName"
+                    ItemsSource="{Binding Source={StaticResource DataContextProxy}, Path=Value.Cams}"
+                    SelectedItemBinding="{Binding CamName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                <DataGridTextColumn
+                    MinWidth="100"
+                    Binding="{Binding ToolName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    Header="ToolName" />
+
+                <materialDesign:DataGridTextColumn
+                    MinWidth="100"
+                    Binding="{Binding Exposure, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    Header="Exposure" />
+
+                <DataGridTextColumn Binding="{Binding Gain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Header="Gain" />
+
+                <materialDesign:DataGridComboBoxColumn
+                    MinWidth="100"
+                    Header="TriggerMode"
+                    ItemsSource="{Binding Source={StaticResource TriggerModeEnum}}"
+                    SelectedItemBinding="{Binding TriggerMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                <DataGridTemplateColumn Header="LightItems">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel IsEnabled="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Converter={StaticResource IsReadToIsEnableConverter}}" Orientation="Horizontal">
+                                <Border Background="White" CornerRadius="4">
+                                    <custm:DataGridView
+                                        Background="{Binding Background, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}"
+                                        BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"
+                                        GridLinesVisibility="Horizontal"
+                                        ItemsSource="{Binding LightItems}" />
+                                </Border>
+                                <StackPanel>
+                                    <Button
+                                        Command="{Binding Source={StaticResource DataContextProxy}, Path=Value.AddLinght}"
+                                        CommandParameter="{Binding}"
+                                        Content="Add" />
+                                    <Button
+                                        Command="{Binding Source={StaticResource DataContextProxy}, Path=Value.ClearLinght}"
+                                        CommandParameter="{Binding}"
+                                        Content="Clear" />
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="VisionTool">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <Button
+                                    Command="{Binding Source={StaticResource DataContextProxy}, Path=Value.AddLinght}"
+                                    CommandParameter="{Binding}"
+                                    Content="Add" />
+                                <Button
+                                    Command="{Binding Source={StaticResource DataContextProxy}, Path=Value.ClearLinght}"
+                                    CommandParameter="{Binding}"
+                                    Content="Clear" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+            </cust:DeviceManagerView.DataGridColumns>
+
+        </cust:DeviceManagerView>
+    </Grid>
+</UserControl>
