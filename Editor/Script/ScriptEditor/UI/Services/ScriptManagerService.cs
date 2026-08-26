@@ -297,7 +297,15 @@ namespace ScriptEditor.Services
                 };
 
                 var json = JsonEx.ToJson(model);
-                System.IO.File.WriteAllText(path, json);
+                Extension.Core.FileEx.FileEx.Write(json, System.IO.Path.GetDirectoryName(path), System.IO.Path.GetFileName(path));
+
+                // 同步导出各脚本为独立 .cs（供 VSCode 查看/编辑）
+                try { ExportScriptsToFolder(path); } catch { /* 镜像导出失败不阻断保存 */ }
+
+                // 自动引入：保存时把最新脚本代码的 using 收敛为全局隐式 using
+                foreach (var item in _items)
+                    CustomRoslynHost.AddGlobalImportsFromSource(item.Code ?? string.Empty);
+
                 Model.StatusText = $"保存成功：{path}";
             }
             catch (Exception ex)
@@ -325,7 +333,7 @@ namespace ScriptEditor.Services
             FileLoading fileLoading = new FileLoading();
 
             var path = _fileService.ShowOpenDialog(
-                "任务文件 (*.taskproj)|*.taskproj|所有文件 (*.*)|*.*");
+                "任务文件 (*.taskproj;*.taskproj.bak)|*.taskproj;*.taskproj.bak|所有文件 (*.*)|*.*");
             if (string.IsNullOrEmpty(path)) return;
 
             fileLoading.Text = "正在加载任务...";
@@ -402,7 +410,18 @@ namespace ScriptEditor.Services
                     Model.TaskName = model.Name;
                 Model.CurrentFilePath = path;
 
-                Model.StatusText = $"加载完成，共 {_items.Count} 个脚本";
+                // 自动引入：把本任务所有脚本的 using 收敛为全局隐式 using，
+                // 之后（含本次启动流程执行）所有脚本免写这些指令
+                foreach (var script in model.Scripts)
+                    CustomRoslynHost.AddGlobalImportsFromSource(script.Code);
+
+                // 纯加载：不在此处导出/回填脚本文件。
+                // 镜像导出与「文件夹较新则回填」的时序由调用方编排——
+                // 启动/关机链路（StartupFlowService 等）：仅当文件夹较新时回填，加载期不写盘；
+                // 显式打开：忠实加载文件内容，不碰文件夹；
+                // 镜像导出只发生在编辑器保存路径（SaveToFile）。
+                if (Model.StatusText.StartsWith("加载完成") == false)
+                    Model.StatusText = $"加载完成，共 {_items.Count} 个脚本";
             }
             catch (Exception ex)
             {
@@ -415,6 +434,96 @@ namespace ScriptEditor.Services
                 Model.StatusText = "加载失败";
             }
         }
+
+        #region 脚本文件同步（VSCode 排查支持）
+
+        private static readonly System.Text.RegularExpressions.Regex ScriptFileRegex =
+            new(@"^\d{2}_.+\.cs$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        /// <summary>脚本导出目录：与 .taskproj 同目录（任务文件夹制）。</summary>
+        public static string GetScriptFolder(string taskprojPath)
+            => System.IO.Path.GetDirectoryName(taskprojPath) ?? string.Empty;
+
+        private static string ScriptFileName(string title, int index)
+        {
+            var name = string.IsNullOrWhiteSpace(title) ? "未命名" : title.Trim();
+            foreach (var c in System.IO.Path.GetInvalidFileNameChars())
+                name = name.Replace(c, '_');
+            return $"{index + 1:00}_{name}.cs";
+        }
+
+        /// <summary>
+        /// 将全部脚本导出为独立 .cs 文件（NN_标题.cs，与 .taskproj 同目录），供 VSCode 打开编辑。
+        /// 覆盖写入（FileEx 自动将旧文件轮换为 .cs.bak）。
+        /// </summary>
+        public void ExportScriptsToFolder(string taskprojPath)
+        {
+            for (var i = 0; i < _items.Count; i++)
+            {
+                var item = _items[i];
+                Extension.Core.FileEx.FileEx.Write(
+                    item.Code ?? string.Empty,
+                    GetScriptFolder(taskprojPath),
+                    ScriptFileName(item.Title, i));
+            }
+        }
+
+        /// <summary>是否存在比 .taskproj 更新的脚本源文件（仅识别 NN_标题.cs 命名）。</summary>
+        public bool FolderHasNewerSources(string taskprojPath)
+        {
+            var dir = GetScriptFolder(taskprojPath);
+            if (!System.IO.Directory.Exists(dir)) return false;
+
+            var projTime = System.IO.File.GetLastWriteTime(taskprojPath);
+            foreach (var f in System.IO.Directory.GetFiles(dir, "*.cs"))
+            {
+                if (!ScriptFileRegex.IsMatch(System.IO.Path.GetFileName(f))) continue;
+                if (System.IO.File.GetLastWriteTime(f) > projTime)
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>按文件名顺序回填脚本代码（仅识别 NN_标题.cs）；返回更新条数。</summary>
+        public int ImportScriptsFromFolder(string taskprojPath)
+        {
+            var dir = GetScriptFolder(taskprojPath);
+            if (!System.IO.Directory.Exists(dir)) return 0;
+
+            var files = System.IO.Directory.GetFiles(dir, "*.cs")
+                .Where(f => ScriptFileRegex.IsMatch(System.IO.Path.GetFileName(f)))
+                .OrderBy(f => f, StringComparer.Ordinal)
+                .ToList();
+
+            var count = 0;
+            for (var i = 0; i < files.Count && i < _items.Count; i++)
+            {
+                _items[i].Code = System.IO.File.ReadAllText(files[i]);
+                // 自动引入：回填的文件夹源码是最新事实源，其 using 一并收敛
+                CustomRoslynHost.AddGlobalImportsFromSource(_items[i].Code);
+                count++;
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// 从 .cs.bak 备份恢复全部脚本代码（按 NN_标题.cs.bak 一一对应）；返回恢复条数。
+        /// </summary>
+        public int RestoreAllFromBackup(string taskprojPath)
+        {
+            var dir = GetScriptFolder(taskprojPath);
+            var count = 0;
+            for (var i = 0; i < _items.Count; i++)
+            {
+                var bak = System.IO.Path.Combine(dir, ScriptFileName(_items[i].Title, i) + ".bak");
+                if (!System.IO.File.Exists(bak)) continue;
+                _items[i].Code = System.IO.File.ReadAllText(bak);
+                count++;
+            }
+            return count;
+        }
+
+        #endregion
 
         #endregion
 

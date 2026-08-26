@@ -98,6 +98,7 @@ public static class ScriptExecutionService
     /// <summary>
     /// 全局路由 Console 写入器，通过 AsyncLocal 将 Console 输出路由到当前执行的脚本的写入器。
     /// 初始化为一次，后续所有脚本共享此实例。
+    /// 无脚本作用域时回退写入原始 Console.Out，保证宿主自身的 Console 输出不丢失。
     /// </summary>
     private sealed class RoutingConsoleWriter : TextWriter
     {
@@ -118,17 +119,23 @@ public static class ScriptExecutionService
 
         private static StreamingTextWriter? Current => _current.Value;
 
-        public override Encoding Encoding => Current?.Encoding ?? Encoding.UTF8;
+        /// <summary>当前脚本上下文存在则路由给脚本；否则回退到原始 Console.Out。</summary>
+        private static TextWriter Target => (TextWriter?)Current ?? _originalOut;
 
-        public override void Write(char value) => Current?.Write(value);
-        public override void Write(string? value) => Current?.Write(value);
-        public override void WriteLine(string? value) => Current?.WriteLine(value);
+        public override Encoding Encoding => Current?.Encoding ?? _originalOut?.Encoding ?? Encoding.UTF8;
+
+        public override void Write(char value) => Target?.Write(value);
+        public override void Write(string? value) => Target?.Write(value);
+        public override void WriteLine(string? value) => Target?.WriteLine(value);
     }
 
     /// <summary>
-    /// 是否已初始化全局 Console 路由。
+    /// 原始 Console.Out（安装全局路由前捕获），作为无脚本作用域时的回退目标。
     /// </summary>
-    private static bool _consoleRouted;
+    private static TextWriter? _originalOut;
+
+    /// <summary>防止并发首次执行时重复初始化 Console 路由。</summary>
+    private static readonly object _consoleInitLock = new();
 
     /// <summary>
     /// 同时支持缓冲和实时流的 TextWriter。
@@ -195,7 +202,8 @@ public static class ScriptExecutionService
 
         var options = ScriptOptions.Default
             .AddReferences(allReferences)
-            .WithImports(host.DefaultImports);
+            // 默认导入 + 全局隐式 using（实时读取，注册先后与编译顺序无关）
+            .WithImports(host.DefaultImports.Concat(CustomRoslynHost.GlobalImports).Distinct());
 
         if (enableDebug)
         {
@@ -312,11 +320,19 @@ public static class ScriptExecutionService
         Script<object> script, bool hasResult, CancellationToken cancellationToken = default,
         Action<string>? onOutput = null, object? globals = null)
     {
-        // 首次调用时，将 Console.Out 替换为全局路由写入器（只做一次）
-        if (!_consoleRouted)
+        // 首次调用时，将 Console.Out 替换为全局路由写入器（只做一次）。
+        // 捕获原始 Console.Out 作为回退目标：脚本作用域外的输出（宿主自身日志等）
+        // 仍写往原始控制台，不再被静默丢弃。
+        if (_originalOut == null)
         {
-            _consoleRouted = true;
-            Console.SetOut(new RoutingConsoleWriter());
+            lock (_consoleInitLock)
+            {
+                if (_originalOut == null)
+                {
+                    _originalOut = Console.Out;
+                    Console.SetOut(new RoutingConsoleWriter());
+                }
+            }
         }
 
         using var writer = new StreamingTextWriter(onOutput);
@@ -406,9 +422,10 @@ public static class ScriptExecutionService
     }
 
     /// <summary>
-    /// 确保脚本代码末尾包含 Script.Run() 调用。
-    /// 如果有 Initialize/Load 方法，注入 _hasLoaded 标志，
-    /// 使 Initialize 仅在首次执行时调用。
+    /// 确保脚本代码末尾包含 Run 调用。
+    /// 自动识别 Run 方法是 static 还是实例方法：
+    /// static 形式追加 Script.Run()，实例形式追加 new Script().Run()（Initialize 与 Run 共享同一实例）。
+    /// 如果有 Initialize/Load 方法，会在 Run 之前调用（无需 static）。
     /// 同时自动添加 #nullable enable 以消除可空注解警告。
     /// </summary>
     /// <param name="code">原始脚本代码。</param>
@@ -426,42 +443,87 @@ public static class ScriptExecutionService
             trimmed = code.TrimEnd();
         }
 
-        // 已包含 Script.Run() 调用（语句或表达式形式），无需修改
-        if (trimmed.EndsWith("Script.Run()") || trimmed.EndsWith("await Script.Run()") ||
-            trimmed.EndsWith("Script.Run();") || trimmed.EndsWith("await Script.Run();"))
-            return code;
+        // 已包含 Run 调用（静态或实例形式），无需修改
+        string[] invokedEndings =
+        {
+            "Script.Run()", "await Script.Run()",
+            "new Script().Run()", "await new Script().Run()",
+            "__scriptInstance.Run()", "await __scriptInstance.Run()",
+        };
+        foreach (var ending in invokedEndings)
+        {
+            if (trimmed.EndsWith(ending) || trimmed.EndsWith(ending + ";"))
+                return code;
+        }
 
         // 不包含 Script 类，可能是纯表达式，不需要追加
         if (!code.Contains("class Script"))
             return code;
 
-        // 判断是否包含 Initialize/Load 方法
-        bool hasInit = code.Contains("static void Initialize") || code.Contains("static async Task Initialize") ||
-                       code.Contains("static async System.Threading.Tasks.Task Initialize") ||
-                       code.Contains("static Task Initialize") ||
-                       code.Contains("static void Load") || code.Contains("static async Task Load") ||
-                       code.Contains("static async System.Threading.Tasks.Task Load") ||
-                       code.Contains("static Task Load");
+        // 查找 Run 声明行，判定 static / 实例形式（未找到时保持旧的静态形式，向后兼容）
+        string? runDecl = FindMethodDeclLine(code, "Run");
+        bool isStatic = runDecl == null || runDecl.Contains("static");
 
-        // 判断是否包含异步 Run 方法（支持 Task、Task<T>、ValueTask 等可等待返回类型）
-        bool isAsyncRun = code.Contains("async") && code.Contains(" Run(")
-            && (code.Contains("Task ") || code.Contains("Task<") || code.Contains("ValueTask"));
+        // 判断是否包含 Initialize/Load 方法（static 或实例均可）
+        bool hasInit = FindMethodDeclLine(code, "Initialize") != null
+                    || FindMethodDeclLine(code, "Load") != null;
+
+        // 判断是否为异步 Run 方法
+        bool isAsyncRun = runDecl != null && runDecl.Contains("async");
 
         var suffix = new StringBuilder();
 
-        if (hasInit)
+        if (isStatic)
         {
-            suffix.Append("\r\nScript.Initialize();");
+            if (hasInit)
+            {
+                suffix.Append("\r\nScript.Initialize();");
+            }
+            suffix.Append(isAsyncRun ? "\r\nawait Script.Run()" : "\r\nScript.Run()");
+        }
+        else
+        {
+            // 实例形式：同一实例先 Initialize 再 Run，保证实例字段在两者之间共享
+            const string instance = "__scriptInstance";
+            suffix.Append($"\r\nvar {instance} = new Script();");
+            if (hasInit)
+            {
+                suffix.Append($"\r\n{instance}.Initialize();");
+            }
+            suffix.Append(isAsyncRun ? $"\r\nawait {instance}.Run()" : $"\r\n{instance}.Run()");
         }
 
-        if (isAsyncRun)
-            suffix.Append("\r\nawait Script.Run()");   // 表达式形式，返回值作为脚本结果
-        else
-            suffix.Append("\r\nScript.Run()");          // 表达式形式，返回值作为脚本结果
-
-
-
         return code + suffix.ToString();
+    }
+
+    /// <summary>
+    /// 在脚本代码中查找指定名称的方法声明行（跳过注释、指令与调用语句）。
+    /// 要求方法名前是空白符（返回类型与方法名之间必有空格），避免误命中 MyRun 之类的名称。
+    /// </summary>
+    /// <param name="code">脚本源代码。</param>
+    /// <param name="methodName">方法名。</param>
+    /// <returns>声明行 Trim 后的文本；未找到返回 null。</returns>
+    private static string? FindMethodDeclLine(string code, string methodName)
+    {
+        foreach (var rawLine in code.Split('\n'))
+        {
+            var line = rawLine.TrimEnd('\r').Trim();
+            if (line.Length == 0 || line.StartsWith("//") || line.StartsWith("*") || line.StartsWith("#"))
+                continue;
+
+            // 声明形式：返回类型 空格 方法名( ；调用形式（如 Script.Run()）前面是 . 或 ( ，不会命中
+            int idx = Math.Max(line.IndexOf(" " + methodName + "(", StringComparison.Ordinal),
+                               line.IndexOf("\t" + methodName + "(", StringComparison.Ordinal));
+            if (idx < 0) continue;
+
+            // 排除赋值/传参场景：= 或 , 之后出现的方法名
+            string head = line.Substring(0, idx);
+            if (head.Contains('=') || head.TrimEnd().EndsWith(","))
+                continue;
+
+            return line;
+        }
+        return null;
     }
 
     /// <summary>

@@ -37,6 +37,7 @@ public class ScriptNode : NodeModel
     /// 执行脚本。将自定义输入端口的值收集为 Dictionary，
     /// 通过 ScriptEditorService.SetInputData() 注入脚本运行时上下文。
     /// 效果等同于脚本内预定义变量 Inputs["key"]。
+    /// 失败语义：编译/运行失败抛出异常（携带脚本输出尾部详情），走容错路径。
     /// </summary>
     public override async Task ExecuteAsync(CancellationToken ct)
     {
@@ -63,10 +64,15 @@ public class ScriptNode : NodeModel
 
         if (!success)
         {
-            Status = NodeStatus.Error;
-            System.Diagnostics.Debug.WriteLine($"[ScriptNode] 脚本执行出错: {Name}");
+            throw new InvalidOperationException(
+                $"脚本执行失败 [{Name}]：{Truncate(service.Model.OutputText, 500)}");
         }
     }
+
+    private static string Truncate(string? text, int maxLength)
+        => string.IsNullOrWhiteSpace(text) ? "（无输出）"
+           : text.Length <= maxLength ? text
+           : text[..maxLength] + $"…（已截断，共 {text.Length} 字符）";
 
     private object? _scriptResult;
     /// <summary>脚本最后一次运行返回的结果（可绑定到输出端口）。</summary>

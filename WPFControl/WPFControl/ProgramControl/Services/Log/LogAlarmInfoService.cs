@@ -45,6 +45,8 @@ namespace WPFControl.ProgramControl.Services
         private void TriggerAlarm(LogInfo logInfo)
         {
             AlarmInfoManager alarmInfo = _AlarmInfoManagerService.Model.DataCollection.FirstOrDefault(x => x.Info_CH == logInfo.Info);
+            if (alarmInfo == null)
+                return;
             _AlarmInfoManagerService.TriggerAlarm(alarmInfo, false);
         }
 

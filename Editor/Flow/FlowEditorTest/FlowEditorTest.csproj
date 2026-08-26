@@ -17,5 +17,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FlowEditor\FlowEditor.csproj" />
+    <ProjectReference Include="..\..\Script\ScriptEditor\ScriptEditor.csproj" />
   </ItemGroup>
 </Project>

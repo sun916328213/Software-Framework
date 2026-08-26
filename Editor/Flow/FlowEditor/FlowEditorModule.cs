@@ -21,6 +21,14 @@ using System.Windows;namespace FlowEditor
         /// </summary>
         public void OnInitialized(IContainerProvider containerProvider)
         {
+            // P3：让反射节点工厂可解析 DI 构造函数参数（接入 Prism 容器），
+            // 使 MC/Camera 等依赖注入节点在子流程与无头运行场景下也能被物化
+            ReflectionNodeFactory.FallbackResolver = t =>
+            {
+                try { return containerProvider.Resolve(t); }
+                catch { return null; }
+            };
+
             MergeResourceDictionaries();
         }
 

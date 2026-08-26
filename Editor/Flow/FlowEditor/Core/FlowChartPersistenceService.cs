@@ -39,7 +39,7 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
         if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
             Directory.CreateDirectory(dir);
         var json = JsonSerializer.Serialize(doc, _jsonOptions);
-        File.WriteAllText(path, json);
+        Extension.Core.FileEx.FileEx.Write(json, dir, Path.GetFileName(path));
     }
 
     /// <summary>从 .flow 文件加载流程图文档。</summary>
@@ -189,16 +189,21 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
         node.RetryDelayMs = doc.RetryDelayMs;
         node.TimeoutMs = doc.TimeoutMs;
 
-        // 还原自定义端口（使用保存的 ID）
+        // 还原自定义端口：按名去重（节点构造函数可能已创建默认自定义端口，
+        // 直接追加会产生同名重复端口导致运行期读写错位），保留保存的原始 ID
         foreach (var portDoc in doc.CustomInputPorts)
         {
-            var port = node.AddCustomInputPort(portDoc.Name);
-            port.Id = portDoc.Id; // 恢复原始端口 ID
+            var port = node.CustomInputPorts.FirstOrDefault(p => p.Name == portDoc.Name)
+                       ?? node.AddCustomInputPort(portDoc.Name);
+            port.Id = portDoc.Id;
         }
         foreach (var portDoc in doc.CustomOutputPorts)
         {
-            var port = node.AddCustomOutputPort(portDoc.Name, portDoc.BoundProperty);
-            port.Id = portDoc.Id; // 恢复原始端口 ID
+            var port = node.CustomOutputPorts.FirstOrDefault(p => p.Name == portDoc.Name)
+                       ?? node.AddCustomOutputPort(portDoc.Name, portDoc.BoundProperty);
+            if (!string.IsNullOrEmpty(portDoc.BoundProperty))
+                port.PropertyName = portDoc.BoundProperty;
+            port.Id = portDoc.Id;
         }
 
         // 还原附加属性

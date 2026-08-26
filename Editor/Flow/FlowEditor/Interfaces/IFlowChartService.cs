@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using FlowEditor.Core;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
 using FlowEditor.ViewModels;
@@ -44,6 +45,15 @@ public interface IFlowChartService
 
     /// <summary>单步继续（调试模式）。</summary>
     void StepContinue();
+
+    /// <summary>调试控制器：断点与单步门闩（P4）。</summary>
+    DebugController Debug { get; }
+
+    /// <summary>画布执行的日志/数据追踪器（P4）。</summary>
+    ExecutionJournal Journal { get; }
+
+    /// <summary>将当前画布编译为不可变 FlowProgram（P3，用于创建隔离运行实例）。</summary>
+    FlowProgram CompileProgram();
 
     /// <summary>放大。</summary>
     void ZoomIn();

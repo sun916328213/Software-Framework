@@ -46,18 +46,6 @@
     <Content Remove="C:\Users\91632\.nuget\packages\materialdesignthemes\5.3.0\contentFiles\any\net8.0-windows7.0\Resources\Roboto\RobotoCondensed-Regular.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Communication\Communication\Communication.csproj" />
-    <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
-    <ProjectReference Include="..\..\Device\Device\Device.csproj" />
-    <ProjectReference Include="..\..\Editor\Flow\FlowEditor\FlowEditor.csproj" />
-    <ProjectReference Include="..\..\Editor\Script\ScriptEditor\ScriptEditor.csproj" />
-    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
-    <ProjectReference Include="..\..\Editor\Flow\FlowNodes\FlowNodes.csproj" />
-    <ProjectReference Include="..\..\Secs\Secs\Secs.csproj" />
-    <ProjectReference Include="..\..\Vision\Ctr_WPF_F48\Ctr_WPF_F48.csproj" />
-    <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls.csproj" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="HarfBuzzSharp" Version="8.3.1.1" />
     <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0" />
@@ -65,6 +53,9 @@
     <PackageReference Include="Prism.Core" Version="8.1.97" />
     <PackageReference Include="Prism.Wpf" Version="8.1.97" />
     <PackageReference Include="System.Management" Version="10.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\FlowNodes\FlowNodes\FlowNodes.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="halcondotnet">

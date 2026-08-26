@@ -7,4 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  </Project>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Device\Device\Device.csproj" />
+  </ItemGroup>
+
+</Project>

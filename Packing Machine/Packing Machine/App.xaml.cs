@@ -237,6 +237,10 @@ namespace Packing_Machine
         {
             var loading = WPFCustomControls.Window.Views.ProgramLoading.StartOnOwnThread();
 
+            // 各初始化步骤的失败汇总（try 外声明：finally 之后仍需读取）
+            var initErrors = new System.Collections.Generic.List<string>();
+            StartupFlowService? startupFlowService = null;
+
             try
             {
                 ContainerManager.Initialize(Container);
@@ -246,7 +250,7 @@ namespace Packing_Machine
 
 
                 // 先在后台线程解析启动/关机流程（不碰 UI）
-                StartupFlowService startupFlowService = Container.Resolve<StartupFlowService>();
+                startupFlowService = Container.Resolve<StartupFlowService>();
                 await startupFlowService.LoadFromDefaultPathAsync();
 
                 var shutdownFlowService = Container.Resolve<ShutdownFlowService>();
@@ -254,22 +258,40 @@ namespace Packing_Machine
 
                 // 把各初始化步骤封装为 (标题, 工作) 列表。每步工作由 ProgramLoading.ShowAsync
                 // 统一投递到主 UI 线程执行，loading 线程只负责进度更新与动画，因此这里全是纯业务代码。
+                // 单步异常就地捕获汇总：不中断后续步骤、不阻塞主窗口显示、真实原因可见可查。
                 var items = startupFlowService.ScriptManager.Items;
                 var initActions = new System.Collections.Generic.List<(string Title, System.Func<Task> Work)>();
 
-                foreach (ScriptEditor.Models.ScriptItem item in items)
+                void RunStep(string title, System.Func<Task> work)
                 {
-                    initActions.Add((item.Title, async () => await item.ExecuteAsync()));
+                    initActions.Add((title, async () =>
+                    {
+                        try { await work(); }
+                        catch (Exception ex)
+                        {
+                            // NRE 等异常的 Message 往往没有信息量，附加堆栈前几帧帮助定位
+                            var stack = ex.StackTrace?.Split('\n')
+                                .Take(3).Select(l => l.Trim()).Aggregate((a, b) => a + "\n  " + b);
+                            initErrors.Add($"[{title}] {ex.GetType().Name}: {ex.Message}"
+                                + (stack == null ? "" : $"\n  at {stack}"));
+                            System.Diagnostics.Debug.WriteLine($"[初始化失败] {title}: {ex}");
+                        }
+                    }));
                 }
 
-                initActions.Add(("预热脚本编辑器", async () =>
+                foreach (ScriptEditor.Models.ScriptItem item in items)
+                {
+                    var scriptItem = item;
+                    RunStep(scriptItem.Title, async () => await scriptItem.ExecuteAsync());
+                }
+
+                RunStep("预热脚本编辑器", async () =>
                 {
                     var scriptEditorService = Container.Resolve<ScriptEditorService>();
                     await scriptEditorService.WarmupAsync(Container);
-                }
-                ));
+                });
 
-                initActions.Add(("预热流程图", async () =>
+                RunStep("预热流程图", async () =>
                 {
                     // 强制加载 FlowNodes 程序集，确保其节点能被工具箱扫描到
                     System.Reflection.Assembly.Load("FlowNodes");
@@ -278,16 +300,14 @@ namespace Packing_Machine
                     await initializeFlowService.LoadFromDefaultPathAsync();
                     var autoFlowService = Container.Resolve<AutoFlowService>();
                     await autoFlowService.LoadFromDefaultPathAsync();
-                }
-                ));
+                });
 
-                initActions.Add(("初始化预热", async () =>
+                RunStep("初始化预热", async () =>
                 {
                     // 视图预热须在主 UI 线程同步执行（DispatcherObject + 真实布局/渲染），
                     // ShowAsync 已保证本步骤运行在主线程，直接调用即可。
                     PrewarmNavigationViews();
-                }
-                ));
+                });
 
                 // await 到窗口关闭后再显示主窗口
                 await loading.RunAsync(initActions);
@@ -312,6 +332,23 @@ namespace Packing_Machine
             regionManager.RequestNavigate("MenuRegion", "MenuView");
             regionManager.RequestNavigate("ControlRegion", "ControlView");
             regionManager.RequestNavigate("IconRegion", "IconView");
+
+            // 初始化步骤失败汇总（含脚本源码目录提示，可用 VSCode 打开排查）
+            if (initErrors.Count > 0 && startupFlowService != null)
+            {
+                var scriptFolder = ScriptEditor.Services.ScriptManagerService.GetScriptFolder(
+                    startupFlowService.DefaultFilePath);
+                var summary =
+                    string.Join(Environment.NewLine, initErrors)
+                    + Environment.NewLine + Environment.NewLine
+                    + $"各启动脚本已导出为独立源码文件（NN_标题.cs），可用 VSCode 打开编辑：{Environment.NewLine}{scriptFolder}"
+                    + Environment.NewLine + "修改并保存后，重新加载启动流程即自动回填。"
+                    + Environment.NewLine + $"改错时可从同名 .cs.bak 备份恢复（VSCode 已配置 .bak 以 C# 高亮打开）。";
+
+                System.Diagnostics.Debug.WriteLine($"[启动初始化异常汇总]{Environment.NewLine}{summary}");
+                MessageBox.Show(summary, "启动初始化存在失败步骤",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void DispatcherTimer_Tick(object? sender, EventArgs e)

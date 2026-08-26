@@ -1,0 +1,90 @@
+namespace MotionControl.Definition
+{
+    /// <summary>
+    /// 运动控制卡执行结果（0 表示成功）
+    /// </summary>
+    public enum EMotionResult
+    {
+        /// <summary>
+        /// 成功
+        /// </summary>
+        Success = 0,
+        /// <summary>
+        /// 失败
+        /// </summary>
+        Fail = 1,
+        /// <summary>
+        /// 卡未连接
+        /// </summary>
+        NotConnected = 2,
+        /// <summary>
+        /// 轴索引非法
+        /// </summary>
+        InvalidAxis = 3,
+        /// <summary>
+        /// 轴正忙（运动中不允许的操作）
+        /// </summary>
+        Busy = 4,
+        /// <summary>
+        /// 参数错误
+        /// </summary>
+        InvalidParam = 5,
+    }
+
+    /// <summary>
+    /// 方向（点动/回零方向）
+    /// </summary>
+    public enum EDirection
+    {
+        /// <summary>
+        /// 负方向
+        /// </summary>
+        Negative = -1,
+        /// <summary>
+        /// 正方向
+        /// </summary>
+        Positive = 1,
+    }
+
+    /// <summary>
+    /// 停止方式
+    /// </summary>
+    public enum EStopMode
+    {
+        /// <summary>
+        /// 减速停止
+        /// </summary>
+        Decelerate = 0,
+        /// <summary>
+        /// 立即停止（急停）
+        /// </summary>
+        Emergency = 1,
+    }
+
+    /// <summary>
+    /// 回零模式
+    /// </summary>
+    public enum EHomeMode
+    {
+        /// <summary>
+        /// 不回零
+        /// </summary>
+        None = 0,
+        /// <summary>
+        /// 原点开关回零
+        /// </summary>
+        OriginSwitch = 1,
+        /// <summary>
+        /// 编码器Z相回零
+        /// </summary>
+        ZPhase = 2,
+        /// <summary>
+        /// 限位开关回零
+        /// </summary>
+        LimitSwitch = 3,
+        /// <summary>
+        /// 当前位置直接置零
+        /// </summary>
+        SetCurrentAsOrigin = 4,
+    }
+}

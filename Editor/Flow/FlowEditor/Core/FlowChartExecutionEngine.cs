@@ -57,7 +57,8 @@ public class FlowChartExecutionEngine
         CancellationToken ct,
         Action<string> log,
         Func<TNode, Task>? onBeforeNode = null,
-        List<TNode>? executionOrder = null) where TNode : INodeExecutable
+        List<TNode>? executionOrder = null,
+        ExecutionJournal? journal = null) where TNode : INodeExecutable
     {
         if (nodes.Count == 0)
         {
@@ -73,7 +74,7 @@ public class FlowChartExecutionEngine
         // 调试模式：逐节点串行执行（注：串行模式按拓扑序遍历全图，不做分支过滤）
         if (onBeforeNode != null)
         {
-            await ExecuteSequentialAsync(graph, ct, log, onBeforeNode, executionOrder);
+            await ExecuteSequentialAsync(graph, ct, log, onBeforeNode, executionOrder, journal);
             return;
         }
 
@@ -81,12 +82,12 @@ public class FlowChartExecutionEngine
         if (graph.HasCycle)
         {
             log("[引擎] 检测到环路，使用路径追踪模式（点击停止按钮终止）");
-            await ExecuteCyclePathAsync(graph, ct, log, executionOrder);
+            await ExecuteCyclePathAsync(graph, ct, log, executionOrder, journal);
             return;
         }
 
         // 无环路 → 依赖驱动异步执行（DAG 模式，支持并行）
-        await ExecuteDagAsync(graph, ct, log, executionOrder);
+        await ExecuteDagAsync(graph, ct, log, executionOrder, journal);
     }
 
     #region 单节点执行核心（三种模式共享）
@@ -114,13 +115,15 @@ public class FlowChartExecutionEngine
         Action<string> log,
         ConcurrentQueue<TNode>? orderBag,
         Func<string>? onExecuted,
-        bool enforceFailFast = false) where TNode : INodeExecutable
+        bool enforceFailFast = false,
+        ExecutionJournal? journal = null) where TNode : INodeExecutable
     {
         var startWallTime = DateTime.Now;
         var startTimestamp = Timestamp();
         nodeVm.Status = NodeStatus.Running;
         orderBag?.Enqueue(nodeVm);
         log($"[开始] {nodeVm.Name} ({startWallTime:HH:mm:ss.fff})");
+        journal?.RecordNodeStart(nodeVm.Id, nodeVm.Name);
 
         // 容错参数（未实现 INodeFaultPolicy 的执行面按默认处理）
         var policyNode = nodeVm as INodeFaultPolicy;
@@ -153,7 +156,7 @@ public class FlowChartExecutionEngine
 
                 try
                 {
-                    FillInputPorts(nodeVm, graph);
+                    FillInputPorts(nodeVm, graph, journal);
                     nodeVm.SyncInputValues();
                     await nodeVm.ExecuteAsync(timeoutCts?.Token ?? ct);
                     nodeVm.SyncOutputValues();
@@ -183,6 +186,7 @@ public class FlowChartExecutionEngine
                 nodeVm.LastElapsedMs = (long)elapsedOk;
                 var extra = onExecuted?.Invoke() ?? "";
                 log($"[完成] {nodeVm.Name} - 耗时 {elapsedOk:F1}ms{extra}");
+                journal?.RecordNodeFinish(nodeVm.Id, nodeVm.Name, nodeVm.Status, (long)elapsedOk);
 
                 return new NodeRunResult(ResolveActivatedPortIds(nodeVm, graph), false, false);
             }
@@ -190,6 +194,7 @@ public class FlowChartExecutionEngine
             // ── 失败处理（已耗尽重试）──
             nodeVm.LastElapsedMs = (long)ElapsedMs(startTimestamp);
             nodeVm.Status = NodeStatus.Error;
+            journal?.RecordNodeFinish(nodeVm.Id, nodeVm.Name, NodeStatus.Error, nodeVm.LastElapsedMs);
             var prefix = failure is FlowChartTypeMismatchException or NodeTimeoutException ? "[错误]" : "[错误]";
             prefix = failure is FlowChartTypeMismatchException ? "[类型错误]" : prefix;
 
@@ -289,7 +294,8 @@ public class FlowChartExecutionEngine
         CompiledFlowGraph<TNode> graph,
         CancellationToken ct,
         Action<string> log,
-        List<TNode>? executionOrder) where TNode : INodeExecutable
+        List<TNode>? executionOrder,
+        ExecutionJournal? journal) where TNode : INodeExecutable
     {
         log($"[引擎] 依赖图构建完成，共 {graph.Nodes.Count} 个节点");
 
@@ -318,7 +324,7 @@ public class FlowChartExecutionEngine
             _ = RunNodeDagAsync(entry, graph, linkedCts.Token, log,
                 completionSources, remainingPredecessors,
                 failedPredecessorCount, exceptionList,
-                counter, totalCount, orderBag, linkedCts);
+                counter, totalCount, orderBag, linkedCts, journal);
         }
 
         try { await Task.WhenAll(completionSources.Values.Select(tcs => tcs.Task)); }
@@ -350,7 +356,8 @@ public class FlowChartExecutionEngine
         ExecutionCounter counter,
         int totalCount,
         ConcurrentQueue<TNode>? orderBag,
-        CancellationTokenSource linkedCts) where TNode : INodeExecutable
+        CancellationTokenSource linkedCts,
+        ExecutionJournal? journal) where TNode : INodeExecutable
     {
         IReadOnlySet<string>? activated = null;
         bool propagateFailure = false;
@@ -361,9 +368,10 @@ public class FlowChartExecutionEngine
                 onExecuted: () =>
                 {
                     var executed = Interlocked.Increment(ref counter.Value);
-                    nodeVm.Count = executed;
+                    nodeVm.Count++; // 节点本地累计（全局进度仅用于日志展示）
                     return $" ({executed}/{totalCount})";
-                });
+                },
+                journal: journal);
             activated = result.ActivatedIds;
         }
         catch (OperationCanceledException ex)
@@ -391,7 +399,7 @@ public class FlowChartExecutionEngine
                 {
                     ScheduleSuccessorDag(conn, propagateFailure, result, graph, ct, log,
                         completionSources, remainingPredecessors, failedPredecessorCount,
-                        exceptionList, counter, totalCount, orderBag, linkedCts);
+                        exceptionList, counter, totalCount, orderBag, linkedCts, journal);
                 }
             }
         }
@@ -416,7 +424,8 @@ public class FlowChartExecutionEngine
         ExecutionCounter counter,
         int totalCount,
         ConcurrentQueue<TNode>? orderBag,
-        CancellationTokenSource linkedCts) where TNode : INodeExecutable
+        CancellationTokenSource linkedCts,
+        ExecutionJournal? journal) where TNode : INodeExecutable
     {
         var succId = conn.TargetNodeId;
 
@@ -441,14 +450,14 @@ public class FlowChartExecutionEngine
         if (failedPredecessorCount.GetValueOrDefault(succId, 0) > 0)
         {
             SkipDownstream(succNode, graph,
-                completionSources, remainingPredecessors, failedPredecessorCount, log);
+                completionSources, remainingPredecessors, failedPredecessorCount, log, journal);
         }
         else
         {
             _ = RunNodeDagAsync(succNode, graph, ct, log,
                 completionSources, remainingPredecessors,
                 failedPredecessorCount, exceptionList,
-                counter, totalCount, orderBag, linkedCts);
+                counter, totalCount, orderBag, linkedCts, journal);
         }
     }
 
@@ -477,9 +486,11 @@ public class FlowChartExecutionEngine
         Dictionary<string, TaskCompletionSource> completionSources,
         ConcurrentDictionary<string, int> remainingPredecessors,
         ConcurrentDictionary<string, int> failedPredecessorCount,
-        Action<string> log) where TNode : INodeExecutable
+        Action<string> log,
+        ExecutionJournal? journal = null) where TNode : INodeExecutable
     {
         log($"[跳过] {nodeVm.Name} - 上游未执行（失败或分支未选中）");
+        journal?.RecordNodeSkipped(nodeVm.Id, nodeVm.Name);
 
         // 标记该节点"被跳过"，但其后继仍需标记
         MarkNodeFailed(nodeVm.Id, graph, failedPredecessorCount);
@@ -501,7 +512,7 @@ public class FlowChartExecutionEngine
                     {
                         SkipDownstream(succNode, graph,
                             completionSources, remainingPredecessors,
-                            failedPredecessorCount, log);
+                            failedPredecessorCount, log, journal);
                     }
                 }
             }
@@ -520,7 +531,8 @@ public class FlowChartExecutionEngine
         CompiledFlowGraph<TNode> graph,
         CancellationToken ct,
         Action<string> log,
-        List<TNode>? executionOrder) where TNode : INodeExecutable
+        List<TNode>? executionOrder,
+        ExecutionJournal? journal) where TNode : INodeExecutable
     {
         var nodeMap = graph.NodeMap;
         var entryIds = graph.EntryNodes.Select(n => n.Id).ToList();
@@ -559,9 +571,10 @@ public class FlowChartExecutionEngine
                 onExecuted: () =>
                 {
                     seq[0]++;
-                    nodeVm.Count = seq[0];
+                    nodeVm.Count++; // 节点本地累计
                     return $" (#{seq[0]})";
-                });
+                },
+                journal: journal);
             var activated = result.ActivatedIds;
 
             // 通知后继（激活边过滤：未激活的出边直接剪枝，包括回边——这是环路自然终止的关键；
@@ -627,7 +640,8 @@ public class FlowChartExecutionEngine
         CancellationToken ct,
         Action<string> log,
         Func<TNode, Task> onBeforeNode,
-        List<TNode>? executionOrder) where TNode : INodeExecutable
+        List<TNode>? executionOrder,
+        ExecutionJournal? journal) where TNode : INodeExecutable
     {
         bool hasCycle = graph.HasCycle;
         if (hasCycle)
@@ -656,7 +670,8 @@ public class FlowChartExecutionEngine
                         nodeVm.Count++;
                         return "";
                     },
-                    enforceFailFast: true);
+                    enforceFailFast: true,
+                    journal: journal);
             }
 
             // 无环路：一轮就结束
@@ -710,7 +725,8 @@ public class FlowChartExecutionEngine
     /// </summary>
     private void FillInputPorts<TNode>(
         TNode targetNode,
-        CompiledFlowGraph<TNode> graph) where TNode : INodeExecutable
+        CompiledFlowGraph<TNode> graph,
+        ExecutionJournal? journal = null) where TNode : INodeExecutable
     {
         var incomingConns = graph.IncomingConnections[targetNode.Id];
 
@@ -742,6 +758,7 @@ public class FlowChartExecutionEngine
             }
 
             targetPort.Value = sourcePort.Value;
+            journal?.RecordEdgeTransfer(conn.Id, sourcePort.Value); // P4 数据追踪：记录每条连线的实际传值
         }
     }
 

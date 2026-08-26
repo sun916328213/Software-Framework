@@ -35,7 +35,8 @@ namespace WPFControl.ProgramControl.Services
         public ScriptManagerService ScriptManager => _scriptManager;
 
         /// <summary>
-        /// 从默认路径加载关闭流程脚本。
+        /// 从默认路径加载关机流程脚本。
+        /// 语义：只加载与替换，不产生任何写盘动作（详见 StartupFlowService 注释）。
         /// </summary>
         public async Task LoadFromDefaultPathAsync()
         {
@@ -43,6 +44,9 @@ namespace WPFControl.ProgramControl.Services
                 return;
 
             await _scriptManager.LoadTaskFromPathAsync(DefaultFilePath);
+
+            if (_scriptManager.FolderHasNewerSources(DefaultFilePath))
+                _scriptManager.ImportScriptsFromFolder(DefaultFilePath);
         }
 
         /// <summary>

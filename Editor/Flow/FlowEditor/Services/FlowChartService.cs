@@ -79,6 +79,12 @@ public class FlowChartService : IFlowChartService
     /// <summary>当前执行节点索引（用于单步调试）。</summary>
     public int CurrentExecutionIndex { get; private set; }
 
+    /// <summary>调试控制器（P4）：断点与单步的 TCS 门闩。</summary>
+    public DebugController Debug { get; } = new();
+
+    /// <summary>画布执行的日志/数据追踪器（P4）：记录节点事件与连线传值。</summary>
+    public ExecutionJournal Journal { get; } = new();
+
     // ── 执行流程 ──
 
     /// <summary>执行流程图。</summary>
@@ -92,6 +98,7 @@ public class FlowChartService : IFlowChartService
 
         Model.IsRunning = true;
         Model.IsDebugMode = debugMode;
+        Debug.StepMode = debugMode;
         _executionCts = new CancellationTokenSource();
         _executionOrder.Clear();
         CurrentExecutionIndex = 0;
@@ -113,7 +120,8 @@ public class FlowChartService : IFlowChartService
                     _executionCts.Token,
                     msg => Application.Current?.Dispatcher.Invoke(() => logCallback(msg)),
                     Model.IsDebugMode ? OnBeforeNodeExecute : null,
-                    _executionOrder);
+                    _executionOrder,
+                    Journal);
             }
 
             logCallback("=== 执行完成 ===");
@@ -135,26 +143,32 @@ public class FlowChartService : IFlowChartService
             Model.IsRunning = false;
             Model.IsDebugMode = false;
             Model.IsPaused = false;
+            Debug.StepMode = false;
+            Debug.Continue(); // 释放可能残留的调试门闩
             _executionCts?.Dispose();
             _executionCts = null;
         }
     }
 
-    /// <summary>单步执行回调：在执行每个节点前暂停。</summary>
+    /// <summary>单步执行回调：命中断点或单步模式时经 TCS 门闩挂起（P4，替代轮询）。</summary>
     private async Task OnBeforeNodeExecute(NodeViewModel node)
     {
         _executionOrder.Add(node);
         Model.IsPaused = true;
-        // 等待用户点击"继续"或"停止"
-        while (Model.IsPaused && Model.IsRunning)
+        try
         {
-            await Task.Delay(100, _executionCts?.Token ?? CancellationToken.None);
+            await Debug.WaitIfPausedAsync(node.Id, _executionCts?.Token ?? CancellationToken.None);
+        }
+        finally
+        {
+            Model.IsPaused = false;
         }
     }
 
-    /// <summary>单步继续（调试模式）。</summary>
+    /// <summary>单步继续/释放断点（调试模式）。</summary>
     public void StepContinue()
     {
+        Debug.Continue();
         Model.IsPaused = false;
     }
 
@@ -215,7 +229,8 @@ public class FlowChartService : IFlowChartService
                         _executionCts.Token,
                         msg => Application.Current?.Dispatcher.Invoke(() => logCallback(msg)),
                         Model.IsDebugMode ? OnBeforeNodeExecute : null,
-                        _executionOrder);
+                        _executionOrder,
+                        Journal);
 
                     logCallback($"--- 第 {iteration} 次循环完成 ---");
 
@@ -269,6 +284,15 @@ public class FlowChartService : IFlowChartService
         Model.StatusText = "正在停止循环执行...";
         FlushLog();
     }
+
+    // ── 编辑/运行分离（P3）──
+
+    /// <summary>
+    /// 将当前画布编译为不可变 FlowProgram（纯数据快照）。
+    /// 之后可用 FlowInstance.Create(program) 创建任意多个相互隔离的运行实例（并发/无头场景）。
+    /// </summary>
+    public FlowProgram CompileProgram()
+        => FlowProgram.FromDocument(_persistence.BuildDocument(Model.TabTitle, Nodes, Connections, Model));
 
     // ── 静态校验（P2）──
 

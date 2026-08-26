@@ -55,6 +55,69 @@ public class CustomRoslynHost : RoslynHost
     /// <summary>默认强制注入的 using 导入（从基类 DefaultImports 快照）。</summary>
     private readonly IReadOnlyList<string> _enforceImports;
 
+    // ════════════════════════════════════════════════════════════════
+    //  全局隐式 using（类似 SDK 的 ImplicitUsings / VS 隐式 global using）
+    // ════════════════════════════════════════════════════════════════
+
+    /// <summary>全局隐式 using 集合：注册后所有脚本自动导入，源码无需再写对应 using 指令。</summary>
+    private static readonly List<string> _globalImports = new();
+
+    /// <summary>保护 <see cref="_globalImports"/> 的锁。</summary>
+    private static readonly object _globalImportsLock = new();
+
+    /// <summary>当前全局隐式 using 快照。</summary>
+    public static IReadOnlyList<string> GlobalImports
+    {
+        get { lock (_globalImportsLock) return _globalImports.ToArray(); }
+    }
+
+    /// <summary>注册单个全局隐式 using（幂等，空值忽略）。见 <see cref="AddGlobalImports"/>。</summary>
+    public static void AddGlobalImport(string ns) => AddGlobalImports(new[] { ns });
+
+    /// <summary>批量注册全局隐式 using（幂等，空值/重复忽略）。</summary>
+    public static void AddGlobalImports(IEnumerable<string>? namespaces)
+    {
+        if (namespaces == null) return;
+        lock (_globalImportsLock)
+        {
+            foreach (var ns in namespaces)
+            {
+                var trimmed = ns?.Trim();
+                if (string.IsNullOrEmpty(trimmed)) continue;
+                if (!_globalImports.Contains(trimmed))
+                    _globalImports.Add(trimmed);
+            }
+        }
+    }
+
+    /// <summary>批量注册全局隐式 using（幂等，空值/重复忽略）。</summary>
+    public static void AddGlobalImports(params string[] namespaces)
+        => AddGlobalImports((IEnumerable<string>)namespaces);
+
+    /// <summary>匹配脚本源码中的普通 using 指令（自动排除 using static 与 别名 X = ... 形式）。</summary>
+    private static readonly System.Text.RegularExpressions.Regex UsingDirectivePattern =
+        new(@"^\s*using\s+(?!static\b)([A-Za-z_][A-Za-z0-9_.]*)\s*;\s*$",
+            System.Text.RegularExpressions.RegexOptions.Multiline |
+            System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    /// <summary>
+    /// 自动引入：从脚本源码提取 using 指令并注册为全局隐式 using。
+    /// 在任务加载/文件夹回填/保存时调用，把现有脚本的 using 收敛为全局集合，
+    /// 之后所有脚本免写这些指令——名单随脚本演进而自动更新，无需手工维护。
+    /// </summary>
+    public static void AddGlobalImportsFromSource(string? sourceCode)
+    {
+        if (string.IsNullOrEmpty(sourceCode)) return;
+
+        var matches = UsingDirectivePattern.Matches(sourceCode);
+        if (matches.Count == 0) return;
+
+        var namespaces = new List<string>(matches.Count);
+        foreach (System.Text.RegularExpressions.Match match in matches)
+            namespaces.Add(match.Groups[1].Value);
+        AddGlobalImports(namespaces);
+    }
+
     /// <summary>
     /// 创建自定义 Roslyn 宿主。
     /// </summary>
@@ -99,12 +162,14 @@ public class CustomRoslynHost : RoslynHost
 
     /// <summary>
     /// 创建编译选项时强制注入默认 using 导入，确保脚本中无需手动添加 using 指令。
+    /// 运行时实时追加全局隐式 using（<see cref="GlobalImports"/>），
+    /// 因此宿主实例创建之后再注册也照样生效。
     /// </summary>
     protected override CompilationOptions CreateCompilationOptions(
         DocumentCreationArgs args, bool addDefaultImports)
     {
         var options = (CSharpCompilationOptions)base.CreateCompilationOptions(args, addDefaultImports);
-        return options.WithUsings(_enforceImports);
+        return options.WithUsings(_enforceImports.Concat(GlobalImports).Distinct());
     }
 
     /// <summary>

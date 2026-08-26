@@ -23,6 +23,13 @@ namespace Communication
 
 
         private List< Action> LoopTask = new List<Action>();
+
+        /// <summary>已注册的读取任务名（幂等去重）：同名任务重复注册时跳过，防止重复执行脚本时叠加。</summary>
+        private readonly HashSet<string> _registeredReadTasks = new();
+
+        /// <summary>轮询循环运行标志（0=未运行 1=运行中），保证 StartLoop 幂等。</summary>
+        private int _loopRunning;
+
         MCHelper _MCHelper;
  
         public CommunicationManager(IContainerProvider container)
@@ -109,6 +116,12 @@ namespace Communication
         /// <param name="length"></param>
         public void SetReadTask(string taskName, string registeraddress, int length,EComparePolarity comparePolarity)
         {
+            // 幂等保护：同名读取任务已注册时跳过（脚本重复执行/流程重跑时不叠加轮询任务）
+            lock (LoopTask)
+            {
+                if (!_registeredReadTasks.Add(taskName)) return;
+            }
+
             CurData.TryAdd(taskName,null);
             LastData.TryAdd(taskName, null);
             int Num = Convert.ToInt32(registeraddress.ReplaceLetter());
@@ -153,31 +166,50 @@ namespace Communication
         /// <param name="pInterval">循环间隔时间 ms</param>
         public void StartLoop(int pInterval = 500)
         {
+            // 幂等保护：已在运行则直接返回（重复执行脚本/刷新时不再叠加轮询循环）
+            if (Interlocked.Exchange(ref _loopRunning, 1) == 1) return;
+
+            // StopLoopRead 之后允许重新启动：令牌已被取消时重建
+            if (cancellationTokenSource.IsCancellationRequested)
+                cancellationTokenSource = new CancellationTokenSource();
+
+            var token = cancellationTokenSource.Token;
             Stopwatch stopwatch = new Stopwatch();
             // 设置Task任务的优先级
             Task.Factory.StartNew(async () =>
             {
-                while (!cancellationTokenSource.IsCancellationRequested)
+                try
                 {
-                    try
+                    while (!token.IsCancellationRequested)
                     {
-                        int index = 0;
-                        foreach (var item in LoopTask)
+                        try
                         {
-                            index++;
-                            stopwatch.Restart();
-                            item();
-                            stopwatch.Stop();
-                            //Console.WriteLine($"{index} 读取时间: {stopwatch.ElapsedMilliseconds}");
+                            int index = 0;
+                            // 快照后遍历：避免遍历期间其他线程注册任务导致集合被修改
+                            List<Action> snapshot;
+                            lock (LoopTask) { snapshot = LoopTask.ToList(); }
+                            foreach (var item in snapshot)
+                            {
+                                index++;
+                                stopwatch.Restart();
+                                item();
+                                stopwatch.Stop();
+                                //Console.WriteLine($"{index} 读取时间: {stopwatch.ElapsedMilliseconds}");
+                            }
                         }
+                        catch
+                        {
+
+                        }
+                        await Task.Delay(pInterval);
                     }
-                    catch 
-                    { 
-                    
-                    }
-                    await Task.Delay(pInterval);
                 }
-            }, cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                finally
+                {
+                    // 循环退出后复位标志，允许下次 StartLoop 重新启动
+                    Interlocked.Exchange(ref _loopRunning, 0);
+                }
+            }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         /// <summary>
@@ -186,6 +218,12 @@ namespace Communication
         public void StopLoopRead()
         {
             cancellationTokenSource?.Cancel();
+            // 清空已注册任务名与任务列表：停止后允许重新注册、重新启动
+            lock (LoopTask)
+            {
+                _registeredReadTasks.Clear();
+                LoopTask.Clear();
+            }
         }
 
 

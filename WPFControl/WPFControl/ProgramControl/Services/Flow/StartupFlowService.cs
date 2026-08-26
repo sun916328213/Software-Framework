@@ -36,6 +36,11 @@ namespace WPFControl.ProgramControl.Services
 
         /// <summary>
         /// 从默认路径加载启动流程脚本。
+        /// 语义：只加载与替换（内存 ← taskproj/文件夹），**不产生任何写盘动作**。
+        /// - 文件夹源码（NN_标题.cs）比 taskproj 新 → 以源码替换内存；
+        ///   taskproj 保持旧快照，直到下次在编辑器中保存时自然收敛；
+        /// - 否则 taskproj 即事实源，直接使用（镜像同步由编辑器保存路径负责，
+        ///   加载期导出会刷新源码时间戳，导致下次启动误判"文件夹较新"）。
         /// </summary>
         public async Task LoadFromDefaultPathAsync()
         {
@@ -43,6 +48,9 @@ namespace WPFControl.ProgramControl.Services
                 return;
 
             await _scriptManager.LoadTaskFromPathAsync(DefaultFilePath);
+
+            if (_scriptManager.FolderHasNewerSources(DefaultFilePath))
+                _scriptManager.ImportScriptsFromFolder(DefaultFilePath);
         }
 
         /// <summary>

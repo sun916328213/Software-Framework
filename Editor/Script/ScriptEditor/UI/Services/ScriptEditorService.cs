@@ -501,12 +501,12 @@ public class ScriptEditorService : INotifyPropertyChanged
         return @"
 public class Script
 {
-    public static void Initialize()
+    public void Initialize()
     {
-        // 初始化逻辑
+        // 初始化逻辑（可选，不需要可删除）
     }
 
-    public static void Run()
+    public void Run()
     {
         Console.WriteLine(""开始执行脚本"");
     }
@@ -663,7 +663,7 @@ public class Script
     public void OpenDocument()
     {
         var path = _fileService.ShowOpenDialog(
-            "脚本工程文件 (*.scriptproj)|*.scriptproj|C# 文件 (*.cs)|*.cs|脚本文件 (*.csx)|*.csx|所有文件 (*.*)|*.*");
+            "脚本工程文件 (*.scriptproj;*.scriptproj.bak)|*.scriptproj;*.scriptproj.bak|C# 文件 (*.cs;*.cs.bak)|*.cs;*.cs.bak|脚本文件 (*.csx)|*.csx|所有文件 (*.*)|*.*");
         if (path == null) return;
 
         LoadScriptCore(path);
