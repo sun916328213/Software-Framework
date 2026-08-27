@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using WPFControl.CustomControl.Models;
 using WPFControl.ProgramControl.Models;
 
@@ -23,10 +24,10 @@ namespace WPFControl.ProgramControl.Services
             _UserInfoService = container.Resolve<UserInfoService>();
             InitializePermissionSystem();
         }
- 
+  
         // 用户权限变化事件
         public event Action<EUserLevel> OnUserLevelChanged;
- 
+  
 
         /// <summary>
         /// 初始化菜单权限系统，监听用户权限变化
@@ -35,17 +36,18 @@ namespace WPFControl.ProgramControl.Services
         {
             if (_UserInfoService == null) return;
 
-            // 监听用户信息变化
-            _UserInfoService.Model.PropertyChanged += (sender, e) =>
+            // 监听用户信息变化（登录 / 登出 / 权限变更），实时刷新菜单可见性
+            _UserInfoService.UserInfoChanged += (sender, model) =>
             {
-                if (e.PropertyName == nameof(UserInfoModel.CurUserInfo))
+                if (model?.CurUserInfo != null)
                 {
-                    SetCurrentUserLevel(_UserInfoService.Model.CurUserInfo.Level);
+                    SetCurrentUserLevel(model.CurUserInfo.Level);
+                    SwitchMenu(0);
                 }
             };
 
             // 设置初始用户权限
-            SetCurrentUserLevel(_UserInfoService.Model .CurUserInfo.Level);
+            SetCurrentUserLevel(_UserInfoService.Model.CurUserInfo.Level);
         }
 
         /// <summary>
@@ -142,13 +144,60 @@ namespace WPFControl.ProgramControl.Services
                throw new Exception($"更新菜单可见性时发生错误: {ex}");
             }
         }
- 
- 
+
+        /// <summary>
+        /// 切换菜单项
+        /// </summary>
+        /// <param name="index"></param>
+        public void SwitchMenu(int index)
+        {
+            if (index >= Model.NavigationItems.Count)
+            {
+                MessageBox.Show("Menu switch index out of range");
+                Model.SelectNavigationItems = Model.NavigationItems[0];
+            }
+            ExecuteNavigationItem();
+        }
+
+        /// <summary>
+        /// 切换菜单项（按标题查找，支持多级子菜单递归匹配）。
+        /// </summary>
+        /// <param name="name">目标菜单项标题</param>
+        public void SwitchMenu(string name)
+        {
+            var item = FindNavigationItem(Model.NavigationItems, name);
+            if (item == null)
+            {
+                MessageBox.Show("Menu item not found");
+                return;
+            }
+
+            // 命中后切换到该项并执行其操作（原实现漏设 Model.SelectNavigationItems，
+            // 仅一级查找且匹配成功后实际仍执行旧选中项）
+            Model.SelectNavigationItems = item;
+            ExecuteNavigationItem();
+        }
+
+        /// <summary>在菜单集合（含子菜单 Children）中按标题递归查找项。</summary>
+        private static CNavigationItem? FindNavigationItem(IEnumerable<CNavigationItem> items, string name)
+        {
+            foreach (var it in items)
+            {
+                if (it.Title == name) return it;
+                if (it.Children != null)
+                {
+                    var child = FindNavigationItem(it.Children, name);
+                    if (child != null) return child;
+                }
+            }
+            return null;
+        }
+
         /// <summary>
         /// 执行菜单项操作
         /// </summary>
-        
-        public void ExecuteNavigationItem( )
+
+        private void ExecuteNavigationItem( )
         {
             var item = Model.SelectNavigationItems;
             if (item != null)
@@ -160,14 +209,10 @@ namespace WPFControl.ProgramControl.Services
                     {
                         if (item.Action != null)
                         {
-                            // 使用 Task.Run 避免阻塞 UI 线程
-                            Task.Run(() =>
+                            // 导航操作回到主线程
+                           _= Application.Current.Dispatcher.InvokeAsync(() =>
                             {
-                                // 导航操作回到主线程
-                                System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                                {
-                                    item.Action.Invoke();
-                                });
+                                item.Action.Invoke();
                             });
                         }
                     }
@@ -185,11 +230,7 @@ namespace WPFControl.ProgramControl.Services
                 }
             }
         }
-
-        public CNavigationItem Query(string pTitle)
-        {
-            return Model.NavigationItems.FirstOrDefault(s => s.Title == pTitle);
-        }
+ 
 
         public void Add(CNavigationItem pItem)
         {

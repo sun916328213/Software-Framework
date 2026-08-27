@@ -208,8 +208,7 @@ namespace Packing_Machine.UI.ViewModel
             SettingCommand = new RelayCommand(() => {
                MessagePrompt message = new  MessagePrompt("提示", "选择配方后请再去打印界面设置标签数据,即将转去打印界面!!", System.Windows.Visibility.Hidden);
                 message.ShowDialog ();
-                _MenuService.Model.SelectNavigationItems = _MenuService.Query("打印设置");
-                _MenuService.ExecuteNavigationItem();
+               _MenuService.SwitchMenu("打印设置");
             });
 
             UpdateCommand = new RelayCommand(() =>

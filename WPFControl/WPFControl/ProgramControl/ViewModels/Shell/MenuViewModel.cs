@@ -34,9 +34,7 @@ namespace WPFControl.ProgramControl.ViewModels
             {
                 if (item != null)
                 {
-                    // 设置当前选中的菜单项（一级或二级都显示灰色）
-                    Service.Model.SelectNavigationItems = item;
-                    Service.ExecuteNavigationItem();
+                    Service.SwitchMenu(item.Title);
                 }
             });
         }

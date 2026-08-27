@@ -78,7 +78,7 @@ public class ScriptEditorModule : IModule
             var resources = new ResourceDictionary
             {
                 Source = new Uri(
-                    "pack://application:,,,/WPFControl;component/Resources/Resources.xaml",
+                    "pack://application:,,,/WPFCustomControls;component/Resources/Resources.xaml",
                     UriKind.Absolute)
             };
             app.Resources.MergedDictionaries.Add(resources);

@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
+    xmlns:script="clr-namespace:ScriptEditor.Views;assembly=ScriptEditor"
     Width="1400"
     Height="900"
     FontSize="14"
@@ -12,8 +13,8 @@
     mc:Ignorable="d">
 
     <TabControl>
-        <TabItem Header="脚本编辑">
-            <ContentControl prism:RegionManager.RegionName="ScriptRegion" />
+        <TabItem Header="脚本编辑器">
+            <script:ScriptManagerView/>
         </TabItem>
         <TabItem Header="流程图">
             <ContentControl prism:RegionManager.RegionName="FlowRegion" />

@@ -40,6 +40,8 @@ namespace WPFControl.ProgramControl.Services
         private void OnUserStatusChanged(UserInfo userInfo)
         {
             Update();
+            // 用户状态变化（含自动登出）统一在此通知订阅方，确保菜单等随等级刷新
+            UserInfoChanged?.Invoke(this, Model);
         }
 
         /// <summary>
@@ -131,10 +133,9 @@ namespace WPFControl.ProgramControl.Services
             TryCatchHelper.TryExecute(() =>
             {
                 _UserService.Login(Model.UserName, Model.Password);
-             
+
                 Update();
                 Reset();
-                UserInfoChanged?.Invoke(this,Model);
             },
             (ex) => Model.ErrorMessage = ex.Message
             );
@@ -147,7 +148,6 @@ namespace WPFControl.ProgramControl.Services
                 _UserService.Logout();
                 Update();
                 Reset();
-                UserInfoChanged?.Invoke(this, Model);
             },
             (ex) => Model.ErrorMessage = ex.Message
             );

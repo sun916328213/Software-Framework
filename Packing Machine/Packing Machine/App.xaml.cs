@@ -134,30 +134,22 @@ namespace Packing_Machine
             // Prism 的 RegisterForNavigation 在 DryIoc 下是瞬时注册，预热实例会被丢弃、
             // 导航首进仍要重建导致卡顿。注册为单例后，PrewarmNavigationViewsAsync 预热的
             // 实例即导航首次进入复用的实例；带显式 VM 的重载同时保留 ViewModelLocationProvider 绑定。
-            containerRegistry.RegisterSingleton<Home>();
+ 
             containerRegistry.RegisterNavigationView<Home>();
-
-            containerRegistry.RegisterSingleton<UI.View.Recipe>();
             containerRegistry.RegisterNavigationView<UI.View.Recipe, ViewModel_Recipe>();
-
-            containerRegistry.RegisterSingleton<VisionSettingView>();
             containerRegistry.RegisterNavigationView<VisionSettingView, VisionSettingViewModel>();
-
-            containerRegistry.RegisterSingleton<VisionView>();
             containerRegistry.RegisterNavigationView<VisionView, VisionViewModel>();
+            containerRegistry.RegisterNavigationView<DataQueryView, DataQueryViewModel<CSQLData, CSQLDataDTO>>();
 
+            containerRegistry.RegisterSingleton<CapacityStatisticsService<CSQLData>, PackingCapacityStatisticsService>();
+            containerRegistry.RegisterNavigationView<CapacityStatisticsView, CapacityStatisticsViewModel<CSQLData>>();
 
             containerRegistry.RegisterSingleton<AutoProcess>();
             containerRegistry.RegisterSingleton<PLCTool>();
             containerRegistry.RegisterSingleton<VisionTool>();
             containerRegistry.RegisterSingleton<VisionViewModel>();
             containerRegistry.RegisterSingleton<DataQueryService<CSQLData, CSQLDataDTO>>();
-            containerRegistry.RegisterSingleton<DataQueryView>();
-            containerRegistry.RegisterNavigationView<DataQueryView, DataQueryViewModel<CSQLData, CSQLDataDTO>>();
-
-            containerRegistry.RegisterSingleton<CapacityStatisticsService<CSQLData>, PackingCapacityStatisticsService>();
-            containerRegistry.RegisterNavigationView<CapacityStatisticsView, CapacityStatisticsViewModel<CSQLData>>();
-
+ 
 
             containerRegistry.RegisterSingleton<Load>();
             containerRegistry.RegisterSingleton<ReadID>();
@@ -175,7 +167,6 @@ namespace Packing_Machine
         {
             // 添加WPFControl模块到模块目录
             moduleCatalog.AddModule<DataManagerModule>();
-
             moduleCatalog.AddModule<CommunicationModule>();
             moduleCatalog.AddModule<SecsToolModule>();
             moduleCatalog.AddModule<DeviceModule>();
@@ -276,7 +267,8 @@ namespace Packing_Machine
                                 + (stack == null ? "" : $"\n  at {stack}"));
                             System.Diagnostics.Debug.WriteLine($"[初始化失败] {title}: {ex}");
                         }
-                    }));
+                    }
+                    ));
                 }
 
                 foreach (ScriptEditor.Models.ScriptItem item in items)
@@ -349,11 +341,6 @@ namespace Packing_Machine
                 MessageBox.Show(summary, "启动初始化存在失败步骤",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-        }
-
-        private void DispatcherTimer_Tick(object? sender, EventArgs e)
-        {
-            throw new NotImplementedException();
         }
     }
 }

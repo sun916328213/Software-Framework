@@ -35,7 +35,7 @@ namespace WPFControl.CustomControl.Services
         /// 用户登入时间
         /// </summary>
         private DateTime _lastActivityTime;
-        private readonly DispatcherTimer _logoutTimer=new DispatcherTimer() { Interval=TimeSpan.FromSeconds(10)};
+        private DispatcherTimer _logoutTimer;
 
         /// <summary>
         /// 登出时间
@@ -92,14 +92,15 @@ namespace WPFControl.CustomControl.Services
             {
                 UserInfos.Add(iuser3);
             }
-            Logout();
-
             // DispatcherTimer 和 InputManager 必须在 UI 线程初始化，
-            DispatcherOperation dispatcherOperation = Application.Current.Dispatcher.InvokeAsync(() =>
+            // 否则 DispatcherTimer 会绑定到错误的调度器而永不触发，导致 Login 后无法循环计时
+            Application.Current.Dispatcher.Invoke(() =>
             {
+                _logoutTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(10) };
                 _logoutTimer.Tick += LogoutTimer_Tick;
                 InputManager.Current.PreProcessInput += InputManager_PreProcessInput;
             });
+            Logout();
         }
  
         /// <summary>
@@ -149,7 +150,9 @@ namespace WPFControl.CustomControl.Services
             UserStatusChanged?.Invoke(CurUserInfo);
 
             _lastActivityTime = DateTime.Now;
-            _logoutTimer.Start();
+           
+                _logoutTimer.Start();
+           
         }
 
         private void InputManager_PreProcessInput(object sender, PreProcessInputEventArgs e)
@@ -171,7 +174,7 @@ namespace WPFControl.CustomControl.Services
 
         private void LogoutTimer_Tick(object? sender, EventArgs e)
         {
-            if (DateTime.UtcNow - _lastActivityTime >= LogoutTime)
+            if (DateTime.Now - _lastActivityTime >= LogoutTime)
             {
                 Logout();
             }
@@ -290,13 +293,6 @@ namespace WPFControl.CustomControl.Services
         /// <returns></returns>
         public void Logout()
         {
-            Dispatcher? dispatcher = Application.Current?.Dispatcher;
-            if (dispatcher != null && !dispatcher.CheckAccess())
-            {
-                dispatcher.Invoke(Logout);
-                return;
-            }
-
             _logoutTimer.Stop();
             CurUserInfo = UserInfos.First(s => s.Level == EUserLevel.Guest);
             // 触发用户状态变化事件
