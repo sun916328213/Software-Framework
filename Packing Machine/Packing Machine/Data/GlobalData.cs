@@ -22,11 +22,11 @@ namespace Packing_Machine.Data
         /// <summary>
         /// Log存储路径
         /// </summary>
-        public static string LogPath { get; set; } = "D:\\Data\\Log";
+        public static string LogPath { get; set; } = "D:\\DeviceData\\Log";
         /// <summary>
         /// SecsLog存储路径
         /// </summary>
-        public static string SecsLogPath { get; set; } = "D:\\Data\\SecsLog";
+        public static string SecsLogPath { get; set; } = "D:\\DeviceData\\SecsLog";
         /// <summary>
         /// PLC 地址存储路径
         /// </summary>

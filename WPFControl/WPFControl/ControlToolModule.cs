@@ -1,4 +1,6 @@
-﻿using DataManager.Log;
+﻿using DataManager.Excel;
+using DataManager.Excel.Definition;
+using DataManager.Log;
 using DataManager.Log.SeriLog;
 using Device.PrintSoftware;
 using Extension.Core.ReflectionEx;

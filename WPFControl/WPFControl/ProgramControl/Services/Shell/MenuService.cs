@@ -178,6 +178,16 @@ namespace WPFControl.ProgramControl.Services
             ExecuteNavigationItem();
         }
 
+        /// <summary>
+        /// 切换菜单项
+        /// </summary>
+        /// <param name="item"></param>
+        public void SwitchMenu(CNavigationItem item)
+        {
+            Model.SelectNavigationItems = item;
+            ExecuteNavigationItem();
+        }
+
         /// <summary>在菜单集合（含子菜单 Children）中按标题递归查找项。</summary>
         private static CNavigationItem? FindNavigationItem(IEnumerable<CNavigationItem> items, string name)
         {

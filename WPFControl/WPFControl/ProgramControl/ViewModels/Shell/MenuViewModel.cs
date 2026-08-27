@@ -33,9 +33,7 @@ namespace WPFControl.ProgramControl.ViewModels
             SelectedCommand = new RelayCommand<CNavigationItem>((item) =>
             {
                 if (item != null)
-                {
-                    Service.SwitchMenu(item.Title);
-                }
+                    Service.SwitchMenu(item);
             });
         }
 

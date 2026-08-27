@@ -44,7 +44,7 @@ namespace WPFControl.ProgramControl.Services
         /// <summary>
         /// 报警信息文件路径
         /// </summary>
-        public string FilePath { get; set; } = "C:\\DeviceData\\Alarm";
+        public string FilePath { get; set; } = "D:\\DeviceData\\Alarm";
         /// <summary>
         /// 报警信息文件名
         /// </summary>
@@ -59,7 +59,7 @@ namespace WPFControl.ProgramControl.Services
             _LogInfoService = container.Resolve<LogInfoService>();
             _SecsControl = container.Resolve<SecsControl>();
 
-            _ExcelManager = new EPPlusHelper();
+            _ExcelManager = container.Resolve< EPPlusHelper>();
             _ExcelManager.ExcelParam = new ExcelParam()
             {
                 Name = "AlarmInfo",

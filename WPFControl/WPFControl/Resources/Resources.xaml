@@ -37,5 +37,5 @@
     <!--  应用图标资源  -->
     <BitmapImage x:Key="AppIcon" UriSource="/WPFControl;component/Resources/图标.ico" />
 
- 
+
 </ResourceDictionary>

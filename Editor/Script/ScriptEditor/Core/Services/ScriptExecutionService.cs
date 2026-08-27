@@ -561,6 +561,34 @@ public static class ScriptExecutionService
                 || first.StartsWith("//".AsSpan(), StringComparison.Ordinal)
                 || first.StartsWith("#".AsSpan(), StringComparison.Ordinal))
                 return true;
+
+            // 续行检测：以下开头的行通常是多行语句的续行，不可插桩
+            if (first.StartsWith(",".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith(".".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("?".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("=>".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith(")".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("]".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("}".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("+".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("-".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("*".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("/".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("%".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("&".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("|".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("^".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("<".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith(">".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("=".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("!".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("??".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("&&".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith("||".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith(":".AsSpan(), StringComparison.Ordinal)
+                || first.StartsWith(";".AsSpan(), StringComparison.Ordinal))
+                return true;
+
             return false;
         }
 
