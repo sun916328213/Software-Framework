@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -54,11 +55,12 @@ public partial class ScriptEditorView : UserControl
     private bool _suppressScriptCodeChange;
     /// <summary>压制 OutputText 依赖属性变更回调的标志（防止双向绑定循环触发）。</summary>
     private bool _suppressOutputChange;
-    /// <summary>
-    /// 抑制输出面板自动滚动的标志。切页播种（AttachToItem/VM 种子同步）会触发
+    /// <summary>抑制输出面板自动滚动的标志。切页播种（AttachToItem/VM 种子同步）会触发
     /// ViewModel 输出变化事件，若不抑制会把新脚本的输出强制滚到底部。
     /// </summary>
     private bool _suppressAutoScroll;
+    /// <summary>抑制断点集合变更同步到 ScriptItem 的标志（切页保存/恢复期间使用）。</summary>
+    private bool _suppressBreakpointSync;
     /// <summary>异步等待初始化完成的 TaskCompletionSource。</summary>
     private TaskCompletionSource<bool>? _initTcs;
     /// <summary>
@@ -501,6 +503,12 @@ public partial class ScriptEditorView : UserControl
             _suppressAutoScroll = true;
             _viewModel.OutputText = _attachedItem.OutputText;
             _suppressAutoScroll = false;
+
+            // 播种断点：首次创建 ViewModel 时从 ScriptItem 恢复断点
+            _suppressBreakpointSync = true;
+            foreach (var bp in _attachedItem.Breakpoints)
+                _viewModel.Breakpoints.Add(bp);
+            _suppressBreakpointSync = false;
         }
 
         LayoutRoot.DataContext = _viewModel;
@@ -966,10 +974,20 @@ public partial class ScriptEditorView : UserControl
     /// 将本编辑器与脚本项关联：引用面板加载脚本项的 DLL 引用，并让服务把
     /// 后续引用增删同步回脚本项（保证"运行全部/保存任务"使用同一份引用）。
     /// 同时刷新输出面板，确保切换脚本时输出栏显示正确的脚本输出。
+    /// 断点也在此处按脚本独立保存/恢复（与代码、光标、滚动位置同理）。
     /// </summary>
     private void AttachToItem(ScriptItem item)
     {
         if (_attachedItem == item) return;
+
+        // 切页前：将当前 ViewModel 断点保存到旧脚本项
+        if (_attachedItem != null && _viewModel != null)
+        {
+            _attachedItem.Breakpoints.Clear();
+            foreach (var bp in _viewModel.Breakpoints)
+                _attachedItem.Breakpoints.Add(bp);
+        }
+
         _attachedItem = item;
 
         // 后端可能尚未初始化（OnLoaded 在 InitializeCoreAsync 之前触发），
@@ -985,6 +1003,13 @@ public partial class ScriptEditorView : UserControl
             _suppressAutoScroll = true;
             _viewModel.OutputText = item.OutputText;
             _suppressAutoScroll = false;
+
+            // 恢复新脚本项的断点（抑制同步回调，避免回环写入）
+            _suppressBreakpointSync = true;
+            _viewModel.Breakpoints.Clear();
+            foreach (var bp in item.Breakpoints)
+                _viewModel.Breakpoints.Add(bp);
+            _suppressBreakpointSync = false;
         }
     }
 
@@ -1088,6 +1113,7 @@ public partial class ScriptEditorView : UserControl
 
     /// <summary>
     /// 绑定 VS 风格断点边栏：关联断点集合、编辑器 TextView、点击事件。
+    /// 同时订阅断点集合变更，实时同步到当前 ScriptItem（供"全部执行"使用）。
     /// </summary>
     private void SetupBreakpointGutter()
     {
@@ -1101,6 +1127,10 @@ public partial class ScriptEditorView : UserControl
             textView.InvalidateVisual();
         };
 
+        // 订阅断点集合变更：实时同步到当前 ScriptItem，
+        // 使 ScriptItem.Engine（全部执行路径）能读取到正确的断点
+        _viewModel.Breakpoints.CollectionChanged += OnBreakpointsChanged;
+
         // 通过 IsDebugMode 控制边栏可见性
         breakpointGutter.SetBinding(VisibilityProperty,
             new System.Windows.Data.Binding(nameof(ScriptEditorViewModel.IsDebugMode))
@@ -1108,5 +1138,19 @@ public partial class ScriptEditorView : UserControl
                 Source = _viewModel,
                 Converter = new System.Windows.Controls.BooleanToVisibilityConverter()
             });
+    }
+
+    /// <summary>
+    /// 断点集合变更回调：将 ViewModel 断点同步到当前 ScriptItem。
+    /// 切页期间的批量保存/恢复由 _suppressBreakpointSync 抑制。
+    /// </summary>
+    private void OnBreakpointsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (_suppressBreakpointSync || _attachedItem == null || _viewModel == null) return;
+        if (!ReferenceEquals(_attachedItem, DataContext)) return;
+
+        _attachedItem.Breakpoints.Clear();
+        foreach (var bp in _viewModel.Breakpoints)
+            _attachedItem.Breakpoints.Add(bp);
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -153,6 +154,10 @@ public class ScriptItem : ScriptStateBase
         }
     }
 
+    /// <summary>断点行号集合（1-based），由 ScriptEditorView 在切页时同步保存/恢复。</summary>
+    [JsonIgnore]
+    public ObservableCollection<int> Breakpoints { get; } = new();
+
     #region 执行（委托给懒加载的 ScriptEngine）
 
     /// <summary>获取（或懒创建）本脚本的无头执行引擎。</summary>
@@ -173,7 +178,7 @@ public class ScriptItem : ScriptStateBase
         var engine = new ScriptEngine(
             () => Code,
             GetReferences,
-            () => Array.Empty<int>())
+            () => Breakpoints.ToArray())
         {
             LoopInterval = LoopInterval
         };
