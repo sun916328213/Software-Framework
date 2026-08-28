@@ -251,7 +251,7 @@ namespace Packing_Machine.Business.Flow
                         {
                             Title = Message.主页.GetMessage(),
                             SelectedIcon = PackIconKind.Home,
-                            UnselectedIcon = PackIconKind.HomeOutline,
+                            Icon = PackIconKind.HomeOutline,
                             Action = (() => {
                                 _regionManager.RequestNavigate("MainContentRegion", "Home");
                             })
@@ -261,7 +261,7 @@ namespace Packing_Machine.Business.Flow
                         {
                             Title = Message.配方.GetMessage(),
                             SelectedIcon = PackIconKind.ReceiptTextEdit,
-                            UnselectedIcon = PackIconKind.ReceiptTextEditOutline,
+                            Icon = PackIconKind.ReceiptTextEditOutline,
                             //Userlevel= EUserLevel.Admin,
                             Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "Recipe"); })
                         },
@@ -269,7 +269,7 @@ namespace Packing_Machine.Business.Flow
                         {
                             Title = Message.打印设置.GetMessage(),
                             SelectedIcon = PackIconKind.Printer,
-                            UnselectedIcon = PackIconKind.PrinterOutline,
+                            Icon = PackIconKind.PrinterOutline,
                             Action = (() =>
                             {
                                 _regionManager.RequestNavigate("MainContentRegion", "PrintManagerView");
@@ -279,49 +279,49 @@ namespace Packing_Machine.Business.Flow
                         {
                             Title = Message.视觉查看.GetMessage(),
                             SelectedIcon = PackIconKind.Video,
-                            UnselectedIcon = PackIconKind.VideoOutline,
+                            Icon = PackIconKind.VideoOutline,
                             Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "DisplayView"); }),
                         },
                         new CNavigationItem
                         {
                             Title = Message.Cam设置.GetMessage(),
                             SelectedIcon = PackIconKind.Camera,
-                            UnselectedIcon = PackIconKind.CameraOutline,
+                            Icon = PackIconKind.CameraOutline,
                             Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "CamManagerView"); })
                         },
                         new CNavigationItem
                         {
                             Title = Message.流程.GetMessage(),
                             SelectedIcon = PackIconKind.ListBox,
-                            UnselectedIcon = PackIconKind.ListBoxOutline,
+                            Icon = PackIconKind.ListBoxOutline,
                             Children = new ObservableCollection<CNavigationItem>
                             {
                                 new CNavigationItem
                                 {
                                     Title = Message.启动流程.GetMessage(),
                                     SelectedIcon = PackIconKind.Play,
-                                    UnselectedIcon = PackIconKind.PlayOutline,
+                                    Icon = PackIconKind.PlayOutline,
                                     Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "StartupFlowView"); })
                                 },
                                 new CNavigationItem
                                 {
                                     Title = Message.初始化流程.GetMessage(),
                                     SelectedIcon = PackIconKind.Refresh,
-                                    UnselectedIcon = PackIconKind.Refresh,
+                                    Icon = PackIconKind.Refresh,
                                     Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "InitializeFlowView"); })
                                 },
                                 new CNavigationItem
                                 {
                                     Title = Message.自动流程.GetMessage(),
                                     SelectedIcon = PackIconKind.Play,
-                                    UnselectedIcon = PackIconKind.PlayOutline,
+                                    Icon = PackIconKind.PlayOutline,
                                     Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "AutoFlowView"); })
                                 },
                                 new CNavigationItem
                                 {
                                     Title = Message.关闭流程.GetMessage(),
                                     SelectedIcon = PackIconKind.PowerOff,
-                                    UnselectedIcon = PackIconKind.PowerOff,
+                                    Icon = PackIconKind.PowerOff,
                                     Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "ShutdownFlowView"); })
                                 },
                             }
@@ -330,7 +330,7 @@ namespace Packing_Machine.Business.Flow
                         {
                             Title =Message.检测项设置.GetMessage(),
                             SelectedIcon = PackIconKind.PencilRuler,
-                            UnselectedIcon = PackIconKind.PencilRulerOutline,
+                            Icon = PackIconKind.PencilRulerOutline,
 
                             Children=new ObservableCollection<CNavigationItem>
                             {
@@ -338,7 +338,7 @@ namespace Packing_Machine.Business.Flow
                                 {
                                     Title =Message.检测项设置.GetMessage(),
                                     SelectedIcon = PackIconKind.CameraWireless,
-                                    UnselectedIcon = PackIconKind.CameraWirelessOutline,
+                                    Icon = PackIconKind.CameraWirelessOutline,
                                     Action = (() =>
                                     {
                                         _regionManager.RequestNavigate("MainContentRegion", "VisionSettingView");
@@ -348,7 +348,7 @@ namespace Packing_Machine.Business.Flow
                                 {
                                     Title = Message.视觉设置.GetMessage(),
                                     SelectedIcon = PackIconKind.PencilBoxMultiple,
-                                    UnselectedIcon = PackIconKind.PencilBoxMultipleOutline,
+                                    Icon = PackIconKind.PencilBoxMultipleOutline,
                                     Action = (() =>
                                     {
                                         _regionManager.RequestNavigate("MainContentRegion", "VisionView");
@@ -360,28 +360,28 @@ namespace Packing_Machine.Business.Flow
                         {
                             Title = Message.硬件设置.GetMessage(),
                             SelectedIcon = PackIconKind.Cog ,
-                            UnselectedIcon = PackIconKind.CogOutline,
+                            Icon = PackIconKind.CogOutline,
                             Children=new ObservableCollection<CNavigationItem>
                             {
                                 new CNavigationItem
                                 {
                                     Title = Message.Cam设置.GetMessage(),
                                     SelectedIcon = PackIconKind.Camera,
-                                    UnselectedIcon = PackIconKind.CameraOutline,
+                                    Icon = PackIconKind.CameraOutline,
                                     Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "CamManagerView"); })
                                 },
                                 new CNavigationItem
                                 {
                                     Title = Message.RFID设置.GetMessage(),
                                     SelectedIcon = PackIconKind.CastConnected,
-                                    UnselectedIcon = PackIconKind.Cast,
+                                    Icon = PackIconKind.Cast,
                                     Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "RFIDManagerView"); })
                                 },
                                  new CNavigationItem
                                 {
                                     Title = "脚本编辑器",
                                     SelectedIcon = PackIconKind.CodeBraces,
-                                    UnselectedIcon = PackIconKind.CodeBracesBox,
+                                    Icon = PackIconKind.CodeBracesBox,
                                     Userlevel= EUserLevel.Admin,
                                     Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "ScriptEditorView"); })
                                 },
@@ -392,42 +392,42 @@ namespace Packing_Machine.Business.Flow
                         {
                             Title = Message.数据查询.GetMessage(),
                             SelectedIcon = PackIconKind.DatabaseSearch,
-                            UnselectedIcon = PackIconKind.DatabaseSearchOutline,
+                            Icon = PackIconKind.DatabaseSearchOutline,
                             Children=new ObservableCollection<CNavigationItem>
                             {
                                 new CNavigationItem
                                 {
                                     Title = Message.Log查询.GetMessage(),
                                     SelectedIcon = PackIconKind.NoteSearch,
-                                    UnselectedIcon = PackIconKind.NoteSearchOutline,
+                                    Icon = PackIconKind.NoteSearchOutline,
                                     Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "LogQueryView"); })
                                 },
                                 new CNavigationItem
                                 {
                                     Title = Message.SEMILog查询.GetMessage(),
                                     SelectedIcon = PackIconKind.CloudSearch,
-                                    UnselectedIcon = PackIconKind.CloudSearchOutline,
+                                    Icon = PackIconKind.CloudSearchOutline,
                                     Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "SEMILogQueryView"); })
                                 },
                                 new CNavigationItem
                                 {
                                     Title = Message.数据查询.GetMessage(),
                                     SelectedIcon = PackIconKind.TextBoxSearch,
-                                    UnselectedIcon = PackIconKind.TextBoxSearchOutline,
+                                    Icon = PackIconKind.TextBoxSearchOutline,
                                     Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "DataQueryView"); })
                                 },
                                 new CNavigationItem
                                 {
                                     Title = Message.图像查询.GetMessage(),
                                     SelectedIcon = PackIconKind.ImageSearch,
-                                    UnselectedIcon = PackIconKind.ImageSearchOutline,
+                                    Icon = PackIconKind.ImageSearchOutline,
                                     Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "ImageQueryView"); })
                                 },
                                 new CNavigationItem
                                 {
                                     Title = Message.报警查询.GetMessage(),
                                     SelectedIcon = PackIconKind.AlarmLight,
-                                    UnselectedIcon = PackIconKind.AlarmLightOutline,
+                                    Icon = PackIconKind.AlarmLightOutline,
                                     Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "AlarmInfoQueryView"); })
                                 },
                             }
@@ -437,7 +437,7 @@ namespace Packing_Machine.Business.Flow
                         {
                             Title = Message.用户登录.GetMessage(),
                             SelectedIcon = PackIconKind.User,
-                            UnselectedIcon = PackIconKind.UserOutline,
+                            Icon = PackIconKind.UserOutline,
                             Action = () => { _dialogService.ShowDialog("UserInfoView"); },
                             ItemType = NavigationItemType.UserLogin // 设置菜单项类型为用户登录
                         },
@@ -445,7 +445,7 @@ namespace Packing_Machine.Business.Flow
                         {
                             Title = Message.用户信息管理.GetMessage(),
                             SelectedIcon = PackIconKind.AccountKey,
-                            UnselectedIcon = PackIconKind.AccountKeyOutline,
+                            Icon = PackIconKind.AccountKeyOutline,
                             Action = () => { _regionManager.RequestNavigate("MainContentRegion","UserInfoManagerView"); },
                             Userlevel= EUserLevel.Admin,
                         },
@@ -453,7 +453,7 @@ namespace Packing_Machine.Business.Flow
                         {
                             Title = Message.SEMI设置.GetMessage(),
                             SelectedIcon = PackIconKind.ConsoleNetwork,
-                            UnselectedIcon = PackIconKind.ConsoleNetworkOutline,
+                            Icon = PackIconKind.ConsoleNetworkOutline,
                             Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "SEMIManagerView"); })
                         },
                         new CNavigationItem
@@ -461,7 +461,7 @@ namespace Packing_Machine.Business.Flow
                             Title = Message.报警设置.GetMessage(),
                              Userlevel= EUserLevel.SuperAdmin,
                             SelectedIcon = PackIconKind.BellCog,
-                            UnselectedIcon = PackIconKind.BellCogOutline,
+                            Icon = PackIconKind.BellCogOutline,
                             Action = (() => { _regionManager.RequestNavigate("MainContentRegion", "AlarmInfoView"); })
                         },
                     });

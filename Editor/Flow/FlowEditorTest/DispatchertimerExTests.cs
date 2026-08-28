@@ -26,13 +26,13 @@ public class DispatchertimerExTests
         Assert.True(t1.IsEnabled == false, "旧定时器应被替换停止"); // 同 key 替换：旧的 Stop
         Assert.True(t2.IsEnabled);
 
-        Assert.True(DispatchertimerEx.StopTimer("test-timer"));
+        Assert.True(DispatcherTimerEx.StopTimer("test-timer"));
         Assert.False(t2.IsEnabled);
     }
 
     [Fact]
     public void StopTimer_MissingKey_ReturnsFalse()
     {
-        Assert.False(DispatchertimerEx.StopTimer("不存在的key"));
+        Assert.False(DispatcherTimerEx.StopTimer("不存在的key"));
     }
 }

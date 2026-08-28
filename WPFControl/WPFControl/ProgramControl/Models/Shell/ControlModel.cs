@@ -15,9 +15,9 @@ namespace WPFControl.ProgramControl.Models
         /// </summary>
         public PackIconKind SelectedIcon { get; set; }
         /// <summary>
-        /// 未选中图标
+        /// 默认图标
         /// </summary>
-        public PackIconKind UnselectedIcon { get; set; }
+        public PackIconKind Icon { get; set; }
         /// <summary>
         /// 函数
         /// </summary>
@@ -42,10 +42,10 @@ namespace WPFControl.ProgramControl.Models
         /// </summary>
         public ControlModel()
         {
-            ControlItems.Add(new CControlItem() { Title = "初始化", SelectedIcon = PackIconKind.Replay, UnselectedIcon = PackIconKind.Restore });
-            ControlItems.Add(new CControlItem() { Title = "启动", SelectedIcon = PackIconKind.Play, UnselectedIcon = PackIconKind.PlayOutline });
-            ControlItems.Add(new CControlItem() { Title = "停止", SelectedIcon = PackIconKind.StopCircle, UnselectedIcon = PackIconKind.StopCircleOutline });
-            ControlItems.Add(new CControlItem() { Title = "退出", SelectedIcon = PackIconKind.Power, UnselectedIcon = PackIconKind.PowerStandby });
+            ControlItems.Add(new CControlItem() { Title = "初始化", SelectedIcon = PackIconKind.Replay, Icon = PackIconKind.Restore });
+            ControlItems.Add(new CControlItem() { Title = "启动", SelectedIcon = PackIconKind.Play, Icon = PackIconKind.PlayOutline });
+            ControlItems.Add(new CControlItem() { Title = "停止", SelectedIcon = PackIconKind.StopCircle, Icon = PackIconKind.StopCircleOutline });
+            ControlItems.Add(new CControlItem() { Title = "退出", SelectedIcon = PackIconKind.Power, Icon = PackIconKind.PowerStandby });
         }
     }
 }

@@ -1,7 +1,10 @@
+using DataManager.SQL;
+using DataManager.SQL.Definition;
 using Packing_Machine.Business.Flow;
-using Packing_Machine.Infra.Tool;
 using Packing_Machine.Business.Order;
 using Packing_Machine.Business.Station;
+using Packing_Machine.Data.Model;
+using Packing_Machine.Infra.Tool;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
@@ -179,9 +182,19 @@ namespace Packing_Machine.UI.View
         }
         private async void Button_Click26(object sender, RoutedEventArgs e)
         {
-            IContainerProvider container = ContainerLocator.Container;
-            var dbTestManager = new DbTestManager(container);
-            dbTestManager.WriteTestDataToDb();
+            try
+            {
+                IContainerProvider container = ContainerLocator.Container;
+
+
+                var _SQLManager = container.Resolve<SQLManager>();
+
+                //连接数据库
+                _SQLManager[0].Connect();
+            }
+            catch (Exception ex)
+            {
+            }
         }
     }
 }

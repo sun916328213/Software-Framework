@@ -46,8 +46,8 @@
                     <Setter Property="materialDesign:NavigationBarAssist.SelectionHeight" Value="50" />
                     <Setter Property="materialDesign:NavigationBarAssist.IconSize" Value="45" />
                     <Setter Property="materialDesign:NavigationBarAssist.IsTextVisible" Value="True" />
-                    <Setter Property="materialDesign:NavigationBarAssist.SelectedIcon" Value="{Binding UnselectedIcon}" />
-                    <Setter Property="materialDesign:NavigationBarAssist.UnselectedIcon" Value="{Binding UnselectedIcon}" />
+                    <Setter Property="materialDesign:NavigationBarAssist.SelectedIcon" Value="{Binding Icon}" />
+                    <Setter Property="materialDesign:NavigationBarAssist.UnselectedIcon" Value="{Binding Icon}" />
                 </Style>
             </ListBox.ItemContainerStyle>
             <ListBox.Resources>

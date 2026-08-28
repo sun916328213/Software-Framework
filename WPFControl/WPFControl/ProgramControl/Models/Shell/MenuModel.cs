@@ -32,9 +32,9 @@ namespace WPFControl.ProgramControl.Models
         /// </summary>
         public PackIconKind SelectedIcon { get; set; }
         /// <summary>
-        /// 未选中图标
+        /// 默认图标
         /// </summary>
-        public PackIconKind UnselectedIcon { get; set; }
+        public PackIconKind Icon { get; set; }
         /// <summary>
         /// 视图
         /// </summary>
