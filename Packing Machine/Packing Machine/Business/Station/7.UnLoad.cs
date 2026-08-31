@@ -5,11 +5,11 @@ using Extension.Struct;
 using Packing_Machine.Data;
 using Packing_Machine.Business.Flow;
 using Packing_Machine.Infra.Tool;
-using Packing_Machine.Data.Model;
 using Packing_Machine.Business.Order;
 using Prism.Ioc;
 using System;
 using System.Linq;
+using Packing_Machine.UI.Model;
 
 namespace Packing_Machine.Business.Station
 {

@@ -18,9 +18,9 @@ namespace Extension.Core.ControlEx
         }
 
         static SaveFileDialog _SaveFileDialog = new SaveFileDialog();
-        public static string SaveFile()
+        public static string SaveFile(string FileName="")
         {
-            _SaveFileDialog.FileName = "";
+            _SaveFileDialog.FileName = FileName;
             //_SaveFileDialog.Filter = " 所有文件 (*.*)|*.*";
             var ret = _SaveFileDialog.ShowDialog();
             if (ret == true)

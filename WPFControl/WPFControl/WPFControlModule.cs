@@ -30,7 +30,7 @@ namespace WPFControl
     /// WPFControl的Prism模块类
     /// 负责注册本模块的视图和服务
     /// </summary>
-    public class ControlToolModule : IModule 
+    public class WPFControlModule : IModule 
     {
         /// <summary>
         /// 模块初始化完成后调用

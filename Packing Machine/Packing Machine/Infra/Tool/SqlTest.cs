@@ -4,13 +4,13 @@ using Extension.Core.SystemEx;
 using Extension.Struct;
 using Microsoft.EntityFrameworkCore;
 using Packing_Machine.Data;
-using Packing_Machine.Data.Model;
 using Packing_Machine.Business.Station;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using WPFControl.ProgramControl.Services;
+using Packing_Machine.UI.Model;
 
 namespace Packing_Machine.Infra.Tool
 {

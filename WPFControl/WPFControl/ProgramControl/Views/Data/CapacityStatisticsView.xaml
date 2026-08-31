@@ -7,6 +7,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
+    xmlns:viewmodels="clr-namespace:WPFControl.ProgramControl.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:CapacityStatisticsViewModel}"
     d:DesignHeight="700"
     d:DesignWidth="1100"
     prism:ViewModelLocator.AutoWireViewModel="True"
@@ -15,11 +17,11 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <Style x:Key="CardStyle" TargetType="Border">
-                <Setter Property="Margin" Value="4" />
+                <Setter Property="Margin" Value="10" />
                 <Setter Property="Padding" Value="8" />
                 <Setter Property="CornerRadius" Value="8" />
                 <Setter Property="Background" Value="{StaticResource Color_White}" />
-                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="BorderThickness" Value="1.5" />
                 <Setter Property="BorderBrush" Value="{StaticResource Color_Gray5}" />
             </Style>
 
@@ -38,7 +40,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Border Style="{StaticResource Border_Style}">
+    <Border Padding="6" Style="{StaticResource Border_Style}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="40" />
@@ -49,9 +51,7 @@
 
             <!--  标题栏  -->
             <Grid Grid.Row="0">
-                <StackPanel
-                    VerticalAlignment="Center"
-                    Orientation="Horizontal">
+                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
                     <TextBlock
                         Margin="4,0"
                         VerticalAlignment="Center"
@@ -72,12 +72,21 @@
                 Grid.Row="1"
                 Margin="4"
                 Style="{StaticResource Border_Style}">
-                <cust:QueryView
-                    IsShowFilter="False"
-                    IsShowSelect="False"
-                    QueryCommand="{Binding QueryCommand}"
-                    EndTime="{Binding EndTime, Mode=TwoWay}"
-                    StartTime="{Binding StartTime, Mode=TwoWay}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <cust:QueryView
+                        Grid.Column="0"
+                        EndTime="{Binding Datas.EndTime, Mode=TwoWay}"
+                        IsShowFilter="False"
+                        IsShowSelect="False"
+                        QueryCommand="{Binding QueryCommand}"
+                        SaveCommand="{Binding SaveCommand}"
+                        StartTime="{Binding Datas.StartTime, Mode=TwoWay}" />
+
+                </Grid>
             </Border>
 
             <!--  汇总卡片  -->
@@ -85,7 +94,10 @@
                 <Border Style="{StaticResource CardStyle}">
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Style="{StaticResource CardTitleStyle}" Text="区间产量" />
-                        <TextBlock Style="{StaticResource CardValueStyle}" Text="{Binding Datas.TodayOutput}" />
+                        <TextBlock
+                            Foreground="{StaticResource Color_Blue}"
+                            Style="{StaticResource CardValueStyle}"
+                            Text="{Binding Datas.TotalOutput}" />
                     </StackPanel>
                 </Border>
 
@@ -146,7 +158,9 @@
 
                 <Border
                     Grid.Column="0"
+                    Grid.ColumnSpan="2"
                     Margin="4"
+                    BorderThickness="0"
                     Style="{StaticResource CardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -170,9 +184,10 @@
                 </Border>
 
                 <Border
-                    Grid.Column="1"
+                    Grid.Column="2"
                     Margin="4"
-                    Style="{StaticResource CardStyle}">
+                    Style="{StaticResource CardStyle}"
+                    Visibility="Hidden">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="30" />

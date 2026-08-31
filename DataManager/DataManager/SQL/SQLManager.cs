@@ -1,19 +1,25 @@
-﻿using DataManager.Log.Definition;
-using DataManager.SQL.Dapper;
+﻿using DataManager.SQL.Dapper;
 using DataManager.SQL.Definition;
 using DataManager.SQL.EFCore;
 using DataManager.SQL.SqlSugar;
 using DataManager.SQL.SqlSugarSQL;
+using Prism.Ioc;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataManager.SQL
 {
+    /// <summary>
+    /// SQL 管理器
+    /// </summary>
     public class SQLManager : ManagerBase<ISQL, SQLParam>
     {
+        IContainerExtension ContainerRegistry;
+        public SQLManager(IContainerExtension container )
+        {
+            ContainerRegistry = container;
+        }
+ 
         public override void Config(List<SQLParam> param)
         {
             foreach (var item in param)
@@ -22,22 +28,19 @@ namespace DataManager.SQL
 
         public ISQL<T> Create<T>(SQLParam param) where T : class, new()
         {
-            switch (param.ToolType)
+            ISQL<T> sql = param.ToolType switch
             {
-                case ESQLToolType.EFCore:
-                    var efc = EFCoreHelper<T>.Create(param);
-                    DataManagers.Add(efc);
-                    return efc;
-                case ESQLToolType.SqlSugar:
-                    var sugar = SqlSugarHelper<T>.Create(param);
-                    DataManagers.Add(sugar);
-                    return sugar;
-                case ESQLToolType.Dapper:
-                    var dapper = DapperHelper<T>.Create(param);
-                    DataManagers.Add(dapper);
-                    return dapper;
-                default: throw new NotSupportedException($"{param.ToolType} not support.");
-            }
+                ESQLToolType.EFCore => EFCoreHelper<T>.Create(param),
+                ESQLToolType.SqlSugar => SqlSugarHelper<T>.Create(param),
+                ESQLToolType.Dapper => DapperHelper<T>.Create(param),
+                _ => throw new NotSupportedException($"{param.ToolType} not support.")
+            };
+
+            DataManagers.Add(sql);
+            // 将实例注册为 IOC 单例
+            ContainerRegistry.RegisterInstance (typeof(ISQL<T>), sql);
+            
+            return sql;
         }
 
         public override ISQL Create(SQLParam param)

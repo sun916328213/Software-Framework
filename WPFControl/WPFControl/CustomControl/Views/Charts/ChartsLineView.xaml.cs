@@ -1,4 +1,4 @@
-﻿using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.WPF;
 using System;
 using System.Collections.Generic;
@@ -116,7 +116,8 @@ namespace WPFControl.CustomControl.Views.Charts
         {
             var view = (ChartsLineView)d;
             view.chartsLineService.SetAxisFontSize(view.AxisFontSize);
-            view.XAxes = view.chartsLineService.GetAxisX();
+            // 重新赋值 XAxes 以触发图表刷新（LiveCharts 会响应内部 TextSize 属性变更）
+            view.chats_CartesianChart.XAxes = view.chartsLineService.GetAxisX();
         }
 
         /// <summary>

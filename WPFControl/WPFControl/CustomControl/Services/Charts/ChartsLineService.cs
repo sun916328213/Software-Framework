@@ -56,6 +56,11 @@ namespace WPFControl.CustomControl.Services.Charts
         public void SetAxisFontSize(double fontSize = 14)
         {
             Model.AxisFontSize = fontSize;
+            // 同步应用到当前所有已存在的轴，使其立即生效
+            foreach (var axis in Model.Axis_X)
+            {
+                axis.TextSize = fontSize;
+            }
         }
 
         /// <summary>

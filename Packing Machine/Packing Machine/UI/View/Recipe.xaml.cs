@@ -1,26 +1,11 @@
 using DataManager.SQL;
-using DataManager.SQL.Definition;
 using Packing_Machine.Business.Flow;
 using Packing_Machine.Business.Order;
 using Packing_Machine.Business.Station;
-using Packing_Machine.Data.Model;
 using Packing_Machine.Infra.Tool;
 using Prism.Ioc;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Packing_Machine.UI.View
 {

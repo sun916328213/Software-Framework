@@ -1,4 +1,12 @@
+using DataManager.Excel;
+using DataManager.Excel.MiniExcel;
 using DataManager.SQL;
+using Extension.Core.ControlEx;
+using Extension.Core.ConvertEx;
+using Extension.Core.FileEx;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Win32;
+using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,130 +19,287 @@ using WPFControl.Resources;
 namespace WPFControl.ProgramControl.Services
 {
     /// <summary>
-    /// 产能统计服务（抽象基类）：按时间区间查询数据库原始记录，通过 <see cref="IsNG"/>
-    /// 判定每条记录良品/不良品，再聚合为产能统计结果。
-    /// 框架层泛型实现，不依赖具体业务表类型；良品判定规则由使用方在子类中实现。
+    /// 产能统计服务类
     /// </summary>
-    /// <typeparam name="T">数据库记录类型</typeparam>
-    public abstract class CapacityStatisticsService<T> where T : ISQLDataBase
+    public class CapacityStatisticsService
     {
-        internal readonly SQLManager SQLManager;
+        // 改为 Lazy 注入：避免注册时强求 ISQL<CapacityStatisticsInfo>（该依赖在 Startup 脚本里才注入），
+        // 实际取值时再由容器解析，保证解析顺序无关。
+            ISQL<CapacityStatisticsInfo> StatsSQL=> containerProvider.Resolve<ISQL<CapacityStatisticsInfo>>();
 
-        ISQL<T> Service_SQL => (ISQL<T>)SQLManager[0];
 
-        protected CapacityStatisticsService(SQLManager sqlManager)
+        public CapacityStatisticsModel Model = new CapacityStatisticsModel();
+
+       
+        IContainerProvider containerProvider;
+        public CapacityStatisticsService(IContainerProvider container)
         {
-            SQLManager = sqlManager;
+            containerProvider = container;
+            Model.StartTime = DateTime.Now.Date;
+            Model.EndTime = DateTime.Now.Date;
+
         }
 
         /// <summary>
-        /// 判定单条记录是否为不良品（由使用方在子类中实现）
+        /// 记录一条产能统计结果，自动累加到对应天/小时的 OK/NG 计数
         /// </summary>
-        /// <param name="data">数据库记录</param>
-        /// <returns>true 表示不良品，false 表示良品</returns>
-        protected abstract bool IsNG(T data);
+        /// <param name="time">发生时间</param>
+        /// <param name="isOK">true=良品 false=不良品</param>
+        public bool SaveStatistics(DateTime time, bool isOK)
+        {
+            return TryCatchHelper.TryExecuteWithResult(() =>
+            {
+                var day = time.Date;
+                var hour = time.Hour; // 0..23
+                var id = day.ToString("yyyyMMdd");
+
+                var existing = StatsSQL.Query(s => s.Time.Date == day)?.FirstOrDefault();
+                if (existing != null)
+                {
+                    if (isOK) SetOK(existing, hour, OKAt(existing, hour) + 1);
+                    else SetNG(existing, hour, NGAt(existing, hour) + 1);
+                    StatsSQL.Update(s => s.Time.Date == day, existing);
+                }
+                else
+                {
+                    var row = new CapacityStatisticsInfo { ID = id, Time = day };
+                    if (isOK) SetOK(row, hour, 1); else SetNG(row, hour, 1);
+                    StatsSQL.Add(row);
+                }
+            });
+        }
+
+        /// <summary>
+        /// 按小时单点更新产能统计(适用于PLC 10s循环读取累计值,每小时只更新该小时列)
+        /// 每条数据按其 Time 字段定位"当天 + 对应小时列",只更新该列的 OK/NG 值,不影响其它23列
+        /// </summary>
+        /// <param name="datas">产能统计数据列表(每条 Time 决定归属小时,OK/NG 取该小时列的值)</param>
+        /// <param name="seconds">归属时间偏移量(秒),避免整点时刻数据归属错误</param>    
+        public bool SaveStatistics(CapacityStatisticsInfo data, int seconds = -10)
+        {
+            return TryCatchHelper.TryExecuteWithResult(() =>
+            {
+                if (data == null) return;
+                var curtime = data.Time.AddSeconds(seconds); // 取前seconds秒的时间作为归属时间,避免整点时刻数据归属错误
+
+                var day = curtime.Date;
+                var hour = curtime.Hour; // 0..23
+                var id = day.ToString("yyyyMMdd");
+
+                var existing = StatsSQL.Query(s => s.Time.Date == day)?.FirstOrDefault();
+                if (existing != null)
+                {
+                    // 仅更新该小时列,其它列保持不变
+                    SetOK(existing, hour, OKAt(data, hour));
+                    SetNG(existing, hour, NGAt(data, hour));
+                    StatsSQL.Update(s => s.Time.Date == day, existing);
+                }
+                else
+                {
+                    // 当天首条:新建行,只填该小时列,其它列默认0
+                    var row = new CapacityStatisticsInfo { ID = id, Time = day };
+                    SetOK(row, hour, OKAt(data, hour));
+                    SetNG(row, hour, NGAt(data, hour));
+                    StatsSQL.Add(row);
+                }
+            });
+        }
+
+        /// <summary>
+        /// 保存产能统计数据到 Excel 文件
+        /// </summary>
+        public async Task<bool> SaveStatistics(List<CapacityStatisticsInfo> data)
+        {
+            if (data == null || data.Count == 0) return false;
+ 
+            var dd1=FileDialogEx.SaveFile($"产能统计_{DateTime.Now:yyyyMMdd}.xlsx");
+            if(string.IsNullOrEmpty(dd1)) return false;
+            await ExcelEx.SaveToExcelAsync(dd1, data).ConfigureAwait(false);
+            return true;
+        }
 
         /// <summary>
         /// 获取指定时间区间的产能统计数据
         /// </summary>
-        public CapacityStatisticsModel GetStatistics(DateTime start, DateTime end)
+        public void GetStatistics()
         {
-            var model = new CapacityStatisticsModel();
+            var startDay = Model.StartTime;
+            var endDay = Model.EndTime.AddDays(1);
 
-            TryCatchHelper.TryExecute(() =>
-            {
-                var startDay = start.Date;
-                var endDay = end.AddDays(1).Date;
+            var data = StatsSQL.Query(s => s.Time.Date >= startDay && s.Time.Date <= endDay)?.ToList()
+                       ?? new List<CapacityStatisticsInfo>();
 
-                var data = Service_SQL.Query(s => s.Time.Date >= startDay && s.Time.Date <= endDay)?.ToList()
-                           ?? new List<T>();
+            // 原始数据集合
+            Model.CapacityStatisticsDatas.Clear();
+            foreach (var item in data)
+                Model.CapacityStatisticsDatas.Add(item);
 
-                model.TotalOutput = data.Count;
-                model.TodayOutput = data.Count;
-                model.GoodCount = data.Count(d => !IsNG(d));
-                model.DefectCount = data.Count - model.GoodCount;
-                model.YieldRate = model.TotalOutput > 0 ? Math.Round(model.GoodCount * 100.0 / model.TotalOutput, 2) : 0;
+            int good = data.Sum(SumOK);
+            int defect = data.Sum(SumNG);
+            int total = good + defect;
 
-                if (data.Count > 0)
-                {
-                    var min = data.Min(d => d.Time);
-                    var max = data.Max(d => d.Time);
-                    model.RunTime = Math.Round((max - min).TotalHours, 2);
-                    var totalHours = (endDay - startDay).TotalHours;
-                    model.UtilizationRate = totalHours > 0 ? Math.Round(model.RunTime * 100.0 / totalHours, 2) : 0;
-                }
-                else
-                {
-                    model.RunTime = 0;
-                    model.UtilizationRate = 0;
-                }
+            Model.TotalOutput = total;
+            Model.GoodCount = good;
+            Model.DefectCount = defect;
+            Model.YieldRate = total > 0 ? Math.Round(good * 100.0 / total, 2) : 0;
 
-                BuildTrend(model, data, startDay, endDay);
+            // 运行时长 = 有产出的工时数
+            int activeHours = 0;
+            foreach (var d in data)
+                for (int h = 0; h < 24; h++)
+                    if (OKAt(d, h) + NGAt(d, h) > 0) activeHours++;
+            Model.RunTime = activeHours;
 
-                model.PieData = new ObservableCollection<PieData>
-                {
-                    new PieData { SeriesName = "良品", Value = model.GoodCount, Color = ColorHelper.Color_Green },
-                    new PieData { SeriesName = "不良品", Value = model.DefectCount, Color = ColorHelper.Color_Red }
-                };
+            double totalHours = (endDay - startDay).TotalHours + 24;
+            Model.UtilizationRate = totalHours > 0 ? Math.Round(Model.RunTime * 100.0 / totalHours, 2) : 0;
 
-                model.UpdateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            });
+            BuildTrend(Model, data, startDay, endDay);
 
-            return model;
         }
 
         /// <summary>
-        /// 生成产量趋势：区间<=2天按小时分组，否则按天分组
+        /// 构建产量趋势折线图(区间<=2天按小时,否则按天)
         /// </summary>
-        private void BuildTrend(CapacityStatisticsModel model, List<T> data, DateTime startDay, DateTime endDay)
+        private void BuildTrend(CapacityStatisticsModel model, List<CapacityStatisticsInfo> data, DateTime startDay, DateTime endDay)
         {
             var axisX = new ObservableCollection<string>();
-            var outputSeries = new LineSeries { SeriesName = "产量", Color = ColorHelper.Color_Green };
-            var goodSeries = new LineSeries { SeriesName = "良品", Color = ColorHelper.Color_Blue };
-
+            var outputSeries = new LineSeries { SeriesName = "Total", Color = ColorHelper.Color_Blue };
+            var goodSeries = new LineSeries { SeriesName = "OK", Color = ColorHelper.Color_Green };
+            var failSeries = new LineSeries { SeriesName = "NG", Color = ColorHelper.Color_Red };
+           
             bool hourly = (endDay - startDay).TotalDays <= 2;
 
             if (hourly)
             {
-                var byHour = data.GroupBy(d => d.Time.Hour).ToDictionary(g => g.Key, g => g.ToList());
+                // 按小时汇总(0-23点),多天数据合并到同一小时
                 for (int h = 0; h < 24; h++)
                 {
                     axisX.Add($"{h:00}:00");
-                    if (byHour.TryGetValue(h, out var list))
-                    {
-                        outputSeries.Value.Add(list.Count);
-                        goodSeries.Value.Add(list.Count(d => !IsNG(d)));
-                    }
-                    else
-                    {
-                        outputSeries.Value.Add(0);
-                        goodSeries.Value.Add(0);
-                    }
+                    outputSeries.Value.Add(data.Sum(d => OKAt(d, h) + NGAt(d, h)));
+                    goodSeries.Value.Add(data.Sum(d => OKAt(d, h)));
+                    failSeries.Value.Add(data.Sum(d => NGAt(d, h)));
                 }
             }
             else
             {
+                // 按天汇总
                 var byDay = data.GroupBy(d => d.Time.Date).ToDictionary(g => g.Key, g => g.ToList());
                 var day = startDay;
-                while (day < endDay)
+                while (day <= endDay)
                 {
                     axisX.Add(day.ToString("MM-dd"));
                     if (byDay.TryGetValue(day, out var list))
                     {
-                        outputSeries.Value.Add(list.Count);
-                        goodSeries.Value.Add(list.Count(d => !IsNG(d)));
+                        outputSeries.Value.Add(list.Sum(d => SumOK(d) + SumNG(d)));
+                        goodSeries.Value.Add(list.Sum(SumOK));
+                        failSeries.Value.Add(list.Sum( SumNG ));
                     }
                     else
-                    {
+                    {   
                         outputSeries.Value.Add(0);
                         goodSeries.Value.Add(0);
+                        failSeries.Value.Add(0);
                     }
                     day = day.AddDays(1);
                 }
             }
 
             model.AxisX = axisX;
-            model.OutputTrend = new ObservableCollection<LineSeries> { outputSeries, goodSeries };
+            model.OutputTrend = new ObservableCollection<LineSeries> {   goodSeries, failSeries, outputSeries };
         }
+
+        #region OK/NG 计数读写(直接访问字段)
+
+        private static int OKAt(CapacityStatisticsData d, int hour) => hour switch
+        {
+            0 => d.OKCOunt1, 1 => d.OKCOunt2, 2 => d.OKCOunt3, 3 => d.OKCOunt4,
+            4 => d.OKCOunt5, 5 => d.OKCOunt6, 6 => d.OKCOunt7, 7 => d.OKCOunt8,
+            8 => d.OKCOunt9, 9 => d.OKCOunt10, 10 => d.OKCOunt11, 11 => d.OKCOunt12,
+            12 => d.OKCOunt13, 13 => d.OKCOunt14, 14 => d.OKCOunt15, 15 => d.OKCOunt16,
+            16 => d.OKCOunt17, 17 => d.OKCOunt18, 18 => d.OKCOunt19, 19 => d.OKCOunt20,
+            20 => d.OKCOunt21, 21 => d.OKCOunt22, 22 => d.OKCOunt23, 23 => d.OKCOunt24,
+            _ => 0
+        };
+
+        private static int NGAt(CapacityStatisticsData d, int hour) => hour switch
+        {
+            0 => d.NGCount1, 1 => d.NGCount2, 2 => d.NGCount3, 3 => d.NGCount4,
+            4 => d.NGCount5, 5 => d.NGCount6, 6 => d.NGCount7, 7 => d.NGCount8,
+            8 => d.NGCount9, 9 => d.NGCount10, 10 => d.NGCount11, 11 => d.NGCount12,
+            12 => d.NGCount13, 13 => d.NGCount14, 14 => d.NGCount15, 15 => d.NGCount16,
+            16 => d.NGCount17, 17 => d.NGCount18, 18 => d.NGCount19, 19 => d.NGCount20,
+            20 => d.NGCount21, 21 => d.NGCount22, 22 => d.NGCount23, 23 => d.NGCount24,
+            _ => 0
+        };
+
+        private static void SetOK(CapacityStatisticsData d, int hour, int value)
+        {
+            switch (hour)
+            {
+                case 0: d.OKCOunt1 = value; break;
+                case 1: d.OKCOunt2 = value; break;
+                case 2: d.OKCOunt3 = value; break;
+                case 3: d.OKCOunt4 = value; break;
+                case 4: d.OKCOunt5 = value; break;
+                case 5: d.OKCOunt6 = value; break;
+                case 6: d.OKCOunt7 = value; break;
+                case 7: d.OKCOunt8 = value; break;
+                case 8: d.OKCOunt9 = value; break;
+                case 9: d.OKCOunt10 = value; break;
+                case 10: d.OKCOunt11 = value; break;
+                case 11: d.OKCOunt12 = value; break;
+                case 12: d.OKCOunt13 = value; break;
+                case 13: d.OKCOunt14 = value; break;
+                case 14: d.OKCOunt15 = value; break;
+                case 15: d.OKCOunt16 = value; break;
+                case 16: d.OKCOunt17 = value; break;
+                case 17: d.OKCOunt18 = value; break;
+                case 18: d.OKCOunt19 = value; break;
+                case 19: d.OKCOunt20 = value; break;
+                case 20: d.OKCOunt21 = value; break;
+                case 21: d.OKCOunt22 = value; break;
+                case 22: d.OKCOunt23 = value; break;
+                case 23: d.OKCOunt24 = value; break;
+            }
+        }
+
+        private static void SetNG(CapacityStatisticsData d, int hour, int value)
+        {
+            switch (hour)
+            {
+                case 0: d.NGCount1 = value; break;
+                case 1: d.NGCount2 = value; break;
+                case 2: d.NGCount3 = value; break;
+                case 3: d.NGCount4 = value; break;
+                case 4: d.NGCount5 = value; break;
+                case 5: d.NGCount6 = value; break;
+                case 6: d.NGCount7 = value; break;
+                case 7: d.NGCount8 = value; break;
+                case 8: d.NGCount9 = value; break;
+                case 9: d.NGCount10 = value; break;
+                case 10: d.NGCount11 = value; break;
+                case 11: d.NGCount12 = value; break;
+                case 12: d.NGCount13 = value; break;
+                case 13: d.NGCount14 = value; break;
+                case 14: d.NGCount15 = value; break;
+                case 15: d.NGCount16 = value; break;
+                case 16: d.NGCount17 = value; break;
+                case 17: d.NGCount18 = value; break;
+                case 18: d.NGCount19 = value; break;
+                case 19: d.NGCount20 = value; break;
+                case 20: d.NGCount21 = value; break;
+                case 21: d.NGCount22 = value; break;
+                case 22: d.NGCount23 = value; break;
+                case 23: d.NGCount24 = value; break;
+            }
+        }
+
+        private static int SumOK(CapacityStatisticsData d)
+            => Enumerable.Range(0, 24).Sum(h => OKAt(d, h));
+
+        private static int SumNG(CapacityStatisticsData d)
+            => Enumerable.Range(0, 24).Sum(h => NGAt(d, h));
+
+        #endregion
     }
 }

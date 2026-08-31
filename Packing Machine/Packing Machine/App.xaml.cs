@@ -1,44 +1,31 @@
 ﻿using Communication;
 using DataManager;
 using Device;
-using Dm.util;
 using Extension.Core.ReflectionEx;
 using Extension.Helper.Mapping;
 using FlowEditor;
-using FlowEditor.Core;
 using Packing_Machine.Business.Flow;
-using Packing_Machine.Infra.Tool;
-using Packing_Machine.Infra.Core;
-using Packing_Machine.Data.Services;
-using Packing_Machine.Data.Model;
 using Packing_Machine.Business.Station;
+using Packing_Machine.Infra.Core;
+using Packing_Machine.Infra.Tool;
+using Packing_Machine.UI.Model;
 using Packing_Machine.UI.View;
 // 添加ViewModel命名空间
 using Packing_Machine.UI.ViewModel;
 using Prism.DryIoc;
 using Prism.Ioc;
 using Prism.Modularity;
-using Prism.Mvvm;
 using Prism.Regions;
-using Prism.Services.Dialogs;
 using ScriptEditor;
 using ScriptEditor.Services;
-using ScriptEditor.Tests;
 using Secs;
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using WPFControl;
 using WPFControl.ProgramControl.Services;
 using WPFControl.ProgramControl.ViewModels;
 using WPFControl.ProgramControl.Views;
 using WPFCustomControls;
-using WPFCustomControls.Window.Views;
 
 namespace Packing_Machine
 {
@@ -59,7 +46,6 @@ namespace Packing_Machine
             "StartupFlowView",
             "ShutdownFlowView",
             "CamManagerView",
-            "VisionSettingView",
             "VisionView",
             "RFIDManagerView",
 
@@ -127,29 +113,20 @@ namespace Packing_Machine
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            // 注册本项目的视图
             containerRegistry.RegisterSingleton<MainWindow>();
 
-            // 导航视图注册为 (object, 导航名) 单例（RegisterNavigationViewEx）：
-            // Prism 的 RegisterForNavigation 在 DryIoc 下是瞬时注册，预热实例会被丢弃、
-            // 导航首进仍要重建导致卡顿。注册为单例后，PrewarmNavigationViewsAsync 预热的
-            // 实例即导航首次进入复用的实例；带显式 VM 的重载同时保留 ViewModelLocationProvider 绑定。
- 
             containerRegistry.RegisterNavigationView<Home>();
             containerRegistry.RegisterNavigationView<UI.View.Recipe, ViewModel_Recipe>();
-            containerRegistry.RegisterNavigationView<VisionSettingView, VisionSettingViewModel>();
+ 
             containerRegistry.RegisterNavigationView<VisionView, VisionViewModel>();
             containerRegistry.RegisterNavigationView<DataQueryView, DataQueryViewModel<CSQLData, CSQLDataDTO>>();
 
-            containerRegistry.RegisterSingleton<CapacityStatisticsService<CSQLData>, PackingCapacityStatisticsService>();
-            containerRegistry.RegisterNavigationView<CapacityStatisticsView, CapacityStatisticsViewModel<CSQLData>>();
-
+         
             containerRegistry.RegisterSingleton<AutoProcess>();
             containerRegistry.RegisterSingleton<PLCTool>();
             containerRegistry.RegisterSingleton<VisionTool>();
             containerRegistry.RegisterSingleton<VisionViewModel>();
             containerRegistry.RegisterSingleton<DataQueryService<CSQLData, CSQLDataDTO>>();
- 
 
             containerRegistry.RegisterSingleton<Load>();
             containerRegistry.RegisterSingleton<ReadID>();
@@ -161,6 +138,7 @@ namespace Packing_Machine
             containerRegistry.RegisterSingleton<HumidityCard>();
             containerRegistry.RegisterSingleton<Business.Flow.Recipe>();
 
+            containerRegistry.RegisterNavigationView<Test>();
         }
 
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
@@ -170,7 +148,7 @@ namespace Packing_Machine
             moduleCatalog.AddModule<CommunicationModule>();
             moduleCatalog.AddModule<SecsToolModule>();
             moduleCatalog.AddModule<DeviceModule>();
-            moduleCatalog.AddModule<ControlToolModule>();
+            moduleCatalog.AddModule<WPFControlModule>();
             moduleCatalog.AddModule<WPFCustomControlsModule>();
             moduleCatalog.AddModule<FlowEditorModule>();
             moduleCatalog.AddModule<ScriptEditorModule>();
@@ -340,7 +318,12 @@ namespace Packing_Machine
                 System.Diagnostics.Debug.WriteLine($"[启动初始化异常汇总]{Environment.NewLine}{summary}");
                 MessageBox.Show(summary, "启动初始化存在失败步骤",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
+
+       
             }
+
+            //Init init = new Init();
+            //init.InitControl();
         }
     }
 }

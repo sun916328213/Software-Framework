@@ -9,7 +9,7 @@ using WPFControl.ProgramControl.Models;
 using CommunityToolkit.Mvvm;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace Packing_Machine.Data.Model
+namespace Packing_Machine.UI.Model
 {
     public class CLabelInfo_Single
     {

@@ -6,7 +6,7 @@ using WPFControl.ProgramControl.Models;
 using Extension.Core.ConvertEx;
 using System.ComponentModel.DataAnnotations;
 
-namespace Packing_Machine.Data.Model
+namespace Packing_Machine.UI.Model
 {
     public class CStation
     {

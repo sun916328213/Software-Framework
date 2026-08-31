@@ -3,6 +3,7 @@ using Mapster;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WPFControl.ProgramControl.Models
 {
@@ -12,7 +13,7 @@ namespace WPFControl.ProgramControl.Models
     public interface ISQLDataBase
     {
         public string ID { get; set; }
-
+ 
         public DateTime Time { get; set; }
     }
 

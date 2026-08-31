@@ -3,10 +3,10 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:cust="clr-namespace:WPFControl.CustomControl.Views.Charts"
+    xmlns:custm="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:WPFControl.ProgramControl.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:custm="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
     xmlns:view="clr-namespace:WPFControl.CustomControl.Views"
     xmlns:viewmodels="clr-namespace:WPFControl.ProgramControl.ViewModels"
     x:Name="UserControl"
@@ -30,11 +30,11 @@
             Grid.ColumnSpan="2"
             Style="{StaticResource Border_Style}">
             <view:QueryView
+                EndTime="{Binding Datas.DateTime_End, Mode=TwoWay}"
                 IsShowFilter="False"
                 IsShowSelect="False"
                 QueryCommand="{Binding QueryCommand}"
                 SaveCommand="{Binding SaveCommand}"
-                EndTime="{Binding Datas.DateTime_End, Mode=TwoWay}"
                 StartTime="{Binding Datas.DateTime_Start, Mode=TwoWay}" />
         </Border>
         <Border

@@ -39,7 +39,7 @@ namespace WPFControl.ProgramControl.Services
 
                 var end = Model.DateTime_End.AddDays(1).Date;
                 var start = Model.DateTime_Start.Date;
-
+               
                 if (string.IsNullOrEmpty(Model.ID))
                     data = Service_SQL.Query(s => s.Time.Date >= start && s.Time.Date <= end);
 

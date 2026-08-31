@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Extension.Core.ConvertEx;
 using Extension.Core.EnumEx;
-using Packing_Machine.Data.Model;
+using Packing_Machine.UI.Model;
 using Packing_Machine.UI.WindowUI;
 using Prism.Ioc;
 using System;

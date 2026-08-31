@@ -1,10 +1,12 @@
 using DataManager.SQL;
-using DataManager.SQL.Definition;
 using DataManager.SQL.Dapper;
+using DataManager.SQL.Definition;
 using DataManager.SQL.SqlSugarSQL;
+using Prism.Ioc;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Windows;
@@ -27,7 +29,8 @@ namespace DataManagerDemo
 
     public partial class MainWindow : Window
     {
-        SQLManager sQLManager = new SQLManager();
+        //.ContainerLocator.Container.Resolve<IContainerRegistry>()
+        SQLManager sQLManager = new SQLManager(ContainerLocator.Container.Resolve<IContainerExtension>());
         ISQL<TestEntity> EFCore => (ISQL<TestEntity>)sQLManager[0];
         ISQL<TestEntity> SQLSugra => (ISQL<TestEntity>)sQLManager[1];
         DapperBase<TestEntity> DapperDb => (DapperBase<TestEntity>)sQLManager[2];

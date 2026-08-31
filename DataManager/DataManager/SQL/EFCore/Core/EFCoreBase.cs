@@ -131,7 +131,7 @@ namespace DataManager.SQL.EFCore
         public virtual IEnumerable<T> Query()
         {
             var table = Set<T>();
-            return table;
+            return table.AsNoTracking().AsEnumerable();
         }
 
         public virtual async Task<IEnumerable<T>> QueryAsync()
@@ -142,7 +142,7 @@ namespace DataManager.SQL.EFCore
         public virtual IEnumerable<T> Query(Expression<Func<T, bool>> predicate)
         {
             var table = Set<T>();
-            return table.Where(predicate).AsEnumerable<T>();
+            return table.Where(predicate).AsNoTracking().ToList();
         }
 
         public virtual async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate)

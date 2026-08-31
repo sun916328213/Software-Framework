@@ -1,4 +1,5 @@
 using DataManager.Excel;
+using DataManager.Excel.MiniExcel;
 using DataManager.Log;
 using DataManager.Log.Definition;
 using DataManager.Log.SeriLog;
@@ -22,9 +23,11 @@ namespace DataManager
         /// <param name="containerRegistry">容器注册器</param>
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            containerRegistry.RegisterSingleton<LogManager>( );
+            containerRegistry.RegisterSingleton<LogManager>();
             containerRegistry.RegisterSingleton<SQLManager>();
             containerRegistry.RegisterSingleton<ExcelManager>();
+
+            containerRegistry.RegisterSingleton<IExcel, MiniExcelHelper>();
         }
 
         /// <summary>
@@ -35,7 +38,9 @@ namespace DataManager
         {
             // 在这里执行模块初始化完成后的操作
             // 例如获取服务实例等
- 
+
+            // 恢复 Npgsql 6.0 之前的时间戳兼容行为，允许写入 Local 时间
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         }
     }
 }
