@@ -116,7 +116,7 @@ namespace Packing_Machine
             containerRegistry.RegisterSingleton<MainWindow>();
 
             containerRegistry.RegisterNavigationView<Home>();
-            containerRegistry.RegisterNavigationView<UI.View.Recipe, ViewModel_Recipe>();
+            containerRegistry.RegisterNavigationView<UI.View.Recipe, RecipeViewModel>();
  
             containerRegistry.RegisterNavigationView<VisionView, VisionViewModel>();
             containerRegistry.RegisterNavigationView<DataQueryView, DataQueryViewModel<CSQLData, CSQLDataDTO>>();

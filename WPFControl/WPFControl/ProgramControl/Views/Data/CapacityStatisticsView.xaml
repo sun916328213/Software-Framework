@@ -59,11 +59,7 @@
                         FontWeight="Bold"
                         Foreground="{StaticResource Color_Teal}"
                         Text="产能统计" />
-                    <TextBlock
-                        Margin="8,0,0,0"
-                        VerticalAlignment="Center"
-                        Foreground="{StaticResource Color_Gray9}"
-                        Text="{Binding Datas.UpdateTime}" />
+
                 </StackPanel>
             </Grid>
 

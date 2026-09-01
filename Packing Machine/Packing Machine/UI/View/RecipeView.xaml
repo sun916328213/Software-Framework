@@ -9,7 +9,7 @@
     xmlns:viewmodel="clr-namespace:Packing_Machine.UI.ViewModel"
     x:Name="UserControl"
     d:DesignHeight="950"
-    d:DesignWidth="800"
+    d:DesignWidth="1200"
     mc:Ignorable="d">
 
 
@@ -59,9 +59,9 @@
 
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0" />
-                    <ColumnDefinition Width="0" />
-                    <ColumnDefinition Width="0" />
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="150" />
                     <ColumnDefinition Width="300" />
                     <ColumnDefinition Width="150" />
                     <ColumnDefinition Width="150" />
@@ -117,142 +117,6 @@
             </Grid>
         </Border>
 
-        <Border
-            Width="330"
-            DockPanel.Dock="Right"
-            Style="{StaticResource Border_Style}"
-            Visibility="Visible">
-            <UniformGrid Columns="2">
-                <StackPanel>
-                    <Button
-                        Click="Button_Click1"
-                        Content="LoadReadFRID"
-                        Style="{StaticResource ButtonStyle}" />
-
-                    <Button
-                        Click="Button_Click9"
-                        Content="进站存档"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click2"
-                        Content="读取FOSBID"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click11"
-                        Content="打印标签"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click7"
-                        Content="FOSB标签贴前检测"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click8"
-                        Content="FOSB标签贴后检测"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click72"
-                        Content="AL标签贴前检测"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click82"
-                        Content="AL标签贴后检测"
-                        Style="{StaticResource ButtonStyle}" />
-
-                    <Button
-                        Click="Button_Click6"
-                        Content="湿度卡相机检测"
-                        Style="{StaticResource ButtonStyle}" />
-
-                    <Button
-                        Click="Button_Click12"
-                        Content="干燥剂复拍"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click13"
-                        Content="热封相机"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click10"
-                        Content="出站存档"
-                        Style="{StaticResource ButtonStyle}" />
-
-                    <Button
-                        Click="Button_Click14"
-                        Content="AL相机示教"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click15"
-                        Content="AL相机检测"
-                        Style="{StaticResource ButtonStyle}" />
-
-                    <Button
-                        Click="Button_Click3"
-                        Content="九点标定"
-                        Style="{StaticResource ButtonStyle}" />
-
-                    <Button
-                        Click="Button_Click4"
-                        Content="湿度卡相机准基"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click5"
-                        Content="颜色传感器示教"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click51"
-                        Content="Recipe读取"
-                        Style="{StaticResource ButtonStyle}" />
-                </StackPanel>
-
-                <StackPanel>
-                    <Button
-                        Click="Button_Click16"
-                        Content="进站流程"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click17"
-                        Content="配件流程"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click18"
-                        Content="FOSB贴标流程"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click19"
-                        Content="FOSB入袋流程"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click20"
-                        Content="抽真空流程"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click21"
-                        Content="冲氮气流程"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click22"
-                        Content="热封流程"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click23"
-                        Content="AL标签流程"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click24"
-                        Content="出站流程"
-                        Style="{StaticResource ButtonStyle}" />
-
-                    <Button
-                        Click="Button_Click25"
-                        Content="清除PLCTrigger"
-                        Style="{StaticResource ButtonStyle}" />
-                    <Button
-                        Click="Button_Click26"
-                        Content="数据库测试"
-                        Style="{StaticResource ButtonStyle}" />
-                </StackPanel>
-            </UniformGrid>
-        </Border>
 
         <Border Style="{StaticResource Border_Style}">
             <view:DataGridView
@@ -275,7 +139,7 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Width="60" Text="{Binding LabelDir, StringFormat={}{0}:}" />
+                                                <TextBlock Width="60" Text="{Binding LabelDir, StringFormat={}{0}}" />
                                                 <TextBlock Text="{Binding LabelNum}" />
                                             </StackPanel>
                                         </DataTemplate>
@@ -291,7 +155,7 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Width="60" Text="{Binding LabelDir, StringFormat={}{0}:}" />
+                                                <TextBlock Width="60" Text="{Binding LabelDir, StringFormat={}{0}}" />
                                                 <TextBlock Text="{Binding LabelNum}" />
                                             </StackPanel>
                                         </DataTemplate>

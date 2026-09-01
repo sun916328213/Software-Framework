@@ -8,19 +8,18 @@ using System.Linq;
 using WPFControl.ProgramControl.Models;
 using CommunityToolkit.Mvvm;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Windows;
+using ImTools;
 
 namespace Packing_Machine.UI.Model
 {
     public class CLabelInfo_Single
     {
         /// <summary>
-        /// 标签方向
+        /// 标签具体位置
         /// </summary>
-        public ELabelDir LabelDir { get; set; }= ELabelDir.Fornt;
-        /// <summary>
-        /// 标签数量
-        /// </summary>
-        public int LabelNum { get; set; } = 1;
+        public string LabelDir { get; set; } 
+ 
     }
 
     public class CLabelInfoCollection
@@ -73,7 +72,7 @@ namespace Packing_Machine.UI.Model
             Load();
         }
 
-        private string Path = "Config//Recipe";
+        private string Path = "Config//ProcessInfo//Recipe";
         /// <summary>
         /// 配方集合
         /// </summary>
@@ -110,8 +109,7 @@ namespace Packing_Machine.UI.Model
             var data1 = curdata.FirstOrDefault(s => s.LabelDir == labelInfo.LabelDir);
             if (data1 != null)
             {
-                data1.LabelDir = labelInfo.LabelDir;
-                data1.LabelNum = labelInfo.LabelNum;
+                MessageBox.Show("标签方向已经存在,请检查后重新添加！！");
             }
             else
                 curdata.Add(labelInfo);
@@ -144,7 +142,7 @@ namespace Packing_Machine.UI.Model
         /// </summary>
         /// <param name="pTimes"></param>
         /// <returns></returns>
-        public IEnumerable<ELabelDir> GetCurRecipeLabelDir(int pTimes)
+        public IEnumerable<string> GetCurRecipeLabelDir(int pTimes)
         {
             try
             {
@@ -156,22 +154,7 @@ namespace Packing_Machine.UI.Model
             }
         }
 
-        /// <summary>
-        /// 获取当前配方的标签数量
-        /// </summary>
-        /// <param name="pTimes"></param>
-        /// <returns></returns>
-        public IEnumerable<int> GetCurRecipeLabelNum(int pTimes)
-        {
-            try
-            {
-                return GetCurTimesLabelInfo(pTimes).Select(s => s.LabelNum);
-            }
-            catch
-            {
-                return null;
-            }
-        }
+      
 
         /// <summary>
         /// 添加
@@ -180,7 +163,7 @@ namespace Packing_Machine.UI.Model
         /// <returns></returns>
         public void Add(CRecipe pRecipe)
         {
-            var data = Recipes.Where(s => s.ID == pRecipe.ID);
+            var data = Recipes.FindFirst(s => s.ID == pRecipe.ID);
             if (data != null) throw new Exception("ID already exists!!");
 
             Recipes.Add(pRecipe);

@@ -15,7 +15,7 @@ using WPFCustomControls.Window.Views;
 
 namespace Packing_Machine.UI.ViewModel
 {
-    internal class ViewModel_Recipe : ObservableObject
+    internal class RecipeViewModel : ObservableObject
     {
         internal readonly Model_Recipe Model;
         internal readonly MenuService _MenuService;
@@ -23,11 +23,11 @@ namespace Packing_Machine.UI.ViewModel
         public ObservableCollection<CRecipe> Datas => Model.Recipes;
 
 
-        public string[] FOSBType => File.ReadAllText("Config//FOSBName.json").FromJson<string[]>();
+        public string[] FOSBType => File.ReadAllText("Config//ProcessInfo//FOSBName.json").FromJson<string[]>();
 
-        public string[] BagType => File.ReadAllText("Config//BagType.json").FromJson<string[]>();
+        public string[] BagType => File.ReadAllText("Config//ProcessInfo//BagType.json").FromJson<string[]>();
 
-        public string[] LabelDir => EnumEx.GetName<ELabelDir>();
+        public string[] LabelDir => File.ReadAllText("Config//ProcessInfo//LabelPosition.json").FromJson<string[]>();
 
 
         private CLabelInfo_Single labelInfo_AddLabel = new CLabelInfo_Single();
@@ -73,40 +73,32 @@ namespace Packing_Machine.UI.ViewModel
         public int CurLabelTimes { get; set; }
 
         #region 第一层
-        private IEnumerable<ELabelDir> curRecipeLabelDir_First;
-        public IEnumerable<ELabelDir> CurRecipeLabelDir_First
+        private IEnumerable<string> curRecipeLabelDir_First;
+
+        /// <summary>
+        /// 第一次贴标的标签方向集合 FOSB本体
+        /// </summary>
+        public IEnumerable<string> CurRecipeLabelDir_First
         {
 
             get => curRecipeLabelDir_First;
             set => SetProperty(ref curRecipeLabelDir_First, value);
         }
-
-
-        private IEnumerable<int> curRecipeLabelNum_First;
-
-        public IEnumerable<int> CurRecipeLabelNum_First
-        {
-            get => curRecipeLabelNum_First;
-            set => SetProperty(ref curRecipeLabelNum_First, value);
-        }
+ 
         #endregion
         #region 第二层
-        private IEnumerable<ELabelDir> curRecipeLabelDir_Second;
-        public IEnumerable<ELabelDir> CurRecipeLabelDir_Second
+        private IEnumerable<string> curRecipeLabelDir_Second;
+
+        /// <summary>
+        /// 第二次贴标的标签方向集合 AL袋
+        /// </summary>
+        public IEnumerable<string> CurRecipeLabelDir_Second
         {
 
             get => curRecipeLabelDir_Second;
             set => SetProperty(ref curRecipeLabelDir_Second, value);
         }
-
-
-        private IEnumerable<int> curRecipeLabelNum_Second;
-
-        public IEnumerable<int> CurRecipeLabelNum_Second
-        {
-            get => curRecipeLabelNum_Second;
-            set => SetProperty(ref curRecipeLabelNum_Second, value);
-        }
+ 
         #endregion
 
 
@@ -124,7 +116,7 @@ namespace Packing_Machine.UI.ViewModel
         public RelayCommand<string> LabelManger_Add { get; }
 
 
-        public ViewModel_Recipe( IContainerProvider  container)
+        public RecipeViewModel( IContainerProvider  container)
         {
             Model = container.Resolve<Model_Recipe>();
 
@@ -138,11 +130,11 @@ namespace Packing_Machine.UI.ViewModel
                     {
                         case 1:
                             CurRecipeLabelDir_First = Model.GetCurRecipeLabelDir(CurLabelTimes);
-                            CurRecipeLabelNum_First = Model.GetCurRecipeLabelNum(CurLabelTimes);
+                        
                             break;
                         case 2:
                             CurRecipeLabelDir_Second = Model.GetCurRecipeLabelDir(CurLabelTimes);
-                            CurRecipeLabelNum_Second = Model.GetCurRecipeLabelNum(CurLabelTimes);
+                     
                             break;
                     }
 
@@ -161,7 +153,7 @@ namespace Packing_Machine.UI.ViewModel
                 CurLabelTimes = Convert.ToInt32(index);
                 AddLabelInfo addLabelInfo = new AddLabelInfo();
                 addLabelInfo.DataContext = this;
-                LabelInfo_AddLabel.LabelNum = 1;
+                 
                 addLabelInfo.ShowDialog();
             });
 
@@ -184,11 +176,9 @@ namespace Packing_Machine.UI.ViewModel
                 if (CurRecipe != null && CurRecipe.ID != null)
                 {
                     CurRecipeLabelDir_First = Model.GetCurRecipeLabelDir(1);
-                    CurRecipeLabelNum_First = Model.GetCurRecipeLabelNum(1);
-
+                
                     CurRecipeLabelDir_Second = Model.GetCurRecipeLabelDir(2);
-                    CurRecipeLabelNum_Second = Model.GetCurRecipeLabelNum(2);
-
+               
                     RecipeSetting recipeSetting;
                     recipeSetting = new RecipeSetting();
                     recipeSetting.DataContext = this;

@@ -112,7 +112,7 @@ namespace WPFControl.ProgramControl.Services
         {
             if (data == null || data.Count == 0) return false;
  
-            var dd1=FileDialogEx.SaveFile($"产能统计_{DateTime.Now:yyyyMMdd}.xlsx");
+            var dd1=FileDialogEx.SaveFile($"产能统计_{Model.StartTime.ToDate()}-{Model.EndTime.ToDate()}.xlsx");
             if(string.IsNullOrEmpty(dd1)) return false;
             await ExcelEx.SaveToExcelAsync(dd1, data).ConfigureAwait(false);
             return true;

@@ -10,38 +10,6 @@ using WPFControl.CustomControl.Models;
 namespace WPFControl.ProgramControl.Models
 {
  
-    /// <summary>
-    /// 贴标信息
-    /// </summary>
-    public enum ELabelDir
-    {
-        /// <summary>
-        /// 正面
-        /// </summary>
-        [System.ComponentModel.Description("正面")]
-        Fornt,
-        /// <summary>
-        /// 背面
-        /// </summary>
-        [System.ComponentModel.Description("背面")]
-        Raer,
-        /// <summary>
-        /// 左侧
-        /// </summary>
-        [System.ComponentModel.Description("左侧")]
-        Left,
-        /// <summary>
-        /// 右侧
-        /// </summary>
-        [System.ComponentModel.Description("右侧")]
-        Right,
-        /// <summary>
-        /// 顶部
-        /// </summary>
-        [System.ComponentModel.Description("顶部")]
-        Top,
-    }
- 
 
     /// <summary>
     /// 打印信息管理
@@ -60,10 +28,7 @@ namespace WPFControl.ProgramControl.Models
         /// 贴标对象类型
         /// </summary>
         internal string ObjectType { get; set; }
-        /// <summary>
-        /// 标签方向
-        /// </summary>
-        internal ELabelDir LabelDir { get; set; }
+ 
         /// <summary>
         /// 标签位置
         /// </summary>

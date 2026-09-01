@@ -11,7 +11,7 @@
     Title="RecipeSetting"
     Width="380"
     Height="450"
-    d:DataContext="{d:DesignInstance Type=viewmodel:ViewModel_Recipe}"
+    d:DataContext="{d:DesignInstance Type=viewmodel:RecipeViewModel}"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 
@@ -108,17 +108,7 @@
                 </Button.Content>
             </Button>
         </StackPanel>
-        <StackPanel
-            Grid.Row="3"
-            Grid.Column="1"
-            Orientation="Horizontal">
-            <Label Content="FOSB标签数量:" Style="{StaticResource LabelStyle}" />
-            <ComboBox
-                Width="{Binding ElementName=txt_ID, Path=Width}"
-                VerticalAlignment="Stretch"
-                ItemsSource="{Binding CurRecipeLabelNum_First}"
-                SelectedIndex="{Binding ElementName=cmb_Fosb, Path=SelectedIndex}" />
-        </StackPanel>
+     
         <StackPanel
             Grid.Row="4"
             Grid.Column="1"
@@ -155,19 +145,7 @@
                 </Button.Content>
             </Button>
         </StackPanel>
-        <StackPanel
-            Grid.Row="5"
-            Grid.Column="1"
-            Orientation="Horizontal">
-            <Label Content="AL标签数量:" Style="{StaticResource LabelStyle}" />
-            <ComboBox
-                Width="{Binding ElementName=txt_ID, Path=Width}"
-                VerticalAlignment="Stretch"
-                ItemsSource="{Binding CurRecipeLabelNum_Second}"
-                SelectedIndex="{Binding ElementName=cmb_AL, Path=SelectedIndex}" />
-
-        </StackPanel>
-
+     
         <Grid Grid.Row="6" Grid.Column="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
