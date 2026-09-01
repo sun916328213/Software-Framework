@@ -127,6 +127,28 @@ namespace WPFControl.Helper
         }
 
         /// <summary>
+        /// 执行可能抛出异常的操作，并返回执行结果
+        /// </summary>
+        /// <param name="action">要执行的操作</param>
+        /// <param name="erraction">异常处理操作</param>
+        /// <returns>操作是否成功执行</returns>
+        public static bool TryExecuteWithResult(Action action,Action<Exception> erraction = null)
+        {
+            try
+            {
+                action?.Invoke();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                erraction.Invoke(ex);
+                string message = string.Join("\r\n", ex.Message, ex.StackTrace);
+                _logInfoService?.AddRunInfo(message, ELogLevel.SysError);
+                return false;
+            }
+        }
+
+        /// <summary>
         /// 异步执行可能抛出异常的操作，并返回执行结果
         /// 适用于ViewModel层需要知道异步操作结果的场景
         /// </summary>

@@ -1,4 +1,5 @@
 using Extension.Core.ControlEx;
+using ScriptEditor.Services;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -221,5 +222,6 @@ namespace WPFControl.ProgramControl.Views
         }
 
         #endregion
+ 
     }
 }

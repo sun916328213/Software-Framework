@@ -1,4 +1,5 @@
-﻿using Prism.Ioc;
+﻿using Packing_Machine.Business.Flow;
+using Prism.Ioc;
 using System;
 using System.Threading.Tasks;
 using WPFControl.ProgramControl.Services;
@@ -24,6 +25,12 @@ namespace Packing_Machine
         {
             base.OnWindowLoaded();
             WindowMenuService?.UpdataTitle("12寸FOSB自动包装机");
+        }
+
+        private void DockPanel_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            var d = Container.Resolve<Init>();
+            d.InitControl();
         }
     }
 }

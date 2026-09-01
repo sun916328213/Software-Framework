@@ -42,7 +42,6 @@ namespace WPFControl.ProgramControl.Services
                 if (model?.CurUserInfo != null)
                 {
                     SetCurrentUserLevel(model.CurUserInfo.Level);
-                    SwitchMenu(0);
                 }
             };
 
@@ -61,6 +60,8 @@ namespace WPFControl.ProgramControl.Services
                 Model.CurrentUserLevel = userLevel;
                 Action action = () => UpdateMenuVisibility();
                 action.UIBeginInvoke();
+
+                SwitchMenu(0);//权限更新后注意切换菜单
                 OnUserLevelChanged?.Invoke(userLevel);
             }
         }
@@ -154,7 +155,11 @@ namespace WPFControl.ProgramControl.Services
             if (index >= Model.NavigationItems.Count)
             {
                 MessageBox.Show("Menu switch index out of range");
-                Model.SelectNavigationItems = Model.NavigationItems[0];
+                index = 0;
+            }
+            if (Model.NavigationItems.Count > 0)
+            {
+                Model.SelectNavigationItems = Model.NavigationItems[index];
             }
             ExecuteNavigationItem();
         }
@@ -212,7 +217,7 @@ namespace WPFControl.ProgramControl.Services
             var item = Model.SelectNavigationItems;
             if (item != null)
             {
-                if (item != Model.LastNavigationItems|| item .ItemType== NavigationItemType.UserLogin)
+                if (item != Model.LastNavigationItems)
                 {
                     // 检查权限后执行操作
                     if (item.HasPermission(Model.CurrentUserLevel))

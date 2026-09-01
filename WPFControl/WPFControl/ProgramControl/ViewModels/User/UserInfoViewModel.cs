@@ -60,9 +60,11 @@ namespace WPFControl.ProgramControl.ViewModels
         public UserInfoViewModel(UserInfoService model)
         {
             Service = model;
- 
-            //UserNames = _UserNames;
-            LoginCommand = new RelayCommand(Service.LoginCommand);
+
+            LoginCommand = new RelayCommand(() =>{
+              if(  Service.LoginCommand())
+                CloseDialog();
+            });
             LogoutCommand = new RelayCommand(Service.LogoutCommand);
 
             AddCommand = new RelayCommand(Service.AddCommand);

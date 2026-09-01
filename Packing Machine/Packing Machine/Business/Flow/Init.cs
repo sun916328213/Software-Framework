@@ -47,7 +47,7 @@ namespace Packing_Machine.Business.Flow
         }
 
         #region 控件
-        private static void Init_Control()
+        private void Init_Control()
         {
             //控制按钮功能
             _ControlService.AddAction(new List<Action>
@@ -75,7 +75,7 @@ namespace Packing_Machine.Business.Flow
         });
         }
 
-        private static void Init_Display()
+        private void Init_Display()
         {
             var _DisplayService = ContainerManager.Resolve<DisplayService>();
 
@@ -90,7 +90,7 @@ namespace Packing_Machine.Business.Flow
             _DisplayService.AddDisplayTitle("6");
         }
 
-        private static void Init_Menu()
+        private void Init_Menu()
         {
             _MenuService.Clear();
             _MenuService.AddRange(new List<CNavigationItem>
@@ -104,7 +104,15 @@ namespace Packing_Machine.Business.Flow
                  _IRegionManager.RequestNavigate("MainContentRegion", "Home");
              })
          },
- 
+         new CNavigationItem
+         {
+             Title = "Test",
+             Icon = PackIconKind.TestTube,
+             Action = (() => {
+                 _IRegionManager.RequestNavigate("MainContentRegion", "Test");
+             })
+         },
+
          new CNavigationItem
          {
              Title = Message.配方.GetMessage(),
@@ -140,8 +148,7 @@ namespace Packing_Machine.Business.Flow
                  new CNavigationItem
                  {
                      Title = "加载流程" ,
-                     SelectedIcon = PackIconKind.Download,
-                     Icon = PackIconKind.Download,
+                     Icon = PackIconKind.DownloadBoxOutline,
                      Userlevel= EUserLevel.SuperAdmin,
                      Action = (() => { _IRegionManager.RequestNavigate("MainContentRegion", "StartupFlowView"); })
                  },
@@ -156,16 +163,16 @@ namespace Packing_Machine.Business.Flow
                  new CNavigationItem
                  {
                      Title = Message.自动流程.GetMessage(),
-                     SelectedIcon = PackIconKind.Autorenew,
-                     Icon = PackIconKind.Autorenew,
+
+                     Icon = PackIconKind.RepeatVariant,
                       Userlevel= EUserLevel.SuperAdmin,
                      Action = (() => { _IRegionManager.RequestNavigate("MainContentRegion", "AutoFlowView"); })
                  },
                  new CNavigationItem
                  {
                      Title = Message.关闭流程.GetMessage(),
-                     SelectedIcon = PackIconKind.Power,
-                     Icon = PackIconKind.Power,
+
+                     Icon = PackIconKind.CloseThick,
                       Userlevel= EUserLevel.SuperAdmin,
                      Action = (() => { _IRegionManager.RequestNavigate("MainContentRegion", "ShutdownFlowView"); })
                  },
@@ -255,6 +262,13 @@ namespace Packing_Machine.Business.Flow
                      SelectedIcon = PackIconKind.TextBoxSearch,
                      Icon = PackIconKind.TextBoxSearchOutline,
                      Action = (() => { _IRegionManager.RequestNavigate("MainContentRegion", "DataQueryView"); })
+                 },
+                 new CNavigationItem
+                 {
+                     Title = "产能查询",
+
+                     Icon = PackIconKind.EqualizerOutline,
+                     Action = (() => { _IRegionManager.RequestNavigate("MainContentRegion", "CapacityStatisticsView"); })
                  },
                  new CNavigationItem
                  {

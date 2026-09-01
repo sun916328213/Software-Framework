@@ -77,9 +77,10 @@ namespace WPFControl.ProgramControl.Services
         /// <returns></returns>
         public string GetUserName()
         {
-            return TryCatchHelper.TryExecute(() =>
+            return TryCatchHelper.TryExecute<string>(() =>
             {
-                return Model.UserName = _UserService.CurUserInfo.Name;
+                Model.UserName = _UserService.CurUserInfo.Name;
+                return Model.UserName;
             });
         }
 
@@ -128,17 +129,17 @@ namespace WPFControl.ProgramControl.Services
             });
         }
 
-        public void LoginCommand()
+        public bool LoginCommand()
         {
-            TryCatchHelper.TryExecute(() =>
-            {
-                _UserService.Login(Model.UserName, Model.Password);
+            return TryCatchHelper.TryExecuteWithResult(() =>
+              {
+                  _UserService.Login(Model.UserName, Model.Password);
 
-                Update();
-                Reset();
-            },
-            (ex) => Model.ErrorMessage = ex.Message
-            );
+                  Update();
+                  Reset();
+              },
+              (ex) => Model.ErrorMessage = ex.Message
+              );
         }
 
         public void LogoutCommand()
