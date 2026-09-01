@@ -42,6 +42,8 @@ namespace WPFControl.ProgramControl.ViewModels
                 containerProvider);
 
             _containerVM = containerProvider.Resolve<FlowChartContainerViewModel>();
+            // 流程名（容器级）：节点日志按「流程名\任务名」路由，初始化流程任务落在 D:\DeviceData\Log\Flow\InitializeFlow\{任务名}\
+            _containerVM.ProcessName = "InitializeFlow";
             _containerVM.ReplaceWithFlow(flowChartVM);
         }
     }

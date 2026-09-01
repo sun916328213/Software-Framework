@@ -289,6 +289,22 @@ namespace Packing_Machine.Business.Flow
 
          new CNavigationItem
          {
+             Title = "系统设置",
+             SelectedIcon = PackIconKind.Settings,
+             Icon = PackIconKind.SettingsOutline,
+             Children = new ObservableCollection<CNavigationItem>
+             {
+                 new CNavigationItem
+                 {
+                     Title = "日志设置",
+                     Icon = PackIconKind.NotebookOutline,
+                     Action = (() => { _IRegionManager.RequestNavigate("MainContentRegion", "LogConfigView"); })
+                 },
+             }
+         },
+
+         new CNavigationItem
+         {
              Title = Message.用户登录.GetMessage(),
              SelectedIcon = PackIconKind.User,
              Icon = PackIconKind.UserOutline,

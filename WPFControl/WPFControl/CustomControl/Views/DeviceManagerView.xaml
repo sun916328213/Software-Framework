@@ -15,9 +15,9 @@
 
     <UserControl.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
+            <!--<ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/WPFCustomControls;component/Resources/Resources.xaml" />
-            </ResourceDictionary.MergedDictionaries>
+            </ResourceDictionary.MergedDictionaries>-->
 
             <converters:IsReadToIsEnableConverter x:Key="IsReadToIsEnableConverter" />
 
@@ -38,7 +38,7 @@
             <GroupBox Margin="8" Header="{Binding ElementName=UserControl, Path=DeviceName}">
                 <custm:DataGridView
                     x:Name="DataGridView"
-                    Grid.Column="0"
+                    Grid.Column="0"  
                     Background="{Binding ElementName=UserControl, Path=Background}"
                     FontSize="{Binding ElementName=UserControl, Path=FontSize}"
                     IsReadOnly="{Binding ElementName=UserControl, Path=IsReadOnly}"

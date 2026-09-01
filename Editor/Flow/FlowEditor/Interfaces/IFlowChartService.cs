@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using FlowEditor.Core;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
@@ -27,6 +27,9 @@ public interface IFlowChartService
 
     /// <summary>当前文件路径。</summary>
     string? CurrentFilePath { get; set; }
+
+    /// <summary>流程名（宿主设置，如 AutoFlow / InitializeFlow）；用于把节点日志路由到 D:\DeviceData\Log\Flow\{流程名}\{任务名}。</summary>
+    string? ProcessName { get; set; }
 
     /// <summary>容器提供器（用于 ToolBlock 内部编辑器创建子 ViewModel）。</summary>
     Prism.Ioc.IContainerProvider? ContainerProvider { get; }

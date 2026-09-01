@@ -1,4 +1,4 @@
-﻿using FlowEditor.Nodes;
+using FlowEditor.Nodes;
 using Communication;
 using Extension.Core.CompareEx;
 using FlowEditor.Core;
@@ -6,6 +6,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using WPFCustomControls.PropertyGrid.Models;
+using Prism.Ioc;
 
 namespace FlowNodes.Communication.MC
 {
@@ -18,12 +19,12 @@ namespace FlowNodes.Communication.MC
     [FlowTool("MC触发", "Memory", ToolGroup = "通讯", ToolSubGroup = "MC", SortIndex = 30, Description = "MC等待")]
     public class MCWaitNode : NodeModel
     {
-        private readonly CommunicationManager CommunicationManager;
+          readonly CommunicationManager CommunicationManager;
 
         /// <summary>直接依赖通讯管理器（不再经由 IContainerProvider 间接解析）。</summary>
-        public MCWaitNode(CommunicationManager communicationManager)
+        public MCWaitNode(IContainerProvider  container)
         {
-            CommunicationManager = communicationManager ?? throw new ArgumentNullException(nameof(communicationManager));
+            CommunicationManager = container.Resolve<CommunicationManager>();
         }
 
         private string _registerName = "";
@@ -92,8 +93,12 @@ namespace FlowNodes.Communication.MC
                     EComparePolarity.BothEdges => curvalue > lastvalue || curvalue < lastvalue,
                     _ => false
                 };
-                if (triggered) return;
-
+                if (triggered)
+                {
+                    await NodeLog.Info($"MC 触发等待：寄存器 [{RegisterName}] 当前值 {curvalue}，上次值 {lastvalue}，触发");
+                    return;
+                }
+ 
                 lastvalue = curvalue;
                 await Task.Delay(Math.Max(1, PollIntervalMs), ct);
             }

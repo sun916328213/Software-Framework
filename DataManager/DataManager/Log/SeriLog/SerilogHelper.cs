@@ -1,4 +1,4 @@
-﻿using Serilog;
+using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using System;
@@ -28,7 +28,8 @@ namespace DataManager.Log.SeriLog
     public class SerilogHelper : LogBase , IDisposable
     {
 
-        private object obj = new object();
+        // 全局静态锁：Serilog.Log.Logger 为全局单例，跨实例并发写必须串行化，否则会互相覆盖/关闭导致串文件
+        private static readonly object obj = new object();
 
         private string _logOutputTemplate;
  

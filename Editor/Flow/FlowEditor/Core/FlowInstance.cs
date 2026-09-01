@@ -107,13 +107,17 @@ public sealed class FlowInstance
     public async Task RunAsync(CancellationToken ct, Action<string>? log = null)
     {
         Journal.Clear();
-        await _engine.ExecuteAsync(
-            _nodes,
-            _connections,
-            ct,
-            log ?? (_ => { }),
-            onBeforeNode: Debug == null ? null : node => Debug.WaitIfPausedAsync(node.Id, ct),
-            executionOrder: null,
-            journal: Journal);
+        // 进入流程作用域：节点日志按当前流程（+节点+运行序号）路由落盘
+        using (FlowLogContext.EnterFlow(Name))
+        {
+            await _engine.ExecuteAsync(
+                _nodes,
+                _connections,
+                ct,
+                log ?? (_ => { }),
+                onBeforeNode: Debug == null ? null : node => Debug.WaitIfPausedAsync(node.Id, ct),
+                executionOrder: null,
+                journal: Journal);
+        }
     }
 }

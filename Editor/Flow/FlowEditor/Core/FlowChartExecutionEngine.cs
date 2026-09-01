@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
@@ -158,7 +158,11 @@ public class FlowChartExecutionEngine
                 {
                     FillInputPorts(nodeVm, graph, journal);
                     nodeVm.SyncInputValues();
-                    await nodeVm.ExecuteAsync(timeoutCts?.Token ?? ct);
+                    // 节点执行作用域：日志按当前节点路由（FlowLogContext.NodeName）
+                    using (FlowLogContext.EnterNode(nodeVm.Name))
+                    {
+                        await nodeVm.ExecuteAsync(timeoutCts?.Token ?? ct);
+                    }
                     nodeVm.SyncOutputValues();
                     failure = null;
                     break;

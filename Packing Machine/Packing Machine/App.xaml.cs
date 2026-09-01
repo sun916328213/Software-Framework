@@ -1,4 +1,4 @@
-﻿using Communication;
+using Communication;
 using DataManager;
 using Device;
 using Extension.Core.ReflectionEx;
@@ -58,6 +58,7 @@ namespace Packing_Machine
             "UserInfoManagerView",
             "SEMIManagerView",
             "AlarmInfoManagerView",
+            "LogConfigView"
         };
 
         protected override Window CreateShell()
@@ -216,8 +217,7 @@ namespace Packing_Machine
                 MappingConfig.InitializeAllMappings();
                 // 初始化映射配置
                 CSQLDataMapping.Configure(Mapster.TypeAdapterConfig.GlobalSettings);
-
-
+ 
                 // 先在后台线程解析启动/关机流程（不碰 UI）
                 startupFlowService = Container.Resolve<StartupFlowService>();
                 await startupFlowService.LoadFromDefaultPathAsync();

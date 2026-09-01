@@ -1,9 +1,11 @@
-﻿using Device.Light.Definition;
+using DataManager.Log.Definition;
+using Device.Light.Definition;
 using Device.Scan.Definition;
 using Extension.Core.ConvertEx;
 using Extension.Struct;
 using System.Collections.ObjectModel;
 using WPFControl.ProgramControl.Models;
+using WPFControl.ProgramControl.Services;
 using static WPFControl.ProgramControl.Models.VisionInspectionItemModel;
 
 namespace Packing_Machine.Data
@@ -19,14 +21,7 @@ namespace Packing_Machine.Data
         /// 保存图像天数
         /// </summary>
         public static int SaveImageDay { get; set; } = 100;
-        /// <summary>
-        /// Log存储路径
-        /// </summary>
-        public static string LogPath { get; set; } = "D:\\DeviceData\\Log";
-        /// <summary>
-        /// SecsLog存储路径
-        /// </summary>
-        public static string SecsLogPath { get; set; } = "D:\\DeviceData\\SecsLog";
+ 
         /// <summary>
         /// PLC 地址存储路径
         /// </summary>

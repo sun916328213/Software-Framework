@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -73,6 +73,9 @@ public partial class FlowChartViewModel : ObservableObject
 
     /// <summary>流程图运行时模型。View 直接绑定到此模型属性。</summary>
     public FlowChartModel Model => Service.Model;
+
+    /// <summary>设置流程名（容器向下传播，供节点日志按「流程名\任务名」路由）。</summary>
+    public void SetProcessName(string? name) => Service.ProcessName = name;
 
     /// <summary>画布上所有节点。</summary>
     public ObservableCollection<NodeViewModel> Nodes => Service.Nodes;

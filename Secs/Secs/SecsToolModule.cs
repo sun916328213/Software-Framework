@@ -1,6 +1,3 @@
-using DataManager.Log;
-using DataManager.Log.Definition;
-using DataManager.Log.SeriLog;
 using Extension.Core.ReflectionEx;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -8,7 +5,6 @@ using Secs;
 using Secs.Manager;
 using Secs.Order;
 using Secs.UI;
-using System;
 using System.Reflection;
 
 
@@ -29,18 +25,8 @@ namespace Secs
             var assembly = Assembly.GetExecutingAssembly();
             RegisterServicesEx.RegisterSingletonFromNamespace(assembly, containerRegistry, "Secs.Manager");
 
-            // 注册日志服务
             containerRegistry.RegisterSingleton<SecsControl>();
-
-            ILog log = new SerilogHelper();
-            log.Param = new LogParam()
-            {
-                Name = "SecsLog",
-                FilePath = @"D:\Log\SecsLog",
-            };
-            containerRegistry.RegisterInstance<ILog>(log);
         }
-
         /// <summary>
         /// 模块初始化完成后的回调
         /// </summary>
@@ -49,7 +35,7 @@ namespace Secs
         {
             // 在这里执行模块初始化完成后的操作
             // 例如获取服务实例等
- 
+
         }
     }
 }

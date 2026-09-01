@@ -42,6 +42,8 @@ namespace WPFControl.ProgramControl.ViewModels
                 containerProvider);
 
             _containerVM = containerProvider.Resolve<FlowChartContainerViewModel>();
+            // 流程名（容器级）：节点日志按「流程名\任务名」路由，自动流程任务落在 D:\DeviceData\Log\Flow\AutoFlow\{任务名}\
+            _containerVM.ProcessName = "AutoFlow";
             _containerVM.ReplaceWithFlow(flowChartVM);
         }
     }

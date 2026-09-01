@@ -1,27 +1,15 @@
-﻿using DataManager.Excel;
-using DataManager.Excel.Definition;
-using DataManager.Log;
-using DataManager.Log.SeriLog;
-using Device.PrintSoftware;
 using Extension.Core.ReflectionEx;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
-using MaterialDesignColors;
-using MaterialDesignThemes.Wpf;
 using Prism.Ioc;
 using Prism.Modularity;
 using SkiaSharp;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using System.Windows;
-using System.Windows.Media;
 using WPFControl.Helper; // 添加Helper命名空间引用
 using WPFControl.ProgramControl.Services;
 using WPFControl.ProgramControl.Views;
-using WPFCustomControls.Window.Views;
 
 
 namespace WPFControl
@@ -52,6 +40,7 @@ namespace WPFControl
 
             // 合并WPFControl的资源字典到应用程序资源中
             MergeResourceDictionaries();
+ 
 
             //// 初始化TryCatchHelper
             var tryCatchHelper = new TryCatchHelper(containerProvider);

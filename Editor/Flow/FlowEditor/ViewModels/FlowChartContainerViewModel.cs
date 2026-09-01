@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FlowEditor.Interfaces;
@@ -62,6 +62,9 @@ public partial class FlowChartContainerViewModel : ObservableObject
     }
 
     private string? _containerFilePath;
+
+    /// <summary>容器所属流程名（AutoFlow / InitializeFlow ...，宿主设置）；向下传播到各标签页，用于节点日志按「流程名\任务名」路由。</summary>
+    public string? ProcessName { get; set; }
 
     public FlowChartContainerViewModel(
         IDialogService dialogService,
@@ -157,6 +160,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
     public void AddNewTab()
     {
         var vm = _containerProvider.Resolve<FlowChartViewModel>();
+        vm.SetProcessName(ProcessName);
         vm.Model.TabTitle = $"流程图{GetNextFlowNumber()}";
         vm.Model.StatusText = "就绪";
         // 监听选中变化，更新属性面板 ViewModel
@@ -212,6 +216,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
     /// <summary>用单个流程替换当前所有标签页（用于自动流程等默认流程自动加载）。</summary>
     public void ReplaceWithFlow(FlowChartViewModel vm)
     {
+        vm.SetProcessName(ProcessName);
         foreach (var tab in Tabs.ToList())
             RemoveTab(tab);
         AttachPropertyGridHook(vm);
@@ -289,6 +294,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
             foreach (var flowDoc in containerDoc.Flows)
             {
                 var vm = _containerDocumentService.CreateTabFromFlow(flowDoc);
+                vm.SetProcessName(ProcessName);
                 AttachPropertyGridHook(vm);
                 Tabs.Add(vm);
             }

@@ -40,7 +40,7 @@ namespace WPFControl.ProgramControl.Services
         /// <summary>
         /// 日志助手
         /// </summary>
-        internal   ILog Service_Log => logManager[0];
+        internal   ILog Service_Log => logManager["RunLog"];
 
         /// <summary>
         /// 分页数据源(查询或筛选后的完整结果)

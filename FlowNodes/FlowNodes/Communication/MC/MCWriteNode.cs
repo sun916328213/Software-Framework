@@ -1,6 +1,7 @@
-﻿using FlowEditor.Nodes;
-using Communication;
+﻿using Communication;
 using FlowEditor.Core;
+using FlowEditor.Nodes;
+using Google.Protobuf.WellKnownTypes;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,15 +49,19 @@ namespace FlowNodes.Communication.MC
         /// 执行写入。失败时抛出 InvalidOperationException（引擎据此触发容错策略）；
         /// WriteResult 属性保留 false 供属性面板检查（注意：异常路径下输出端口不会同步）。
         /// </summary>
-        public override Task ExecuteAsync(CancellationToken ct)
+        public override async Task<Task> ExecuteAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
 
             WriteResult = CommunicationManager.Write(RegisterName, RegisterValue);
             if (!WriteResult)
+            {
+                await NodeLog.Error($"MC 触发等待：寄存器 [{RegisterName}] 写入 [{RegisterValue}] 未成功");
                 throw new InvalidOperationException(
                     $"MC 写入失败：寄存器 [{RegisterName}] 写入 [{RegisterValue}] 未成功（副作用未发生，流程不应继续）");
 
+            }
+            await NodeLog.Info($"MC 触发等待：寄存器 [{RegisterName}] 写入 [{RegisterValue}] 成功");
             return Task.CompletedTask;
         }
 

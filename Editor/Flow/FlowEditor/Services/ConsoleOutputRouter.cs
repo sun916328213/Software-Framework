@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading;
+using FlowEditor.Core;
 
 namespace FlowEditor.Services;
 
@@ -27,7 +28,13 @@ public static class ConsoleOutputRouter
         public override void WriteLine(string? value)
         {
             _previous.WriteLine(value);
-            Current.Value?.Invoke(value ?? string.Empty);
+            var msg = value ?? string.Empty;
+            Current.Value?.Invoke(msg);
+
+            // 流程作用域内的 Console 输出同步落盘（带 #运行序号 / [节点名] 前缀）
+            var line = FlowLogContext.Format(msg);
+            if (line != null)
+                FlowLogContext.FileSink?.Invoke(line);
         }
 
         public static IDisposable EnterScope(Action<string> onLine)

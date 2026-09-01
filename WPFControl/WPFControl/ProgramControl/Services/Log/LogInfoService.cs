@@ -11,7 +11,7 @@ namespace WPFControl.ProgramControl.Services
     public class LogInfoService : DataGridService<LogInfo>
     {
         LogManager logManager;
-        ILog log =>  logManager[0] ;
+        ILog log =>  logManager["RunLog"] ;
         LogAlarmInfoService logAlarmInfoService;
 
         public LogInfoService(IContainerProvider container)

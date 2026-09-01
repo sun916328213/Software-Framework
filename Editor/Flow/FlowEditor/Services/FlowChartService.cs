@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -79,6 +80,13 @@ public class FlowChartService : IFlowChartService
     /// <summary>当前执行节点索引（用于单步调试）。</summary>
     public int CurrentExecutionIndex { get; private set; }
 
+    /// <summary>流程名（宿主设置，如 AutoFlow / InitializeFlow）；为节点日志的上级目录。</summary>
+    public string? ProcessName { get; set; }
+
+    /// <summary>任务日志名称：取标签页名（AddNewTab/流程文件已保证唯一，如 流程图1），
+    /// 日志路径为 D:\DeviceData\Log\Flow\{流程名}\{任务名}\yyyyMMdd.txt。</summary>
+    private string FlowLogName => Model.TabTitle;
+
     /// <summary>调试控制器（P4）：断点与单步的 TCS 门闩。</summary>
     public DebugController Debug { get; } = new();
 
@@ -112,6 +120,9 @@ public class FlowChartService : IFlowChartService
             ClearLog();
             logCallback("=== 开始执行流程 ===");
 
+            // 进入流程（容器级）与任务作用域：节点日志按「流程名\任务名」路由落盘
+            using (FlowLogContext.EnterProcess(ProcessName ?? FlowLogName))
+            using (FlowLogContext.EnterFlow(FlowLogName))
             using (ConsoleOutputRouter.EnterScope(msg => Application.Current?.Dispatcher.Invoke(() => logCallback(msg))))
             {
                 await _engine.ExecuteAsync(
@@ -223,14 +234,19 @@ public class FlowChartService : IFlowChartService
                     _executionOrder.Clear();
                     CurrentExecutionIndex = 0;
 
-                    await _engine.ExecuteAsync(
-                        Nodes.ToList(),
-                        Connections.ToList(),
-                        _executionCts.Token,
-                        msg => Application.Current?.Dispatcher.Invoke(() => logCallback(msg)),
-                        Model.IsDebugMode ? OnBeforeNodeExecute : null,
-                        _executionOrder,
-                        Journal);
+                    // 每次循环 = 一次独立运行，进入新的流程（容器级）+ 任务作用域（RunId 自增）
+                    using (FlowLogContext.EnterProcess(ProcessName ?? FlowLogName))
+                    using (FlowLogContext.EnterFlow(FlowLogName))
+                    {
+                        await _engine.ExecuteAsync(
+                            Nodes.ToList(),
+                            Connections.ToList(),
+                            _executionCts.Token,
+                            msg => Application.Current?.Dispatcher.Invoke(() => logCallback(msg)),
+                            Model.IsDebugMode ? OnBeforeNodeExecute : null,
+                            _executionOrder,
+                            Journal);
+                    }
 
                     logCallback($"--- 第 {iteration} 次循环完成 ---");
 
