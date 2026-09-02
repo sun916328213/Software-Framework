@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
+using Extension.Struct;
 using FlowEditor.Core;
 using FlowEditor.Interfaces;
 using FlowEditor.Models;
@@ -118,24 +119,41 @@ public class FlowChartService : IFlowChartService
                 n.ResetStatus();
 
             ClearLog();
-            logCallback("=== 开始执行流程 ===");
 
             // 进入流程（容器级）与任务作用域：节点日志按「流程名\任务名」路由落盘
             using (FlowLogContext.EnterProcess(ProcessName ?? FlowLogName))
             using (FlowLogContext.EnterFlow(FlowLogName))
             using (ConsoleOutputRouter.EnterScope(msg => Application.Current?.Dispatcher.Invoke(() => logCallback(msg))))
             {
+                // 面板输出（引擎执行轨迹与运行标记）同步落盘到流程日志文件：
+                // NodeLog/节点 Console 已有独立落盘通道，此处只覆盖引擎 log 轨迹，避免重复写入。
+                // 按前缀区分日志等级；[跳过]/[分支] 等未激活分支剪枝噪声不入日志文件
+                void Panel(string msg)
+                {
+                    Application.Current?.Dispatcher.Invoke(() => logCallback(msg));
+
+                    if (msg.StartsWith("[跳过]") || msg.StartsWith("[分支]")) return;
+
+                    var level = (msg.StartsWith("[错误]") || msg.StartsWith("[类型错误]") || msg.StartsWith("[堆栈]"))
+                        ? ELogLevel.Error
+                        : (msg.StartsWith("[容错]") || msg.StartsWith("[重试]"))
+                            ? ELogLevel.Warning
+                            : ELogLevel.Information;
+                    FlowLogContext.Write(msg, level);
+                }
+
+                Panel("=== 开始执行流程 ===");
                 await _engine.ExecuteAsync(
                     Nodes.ToList(),
                     Connections.ToList(),
                     _executionCts.Token,
-                    msg => Application.Current?.Dispatcher.Invoke(() => logCallback(msg)),
+                    Panel,
                     Model.IsDebugMode ? OnBeforeNodeExecute : null,
                     _executionOrder,
                     Journal);
+                Panel("=== 执行完成 ===");
             }
 
-            logCallback("=== 执行完成 ===");
             Model.StatusText = "执行完成";
         }
         catch (OperationCanceledException)
@@ -238,11 +256,27 @@ public class FlowChartService : IFlowChartService
                     using (FlowLogContext.EnterProcess(ProcessName ?? FlowLogName))
                     using (FlowLogContext.EnterFlow(FlowLogName))
                     {
+                        // 引擎执行轨迹同步落盘（NodeLog/节点 Console 已有独立落盘通道，避免重复写入）；
+                        // 按前缀区分日志等级，[跳过]/[分支] 剪枝噪声不入日志文件
+                        void Panel(string msg)
+                        {
+                            Application.Current?.Dispatcher.Invoke(() => logCallback(msg));
+
+                            if (msg.StartsWith("[跳过]") || msg.StartsWith("[分支]")) return;
+
+                            var level = (msg.StartsWith("[错误]") || msg.StartsWith("[类型错误]") || msg.StartsWith("[堆栈]"))
+                                ? ELogLevel.Error
+                                : (msg.StartsWith("[容错]") || msg.StartsWith("[重试]"))
+                                    ? ELogLevel.Warning
+                                    : ELogLevel.Information;
+                            FlowLogContext.Write(msg, level);
+                        }
+
                         await _engine.ExecuteAsync(
                             Nodes.ToList(),
                             Connections.ToList(),
                             _executionCts.Token,
-                            msg => Application.Current?.Dispatcher.Invoke(() => logCallback(msg)),
+                            Panel,
                             Model.IsDebugMode ? OnBeforeNodeExecute : null,
                             _executionOrder,
                             Journal);

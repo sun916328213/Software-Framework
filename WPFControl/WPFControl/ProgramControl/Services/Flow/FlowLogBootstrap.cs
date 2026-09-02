@@ -1,5 +1,6 @@
 using DataManager.Log;
 using DataManager.Log.Definition;
+using Extension.Struct;
 using FlowEditor.Core;
 using FlowNodes;
 using System;
@@ -12,11 +13,11 @@ namespace WPFControl.ProgramControl.Services
     /// 流程日志启动器：注册按「流程名\任务名」区分的 DataManager ILog（LogManager），并把节点日志
     /// （NodeLog 显式分级 / ConsoleOutputRouter 捕获的 Console 输出）经 FlowLogContext 路由到
     /// 对应流程任务的日志文件 {FlowLog.FilePath}\{流程名}\{任务名}\yyyyMMdd.txt。
-    /// 静态日志（RunLog 通用运行日志 / FlowLog / SEMILog）已由 LogConfigService 在配置加载时
+    /// 静态日志（DeviceLog 机台所有 Log / FlowLog / SEMILog）已由 LogConfigService 在配置加载时
     /// 注册到 LogManager，本类只负责 Flow 任务日志的动态注册，FlowLog 基础模板经 LogManager 获取。
     /// 任意「流程名\任务名」首次出现时自动注册；LogManager 经构造器自动注入
     /// （本类注册于 ProgramControl.Services 命名空间，由 RegisterServicesFromNamespace 注册为单例），
-    /// 由容器解析后调用一次 Initialize()。
+    /// 由容器解析后自动 Initialize()。
     /// </summary>
     public class FlowLogBootstrap
     {
@@ -32,14 +33,14 @@ namespace WPFControl.ProgramControl.Services
 
         public void Initialize()
         {
-            // Console 输出捕获的日志行 → 当前「流程名\任务名」的 ILog（Format 已带 #运行序号 / [节点名] 前缀）
-            FlowLogContext.FileSink = line =>
+            // Console 输出捕获的日志行 → 当前「流程名\任务名」的 ILog（Format 已带 #运行序号 / [节点名] 前缀，保留等级）
+            FlowLogContext.FileSink = (line, level) =>
             {
                 try
                 {
                     var key = FlowLogContext.LogKey;
                     if (string.IsNullOrEmpty(key)) return;
-                    Resolve(key)?.Add(line);
+                    Resolve(key)?.Add(line, level);
                 }
                 catch
                 {

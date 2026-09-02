@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading;
+using Extension.Struct;
 using FlowEditor.Core;
 
 namespace FlowEditor.Services;
@@ -31,10 +32,10 @@ public static class ConsoleOutputRouter
             var msg = value ?? string.Empty;
             Current.Value?.Invoke(msg);
 
-            // 流程作用域内的 Console 输出同步落盘（带 #运行序号 / [节点名] 前缀）
+            // 流程作用域内的 Console 输出同步落盘（带 #运行序号 / [节点名] 前缀，默认信息级）
             var line = FlowLogContext.Format(msg);
             if (line != null)
-                FlowLogContext.FileSink?.Invoke(line);
+                FlowLogContext.FileSink?.Invoke(line, ELogLevel.Information);
         }
 
         public static IDisposable EnterScope(Action<string> onLine)

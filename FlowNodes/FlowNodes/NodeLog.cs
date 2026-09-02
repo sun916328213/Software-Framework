@@ -15,11 +15,13 @@ namespace FlowNodes
         /// <summary>按流程名解析 ILog（宿主注册：container.Resolve&lt;LogManager&gt;()[name]）。</summary>
         public static Func<string, ILog?>? Resolver { get; set; }
 
-        public static Task Info(string message) => Write(ELogLevel.Information, message);
-        public static Task Warn(string message) => Write(ELogLevel.Warning, message);
-        public static Task Error(string message) => Write(ELogLevel.Error, message);
+        public static Task InfoAsync(string message) => WriteAsync(ELogLevel.Information, message);
+        public static Task WarnAsync(string message) => WriteAsync(ELogLevel.Warning, message);
+        public static Task ErrorAsync(string message) => WriteAsync(ELogLevel.Error, message);
+        public static Task SysErrorAsync(string message) => WriteAsync(ELogLevel.SysError, message);
+ 
 
-        private static async Task Write(ELogLevel level, string message)
+        private static async Task WriteAsync(ELogLevel level, string message)
         {
             var node = FlowLogContext.NodeName;
             var prefix = string.IsNullOrEmpty(node) ? "" : $"[{node}] ";

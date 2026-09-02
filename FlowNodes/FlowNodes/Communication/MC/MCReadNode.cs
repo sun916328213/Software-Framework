@@ -1,4 +1,4 @@
-﻿using FlowEditor.Nodes;
+using FlowEditor.Nodes;
 using Communication;
 using FlowEditor.Core;
 using System;
@@ -33,17 +33,18 @@ namespace FlowNodes.Communication.MC
             set => SetProperty(ref _registerName, value);
         }
 
-        public override Task ExecuteAsync(CancellationToken ct)
+        public override async Task ExecuteAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
 
             ReadValue = CommunicationManager.Read(RegisterName);
             if (ReadValue is null or false)
-                throw new InvalidOperationException(
-                    $"MC 读取失败：寄存器 [{RegisterName}] 未返回有效数据");
-
-            Console.WriteLine($"读取节点:{Name},读取值:{ReadValue}");
-            return Task.CompletedTask;
+            {
+                string errorMessage = $"MC 读取失败：寄存器 [{RegisterName}] 未返回有效数据";
+                await NodeLog.ErrorAsync(errorMessage);
+                throw new InvalidOperationException(errorMessage);
+            }
+            await NodeLog.InfoAsync($"读取节点:{Name},读取值:{ReadValue}");
         }
 
         private object? _readValue;

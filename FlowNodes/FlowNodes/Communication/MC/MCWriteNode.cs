@@ -54,14 +54,14 @@ namespace FlowNodes.Communication.MC
             ct.ThrowIfCancellationRequested();
 
             WriteResult = CommunicationManager.Write(RegisterName, RegisterValue);
+            throw new Exception("fail");
             if (!WriteResult)
             {
-                await NodeLog.Error($"MC 触发等待：寄存器 [{RegisterName}] 写入 [{RegisterValue}] 未成功");
-                throw new InvalidOperationException(
-                    $"MC 写入失败：寄存器 [{RegisterName}] 写入 [{RegisterValue}] 未成功（副作用未发生，流程不应继续）");
-
+                string errorMessage = $"MC 写入失败：寄存器 [{RegisterName}] 写入 [{RegisterValue}] 失败";
+                await NodeLog.ErrorAsync(errorMessage);
+                throw new InvalidOperationException(errorMessage);
             }
-            await NodeLog.Info($"MC 触发等待：寄存器 [{RegisterName}] 写入 [{RegisterValue}] 成功");
+            await NodeLog.InfoAsync($"MC 触发等待：寄存器 [{RegisterName}] 写入 [{RegisterValue}] 成功");
             return Task.CompletedTask;
         }
 

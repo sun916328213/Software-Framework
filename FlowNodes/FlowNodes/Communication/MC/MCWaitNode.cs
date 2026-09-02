@@ -95,7 +95,7 @@ namespace FlowNodes.Communication.MC
                 };
                 if (triggered)
                 {
-                    await NodeLog.Info($"MC 触发等待：寄存器 [{RegisterName}] 当前值 {curvalue}，上次值 {lastvalue}，触发");
+                    await NodeLog.InfoAsync($"MC 触发等待：寄存器 [{RegisterName}] 当前值 {curvalue}，上次值 {lastvalue}，触发");
                     return;
                 }
  

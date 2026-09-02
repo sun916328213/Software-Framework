@@ -1,3 +1,5 @@
+using Extension.Struct;
+
 namespace FlowEditor.Core;
 
 /// <summary>
@@ -26,8 +28,8 @@ public static class FlowLogContext
     /// <summary>当前流程运行序号（每次进入流程作用域自增，用于区分同一流程的多次运行）。</summary>
     public static long RunId => Run.Value;
 
-    /// <summary>落盘 Sink：由宿主注册，把（已带上下文前缀的）日志行写入 DataManager 的 ILog；null = 不落盘。</summary>
-    public static Action<string>? FileSink { get; set; }
+    /// <summary>落盘 Sink：由宿主注册，把（已带上下文前缀的）日志行与日志等级写入 DataManager 的 ILog；null = 不落盘。</summary>
+    public static Action<string, ELogLevel>? FileSink { get; set; }
 
     /// <summary>进入流程（容器）作用域；Dispose 时还原上一流程名（支持嵌套）。</summary>
     public static IDisposable EnterProcess(string? processName)
@@ -89,6 +91,17 @@ public static class FlowLogContext
         if (string.IsNullOrEmpty(Flow.Value)) return null;
         var node = Node.Value;
         return string.IsNullOrEmpty(node) ? $"#{Run.Value} {message}" : $"#{Run.Value} [{node}] {message}";
+    }
+
+    /// <summary>
+    /// 将（未带前缀的）日志行写入流程日志文件（内部经 <see cref="Format"/> 加前缀后交给 FileSink）。
+    /// 供引擎失败处理等非 NodeLog 路径调用，保证节点裸抛异常也能在流程日志文件中留痕；
+    /// 不在流程作用域内或已抑制落盘时静默忽略。
+    /// </summary>
+    public static void Write(string message, ELogLevel level = ELogLevel.Information)
+    {
+        var line = Format(message);
+        if (line != null) FileSink?.Invoke(line, level);
     }
 
     private sealed class Scope(Action restore) : IDisposable
