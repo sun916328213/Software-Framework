@@ -134,9 +134,9 @@ public class FlowChartService : IFlowChartService
 
                     if (msg.StartsWith("[跳过]") || msg.StartsWith("[分支]")) return;
 
-                    var level = (msg.StartsWith("[错误]") || msg.StartsWith("[类型错误]") || msg.StartsWith("[堆栈]"))
+                    var level = (msg.Contains("[错误]") || msg.Contains("[类型错误]") || msg.Contains("[堆栈]"))
                         ? ELogLevel.Error
-                        : (msg.StartsWith("[容错]") || msg.StartsWith("[重试]"))
+                        : (msg.Contains("[容错]") || msg.Contains("[重试]"))
                             ? ELogLevel.Warning
                             : ELogLevel.Information;
                     FlowLogContext.Write(msg, level);
@@ -551,7 +551,8 @@ public class FlowChartService : IFlowChartService
         bool shouldFlush;
         lock (_logGate)
         {
-            _logBuilder.AppendLine(message);
+            // 输出面板每行统一加时间前缀（日志文件本身含时间戳，无需在此添加）
+            _logBuilder.AppendLine($"[{DateTime.Now:HH:mm:ss.fff}] {message}");
             if (_logBuilder.Length > MaxLogChars)
                 _logBuilder.Remove(0, _logBuilder.Length / 2);
 

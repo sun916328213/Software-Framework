@@ -77,8 +77,10 @@ namespace FlowNodes.Communication.MC
                 {
                     readFailStreak++;
                     if (readFailStreak > Math.Max(0, ReadRetryCount))
-                        throw new InvalidOperationException(
-                            $"MC 触发等待失败：寄存器 [{RegisterName}] 连续 {readFailStreak} 次读取无效");
+                    {
+                        string msg = $"MC 触发等待失败：寄存器 [{RegisterName}] 连续 {readFailStreak} 次读取无效";
+                        throw new InvalidOperationException(msg);
+                    }
                     await Task.Delay(Math.Max(1, PollIntervalMs), ct);
                     continue;
                 }

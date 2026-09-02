@@ -63,9 +63,9 @@
                     VerticalAlignment="Center"
                     VerticalContentAlignment="Center"
                     FontSize="{Binding ElementName=UserControl, Path=FontSize}"
-                    TextAlignment="Center"
                     KeyDown="PageNumberBox_KeyDown"
-                    LostFocus="PageNumberBox_LostFocus" />
+                    LostFocus="PageNumberBox_LostFocus"
+                    TextAlignment="Center" />
                 <TextBlock
                     Margin="6,0,12,0"
                     VerticalAlignment="Center"

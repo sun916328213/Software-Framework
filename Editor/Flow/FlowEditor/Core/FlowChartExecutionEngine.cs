@@ -118,11 +118,12 @@ public class FlowChartExecutionEngine
         bool enforceFailFast = false,
         ExecutionJournal? journal = null) where TNode : INodeExecutable
     {
-        var startWallTime = DateTime.Now;
         var startTimestamp = Timestamp();
         nodeVm.Status = NodeStatus.Running;
         orderBag?.Enqueue(nodeVm);
-        log($"[开始] {nodeVm.Name} ({startWallTime:HH:mm:ss.fff})");
+        // 节点级日志统一为「#运行序号 [节点名] 内容」，与 NodeLog 面板/文件格式一致
+        Action<string> nodeLog = msg => log($"#{FlowLogContext.RunId} [{nodeVm.Name}] {msg}");
+        nodeLog("[开始]");
         journal?.RecordNodeStart(nodeVm.Id, nodeVm.Name);
 
         // 容错参数（未实现 INodeFaultPolicy 的执行面按默认处理）
@@ -145,7 +146,7 @@ public class FlowChartExecutionEngine
                     nodeVm.Status = NodeStatus.Running;
                     if (retryDelayMs > 0)
                         await Task.Delay(retryDelayMs, ct);
-                    log($"[重试] {nodeVm.Name} 第 {attempt - 1}/{maxAttempts - 1} 次");
+                    nodeLog($"[重试] 第 {attempt - 1}/{maxAttempts - 1} 次");
                 }
 
                 nodeVm.ResetActivation();
@@ -189,7 +190,7 @@ public class FlowChartExecutionEngine
                 var elapsedOk = ElapsedMs(startTimestamp);
                 nodeVm.LastElapsedMs = (long)elapsedOk;
                 var extra = onExecuted?.Invoke() ?? "";
-                log($"[完成] {nodeVm.Name} - 耗时 {elapsedOk:F1}ms{extra}");
+                nodeLog($"[完成] - 耗时 {elapsedOk:F1}ms{extra}");
                 journal?.RecordNodeFinish(nodeVm.Id, nodeVm.Name, nodeVm.Status, (long)elapsedOk);
 
                 return new NodeRunResult(ResolveActivatedPortIds(nodeVm, graph), false, false);
@@ -212,17 +213,17 @@ public class FlowChartExecutionEngine
                         log($"[容错] [{nodeVm.Name}] 失败已路由至 Error 端口，仅沿 Error 连线继续");
                         return new NodeRunResult(new HashSet<string> { errPortId }, true, true);
                     }
-                    log($"[容错] [{nodeVm.Name}] 未接线 Error 端口，按继续执行处理");
+                    nodeLog("[容错] 未接线 Error 端口，按继续执行处理");
                     goto case NodeErrorPolicy.ContinueOnError;
 
                 case NodeErrorPolicy.ContinueOnError:
-                    log($"{prefix} {nodeVm.Name}: {failure.Message}");
-                    log($"[容错] 策略为继续执行，[{nodeVm.Name}] 的下游将以上游遗留输入值继续调度");
+                    nodeLog($"{prefix} {failure.Message}");
+                    nodeLog("[容错] 策略为继续执行，下游将以上游遗留输入值继续调度");
                     return new NodeRunResult(null, true, true);
 
                 default: // FailFast
-                    log($"{prefix} {nodeVm.Name}: {failure.Message}");
-                    log($"[堆栈] {failure.StackTrace}");
+                    nodeLog($"{prefix} {failure.Message}");
+                    nodeLog($"[堆栈] {failure.StackTrace}");
                     throw failure;
             }
         }

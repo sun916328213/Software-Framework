@@ -14,7 +14,10 @@ public static class FlowLogContext
     private static readonly AsyncLocal<string?> Node = new();
     private static readonly AsyncLocal<long> Run = new();
     private static readonly AsyncLocal<bool> SuppressSink = new();
-    private static long _runCounter;
+
+    // 运行序号按「流程名\任务名」分桶计数：同一任务的多次运行在日志中为连续 #1 #2 #3（跨流程互不影响）
+    private static readonly Dictionary<string, long> _runCounters = new();
+    private static readonly object _runLock = new();
 
     /// <summary>当前流程名（AutoFlow / InitializeFlow ...，容器级；为任务日志的上级目录）。</summary>
     public static string? ProcessName => Process.Value;
@@ -25,7 +28,7 @@ public static class FlowLogContext
     /// <summary>当前节点名（节点执行期间非 null）。</summary>
     public static string? NodeName => Node.Value;
 
-    /// <summary>当前流程运行序号（每次进入流程作用域自增，用于区分同一流程的多次运行）。</summary>
+    /// <summary>当前任务运行序号（按「流程名\任务名」独立分桶、从 1 连续递增，用于区分同一任务的多次运行）。</summary>
     public static long RunId => Run.Value;
 
     /// <summary>落盘 Sink：由宿主注册，把（已带上下文前缀的）日志行与日志等级写入 DataManager 的 ILog；null = 不落盘。</summary>
@@ -45,12 +48,27 @@ public static class FlowLogContext
         var oldFlow = Flow.Value;
         var oldRun = Run.Value;
         Flow.Value = flowName;
-        Run.Value = Interlocked.Increment(ref _runCounter);
+
+        // 运行序号按任务（流程名\任务名）独立自增，同一任务多次运行日志中连续编号
+        Run.Value = NextRunId(flowName);
         return new Scope(() =>
         {
             Flow.Value = oldFlow;
             Run.Value = oldRun;
         });
+    }
+
+    /// <summary>取该任务的下一个运行序号（进程内按「流程名\任务名」独立分桶，从 1 连续递增）。</summary>
+    private static long NextRunId(string? flowName)
+    {
+        var key = string.IsNullOrEmpty(Process.Value) ? flowName ?? "" : $"{Process.Value}\\{flowName}";
+        lock (_runLock)
+        {
+            _runCounters.TryGetValue(key, out var current);
+            var next = current + 1;
+            _runCounters[key] = next;
+            return next;
+        }
     }
 
     /// <summary>进入节点作用域；Dispose 时还原上一节点名。</summary>

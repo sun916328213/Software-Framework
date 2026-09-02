@@ -31,6 +31,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
             if (SetProperty(ref _activeTab, value))
             {
                 OnPropertyChanged(nameof(HasActiveTab));
+                RunCurrentCommand.NotifyCanExecuteChanged();
                 NotifyAllCanExecuteChanged();
             }
         }
@@ -42,6 +43,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
     public PropertyGridHostViewModel PropertyGridVM { get; }
 
     // ── 容器级命令 ──
+    public AsyncRelayCommand RunCurrentCommand { get; }
     public AsyncRelayCommand RunAllCommand { get; }
     public RelayCommand StopAllCommand { get; }
     public AsyncRelayCommand LoopRunAllCommand { get; }
@@ -79,6 +81,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
 
         PropertyGridVM = containerProvider.Resolve<PropertyGridHostViewModel>();
 
+        RunCurrentCommand = new AsyncRelayCommand(RunCurrentAsync, () => ActiveTab != null);
         RunAllCommand = new AsyncRelayCommand(RunAllAsync);
         StopAllCommand = new RelayCommand(StopAll);
         LoopRunAllCommand = new AsyncRelayCommand(LoopRunAllAsync);
@@ -91,6 +94,14 @@ public partial class FlowChartContainerViewModel : ObservableObject
 
         _ = _toolboxService.RefreshAsync();
         AddNewTab();
+    }
+
+    // ═══════════════════ 当前流程执行 ═══════════════════
+
+    private async Task RunCurrentAsync()
+    {
+        if (ActiveTab?.RunCommand.CanExecute(null) == true)
+            await ActiveTab.RunCommand.ExecuteAsync(null);
     }
 
     // ═══════════════════ 全部运行 / 全部停止 ═══════════════════

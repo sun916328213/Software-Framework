@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="FlowEditor.Views.FlowChartContainerView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -10,7 +10,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pg="clr-namespace:WPFCustomControls.PropertyGrid.Views;assembly=WPFCustomControls"
     xmlns:prism="http://prismlibrary.com/"
-    xmlns:vm="clr-namespace:FlowEditor.ViewModels"
+    xmlns:vm="clr-namespace:FlowEditor.ViewModels" d:DataContext="{d:DesignInstance Type=vm:FlowChartContainerViewModel}"
     x:Name="RootContainer"
     d:DesignHeight="900"
     d:DesignWidth="1600"
@@ -126,6 +126,15 @@
         <Border Grid.Row="0" Padding="4,2">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <Button
+                        Command="{Binding RunCurrentCommand}"
+                        Style="{StaticResource ToolBarButtonStyle}"
+                        ToolTip="当前流程执行">
+                        <materialDesign:PackIcon
+                            Width="22"
+                            Height="22"
+                            Kind="NavigationVariant" />
+                    </Button>
                     <Button
                         Command="{Binding RunAllCommand}"
                         Style="{StaticResource ToolBarButtonStyle}"

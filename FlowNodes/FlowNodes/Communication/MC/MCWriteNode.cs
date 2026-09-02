@@ -54,7 +54,7 @@ namespace FlowNodes.Communication.MC
             ct.ThrowIfCancellationRequested();
 
             WriteResult = CommunicationManager.Write(RegisterName, RegisterValue);
-            throw new Exception("fail");
+ 
             if (!WriteResult)
             {
                 string errorMessage = $"MC 写入失败：寄存器 [{RegisterName}] 写入 [{RegisterValue}] 失败";
