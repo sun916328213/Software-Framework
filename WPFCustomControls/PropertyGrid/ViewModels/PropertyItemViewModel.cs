@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
@@ -185,7 +185,9 @@ public partial class PropertyItemViewModel : ObservableObject, IDisposable
         try
         {
             _propertyInfo.SetValue(_target, Convert.ChangeType(d, UnderlyingType, CultureInfo.InvariantCulture));
-            OnPropertyChanged();
+            // 显式通知 Value：此处位于 StepValue 内部，OnPropertyChanged() 缺省的 CallerMemberName 是 "StepValue"，
+            // 不会广播到 TextBox 双向绑定的 Value，导致上下按钮点击后 UI 不刷新（数据其实已写入目标对象）。
+            OnPropertyChanged(nameof(Value));
         }
         catch
         {

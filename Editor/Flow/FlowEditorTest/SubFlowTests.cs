@@ -1,7 +1,7 @@
 using FlowEditor.Core;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
-using FlowEditor.Nodes.Common;
+using FlowEditor.Nodes.FlowControl;
 using Xunit;
 
 namespace FlowEditorTest;

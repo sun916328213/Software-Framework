@@ -42,6 +42,13 @@ public class FlowChartExecutionEngine
         public int Value;
     }
 
+    /// <summary>
+    /// 本次"按一次执行按钮"周期内的全局执行序号（节点 RunSequence 字段的共享累加器）。
+    /// 每次 ExecuteAsync 入口重置为 0；每次 ExecuteSingleNodeAsync 推进一次。
+    /// 循环回边 BumpRun 不重置，因此循环节点能看到自身在循环内的"被触发序号"，同时循环外的节点 RunSequence 紧接其后。
+    /// </summary>
+    private int _runSeqCounter;
+
     private static long Timestamp() => Stopwatch.GetTimestamp();
 
     private static double ElapsedMs(long start) => Stopwatch.GetElapsedTime(start).TotalMilliseconds;
@@ -64,6 +71,15 @@ public class FlowChartExecutionEngine
         {
             log("[引擎] 画布为空，无需执行");
             return;
+        }
+
+        // 重置本轮执行的所有节点 CurrentRunCount；RunSequence 由 Interlocked.Increment 在节点执行入口处推进
+        // (重置时机：每次 ExecuteAsync 调用，即"按一次执行按钮"=一个完整执行周期；循环回边 BumpRun 不在此处重置)
+        _runSeqCounter = 0;
+        foreach (var n in nodes)
+        {
+            if (n is FlowEditor.ViewModels.NodeViewModel nvm)
+                nvm.CurrentRunCount = 0;
         }
 
         // 编译期：一次性预计算邻接表、回边、前驱表、拓扑序（O(N+E)）
@@ -125,6 +141,15 @@ public class FlowChartExecutionEngine
         Action<string> nodeLog = msg => log($"#{FlowLogContext.RunId} [{nodeVm.Name}] {msg}");
         nodeLog("[开始]");
         journal?.RecordNodeStart(nodeVm.Id, nodeVm.Name);
+
+        // 计数更新：Count 永远累加；CurrentRunCount 在 ExecuteAsync 入口处已重置过；RunSequence 走本轮共享累加器
+        // 失败也累加（节点尝试执行了就算"跑过一次"，与 UI 期望一致）
+        if (nodeVm is FlowEditor.ViewModels.NodeViewModel nvmCounter)
+        {
+            nvmCounter.Count++;
+            nvmCounter.CurrentRunCount++;
+            nvmCounter.RunSequence = Interlocked.Increment(ref _runSeqCounter);
+        }
 
         // 容错参数（未实现 INodeFaultPolicy 的执行面按默认处理）
         var policyNode = nodeVm as INodeFaultPolicy;
@@ -372,8 +397,8 @@ public class FlowChartExecutionEngine
             result = await ExecuteSingleNodeAsync(nodeVm, graph, ct, log, orderBag,
                 onExecuted: () =>
                 {
+                    // 节点本地 Count/CurrentRunCount 已在 ExecuteSingleNodeAsync 入口处累加，此处只推进全局执行进度
                     var executed = Interlocked.Increment(ref counter.Value);
-                    nodeVm.Count++; // 节点本地累计（全局进度仅用于日志展示）
                     return $" ({executed}/{totalCount})";
                 },
                 journal: journal);
@@ -575,8 +600,8 @@ public class FlowChartExecutionEngine
             var result = await ExecuteSingleNodeAsync(nodeVm, graph, ct, log, orderBag: null,
                 onExecuted: () =>
                 {
+                    // 节点本地 Count/CurrentRunCount 已在 ExecuteSingleNodeAsync 入口处累加，此处只推进本轮全局执行序号
                     seq[0]++;
-                    nodeVm.Count++; // 节点本地累计
                     return $" (#{seq[0]})";
                 },
                 journal: journal);
@@ -584,6 +609,9 @@ public class FlowChartExecutionEngine
 
             // 通知后继（激活边过滤：未激活的出边直接剪枝，包括回边——这是环路自然终止的关键；
             // 容错吞掉的失败经 ErrorPort 路由或全放行表达走向）
+            // rescheduled：本轮已重新调度的目标去重。循环体末端若是分支节点，归一化器会为它的每个
+            // 控制流端口各合成一条回边，若不去重则同一次执行会把循环头入队多次，导致计数错乱。
+            var rescheduled = new HashSet<string>();
             foreach (var conn in graph.SuccessorConnections[nodeId])
             {
                 var succId = conn.TargetNodeId;
@@ -596,7 +624,10 @@ public class FlowChartExecutionEngine
 
                 if (graph.BackEdges.Contains((conn.SourceNodeId, succId)))
                 {
-                    // 回边 → 重置目标节点的前驱计数，入队重新执行
+                    if (!rescheduled.Add(succId)) continue;
+
+                    // 回边 → 进入新一轮：运行序号自增（使循环各轮日志的 #运行序号 可区分），重置目标节点前驱计数后重新调度
+                    FlowLogContext.BumpRun();
                     log($"[环路] 重新调度 {nodeMap[succId].Name}");
                     remaining[succId] = 0;
                     nodeMap[succId].Status = NodeStatus.Idle;
@@ -670,11 +701,8 @@ public class FlowChartExecutionEngine
 
                 // 调试模式强制 FailFast：失败立即中断步进（重试/超时仍然生效）
                 await ExecuteSingleNodeAsync(nodeVm, graph, ct, log, orderBag: null,
-                    onExecuted: () =>
-                    {
-                        nodeVm.Count++;
-                        return "";
-                    },
+                    // 调试模式：节点 Count/CurrentRunCount 已在 ExecuteSingleNodeAsync 入口处累加
+                    onExecuted: () => "",
                     enforceFailFast: true,
                     journal: journal);
             }

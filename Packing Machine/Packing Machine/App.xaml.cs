@@ -48,7 +48,7 @@ namespace Packing_Machine
             "CamManagerView",
             "VisionView",
             "RFIDManagerView",
-
+            "ResourceMonitorView",
             "LogQueryView",
             "SEMILogQueryView",
             "DataQueryView",
@@ -266,10 +266,11 @@ namespace Packing_Machine
                     // 强制加载 FlowNodes 程序集，确保其节点能被工具箱扫描到
                     System.Reflection.Assembly.Load("FlowNodes");
                     Container.Resolve<FlowEditor.Interfaces.IFlowToolDiscoveryService>().Discover();
+                    // 加载流程组（.flows 多流程容器），而非单个流程（.flow）
                     var initializeFlowService = Container.Resolve<InitializeFlowService>();
-                    await initializeFlowService.LoadFromDefaultPathAsync();
+                    await initializeFlowService.LoadFlowGroupFromAsync();
                     var autoFlowService = Container.Resolve<AutoFlowService>();
-                    await autoFlowService.LoadFromDefaultPathAsync();
+                    await autoFlowService.LoadFlowGroupFromAsync();
                 });
 
                 RunStep("初始化预热", async () =>

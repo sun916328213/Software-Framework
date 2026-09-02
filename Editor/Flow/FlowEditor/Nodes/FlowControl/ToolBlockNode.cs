@@ -1,21 +1,18 @@
-﻿using FlowEditor.Nodes;
 using System.Windows;
 using FlowEditor.Core;
 using FlowEditor.Models;
-using FlowEditor.Services;
 using FlowEditor.ViewModels;
 using FlowEditor.Views;
-using WPFCustomControls.PropertyGrid;
 using WPFCustomControls.PropertyGrid.Models;
 
-namespace FlowEditor.Nodes.Common;
+namespace FlowEditor.Nodes.FlowControl;
 
 /// <summary>
 /// 工具块节点：将多个工具封装为一个容器，减少主流程显示。
 /// 内部可包含任意数量的其他节点，执行时按序运行。
 /// 双击或点击按钮可打开内部流程编辑器查看/编辑内含节点。
 /// </summary>
-[FlowTool("ToolBlock", "PackageVariantClosed", ToolGroup = "通用", SortIndex = 100,
+[FlowTool("ToolBlock", "PackageVariantClosed", ToolGroup = "流程控制", SortIndex = 7,
     Description = "工具块：将多个工具封装为一个，减少主流程显示")]
 public class ToolBlockNode : NodeModel
 {
@@ -31,9 +28,6 @@ public class ToolBlockNode : NodeModel
         Name = "ToolBlock";
         IsInEnabled = true;
         IsOutEnabled = true;
-        System.Diagnostics.Debug.WriteLine($"[ToolBlockNode] Ctor: ActionButtons.Count={ActionButtons.Count}");
-        foreach (var btn in ActionButtons)
-            System.Diagnostics.Debug.WriteLine($"  - Button: {btn.Name}, Icon={btn.IconResource}");
     }
 
     /// <summary>

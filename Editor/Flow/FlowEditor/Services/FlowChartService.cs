@@ -112,6 +112,9 @@ public class FlowChartService : IFlowChartService
         _executionOrder.Clear();
         CurrentExecutionIndex = 0;
 
+        // 捕获本次运行序号，供流程作用域外（取消/异常）的收尾消息补 #前缀
+        long flowRunId = 0;
+
         try
         {
             // 重置所有节点状态
@@ -127,43 +130,33 @@ public class FlowChartService : IFlowChartService
             {
                 // 面板输出（引擎执行轨迹与运行标记）同步落盘到流程日志文件：
                 // NodeLog/节点 Console 已有独立落盘通道，此处只覆盖引擎 log 轨迹，避免重复写入。
-                // 按前缀区分日志等级；[跳过]/[分支] 等未激活分支剪枝噪声不入日志文件
-                void Panel(string msg)
-                {
-                    Application.Current?.Dispatcher.Invoke(() => logCallback(msg));
+                // runId 传本次运行根 RunId：让 [引擎] / === 执行完成 === 等无节点消息使用"运行级"编号，
+                // 不被 BumpRun 推进的"轮次 RunId"覆盖；节点级日志仍走 RunId 区分循环各轮。
+                void Panel(string msg, long runId) => PanelLog(msg, logCallback, runId);
 
-                    if (msg.StartsWith("[跳过]") || msg.StartsWith("[分支]")) return;
-
-                    var level = (msg.Contains("[错误]") || msg.Contains("[类型错误]") || msg.Contains("[堆栈]"))
-                        ? ELogLevel.Error
-                        : (msg.Contains("[容错]") || msg.Contains("[重试]"))
-                            ? ELogLevel.Warning
-                            : ELogLevel.Information;
-                    FlowLogContext.Write(msg, level);
-                }
-
-                Panel("=== 开始执行流程 ===");
+                flowRunId = FlowLogContext.RunId;
+                Panel("=== 开始执行流程 ===", flowRunId);
                 await _engine.ExecuteAsync(
                     Nodes.ToList(),
                     Connections.ToList(),
                     _executionCts.Token,
-                    Panel,
+                    msg => Panel(msg, flowRunId),
                     Model.IsDebugMode ? OnBeforeNodeExecute : null,
                     _executionOrder,
                     Journal);
-                Panel("=== 执行完成 ===");
+                Panel("=== 执行完成 ===", flowRunId);
             }
 
             Model.StatusText = "执行完成";
         }
         catch (OperationCanceledException)
         {
-            logCallback("=== 已取消执行 ===");
+            PanelLog("=== 已取消执行 ===", logCallback, flowRunId);
             Model.StatusText = "已取消";
         }
         catch (Exception ex)
         {
-            logCallback($"[错误] {ex.Message}");
+            PanelLog($"[错误] {ex.Message}", logCallback, flowRunId);
             Model.StatusText = "执行出错";
         }
         finally
@@ -227,6 +220,9 @@ public class FlowChartService : IFlowChartService
         Model.CurrentLoopIndex = 0;
         _executionCts = new CancellationTokenSource();
 
+        // 捕获最近一次循环的运行序号，供循环作用域外（停止/异常）的收尾消息补 #前缀
+        long loopRunId = 0;
+
         try
         {
             ClearLog();
@@ -256,21 +252,10 @@ public class FlowChartService : IFlowChartService
                     using (FlowLogContext.EnterProcess(ProcessName ?? FlowLogName))
                     using (FlowLogContext.EnterFlow(FlowLogName))
                     {
-                        // 引擎执行轨迹同步落盘（NodeLog/节点 Console 已有独立落盘通道，避免重复写入）；
-                        // 按前缀区分日志等级，[跳过]/[分支] 剪枝噪声不入日志文件
-                        void Panel(string msg)
-                        {
-                            Application.Current?.Dispatcher.Invoke(() => logCallback(msg));
+                        // 引擎执行轨迹同步落盘（NodeLog/节点 Console 已有独立落盘通道，避免重复写入）
+                        void Panel(string msg) => PanelLog(msg, logCallback);
 
-                            if (msg.StartsWith("[跳过]") || msg.StartsWith("[分支]")) return;
-
-                            var level = (msg.StartsWith("[错误]") || msg.StartsWith("[类型错误]") || msg.StartsWith("[堆栈]"))
-                                ? ELogLevel.Error
-                                : (msg.StartsWith("[容错]") || msg.StartsWith("[重试]"))
-                                    ? ELogLevel.Warning
-                                    : ELogLevel.Information;
-                            FlowLogContext.Write(msg, level);
-                        }
+                        loopRunId = FlowLogContext.RunId;
 
                         await _engine.ExecuteAsync(
                             Nodes.ToList(),
@@ -303,12 +288,12 @@ public class FlowChartService : IFlowChartService
         }
         catch (OperationCanceledException)
         {
-            logCallback("=== 已停止循环执行 ===");
+            PanelLog("=== 已停止循环执行 ===", logCallback, loopRunId);
             Model.StatusText = "循环执行已停止";
         }
         catch (Exception ex)
         {
-            logCallback($"[错误] {ex.Message}");
+            PanelLog($"[错误] {ex.Message}", logCallback, loopRunId);
             Model.StatusText = "循环执行出错";
         }
         finally
@@ -321,6 +306,31 @@ public class FlowChartService : IFlowChartService
             _executionCts?.Dispose();
             _executionCts = null;
         }
+    }
+
+    /// <summary>
+    /// 引擎执行轨迹统一处理（面板 + 流程日志文件）：
+    /// 1. 剪枝噪声（[跳过]/[分支]）面板与文件均不输出，简化运行输出；
+    /// 2. 引擎级消息（无节点）自动补 #运行序号 前缀，与节点级/NodeLog 格式统一；
+    /// 3. 按消息内标签区分日志等级（[错误]/[类型错误]/[堆栈]→Error，[容错]/[重试]→Warning，其余→Information）。
+    /// </summary>
+    private static void PanelLog(string msg, Action<string> logCallback, long runId = 0)
+    {
+        if (msg.StartsWith("[跳过]") || msg.StartsWith("[分支]")) return;
+
+        // runId 参数用于流程作用域外的收尾消息（取消/异常）补 #前缀；作用域内传入 0 时取当前 RunId
+        var id = runId > 0 ? runId : FlowLogContext.RunId;
+        if (!msg.StartsWith("#") && id > 0)
+            msg = $"#{id} {msg}";
+
+        Application.Current?.Dispatcher.Invoke(() => logCallback(msg));
+
+        var level = (msg.Contains("[错误]") || msg.Contains("[类型错误]") || msg.Contains("[堆栈]"))
+            ? ELogLevel.Error
+            : (msg.Contains("[容错]") || msg.Contains("[重试]"))
+                ? ELogLevel.Warning
+                : ELogLevel.Information;
+        FlowLogContext.Write(msg, level);
     }
 
     /// <summary>停止循环执行。</summary>

@@ -37,9 +37,13 @@ namespace WPFControl.ProgramControl.Services
             
             // 获取系统总内存
             GetTotalSystemMemory();
-            
-            // 初始化性能计数器
-            InitializePerformanceCounters();
+
+            _=Task.Run(() => 
+            {
+                // 初始化性能计数器
+                InitializePerformanceCounters();
+            });
+           
         }
         
         /// <summary>

@@ -97,8 +97,12 @@ public sealed class CompiledFlowGraph<TNode> where TNode : INodeExecutable
             incoming[n.Id] = [];
         }
 
+        // 循环回边归一化：为循环节点补全未显式连接的回边（循环体末端悬空即可）。
+        // 合成连线仅存在于编译结果中，不写回画布，老图（已画回边）自动跳过。
+        var effectiveConnections = LoopNormalizer.Normalize(nodes, connections);
+
         // 单遍扫描建立出边/入边索引
-        foreach (var conn in connections)
+        foreach (var conn in effectiveConnections)
         {
             if (!nodeMap.ContainsKey(conn.SourceNodeId) || !nodeMap.ContainsKey(conn.TargetNodeId))
                 continue;
@@ -145,7 +149,7 @@ public sealed class CompiledFlowGraph<TNode> where TNode : INodeExecutable
         }
 
         // 前驱表：排除回边（保证环路存在时仍有入口可调度）
-        foreach (var conn in connections)
+        foreach (var conn in effectiveConnections)
         {
             if (!nodeMap.ContainsKey(conn.SourceNodeId) || !nodeMap.ContainsKey(conn.TargetNodeId))
                 continue;

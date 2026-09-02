@@ -30,12 +30,27 @@ public static class ConsoleOutputRouter
         {
             _previous.WriteLine(value);
             var msg = value ?? string.Empty;
-            Current.Value?.Invoke(msg);
 
-            // 流程作用域内的 Console 输出同步落盘（带 #运行序号 / [节点名] 前缀，默认信息级）
+            // 消息已带 #运行序号 前缀（如 NodeLog 显式构造）：面板原样转发，文件由原路径（ILog）落盘
+            if (msg.StartsWith("#"))
+            {
+                Current.Value?.Invoke(msg);
+                return;
+            }
+
+            // 流程作用域内的裸 Console 输出（如 LogNode 的 Console.WriteLine）：
+            // 统一补 #运行序号 [节点名] 前缀，面板与文件格式一致（默认信息级）
             var line = FlowLogContext.Format(msg);
             if (line != null)
-                FlowLogContext.FileSink?.Invoke(line, ELogLevel.Information);
+            {
+                Current.Value?.Invoke(line);
+                if (!FlowLogContext.IsFileSinkSuppressed)
+                    FlowLogContext.FileSink?.Invoke(line, ELogLevel.Information);
+            }
+            else
+            {
+                Current.Value?.Invoke(msg);
+            }
         }
 
         public static IDisposable EnterScope(Action<string> onLine)

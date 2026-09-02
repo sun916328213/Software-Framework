@@ -10,11 +10,11 @@ namespace WPFControl.ProgramControl.Models
         /// <summary>
         /// 自动流程文件路径
         /// </summary>
-        public string FilePath { get; set; } = "Config\\Flow";
+        public string FilePath { get; set; } = "Config\\Flow\\AUtoFlow";
 
         /// <summary>
         /// 自动流程文件名
         /// </summary>
-        public string FileName { get; set; } = "AutoFlow.flow";
+        public string FileName { get; set; } = "AutoFlow.flows";
     }
 }

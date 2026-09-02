@@ -71,6 +71,24 @@ public static class FlowLogContext
         }
     }
 
+    /// <summary>
+    /// 当前任务运行序号自增 1（环路模式：每沿回边重新调度一次即进入新一轮，
+    /// 使循环各轮日志的 #运行序号 可区分）。仅在流程作用域内有效（RunId &gt; 0 时）。
+    /// </summary>
+    public static void BumpRun()
+    {
+        if (Run.Value <= 0) return;
+        var flowName = Flow.Value;
+        var key = string.IsNullOrEmpty(Process.Value) ? flowName ?? "" : $"{Process.Value}\\{flowName}";
+        lock (_runLock)
+        {
+            _runCounters.TryGetValue(key, out var current);
+            var next = current + 1;
+            _runCounters[key] = next;
+            Run.Value = next;
+        }
+    }
+
     /// <summary>进入节点作用域；Dispose 时还原上一节点名。</summary>
     public static IDisposable EnterNode(string? nodeName)
     {
@@ -87,6 +105,9 @@ public static class FlowLogContext
         return new Scope(() => SuppressSink.Value = old);
     }
 
+    /// <summary>是否抑制 FileSink 落盘（NodeLog / LogNode 非信息级经此避免 Console 捕获重复落盘）。</summary>
+    public static bool IsFileSinkSuppressed => SuppressSink.Value;
+
     /// <summary>
     /// 日志路由键：流程名\任务名（如 AutoFlow\流程图1）。仅任务名为空时返回 null；
     /// 流程名为空时退化为仅任务名。
@@ -102,11 +123,16 @@ public static class FlowLogContext
         }
     }
 
-    /// <summary>为日志行附加上下文前缀；不在流程作用域内或已抑制落盘时返回 null。</summary>
+    /// <summary>
+    /// 为日志行附加上下文前缀；不在流程作用域内返回 null。
+    /// 消息已带 #运行序号 前缀时原样返回（NodeLog / PanelLog 已构造前缀的行不二次加前缀）。
+    /// 注：抑制落盘状态不影响本方法——面板展示仍应统一加前缀，仅文件写入由调用方按
+    /// <see cref="IsFileSinkSuppressed"/> 决定。
+    /// </summary>
     public static string? Format(string message)
     {
-        if (SuppressSink.Value) return null;
         if (string.IsNullOrEmpty(Flow.Value)) return null;
+        if (message.StartsWith("#")) return message;
         var node = Node.Value;
         return string.IsNullOrEmpty(node) ? $"#{Run.Value} {message}" : $"#{Run.Value} [{node}] {message}";
     }
@@ -118,6 +144,7 @@ public static class FlowLogContext
     /// </summary>
     public static void Write(string message, ELogLevel level = ELogLevel.Information)
     {
+        if (SuppressSink.Value) return;
         var line = Format(message);
         if (line != null) FileSink?.Invoke(line, level);
     }

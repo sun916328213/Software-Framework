@@ -1,7 +1,7 @@
 using FlowEditor.Core;
 using FlowEditor.Models;
 
-namespace FlowEditor.Nodes.Common;
+namespace FlowEditor.Nodes.FlowControl;
 
 /// <summary>
 /// 子流程节点（P5）：把一个 .flow 文档作为可复用子程序执行。

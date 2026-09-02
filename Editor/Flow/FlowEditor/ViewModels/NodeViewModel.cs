@@ -11,8 +11,10 @@ namespace FlowEditor.ViewModels;
 /// <summary>
 /// 节点 ViewModel。
 /// 持有 NodeModel 引用，管理拖拽、选中、端口状态等 UI 逻辑。
+/// 引擎以本类型为执行单元（见 FlowChartService.Nodes），因此能力接口在此显式转发至 Model：
+/// INodeExecutable / INodeFaultPolicy / ILoopControlNode。
 /// </summary>
-public class NodeViewModel : ObservableObject, INodeExecutable, INodeFaultPolicy
+public class NodeViewModel : ObservableObject, INodeExecutable, INodeFaultPolicy, ILoopControlNode
 {
     /// <summary>底层节点模型。</summary>
     public NodeModel Model { get; }
@@ -76,6 +78,20 @@ public class NodeViewModel : ObservableObject, INodeExecutable, INodeFaultPolicy
     {
         get => Model.Count;
         set => Model.Count = value;
+    }
+
+    /// <summary>本次"按执行按钮"周期内该节点被触发的次数（节点局部）。详见 <see cref="Model.CurrentRunCount"/>。</summary>
+    public int CurrentRunCount
+    {
+        get => Model.CurrentRunCount;
+        set => Model.CurrentRunCount = value;
+    }
+
+    /// <summary>本次"按执行按钮"周期内的全局执行序号（共享累加器）。详见 <see cref="Model.RunSequence"/>。</summary>
+    public int RunSequence
+    {
+        get => Model.RunSequence;
+        set => Model.RunSequence = value;
     }
 
     /// <summary>节点执行状态。</summary>
@@ -183,6 +199,19 @@ public class NodeViewModel : ObservableObject, INodeExecutable, INodeFaultPolicy
         => ((INodeExecutable)Model).GetActivatedOutputNames();
 
     IReadOnlyList<string>? INodeExecutable.ControlFlowPorts => Model.ControlFlowPorts;
+
+    #endregion
+
+    #region ILoopControlNode 显式实现（转发至 Model）
+
+    // 引擎拿到的执行单元是 NodeViewModel（FlowChartService.Nodes），循环回边归一化
+    // 通过此接口识别循环节点；Model 未实现时返回空成员，等价于普通节点，归一化自动跳过。
+
+    IReadOnlyCollection<string> ILoopControlNode.BodyPortIds
+        => Model is ILoopControlNode loop ? loop.BodyPortIds : Array.Empty<string>();
+
+    string ILoopControlNode.LoopBackPortId
+        => Model is ILoopControlNode loop ? loop.LoopBackPortId : string.Empty;
 
     #endregion
 

@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Text.Json;
@@ -65,11 +65,36 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
     }
 
     private int _count;
-    /// <summary>工具运行次数累加，运行时由引擎写入，UI 绑定显示</summary>
+    /// <summary>工具运行次数历史累计（永不重置），运行时由引擎写入，UI 绑定显示</summary>
     public int Count
     {
         get => _count;
         set => SetProperty(ref _count, value);
+    }
+
+    private int _currentRunCount;
+    /// <summary>
+    /// 本次"按执行按钮"周期内该节点被触发的次数（节点局部）。
+    /// 在 FlowChartService.RunAsync 进入 EnterFlow 时清零；循环回边 BumpRun 不清零，
+    /// 因此循环内第 N 轮执行的节点 CurrentRunCount=N，可直接看出循环跑了多少轮。
+    /// 排查"循环节点 Count 偏大"用：独立触发节点 CurrentRunCount=1，循环节点 CurrentRunCount=轮数。
+    /// </summary>
+    public int CurrentRunCount
+    {
+        get => _currentRunCount;
+        set => SetProperty(ref _currentRunCount, value);
+    }
+
+    private int _runSequence;
+    /// <summary>
+    /// 本次"按执行按钮"周期内的全局执行序号（共享累加器，节点各自持有一份"上一次被触发的全局序号"）。
+    /// 同一周期内所有节点共享一个累加器，节点 A 在循环里跑 5 轮后节点 B 执行：
+    /// A.RunSequence=1,2,3,4,5；B.RunSequence=6 —— 一眼看出 A 循环 5 轮后 B 才执行。
+    /// </summary>
+    public int RunSequence
+    {
+        get => _runSequence;
+        set => SetProperty(ref _runSequence, value);
     }
 
     private bool _isInEnabled=true;

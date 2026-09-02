@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FlowEditor.Interfaces;
@@ -283,40 +285,47 @@ public partial class FlowChartContainerViewModel : ObservableObject
     }
 
     /// <summary>从文件加载多个流程。</summary>
-    private void LoadAll()
+    private async void LoadAll()
     {
         var path = _dialogService.ShowOpenFileDialog("多流程文件 (*.flows)|*.flows|所有文件 (*.*)|*.*");
         if (path == null) return;
-
         try
         {
-            var containerDoc = _containerDocumentService.Load(path);
-            if (containerDoc.Flows.Count == 0)
-            {
-                _dialogService.ShowInfo("多流程文件内容为空");
-                return;
-            }
-
-            // 关闭所有现有标签页（不弹确认框）
-            foreach (var tab in Tabs.ToList())
-                RemoveTab(tab);
-
-            // 加载每个流程
-            foreach (var flowDoc in containerDoc.Flows)
-            {
-                var vm = _containerDocumentService.CreateTabFromFlow(flowDoc);
-                vm.SetProcessName(ProcessName);
-                AttachPropertyGridHook(vm);
-                Tabs.Add(vm);
-            }
-
-            _containerFilePath = path;
-            ActiveTab = Tabs.FirstOrDefault();
+            await LoadFlowGroup(path);
         }
         catch (Exception ex)
         {
             _dialogService.ShowError($"加载多流程失败：{ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// 从指定 .flows 文件加载流程组（非交互版，供启动预热等无对话框场景调用）。
+    /// 文件不存在、内容为空均直接返回不报错；反序列化失败抛出由调用方捕获。
+    /// 必须在 UI 线程调用以保证 ObservableCollection 绑定安全。
+    /// </summary>
+    public async Task LoadFlowGroup(string path)
+    {
+        if (string.IsNullOrEmpty(path) || !File.Exists(path)) return;
+
+        var containerDoc = await Task.Run(() => _containerDocumentService.Load(path));
+        if (containerDoc.Flows.Count == 0) return;
+
+        // 关闭所有现有标签页（不弹确认框）
+        foreach (var tab in Tabs.ToList())
+            RemoveTab(tab);
+
+        // 加载每个流程
+        foreach (var flowDoc in containerDoc.Flows)
+        {
+            var vm = _containerDocumentService.CreateTabFromFlow(flowDoc);
+            vm.SetProcessName(ProcessName);
+            AttachPropertyGridHook(vm);
+            Tabs.Add(vm);
+        }
+
+        _containerFilePath = path;
+        ActiveTab = Tabs.FirstOrDefault();
     }
 
     // ═══════════════════ 工具箱 ═══════════════════

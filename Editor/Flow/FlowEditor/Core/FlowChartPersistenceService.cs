@@ -215,9 +215,17 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
     private static Type? ResolveType(string typeName)
     {
         var type = TryResolve(typeName);
+        if (type != null) return type;
 
-        // 旧版兼容：节点迁移到 FlowNodes 程序集前的 .flow 文件使用 FlowEditor.Nodes.* 类型名
-        if (type == null && typeName.Contains("FlowEditor.Nodes."))
+        // 旧版兼容 1：Common 组并入 FlowControl 前的 .flow 文件使用 FlowEditor.Nodes.Common.* 类型名
+        if (typeName.Contains("FlowEditor.Nodes.Common."))
+        {
+            type = TryResolve(typeName.Replace("FlowEditor.Nodes.Common.", "FlowEditor.Nodes.FlowControl."));
+            if (type != null) return type;
+        }
+
+        // 旧版兼容 2：节点迁移到 FlowNodes 程序集前的 .flow 文件使用 FlowEditor.Nodes.* 类型名
+        if (typeName.Contains("FlowEditor.Nodes."))
             type = TryResolve(typeName.Replace("FlowEditor.Nodes.", "FlowNodes."));
 
         return type;
