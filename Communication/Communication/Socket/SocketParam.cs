@@ -44,7 +44,7 @@ namespace Communication.Socket
         /// <summary>
         /// 是否自动重连
         /// </summary>
-        public bool AutoReconnect { get; set; } = true;
+        public bool AutoReconnect { get; set; } = false;
 
         /// <summary>
         /// 重连间隔（毫秒）

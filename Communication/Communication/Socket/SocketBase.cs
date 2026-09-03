@@ -65,6 +65,8 @@ namespace Communication.Socket
         {
             try
             {
+                if(_client==null)
+                    _client = new TcpClient();
                 _client.ReceiveTimeout = SocketParam.ReceiveTimeout;
                 _client.SendTimeout = SocketParam.SendTimeout;
                 _client.Connect(SocketParam.ServerIP, SocketParam.Port);
@@ -76,7 +78,7 @@ namespace Communication.Socket
             }
             catch (Exception ex)
             {
-                IsConnected = false;
+                Disconnect();
                 OnConnectionStateChanged(new ConnectionStateChangedEventArgs(false));
                 OnErrorOccurred(new ErrorEventArgs(ex));
                 return false;
@@ -92,6 +94,7 @@ namespace Communication.Socket
             {
                 _stream?.Close();
                 _client?.Close();
+                _client = null;
                 IsConnected = false;
                 OnConnectionStateChanged(new ConnectionStateChangedEventArgs(false));
             }
