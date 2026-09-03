@@ -10,8 +10,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pg="clr-namespace:WPFCustomControls.PropertyGrid.Views;assembly=WPFCustomControls"
     xmlns:prism="http://prismlibrary.com/"
-    xmlns:vm="clr-namespace:FlowEditor.ViewModels" d:DataContext="{d:DesignInstance Type=vm:FlowChartContainerViewModel}"
+    xmlns:vm="clr-namespace:FlowEditor.ViewModels"
     x:Name="RootContainer"
+    d:DataContext="{d:DesignInstance Type=vm:FlowChartContainerViewModel}"
     d:DesignHeight="900"
     d:DesignWidth="1600"
     prism:ViewModelLocator.AutoWireViewModel="True"
@@ -107,7 +108,7 @@
             Modifiers="Control" />
         <KeyBinding
             Key="S"
-            Command="{Binding ActiveTab.SaveCommand}"
+            Command="{Binding SaveAllCommand}"
             Modifiers="Control" />
         <KeyBinding
             Key="O"
@@ -196,7 +197,7 @@
                     <Button
                         Command="{Binding ActiveTab.SaveCommand}"
                         Style="{StaticResource ToolBarButtonStyle}"
-                        ToolTip="保存流程 (Ctrl+S)">
+                        ToolTip="保存当前页面流程 (Ctrl+S)">
                         <materialDesign:PackIcon
                             Width="22"
                             Height="22"
@@ -205,7 +206,7 @@
                     <Button
                         Command="{Binding ActiveTab.SaveAsCommand}"
                         Style="{StaticResource ToolBarButtonStyle}"
-                        ToolTip="另存为">
+                        ToolTip="另存为当前页面流程">
                         <materialDesign:PackIcon
                             Width="22"
                             Height="22"
@@ -312,8 +313,8 @@
 
                         <ToggleButton
                             x:Name="DataConnectionsToggle"
-                            Width="60"
                             Margin="5,2"
+                            Padding="2"
                             IsChecked="{Binding ActiveTab.Model.ShowDataConnections}"
                             ToolTip="显示/隐藏数据连线">
                             <materialDesign:ToggleButtonAssist.OnContent>

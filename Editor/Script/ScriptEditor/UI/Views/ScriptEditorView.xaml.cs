@@ -77,6 +77,15 @@ public partial class ScriptEditorView : UserControl
     private bool _onLoadedHandled;
     /// <summary>初始化延迟挂接是否已完成。</summary>
     private bool _initDeferralHooked;
+    /// <summary>
+    /// 构造时传入的初始文档快照（代码 + DLL 引用，ScriptNode 宿主窗口场景）。
+    /// 后端初始化前 SetScriptCode/SetReferences 是空操作，此处统一暂存，
+    /// 确保初始化时回填到编辑器，避免每次打开都被默认模板覆盖。
+    /// null 表示 ScriptManager 标签页场景（由 _attachedItem 提供）。
+    /// </summary>
+    private ScriptEditorState? _initialDocument;
+    /// <summary>构造时传入的输入数据（与 _initialDocument 解耦：document 可空但 inputData 可独立传入）。</summary>
+    private object? _initialInputData;
 
     /// <summary>
     /// RoslynPad 代码编辑器控件（前后端分离：不再由 XAML 自动生成，改为 InitializeCoreAsync 中动态创建）。
@@ -343,9 +352,10 @@ public partial class ScriptEditorView : UserControl
     public ScriptEditorView(string title, Models.ScriptEditorState document, object? inputData) : this()
     {
         Title = title;
-        SetScriptCode(document.Code);
-        SetReferences(document.References);
-        SetInputData(inputData);
+        // 暂存初始数据：后端未初始化时 SetScriptCode/SetReferences/SetInputData 都是空操作，
+        // 必须延后到 EnsureBackendInitialized 时应用，否则每次打开都会被默认模板覆盖。
+        _initialDocument = document;
+        _initialInputData = inputData;
     }
 
     #region 公共 API
@@ -492,8 +502,15 @@ public partial class ScriptEditorView : UserControl
         _editorService = ContainerLocator.Container.Resolve<ScriptEditorService>();
         Debug.WriteLine($"[ScriptEditor] EnsureBackend ScriptEditorService: {sw.ElapsedMilliseconds}ms");
 
+        // 应用 ctor 暂存的初始数据：SetInputData 仅依赖 Service 可立即应用；
+        // SetReferences 依赖 ViewModel 必须在创建后调用。
+        SetInputData(_initialInputData!);
+
         _viewModel = new ScriptEditorViewModel(_editorService);
         Debug.WriteLine($"[ScriptEditor] EnsureBackend ScriptEditorViewModel: {sw.ElapsedMilliseconds}ms");
+
+        if (_initialDocument != null)
+            SetReferences(_initialDocument.References);
 
         // 用当前脚本项的既有输出（如启动加载流程的无头执行结果）为 ViewModel 做种子，
         // 保证打开界面即可看到历史输出，且编辑器路径的后续输出在此基础上衔接。
@@ -550,26 +567,32 @@ public partial class ScriptEditorView : UserControl
                 LoopInterval = _viewModel.LoopInterval;
             else if (e.PropertyName == nameof(_viewModel.OutputText))
             {
-                // 关键守卫：EditTabControl 复用同一 View 实例切页，DataContext 切换后
-                // ViewModel 可能仍残留旧脚本的延迟事件。仅当 ViewModel 输出属于
-                // 当前绑定脚本项时才推送显示/写回，防止多脚本输出串扰。
-                if (!ReferenceEquals(_attachedItem, DataContext)) return;
+                // 关键:TextBox 模板绑定的是 UserControl.OutputText DP(不是 VM.OutputText),
+                // 必须把 VM 输出镜像到该 DP 才能显示;否则 TextBox 永远是空。
+                // 注意用 _suppressOutputChange 防止 OnOutputTextChanged 反向再写 VM 形成回环。
+                _suppressOutputChange = true;
+                try { OutputText = _viewModel.OutputText; }
+                finally { _suppressOutputChange = false; }
 
-                // 只写数据源（脚本项）：INPC 经模板单向绑定自动刷新依赖属性与输出面板。
-                // 切勿对 OutputText 直接 SetValue——本地值会顶掉模板绑定，
-                // 之后引擎更新 ScriptItem.OutputText 时面板将永不刷新。
-                _attachedItem!.OutputText = _viewModel.OutputText;
+                // ScriptManager 标签页场景:同时镜像到 _attachedItem,保证切页后输出不丢。
+                // ScriptNode 宿主窗口场景:_attachedItem 为 null,跳过此步即可。
+                // 用 ReferenceEquals 守卫避免切页瞬间旧 VM 输出串到新脚本项。
+                var item = _attachedItem;
+                if (item != null && ReferenceEquals(item, DataContext))
+                    item.OutputText = _viewModel.OutputText;
 
-                // 防抖：每 50ms 最多滚动一次，避免大量输出时频繁滚动卡顿；
-                // 切页播种期间抑制滚动，防止新脚本被强制滚到底部
+                // 防抖:每 50ms 最多滚动一次,避免大量输出时频繁滚动卡顿;
+                // 切页播种期间抑制滚动,防止新脚本被强制滚到底部
                 var now = DateTime.Now;
                 if (!_suppressAutoScroll && (now - _lastAutoScrollTime).TotalMilliseconds >= 50)
                 {
                     _lastAutoScrollTime = now;
-                    var scrollItemTitle = _attachedItem!.Title;
+                    var scrollItemTitle = item?.Title;
                     OutputTextBox.Dispatcher.InvokeAsync(() =>
                     {
-                        Debug.WriteLine($"[ScriptEditor] AutoScrollToEnd fired for '{scrollItemTitle}', current='{(_attachedItem?.Title ?? "null")}'");
+                        // 跨线程排队后 _attachedItem 可能已被切到新脚本,
+                        // 此处不再校验 item(其可能为 null),只滚动当前 TextBox 即可
+                        Debug.WriteLine($"[ScriptEditor] AutoScrollToEnd fired for '{scrollItemTitle ?? "(no item)"}', current='{(_attachedItem?.Title ?? "null")}'");
                         OutputTextBox.CaretIndex = OutputTextBox.Text.Length;
                         OutputTextBox.ScrollToEnd();
                     });
@@ -691,10 +714,16 @@ public partial class ScriptEditorView : UserControl
             var workingDir = System.IO.Path.GetDirectoryName(
                 typeof(ScriptEditorService).Assembly.Location) ?? ".";
 
-            // 优先使用 ScriptItem 中已有的代码（如从文件加载），否则使用默认模板
-            var template = !string.IsNullOrEmpty(_attachedItem?.Code)
-                ? _attachedItem.Code
-                : _editorService!.GetDefaultTemplate();
+            // 优先级：ctor 暂存的初始代码（ScriptNode 宿主窗口场景，回填上次保存的内容）>
+            //         _attachedItem.Code（ScriptManager 标签页场景）>
+            //         默认模板
+            var template = !string.IsNullOrEmpty(_initialDocument?.Code)
+                ? _initialDocument.Code
+                : !string.IsNullOrEmpty(_attachedItem?.Code)
+                    ? _attachedItem.Code
+                    : _editorService!.GetDefaultTemplate();
+            // 模板已应用,清空暂存,避免后续路径误用
+            _initialDocument = null;
 
             // 同步 _pendingText 为当前 Item 的正确代码，防止共享 Service 中残留的旧
             // _pendingText 在 Initialize 中覆盖 InitializeAsync 刚刚设置的正确文本
