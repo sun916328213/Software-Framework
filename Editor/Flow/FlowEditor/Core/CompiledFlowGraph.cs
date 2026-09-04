@@ -77,12 +77,12 @@ public sealed class CompiledFlowGraph<TNode> where TNode : INodeExecutable
     public IReadOnlyList<TNode> EntryNodes { get; }
 
     /// <summary>编译流程图：单遍构建邻接表 + 迭代 DFS 检测回边 + Kahn 分层。复杂度 O(N+E)。</summary>
-    public static CompiledFlowGraph<TNode> Compile<TNode>(
-        IReadOnlyList<TNode> nodes,
-        IReadOnlyList<ConnectionModel> connections) where TNode : INodeExecutable
+    public static CompiledFlowGraph<TNodeItem> Compile<TNodeItem>(
+        IReadOnlyList<TNodeItem> nodes,
+        IReadOnlyList<ConnectionModel> connections) where TNodeItem : INodeExecutable
     {
         var count = nodes.Count;
-        var nodeMap = new Dictionary<string, TNode>(count);
+        var nodeMap = new Dictionary<string, TNodeItem>(count);
         var successors = new Dictionary<string, List<string>>(count);
         var successorConns = new Dictionary<string, List<ConnectionModel>>(count);
         var predecessors = new Dictionary<string, List<string>>(count);
@@ -157,16 +157,16 @@ public sealed class CompiledFlowGraph<TNode> where TNode : INodeExecutable
                 predecessors[conn.TargetNodeId].Add(conn.SourceNodeId);
         }
 
-        return new CompiledFlowGraph<TNode>(nodes, nodeMap, successors, successorConns, predecessors, incoming, backEdges,
+        return new CompiledFlowGraph<TNodeItem>(nodes, nodeMap, successors, successorConns, predecessors, incoming, backEdges,
             ComputeLayers(nodes, nodeMap, predecessors, successors));
     }
 
     /// <summary>Kahn 分层：深度 = max(前驱深度)+1；前驱永不归零的环路节点归入 maxDepth+1 层。</summary>
-    private static List<List<TNode>> ComputeLayers<TNode>(
-        IReadOnlyList<TNode> nodes,
-        Dictionary<string, TNode> nodeMap,
+    private static List<List<TNodeItem>> ComputeLayers<TNodeItem>(
+        IReadOnlyList<TNodeItem> nodes,
+        Dictionary<string, TNodeItem> nodeMap,
         Dictionary<string, List<string>> predecessors,
-        Dictionary<string, List<string>> successors) where TNode : INodeExecutable
+        Dictionary<string, List<string>> successors) where TNodeItem : INodeExecutable
     {
         var depth = new Dictionary<string, int>(nodes.Count);
         var inDegree = new Dictionary<string, int>(nodes.Count);
@@ -201,7 +201,7 @@ public sealed class CompiledFlowGraph<TNode> where TNode : INodeExecutable
                 depth[id] = maxDepth + 1;
         }
 
-        var layers = new List<List<TNode>>();
+        var layers = new List<List<TNodeItem>>();
         foreach (var group in depth.GroupBy(kv => kv.Value).OrderBy(g => g.Key))
             layers.Add(group.Select(kv => nodeMap[kv.Key]).ToList());
 

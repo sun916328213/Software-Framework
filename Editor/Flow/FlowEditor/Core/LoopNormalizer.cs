@@ -163,17 +163,23 @@ public static class LoopNormalizer
         }
 
         while (queue.Count > 0)
-        {
-            string current = queue.Dequeue();
-            if (!outByNode.TryGetValue(current, out var conns)) continue;
+    {
+        string current = queue.Dequeue();
+        if (!outByNode.TryGetValue(current, out var conns)) continue;
 
-            foreach (var c in conns)
-            {
-                if (c.TargetNodeId == loopNode.Id) continue;
-                if (!nodeMap.ContainsKey(c.TargetNodeId)) continue;
-                if (body.Add(c.TargetNodeId)) queue.Enqueue(c.TargetNodeId);
-            }
+        foreach (var c in conns)
+        {
+            if (c.TargetNodeId == loopNode.Id) continue;
+            if (!nodeMap.ContainsKey(c.TargetNodeId)) continue;
+
+            // 只沿控制流边（PortType.Flow）展开，避免 Error/数据端口将退出路径误纳入循环体
+            var sourceNode = nodeMap[c.SourceNodeId];
+            var sourcePort = sourceNode.FindPortById(c.SourcePortId);
+            if (sourcePort == null || sourcePort.DataType != PortType.Flow) continue;
+
+            if (body.Add(c.TargetNodeId)) queue.Enqueue(c.TargetNodeId);
         }
+    }
 
         return body;
     }

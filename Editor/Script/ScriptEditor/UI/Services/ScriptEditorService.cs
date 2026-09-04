@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -191,6 +191,14 @@ public class ScriptEditorService : INotifyPropertyChanged
 
     /// <summary>最近一次脚本执行的原始返回值。</summary>
     public object? LastScriptResult => _engine.LastScriptResult;
+
+    /// <summary>
+    /// 最近一次脚本执行的输出文本（引擎直读，无 UI 封送延迟）。
+    /// RunAsync 返回后引擎已在 finally 中同步 FlushOutput，此值即时完整；
+    /// Model.OutputText 的镜像经 Dispatcher.InvokeAsync 封送，可能尚未执行，
+    /// 无 UI 参与的调用方（如 ScriptNode 流程执行）必须读此属性。
+    /// </summary>
+    public string EngineOutputText => _engine.OutputText;
 
     // 内部使用的便利属性（LoopInterval 需要同步到 Engine）
     internal int LoopInterval

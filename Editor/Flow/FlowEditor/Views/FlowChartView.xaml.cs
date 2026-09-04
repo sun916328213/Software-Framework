@@ -298,6 +298,7 @@ public partial class FlowChartView : UserControl
 
     private void OnCanvasMouseUp(object sender, MouseButtonEventArgs e)
     {
+        if (!_isBoxSelecting) return;
         _isBoxSelecting = false;
     }
 

@@ -1,4 +1,4 @@
-﻿using FlowEditor.Nodes;
+using FlowEditor.Nodes;
 using System.Windows;
 using FlowEditor.Core;
 
@@ -48,25 +48,34 @@ public class ScriptNode : NodeModel
             return;
         }
 
-        var inputs = new Dictionary<string, object?>();
-        foreach (FlowEditor.Models.PortModel port in CustomInputPorts)
-        {
-            inputs[port.Name] = port.Value;
-        }
-
         var service = new ScriptEditor.Services.ScriptEditorService();
         service.SetText(EditorState.Code);
-        service.SetInputData(inputs);
+        service.SetInputData(_BuildInputs());
         foreach (var path in EditorState.References)
             service.AddReference(path);
         var success = await service.RunAsync();
         ScriptResult = service.LastScriptResult;
+        // 无论成败都保留最近一次输出，供打开编辑器时回显（不随流程图序列化）。
+        // 必须读 EngineOutputText（引擎同步 Flush，值即时完整）；
+        // Model.OutputText 经 Dispatcher.InvokeAsync 封送，RunAsync 刚返回时可能还是空。
+        _lastOutput = service.EngineOutputText;
 
         if (!success)
         {
             throw new InvalidOperationException(
                 $"脚本执行失败 [{Name}]：{Truncate(service.Model.OutputText, 500)}");
         }
+    }
+
+    /// <summary>
+    /// 把自定义输入端口打包为 Dictionary&lt;string, object?&gt;，供脚本 Inputs["portName"] 访问。
+    /// </summary>
+    private Dictionary<string, object?> _BuildInputs()
+    {
+        var inputs = new Dictionary<string, object?>();
+        foreach (FlowEditor.Models.PortModel port in CustomInputPorts)
+            inputs[port.Name] = port.Value;
+        return inputs;
     }
 
     private static string Truncate(string? text, int maxLength)
@@ -81,6 +90,9 @@ public class ScriptNode : NodeModel
         get => _scriptResult;
         set => SetProperty(ref _scriptResult, value);
     }
+
+    /// <summary>最近一次脚本执行的输出文本（运行态数据，不随流程图序列化）。</summary>
+    private string? _lastOutput;
  
 
    
@@ -92,13 +104,7 @@ public class ScriptNode : NodeModel
     /// </summary>
     private void OpenScriptEditor()
     {
-        var inputs = new Dictionary<string, object?>();
-        foreach (var port in CustomInputPorts)
-        {
-            inputs[port.Name] = port.Value;
-        }
-
-        var editor = new ScriptEditor.Views.ScriptEditorView($"脚本编辑器 - {Name}", EditorState, inputs);
+        var editor = new ScriptEditor.Views.ScriptEditorView($"脚本编辑器 - {Name}", EditorState, _BuildInputs(), _lastOutput);
 
         var window = new Window
         {

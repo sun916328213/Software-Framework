@@ -184,10 +184,11 @@ public static class ScriptExecutionService
     /// <param name="host">Roslyn 宿主实例。</param>
     /// <param name="getAdditionalReferences">获取额外元数据引用的委托。</param>
     /// <param name="enableDebug">是否启用调试模式（生成 PDB + 源文件映射）。</param>
+    /// <param name="globalsType">globals 的静态类型（用于让脚本源码能引用 globals 变量）。</param>
     /// <returns>编译就绪的脚本对象。</returns>
     public static Script<object> BuildScript(string code,
         RoslynHost host, Func<IReadOnlyList<MetadataReference>>? getAdditionalReferences,
-        bool enableDebug = false)
+        bool enableDebug = false, Type? globalsType = null)
     {
         // 合并默认引用、框架程序集 + 宿主程序目录引用、用户额外引用
         IEnumerable<MetadataReference> allReferences = host.DefaultReferences;
@@ -213,7 +214,7 @@ public static class ScriptExecutionService
                              .WithFileEncoding(Encoding.UTF8);
         }
 
-        return CSharpScript.Create(code, options);
+        return CSharpScript.Create(code, options, globalsType: globalsType);
     }
 
     /// <summary>
@@ -291,15 +292,16 @@ public static class ScriptExecutionService
     /// 异步编译脚本并检测是否产生返回值。
     /// 编译操作（BuildScript + GetCompilation + Compile）在线程池上执行，
     /// <param name="enableDebug">是否启用调试模式。</param>
+    /// <param name="globalsType">globals 的静态类型（用于让脚本源码能引用 globals 变量）。</param>
     /// <returns>编译后的脚本对象、是否产生返回值的标志、诊断信息数组。</returns>
     public static async Task<(Script<object> Script, bool HasResult, Diagnostic[] Diagnostics)> CompileAndCheckAsync(
         string code, RoslynHost host,
         Func<IReadOnlyList<MetadataReference>>? getAdditionalReferences,
-        bool enableDebug = false)
+        bool enableDebug = false, Type? globalsType = null)
     {
         return await Task.Run(() =>
         {
-            var script = BuildScript(code, host, getAdditionalReferences, enableDebug);
+            var script = BuildScript(code, host, getAdditionalReferences, enableDebug, globalsType);
             var compilation = script.GetCompilation();
             bool hasResult = HasSubmissionResultMethod.Invoke(compilation, null) as bool? == true;
             var diags = script.Compile().ToArray();
@@ -464,6 +466,19 @@ public static class ScriptExecutionService
         string? runDecl = FindMethodDeclLine(code, "Run");
         bool isStatic = runDecl == null || runDecl.Contains("static");
 
+        // 注入 Inputs 字段到 Script 类：Roslyn 的 globals 字段在 type declarations 内不可见，
+        // 重写 class Script 头，向其内部注入 dynamic Inputs 字段，让 Run() 内能直接写 Inputs.A。
+        // 仅处理最常见的 `class Script {` 与 `class Script: ... {` 形式（保留可能的基类）。
+        var injectField = isStatic
+            ? "public static dynamic? Inputs; "
+            : "public dynamic? Inputs; ";
+        code = System.Text.RegularExpressions.Regex.Replace(
+            code,
+            @"\bclass\s+Script\b(?:\s*:\s*[^{]*?)?\s*\{",
+            m => m.Value + "\r\n#line hidden\r\n" + injectField + "\r\n#line default\r\n",
+            System.Text.RegularExpressions.RegexOptions.None,
+            System.TimeSpan.FromSeconds(1));
+
         // 判断是否包含 Initialize/Load 方法（static 或实例均可）
         bool hasInit = FindMethodDeclLine(code, "Initialize") != null
                     || FindMethodDeclLine(code, "Load") != null;
@@ -475,6 +490,8 @@ public static class ScriptExecutionService
 
         if (isStatic)
         {
+            // 顶层代码中 Inputs 解析到 globals（ScriptGlobals.Inputs），赋给静态字段后类内方法即可访问。
+            suffix.Append("\r\nScript.Inputs = Inputs;");
             if (hasInit)
             {
                 suffix.Append("\r\nScript.Initialize();");
@@ -485,7 +502,9 @@ public static class ScriptExecutionService
         {
             // 实例形式：同一实例先 Initialize 再 Run，保证实例字段在两者之间共享
             const string instance = "__scriptInstance";
+            // 顶层代码中 Inputs 解析到 globals（ScriptGlobals.Inputs），赋给实例字段后类内方法即可访问。
             suffix.Append($"\r\nvar {instance} = new Script();");
+            suffix.Append($"\r\n{instance}.Inputs = Inputs;");
             if (hasInit)
             {
                 suffix.Append($"\r\n{instance}.Initialize();");

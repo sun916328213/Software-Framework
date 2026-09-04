@@ -20,6 +20,9 @@ public static class ScriptEditorLoadTest
     {
         Debug.WriteLine($"[LoadTest] ====== 开始性能测试 ======");
 
+        // 先跑 globals 注入单元测试（无需 UI 即可执行）
+        ScriptEngineGlobalsTest.RunAsync().GetAwaiter().GetResult();
+
         // 构造模拟的 ScriptItem
         var totalSw = Stopwatch.StartNew();
         var mockItem = new ScriptItem

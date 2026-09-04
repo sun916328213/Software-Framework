@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -39,7 +39,7 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
         if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
             Directory.CreateDirectory(dir);
         var json = JsonSerializer.Serialize(doc, _jsonOptions);
-        Extension.Core.FileEx.FileEx.Write(json, dir, Path.GetFileName(path));
+        Extension.Core.FileEx.FileEx.Write(json, dir ?? string.Empty, Path.GetFileName(path));
     }
 
     /// <summary>从 .flow 文件加载流程图文档。</summary>

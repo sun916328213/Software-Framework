@@ -9,6 +9,21 @@ using ScriptEditor.Helpers;
 namespace ScriptEditor.Services;
 
 /// <summary>
+/// 脚本全局对象。Roslyn 脚本里可直接访问 <c>Inputs</c> 字段（dynamic），支持任意类型：
+/// <list type="bullet">
+///   <item><see cref="System.Collections.Generic.IDictionary{TKey,TValue}"/>：保留旧写法 <c>Inputs["key"]</c></item>
+///   <item>任意 class：<c>Inputs.PropertyName</c>、<c>Inputs.Method()</c>，通过 dynamic 调度</item>
+/// </list>
+/// 静态 globalsType 保证缓存 key 稳定（始终是本类型），不会因运行时 inputData 类型变化而重新编译。
+/// </summary>
+public sealed class ScriptGlobals
+{
+    /// <summary>脚本输入参数。支持任意类型：IDictionary 走索引器，class 走 dynamic 成员访问。
+    /// 实例形式 Script 的 suffix 注入代码（EnsureScriptRunInvoked）也通过本字段给实例 Inputs 赋值。</summary>
+    public dynamic? Inputs { get; set; }
+}
+
+/// <summary>
 /// 无头脚本执行引擎（前端/后端分离后的后端核心）。
 /// </summary>
 /// <remarks>
@@ -260,43 +275,6 @@ public sealed class ScriptEngine : INotifyPropertyChanged
         return sb.ToString();
     }
 
-    // ════════════════════════════════════════════════════════════════
-    //  Inputs 注入
-    // ════════════════════════════════════════════════════════════════
-
-    private string BuildInputDeclarationCode()
-    {
-        if (_inputData is not System.Collections.Generic.IDictionary<string, object?> inputs || inputs.Count == 0)
-            return string.Empty;
-
-        var entries = new List<string>();
-        foreach (var kv in inputs)
-        {
-            var valueJson = System.Text.Json.JsonSerializer.Serialize(kv.Value);
-            entries.Add($"{{ \"{kv.Key}\", {valueJson} }}");
-        }
-        return $"new Dictionary<string, object?> {{ {string.Join(", ", entries)} }}";
-    }
-
-    private static readonly System.Text.RegularExpressions.Regex ScriptClassPattern = new(
-        @"(public\s+|internal\s+|private\s+|protected\s+)?class\s+Script\s*\{",
-        System.Text.RegularExpressions.RegexOptions.Multiline | System.Text.RegularExpressions.RegexOptions.Compiled);
-
-    private string InjectInputs(string userCode, string dictInit)
-    {
-        if (string.IsNullOrEmpty(dictInit))
-            return userCode;
-
-        var match = ScriptClassPattern.Match(userCode);
-        if (match.Success)
-        {
-            var insertPos = match.Index + match.Value.Length;
-            var field = $"\r\n        /// <summary>输入参数字典，通过 Inputs[\"key\"] 访问。</summary>\r\n        public static Dictionary<string, object?> Inputs = {dictInit};\r\n";
-            return userCode.Insert(insertPos, field);
-        }
-
-        return $"var Inputs = {dictInit};\r\n\r\n{userCode}";
-    }
 
     // ════════════════════════════════════════════════════════════════
     //  执行
@@ -325,6 +303,10 @@ public sealed class ScriptEngine : INotifyPropertyChanged
             OutputText = string.Empty;
         }
 
+        // globals 的静态类型：固定为 ScriptGlobals，使脚本里可访问 Inputs（dynamic）字段，
+        // 任意 _inputData 类型（含 class）通过 dynamic 调度都能正确解析，缓存 key 稳定。
+        var globalsType = typeof(ScriptGlobals);
+
         _executionCts?.Cancel();
         _executionCts?.Dispose();
         _executionCts = new CancellationTokenSource();
@@ -345,9 +327,9 @@ public sealed class ScriptEngine : INotifyPropertyChanged
                 return false;
             }
 
-            // 将输入数据注入脚本代码
-            var dictInit = BuildInputDeclarationCode();
-            rawCode = InjectInputs(rawCode, dictInit);
+            // ScriptGlobals.Inputs 是 dynamic 字段，脚本里直接写 Inputs 即可访问 _inputData。
+            // IDictionary 走索引器，任意 class 走 dynamic 成员访问，均由 DLR 调度。
+            // 无需源码注入，避免污染用户代码与断点行号。
 
             // 有断点时进行源码插桩 + 启用调试信息
             var breakpoints = _getBreakpoints().ToList();
@@ -376,7 +358,7 @@ public sealed class ScriptEngine : INotifyPropertyChanged
                 var captureGetRefs = _getAdditionalReferences;
 
                 var (s, hr, diags) = await ScriptExecutionService.CompileAndCheckAsync(
-                    code, captureHost, captureGetRefs, hasBreakpoints);
+                    code, captureHost, captureGetRefs, hasBreakpoints, globalsType);
                 var errors = diags.Where(d => d.Severity == DiagnosticSeverity.Error).ToList();
 
                 if (errors.Count > 0)
@@ -408,9 +390,19 @@ public sealed class ScriptEngine : INotifyPropertyChanged
                 EnqueueRaw($"\r\n\r\n=== 第 {iter} 次迭代 ===\r\n");
             }
 
+            // 注入策略：直接把 _inputData 作为动态全局传入，运行时由 DLR binder 按实际类型分派——
+            // IDictionary 走索引器（Inputs["key"] 旧 API），class 走成员访问（Inputs.Prop 新 API）。
+            // null 时给空字典，保证脚本内 Inputs 可安全访问。
+            var globalsInput = (object?)_inputData ?? new System.Collections.Generic.Dictionary<string, object?>();
+
             var (result, hasError, returnValue) = await ScriptExecutionService.RunScriptAsync(
                 scriptToRun, hasResultToRun, ct,
-                onOutput: EnqueueRaw);
+                onOutput: EnqueueRaw,
+                globals: new ScriptGlobals
+                {
+                    Inputs = globalsInput
+                });
+
             LastScriptResult = returnValue;
 
             var elapsed = DateTime.Now - startTime;
@@ -588,9 +580,7 @@ public sealed class ScriptEngine : INotifyPropertyChanged
         {
             var rawCode = _getCode();
 
-            // 注入 Inputs（与 RunAsync 保持一致）
-            var dictInit = BuildInputDeclarationCode();
-            rawCode = InjectInputs(rawCode, dictInit);
+            // ScriptGlobals.Inputs 已是 dynamic 字段，无需源码注入。
 
             var invokeCode = ScriptExecutionService.EnsureScriptRunInvoked(rawCode);
             ScriptExecutionService.CleanupOldScript();
@@ -600,7 +590,7 @@ public sealed class ScriptEngine : INotifyPropertyChanged
             var captureGetRefs = _getAdditionalReferences;
 
             var (script, hasResult, diagnostics) = await ScriptExecutionService.CompileAndCheckAsync(
-                captureCode, captureHost, captureGetRefs, false);
+                captureCode, captureHost, captureGetRefs, false, typeof(ScriptGlobals));
 
             if (!diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
             {
@@ -649,9 +639,7 @@ public sealed class ScriptEngine : INotifyPropertyChanged
         var host = _host;
         if (host == null || string.IsNullOrWhiteSpace(code)) return;
 
-        // 注入 Inputs（与 RunAsync 保持一致）
-        var dictInit = BuildInputDeclarationCode();
-        code = InjectInputs(code, dictInit);
+        // ScriptGlobals.Inputs 已是 dynamic 字段，无需源码注入。
 
         var invokeCode = ScriptExecutionService.EnsureScriptRunInvoked(code);
         if (string.IsNullOrWhiteSpace(invokeCode)) return;
@@ -663,7 +651,7 @@ public sealed class ScriptEngine : INotifyPropertyChanged
             var captureGetRefs = _getAdditionalReferences;
 
             var (script, hasResult, diagnostics) = await ScriptExecutionService.CompileAndCheckAsync(
-                captureCode, captureHost, captureGetRefs, false);
+                captureCode, captureHost, captureGetRefs, false, typeof(ScriptGlobals));
             if (!diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
             {
                 _lastSubmittedCode = captureCode;

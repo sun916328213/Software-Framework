@@ -80,6 +80,9 @@ public class FlowChartExecutionEngine
         {
             if (n is FlowEditor.ViewModels.NodeViewModel nvm)
                 nvm.CurrentRunCount = 0;
+            // FlowInstance 直接使用 NodeModel（非 NodeViewModel），同样需要重置周期计数
+            else if (n is FlowEditor.Nodes.NodeModel nm)
+                nm.CurrentRunCount = 0;
         }
 
         // 编译期：一次性预计算邻接表、回边、前驱表、拓扑序（O(N+E)）
@@ -144,11 +147,17 @@ public class FlowChartExecutionEngine
 
         // 计数更新：Count 永远累加；CurrentRunCount 在 ExecuteAsync 入口处已重置过；RunSequence 走本轮共享累加器
         // 失败也累加（节点尝试执行了就算"跑过一次"，与 UI 期望一致）
+        // INodeExecutable.Count 接口属性覆盖 NodeViewModel 和 NodeModel 两种执行面
+        nodeVm.Count++;
         if (nodeVm is FlowEditor.ViewModels.NodeViewModel nvmCounter)
         {
-            nvmCounter.Count++;
             nvmCounter.CurrentRunCount++;
             nvmCounter.RunSequence = Interlocked.Increment(ref _runSeqCounter);
+        }
+        else if (nodeVm is FlowEditor.Nodes.NodeModel nmCounter)
+        {
+            nmCounter.CurrentRunCount++;
+            nmCounter.RunSequence = Interlocked.Increment(ref _runSeqCounter);
         }
 
         // 容错参数（未实现 INodeFaultPolicy 的执行面按默认处理）

@@ -86,6 +86,8 @@ public partial class ScriptEditorView : UserControl
     private ScriptEditorState? _initialDocument;
     /// <summary>构造时传入的输入数据（与 _initialDocument 解耦：document 可空但 inputData 可独立传入）。</summary>
     private object? _initialInputData;
+    /// <summary>构造时传入的最近一次执行输出（ScriptNode 宿主窗口场景，打开即回显上次运行结果）。</summary>
+    private string? _initialOutput;
 
     /// <summary>
     /// RoslynPad 代码编辑器控件（前后端分离：不再由 XAML 自动生成，改为 InitializeCoreAsync 中动态创建）。
@@ -347,15 +349,16 @@ public partial class ScriptEditorView : UserControl
     }
 
     /// <summary>
-    /// 带初始数据的构造重载（宿主窗口场景）：设置标题、代码、DLL 引用与输入数据。
+    /// 带初始数据的构造重载（宿主窗口场景）：设置标题、代码、DLL 引用、输入数据与最近一次执行输出。
     /// </summary>
-    public ScriptEditorView(string title, Models.ScriptEditorState document, object? inputData) : this()
+    public ScriptEditorView(string title, Models.ScriptEditorState document, object? inputData, string? initialOutput = null) : this()
     {
         Title = title;
         // 暂存初始数据：后端未初始化时 SetScriptCode/SetReferences/SetInputData 都是空操作，
         // 必须延后到 EnsureBackendInitialized 时应用，否则每次打开都会被默认模板覆盖。
         _initialDocument = document;
         _initialInputData = inputData;
+        _initialOutput = initialOutput;
     }
 
     #region 公共 API
@@ -599,6 +602,17 @@ public partial class ScriptEditorView : UserControl
                 }
             }
         };
+
+        // ScriptNode 宿主窗口场景：_attachedItem 为 null，无运行时的 ScriptItem 输出可镜像。
+        // 必须放在 PropertyChanged 注册之后播种，写 VM.OutputText 才会触发上方回调
+        // 镜像到 OutputText DP，TextBox 才能显示 ctor 传入的最近一次执行输出。
+        if (_attachedItem == null && !string.IsNullOrEmpty(_initialOutput))
+        {
+            _suppressAutoScroll = true;
+            try { _viewModel.OutputText = _initialOutput; }
+            finally { _suppressAutoScroll = false; }
+            _initialOutput = null; // 播种一次即清，后续以 ViewModel 实时状态为准
+        }
 
         Debug.WriteLine($"[ScriptEditor] EnsureBackend TOTAL: {sw.ElapsedMilliseconds}ms");
     }
