@@ -31,27 +31,27 @@ namespace DataManager.Log.SeriLog
         // 全局静态锁：Serilog.Log.Logger 为全局单例，跨实例并发写必须串行化，否则会互相覆盖/关闭导致串文件
         private static readonly object obj = new object();
 
-        private string _logOutputTemplate;
- 
         public override LogParam Param { get; set; } = new LogParam();
 
         public SerilogHelper()
         {
-            _logOutputTemplate = "{Timestamp:yyyy/MM/dd HH:mm:ss} " + Param.Separator + " {CustomLevel} " + Param.Separator + " {Message} {NewLine}";
         }
 
         public void Connect(ELogLevel logLevel)
         {
+            // 模板在连接时生成，确保使用运行时的 Separator 参数
+            var outputTemplate = "{Timestamp:yyyy/MM/dd HH:mm:ss} " + Param.Separator + " {CustomLevel} " + Param.Separator + " {Message} {NewLine}";
+
             // 创建全局静态实例
             var loggerConfig = new LoggerConfiguration()
                 .Enrich.FromLogContext()
                 .MinimumLevel.Debug()
                 .WriteTo.File(
-                    path: Param.FilePath + "\\.txt",
+                    path: System.IO.Path.Combine(Param.FilePath, "log"),
                     rollingInterval: RollingInterval.Day,
                     retainedFileCountLimit: Param.SaveDays,
                      fileSizeLimitBytes: null,
-                    outputTemplate: _logOutputTemplate);
+                    outputTemplate: outputTemplate);
 
             // 添加自定义Enricher
             loggerConfig = loggerConfig.Enrich.With(new CustomLevelEnricher(logLevel));

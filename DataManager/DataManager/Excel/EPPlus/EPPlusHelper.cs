@@ -252,6 +252,25 @@ namespace DataManager.Excel.EPPlus
             return package.Workbook.Worksheets.FirstOrDefault() ?? package.Workbook.Worksheets.Add("Sheet1");
         }
 
+        /// <summary>
+        /// 获取工作表中实际有值的最后一行（忽略仅有样式的幽灵单元格）
+        /// </summary>
+        private int GetLastUsedRow(ExcelWorksheet worksheet)
+        {
+            var dim = worksheet.Dimension;
+            if (dim == null) return 1;
+
+            for (int row = dim.End.Row; row >= 1; row--)
+            {
+                for (int col = 1; col <= dim.End.Column; col++)
+                {
+                    if (worksheet.Cells[row, col].Value != null)
+                        return row;
+                }
+            }
+            return 1;
+        }
+
         private void WriteHeaders(ExcelWorksheet worksheet, PropertyInfo[] properties, int headerRow)
         {
             for (int i = 0; i < properties.Length; i++)
@@ -324,6 +343,7 @@ namespace DataManager.Excel.EPPlus
         private T CreateItem<T>(ExcelWorksheet worksheet, PropertyInfo[] properties, Dictionary<string, int> headers, int row) where T : new()
         {
             var item = new T();
+            var hasValue = false;
             foreach (var prop in properties)
             {
                 if (headers.TryGetValue(prop.Name, out int col))
@@ -331,6 +351,7 @@ namespace DataManager.Excel.EPPlus
                     var cellValue = worksheet.Cells[row, col].Value;
                     if (cellValue != null)
                     {
+                        hasValue = true;
                         try
                         {
                             prop.SetValue(item, Convert.ChangeType(cellValue, prop.PropertyType));
@@ -339,7 +360,8 @@ namespace DataManager.Excel.EPPlus
                     }
                 }
             }
-            return item;
+            // 该行所有单元格都无值（样式导致的幽灵行）时返回 null，避免查询多出空实体
+            return hasValue ? item : default;
         }
 
         private T CreateTempItem<T>(ExcelWorksheet worksheet, PropertyInfo[] properties, Dictionary<string, int> headers, int row) where T : new()

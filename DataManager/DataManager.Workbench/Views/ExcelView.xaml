@@ -1,0 +1,92 @@
+<UserControl
+    x:Class="DataManager.Workbench.Views.ExcelView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignWidth="1000"
+    mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,20,24,8" MaxWidth="1100">
+
+            <!-- 页头 -->
+            <StackPanel Margin="0,0,0,16">
+                <TextBlock Style="{StaticResource PageTitle}" Text="Excel 测试" />
+                <TextBlock Style="{StaticResource PageSubTitle}"
+                           Text="通过 DataManager 的 ExcelManager / IExcel 测试 EPPlus 与 MiniExcel 读写（追加与更新仅 EPPlus 支持）" />
+            </StackPanel>
+
+            <!-- 配置 -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="文件配置" />
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="文件目录" />
+                            <TextBox Style="{StaticResource InputStyle}" Text="{Binding ExcelFilePath}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="文件名" />
+                            <TextBox Style="{StaticResource InputStyle}" Text="{Binding ExcelFileName}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="Excel 库" />
+                            <ComboBox ItemsSource="{Binding ExcelTypes}" SelectedItem="{Binding SelectedExcelType}" />
+                        </StackPanel>
+                    </Grid>
+                    <WrapPanel Margin="0,14,0,0">
+                        <Button Command="{Binding ApplyCommand}" Content="应用配置" Style="{StaticResource SuccessButton}" />
+                        <Button Command="{Binding OpenFolderCommand}" Content="打开文件夹" Style="{StaticResource SecondaryButton}" />
+                        <CheckBox Margin="4,8,0,0" Content="首行为表头" IsChecked="{Binding HasHeader}" />
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 数据操作 -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="数据操作（ExcelPerson：Name / Age / CreateTime）" />
+                    <WrapPanel Margin="0,14,0,0">
+                        <Button Command="{Binding Write10Command}" Content="覆盖写入 10 条" Style="{StaticResource PrimaryButton}" />
+                        <Button Command="{Binding Add1Command}" Content="追加 1 条" Style="{StaticResource PrimaryButton}" />
+                        <Button Command="{Binding Add10Command}" Content="追加 10 条" Style="{StaticResource PrimaryButton}" />
+                        <Button Command="{Binding QueryAllCommand}" Content="查询全部" Style="{StaticResource SecondaryButton}" />
+                        <Button Command="{Binding QueryConditionCommand}" Content="条件查询 Age>25" Style="{StaticResource SecondaryButton}" />
+                        <Button Command="{Binding UpdateSelectedCommand}" Content="更新选中行" Style="{StaticResource SecondaryButton}" />
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 查询结果 -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="查询结果" />
+                    <DataGrid
+                        Height="260"
+                        Margin="0,12,0,0"
+                        ItemsSource="{Binding Results}"
+                        SelectedItem="{Binding SelectedEntity}"
+                        Style="{StaticResource DataGridStyle}" />
+                </StackPanel>
+            </Border>
+
+            <!-- 运行输出 -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="运行输出" />
+                    <TextBox Height="130" Margin="0,12,0,0" Style="{StaticResource OutputBox}" Text="{Binding OutputText, Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

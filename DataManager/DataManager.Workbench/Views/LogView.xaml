@@ -1,0 +1,154 @@
+<UserControl
+    x:Class="DataManager.Workbench.Views.LogView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignWidth="1000"
+    mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,20,24,8" MaxWidth="1100">
+
+            <!-- 页头 -->
+            <StackPanel Margin="0,0,0,16">
+                <TextBlock Style="{StaticResource PageTitle}" Text="日志测试" />
+                <TextBlock Style="{StaticResource PageSubTitle}"
+                           Text="通过 DataManager 的 LogManager / ILog 测试 Serilog 日志写入与查询" />
+            </StackPanel>
+
+            <!-- 日志配置 -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="日志配置" />
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="名称" />
+                            <TextBox Style="{StaticResource InputStyle}" Text="{Binding LogName}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="日志目录" />
+                            <TextBox Style="{StaticResource InputStyle}" Text="{Binding FilePath}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="保存天数" />
+                            <TextBox Style="{StaticResource InputStyle}" Text="{Binding SaveDays}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="6">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="日志库" />
+                            <ComboBox ItemsSource="{Binding LogTypes}" SelectedItem="{Binding SelectedLogType}" />
+                        </StackPanel>
+                    </Grid>
+                    <WrapPanel Margin="0,14,0,0">
+                        <Button Command="{Binding InitLogCommand}" Content="初始化日志" Style="{StaticResource SuccessButton}" />
+                        <Button Command="{Binding OpenFolderCommand}" Content="打开日志目录" Style="{StaticResource SecondaryButton}" />
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 写入 -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="写入日志" />
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="日志内容" />
+                            <TextBox Style="{StaticResource InputStyle}" Text="{Binding Message}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="等级" />
+                            <ComboBox ItemsSource="{Binding Levels}" SelectedItem="{Binding SelectedLevel}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="4" VerticalAlignment="Bottom" Orientation="Horizontal">
+                            <Button Command="{Binding WriteCommand}" Content="写入一条" Style="{StaticResource PrimaryButton}" />
+                            <Button Command="{Binding WriteManyCommand}" Content="批量写 100 条" Style="{StaticResource PrimaryButton}" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- 查询 -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="查询日志" />
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="日志文件" />
+                            <ComboBox ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="开始日期" />
+                            <DatePicker SelectedDate="{Binding StartDate}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="结束日期" />
+                            <DatePicker SelectedDate="{Binding EndDate}" />
+                        </StackPanel>
+                    </Grid>
+                    <WrapPanel Margin="0,14,0,0">
+                        <Button Command="{Binding RefreshFilesCommand}" Content="刷新文件列表" Style="{StaticResource SecondaryButton}" />
+                        <Button Command="{Binding QueryByFileCommand}" Content="按文件查询" Style="{StaticResource PrimaryButton}" />
+                        <Button Command="{Binding QueryByRangeCommand}" Content="按时间范围查询" Style="{StaticResource PrimaryButton}" />
+                        <Button Command="{Binding QueryMultiCommand}" Content="多行读取" Style="{StaticResource SecondaryButton}" />
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 查询结果 -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="查询结果" />
+                    <DataGrid
+                        Height="200"
+                        Margin="0,12,0,0"
+                        AutoGenerateColumns="False"
+                        ItemsSource="{Binding Results}"
+                        Style="{StaticResource DataGridStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Width="170" Binding="{Binding Time}" Header="时间" />
+                            <DataGridTextColumn Width="90" Binding="{Binding Level}" Header="等级" />
+                            <DataGridTextColumn Width="*" Binding="{Binding Info}" Header="内容" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Margin="0,10,0,0" Style="{StaticResource FieldLabel}" Text="多行原文" />
+                    <TextBox Height="90" Style="{StaticResource OutputBox}" Text="{Binding MultiText, Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+            <!-- 运行输出 -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="运行输出" />
+                    <TextBox Height="120" Margin="0,12,0,0" Style="{StaticResource OutputBox}" Text="{Binding OutputText, Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
