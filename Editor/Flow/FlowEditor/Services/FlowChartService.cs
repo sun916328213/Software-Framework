@@ -156,7 +156,9 @@ public class FlowChartService : IFlowChartService
         }
         catch (Exception ex)
         {
-            PanelLog($"[错误] {ex.Message}", logCallback, flowRunId);
+            // 记录完整异常信息（含堆栈）便于排障；面板仅显示消息摘要，堆栈落盘到日志文件
+            PanelLog($"[错误] {ex.GetType().Name}: {ex.Message}", logCallback, flowRunId);
+            FlowLogContext.Write($"流程执行异常 {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
             Model.StatusText = "执行出错";
         }
         finally

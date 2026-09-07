@@ -21,6 +21,8 @@ namespace ScriptEditor.ViewModels
         #region 字段
 
         private readonly ScriptManagerService _service;
+        /// <summary>是否已附加到 Model 事件（Attach/Detach 幂等守卫）。</summary>
+        private bool _attached;
 
         #endregion
 
@@ -29,6 +31,11 @@ namespace ScriptEditor.ViewModels
         /// <summary>
         /// 构造注入 ScriptManagerService（由 Prism 容器自动解析）。
         /// </summary>
+        /// <remarks>
+        /// 注意：不在构造函数中订阅 Model 事件——ScriptManagerModel 是单例 Service 的
+        /// 长生命周期对象，构造即订阅会让废弃的 VM 永远无法回收（内存泄漏）。
+        /// 改为 View Loaded 时调用 <see cref="Attach"/>、最终卸载时调用 <see cref="Detach"/>。
+        /// </remarks>
         /// <param name="service">脚本管理器服务实例。</param>
         public ScriptManagerViewModel(ScriptManagerService service)
         {
@@ -51,9 +58,39 @@ namespace ScriptEditor.ViewModels
             SaveTaskCommand = new AsyncRelayCommand(_service.SaveTaskAsync);
             SaveAsTaskCommand = new AsyncRelayCommand(_service.SaveAsTaskAsync);
             LoadTaskCommand = new AsyncRelayCommand(_service.LoadTaskAsync);
+        }
+
+        #endregion
+
+        #region 事件生命周期（Attach/Detach）
+
+        /// <summary>
+        /// 附加到 Model 事件（View Loaded 时调用，幂等可重入）。
+        /// 恢复时主动补发一次状态/集合刷新，避免错过分离期间的变更。
+        /// </summary>
+        public void Attach()
+        {
+            if (_attached) return;
+            _attached = true;
             _service.Model.StateChanged += OnServiceStateChanged;
             _service.Model.CollectionChanged += OnServiceCollectionChanged;
             _service.Model.PropertyChanged += OnModelPropertyChanged;
+
+            OnServiceStateChanged();
+            OnServiceCollectionChanged();
+        }
+
+        /// <summary>
+        /// 从 Model 事件分离（View 最终卸载时调用，幂等可重入）。
+        /// 切断单例 Service/Model 对废弃 VM 的强引用，允许 VM 被正常回收。
+        /// </summary>
+        public void Detach()
+        {
+            if (!_attached) return;
+            _attached = false;
+            _service.Model.StateChanged -= OnServiceStateChanged;
+            _service.Model.CollectionChanged -= OnServiceCollectionChanged;
+            _service.Model.PropertyChanged -= OnModelPropertyChanged;
         }
 
         #endregion

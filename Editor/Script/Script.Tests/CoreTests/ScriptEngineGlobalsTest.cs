@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Windows;
 using ScriptEditor.Services;
 
-namespace ScriptEditor.Tests;
+namespace Script.Tests.CoreTests;
 
 /// <summary>
 /// ScriptEngine globals 注入路径测试：
@@ -45,23 +41,6 @@ public static class ScriptEngineGlobalsTest
                 throw new Exception($"[{name}] 输出缺少 '{exp}': 实际='{output}'");
         }
         Trace.WriteLine($"[GlobalsTest][{name}] OK: {output.Replace("\r\n", " | ").Trim()}");
-    }
-
-    /// <summary>自启模式：用于在没有宿主 App 时直接运行测试。用法：STAThread 控制台调用本方法。</summary>
-    [STAThread]
-    public static void RunSelfContained()
-    {
-        Trace.Listeners.Add(new TextWriterTraceListener(Console.Out));
-        var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
-        try
-        {
-            RunAsync().GetAwaiter().GetResult();
-        }
-        finally
-        {
-            Trace.WriteLine("[GlobalsTest] 退出");
-            app.Shutdown();
-        }
     }
 
     public static async Task RunAsync()

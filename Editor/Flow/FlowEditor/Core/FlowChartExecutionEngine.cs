@@ -589,13 +589,21 @@ public class FlowChartExecutionEngine
 
         var seq = new int[1];
 
+        // 队列级回边目标去重：循环体存在多条并行末端时，归一化器会为每个末端各合成一条回边，
+        // 若不去重则循环头一轮被入队多次 → 计数翻倍、Completed 后残留调度复活循环（无限活锁）。
+        // 该集合跨节点持久（区别于旧实现的单次执行局部去重），目标出队执行时移除。
+        var pendingBackEdgeTargets = new HashSet<string>();
+
         while (queue.Count > 0)
         {
             ct.ThrowIfCancellationRequested();
 
             var nodeId = queue.Dequeue();
             if (!nodeMap.TryGetValue(nodeId, out var nodeVm))
+            {
+                pendingBackEdgeTargets.Remove(nodeId);
                 continue;
+            }
 
             // 前驱未全部完成 → 重新入队尾部等待
             if (remaining.GetValueOrDefault(nodeId, 0) > 0)
@@ -603,6 +611,8 @@ public class FlowChartExecutionEngine
                 queue.Enqueue(nodeId);
                 continue;
             }
+
+            pendingBackEdgeTargets.Remove(nodeId);
 
             executionOrder?.Add(nodeVm);
 
@@ -618,9 +628,6 @@ public class FlowChartExecutionEngine
 
             // 通知后继（激活边过滤：未激活的出边直接剪枝，包括回边——这是环路自然终止的关键；
             // 容错吞掉的失败经 ErrorPort 路由或全放行表达走向）
-            // rescheduled：本轮已重新调度的目标去重。循环体末端若是分支节点，归一化器会为它的每个
-            // 控制流端口各合成一条回边，若不去重则同一次执行会把循环头入队多次，导致计数错乱。
-            var rescheduled = new HashSet<string>();
             foreach (var conn in graph.SuccessorConnections[nodeId])
             {
                 var succId = conn.TargetNodeId;
@@ -633,7 +640,9 @@ public class FlowChartExecutionEngine
 
                 if (graph.BackEdges.Contains((conn.SourceNodeId, succId)))
                 {
-                    if (!rescheduled.Add(succId)) continue;
+                    // 队列级去重：同一轮内多条并行末端回边指向同一循环头时，只重新调度一次。
+                    // （单次执行内的多条回边同样被此集合覆盖，替代旧的局部 rescheduled 方案）
+                    if (!pendingBackEdgeTargets.Add(succId)) continue;
 
                     // 回边 → 进入新一轮：运行序号自增（使循环各轮日志的 #运行序号 可区分），重置目标节点前驱计数后重新调度
                     FlowLogContext.BumpRun();

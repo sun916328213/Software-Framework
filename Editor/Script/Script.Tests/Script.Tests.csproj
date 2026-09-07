@@ -5,9 +5,12 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>GlobalsTestRunner</RootNamespace>
+    <RootNamespace>Script.Tests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\ScriptEditor\ScriptEditor.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Prism.DryIoc" Version="8.1.97" />
   </ItemGroup>
 </Project>

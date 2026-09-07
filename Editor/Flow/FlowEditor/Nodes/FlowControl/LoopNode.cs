@@ -1,4 +1,4 @@
-﻿using FlowEditor.Core;
+using FlowEditor.Core;
 using FlowEditor.Models;
 using WPFCustomControls.PropertyGrid.Models;
 
@@ -87,6 +87,17 @@ public class LoopNode : NodeModel, ILoopControlNode
 
     public override Task ExecuteAsync(CancellationToken ct)
     {
+        // 防复活保护（配合引擎队列级回边去重的双保险）：上一轮已走 Completed 后若仍被调度，
+        // 说明是队列中的残留调度（多末端并行回边等场景的极端产物）。此时不推进计数，
+        // 一律再次激活 Completed 端口走终止分支——激活边语义会剪掉 Body 出边，
+        // 保证环路必然排空终止，而非重新进入 Body 模式造成无限活锁。
+        if (_completedThisCycle)
+        {
+            _completedThisCycle = false;
+            ActivateOutput("Completed");
+            return Task.CompletedTask;
+        }
+
         CurrentIndex++;
         if (CurrentIndex <= Math.Max(1, Iterations))
         {
@@ -96,9 +107,13 @@ public class LoopNode : NodeModel, ILoopControlNode
         {
             ActivateOutput("Completed");
             CurrentIndex = 0; // 本轮循环结束，复位供下一次外部触发
+            _completedThisCycle = true; // 标记本轮已终止，吞掉队列中可能残留的重复调度
         }
         return Task.CompletedTask;
     }
+
+    /// <summary>本轮循环已走 Completed 的标记：用于吞掉多末端回边产生的残留重复调度，防止循环复活。</summary>
+    private bool _completedThisCycle;
 
     public override IReadOnlyList<string>? ControlFlowPorts => new[] { "Body", "Completed" };
 

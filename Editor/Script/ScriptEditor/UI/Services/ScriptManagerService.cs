@@ -1,4 +1,4 @@
-﻿using Extension.Core.ConvertEx;
+using Extension.Core.ConvertEx;
 using Extension.Tool;
 using ScriptEditor.Models;
 using System.Collections.ObjectModel;
@@ -155,21 +155,9 @@ namespace ScriptEditor.Services
             var index = _items.Count + 1;
             var item = new ScriptItem { Title = $"新脚本 {index}", Code = _editorService.GetDefaultTemplate() };
 
-            // 在独立 UI 线程上创建 FileLoading 窗口，主线程阻塞时动画不受影响
-            var ready = new System.Threading.ManualResetEventSlim(false);
-            WPFCustomControls.Window.Views.FileLoading? loadingWindow = null;
-            var thread = new System.Threading.Thread(() =>
-            {
-                loadingWindow = new WPFCustomControls.Window.Views.FileLoading { Text = "正在加载编辑器..." };
-                loadingWindow.Show();
-                ready.Set();
-                System.Windows.Threading.Dispatcher.Run();
-            });
-            thread.SetApartmentState(System.Threading.ApartmentState.STA);
-            thread.IsBackground = true;
-            thread.Start();
-            ready.Wait();
-            item.LoadingWindow = loadingWindow;
+            // 在独立 UI 线程上创建 FileLoading 窗口，主线程阻塞时动画不受影响。
+            // 带超时与异常保护：窗口创建失败时降级为 null（ScriptItem 对 null 已容忍），绝不阻塞调用方
+            item.LoadingWindow = TryCreateLoadingWindow("正在加载编辑器...");
 
             _items.Add(item);
             System.Diagnostics.Debug.WriteLine($"[ScriptManager] AddScript: added '{item.Title}', _items.Count={_items.Count}");
@@ -226,11 +214,10 @@ namespace ScriptEditor.Services
             var prompt = new MessagePrompt("确认删除全部", "确定要删除全部脚本吗？此操作不可撤销。", Visibility.Visible);
             if (prompt.ShowDialog() != true) return;
 
-            foreach (var item in _items.ToList())
-            {
+            foreach (var item in _items)
                 item.Terminate();
-                _items.Remove(item);
-            }
+            // 批量清空：仅触发一次 Reset 通知，避免逐条 Remove 引发 N 次布局重算
+            _items.Clear();
             Model.StatusText = "已删除全部脚本";
         }
 
@@ -238,12 +225,15 @@ namespace ScriptEditor.Services
         /// 预编译所有脚本（无头后台编译，加速首次执行）。编辑器不再在启动时创建，
         /// 因此此处不再初始化 RoslynPad，仅预热编译缓存。
         /// </summary>
+        /// <remarks>
+        /// 各脚本拥有独立 <see cref="ScriptEngine"/> 实例，编译相互独立，可安全并行；
+        /// 相比逐个 await 的串行版本，总耗时约等于最慢单个脚本的耗时。
+        /// </remarks>
         public async Task LoadAsync()
         {
-            foreach (var item in _items)
-            {
-                await item.PreCompileAsync();
-            }
+            var tasks = _items.Select(item => item.PreCompileAsync()).ToList();
+            if (tasks.Count > 0)
+                await Task.WhenAll(tasks);
         }
 
         #endregion
@@ -257,7 +247,7 @@ namespace ScriptEditor.Services
         {
             if (!string.IsNullOrEmpty(Model.CurrentFilePath))
             {
-                SaveToFile(Model.CurrentFilePath);
+                await SaveToFileAsync(Model.CurrentFilePath);
             }
             else
             {
@@ -276,16 +266,15 @@ namespace ScriptEditor.Services
                 _editorService.Model.ScriptsDirectoryPath);
             if (string.IsNullOrEmpty(path)) return;
 
-            SaveToFile(path);
+            await SaveToFileAsync(path);
             Model.CurrentFilePath = path;
-            await Task.CompletedTask;
         }
 
         /// <summary>
-        /// 将当前任务序列化并写入指定路径。
+        /// 将当前任务序列化并写入指定路径（序列化与磁盘 IO 均在后台线程执行，不阻塞 UI）。
         /// </summary>
         /// <param name="path">目标文件路径。</param>
-        private void SaveToFile(string path)
+        private async Task SaveToFileAsync(string path)
         {
             try
             {
@@ -296,13 +285,18 @@ namespace ScriptEditor.Services
                     References = _editorService.AdditionalReferencePaths.ToList()
                 };
 
-                var json = JsonEx.ToJson(model);
-                Extension.Core.FileEx.FileEx.Write(json, System.IO.Path.GetDirectoryName(path), System.IO.Path.GetFileName(path));
+                // 后台线程执行 JSON 序列化 + 写盘 + 镜像导出，避免大任务时冻结 UI
+                var json = await Task.Run(() => JsonEx.ToJson(model));
+                var itemsSnapshot = _items.ToList();
+                await Task.Run(() =>
+                {
+                    Extension.Core.FileEx.FileEx.Write(json, System.IO.Path.GetDirectoryName(path), System.IO.Path.GetFileName(path));
 
-                // 同步导出各脚本为独立 .cs（供 VSCode 查看/编辑）
-                try { ExportScriptsToFolder(path); } catch { /* 镜像导出失败不阻断保存 */ }
+                    // 同步导出各脚本为独立 .cs（供 VSCode 查看/编辑）
+                    try { ExportScriptsCore(itemsSnapshot, path); } catch { /* 镜像导出失败不阻断保存 */ }
+                });
 
-                // 自动引入：保存时把最新脚本代码的 using 收敛为全局隐式 using
+                // 自动引入：保存时把最新脚本代码的 using 收敛为全局隐式 using（操作 RoslynHost 静态状态，保持 UI 线程）
                 foreach (var item in _items)
                     CustomRoslynHost.AddGlobalImportsFromSource(item.Code ?? string.Empty);
 
@@ -319,31 +313,30 @@ namespace ScriptEditor.Services
         /// 将当前任务保存到指定路径（供外部服务调用，如启动流程保存）。
         /// </summary>
         /// <param name="path">目标文件路径。</param>
-        public async Task SaveToPathAsync(string path)
-        {
-            SaveToFile(path);
-            await Task.CompletedTask;
-        }
+        public Task SaveToPathAsync(string path) => SaveToFileAsync(path);
 
         /// <summary>
         /// 从 .taskproj 文件加载任务（弹出文件选择对话框）。
         /// </summary>
         public async Task LoadTaskAsync()
         {
-            FileLoading fileLoading = new FileLoading();
-
             var path = _fileService.ShowOpenDialog(
                 "任务文件 (*.taskproj;*.taskproj.bak)|*.taskproj;*.taskproj.bak|所有文件 (*.*)|*.*");
             if (string.IsNullOrEmpty(path)) return;
 
-            fileLoading.Text = "正在加载任务...";
+            // 用户确认后才创建进度窗口，取消选择时不产生无用窗口
+            var fileLoading = new FileLoading { Text = "正在加载任务..." };
             fileLoading.Show();
             // 让出 UI 线程让 FileLoading 窗口完成首帧渲染（布局 + 圆形进度条动画启动）
             await Dispatcher.Yield(DispatcherPriority.Render);
-            await LoadTaskFromPathAsync(path);
-            // 短暂停留让用户看到"加载完成"状态
-            await Task.Delay(300);
-            fileLoading.Close();
+            try
+            {
+                await LoadTaskFromPathAsync(path);
+            }
+            finally
+            {
+                fileLoading.Close();
+            }
         }
 
         /// <summary>
@@ -372,12 +365,10 @@ namespace ScriptEditor.Services
                     return;
                 }
 
-                // ---- UI 线程：清除旧脚本 ----
-                foreach (var item in _items.ToList())
-                {
+                // ---- UI 线程：清除旧脚本（批量：先终止再一次性 Clear，仅触发一次 Reset）----
+                foreach (var item in _items)
                     item.Terminate();
-                    _items.Remove(item);
-                }
+                _items.Clear();
                 // 加载共享 DLL 引用：直接操作 Model 数据层，最后一次性刷新 UI
                 _editorService.Model.ClearReferenceData();
                 if (model.References != null)
@@ -398,11 +389,9 @@ namespace ScriptEditor.Services
                     item.SetReferences(script.References ?? new List<string>());
                     tempItems.Add(item);
                 }
- 
-                for (int i = 0; i < tempItems.Count; i++)
-                {
-                    _items.Add(tempItems[i]);
-                }
+
+                // 批量替换集合内容：仅触发一次 Reset 通知
+                _items.ReplaceAll(tempItems);
  
                 if (_items.Count > 0)
                     Model.SelectedItem = _items[0];
@@ -457,10 +446,14 @@ namespace ScriptEditor.Services
         /// 覆盖写入（FileEx 自动将旧文件轮换为 .cs.bak）。
         /// </summary>
         public void ExportScriptsToFolder(string taskprojPath)
+            => ExportScriptsCore(_items.ToList(), taskprojPath);
+
+        /// <summary>导出核心实现（快照 + 无 UI 依赖，可安全在后台线程调用）。</summary>
+        private static void ExportScriptsCore(IReadOnlyList<ScriptItem> items, string taskprojPath)
         {
-            for (var i = 0; i < _items.Count; i++)
+            for (var i = 0; i < items.Count; i++)
             {
-                var item = _items[i];
+                var item = items[i];
                 Extension.Core.FileEx.FileEx.Write(
                     item.Code ?? string.Empty,
                     GetScriptFolder(taskprojPath),
@@ -554,23 +547,35 @@ namespace ScriptEditor.Services
             Model.StatusText = "正在执行所有脚本...";
             Model.NotifyStateChanged();
 
-            // 预设容量避免扩容
-            var runningTasks = new List<Task>(_items.Count);
-            foreach (var item in _items)
+            var failed = false;
+            try
             {
-                item.ItemStatus = "执行中...";
-                runningTasks.Add(item.ExecuteAsync());
+                // 预设容量避免扩容
+                var runningTasks = new List<Task>(_items.Count);
+                foreach (var item in _items)
+                {
+                    item.ItemStatus = "执行中...";
+                    runningTasks.Add(item.ExecuteAsync());
+                }
+
+                if (runningTasks.Count > 0)
+                    await Task.WhenAll(runningTasks);
             }
+            catch (Exception ex)
+            {
+                // 单个脚本异常不应导致全局状态卡死：记录后继续复位（finally 兜底）
+                failed = true;
+                System.Diagnostics.Debug.WriteLine($"[ScriptManager] RunAllAsync 异常：{ex.Message}");
+            }
+            finally
+            {
+                foreach (var item in _items)
+                    item.ItemStatus = "就绪";
 
-            if (runningTasks.Count > 0)
-                await Task.WhenAll(runningTasks);
-
-            foreach (var item in _items)
-                item.ItemStatus = "就绪";
-
-            Model.IsRunning = false;
-            Model.StatusText = "所有脚本执行完成";
-            Model.NotifyStateChanged();
+                Model.IsRunning = false;
+                Model.StatusText = failed ? "所有脚本执行完成（部分脚本异常）" : "所有脚本执行完成";
+                Model.NotifyStateChanged();
+            }
         }
 
         /// <summary>
@@ -586,23 +591,35 @@ namespace ScriptEditor.Services
             Model.StatusText = "循环执行中...";
             Model.NotifyStateChanged();
 
-            // 快照脚本列表
-            var itemsSnapshot = _items.ToList();
+            var failed = false;
+            try
+            {
+                // 快照脚本列表
+                var itemsSnapshot = _items.ToList();
 
-            // 并行启动所有脚本的循环，LoopRunAsync 内部自行管理线程和生命周期
-            var tasks = itemsSnapshot
-                .Select(item => item.LoopRunAsync())
-                .ToList();
+                // 并行启动所有脚本的循环，LoopRunAsync 内部自行管理线程和生命周期
+                var tasks = itemsSnapshot
+                    .Select(item => item.LoopRunAsync())
+                    .ToList();
 
-            if (tasks.Count > 0)
-                await Task.WhenAll(tasks);
-
-            Model.IsLooping = false;
-            await Dispatcher.Yield(DispatcherPriority.Background);
-            foreach (var item in _items)
-                item.ItemStatus = "就绪";
-            Model.StatusText = "循环执行已停止";
-            Model.NotifyStateChanged();
+                if (tasks.Count > 0)
+                    await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                // 循环调度异常不应导致 IsLooping 永久卡 true（finally 兜底复位）
+                failed = true;
+                System.Diagnostics.Debug.WriteLine($"[ScriptManager] LoopRunAsync 异常：{ex.Message}");
+            }
+            finally
+            {
+                Model.IsLooping = false;
+                await Dispatcher.Yield(DispatcherPriority.Background);
+                foreach (var item in _items)
+                    item.ItemStatus = "就绪";
+                Model.StatusText = failed ? "循环执行异常终止" : "循环执行已停止";
+                Model.NotifyStateChanged();
+            }
         }
 
         /// <summary>
@@ -618,6 +635,51 @@ namespace ScriptEditor.Services
         #endregion
 
         #region 内部方法
+
+        /// <summary>
+        /// 在独立 STA 线程上创建 FileLoading 窗口（主线程阻塞时动画不受影响）。
+        /// </summary>
+        /// <remarks>
+        /// 健壮性设计：原实现若窗口构造/显示抛出异常，后台线程直接死亡且不发出就绪信号，
+        /// 主线程将无限期阻塞在 ready.Wait()。现改为 try/finally 保证信号必然发出，
+        /// 并施加 3 秒超时；失败时返回 null 降级为无加载窗模式。
+        /// </remarks>
+        private static WPFCustomControls.Window.Views.FileLoading? TryCreateLoadingWindow(string text)
+        {
+            WPFCustomControls.Window.Views.FileLoading? loadingWindow = null;
+            Exception? threadError = null;
+            var ready = new System.Threading.ManualResetEventSlim(false);
+
+            var thread = new System.Threading.Thread(() =>
+            {
+                try
+                {
+                    loadingWindow = new WPFCustomControls.Window.Views.FileLoading { Text = text };
+                    loadingWindow.Show();
+                }
+                catch (Exception ex)
+                {
+                    threadError = ex;
+                }
+                finally
+                {
+                    ready.Set();
+                    if (threadError == null)
+                        System.Windows.Threading.Dispatcher.Run();
+                }
+            });
+            thread.SetApartmentState(System.Threading.ApartmentState.STA);
+            thread.IsBackground = true;
+            thread.Start();
+
+            if (!ready.Wait(TimeSpan.FromSeconds(3)) || threadError != null)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"[ScriptManager] 加载窗口创建失败（超时或异常）：{threadError?.Message ?? "超时"}");
+                return null;
+            }
+            return loadingWindow;
+        }
 
         /// <summary>集合变化事件处理：通知 Model 触发 CollectionChanged。</summary>
         private void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)

@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
-using System.ComponentModel;
 using System.Text;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting;
 using RoslynPad.Roslyn;
@@ -35,14 +35,9 @@ public sealed class ScriptGlobals
 /// <para>与旧 ScriptEditorService 中的执行逻辑行为一致（Inputs 注入、断点插桩、
 /// EnsureScriptRunInvoked、编译缓存等均已迁移至此）。</para>
 /// </remarks>
-public sealed class ScriptEngine : INotifyPropertyChanged
+public sealed class ScriptEngine : ObservableObject
 {
     #region 事件
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    private void OnPropertyChanged(string? propertyName)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     /// <summary>IsRunning / IsLooping / StatusText 等状态变化时触发。</summary>
     public event Action? StateChanged;
@@ -91,29 +86,14 @@ public sealed class ScriptEngine : INotifyPropertyChanged
     public string OutputText
     {
         get => _outputText;
-        private set
-        {
-            value = OutputTruncator.Truncate(value);
-            if (_outputText != value)
-            {
-                _outputText = value;
-                OnPropertyChanged(nameof(OutputText));
-            }
-        }
+        private set => SetProperty(ref _outputText, OutputTruncator.Truncate(value));
     }
 
     private string _statusText = "就绪";
     public string StatusText
     {
         get => _statusText;
-        private set
-        {
-            if (_statusText != value)
-            {
-                _statusText = value;
-                OnPropertyChanged(nameof(StatusText));
-            }
-        }
+        private set => SetProperty(ref _statusText, value);
     }
 
     private bool _isRunning;
@@ -122,12 +102,8 @@ public sealed class ScriptEngine : INotifyPropertyChanged
         get => _isRunning;
         private set
         {
-            if (_isRunning != value)
-            {
-                _isRunning = value;
-                OnPropertyChanged(nameof(IsRunning));
+            if (SetProperty(ref _isRunning, value))
                 NotifyStateChanged();
-            }
         }
     }
 
@@ -137,12 +113,8 @@ public sealed class ScriptEngine : INotifyPropertyChanged
         get => _isLooping;
         private set
         {
-            if (_isLooping != value)
-            {
-                _isLooping = value;
-                OnPropertyChanged(nameof(IsLooping));
+            if (SetProperty(ref _isLooping, value))
                 NotifyStateChanged();
-            }
         }
     }
 
@@ -151,28 +123,14 @@ public sealed class ScriptEngine : INotifyPropertyChanged
     public int LoopInterval
     {
         get => _loopInterval;
-        set
-        {
-            if (_loopInterval != value)
-            {
-                _loopInterval = value;
-                OnPropertyChanged(nameof(LoopInterval));
-            }
-        }
+        set => SetProperty(ref _loopInterval, value);
     }
 
     private string _executionTime = string.Empty;
     public string ExecutionTime
     {
         get => _executionTime;
-        private set
-        {
-            if (_executionTime != value)
-            {
-                _executionTime = value;
-                OnPropertyChanged(nameof(ExecutionTime));
-            }
-        }
+        private set => SetProperty(ref _executionTime, value);
     }
 
     /// <summary>最近一次脚本执行的原始返回值（未格式化）。</summary>

@@ -39,21 +39,44 @@ public sealed record JournalEntry(
 /// </summary>
 public sealed class ExecutionJournal
 {
+    /// <summary>默认容量上限（按条数）。超出后丢弃最旧条目，防止长循环导致无界增长（OOM）。</summary>
+    public const int DefaultCapacity = 10_000;
+
     private readonly ConcurrentQueue<JournalEntry> _entries = new();
     private readonly ConcurrentDictionary<string, JournalEntry> _latestEdgeValues = new();
     private readonly long _originTimestamp = System.Diagnostics.Stopwatch.GetTimestamp();
+    private readonly int _capacity;
+    private int _droppedCount;
+    // 自维护原子计数：ConcurrentQueue.Count 是 O(segment 链) 的加锁遍历，
+    // 在高频写入（循环每轮多条日志）下开销会急剧放大；用 O(1) 计数器替代。
+    private int _liveCount;
+
+    /// <summary>构造；capacity 条数上限（&gt;0），超出自动丢弃最旧条目。默认 <see cref="DefaultCapacity"/>。</summary>
+    public ExecutionJournal(int capacity = DefaultCapacity)
+    {
+        if (capacity <= 0) throw new ArgumentOutOfRangeException(nameof(capacity));
+        _capacity = capacity;
+    }
+
+    /// <summary>容量上限（条数）。超出后自动丢弃最旧条目。</summary>
+    public int Capacity => _capacity;
+
+    /// <summary>因容量上限被丢弃的条目数（诊断用）。</summary>
+    public int DroppedCount => Volatile.Read(ref _droppedCount);
 
     /// <summary>全部条目（按发生顺序的快照）。</summary>
     public IReadOnlyList<JournalEntry> Entries => _entries.ToList();
 
-    /// <summary>累计条目数。</summary>
-    public int Count => _entries.Count;
+    /// <summary>当前保留的条目数（O(1) 原子读取）。</summary>
+    public int Count => Volatile.Read(ref _liveCount);
 
     /// <summary>清空（新一轮循环前调用，避免无限增长）。</summary>
     public void Clear()
     {
         while (_entries.TryDequeue(out _)) { }
         _latestEdgeValues.Clear();
+        Interlocked.Exchange(ref _droppedCount, 0);
+        Interlocked.Exchange(ref _liveCount, 0);
     }
 
     internal void RecordNodeStart(string nodeId, string name)
@@ -94,5 +117,20 @@ public sealed class ExecutionJournal
         var ms => (long)ms
     };
 
-    private void Enqueue(JournalEntry entry) => _entries.Enqueue(entry);
+    /// <summary>
+    /// 入队并执行容量淘汰：当条目数超过上限时丢弃最旧条目（尽力而为，
+    /// 并发下可能短暂超出上限 1~2 条，属可接受的诊断日志误差）。
+    /// 计数用自维护原子量，避免 ConcurrentQueue.Count 的 O(segment) 加锁遍历。
+    /// </summary>
+    private void Enqueue(JournalEntry entry)
+    {
+        _entries.Enqueue(entry);
+        var live = Interlocked.Increment(ref _liveCount);
+        if (live > _capacity)
+        {
+            if (_entries.TryDequeue(out _))
+                Interlocked.Decrement(ref _liveCount);
+            Interlocked.Increment(ref _droppedCount);
+        }
+    }
 }

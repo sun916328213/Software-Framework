@@ -267,6 +267,7 @@ public partial class ScriptEditorView : UserControl
         // 前后端分离：Service/ViewModel 延迟到 InitializeCoreAsync 中初始化，
         // 构造函数只做轻量工作：BAML 加载 + 生命周期事件挂接
         Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
         DataContextChanged += OnDataContextChanged;
 
         // 输出面板滚动位置实时记录到当前脚本项（按脚本独立记忆）。
@@ -510,6 +511,8 @@ public partial class ScriptEditorView : UserControl
         SetInputData(_initialInputData!);
 
         _viewModel = new ScriptEditorViewModel(_editorService);
+        // 附加到单例 Service 的事件（幂等；OnLoaded 再次调用亦安全）
+        _viewModel.Attach();
         Debug.WriteLine($"[ScriptEditor] EnsureBackend ScriptEditorViewModel: {sw.ElapsedMilliseconds}ms");
 
         if (_initialDocument != null)
@@ -562,46 +565,7 @@ public partial class ScriptEditorView : UserControl
         Debug.WriteLine($"[ScriptEditor] EnsureBackend CreateReferencePanel: {sw.ElapsedMilliseconds}ms");
 
         // 同步 ViewModel <-> View 的循环状态 + 输出文本
-        _viewModel.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName == nameof(_viewModel.IsLooping))
-                IsLooping = _viewModel.IsLooping;
-            else if (e.PropertyName == nameof(_viewModel.LoopInterval))
-                LoopInterval = _viewModel.LoopInterval;
-            else if (e.PropertyName == nameof(_viewModel.OutputText))
-            {
-                // 关键:TextBox 模板绑定的是 UserControl.OutputText DP(不是 VM.OutputText),
-                // 必须把 VM 输出镜像到该 DP 才能显示;否则 TextBox 永远是空。
-                // 注意用 _suppressOutputChange 防止 OnOutputTextChanged 反向再写 VM 形成回环。
-                _suppressOutputChange = true;
-                try { OutputText = _viewModel.OutputText; }
-                finally { _suppressOutputChange = false; }
-
-                // ScriptManager 标签页场景:同时镜像到 _attachedItem,保证切页后输出不丢。
-                // ScriptNode 宿主窗口场景:_attachedItem 为 null,跳过此步即可。
-                // 用 ReferenceEquals 守卫避免切页瞬间旧 VM 输出串到新脚本项。
-                var item = _attachedItem;
-                if (item != null && ReferenceEquals(item, DataContext))
-                    item.OutputText = _viewModel.OutputText;
-
-                // 防抖:每 50ms 最多滚动一次,避免大量输出时频繁滚动卡顿;
-                // 切页播种期间抑制滚动,防止新脚本被强制滚到底部
-                var now = DateTime.Now;
-                if (!_suppressAutoScroll && (now - _lastAutoScrollTime).TotalMilliseconds >= 50)
-                {
-                    _lastAutoScrollTime = now;
-                    var scrollItemTitle = item?.Title;
-                    OutputTextBox.Dispatcher.InvokeAsync(() =>
-                    {
-                        // 跨线程排队后 _attachedItem 可能已被切到新脚本,
-                        // 此处不再校验 item(其可能为 null),只滚动当前 TextBox 即可
-                        Debug.WriteLine($"[ScriptEditor] AutoScrollToEnd fired for '{scrollItemTitle ?? "(no item)"}', current='{(_attachedItem?.Title ?? "null")}'");
-                        OutputTextBox.CaretIndex = OutputTextBox.Text.Length;
-                        OutputTextBox.ScrollToEnd();
-                    });
-                }
-            }
-        };
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
         // ScriptNode 宿主窗口场景：_attachedItem 为 null，无运行时的 ScriptItem 输出可镜像。
         // 必须放在 PropertyChanged 注册之后播种，写 VM.OutputText 才会触发上方回调
@@ -615,6 +579,52 @@ public partial class ScriptEditorView : UserControl
         }
 
         Debug.WriteLine($"[ScriptEditor] EnsureBackend TOTAL: {sw.ElapsedMilliseconds}ms");
+    }
+
+    /// <summary>
+    /// ViewModel 属性变更镜像到 View 依赖属性（EnsureBackendInitialized 中订阅）。
+    /// VM 生命周期与 View 一致，无需退订；改为具名方法以便调试与后续维护。
+    /// </summary>
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ScriptEditorViewModel.IsLooping))
+            IsLooping = _viewModel!.IsLooping;
+        else if (e.PropertyName == nameof(ScriptEditorViewModel.LoopInterval))
+            LoopInterval = _viewModel!.LoopInterval;
+        else if (e.PropertyName == nameof(ScriptEditorViewModel.OutputText))
+        {
+            var vm = _viewModel!;
+            // 关键:TextBox 模板绑定的是 UserControl.OutputText DP(不是 VM.OutputText),
+            // 必须把 VM 输出镜像到该 DP 才能显示;否则 TextBox 永远是空。
+            // 注意用 _suppressOutputChange 防止 OnOutputTextChanged 反向再写 VM 形成回环。
+            _suppressOutputChange = true;
+            try { OutputText = vm.OutputText; }
+            finally { _suppressOutputChange = false; }
+
+            // ScriptManager 标签页场景:同时镜像到 _attachedItem,保证切页后输出不丢。
+            // ScriptNode 宿主窗口场景:_attachedItem 为 null,跳过此步即可。
+            // 用 ReferenceEquals 守卫避免切页瞬间旧 VM 输出串到新脚本项。
+            var item = _attachedItem;
+            if (item != null && ReferenceEquals(item, DataContext))
+                item.OutputText = vm.OutputText;
+
+            // 防抖:每 50ms 最多滚动一次,避免大量输出时频繁滚动卡顿;
+            // 切页播种期间抑制滚动,防止新脚本被强制滚到底部
+            var now = DateTime.Now;
+            if (!_suppressAutoScroll && (now - _lastAutoScrollTime).TotalMilliseconds >= 50)
+            {
+                _lastAutoScrollTime = now;
+                var scrollItemTitle = item?.Title;
+                OutputTextBox.Dispatcher.InvokeAsync(() =>
+                {
+                    // 跨线程排队后 _attachedItem 可能已被切到新脚本,
+                    // 此处不再校验 item(其可能为 null),只滚动当前 TextBox 即可
+                    Debug.WriteLine($"[ScriptEditor] AutoScrollToEnd fired for '{scrollItemTitle ?? "(no item)"}', current='{(_attachedItem?.Title ?? "null")}'");
+                    OutputTextBox.CaretIndex = OutputTextBox.Text.Length;
+                    OutputTextBox.ScrollToEnd();
+                });
+            }
+        }
     }
 
     /// <summary>
@@ -899,6 +909,9 @@ public partial class ScriptEditorView : UserControl
     /// </remarks>
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        // 重新载入（如切页回来）时恢复 VM 与单例 Service 的事件连接（幂等）
+        _viewModel?.Attach();
+
         if (_onLoadedHandled) return;
         _onLoadedHandled = true;
 
@@ -918,6 +931,23 @@ public partial class ScriptEditorView : UserControl
 
         Debug.WriteLine("[ScriptEditor] OnLoaded: about to start deferred initialization");
         EnsureDeferredInitialization();
+    }
+
+    /// <summary>
+    /// 控件卸载：延迟到 ApplicationIdle 再确认是否为最终卸载。
+    /// </summary>
+    /// <remarks>
+    /// TabControl 切页也会触发 Unloaded，若立即 Detach 会切断 VM 与单例 Service 的
+    /// 事件连接。因此延迟到 ApplicationIdle：届时若视图已重新载入（IsLoaded）则跳过，
+    /// 仅在真正脱离可视化树时才 Detach，阻断单例 Service 对废弃 VM 的强引用。
+    /// </remarks>
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (!IsLoaded)
+                _viewModel?.Detach();
+        }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
     }
 
     /// <summary>

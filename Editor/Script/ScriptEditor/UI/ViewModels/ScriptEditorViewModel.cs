@@ -19,14 +19,16 @@ public class ScriptEditorViewModel : ObservableObject, IDisposable
 {
     private readonly ScriptEditorService _editorService;
     private bool _referencesLoaded;
+    /// <summary>是否已附加到单例 Service 的事件（Attach/Detach 幂等守卫）。</summary>
+    private bool _attached;
 
     public ScriptEditorViewModel(ScriptEditorService editorService)
     {
         _editorService = editorService;
 
-        // 监听 Service 状态变化 → 刷新 VM 属性 → 驱动 WPF 绑定
-        _editorService.PropertyChanged += OnServicePropertyChanged;
-        _editorService.StateChanged += OnServiceStateChanged;
+        // 注意：不再在构造函数中订阅单例 Service 的事件。
+        // 单例 Service 的生命周期长于本 VM，构造即订阅会导致废弃 VM 永远无法回收。
+        // 改为 View Loaded 时调用 Attach()、最终卸载时调用 Detach()。
 
         #region 初始化命令
 
@@ -70,8 +72,36 @@ public class ScriptEditorViewModel : ObservableObject, IDisposable
     }
 
     // ════════════════════════════════════════════════════════════════
-    //  Service 事件 → VM 属性刷新
+    //  Service 事件 → VM 属性刷新（Attach/Detach 生命周期管理）
     // ════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// 附加到单例 Service 的事件（View Loaded 后调用，幂等可重入）。
+    /// </summary>
+    /// <remarks>
+    /// 分离期间 Service 产生的事件会被跳过，恢复时在此处补一次命令状态刷新，
+    /// 避免错过分离期间的 IsRunning/IsLooping 变化。
+    /// </remarks>
+    public void Attach()
+    {
+        if (_attached) return;
+        _attached = true;
+        _editorService.PropertyChanged += OnServicePropertyChanged;
+        _editorService.StateChanged += OnServiceStateChanged;
+        OnServiceStateChanged();
+    }
+
+    /// <summary>
+    /// 从单例 Service 事件分离（View 最终卸载时调用，幂等可重入）。
+    /// 切断单例 Service 对本 VM 的强引用，允许 VM 及其关联 UI 资源被正常回收。
+    /// </summary>
+    public void Detach()
+    {
+        if (!_attached) return;
+        _attached = false;
+        _editorService.PropertyChanged -= OnServicePropertyChanged;
+        _editorService.StateChanged -= OnServiceStateChanged;
+    }
 
     private void OnServicePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
@@ -430,11 +460,10 @@ public class ScriptEditorViewModel : ObservableObject, IDisposable
 
     #region IDisposable
 
-    /// <summary>释放资源。</summary>
+    /// <summary>释放资源：分离 Service 事件并终止执行订阅。</summary>
     public void Dispose()
     {
-        _editorService.PropertyChanged -= OnServicePropertyChanged;
-        _editorService.StateChanged -= OnServiceStateChanged;
+        Detach();
         _editorService.DisposeExecution();
     }
 

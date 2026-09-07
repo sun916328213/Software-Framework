@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text;
 using System.Windows.Threading;
 
+using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
@@ -34,18 +35,16 @@ namespace ScriptEditor.Services;
 ///   <item>文件新建/打开/保存/另存为</item>
 /// </list>
 /// <para>运行时状态委托给 <see cref="ScriptEditorModel"/>。</para>
+/// <para>架构：按职责拆分为 partial 模块 ——</para>
+/// <list type="bullet">
+///   <item><c>ScriptEditorService.cs</c>：核心状态、事件中继、编辑器生命周期、执行引擎</item>
+///   <item><c>ScriptEditorService.References.cs</c>：引用管理与 Roslyn 工作区同步</item>
+///   <item><c>ScriptEditorService.Files.cs</c>：文件操作与脚本模板</item>
+/// </list>
 /// </remarks>
-public class ScriptEditorService : INotifyPropertyChanged
+public partial class ScriptEditorService : ObservableObject
 {
     #region 事件
-
-    /// <summary>属性变更通知（供 ViewModel 监听，从 Model 中继）。</summary>
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    private void OnPropertyChanged(string? propertyName)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
 
     /// <summary>综合状态变更通知（IsRunning / IsLooping / StatusText 等任意状态变化时触发）。</summary>
     public event Action? StateChanged;
@@ -82,7 +81,7 @@ public class ScriptEditorService : INotifyPropertyChanged
         set
         {
             _attachedItem = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AttachedItem)));
+            OnPropertyChanged(nameof(AttachedItem));
         }
     }
 
@@ -97,6 +96,9 @@ public class ScriptEditorService : INotifyPropertyChanged
     private DocumentId? _documentId;
     private string? _pendingText;
 
+    /// <summary>编辑器文本变更处理程序（保存为字段以便重复 Initialize 时先退订，防止订阅叠加）。</summary>
+    private EventHandler? _editorTextChanged;
+
     /// <summary>
     /// 创建脚本编辑器服务。
     /// </summary>
@@ -109,34 +111,9 @@ public class ScriptEditorService : INotifyPropertyChanged
         System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor model+fileService: {sw.ElapsedMilliseconds}ms");
 
         // 中继 Model 事件（跨线程时封送到 UI 线程，已在 UI 线程则同步通知避免绑定延迟）
-        _model.PropertyChanged += (_, e) =>
-        {
-            var dispatcher = System.Windows.Application.Current?.Dispatcher;
-            if (dispatcher != null && !dispatcher.CheckAccess())
-            {
-                dispatcher.InvokeAsync(() =>
-                {
-                    OnPropertyChanged(e.PropertyName);
-                    if (e.PropertyName == nameof(ScriptEditorModel.OutputText))
-                        OutputTextChanged?.Invoke();
-                }, DispatcherPriority.Background);
-            }
-            else
-            {
-                OnPropertyChanged(e.PropertyName);
-                if (e.PropertyName == nameof(ScriptEditorModel.OutputText))
-                    OutputTextChanged?.Invoke();
-            }
-        };
-
-        _model.StateChanged += () =>
-        {
-            var dispatcher = System.Windows.Application.Current?.Dispatcher;
-            if (dispatcher != null && !dispatcher.CheckAccess())
-                dispatcher.InvokeAsync(() => StateChanged?.Invoke(), DispatcherPriority.Background);
-            else
-                StateChanged?.Invoke();
-        };
+        // 注：Model 与本 Service 同生命周期（构造函数内创建），订阅无泄漏风险
+        _model.PropertyChanged += OnModelPropertyChanged;
+        _model.StateChanged += OnModelStateChanged;
 
         System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor events: {sw.ElapsedMilliseconds}ms");
 
@@ -211,25 +188,64 @@ public class ScriptEditorService : INotifyPropertyChanged
     //  原有：编辑器生命周期
     // ════════════════════════════════════════════════════════════════
 
+    /// <summary>Model 属性变更 → 跨线程封送后中继为 Service 属性变更。</summary>
+    private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+        {
+            dispatcher.InvokeAsync(() =>
+            {
+                OnPropertyChanged(e.PropertyName);
+                if (e.PropertyName == nameof(ScriptEditorModel.OutputText))
+                    OutputTextChanged?.Invoke();
+            }, DispatcherPriority.Background);
+        }
+        else
+        {
+            OnPropertyChanged(e.PropertyName);
+            if (e.PropertyName == nameof(ScriptEditorModel.OutputText))
+                OutputTextChanged?.Invoke();
+        }
+    }
+
+    /// <summary>Model 综合状态变更 → 跨线程封送后转发。</summary>
+    private void OnModelStateChanged()
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+            dispatcher.InvokeAsync(() => StateChanged?.Invoke(), DispatcherPriority.Background);
+        else
+            StateChanged?.Invoke();
+    }
+
     /// <summary>
     /// 关联 RoslynCodeEditor 实例。由 View 层在 OnLoaded 中调用。
     /// </summary>
     public void Initialize(RoslynCodeEditor editor, RoslynHost host, DocumentId documentId)
     {
+        // 防止重复 Initialize（View 多次 Loaded）时订阅叠加：先退订旧编辑器上的处理程序
+        if (_editor != null && _editorTextChanged != null)
+            _editor.Document.TextChanged -= _editorTextChanged;
+
         _editor = editor;
         _host = host;
         _documentId = documentId;
 
-        editor.Document.TextChanged += (_, _) =>
-        {
-            _pendingText = editor.Text;
-            _model.HasModified = true;
-        };
+        _editorTextChanged = OnEditorTextChanged;
+        editor.Document.TextChanged += _editorTextChanged;
 
         if (_pendingText != null)
             editor.Text = _pendingText;
         else
             _pendingText = editor.Text;
+    }
+
+    private void OnEditorTextChanged(object? sender, EventArgs e)
+    {
+        if (_editor == null) return;
+        _pendingText = _editor.Text;
+        _model.HasModified = true;
     }
 
     /// <summary>获取编辑器当前完整文本（线程安全，始终返回缓存文本）。</summary>
@@ -270,6 +286,8 @@ public class ScriptEditorService : INotifyPropertyChanged
         try
         {
             var text = _editor.Text;
+            // 文本未变化时跳过整篇 Replace：避免产生冗余撤销记录与不必要的重分析
+            if (string.Equals(text, _editor.Document.Text, StringComparison.Ordinal)) return;
             _editor.Document.Replace(0, _editor.Document.TextLength, text);
         }
         catch { }
@@ -284,7 +302,10 @@ public class ScriptEditorService : INotifyPropertyChanged
             if (document == null) return;
             var formattedDoc = await Formatter.FormatAsync(document) ;
             var formattedText = await formattedDoc.GetTextAsync() ;
-            _editor.Document.Replace(0, _editor.Document.TextLength, formattedText.ToString());
+            var newText = formattedText.ToString();
+            // 内容未变化时跳过 Replace，避免破坏撤销栈
+            if (!string.Equals(newText, _editor.Document.Text, StringComparison.Ordinal))
+                _editor.Document.Replace(0, _editor.Document.TextLength, newText);
             _host.UpdateDocument(formattedDoc);
         }
         catch { }
@@ -406,120 +427,9 @@ public class ScriptEditorService : INotifyPropertyChanged
     }
 
     // ════════════════════════════════════════════════════════════════
-    //  原有：引用管理
+    //  引用管理与文件操作：见 partial 模块
+    //  ScriptEditorService.References.cs / ScriptEditorService.Files.cs
     // ════════════════════════════════════════════════════════════════
-
-    private void InitializeRoslynHost()
-    {
-        _model.RoslynHost = ScriptHostProvider.Shared;
-    }
-
-    public bool AddReference(string dllPath)
-    {
-        if (!_model.AddReferenceData(dllPath)) return false;
-        SyncWorkspaceReferences();
-        SyncAttachedItemReferences();
-        return true;
-    }
-
-    public bool RemoveReference(string dllPath)
-    {
-        if (!_model.RemoveReferenceData(dllPath)) return false;
-        _localInjectedReferencePaths.Remove(dllPath);
-        SyncWorkspaceReferences();
-        SyncAttachedItemReferences();
-        return true;
-    }
-
-    public void ClearReferences()
-    {
-        _model.ClearReferenceData();
-        _localInjectedReferencePaths.Clear();
-        SyncWorkspaceReferences();
-        SyncAttachedItemReferences();
-    }
-
-    public IReadOnlyList<MetadataReference> GetAdditionalReferences() => _model.AdditionalReferences;
-
-    private void SyncWorkspaceReferences()
-    {
-        if (_host == null || _documentId == null || RoslynHost is not { } host) return;
-        try
-        {
-            var document = _host.GetDocument(_documentId);
-            if (document == null) return;
-            var project = RemoveInjectedReferences(document.Project, _localInjectedReferencePaths);
-            project = AddUserReferencesToProject(project, _model.AdditionalReferences);
-            _localInjectedReferencePaths.Clear();
-            foreach (var path in CustomRoslynHost.CollectReferencePaths(_model.AdditionalReferences))
-                _localInjectedReferencePaths.Add(path);
-            CommitWorkspaceChanges(project);
-        }
-        catch (InvalidOperationException) { }
-    }
-
-    private static Project RemoveInjectedReferences(Project project, HashSet<string> localInjectedPaths)
-    {
-        foreach (var injectedPath in localInjectedPaths)
-        {
-            foreach (var reference in project.MetadataReferences)
-            {
-                if (string.IsNullOrWhiteSpace(reference.Display)) continue;
-                var resolvedPath = CustomRoslynHost.ResolveReferencePath(reference.Display);
-                if (string.Equals(resolvedPath, injectedPath, StringComparison.OrdinalIgnoreCase))
-                {
-                    project = project.RemoveMetadataReference(reference);
-                    break;
-                }
-            }
-        }
-        return project;
-    }
-
-    private static Project AddUserReferencesToProject(Project project, IReadOnlyList<MetadataReference> additionalReferences)
-    {
-        var existingPaths = CustomRoslynHost.CollectReferencePaths(project.MetadataReferences);
-        foreach (var reference in additionalReferences)
-        {
-            if (string.IsNullOrWhiteSpace(reference.Display)) continue;
-            var fullPath = CustomRoslynHost.ResolveReferencePath(reference.Display);
-            if (!existingPaths.Contains(fullPath))
-            {
-                project = project.AddMetadataReference(reference);
-                existingPaths.Add(fullPath);
-            }
-        }
-        return project;
-    }
-
-    private void CommitWorkspaceChanges(Project project)
-    {
-        if (_host == null || _documentId == null) return;
-        var updatedDoc = project.Solution.GetDocument(_documentId);
-        if (project.Solution.Workspace.TryApplyChanges(project.Solution) && updatedDoc != null)
-            _host.UpdateDocument(updatedDoc);
-    }
-
-    // ════════════════════════════════════════════════════════════════
-    //  原有：默认脚本模板
-    // ════════════════════════════════════════════════════════════════
-
-    public string GetDefaultTemplate()
-    {
-        return @"
-public class Script
-{
-    public void Initialize()
-    {
-        // 初始化逻辑（可选，不需要可删除）
-    }
-
-    public void Run()
-    {
-        Console.WriteLine(""开始执行脚本"");
-    }
-}";
-    }
 
     // ════════════════════════════════════════════════════════════════
     //  执行引擎（委托给无头 ScriptEngine）
@@ -650,220 +560,7 @@ public class Script
 
     #endregion
 
-    // ════════════════════════════════════════════════════════════════
-    //  原有：文件操作
-    // ════════════════════════════════════════════════════════════════
-
-    #region 文件操作
-
-    /// <summary>新建文档。</summary>
-    public void NewDocument()
-    {
-        _model.CurrentFilePath = null;
-        SetText(GetDefaultTemplate());
-        _model.DocumentTitle = "无标题";
-        _model.OutputText = string.Empty;
-        _model.StatusText = "已创建新文档";
-        _model.HasModified = false;
-    }
-
-    /// <summary>打开文件对话框并加载脚本。</summary>
-    public void OpenDocument()
-    {
-        var path = _fileService.ShowOpenDialog(
-            "脚本工程文件 (*.scriptproj;*.scriptproj.bak)|*.scriptproj;*.scriptproj.bak|C# 文件 (*.cs;*.cs.bak)|*.cs;*.cs.bak|脚本文件 (*.csx)|*.csx|所有文件 (*.*)|*.*");
-        if (path == null) return;
-
-        LoadScriptCore(path);
-    }
-
-    /// <summary>保存文件（有路径则直接保存，否则另存为）。</summary>
-    public void Save()
-    {
-        if (_model.CurrentFilePath != null)
-            SaveToFile(_model.CurrentFilePath);
-        else
-            SaveAsCore();
-    }
-
-    /// <summary>另存为。</summary>
-    public void SaveAs()
-    {
-        SaveAsCore();
-    }
-
-    private void SaveAsCore()
-    {
-        var path = _fileService.ShowSaveDialog(
-            "脚本工程文件 (*.scriptproj)|*.scriptproj|C# 文件 (*.cs)|*.cs|脚本文件 (*.csx)|*.csx|所有文件 (*.*)|*.*",
-            _model.DocumentTitle);
-        if (path == null) return;
-        SaveToFile(path);
-    }
-
-    private void SaveToFile(string path)
-    {
-        try
-        {
-            var state = new ScriptEditorState
-            {
-                Code = GetText(),
-                References = AdditionalReferencePaths.ToList()
-            };
-
-            var json =   JsonEx.ToJson(state);
-            _fileService.WriteAllText(path, json);
-            _model.CurrentFilePath = path;
-            _model.DocumentTitle = Path.GetFileName(path);
-            _model.StatusText = $"已保存: {path}";
-            _model.HasModified = false;
-        }
-        catch (Exception ex)
-        {
-            _model.OutputText = $"保存文件失败: {ex.Message}";
-            _model.StatusText = "保存失败";
-        }
-    }
-
-    /// <summary>从指定路径加载脚本文件（支持 JSON 格式和旧纯文本格式）。</summary>
-    public void LoadFromFile(string path)
-    {
-        LoadScriptCore(path);
-    }
-
-    /// <summary>核心加载逻辑：JSON 格式优先，回退到纯文本。</summary>
-    private void LoadScriptCore(string path)
-    {
-        try
-        {
-            var content = _fileService.ReadAllText(path);
-
-            // 尝试解析为 JSON 格式（ScriptEditorState）
-            var state = TryParseScriptEditorState(content);
-            if (state != null)
-            {
-                SetText(state.Code);
-
-                // 加载 DLL 引用：直接操作 Model 数据层，最后一次性同步工作区
-                _model.ClearReferenceData();
-                foreach (var refPath in state.References)
-                    _model.AddReferenceData(refPath);
-                _localInjectedReferencePaths.Clear();
-                SyncWorkspaceReferences();
-                SyncAttachedItemReferences();
-                _model.RefreshReferenceUI();
-            }
-            else
-            {
-                // 旧格式：纯文本代码
-                SetText(content);
-            }
-
-            _model.CurrentFilePath = path;
-            _model.DocumentTitle = Path.GetFileName(path);
-            _model.OutputText = string.Empty;
-            _model.StatusText = $"已打开: {path}";
-            _model.HasModified = false;
-
-            if (IsInitialized && !string.IsNullOrEmpty(GetText()))
-                _ = PreCompileScriptAsync(GetText());
-        }
-        catch (Exception ex)
-        {
-            _model.OutputText = $"打开文件失败: {ex.Message}";
-            _model.StatusText = "打开失败";
-        }
-    }
-
-    /// <summary>尝试将文件内容解析为 ScriptEditorState JSON，失败返回 null。</summary>
-    private static ScriptEditorState? TryParseScriptEditorState(string content)
-    {
-        try
-        {
-            var state = JsonEx.FromJson<ScriptEditorState>(content);
-            // 有效 JSON 必须包含 Code 字段（即使为空字符串）
-            return state?.Code != null ? state : null;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    #endregion
-
-    #region 引用管理操作
-
-    /// <summary>从服务加载引用到 ObservableCollection。</summary>
-    public void LoadReferences() => _model.RefreshReferenceUI();
-
-    /// <summary>添加 DLL 引用（传入文件路径）。</summary>
-    public void AddReferenceItem(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path)) return;
-        if (AddReference(path))
-        {
-            _model.References.Add(ReferenceItem.FromPath(path));
-            _model.StatusText = $"已添加引用: {path}";
-        }
-        else
-        {
-            _model.StatusText = "引用已存在或添加失败";
-        }
-    }
-
-    /// <summary>打开对话框添加引用。</summary>
-    public void AddReferenceFromDialog()
-    {
-        var path = _fileService.ShowOpenDialog("DLL 文件 (*.dll)|*.dll|所有文件 (*.*)|*.*");
-        if (path == null) return;
-        AddReferenceItem(path);
-    }
-
-    /// <summary>移除引用项。</summary>
-    public void RemoveReferenceItem(ReferenceItem? item)
-    {
-        if (item == null) return;
-        var isInService = AdditionalReferencePaths.Contains(item.FullPath, StringComparer.OrdinalIgnoreCase);
-        if (isInService)
-        {
-            if (RemoveReference(item.FullPath))
-            {
-                _model.References.Remove(item);
-                _model.StatusText = $"已移除引用: {item.Name}";
-            }
-            else
-            {
-                _model.StatusText = "移除引用失败";
-            }
-        }
-        else
-        {
-            _model.References.Remove(item);
-            _model.StatusText = $"已移除引用: {item.Name}";
-        }
-    }
-
-    /// <summary>清空所有自定义引用。</summary>
-    public void ClearAllReferenceItems()
-    {
-        ClearReferences();
-        _model.References.Clear();
-        LoadReferences();
-        _model.StatusText = "已清空自定义引用";
-    }
-
-    /// <summary>切换引用面板展开状态。</summary>
-    public void ToggleReferencePanel()
-    {
-        _model.IsReferencePanelOpen = !_model.IsReferencePanelOpen;
-    }
-
-    #endregion
-
-    // ════════════════════════════════════════════════════════════════
-    //  新增：编辑器操作委托
-    // ════════════════════════════════════════════════════════════════
+    // 引用管理操作 → 见 ScriptEditorService.References.cs
 
     #region 编辑器操作委托
 
