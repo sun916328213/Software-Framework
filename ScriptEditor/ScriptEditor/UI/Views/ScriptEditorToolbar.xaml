@@ -1,0 +1,217 @@
+<!--
+    ScriptEditorToolbar.xaml - 脚本编辑器工具栏（前后端分离：从 ScriptEditorView 中独立出来，延迟创建）
+-->
+<UserControl
+    x:Class="ScriptEditor.Views.ScriptEditorToolbar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:viewmodels="clr-namespace:ScriptEditor.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:ScriptEditorViewModel}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+        <Style
+            x:Key="ToolBarButtonStyle"
+            BasedOn="{StaticResource MaterialDesignFlatButton}"
+            TargetType="Button">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Margin" Value="1,0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <Style x:Key="ToolBarPackIconStyle" TargetType="materialDesign:PackIcon">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+        </Style>
+    </UserControl.Resources>
+
+    <Border Padding="4,2" Background="#F5F5F5">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                <!--  文件操作：新建 / 打开 / 保存 / 另存为  -->
+                <Button
+                    Command="{Binding NewDocumentCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="新建 (Ctrl+N)">
+                    <materialDesign:PackIcon Kind="FileDocument" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding OpenDocumentCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="打开 (Ctrl+O)">
+                    <materialDesign:PackIcon Kind="FolderOpen" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding SaveCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="保存 (Ctrl+S)">
+                    <materialDesign:PackIcon Kind="ContentSave" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding SaveAsCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="另存为 (Ctrl+Shift+S)">
+                    <materialDesign:PackIcon Kind="ContentSaveAll" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Rectangle
+                    Width="1"
+                    Margin="4,4"
+                    Fill="#CCCCCC" />
+
+                <!--  构建 / 执行 / 终止  -->
+                <Button
+                    Command="{Binding CompileCommand}"
+                    Cursor="Hand"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="构建 (Ctrl+B)">
+                    <materialDesign:PackIcon Kind="HammerWrench" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding RunCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="执行 (F5)">
+                    <materialDesign:PackIcon Kind="PlayArrow" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding TerminateCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="终止 (Shift+F5)">
+                    <materialDesign:PackIcon Kind="Stop" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Rectangle
+                    Width="1"
+                    Margin="4,4"
+                    Fill="#CCCCCC" />
+
+                <!--  格式化 / 注释  -->
+                <Button
+                    Command="{Binding FormatDocumentCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="格式化文档 (Ctrl+D)">
+                    <materialDesign:PackIcon Kind="CodeBraces" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding CommentSelectionCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="注释选中行 (Ctrl+K)">
+                    <materialDesign:PackIcon Kind="Comment" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding UncommentSelectionCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="取消注释 (Ctrl+U)">
+                    <materialDesign:PackIcon Kind="CommentRemove" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding RenameSymbolCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="重命名符号 (F2)">
+                    <materialDesign:PackIcon Kind="Pencil" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Rectangle
+                    Width="1"
+                    Margin="4,4"
+                    Fill="#CCCCCC" />
+
+                <!--  引用管理  -->
+                <Button
+                    Command="{Binding ToggleReferencePanelCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="引用管理">
+                    <materialDesign:PackIcon Kind="Bookshelf" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Rectangle
+                    Width="1"
+                    Margin="4,4"
+                    Fill="#CCCCCC" />
+
+                <!--  模板  -->
+                <Button
+                    Command="{Binding LoadTemplateCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="加载模板">
+                    <materialDesign:PackIcon Kind="ClipboardText" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Rectangle
+                    Width="1"
+                    Margin="4,4"
+                    Fill="#CCCCCC" />
+
+                <!--  调试模式  -->
+                <Button
+                    Command="{Binding ToggleDebugModeCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="切换调试模式（启用后可设断点调试）">
+                    <materialDesign:PackIcon Kind="BugOutline" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <!--  清除所有断点  -->
+                <Button
+                    Command="{Binding ClearAllBreakpointsCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="清除所有断点">
+                    <materialDesign:PackIcon Kind="DeleteOff" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Rectangle
+                    Width="1"
+                    Margin="4,4"
+                    Fill="#CCCCCC" />
+
+                <!--  循环执行  -->
+                <Button
+                    Command="{Binding StartLoopCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="循环执行">
+                    <materialDesign:PackIcon Kind="Repeat" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding StopLoopCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    ToolTip="停止循环">
+                    <materialDesign:PackIcon Kind="StopCircleOutline" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <TextBlock
+                    Margin="4,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Foreground="#888"
+                    Text="循环间隔:" />
+                <TextBox
+                    x:Name="LoopIntervalBox"
+                    Width="45"
+                    Height="22"
+                    Margin="2,0"
+                    Padding="2,0"
+                    VerticalAlignment="Center"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    DataObject.Pasting="LoopInterval_Pasting"
+                    PreviewTextInput="LoopInterval_PreviewTextInput"
+                    Text="{Binding LoopInterval, UpdateSourceTrigger=PropertyChanged}"
+                    ToolTip="循环执行的间隔时间（毫秒）" />
+                <TextBlock
+                    Margin="0,0,4,0"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Foreground="#888"
+                    Text="ms" />
+            </StackPanel>
+
+            <!--  执行中进度条  -->
+            <ProgressBar
+                Width="80"
+                Height="4"
+                Margin="8,0,4,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                DockPanel.Dock="Right"
+                IsIndeterminate="{Binding IsRunning}"
+                Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        </DockPanel>
+    </Border>
+</UserControl>
