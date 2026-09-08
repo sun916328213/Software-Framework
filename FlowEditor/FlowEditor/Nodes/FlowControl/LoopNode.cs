@@ -26,7 +26,7 @@ public class LoopNode : NodeModel, ILoopControlNode
     private int _iterations = 5;
 
     /// <summary>循环次数（可由上游节点通过输入端口绑定，未绑定时用面板常量）。</summary>
-    [NodeProperty(DisplayName = "循环次数", Group = "1.基础信息", Order = 0, Min = 1, Step = 1, IsInput = true,
+    [NodeProperty(DisplayName = "循环次数", Group = "1.基础信息", Order = 1, Min = 1, Step = 1, IsInput = true,
         Description = "Body 分支重复执行的次数，可由上游节点绑定；面板值在未绑定时生效")]
     public int Iterations
     {
@@ -37,7 +37,7 @@ public class LoopNode : NodeModel, ILoopControlNode
     private int _currentIndex;
 
     /// <summary>当前迭代序号（1 起）。循环体可通过输出端口「当前索引」直接取用。</summary>
-    [NodeProperty(DisplayName = "当前索引", Group = "1.基础信息", Order = 1, ReadOnly = 1, IsOutput = true,
+    [NodeProperty(DisplayName = "当前索引", Group = "1.基础信息", Order = 2, ReadOnly = 1, 
         Description = "当前第几次迭代（从 1 开始），循环结束后复位为 0")]
     public int CurrentIndex
     {
@@ -66,7 +66,7 @@ public class LoopNode : NodeModel, ILoopControlNode
         AddCustomOutputPort("循环次数", nameof(Iterations));
 
         // 循环次数允许由上游绑定（端口名须为属性名，SyncInputValues 按名写回属性）
-        AddCustomInputPort(nameof(Iterations));
+        AddCustomInputPort("循环次数", nameof(Iterations));
     }
 
     /// <inheritdoc />

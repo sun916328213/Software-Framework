@@ -8,12 +8,13 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:FlowEditor.Models"
     xmlns:nodes="clr-namespace:FlowEditor.Nodes"
+    xmlns:views="clr-namespace:FlowEditor.Views"
     xmlns:viewmodels="clr-namespace:FlowEditor.ViewModels"
     x:Name="RootNode"
-    mc:Ignorable="d"
     MinWidth="160"
     MaxWidth="200"
-    d:DataContext="{d:DesignInstance Type=viewmodels:NodeViewModel}">
+    d:DataContext="{d:DesignInstance Type=viewmodels:NodeViewModel}"
+    mc:Ignorable="d">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -21,7 +22,6 @@
                 <ResourceDictionary Source="/FlowEditor;component/Resources/Resources.xaml" />
             </ResourceDictionary.MergedDictionaries>-->
 
-            <converters:PortColorConverter x:Key="PortColorConverter" />
             <converters:NodeStatusToBrushConverter x:Key="NodeStatusToBrushConverter" />
             <BooleanToVisibilityConverter x:Key="BoolToVis" />
             <converters:PermissionToOpacityConverter x:Key="PermissionToOpacityConverter" />
@@ -128,21 +128,15 @@
                     ItemsSource="{Binding InputPorts}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type models:PortModel}">
-                            <Grid Margin="0,3" ToolTip="{Binding Name}">
+                            <Grid Margin="0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <Ellipse
-                                    x:Name="PortIndicator"
+                                <views:PortConnectorView
                                     Grid.Column="0"
-                                    Width="10"
-                                    Height="10"
-                                    Cursor="Cross"
-                                    Fill="{Binding Direction, Converter={StaticResource PortColorConverter}}"
-                                    Stroke="{StaticResource Flow_Border_Port}"
-                                    StrokeThickness="1"
-                                    Tag="{Binding}" />
+                                    Margin="-7,0,0,0"
+                                    Port="{Binding}" />
                                 <TextBlock
                                     Grid.Column="1"
                                     Margin="4,0,0,0"
@@ -163,7 +157,7 @@
                     ItemsSource="{Binding OutputPorts}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type models:PortModel}">
-                            <Grid Margin="0,3" ToolTip="{Binding Name}">
+                            <Grid Margin="0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
@@ -176,16 +170,10 @@
                                     Foreground="{StaticResource Flow_Text_Secondary}"
                                     Text="{Binding Name}"
                                     TextAlignment="Right" />
-                                <Ellipse
-                                    x:Name="PortIndicator"
+                                <views:PortConnectorView
                                     Grid.Column="1"
-                                    Width="10"
-                                    Height="10"
-                                    Cursor="Cross"
-                                    Fill="{Binding Direction, Converter={StaticResource PortColorConverter}}"
-                                    Stroke="{StaticResource Flow_Border_Port}"
-                                    StrokeThickness="1"
-                                    Tag="{Binding}" />
+                                    Margin="0,0,-7,0"
+                                    Port="{Binding}" />
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

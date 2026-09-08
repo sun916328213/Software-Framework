@@ -1,4 +1,5 @@
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -20,8 +21,11 @@ public partial class FlowChartView : UserControl
     private FlowChartViewModel ViewModel => _currentViewModel!;
 
     private readonly Dictionary<NodeViewModel, NodeView> _nodeViewCache = new();
+    private readonly Dictionary<NodeViewModel, PropertyChangedEventHandler> _nodeSubscriptions = new();
     private Point _boxSelectStart;
     private bool _isBoxSelecting;
+    private PortConnectorView? _connectionCandidate;
+    private const double PortSnapRadius = 28;
 
     /// <summary>暴露画布容器供容器层导出 PNG 等操作使用。</summary>
     public Grid ZoomContainerElement => ZoomContainer;
@@ -29,21 +33,16 @@ public partial class FlowChartView : UserControl
     public FlowChartView()
     {
         InitializeComponent();
-        Loaded += OnLoaded;
         DataContextChanged += OnDataContextChanged;
         PreviewKeyDown += OnFlowChartKeyDown;
         PreviewMouseDown += (s, e) => Focus(); // 确保键盘焦点在画布上，Delete 键才有效
-    }
-
-    #region ViewModel 绑定与切换
-
-    private void OnLoaded(object sender, RoutedEventArgs e)
-    {
         FlowChartCanvas.AddHandler(
             Mouse.MouseUpEvent,
             new MouseButtonEventHandler(OnCanvasConnectionMouseUp),
             handledEventsToo: true);
     }
+
+    #region ViewModel 绑定与切换
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
@@ -56,6 +55,7 @@ public partial class FlowChartView : UserControl
             _currentViewModel.Model.PropertyChanged -= OnModelPropertyChanged;
             _currentViewModel.ZoomToFitRequested -= OnZoomToFitRequested;
         }
+        ClearNodeViews();
 
         // 订阅新 ViewModel
         _currentViewModel = DataContext as FlowChartViewModel;
@@ -90,17 +90,13 @@ public partial class FlowChartView : UserControl
                 RemoveNodeViewFromCanvas(vm);
         }
         if (e.Action == NotifyCollectionChangedAction.Reset)
-        {
-            FlowChartCanvas.Children.Clear();
-            _nodeViewCache.Clear();
-        }
+            ClearNodeViews();
         ScheduleConnectionRender();
     }
 
     private void RenderAllNodes()
     {
-        FlowChartCanvas.Children.Clear();
-        _nodeViewCache.Clear();
+        ClearNodeViews();
         foreach (var vm in ViewModel.Nodes)
             AddNodeViewToCanvas(vm);
         ScheduleConnectionRender();
@@ -112,7 +108,7 @@ public partial class FlowChartView : UserControl
         Canvas.SetLeft(nodeView, vm.X);
         Canvas.SetTop(nodeView, vm.Y);
 
-        vm.PropertyChanged += (_, e) =>
+        PropertyChangedEventHandler propertyChanged = (_, e) =>
         {
             if (e.PropertyName == nameof(NodeViewModel.X))
                 Canvas.SetLeft(nodeView, vm.X);
@@ -121,10 +117,11 @@ public partial class FlowChartView : UserControl
             if (e.PropertyName is nameof(NodeViewModel.X) or nameof(NodeViewModel.Y))
                 ScheduleConnectionRender();
         };
+        vm.PropertyChanged += propertyChanged;
 
         nodeView.MouseLeftButtonDown += (_, e) =>
         {
-            if (e.Source is Ellipse ellipse && ellipse.Name == "PortIndicator")
+            if (PortConnectorLocator.FindAncestor(e.OriginalSource as DependencyObject) != null)
                 return;
             ViewModel.SelectedNode = vm;
             e.Handled = true; // 阻止冒泡到画布，否则 OnCanvasMouseDown 会清空选中
@@ -132,6 +129,7 @@ public partial class FlowChartView : UserControl
 
         FlowChartCanvas.Children.Add(nodeView);
         _nodeViewCache[vm] = nodeView;
+        _nodeSubscriptions[vm] = propertyChanged;
     }
 
     private void RemoveNodeViewFromCanvas(NodeViewModel vm)
@@ -141,6 +139,18 @@ public partial class FlowChartView : UserControl
             FlowChartCanvas.Children.Remove(nodeView);
             _nodeViewCache.Remove(vm);
         }
+        if (_nodeSubscriptions.Remove(vm, out var propertyChanged))
+            vm.PropertyChanged -= propertyChanged;
+    }
+
+    private void ClearNodeViews()
+    {
+        foreach (var (node, handler) in _nodeSubscriptions)
+            node.PropertyChanged -= handler;
+        _nodeSubscriptions.Clear();
+        _nodeViewCache.Clear();
+        FlowChartCanvas.Children.Clear();
+        ClearConnectionCandidate();
     }
 
     #endregion
@@ -239,6 +249,7 @@ public partial class FlowChartView : UserControl
         if (e.Source == FlowChartCanvas || e.Source is Canvas)
         {
             ViewModel.CancelConnection();
+            ClearConnectionCandidate();
             _boxSelectStart = e.GetPosition(FlowChartCanvas);
             _isBoxSelecting = true;
         }
@@ -248,30 +259,19 @@ public partial class FlowChartView : UserControl
     {
         if (!ViewModel.IsDrawingConnection) return;
 
-        var pos = e.GetPosition(FlowChartCanvas);
-        Ellipse? targetEllipse = null;
-        VisualTreeHelper.HitTest(FlowChartCanvas,
-            null,
-            result =>
-            {
-                if (result.VisualHit is Ellipse ellipse && ellipse.Name == "PortIndicator")
-                {
-                    targetEllipse = ellipse;
-                    return HitTestResultBehavior.Stop;
-                }
-                return HitTestResultBehavior.Continue;
-            },
-            new PointHitTestParameters(pos));
-
-        if (targetEllipse?.Tag is PortModel targetPort)
+        var target = _connectionCandidate ??
+            PortConnectorLocator.FindAncestor(e.OriginalSource as DependencyObject);
+        if (target?.Port is PortModel targetPort)
         {
             ViewModel.CompleteConnection(targetPort);
+            ClearConnectionCandidate();
             Mouse.Capture(null);
             e.Handled = true;
             return;
         }
 
         ViewModel.CancelConnection();
+        ClearConnectionCandidate();
         Mouse.Capture(null);
     }
 
@@ -282,6 +282,7 @@ public partial class FlowChartView : UserControl
         {
             var pos = e.GetPosition(FlowChartCanvas);
             ViewModel.UpdateConnectionEndPoint(pos);
+            UpdateConnectionCandidate(pos);
 
             if (ViewModel.ConnectionSourcePort != null)
             {
@@ -289,7 +290,10 @@ public partial class FlowChartView : UserControl
                 if (sourceNode != null && _nodeViewCache.TryGetValue(sourceNode, out var nodeView))
                 {
                     var portCenter = FindPortCenterOnCanvas(nodeView, ViewModel.ConnectionSourcePort.Id);
-                    var geometry = ConnectionRenderer.BuildBezierGeometry(portCenter, pos);
+                    var endPoint = _connectionCandidate == null
+                        ? pos
+                        : PortConnectorLocator.GetCenter(_connectionCandidate, FlowChartCanvas);
+                    var geometry = ConnectionRenderer.BuildBezierGeometry(portCenter, endPoint);
                     ViewModel.SetPendingGeometry(geometry);
                 }
             }
@@ -318,6 +322,7 @@ public partial class FlowChartView : UserControl
 
         ShowCanvasContextMenu();
         ViewModel.CancelConnection();
+        ClearConnectionCandidate();
     }
 
     private void ShowNodeContextMenu(NodeViewModel nodeVm)
@@ -484,29 +489,49 @@ public partial class FlowChartView : UserControl
 
     private Point FindPortCenterOnCanvas(NodeView nodeView, string portId)
     {
-        var ellipse = FindPortEllipse(nodeView, portId);
-        if (ellipse == null) return new Point(0, 0);
+        var connector = PortConnectorLocator.FindByPortId(nodeView, portId);
+        if (connector == null) return new Point(0, 0);
         try
         {
-            var center = new Point(ellipse.ActualWidth / 2.0, ellipse.ActualHeight / 2.0);
-            var transform = ellipse.TransformToVisual(FlowChartCanvas);
-            return transform.Transform(center);
+            return PortConnectorLocator.GetCenter(connector, FlowChartCanvas);
         }
         catch { return new Point(0, 0); }
     }
 
-    private static Ellipse? FindPortEllipse(DependencyObject root, string portId)
+    private void UpdateConnectionCandidate(Point mousePosition)
     {
-        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        var source = ViewModel.ConnectionSourcePort;
+        PortConnectorView? nearest = null;
+        var nearestDistance = PortSnapRadius;
+
+        foreach (var connector in PortConnectorLocator.Enumerate(FlowChartCanvas))
         {
-            var child = VisualTreeHelper.GetChild(root, i);
-            if (child is Ellipse ellipse && ellipse.Name == "PortIndicator" &&
-                ellipse.Tag is PortModel port && port.Id == portId)
-                return ellipse;
-            var found = FindPortEllipse(child, portId);
-            if (found != null) return found;
+            var target = connector.Port;
+            if (source == null || target == null || !ViewModel.CanCompleteConnection(target))
+                continue;
+
+            var center = PortConnectorLocator.GetCenter(connector, FlowChartCanvas);
+            var distance = (center - mousePosition).Length;
+            if (distance <= nearestDistance)
+            {
+                nearest = connector;
+                nearestDistance = distance;
+            }
         }
-        return null;
+
+        if (ReferenceEquals(nearest, _connectionCandidate))
+            return;
+        ClearConnectionCandidate();
+        _connectionCandidate = nearest;
+        if (_connectionCandidate != null)
+            _connectionCandidate.IsConnectionCandidate = true;
+    }
+
+    private void ClearConnectionCandidate()
+    {
+        if (_connectionCandidate != null)
+            _connectionCandidate.IsConnectionCandidate = false;
+        _connectionCandidate = null;
     }
 
     #endregion

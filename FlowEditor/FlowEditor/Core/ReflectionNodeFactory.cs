@@ -102,8 +102,13 @@ public sealed class ReflectionNodeFactory : INodeFactory
             PortModel? port;
             if (input)
             {
-                port = node.CustomInputPorts.FirstOrDefault(p => p.Name == portDoc.Name);
-                port ??= node.AddCustomInputPort(portDoc.Name);
+                port = node.CustomInputPorts.FirstOrDefault(p =>
+                    p.Name == portDoc.Name ||
+                    (!string.IsNullOrEmpty(portDoc.BoundProperty) && p.PropertyName == portDoc.BoundProperty) ||
+                    p.PropertyName == portDoc.Name);
+                port ??= node.AddCustomInputPort(portDoc.Name, portDoc.BoundProperty);
+                if (!string.IsNullOrEmpty(portDoc.BoundProperty))
+                    port.PropertyName = portDoc.BoundProperty;
             }
             else
             {

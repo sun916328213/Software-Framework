@@ -38,6 +38,17 @@
     <!--  功能色  -->
     <SolidColorBrush x:Key="Flow_Indicator_Active" Color="{Binding Color, Source={StaticResource Color_Green}}" />
 
+    <!--  端口数据类型色：参考 Blender / Unreal / Godot 的节点编辑器语义。  -->
+    <!--  输入/输出方向由形状表达；颜色只表达数据类型，避免一个视觉通道承担两种含义。  -->
+    <SolidColorBrush x:Key="Flow_Port_Flow" Color="#8B5CF6" />
+    <SolidColorBrush x:Key="Flow_Port_Boolean" Color="#E85D8E" />
+    <SolidColorBrush x:Key="Flow_Port_Integer" Color="#71B84B" />
+    <SolidColorBrush x:Key="Flow_Port_Double" Color="#B8C0C8" />
+    <SolidColorBrush x:Key="Flow_Port_String" Color="#58A9DE" />
+    <SolidColorBrush x:Key="Flow_Port_Image" Color="#F59E0B" />
+    <SolidColorBrush x:Key="Flow_Port_Object" Color="#4F67C7" />
+    <SolidColorBrush x:Key="Flow_Port_Any" Color="#7B8794" />
+
     <!--  阴影色（Color 资源，适配 DropShadowEffect.Color）  -->
     <Color x:Key="Flow_Shadow">#000000</Color>
 

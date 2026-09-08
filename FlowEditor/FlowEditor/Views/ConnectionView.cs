@@ -5,6 +5,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using FlowEditor.Models;
 using FlowEditor.ViewModels;
+using FlowEditor.Converters;
 
 namespace FlowEditor.Views;
 
@@ -87,6 +88,9 @@ public static class ConnectionRenderer
                 IsHitTestVisible = false   // 命中测试交给下面的透明粗线
             };
             path.SetResourceReference(Path.StyleProperty, styleKey);
+            // 普通数据线沿用端口类型色；选中、运行中和执行流继续使用状态样式。
+            if (!isSelected && !isActive && !isFlow)
+                path.Stroke = PortColorConverter.ResolveBrush(sourcePort.DataType);
             connectionCanvas.Children.Add(path);
 
             // 2) 透明粗命中区域（12px 宽，便于点击选中）
@@ -135,33 +139,17 @@ public static class ConnectionRenderer
             if (child is not NodeView nodeView) continue;
             if (nodeView.DataContext != nodeVm) continue;
 
-            var ellipse = FindPortEllipse(nodeView, portId);
-            if (ellipse == null) continue;
+            var connector = PortConnectorLocator.FindByPortId(nodeView, portId);
+            if (connector == null) continue;
 
             try
             {
-                var center = new Point(ellipse.ActualWidth / 2.0, ellipse.ActualHeight / 2.0);
-                var transform = ellipse.TransformToVisual(nodeCanvas);
-                return transform.Transform(center);
+                return PortConnectorLocator.GetCenter(connector, nodeCanvas);
             }
             catch { return new Point(nodeVm.X + 100, nodeVm.Y + 50); }
         }
 
         return new Point(nodeVm.X + 100, nodeVm.Y + 50);
-    }
-
-    private static Ellipse? FindPortEllipse(DependencyObject root, string portId)
-    {
-        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
-        {
-            var child = VisualTreeHelper.GetChild(root, i);
-            if (child is Ellipse ellipse && ellipse.Name == "PortIndicator" &&
-                ellipse.Tag is PortModel port && port.Id == portId)
-                return ellipse;
-            var found = FindPortEllipse(child, portId);
-            if (found != null) return found;
-        }
-        return null;
     }
 
     private static FlowChartViewModel? FindFlowChartViewModel(DependencyObject element)

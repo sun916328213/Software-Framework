@@ -193,8 +193,13 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
         // 直接追加会产生同名重复端口导致运行期读写错位），保留保存的原始 ID
         foreach (var portDoc in doc.CustomInputPorts)
         {
-            var port = node.CustomInputPorts.FirstOrDefault(p => p.Name == portDoc.Name)
-                       ?? node.AddCustomInputPort(portDoc.Name);
+            var port = node.CustomInputPorts.FirstOrDefault(p =>
+                           p.Name == portDoc.Name ||
+                           (!string.IsNullOrEmpty(portDoc.BoundProperty) && p.PropertyName == portDoc.BoundProperty) ||
+                           p.PropertyName == portDoc.Name)
+                       ?? node.AddCustomInputPort(portDoc.Name, portDoc.BoundProperty);
+            if (!string.IsNullOrEmpty(portDoc.BoundProperty))
+                port.PropertyName = portDoc.BoundProperty;
             port.Id = portDoc.Id;
         }
         foreach (var portDoc in doc.CustomOutputPorts)

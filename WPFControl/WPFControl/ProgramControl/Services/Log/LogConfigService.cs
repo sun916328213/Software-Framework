@@ -1,12 +1,8 @@
-using Dapper.Sharding;
 using DataManager.Log;
 using DataManager.Log.Definition;
 using Extension.Core.ConvertEx;
 using Prism.Ioc;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using WPFControl.ProgramControl.Models;
 
 namespace WPFControl.ProgramControl.Services

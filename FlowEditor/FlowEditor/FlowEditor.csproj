@@ -18,7 +18,7 @@
     <PackageReference Include="Prism.Wpf" Version="8.1.97" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Extension\Extension\Extension.csproj" />
-    <ProjectReference Include="..\..\..\WPFCustomControls\WPFCustomControls.csproj" />
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+    <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
   </ItemGroup>
 </Project>

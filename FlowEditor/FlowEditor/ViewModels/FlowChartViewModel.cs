@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using FlowEditor.Interfaces;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
+using FlowEditor.Services;
 using Prism.Ioc;
 using WPFCustomControls.PropertyGrid.Models;
 
@@ -23,6 +24,7 @@ public partial class FlowChartViewModel : ObservableObject
     private readonly IExportService _exportService;
     private readonly IDialogService _dialogService;
     private readonly IContainerProvider _containerProvider;
+    private readonly ConnectionService _connectionService;
 
     // ── 命令属性 ──
     public AsyncRelayCommand RunCommand { get; private set; } = null!;
@@ -92,12 +94,14 @@ public partial class FlowChartViewModel : ObservableObject
         IFlowChartService service,
         IExportService exportService,
         IDialogService dialogService,
-        IContainerProvider containerProvider)
+        IContainerProvider containerProvider,
+        ConnectionService connectionService)
     {
         Service = service;
         _exportService = exportService;
         _dialogService = dialogService;
         _containerProvider = containerProvider;
+        _connectionService = connectionService;
         InitializeCommands();
 
         // 节点集合变化时刷新命令状态
@@ -572,74 +576,31 @@ public partial class FlowChartViewModel : ObservableObject
             return false;
         }
 
-        if (ConnectionSourcePort.OwnerNodeId == targetPort.OwnerNodeId)
-        {
-            Model.StatusText = "不能连接同一节点的端口";
-            CancelConnection();
-            return false;
-        }
-
-        if (ConnectionSourcePort.Direction != PortDirection.Output ||
-            targetPort.Direction != PortDirection.Input)
-        {
-            Model.StatusText = "只能从输出端口连到输入端口";
-            CancelConnection();
-            return false;
-        }
-
-        // 检查是否存在完全相同的连线（同一源端口到同一目标端口）
-        if (Connections.Any(c => c.SourcePortId == ConnectionSourcePort.Id &&
-                                  c.TargetPortId == targetPort.Id))
-        {
-            Model.StatusText = "这两个端口之间已存在连线";
-            CancelConnection();
-            return false;
-        }
-
-        // 数据类型输入端口只允许单连接（Flow 类型允许多连接）
-        if (targetPort.DataType != PortType.Flow)
-        {
-            var existingIncoming = Connections.Count(c => c.TargetPortId == targetPort.Id);
-            if (existingIncoming > 0)
-            {
-                Model.StatusText = $"数据端口「{targetPort.Name}」已连接，仅允许一条连线";
-                CancelConnection();
-                return false;
-            }
-        }
-
-        // 检测环路：如果 targetNode 已经存在到 sourceNode 的路径，
-        // 则添加此连线会形成环路，仍然允许但给出警告
-        bool createsCycle = WouldCreateCycle(ConnectionSourcePort.OwnerNodeId, targetPort.OwnerNodeId);
-
-        var sourceNodeId = ConnectionSourcePort.OwnerNodeId;
-        var sourcePortId = ConnectionSourcePort.Id;
-
         var action = CreateAction(UndoRedoActionType.ConnectionAdded, "建立连线");
-        var conn = new ConnectionModel
+        var result = _connectionService.PlanConnection(
+            ConnectionSourcePort,
+            targetPort,
+            Nodes.Select(n => n.Model).ToArray(),
+            Connections.ToArray());
+        if (!result.Success)
         {
-            SourceNodeId = sourceNodeId,
-            SourcePortId = sourcePortId,
-            TargetNodeId = targetPort.OwnerNodeId,
-            TargetPortId = targetPort.Id
-        };
+            Model.StatusText = result.Error ?? "无法建立连线";
+            CancelConnection();
+            return false;
+        }
 
-        Connections.Add(conn);
+        foreach (var connection in result.Connections)
+            Connections.Add(connection);
 
-        // Flow 连线创建后自动绑定匹配的数据端口
-        int autoBound = 0;
-        if (ConnectionSourcePort.DataType == PortType.Flow)
-            autoBound = AutoBindDataPorts(sourceNodeId, targetPort.OwnerNodeId);
-
-        action.ConnectionId = conn.Id;
+        action.ConnectionId = result.PrimaryConnection!.Id;
         action.AfterData = Service.CaptureSnapshot();
         Service.UndoRedo.Push(action);
 
         CancelConnection();
         Model.IsModified = true;
-        var status = createsCycle ? "已建立连线（注意：形成环路）" : "已建立连线";
-        if (autoBound > 0)
-            status += $"，自动绑定 {autoBound} 条数据连线";
+        var status = result.CreatesCycle ? "已建立连线（注意：形成环路）" : "已建立连线";
+        if (result.AutoBoundCount > 0)
+            status += $"，自动绑定 {result.AutoBoundCount} 条数据连线";
         Model.StatusText = status;
         return true;
     }
@@ -651,76 +612,11 @@ public partial class FlowChartViewModel : ObservableObject
         PendingConnectionGeometry = null;
     }
 
-    /// <summary>
-    /// 检测从 sourceNodeId 添加一条到 targetNodeId 的连线是否会形成环路。
-    /// 使用 BFS 从 targetNodeId 出发，检查是否能到达 sourceNodeId。
-    /// </summary>
-    private bool WouldCreateCycle(string sourceNodeId, string targetNodeId)
-    {
-        var visited = new HashSet<string>();
-        var queue = new Queue<string>();
-        queue.Enqueue(targetNodeId);
-
-        while (queue.Count > 0)
-        {
-            var current = queue.Dequeue();
-            if (current == sourceNodeId)
-                return true;
-            if (!visited.Add(current))
-                continue;
-
-            foreach (var conn in Connections.Where(c => c.SourceNodeId == current))
-            {
-                if (!visited.Contains(conn.TargetNodeId))
-                    queue.Enqueue(conn.TargetNodeId);
-            }
-        }
-        return false;
-    }
-
-    /// <summary>
-    /// 自动绑定两个节点之间 PropertyName 匹配的数据端口（非 Flow 类型）。
-    /// 在 Flow 连线创建后调用，自动为匹配的输出→输入数据端口创建连线。
-    /// </summary>
-    private int AutoBindDataPorts(string sourceNodeId, string targetNodeId)
-    {
-        var sourceNode = FindNode(sourceNodeId);
-        var targetNode = FindNode(targetNodeId);
-        if (sourceNode == null || targetNode == null) return 0;
-
-        int count = 0;
-        foreach (var outPort in sourceNode.OutputPorts)
-        {
-            if (outPort.DataType == PortType.Flow) continue;
-            var propName = outPort.PropertyName ?? outPort.Name;
-            if (string.IsNullOrEmpty(propName)) continue;
-
-            // 在目标节点的输入端口中找 PropertyName 匹配的数据端口
-            var inPort = targetNode.InputPorts.FirstOrDefault(p =>
-                p.DataType != PortType.Flow &&
-                (p.PropertyName == propName || p.Name == propName));
-            if (inPort == null) continue;
-
-            // 已存在连线则跳过
-            if (Connections.Any(c => c.SourcePortId == outPort.Id && c.TargetPortId == inPort.Id))
-                continue;
-
-            // 数据输入端口已连接其他端口则跳过（单连接约束）
-            if (Connections.Any(c => c.TargetPortId == inPort.Id))
-                continue;
-
-            var dataConn = new ConnectionModel
-            {
-                SourceNodeId = sourceNodeId,
-                SourcePortId = outPort.Id,
-                TargetNodeId = targetNodeId,
-                TargetPortId = inPort.Id
-            };
-            Connections.Add(dataConn);
-            count++;
-        }
-        return count;
-    }
+    /// <summary>供视图预览候选端口，复用最终提交时的同一套连接规则。</summary>
+    public bool CanCompleteConnection(PortModel targetPort)
+        => IsDrawingConnection &&
+           ConnectionSourcePort != null &&
+           _connectionService.GetRejectionReason(ConnectionSourcePort, targetPort, Connections) == null;
 
     public void SetPendingGeometry(Geometry geometry)
     {

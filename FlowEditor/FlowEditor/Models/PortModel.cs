@@ -31,7 +31,8 @@ public partial class PortModel : ObservableObject
     public string Name
     {
         get => _name;
-        set => SetProperty(ref _name, value);
+        set => SetProperty(ref _name,
+            string.IsNullOrWhiteSpace(value) ? "未命名端口" : value.Trim());
     }
 
     /// <summary>对应的节点属性名（用于 SyncInputValues 将端口值写入属性，或输出端口绑定属性）。</summary>
@@ -45,6 +46,9 @@ public partial class PortModel : ObservableObject
 
     /// <summary>端口数据类型。</summary>
     public PortType DataType { get; set; } = PortType.Any;
+
+    /// <summary>面向界面的完整端口说明。</summary>
+    public string ToolTip => $"{(Direction == PortDirection.Input ? "输入" : "输出")} · {DataType} · {Name}";
 
     /// <summary>所属节点 ID。</summary>
     public string OwnerNodeId { get; set; } = string.Empty;

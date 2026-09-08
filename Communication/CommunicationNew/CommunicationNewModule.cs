@@ -3,7 +3,7 @@ using CommunicationNew.Core;
 using Prism.Ioc;
 using Prism.Modularity;
 
-namespace CommunicationNew.Integration.Prism;
+namespace CommunicationNew;
 
 /// <summary>把 CommunicationNew 默认组合根接入 Prism 宿主。</summary>
 public sealed class CommunicationNewModule : IModule

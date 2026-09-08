@@ -54,6 +54,8 @@ using System.Windows;namespace FlowEditor
             containerRegistry.Register<ToolboxService>();
             // 多流程容器文档服务：瞬态
             containerRegistry.Register<FlowChartContainerDocumentService>();
+            // 连接领域模块：无状态，统一端口校验、建线与自动绑定规则
+            containerRegistry.RegisterSingleton<ConnectionService>();
 
             // 注册流程图服务和 ViewModel（瞬态注册，每个标签页独立实例）
             containerRegistry.Register<FlowChartViewModel>();

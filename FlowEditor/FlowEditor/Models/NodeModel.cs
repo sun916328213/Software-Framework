@@ -288,36 +288,28 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
     // ── 自定义端口操作 ──
 
     /// <summary>添加自定义输入端口。</summary>
-    public PortModel AddCustomInputPort(string name)
-    {
-        var port = new PortModel
-        {
-            Id = $"{Id}_CustomIn_{Guid.NewGuid():N}",
-            Name = name,
-            Direction = PortDirection.Input,
-            DataType = PortType.Any,
-            OwnerNodeId = Id,
-            Category = PortCategory.Custom
-        };
-        CustomInputPorts.Add(port);
-        InvalidatePorts();
-        return port;
-    }
+    public PortModel AddCustomInputPort(string name, string? boundProperty = null)
+        => AddCustomPort(name, boundProperty, PortDirection.Input);
 
     /// <summary>添加自定义输出端口（可绑定节点属性）。</summary>
     public PortModel AddCustomOutputPort(string name, string? boundProperty = null)
+        => AddCustomPort(name, boundProperty, PortDirection.Output);
+
+    private PortModel AddCustomPort(string name, string? boundProperty, PortDirection direction)
     {
+        var displayName = NormalizePortDisplayName(name, boundProperty);
         var port = new PortModel
         {
-            Id = $"{Id}_CustomOut_{Guid.NewGuid():N}",
-            Name = name,
+            Id = $"{Id}_{(direction == PortDirection.Input ? "CustomIn" : "CustomOut")}_{Guid.NewGuid():N}",
+            Name = displayName,
             PropertyName = boundProperty,
-            Direction = PortDirection.Output,
-            DataType = PortType.Any,
+            Direction = direction,
+            DataType = PortTypeClassifier.FromClrType(
+                GetType().GetProperty(boundProperty ?? name)?.PropertyType),
             OwnerNodeId = Id,
             Category = PortCategory.Custom
         };
-        CustomOutputPorts.Add(port);
+        GetCustomPorts(direction).Add(port);
         InvalidatePorts();
         return port;
     }
@@ -362,9 +354,11 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
 
     // ── IPortManageable 显式实现（接口签名与具体类型不一致的成员）──
 
-    System.Collections.IEnumerable IPortManageable.CustomInputPorts => CustomInputPorts;
+    // 属性面板只管理数据端口：控制流（Flow）端口由节点结构决定，
+    // 不在自定义端口编辑器中展示/删除（画布、持久化仍走具体的 Custom*Ports 集合，不受影响）。
+    System.Collections.IEnumerable IPortManageable.CustomInputPorts => CustomInputPorts.Where(p => p.DataType != PortType.Flow);
 
-    System.Collections.IEnumerable IPortManageable.CustomOutputPorts => CustomOutputPorts;
+    System.Collections.IEnumerable IPortManageable.CustomOutputPorts => CustomOutputPorts.Where(p => p.DataType != PortType.Flow);
 
     void IPortManageable.AddCustomInputPort(string name) => AddCustomInputPort(name);
 
@@ -373,10 +367,11 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
     /// <summary>重命名自定义端口。</summary>
     public bool RenameCustomPort(string portId, string newName)
     {
+        if (string.IsNullOrWhiteSpace(newName)) return false;
         var port = CustomInputPorts.FirstOrDefault(p => p.Id == portId)
                 ?? CustomOutputPorts.FirstOrDefault(p => p.Id == portId);
         if (port == null) return false;
-        port.Name = newName;
+        port.Name = newName.Trim();
         InvalidatePorts();
         return true;
     }
@@ -611,53 +606,74 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
     public void SetPortConfig(string propertyName, bool isInput, bool isOutput)
     {
         _portConfigs[propertyName] = (isInput, isOutput);
-
-        // 输入端口：根据开关创建或移除自定义输入端口
-        var existingIn = CustomInputPorts.FirstOrDefault(p => p.PropertyName == propertyName || p.Name == propertyName);
-        if (isInput && existingIn == null)
-        {
-            // 创建自定义输入端口，绑定到该属性
-            var port = new PortModel
-            {
-                Id = $"{Id}_PropertyIn_{propertyName}",
-                Name = propertyName,
-                PropertyName = propertyName,
-                Direction = PortDirection.Input,
-                DataType = PortType.Any,
-                OwnerNodeId = Id,
-                Category = PortCategory.Custom
-            };
-            CustomInputPorts.Add(port);
-        }
-        else if (!isInput && existingIn != null)
-        {
-            CustomInputPorts.Remove(existingIn);
-        }
-
-        // 输出端口：根据开关创建或移除自定义输出端口
-        var existingOut = CustomOutputPorts.FirstOrDefault(p => p.PropertyName == propertyName || p.Name == propertyName);
-        if (isOutput && existingOut == null)
-        {
-            // 创建自定义输出端口，绑定到该属性
-            var port = new PortModel
-            {
-                Id = $"{Id}_PropertyOut_{propertyName}",
-                Name = propertyName,
-                PropertyName = propertyName,
-                Direction = PortDirection.Output,
-                DataType = PortType.Any,
-                OwnerNodeId = Id,
-                Category = PortCategory.Custom
-            };
-            CustomOutputPorts.Add(port);
-        }
-        else if (!isOutput && existingOut != null)
-        {
-            CustomOutputPorts.Remove(existingOut);
-        }
+        var displayName = GetPropertyDisplayName(propertyName);
+        UpdatePropertyPort(propertyName, displayName, PortDirection.Input, isInput);
+        UpdatePropertyPort(propertyName, displayName, PortDirection.Output, isOutput);
 
         InvalidatePorts();
         ConfigChanged?.Invoke();
+    }
+
+    private void UpdatePropertyPort(
+        string propertyName,
+        string displayName,
+        PortDirection direction,
+        bool enabled)
+    {
+        var ports = GetCustomPorts(direction);
+        var existing = ports.FirstOrDefault(p =>
+            p.PropertyName == propertyName || p.Name == propertyName);
+        if (!enabled)
+        {
+            if (existing != null)
+                ports.Remove(existing);
+            return;
+        }
+
+        if (existing == null)
+        {
+            ports.Add(new PortModel
+            {
+                Id = $"{Id}_Property{(direction == PortDirection.Input ? "In" : "Out")}_{propertyName}",
+                Name = displayName,
+                PropertyName = propertyName,
+                Direction = direction,
+                DataType = PortTypeClassifier.FromClrType(GetType().GetProperty(propertyName)?.PropertyType),
+                OwnerNodeId = Id,
+                Category = PortCategory.Custom
+            });
+            return;
+        }
+
+        // 兼容旧流程：早期版本把 CLR 属性名当作显示名，且未记录绑定属性。
+        if (string.IsNullOrWhiteSpace(existing.Name) || existing.Name == propertyName)
+            existing.Name = displayName;
+        existing.PropertyName = propertyName;
+    }
+
+    private ObservableCollection<PortModel> GetCustomPorts(PortDirection direction)
+        => direction == PortDirection.Input ? CustomInputPorts : CustomOutputPorts;
+
+    private string GetPropertyDisplayName(string propertyName)
+    {
+        var property = GetType().GetProperty(propertyName);
+        var attribute = property?.GetCustomAttribute<NodePropertyAttribute>();
+        return string.IsNullOrWhiteSpace(attribute?.DisplayName)
+            ? propertyName
+            : attribute.DisplayName;
+    }
+
+    /// <summary>
+    /// 保证端口始终有可见名称：属性绑定端口优先使用 NodeProperty.DisplayName，
+    /// 无名且无绑定的历史端口使用统一占位名，避免 UI 出现空白行。
+    /// </summary>
+    private string NormalizePortDisplayName(string? name, string? boundProperty)
+    {
+        if (!string.IsNullOrWhiteSpace(name))
+            return name;
+        if (!string.IsNullOrWhiteSpace(boundProperty))
+            return GetPropertyDisplayName(boundProperty);
+        return "未命名端口";
     }
 
     // ── IDataBindingProvider 实现 ──
