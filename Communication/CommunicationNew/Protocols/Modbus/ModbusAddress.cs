@@ -25,15 +25,25 @@ namespace CommunicationNew.Protocols.Modbus
     /// </summary>
     public static class ModbusAddress
     {
-        public static (ModbusRegion region, ushort startAddress, ushort quantity) Parse(string address, int length)
+        /// <summary>解析强类型地址，并将调用方数量转换为协议元素数量。</summary>
+        public static (ModbusAddressValue address, ushort quantity) ParseValue(
+            string address,
+            int length)
         {
             if (length is <= 0 or > ushort.MaxValue)
             {
                 throw new ArgumentOutOfRangeException(nameof(length), "数量必须在 1 到 65535 之间。");
             }
 
-            var value = ModbusAddressValue.Parse(address);
-            return (value.Region, value.StartAddress, (ushort)length);
+            return (ModbusAddressValue.Parse(address), (ushort)length);
+        }
+
+        /// <summary>解析为拆分地址字段；请优先使用返回地址值对象的重载。</summary>
+        [Obsolete("请使用保留 ModbusAddressValue 的 ParseValue 方法。")]
+        public static (ModbusRegion region, ushort startAddress, ushort quantity) Parse(string address, int length)
+        {
+            var (value, quantity) = ParseValue(address, length);
+            return (value.Region, value.StartAddress, quantity);
         }
     }
 }

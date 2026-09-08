@@ -85,5 +85,51 @@ namespace DataManager.Tests.Manager
             manager.Config(new List<string> { "A", "B", "C" });
             Assert.Equal(3, manager.Count);
         }
+
+        [Fact]
+        public void Add_DuplicateName_Throws()
+        {
+            var manager = new FakeManager();
+            manager.Add("A");
+            Assert.Throws<InvalidOperationException>(() => manager.Add("A"));
+        }
+
+        [Fact]
+        public void TryGet_FoundAndNotFound()
+        {
+            var manager = new FakeManager();
+            manager.Add("A");
+            Assert.True(manager.TryGet("A", out var a));
+            Assert.Equal("A", a);
+            Assert.False(manager.TryGet("X", out _));
+        }
+
+        [Fact]
+        public void Items_IsReadOnlySnapshot()
+        {
+            var manager = new FakeManager();
+            manager.Add("A");
+            manager.Add("B");
+            Assert.Equal(2, manager.Items.Count);
+            Assert.Contains("A", manager.Items);
+        }
+
+        [Fact]
+        public void Remove_ReturnsTrueAndFalse()
+        {
+            var manager = new FakeManager();
+            manager.Add("A");
+            Assert.True(manager.Remove("A"));
+            Assert.False(manager.Remove("A"));
+        }
+
+        [Fact]
+        public void Add_ParallelUniqueNames_AllAdded()
+        {
+            var manager = new FakeManager();
+            const int count = 100;
+            Parallel.For(0, count, i => manager.Add($"P{i:000}"));
+            Assert.Equal(count, manager.Count);
+        }
     }
 }

@@ -28,11 +28,11 @@ namespace DataManager.Workbench.ViewModels
     public class MainWindowViewModel : BindableBase
     {
         private readonly IRegionManager _regionManager;
-        private NavItem _selectedNav;
+        private NavItem? _selectedNav;
 
         public ObservableCollection<NavItem> NavItems { get; }
 
-        public NavItem SelectedNav
+        public NavItem? SelectedNav
         {
             get => _selectedNav;
             set

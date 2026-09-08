@@ -30,4 +30,13 @@ public sealed class ModbusAddressValueTests
     {
         Assert.Throws<FormatException>(() => ModbusAddressValue.Parse(text));
     }
+
+    [Fact]
+    public void Parser_preserves_the_typed_address_and_explicit_element_quantity()
+    {
+        var (address, quantity) = ModbusAddress.ParseValue("HR10", length: 2);
+
+        Assert.Equal(ModbusAddressValue.Parse("HR10"), address);
+        Assert.Equal((ushort)2, quantity);
+    }
 }

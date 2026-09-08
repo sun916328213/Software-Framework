@@ -1,6 +1,5 @@
 using CommunicationNew.Core.Interfaces;
 using CommunicationNew.Abstractions;
-using CommunicationNew.Runtime.Conversion;
 using System.Collections.Concurrent;
 
 namespace CommunicationNew.Core.Converters
@@ -29,17 +28,16 @@ namespace CommunicationNew.Core.Converters
 
         private static IValueConverter CreateConverter(DataPointType type, DataFormat format)
         {
-            var codec = new DataFormatCodec(format);
             return type switch
             {
                 DataPointType.Bool => new BoolConverter(),
                 DataPointType.Byte => new ByteConverter(),
-                DataPointType.Int16 => new Int16Converter(codec),
-                DataPointType.UInt16 => new UInt16Converter(codec),
-                DataPointType.Int32 => new Int32Converter(codec),
-                DataPointType.UInt32 => new UInt32Converter(codec),
+                DataPointType.Int16 => new Int16Converter(format),
+                DataPointType.UInt16 => new UInt16Converter(format),
+                DataPointType.Int32 => new Int32Converter(format),
+                DataPointType.UInt32 => new UInt32Converter(format),
                 DataPointType.Int64 => new Int64Converter(format),
-                DataPointType.Float => new FloatConverter(codec),
+                DataPointType.Float => new FloatConverter(format),
                 DataPointType.Double => new DoubleConverter(format),
                 DataPointType.String => new StringConverter(),
                 DataPointType.ByteArray => new ByteArrayConverter(),

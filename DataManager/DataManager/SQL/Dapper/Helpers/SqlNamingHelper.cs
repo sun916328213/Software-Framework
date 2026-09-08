@@ -5,7 +5,9 @@ namespace DataManager.SQL.Dapper
 {
     /// <summary>
     /// SQL命名转换助手
-    /// 统一处理不同数据库的表名和字段名大小写问题
+    /// 统一约定（与 DapperNaming 注册给 Dommel 的解析器同源）：
+    /// 表名/列名一律小写单数，显式 [Table]/[Column] 名同样小写化；
+    /// PG 不加引号（fold 后一致），MySQL 加反引号。
     /// </summary>
     public static class SqlNamingHelper
     {
@@ -17,12 +19,7 @@ namespace DataManager.SQL.Dapper
             if (string.IsNullOrEmpty(tableName))
                 return tableName;
 
-            return dbType switch
-            {
-                ESQLType.PostgreSQL => tableName.ToLower(),
-                ESQLType.MySQL => tableName,
-                _ => tableName
-            };
+            return tableName.ToLowerInvariant();
         }
 
         /// <summary>
@@ -33,12 +30,7 @@ namespace DataManager.SQL.Dapper
             if (string.IsNullOrEmpty(columnName))
                 return columnName;
 
-            return dbType switch
-            {
-                ESQLType.PostgreSQL => columnName.ToLower(),
-                ESQLType.MySQL => columnName,
-                _ => columnName
-            };
+            return columnName.ToLowerInvariant();
         }
 
         /// <summary>
@@ -84,11 +76,11 @@ namespace DataManager.SQL.Dapper
         }
 
         /// <summary>
-        /// 检查表名是否需要转换
+        /// 检查表名是否需要转换（当前约定所有库统一小写，恒为 true）
         /// </summary>
         public static bool NeedsConversion(ESQLType dbType)
         {
-            return dbType == ESQLType.PostgreSQL;
+            return true;
         }
     }
 }

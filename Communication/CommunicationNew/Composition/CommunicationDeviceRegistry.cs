@@ -7,7 +7,9 @@ namespace CommunicationNew.Composition;
 /// 基于参数类型的设备注册表。
 /// 新协议通过注册参数工厂接入，不需要修改核心枚举 switch。
 /// </summary>
+#pragma warning disable CS0618 // 注册表同时实现旧接口，以维持迁移期的二进制组合入口。
 public sealed class CommunicationDeviceRegistry : ICommunicationDeviceFactory
+#pragma warning restore CS0618
 {
     private readonly ConcurrentDictionary<Type, Func<CommunicationParam, ICommunicationDevice>> _factories = new();
     private Func<CommunicationParam, ICommunicationDevice>? _fallback;

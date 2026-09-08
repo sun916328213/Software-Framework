@@ -10,7 +10,14 @@ public static class CommunicationServiceCollectionExtensions
     public static IServiceCollection AddCommunicationNew(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-        services.AddSingleton(CommunicationDefaults.CreateFactory());
+        var factory = CommunicationDefaults.CreateDefaultFactory();
+
+        // 两个接口指向同一个实例：Core 是新 seam，Composition 注册保留旧调用方兼容性。
+        services.AddSingleton<CommunicationNew.Core.ICommunicationDeviceFactory>(factory);
+#pragma warning disable CS0618 // 旧依赖注入解析仅作为迁移期兼容入口。
+        services.AddSingleton<ICommunicationDeviceFactory>(
+            (ICommunicationDeviceFactory)factory);
+#pragma warning restore CS0618
         services.AddSingleton<CommunicationManager>();
         return services;
     }

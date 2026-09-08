@@ -1,5 +1,7 @@
 using DataManager.Log;
 using DataManager.Log.Definition;
+using DataManager.Log.Log4Net;
+using DataManager.Log.NLog;
 using DataManager.Log.SeriLog;
 
 namespace DataManager.Tests.Log
@@ -34,14 +36,39 @@ namespace DataManager.Tests.Log
         }
 
         [Fact]
-        public void Create_UnsupportedType_ReturnsNull_DocumentedBehavior()
+        public void Create_NLog_ReturnsNLogHelper()
         {
             var manager = new LogManager();
             var param = CreateParam("a3");
             param.LogType = ELogType.NLog;
 
-            // 当前实现：未支持的类型静默返回 null（列入优化计划，改为抛异常）
-            Assert.Null(manager.Create(param));
+            var log = manager.Create(param);
+
+            Assert.IsType<NLogHelper>(log);
+            Assert.NotNull(manager["a3"]);
+        }
+
+        [Fact]
+        public void Create_Log4Net_ReturnsLog4NetHelper()
+        {
+            var manager = new LogManager();
+            var param = CreateParam("a4");
+            param.LogType = ELogType.Log4Net;
+
+            var log = manager.Create(param);
+
+            Assert.IsType<Log4NetHelper>(log);
+            Assert.NotNull(manager["a4"]);
+        }
+
+        [Fact]
+        public void Create_UnknownType_ThrowsNotSupported()
+        {
+            var manager = new LogManager();
+            var param = CreateParam("a5");
+            param.LogType = (ELogType)999;
+
+            Assert.Throws<NotSupportedException>(() => manager.Create(param));
         }
 
         [Fact]
@@ -51,6 +78,25 @@ namespace DataManager.Tests.Log
             manager.Config(new List<LogParam> { CreateParam("b1"), CreateParam("b2") });
 
             Assert.Equal(2, manager.Count);
+        }
+
+        [Fact]
+        public void Create_MissingFilePath_ThrowsArgumentException()
+        {
+            var manager = new LogManager();
+            var param = CreateParam("c1");
+            param.FilePath = "  ";
+
+            Assert.Throws<ArgumentException>(() => manager.Create(param));
+        }
+
+        [Fact]
+        public void Create_DuplicateName_Throws()
+        {
+            var manager = new LogManager();
+            manager.Create(CreateParam("d1"));
+
+            Assert.Throws<InvalidOperationException>(() => manager.Create(CreateParam("d1")));
         }
     }
 }

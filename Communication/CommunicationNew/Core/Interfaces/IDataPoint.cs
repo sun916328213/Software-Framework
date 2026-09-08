@@ -1,5 +1,7 @@
 namespace CommunicationNew.Core.Interfaces
 {
+    using CommunicationNew.Core.Models;
+
     /// <summary>
     /// 数据质量标志
     /// </summary>
@@ -54,6 +56,9 @@ namespace CommunicationNew.Core.Interfaces
         /// <summary>当前值（类型化）</summary>
         object? Value { get; }
 
+        /// <summary>当前值、质量、时间与错误的不可变快照。</summary>
+        ValueUpdate<object?> Current { get; }
+
         /// <summary>最后更新时间</summary>
         DateTime Timestamp { get; set; }
 
@@ -66,11 +71,25 @@ namespace CommunicationNew.Core.Interfaces
         /// <summary>是否可写</summary>
         bool Writable { get; set; }
 
+        /// <summary>
+        /// 点位扫描周期（毫秒）。0 表示继承轮询器的默认周期。
+        /// </summary>
+        int ScanIntervalMs { get; set; }
+
         /// <summary>刷新值（从原始字节解码为类型化值）</summary>
         void Refresh();
 
         /// <summary>从类型化值编码为原始字节</summary>
         void Encode(object? value);
+
+        /// <summary>解码并原子发布一次成功采样。</summary>
+        void ApplyRead(
+            byte[] rawValue,
+            DateTimeOffset timestamp,
+            DateTimeOffset? sourceTimestamp = null);
+
+        /// <summary>保留最后一个有效值，并原子发布一次失败采样。</summary>
+        void ApplyFailure(Exception error, DateTimeOffset timestamp);
     }
 
     /// <summary>

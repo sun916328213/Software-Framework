@@ -16,7 +16,8 @@ namespace CommunicationNew.Core.Interfaces
         /// <summary>数据点变化事件</summary>
         event EventHandler<DataPointChangedEventArgs>? DataPointChanged;
 
-        /// <summary>启动自动读取</summary>
+        /// <summary>启动自动读取；释放开始后拒绝新的轮询。</summary>
+        /// <exception cref="ObjectDisposedException">读取器已经开始释放。</exception>
         void Start();
 
         /// <summary>停止自动读取</summary>

@@ -25,7 +25,7 @@ namespace DataManager.Log
         {
             List<LogInfo> logInfos = new List<LogInfo>();
             string path = System.IO.Path.Combine(Param.FilePath, fileName);
-            var datas = System.IO.File.ReadAllText(path);
+            var datas = ReadAllTextShared(path);
             var dataselect = datas.SplitByDateTime().Select(s => s.Split(Param.Separator.ToCharArray()).Where(x => x != string.Empty));
             foreach (var info in dataselect)
             {
@@ -79,7 +79,7 @@ namespace DataManager.Log
         public virtual List<string> Query_Multi(string fileName)
         {
             string path = System.IO.Path.Combine(Param.FilePath, fileName);
-            var strings = System.IO.File.ReadAllText(path);
+            var strings = ReadAllTextShared(path);
             return strings.SplitByDateTime().ToList();
         }
 
@@ -109,6 +109,17 @@ namespace DataManager.Log
         {
             if (endTime.Day == startTime.Day) endTime = startTime.AddDays(1);
             return endTime - startTime;
+        }
+
+        /// <summary>
+        /// 共享读（P0-3）：Serilog 常驻 logger 会一直占用文件句柄，
+        /// 必须用 FileShare.ReadWrite 打开，否则 File.ReadAllText 会报 IOException 文件被占用。
+        /// </summary>
+        protected static string ReadAllTextShared(string path)
+        {
+            using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var sr = new StreamReader(fs);
+            return sr.ReadToEnd();
         }
 
        

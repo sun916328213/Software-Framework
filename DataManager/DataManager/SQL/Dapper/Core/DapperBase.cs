@@ -10,8 +10,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using Npgsql;
-using MySqlConnector;
 
 namespace DataManager.SQL.Dapper
 {
@@ -23,8 +21,14 @@ namespace DataManager.SQL.Dapper
     /// <typeparam name="T">实体类型</typeparam>
     public class DapperBase<T> : ISQL<T> where T : class
     {
-        private IDbConnection _connection;
-        private SQLParam _sqlParam;
+        // 同 EFCoreBase：库层面保证 Npgsql Local 时间兼容（静态构造时序早于首次连接）。
+        static DapperBase()
+        {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            DapperDommelSetup.Ensure();
+        }
+
+        private SQLParam _sqlParam = new();
 
         public SQLParam SQLParam 
         { 
@@ -33,7 +37,7 @@ namespace DataManager.SQL.Dapper
         }
         
         public bool IsConnected { get; set; }
-        public virtual string Name { get; set; }
+        public virtual string Name { get; set; } = string.Empty;
 
         public DapperBase()
         {
@@ -45,40 +49,21 @@ namespace DataManager.SQL.Dapper
         }
 
         /// <summary>
-        /// 获取数据库连接（自动连接）
+        /// 短连接：每次调用新建 + Open，调用方 using 释放（P0-4 线程安全改造）。
         /// </summary>
-        private IDbConnection GetConnection()
+        private IDbConnection CreateOpenConnection()
         {
-            if (_connection?.State == ConnectionState.Open)
-                return _connection;
-
-            _connection = CreateConnection();
-            _connection.Open();
-            IsConnected = true;
-            return _connection;
-        }
-
-        /// <summary>
-        /// 创建数据库连接
-        /// </summary>
-        private IDbConnection CreateConnection()
-        {
-            var connectionString = SqlDialectHelper.BuildConnectionString(SQLParam);
-            return SqlDialectHelper.CreateConnection(SQLParam.DBType, connectionString);
+            var factory = new DapperConnectionFactory(SQLParam);
+            return factory.CreateOpen();
         }
 
         public void Connect()
         {
             // 1. 检查数据库是否存在，不存在则创建
-            if (!SqlDialectHelper.IsDatabaseExists(SQLParam))
-            {
-                SqlDialectHelper.CreateDatabase(SQLParam);
-            }
+            new DapperConnectionFactory(SQLParam).EnsureDatabase();
 
-            // 2. 连接目标数据库
-            var conn = CreateConnection();
-            conn.Open();
-            _connection = conn;
+            // 2. 短连接探活（不缓存连接）
+            using var conn = CreateOpenConnection();
             IsConnected = true;
 
             // 3. 创建表
@@ -93,7 +78,7 @@ namespace DataManager.SQL.Dapper
         {
             try
             {
-                var conn = GetConnection();
+                using var conn = CreateOpenConnection();
                 var tableName = IsSplitTableEntity() 
                     ? GetSplitTableName(DateTime.Now) 
                     : (typeof(T).GetCustomAttribute<TableAttribute>()?.Name ?? typeof(T).Name);
@@ -169,15 +154,13 @@ namespace DataManager.SQL.Dapper
 
         public void DisConnect()
         {
-            _connection?.Close();
-            _connection?.Dispose();
-            _connection = null;
+            // 短连接模式：无缓存连接可关，仅置状态位
             IsConnected = false;
         }
 
         public void Add(T data)
         {
-            var conn = GetConnection();
+            using var conn = CreateOpenConnection();
             
             // 如果是分表实体，自动根据数据中的日期字段路由到对应分表
             if (IsSplitTableEntity())
@@ -259,27 +242,65 @@ namespace DataManager.SQL.Dapper
             
             var properties = typeof(T).GetProperties()
                 .Where(p => p.CanRead && p.CanWrite)
+                .Where(p => !IsDefaultKeyValue(p, data))
                 .ToList();
-            
+            if (properties.Count == 0)
+                properties = typeof(T).GetProperties().Where(p => p.CanRead && p.CanWrite).ToList();
+
             // 使用SqlNamingHelper统一处理列名
             var columns = SqlNamingHelper.FormatColumnList(
                 properties.Select(p => p.Name).ToArray(), 
                 SQLParam.DBType);
             var parameters = string.Join(", ", properties.Select(p => $"@{p.Name}"));
             var sql = $"INSERT INTO {SqlNamingHelper.FormatTableName(tableName, SQLParam.DBType)} ({columns}) VALUES ({parameters})";
-            
+
             conn.Execute(sql, data);
+        }
+
+        /// <summary>
+        /// 是否为“未赋值的 [Key] 主键”（与 Dommel 的自增主键语义对齐：默认key不显式插入，由库自增）。
+        /// </summary>
+        private static bool IsDefaultKeyValue(PropertyInfo prop, T data)
+        {
+            if (!prop.GetCustomAttributes(typeof(KeyAttribute), false).Any())
+                return false;
+            var value = prop.GetValue(data);
+            if (value == null)
+                return true;
+            var type = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+            if (!type.IsValueType)
+                return false;
+            return value.Equals(Activator.CreateInstance(type));
+        }
+
+        /// <summary>
+        /// 仅复制可更新值：跳过 [Key] 主键（否则会把 Dommel/EF 查回的主键覆盖为 0，
+        /// 导致 Update 的 WHERE 命中 0 行）；引用/可空类型跳过 null。
+        /// </summary>
+        private static void CopyUpdatableValues(T target, T source)
+        {
+            foreach (var prop in typeof(T).GetProperties())
+            {
+                if (!prop.CanRead || !prop.CanWrite)
+                    continue;
+                if (prop.GetCustomAttributes(typeof(KeyAttribute), false).Any())
+                    continue;
+                var newValue = prop.GetValue(source);
+                if (newValue == null)
+                    continue;
+                prop.SetValue(target, newValue);
+            }
         }
 
         public async Task AddAsync(T data)
         {
-            var conn = GetConnection();
+            using var conn = CreateOpenConnection();
             await conn.InsertAsync(data);
         }
 
         public void AddRange(IEnumerable<T> datas)
         {
-            var conn = GetConnection();
+            using var conn = CreateOpenConnection();
             
             // 如果是分表实体，自动根据每条数据的日期路由
             if (IsSplitTableEntity())
@@ -303,7 +324,7 @@ namespace DataManager.SQL.Dapper
 
         public async Task AddRangeAsync(IEnumerable<T> datas)
         {
-            var conn = GetConnection();
+            using var conn = CreateOpenConnection();
             
             // 如果是分表实体，自动根据每条数据的日期路由
             if (IsSplitTableEntity())
@@ -337,21 +358,24 @@ namespace DataManager.SQL.Dapper
             
             var properties = typeof(T).GetProperties()
                 .Where(p => p.CanRead && p.CanWrite)
+                .Where(p => !IsDefaultKeyValue(p, data))
                 .ToList();
-            
+            if (properties.Count == 0)
+                properties = typeof(T).GetProperties().Where(p => p.CanRead && p.CanWrite).ToList();
+
             // 使用SqlNamingHelper统一处理列名
             var columns = SqlNamingHelper.FormatColumnList(
                 properties.Select(p => p.Name).ToArray(), 
                 SQLParam.DBType);
             var parameters = string.Join(", ", properties.Select(p => $"@{p.Name}"));
-            var sql = $"INSERT INTO {tableName} ({columns}) VALUES ({parameters})";
+            var sql = $"INSERT INTO {SqlNamingHelper.FormatTableName(tableName, SQLParam.DBType)} ({columns}) VALUES ({parameters})";
             
             await conn.ExecuteAsync(sql, data);
         }
 
         public IEnumerable<T> Query()
         {
-            var conn = GetConnection();
+            using var conn = CreateOpenConnection();
             
             // 如果是分表实体，查询所有分表
             if (IsSplitTableEntity())
@@ -374,7 +398,7 @@ namespace DataManager.SQL.Dapper
 
         public async Task<IEnumerable<T>> QueryAsync()
         {
-            var conn = GetConnection();
+            using var conn = CreateOpenConnection();
             
             // 如果是分表实体，查询所有分表
             if (IsSplitTableEntity())
@@ -397,7 +421,7 @@ namespace DataManager.SQL.Dapper
 
         public IEnumerable<T> Query(Expression<Func<T, bool>> predicate)
         {
-            var conn = GetConnection();
+            using var conn = CreateOpenConnection();
             
             // 分表实体：查询所有分表后在内存中过滤
             if (IsSplitTableEntity())
@@ -421,7 +445,7 @@ namespace DataManager.SQL.Dapper
 
         public async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate)
         {
-            var conn = GetConnection();
+            using var conn = CreateOpenConnection();
             
             // 分表实体：查询所有分表后在内存中过滤
             if (IsSplitTableEntity())
@@ -448,7 +472,7 @@ namespace DataManager.SQL.Dapper
         /// </summary>
         public void Update(T data)
         {
-            var conn = GetConnection();
+            using var conn = CreateOpenConnection();
             
             // 分表实体需要特殊处理
             if (IsSplitTableEntity())
@@ -465,7 +489,7 @@ namespace DataManager.SQL.Dapper
 
         public void Update(Expression<Func<T, bool>> predicate, T updatedata)
         {
-            var conn = GetConnection();
+            using var conn = CreateOpenConnection();
             
             if (IsSplitTableEntity())
             {
@@ -479,14 +503,7 @@ namespace DataManager.SQL.Dapper
                     
                     foreach (var entity in entities)
                     {
-                        foreach (var prop in typeof(T).GetProperties())
-                        {
-                            var newValue = prop.GetValue(updatedata);
-                            if (newValue != null)
-                            {
-                                prop.SetValue(entity, newValue);
-                            }
-                        }
+                        CopyUpdatableValues(entity, updatedata);
                         UpdateInSplitTable(conn, table, entity);
                     }
                 }
@@ -496,14 +513,7 @@ namespace DataManager.SQL.Dapper
                 var entities = conn.Select(predicate).ToList();
                 foreach (var entity in entities)
                 {
-                    foreach (var prop in typeof(T).GetProperties())
-                    {
-                        var newValue = prop.GetValue(updatedata);
-                        if (newValue != null)
-                        {
-                            prop.SetValue(entity, newValue);
-                        }
-                    }
+                    CopyUpdatableValues(entity, updatedata);
                     conn.Update(entity);
                 }
             }
@@ -511,7 +521,7 @@ namespace DataManager.SQL.Dapper
 
         public async Task UpdateAsync(Expression<Func<T, bool>> predicate, T updatedata)
         {
-            var conn = GetConnection();
+            using var conn = CreateOpenConnection();
             
             if (IsSplitTableEntity())
             {
@@ -525,14 +535,7 @@ namespace DataManager.SQL.Dapper
                     
                     foreach (var entity in entities)
                     {
-                        foreach (var prop in typeof(T).GetProperties())
-                        {
-                            var newValue = prop.GetValue(updatedata);
-                            if (newValue != null)
-                            {
-                                prop.SetValue(entity, newValue);
-                            }
-                        }
+                        CopyUpdatableValues(entity, updatedata);
                         await UpdateInSplitTableAsync(conn, table, entity);
                     }
                 }
@@ -542,14 +545,7 @@ namespace DataManager.SQL.Dapper
                 var entities = (await conn.SelectAsync(predicate)).ToList();
                 foreach (var entity in entities)
                 {
-                    foreach (var prop in typeof(T).GetProperties())
-                    {
-                        var newValue = prop.GetValue(updatedata);
-                        if (newValue != null)
-                        {
-                            prop.SetValue(entity, newValue);
-                        }
-                    }
+                    CopyUpdatableValues(entity, updatedata);
                     await conn.UpdateAsync(entity);
                 }
             }
@@ -557,7 +553,7 @@ namespace DataManager.SQL.Dapper
 
         public void Delete(Expression<Func<T, bool>> predicate)
         {
-            var conn = GetConnection();
+            using var conn = CreateOpenConnection();
             
             if (IsSplitTableEntity())
             {
@@ -587,7 +583,7 @@ namespace DataManager.SQL.Dapper
 
         public async Task DeleteAsync(Expression<Func<T, bool>> predicate)
         {
-            var conn = GetConnection();
+            using var conn = CreateOpenConnection();
             var entities = (await conn.SelectAsync(predicate)).ToList();
             foreach (var entity in entities)
             {
@@ -602,8 +598,10 @@ namespace DataManager.SQL.Dapper
 
         public async Task DeleteAllAsync()
         {
-            var conn = GetConnection();
-            var sql = $"DELETE FROM {typeof(T).Name}";
+            using var conn = CreateOpenConnection();
+            var tableAttr = typeof(T).GetCustomAttribute<TableAttribute>();
+            var baseTable = tableAttr?.Name ?? typeof(T).Name;
+            var sql = $"DELETE FROM {SqlNamingHelper.FormatTableName(baseTable, SQLParam.DBType)}";
             await conn.ExecuteAsync(sql);
         }
 
@@ -615,11 +613,12 @@ namespace DataManager.SQL.Dapper
         #region 分表支持（类似SqlSugar，全自动路由）
 
         /// <summary>
-        /// 检查是否为分表实体
+        /// 检查是否为分表实体（Dapper 旧特性或共享 DbSplitTableAttribute 均可）。
         /// </summary>
         private bool IsSplitTableEntity()
         {
-            return typeof(T).GetCustomAttributes(typeof(DapperSplitTableAttribute), false).Any();
+            return typeof(T).GetCustomAttributes(typeof(DapperSplitTableAttribute), false).Any()
+                || typeof(T).GetCustomAttributes(typeof(DbSplitTableAttribute), false).Any();
         }
 
         /// <summary>
@@ -628,11 +627,12 @@ namespace DataManager.SQL.Dapper
         private DateTime GetSplitFieldValue(T entity)
         {
             var properties = typeof(T).GetProperties();
-            
-            // 优先查找标记了[DapperSplitField]的字段
+
+            // 优先查找标记了分表字段特性的字段（共享 DbSplitField 或 Dapper 旧特性）
             foreach (var prop in properties)
             {
-                if (prop.GetCustomAttributes(typeof(DapperSplitFieldAttribute), false).Any())
+                if (prop.GetCustomAttributes(typeof(DapperSplitFieldAttribute), false).Any()
+                    || prop.GetCustomAttributes(typeof(DbSplitFieldAttribute), false).Any())
                 {
                     var value = prop.GetValue(entity);
                     if (value is DateTime date)
@@ -663,6 +663,19 @@ namespace DataManager.SQL.Dapper
         {
             // 使用类名作为基础表名
             var baseTableName = typeof(T).Name;
+            var sharedAttr = typeof(T).GetCustomAttribute<DbSplitTableAttribute>();
+            if (sharedAttr != null)
+            {
+                var sharedSuffix = sharedAttr.Period switch
+                {
+                    SplitPeriod.Day => date.ToString("yyyyMMdd"),
+                    SplitPeriod.Month => date.ToString("yyyyMM"),
+                    SplitPeriod.Year => date.ToString("yyyy"),
+                    _ => throw new NotSupportedException($"不支持的分表类型: {sharedAttr.Period}")
+                };
+                return $"{baseTableName}_{sharedSuffix}";
+            }
+
             var splitAttr = typeof(T).GetCustomAttribute<DapperSplitTableAttribute>();
 
             if (splitAttr == null)
@@ -695,7 +708,7 @@ namespace DataManager.SQL.Dapper
                 _ => throw new NotSupportedException($"不支持的数据库类型: {SQLParam.DBType}")
             };
             
-            var conn = GetConnection();
+            using var conn = CreateOpenConnection();
             return conn.Query<string>(sql).ToList();
         }
 

@@ -7,11 +7,13 @@ using System.Linq;
 namespace DataManager
 {
     /// <summary>
-    /// 设备管理类基类
+    /// 设备管理类基类（P1-1：实现 IManager，新增 Items/TryGet/重名检查；保留 DataManagers 兼容旧代码）。
     /// </summary>
-    public abstract class ManagerBase<T, TParam>   
+    public abstract class ManagerBase<T, TParam> : IManager<T, TParam>
     {
         public readonly ConcurrentList<T> DataManagers = new ConcurrentList<T>();
+
+        public IReadOnlyList<T> Items => DataManagers.ToList().AsReadOnly();
 
         public abstract void Config (List<TParam> param);
 
@@ -25,10 +27,21 @@ namespace DataManager
         protected abstract string GetName(T device);
 
         /// <summary>
-        /// 添加
+        /// 添加（重名抛 InvalidOperationException，避免静默覆盖）
         /// </summary>
         /// <param name="device"></param>
         public void Add(T device)
+        {
+            var name = GetName(device);
+            if (DataManagers.Any(x => GetName(x) == name))
+                throw new InvalidOperationException($"已存在同名实例: {name}");
+            DataManagers.Add(device);
+        }
+
+        /// <summary>
+        /// 内部添加（跳过重名检查，供 Create 使用 Block 语义由子类保证，或兼容旧数据）
+        /// </summary>
+        protected void AddInternal(T device)
         {
             DataManagers.Add(device);
         }
@@ -37,9 +50,9 @@ namespace DataManager
         /// 移除
         /// </summary>
         /// <param name="device"></param>
-        public void Remove(T device)
+        public bool Remove(T device)
         {
-            DataManagers.Remove(device);
+            return DataManagers.Remove(device);
         }
 
         /// <summary>
@@ -55,7 +68,7 @@ namespace DataManager
         /// </summary>
         /// <param name="deviceName">设备名称</param>
         /// <returns></returns>
-        public T this[string deviceName] => DataManagers.FirstOrDefault(x => GetName(x) == deviceName);
+        public T? this[string deviceName] => TryGet(deviceName, out var item) ? item : default;
 
 
         /// <summary>
@@ -69,5 +82,13 @@ namespace DataManager
         /// 设备数量
         /// </summary>
         public int Count => DataManagers.Count;
+
+        public bool TryGet(string name, out T? item)
+        {
+            item = DataManagers.FirstOrDefault(x => GetName(x) == name);
+            return item != null;
+        }
+
+        public bool Contains(string name) => DataManagers.Any(x => GetName(x) == name);
     }
 }

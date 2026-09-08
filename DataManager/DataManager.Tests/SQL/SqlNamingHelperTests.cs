@@ -13,15 +13,15 @@ namespace DataManager.Tests.SQL
         }
 
         [Fact]
-        public void ConvertTableName_MySQL_KeepsCase()
+        public void ConvertTableName_MySQL_Lowercases()
         {
-            Assert.Equal("TestEntity", SqlNamingHelper.ConvertTableName("TestEntity", ESQLType.MySQL));
+            Assert.Equal("testentity", SqlNamingHelper.ConvertTableName("TestEntity", ESQLType.MySQL));
         }
 
         [Fact]
-        public void FormatTableName_MySQL_WrapsWithBackticks()
+        public void FormatTableName_MySQL_WrapsLowercaseWithBackticks()
         {
-            Assert.Equal("`TestEntity`", SqlNamingHelper.FormatTableName("TestEntity", ESQLType.MySQL));
+            Assert.Equal("`testentity`", SqlNamingHelper.FormatTableName("TestEntity", ESQLType.MySQL));
         }
 
         [Fact]
@@ -31,16 +31,16 @@ namespace DataManager.Tests.SQL
         }
 
         [Fact]
-        public void FormatColumnName_MySQL_WrapsWithBackticks()
+        public void FormatColumnName_MySQL_WrapsLowercaseWithBackticks()
         {
-            Assert.Equal("`UserName`", SqlNamingHelper.FormatColumnName("UserName", ESQLType.MySQL));
+            Assert.Equal("`username`", SqlNamingHelper.FormatColumnName("UserName", ESQLType.MySQL));
         }
 
         [Fact]
         public void FormatColumnList_JoinsFormattedColumns()
         {
             var result = SqlNamingHelper.FormatColumnList(new[] { "Id", "Name" }, ESQLType.MySQL);
-            Assert.Equal("`Id`, `Name`", result);
+            Assert.Equal("`id`, `name`", result);
         }
 
         [Fact]
@@ -50,16 +50,16 @@ namespace DataManager.Tests.SQL
         }
 
         [Fact]
-        public void NeedsConversion_TrueOnlyForPostgreSQL()
+        public void NeedsConversion_AlwaysTrue()
         {
             Assert.True(SqlNamingHelper.NeedsConversion(ESQLType.PostgreSQL));
-            Assert.False(SqlNamingHelper.NeedsConversion(ESQLType.MySQL));
+            Assert.True(SqlNamingHelper.NeedsConversion(ESQLType.MySQL));
         }
 
         [Fact]
         public void ConvertTableName_NullOrEmpty_ReturnsAsIs()
         {
-            Assert.Null(SqlNamingHelper.ConvertTableName(null, ESQLType.PostgreSQL));
+            Assert.Null(SqlNamingHelper.ConvertTableName(null!, ESQLType.PostgreSQL));
             Assert.Equal(string.Empty, SqlNamingHelper.ConvertTableName(string.Empty, ESQLType.PostgreSQL));
         }
     }

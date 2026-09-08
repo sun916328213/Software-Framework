@@ -14,12 +14,15 @@ namespace DataManager.SQL.SqlSugarSQL
 {
     public class SqlSugarBase<T> : ISQL<T> where T : class, new()
     {
-        private SqlSugarClient _dbClient;
+        // 同 EFCoreBase/DapperBase：库层面保证 Npgsql Local 时间兼容
+        static SqlSugarBase() => AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
+        private SqlSugarClient? _dbClient;
         private readonly object _syncLock = new object();
 
-        public virtual string Name { get; set; }
+        public virtual string Name { get; set; } = string.Empty;
 
-        public SQLParam SQLParam { get; set; }
+        public SQLParam SQLParam { get; set; } = new();
 
         private bool _isConnected;
         public bool IsConnected
@@ -205,17 +208,20 @@ namespace DataManager.SQL.SqlSugarSQL
         /// <returns></returns>
         private SqlSugarClient GetDbClient()
         {
-            if (_dbClient == null)
+            var client = _dbClient;
+            if (client == null)
             {
                 lock (_syncLock)
                 {
-                    if (_dbClient == null)
+                    client = _dbClient;
+                    if (client == null)
                     {
-                        _dbClient = new SqlSugarClient(CreateConnectionConfig());
+                        client = new SqlSugarClient(CreateConnectionConfig());
+                        _dbClient = client;
                     }
                 }
             }
-            return _dbClient;
+            return client;
         }
 
         /// <summary>
@@ -386,127 +392,6 @@ namespace DataManager.SQL.SqlSugarSQL
         {
             var tableAttr = typeof(T).GetCustomAttribute<TableAttribute>();
             return tableAttr != null ? tableAttr.Name : typeof(T).Name.ToLower();
-        }
-        #endregion
-
-        #region  ===================== 官方规范：分表操作 暂时不使用=====================
-
-        // 官方分表示例（按日分表，CreateTime为分表字段）
-
-        //[SugarTable("TestModel_{year}{month}{day}")]
-        //[SplitTable(SplitType.Day)] // 按日分表
-        //public class TestModel_Day
-        //{
-        //    [SplitField]
-        //    public DateTime CreateTime { get; set; }
-        //}
-
-        /// <summary>
-        /// 【官方标准】初始化分表结构
-        /// 功能：自动创建所有分表 + 同步实体表结构（程序启动时调用一次即可）
-        /// 支持：按年/月/日分表，自动根据实体[SplitTable]特性创建
-        /// </summary>
-        private void InitSplitTable()
-        {
-            // 官方推荐：CopyNew() 创建新实例，线程安全，不污染全局客户端
-            GetDbClient().CopyNew().CodeFirst.SplitTables().InitTables<T>();
-        }
-
-        /// <summary>
-        /// 【分表插入】单条数据插入（自动路由到对应分表，表不存在自动创建）
-        /// 对应文档：插入自动路由 + 自动建表
-        /// </summary>
-        private void SplitTableAdd(T data)
-        {
-            GetDbClient().CopyNew().Insertable(data).SplitTable().ExecuteCommand();
-        }
-
-        /// <summary>
-        /// 【分表插入】批量数据插入（高性能，官方推荐）
-        /// 自动根据[SplitField]时间字段路由到对应分表
-        /// </summary>
-        private void SplitTableAddRange(List<T> datas)
-        {
-            GetDbClient().CopyNew().Insertable(datas).SplitTable().ExecuteCommand();
-        }
-
-        /// <summary>
-        /// 【分表查询】按时间范围查询（自动路由，性能最优）
-        /// 示例：按月/按年分表时，仅查询指定时间范围内的分表
-        /// </summary>
-        private List<T> SplitTableQuery(DateTime startTime, DateTime endTime)
-        {
-            return GetDbClient().CopyNew()
-                       .Queryable<T>()
-                       .SplitTable(startTime, endTime) // 官方路由：仅扫描目标分表
-                       .ToList();
-        }
-
-        /// <summary>
-        /// 【分表查询】查询【最近N张分表】（官方性能优化方案）
-        /// 例：Take(3) → 查询最近3张分表，避免全表扫描
-        /// </summary>
-        private List<T> SplitTableQueryByTake(int takeCount = 3)
-        {
-            return GetDbClient().CopyNew()
-                       .Queryable<T>()
-                       .SplitTable(tabs => tabs.Take(takeCount))
-                       .ToList();
-        }
-
-        /// <summary>
-        /// 【分表查询】查询【所有分表】数据
-        /// 注意：仅主键/索引字段查询使用，无索引慎用
-        /// </summary>
-        private List<T> SplitTableQueryAll()
-        {
-            return GetDbClient().CopyNew()
-                       .Queryable<T>()
-                       .SplitTable() // 无参数：查询所有分表
-                       .ToList();
-        }
-
-        /// <summary>
-        /// 【分表更新】按实体更新（自动路由分表）
-        /// </summary>
-        private int SplitTableUpdate(T data)
-        {
-            return GetDbClient().CopyNew()
-                       .Updateable(data)
-                       .SplitTable()
-                       .ExecuteCommand();
-        }
-
-        /// <summary>
-        /// 【分表删除】按实体删除（自动路由分表）
-        /// </summary>
-        private int SplitTableDelete(T data)
-        {
-            return GetDbClient().CopyNew()
-                       .Deleteable(data)
-                       .SplitTable()
-                       .ExecuteCommand();
-        }
-
-        /// <summary>
-        /// 【官方工具】获取当前时间对应的【分表名】
-        /// 例：2024年 → test_table_2024；2024年4月 → test_table_202404
-        /// </summary>
-        private string GetSplitTableName(DateTime time)
-        {
-            return GetDbClient().CopyNew().SplitHelper<T>().GetTableName(time);
-        }
-
-        /// <summary>
-        /// 【官方工具】获取当前实体的【所有分表名】
-        /// </summary>
-        private List<string> GetAllSplitTableNames()
-        {
-            return GetDbClient().CopyNew()
-                       .SplitHelper<T>()
-                       .GetTables()
-                       .Select(x => x.TableName)
-                       .ToList();
         }
         #endregion
     }

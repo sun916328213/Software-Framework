@@ -13,8 +13,28 @@ namespace CommunicationNew.Composition;
 /// <summary>注册 CommunicationNew 内置协议适配器的组合入口。</summary>
 public static class CommunicationDefaults
 {
-    /// <summary>创建包含全部内置协议注册的设备 factory。</summary>
+    /// <summary>创建包含全部内置协议注册、通过 Core seam 暴露的设备 factory。</summary>
+    public static CommunicationNew.Core.ICommunicationDeviceFactory CreateDefaultFactory()
+    {
+        return CreateRegistry();
+    }
+
+    /// <summary>
+    /// 创建使用旧 Composition 接口暴露的内置设备 factory。
+    /// 新代码应改用 <see cref="CreateDefaultFactory"/>。
+    /// </summary>
+    [Obsolete("请使用 CreateDefaultFactory；旧返回类型将在后续主版本移除。")]
+#pragma warning disable CS0618 // 方法签名必须保留旧返回类型，供现有二进制调用方迁移。
     public static ICommunicationDeviceFactory CreateFactory()
+#pragma warning restore CS0618
+    {
+        // 默认注册表在迁移期同时实现新旧接口，因此此转换不会创建额外包装对象。
+#pragma warning disable CS0618
+        return (ICommunicationDeviceFactory)CreateRegistry();
+#pragma warning restore CS0618
+    }
+
+    private static CommunicationDeviceRegistry CreateRegistry()
     {
         return new CommunicationDeviceRegistry()
             .Register<SocketParam>(CreateSocket)
@@ -62,13 +82,13 @@ public static class CommunicationDefaults
             {
                 ProtocolType = parameter.ProtocolType,
             })),
-            ProtocolType.ModbusRtu => CreateFactory().Create(CopyCommon(parameter, new ModbusRtuParam())),
-            ProtocolType.ModbusTcp => CreateFactory().Create(CopyCommon(parameter, new ModbusTcpParam())),
-            ProtocolType.OpcUa => CreateFactory().Create(CopyCommon(parameter, new OpcUaParam())),
-            ProtocolType.Http => CreateFactory().Create(CopyCommon(parameter, new HttpParam())),
-            ProtocolType.WebApi => CreateFactory().Create(CopyCommon(parameter, new WebApiParam())),
-            ProtocolType.MitsubishiMc => CreateFactory().Create(CopyCommon(parameter, new McParam())),
-            ProtocolType.Serial => CreateFactory().Create(CopyCommon(parameter, new SerialParam())),
+            ProtocolType.ModbusRtu => CreateDefaultFactory().Create(CopyCommon(parameter, new ModbusRtuParam())),
+            ProtocolType.ModbusTcp => CreateDefaultFactory().Create(CopyCommon(parameter, new ModbusTcpParam())),
+            ProtocolType.OpcUa => CreateDefaultFactory().Create(CopyCommon(parameter, new OpcUaParam())),
+            ProtocolType.Http => CreateDefaultFactory().Create(CopyCommon(parameter, new HttpParam())),
+            ProtocolType.WebApi => CreateDefaultFactory().Create(CopyCommon(parameter, new WebApiParam())),
+            ProtocolType.MitsubishiMc => CreateDefaultFactory().Create(CopyCommon(parameter, new McParam())),
+            ProtocolType.Serial => CreateDefaultFactory().Create(CopyCommon(parameter, new SerialParam())),
             _ => throw new NotSupportedException($"不支持协议类型 {parameter.ProtocolType}。"),
         };
     }
@@ -87,6 +107,9 @@ public static class CommunicationDefaults
         destination.RetryDelayMs = source.RetryDelayMs;
         destination.AutoReconnect = source.AutoReconnect;
         destination.ReconnectIntervalMs = source.ReconnectIntervalMs;
+        destination.EventQueueCapacity = source.EventQueueCapacity;
+        destination.RequestQueueCapacity = source.RequestQueueCapacity;
+        destination.ServerRequestCapacity = source.ServerRequestCapacity;
         return destination;
     }
 }

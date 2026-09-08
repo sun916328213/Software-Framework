@@ -32,11 +32,31 @@ namespace CommunicationNew.Core.Models
         /// <summary>可写</summary>
         public bool Writable => Access is DataPointAccess.Write or DataPointAccess.ReadWrite;
 
-        /// <summary>该定义所需字节数（0 表示使用类型默认值）</summary>
+        /// <summary>该定义所需字节数；未设置或为 0 时使用数据类型的默认长度，负数无效。</summary>
         public int? LengthBytes { get; set; }
 
+        /// <summary>
+        /// 点位扫描周期（毫秒）。0 表示继承轮询器的默认周期。
+        /// </summary>
+        public int ScanIntervalMs { get; set; }
+
         /// <summary>计算字节数</summary>
-        public int GetByteLength() => LengthBytes ?? DataPoint.GetByteLength(DataType);
+        public int GetByteLength()
+        {
+            if (LengthBytes < 0)
+            {
+                // 负数是配置错误，必须在定义转换时暴露，不能由数据点构造器静默修正。
+                throw new ArgumentOutOfRangeException(
+                    nameof(LengthBytes),
+                    LengthBytes,
+                    "数据点字节长度不能为负数。");
+            }
+
+            // 配置文件常用 0 表示“未覆盖”，在此统一解析，避免不同实例化入口产生不同长度。
+            return LengthBytes is null or 0
+                ? DataPoint.GetByteLength(DataType)
+                : LengthBytes.Value;
+        }
 
         /// <summary>将定义实例化为数据点</summary>
         public IDataPoint ToDataPoint() => new DataPoint(Name, DataType, Address, GetByteLength())
@@ -44,6 +64,7 @@ namespace CommunicationNew.Core.Models
             DataFormat = DataFormat,
             Readable = Readable,
             Writable = Writable,
+            ScanIntervalMs = ScanIntervalMs,
         };
     }
 

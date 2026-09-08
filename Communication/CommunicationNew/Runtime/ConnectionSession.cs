@@ -1,6 +1,10 @@
 using CommunicationNew.Abstractions;
 using CommunicationNew.Transports;
+using System.Buffers;
+using System.Diagnostics;
+using System.IO.Pipelines;
 using System.Runtime.ExceptionServices;
+using Microsoft.Extensions.Logging;
 
 namespace CommunicationNew.Runtime;
 
@@ -16,10 +20,20 @@ public sealed class ConnectionSession<TRequest, TResponse> :
     private readonly IRequestCodec<TRequest, TResponse> _codec;
     private readonly TimeSpan _operationTimeout;
     private readonly TimeProvider _timeProvider;
+    private readonly ILogger? _logger;
+    private readonly CommunicationDiagnosticContext _diagnosticContext;
+    private readonly ReconnectSupervisor? _reconnectSupervisor;
+    private readonly int _maxQueuedRequests;
     private readonly SemaphoreSlim _lifecycleGate = new(1, 1);
     private readonly SemaphoreSlim _requestGate = new(1, 1);
+    private readonly object _disposeSync = new();
     private CancellationTokenSource? _generationCts;
+    private Task? _disposeTask;
     private int _correlationId;
+    private int _queuedRequestCount;
+    private int _disposeStarted;
+    private bool _connectionMetricActive;
+    private volatile bool _desiredConnected;
     private bool _disposed;
 
     /// <summary>创建一个单请求在途的连接 session。</summary>
@@ -27,11 +41,17 @@ public sealed class ConnectionSession<TRequest, TResponse> :
     /// <param name="codec">无状态请求/响应 codec。</param>
     /// <param name="operationTimeout">包含排队和 IO 在内的单次操作总超时。</param>
     /// <param name="timeProvider">时间源；测试可注入虚拟时间。</param>
+    /// <param name="logger">标准 .NET 日志入口；为空时不产生日志。</param>
+    /// <param name="reconnectOptions">意外断开后的恢复策略；为空时不自动重连。</param>
+    /// <param name="maxQueuedRequests">等待单请求执行权的最大请求数。</param>
     public ConnectionSession(
         IByteStreamTransport transport,
         IRequestCodec<TRequest, TResponse> codec,
         TimeSpan operationTimeout,
-        TimeProvider? timeProvider = null)
+        TimeProvider? timeProvider = null,
+        ILogger? logger = null,
+        ConnectionReconnectOptions? reconnectOptions = null,
+        int maxQueuedRequests = 256)
     {
         ArgumentNullException.ThrowIfNull(transport);
         ArgumentNullException.ThrowIfNull(codec);
@@ -39,11 +59,29 @@ public sealed class ConnectionSession<TRequest, TResponse> :
         {
             throw new ArgumentOutOfRangeException(nameof(operationTimeout));
         }
+        if (maxQueuedRequests <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxQueuedRequests));
+        }
 
         _transport = transport;
         _codec = codec;
         _operationTimeout = operationTimeout;
         _timeProvider = timeProvider ?? TimeProvider.System;
+        _logger = logger;
+        _maxQueuedRequests = maxQueuedRequests;
+        _diagnosticContext = new CommunicationDiagnosticContext(
+            _codec.GetType().Name,
+            _transport.GetType().Name);
+        if (reconnectOptions is not null)
+        {
+            _reconnectSupervisor = new ReconnectSupervisor(
+                reconnectOptions,
+                _timeProvider,
+                ReconnectOnceAsync,
+                () => _desiredConnected,
+                _diagnosticContext);
+        }
     }
 
     /// <inheritdoc />
@@ -53,30 +91,66 @@ public sealed class ConnectionSession<TRequest, TResponse> :
     public async ValueTask ConnectAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
+        if (State == ConnectionState.Faulted)
+        {
+            _desiredConnected = false;
+            if (_reconnectSupervisor is not null)
+            {
+                await _reconnectSupervisor.StopAsync().ConfigureAwait(false);
+            }
+        }
+
         await _lifecycleGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            // 释放可能在等待生命周期锁期间开始，获得锁后必须再次确认。
+            ThrowIfDisposed();
             if (State == ConnectionState.Connected)
             {
+                _desiredConnected = true;
                 return;
             }
 
+            var resetTransport = State == ConnectionState.Faulted;
             State = ConnectionState.Connecting;
             try
             {
+                if (resetTransport)
+                {
+                    // Faulted 可能仍保留底层句柄；先关闭才能建立全新的连接代际。
+                    await _transport.CloseAsync(CancellationToken.None).ConfigureAwait(false);
+                }
                 await _transport.OpenAsync(cancellationToken).ConfigureAwait(false);
                 _generationCts?.Dispose();
                 _generationCts = new CancellationTokenSource();
                 State = ConnectionState.Connected;
+                _desiredConnected = true;
+                if (!_connectionMetricActive)
+                {
+                    CommunicationDiagnostics.RecordActiveConnection(1, _diagnosticContext);
+                    _connectionMetricActive = true;
+                }
+                _logger?.LogInformation(
+                    "Connection session state changed to {ConnectionState}.",
+                    State);
+                CommunicationDiagnostics.RecordConnectionAttempt("success", _diagnosticContext);
             }
             catch (OperationCanceledException)
             {
+                _desiredConnected = false;
                 State = ConnectionState.Disconnected;
+                CommunicationDiagnostics.RecordConnectionAttempt("canceled", _diagnosticContext);
                 throw;
             }
-            catch
+            catch (Exception ex)
             {
+                _desiredConnected = false;
                 State = ConnectionState.Faulted;
+                CommunicationDiagnostics.RecordConnectionAttempt("faulted", _diagnosticContext);
+                _logger?.LogError(
+                    ex,
+                    "Connection session failed while entering {ConnectionState}.",
+                    State);
                 throw;
             }
         }
@@ -92,40 +166,99 @@ public sealed class ConnectionSession<TRequest, TResponse> :
         CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-        var generationToken = _generationCts?.Token;
-        if (State != ConnectionState.Connected || generationToken is null)
+        var generation = _generationCts;
+        if (State != ConnectionState.Connected || generation is null)
         {
             throw new InvalidOperationException("The connection is not established.");
         }
+        var generationToken = generation.Token;
 
         using var timeoutCts = new CancellationTokenSource(_operationTimeout, _timeProvider);
         using var operationCts = CancellationTokenSource.CreateLinkedTokenSource(
             cancellationToken,
-            generationToken.Value,
+            generationToken,
             timeoutCts.Token);
         var operationToken = operationCts.Token;
+        using var activity = CommunicationDiagnostics.StartRequestActivity(_diagnosticContext);
+        var startedAt = _timeProvider.GetTimestamp();
+        var outcome = "faulted";
 
         var requestGateEntered = false;
         try
         {
-            await _requestGate.WaitAsync(operationToken).ConfigureAwait(false);
-            requestGateEntered = true;
+            using (CommunicationDiagnostics.StartPhaseActivity("queue", _diagnosticContext))
+            {
+                if (_requestGate.Wait(0))
+                {
+                    requestGateEntered = true;
+                }
+                else
+                {
+                    var queuedCount = Interlocked.Increment(ref _queuedRequestCount);
+                    if (queuedCount > _maxQueuedRequests)
+                    {
+                        Interlocked.Decrement(ref _queuedRequestCount);
+                        throw new RequestQueueFullException(_maxQueuedRequests);
+                    }
+
+                    CommunicationDiagnostics.RecordQueuedRequest(1, _diagnosticContext);
+                    try
+                    {
+                        await _requestGate.WaitAsync(operationToken).ConfigureAwait(false);
+                        requestGateEntered = true;
+                    }
+                    finally
+                    {
+                        // 获得执行权和排队期间取消都必须归还队列深度。
+                        Interlocked.Decrement(ref _queuedRequestCount);
+                        CommunicationDiagnostics.RecordQueuedRequest(-1, _diagnosticContext);
+                    }
+                }
+            }
             if (State != ConnectionState.Connected)
             {
                 throw new InvalidOperationException("The connection is not established.");
             }
 
             var correlationId = unchecked((ushort)Interlocked.Increment(ref _correlationId));
-            var encoded = _codec.Encode(request, correlationId);
-            await _transport.Output.WriteAsync(encoded, operationToken).ConfigureAwait(false);
+            ReadOnlyMemory<byte> encoded;
+            using (CommunicationDiagnostics.StartPhaseActivity("encode", _diagnosticContext))
+            {
+                encoded = _codec.Encode(request, correlationId);
+            }
+            using (CommunicationDiagnostics.StartPhaseActivity("send", _diagnosticContext))
+            {
+                await _transport.Output.WriteAsync(encoded, operationToken).ConfigureAwait(false);
+            }
+            CommunicationDiagnostics.RecordSentBytes(encoded.Length, _diagnosticContext);
 
             while (true)
             {
-                var readResult = await _transport.Input.ReadAsync(operationToken).ConfigureAwait(false);
-                var buffer = readResult.Buffer;
-                if (_codec.TryDecode(buffer, correlationId, out var response, out var consumed))
+                ReadResult readResult;
+                using (CommunicationDiagnostics.StartPhaseActivity("wait", _diagnosticContext))
                 {
+                    readResult = await _transport.Input.ReadAsync(operationToken).ConfigureAwait(false);
+                }
+                var buffer = readResult.Buffer;
+                TResponse response;
+                SequencePosition consumed;
+                bool decoded;
+                using (CommunicationDiagnostics.StartPhaseActivity("decode", _diagnosticContext))
+                {
+                    decoded = _codec.TryDecode(
+                        buffer,
+                        correlationId,
+                        out response,
+                        out consumed);
+                }
+                if (decoded)
+                {
+                    var consumedLength = buffer.Slice(0, consumed).Length;
                     _transport.Input.AdvanceTo(consumed);
+                    CommunicationDiagnostics.RecordReceivedBytes(
+                        consumedLength,
+                        _diagnosticContext);
+                    outcome = "success";
                     return response;
                 }
 
@@ -139,15 +272,48 @@ public sealed class ConnectionSession<TRequest, TResponse> :
         catch (OperationCanceledException ex) when (
             timeoutCts.IsCancellationRequested &&
             !cancellationToken.IsCancellationRequested &&
-            !generationToken.Value.IsCancellationRequested)
+            !generationToken.IsCancellationRequested)
         {
             // 总超时由 session 转换为 TimeoutException，调用者可与主动取消分别处理。
+            outcome = "timeout";
+            activity?.SetStatus(ActivityStatusCode.Error, "operation timeout");
             throw new TimeoutException(
                 $"通信操作在 {_operationTimeout} 内未完成。",
                 ex);
         }
+        catch (OperationCanceledException)
+        {
+            outcome = "canceled";
+            activity?.SetStatus(ActivityStatusCode.Error, "operation canceled");
+            throw;
+        }
+        catch (RequestQueueFullException ex)
+        {
+            outcome = "rejected";
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            throw;
+        }
+        catch (IOException ex)
+        {
+            outcome = "faulted";
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            await TransitionToFaultedAsync(generation, ex).ConfigureAwait(false);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            outcome = "faulted";
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            throw;
+        }
         finally
         {
+            activity?.SetTag("operation", "request");
+            activity?.SetTag("outcome", outcome);
+            CommunicationDiagnostics.RecordRequest(
+                _timeProvider.GetElapsedTime(startedAt),
+                outcome,
+                _diagnosticContext);
             if (requestGateEntered)
             {
                 _requestGate.Release();
@@ -158,6 +324,13 @@ public sealed class ConnectionSession<TRequest, TResponse> :
     /// <inheritdoc />
     public async ValueTask DisconnectAsync(CancellationToken cancellationToken = default)
     {
+        _desiredConnected = false;
+        if (_reconnectSupervisor is not null)
+        {
+            // supervisor 会吞掉自身取消；返回时保证不再访问 transport。
+            await _reconnectSupervisor.StopAsync().ConfigureAwait(false);
+        }
+
         await _lifecycleGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -177,7 +350,15 @@ public sealed class ConnectionSession<TRequest, TResponse> :
                 // 即使传输层关闭失败，也必须结束当前连接代际，避免状态永久停在 Stopping。
                 _generationCts?.Dispose();
                 _generationCts = null;
+                if (_connectionMetricActive)
+                {
+                    CommunicationDiagnostics.RecordActiveConnection(-1, _diagnosticContext);
+                    _connectionMetricActive = false;
+                }
                 State = ConnectionState.Disconnected;
+                _logger?.LogInformation(
+                    "Connection session state changed to {ConnectionState}.",
+                    State);
             }
         }
         finally
@@ -187,13 +368,23 @@ public sealed class ConnectionSession<TRequest, TResponse> :
     }
 
     /// <inheritdoc />
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        if (_disposed)
+        lock (_disposeSync)
         {
-            return;
+            // 所有并发调用共享同一个释放过程，避免重复关闭 transport 或释放生命周期锁。
+            if (_disposeTask is null)
+            {
+                // 先发布停止接纳状态，再运行可能同步执行到首个 await 的释放逻辑。
+                Volatile.Write(ref _disposeStarted, 1);
+                _disposeTask = DisposeCoreAsync();
+            }
+            return new ValueTask(_disposeTask);
         }
+    }
 
+    private async Task DisposeCoreAsync()
+    {
         Exception? disposalError = null;
         try
         {
@@ -209,6 +400,10 @@ public sealed class ConnectionSession<TRequest, TResponse> :
             // generation 取消后等待在途请求离开临界区，才能安全释放请求锁。
             await _requestGate.WaitAsync(CancellationToken.None).ConfigureAwait(false);
             _requestGate.Release();
+            if (_reconnectSupervisor is not null)
+            {
+                await _reconnectSupervisor.DisposeAsync().ConfigureAwait(false);
+            }
             await _transport.DisposeAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -234,6 +429,90 @@ public sealed class ConnectionSession<TRequest, TResponse> :
 
     private void ThrowIfDisposed()
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
+        ObjectDisposedException.ThrowIf(
+            _disposed || Volatile.Read(ref _disposeStarted) != 0,
+            this);
+    }
+
+    private async ValueTask TransitionToFaultedAsync(
+        CancellationTokenSource generation,
+        Exception exception)
+    {
+        await _lifecycleGate.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+        try
+        {
+            if (State != ConnectionState.Connected ||
+                !ReferenceEquals(_generationCts, generation))
+            {
+                return;
+            }
+
+            State = ConnectionState.Faulted;
+            // 连接代际失效后立即取消排队请求，防止它们继续写入已经关闭的字节流。
+            _generationCts?.Cancel();
+            if (_connectionMetricActive)
+            {
+                CommunicationDiagnostics.RecordActiveConnection(-1, _diagnosticContext);
+                _connectionMetricActive = false;
+            }
+            _logger?.LogWarning(
+                exception,
+                "Connection session state changed to {ConnectionState}.",
+                State);
+            _reconnectSupervisor?.Start();
+        }
+        finally
+        {
+            _lifecycleGate.Release();
+        }
+    }
+
+    private async ValueTask<bool> ReconnectOnceAsync(CancellationToken cancellationToken)
+    {
+        await _lifecycleGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!_desiredConnected || _disposed)
+            {
+                return true;
+            }
+
+            try
+            {
+                State = ConnectionState.Reconnecting;
+                await _transport.CloseAsync(cancellationToken).ConfigureAwait(false);
+                await _transport.OpenAsync(cancellationToken).ConfigureAwait(false);
+                _generationCts?.Dispose();
+                _generationCts = new CancellationTokenSource();
+                State = ConnectionState.Connected;
+                if (!_connectionMetricActive)
+                {
+                    CommunicationDiagnostics.RecordActiveConnection(1, _diagnosticContext);
+                    _connectionMetricActive = true;
+                }
+                CommunicationDiagnostics.RecordConnectionAttempt("success", _diagnosticContext);
+                _logger?.LogInformation(
+                    "Connection session recovered to {ConnectionState}.",
+                    State);
+                return true;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // 失败状态与 Disconnect 共用同一把锁，不能覆盖手工断开的最终状态。
+                State = ConnectionState.Faulted;
+                CommunicationDiagnostics.RecordConnectionAttempt("faulted", _diagnosticContext);
+                _logger?.LogWarning(ex, "Connection session reconnect attempt failed.");
+                return false;
+            }
+        }
+        finally
+        {
+            _lifecycleGate.Release();
+        }
     }
 }

@@ -2,7 +2,6 @@ using System.Buffers.Binary;
 using System.Text;
 using CommunicationNew.Abstractions;
 using CommunicationNew.Core.Interfaces;
-using CommunicationNew.Runtime.Conversion;
 
 namespace CommunicationNew.Core.Converters;
 
@@ -31,8 +30,13 @@ public sealed class ByteConverter : IValueConverter
 public sealed class Int16Converter : IValueConverter
 {
     private readonly DataFormatCodec _codec;
-    public Int16Converter(DataFormatCodec? codec = null) =>
-        _codec = codec ?? new DataFormatCodec(DataFormat.ABCD);
+    public Int16Converter(DataFormat format = DataFormat.ABCD) =>
+        _codec = new DataFormatCodec(format);
+#pragma warning disable CS0618 // 旧 codec 构造器只保留源码兼容，新调用方应直接传 DataFormat。
+    [Obsolete("请直接传入 DataFormat；Runtime.DataFormatCodec 构造器将在后续主版本移除。")]
+    public Int16Converter(Runtime.Conversion.DataFormatCodec? codec)
+        : this(codec?.Format ?? DataFormat.ABCD) { }
+#pragma warning restore CS0618
     public DataPointType TargetType => DataPointType.Int16;
     public object Decode(byte[] data, int offset = 0) =>
         data.Length >= offset + 2 ? _codec.DecodeInt16(data.AsSpan(offset, 2)) : (short)0;
@@ -45,8 +49,13 @@ public sealed class Int16Converter : IValueConverter
 public sealed class UInt16Converter : IValueConverter
 {
     private readonly DataFormatCodec _codec;
-    public UInt16Converter(DataFormatCodec? codec = null) =>
-        _codec = codec ?? new DataFormatCodec(DataFormat.ABCD);
+    public UInt16Converter(DataFormat format = DataFormat.ABCD) =>
+        _codec = new DataFormatCodec(format);
+#pragma warning disable CS0618 // 旧 codec 构造器只保留源码兼容，新调用方应直接传 DataFormat。
+    [Obsolete("请直接传入 DataFormat；Runtime.DataFormatCodec 构造器将在后续主版本移除。")]
+    public UInt16Converter(Runtime.Conversion.DataFormatCodec? codec)
+        : this(codec?.Format ?? DataFormat.ABCD) { }
+#pragma warning restore CS0618
     public DataPointType TargetType => DataPointType.UInt16;
     public object Decode(byte[] data, int offset = 0) =>
         data.Length >= offset + 2 ? _codec.DecodeUInt16(data.AsSpan(offset, 2)) : (ushort)0;
@@ -59,8 +68,13 @@ public sealed class UInt16Converter : IValueConverter
 public sealed class Int32Converter : IValueConverter
 {
     private readonly DataFormatCodec _codec;
-    public Int32Converter(DataFormatCodec? codec = null) =>
-        _codec = codec ?? new DataFormatCodec(DataFormat.ABCD);
+    public Int32Converter(DataFormat format = DataFormat.ABCD) =>
+        _codec = new DataFormatCodec(format);
+#pragma warning disable CS0618 // 旧 codec 构造器只保留源码兼容，新调用方应直接传 DataFormat。
+    [Obsolete("请直接传入 DataFormat；Runtime.DataFormatCodec 构造器将在后续主版本移除。")]
+    public Int32Converter(Runtime.Conversion.DataFormatCodec? codec)
+        : this(codec?.Format ?? DataFormat.ABCD) { }
+#pragma warning restore CS0618
     public DataPointType TargetType => DataPointType.Int32;
     public object Decode(byte[] data, int offset = 0) =>
         data.Length >= offset + 4 ? _codec.DecodeInt32(data.AsSpan(offset, 4)) : 0;
@@ -73,8 +87,13 @@ public sealed class Int32Converter : IValueConverter
 public sealed class UInt32Converter : IValueConverter
 {
     private readonly DataFormatCodec _codec;
-    public UInt32Converter(DataFormatCodec? codec = null) =>
-        _codec = codec ?? new DataFormatCodec(DataFormat.ABCD);
+    public UInt32Converter(DataFormat format = DataFormat.ABCD) =>
+        _codec = new DataFormatCodec(format);
+#pragma warning disable CS0618 // 旧 codec 构造器只保留源码兼容，新调用方应直接传 DataFormat。
+    [Obsolete("请直接传入 DataFormat；Runtime.DataFormatCodec 构造器将在后续主版本移除。")]
+    public UInt32Converter(Runtime.Conversion.DataFormatCodec? codec)
+        : this(codec?.Format ?? DataFormat.ABCD) { }
+#pragma warning restore CS0618
     public DataPointType TargetType => DataPointType.UInt32;
     public object Decode(byte[] data, int offset = 0) =>
         data.Length >= offset + 4 ? _codec.DecodeUInt32(data.AsSpan(offset, 4)) : 0u;
@@ -117,8 +136,13 @@ public sealed class Int64Converter : IValueConverter
 public sealed class FloatConverter : IValueConverter
 {
     private readonly DataFormatCodec _codec;
-    public FloatConverter(DataFormatCodec? codec = null) =>
-        _codec = codec ?? new DataFormatCodec(DataFormat.ABCD);
+    public FloatConverter(DataFormat format = DataFormat.ABCD) =>
+        _codec = new DataFormatCodec(format);
+#pragma warning disable CS0618 // 旧 codec 构造器只保留源码兼容，新调用方应直接传 DataFormat。
+    [Obsolete("请直接传入 DataFormat；Runtime.DataFormatCodec 构造器将在后续主版本移除。")]
+    public FloatConverter(Runtime.Conversion.DataFormatCodec? codec)
+        : this(codec?.Format ?? DataFormat.ABCD) { }
+#pragma warning restore CS0618
     public DataPointType TargetType => DataPointType.Float;
     public object Decode(byte[] data, int offset = 0) =>
         data.Length >= offset + 4 ? _codec.DecodeSingle(data.AsSpan(offset, 4)) : 0f;

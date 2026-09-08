@@ -3,8 +3,6 @@ using DataManager.SQL.Dapper;
 using DataManager.SQL.Definition;
 using DataManager.SQL.EFCore;
 using DataManager.SQL.SqlSugar;
-using Prism.DryIoc;
-using Prism.Ioc;
 
 namespace DataManager.Tests.SQL
 {
@@ -25,19 +23,16 @@ namespace DataManager.Tests.SQL
             ToolType = toolType,
         };
 
-        // 必须为 public：EFCoreHelper 通过 Reflection.Emit 生成派生类型，
-        // 私有嵌套类型作为泛型参数会导致 CreateType 可见性校验失败
         public class WorkbenchEntity
         {
             public long Id { get; set; }
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
         }
 
         [Fact]
         public void Create_Dapper_ReturnsDapperHelper()
         {
-            var container = new DryIocContainerExtension();
-            var manager = new SQLManager(container);
+            var manager = new SQLManager();
 
             var sql = manager.Create<WorkbenchEntity>(CreateParam(ESQLToolType.Dapper));
 
@@ -48,20 +43,17 @@ namespace DataManager.Tests.SQL
         [Fact]
         public void Create_EFCore_ReturnsEFCoreHelper()
         {
-            var container = new DryIocContainerExtension();
-            var manager = new SQLManager(container);
+            var manager = new SQLManager();
 
             var sql = manager.Create<WorkbenchEntity>(CreateParam(ESQLToolType.EFCore));
 
-            // EFCoreHelper 通过 Reflection.Emit 生成动态子类实例
-            Assert.IsAssignableFrom<EFCoreHelper<WorkbenchEntity>>(sql);
+            Assert.IsType<EFCoreHelper<WorkbenchEntity>>(sql);
         }
 
         [Fact]
         public void Create_SqlSugar_ReturnsSqlSugarHelper()
         {
-            var container = new DryIocContainerExtension();
-            var manager = new SQLManager(container);
+            var manager = new SQLManager();
 
             var sql = manager.Create<WorkbenchEntity>(CreateParam(ESQLToolType.SqlSugar));
 
@@ -69,22 +61,31 @@ namespace DataManager.Tests.SQL
         }
 
         [Fact]
-        public void Create_RegistersInstanceInContainer()
+        public void Create_InvokesOnCreatedCallback()
         {
-            var container = new DryIocContainerExtension();
-            var manager = new SQLManager(container);
+            var manager = new SQLManager();
+            object? notified = null;
+
+            var sql = manager.Create<WorkbenchEntity>(CreateParam(ESQLToolType.Dapper), onCreated: x => notified = x);
+
+            Assert.Same(sql, notified);
+        }
+
+        [Fact]
+        public void Create_CtorCallback_Invoked()
+        {
+            object? notified = null;
+            var manager = new SQLManager(onCreated: x => notified = x);
 
             var sql = manager.Create<WorkbenchEntity>(CreateParam(ESQLToolType.Dapper));
-            var resolved = container.Resolve<ISQL<WorkbenchEntity>>();
 
-            Assert.Same(sql, resolved);
+            Assert.Same(sql, notified);
         }
 
         [Fact]
         public void Create_AddsToManagerAndSupportsNameIndexer()
         {
-            var container = new DryIocContainerExtension();
-            var manager = new SQLManager(container);
+            var manager = new SQLManager();
 
             manager.Create<WorkbenchEntity>(CreateParam(ESQLToolType.Dapper));
 
@@ -95,8 +96,7 @@ namespace DataManager.Tests.SQL
         [Fact]
         public void Create_BaseMethod_ThrowsNotSupported()
         {
-            var container = new DryIocContainerExtension();
-            var manager = new SQLManager(container);
+            var manager = new SQLManager();
 
             Assert.Throws<NotSupportedException>(() => manager.Create(CreateParam(ESQLToolType.Dapper)));
         }
@@ -107,6 +107,27 @@ namespace DataManager.Tests.SQL
             var param = new SQLParam();
             Assert.Equal(ESQLType.PostgreSQL, param.DBType);
             Assert.Equal(ESQLToolType.EFCore, param.ToolType);
+        }
+
+        [Fact]
+        public void Create_MissingServerIP_ThrowsArgumentException()
+        {
+            var manager = new SQLManager();
+            var param = CreateParam(ESQLToolType.Dapper);
+            param.ServerIP = string.Empty;
+
+            Assert.Throws<ArgumentException>(() => manager.Create<WorkbenchEntity>(param));
+        }
+
+        [Fact]
+        public void Create_DuplicateName_Throws()
+        {
+            var manager = new SQLManager();
+            manager.Create<WorkbenchEntity>(CreateParam(ESQLToolType.Dapper));
+
+            var dup = CreateParam(ESQLToolType.EFCore);
+            dup.Name = "db-Dapper";
+            Assert.Throws<InvalidOperationException>(() => manager.Create<WorkbenchEntity>(dup));
         }
     }
 }

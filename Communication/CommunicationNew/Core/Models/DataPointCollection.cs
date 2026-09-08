@@ -23,7 +23,8 @@ namespace CommunicationNew.Core.Models
         public IDataPoint this[int index] => _ordered[index];
 
         /// <summary>所有数据点</summary>
-        public IEnumerable<IDataPoint> All => _ordered;
+        // 返回只读视图，防止调用方通过强转绕过 Add/Remove 并破坏字典与顺序表的一致性。
+        public IEnumerable<IDataPoint> All => _ordered.AsReadOnly();
 
         /// <summary>添加数据点</summary>
         public void Add(IDataPoint point)
@@ -37,19 +38,29 @@ namespace CommunicationNew.Core.Models
         /// <summary>批量添加数据点</summary>
         public void AddRange(IEnumerable<IDataPoint> points)
         {
-            foreach (var p in points) Add(p);
+            ArgumentNullException.ThrowIfNull(points);
+            var pending = points.ToArray();
+            var names = new HashSet<string>(_points.Keys, StringComparer.OrdinalIgnoreCase);
+            foreach (var point in pending)
+            {
+                ArgumentNullException.ThrowIfNull(point);
+                if (!names.Add(point.Name))
+                {
+                    throw new ArgumentException($"数据点 '{point.Name}' 已存在", nameof(points));
+                }
+            }
+
+            // 整批数据通过校验后才提交，避免枚举或重名失败留下部分新增结果。
+            foreach (var point in pending) Add(point);
         }
 
         /// <summary>按定义创建并添加数据点</summary>
         public IDataPoint AddDefinition(DataPointDefinition def)
         {
-            var point = new DataPoint(def.Name, def.DataType, def.Address)
-            {
-                Length = def.GetByteLength(),
-                DataFormat = def.DataFormat,
-                Readable = def.Readable,
-                Writable = def.Writable,
-            };
+            ArgumentNullException.ThrowIfNull(def);
+
+            // 定义自身是唯一实例化入口，集合只负责所有权登记，避免复制字段映射规则。
+            var point = def.ToDataPoint();
             Add(point);
             return point;
         }
@@ -57,7 +68,14 @@ namespace CommunicationNew.Core.Models
         /// <summary>按定义列表批量创建</summary>
         public void AddDefinitions(IEnumerable<DataPointDefinition> defs)
         {
-            foreach (var d in defs) AddDefinition(d);
+            ArgumentNullException.ThrowIfNull(defs);
+
+            // 定义转换也在 AddRange 提交前完整执行，任何无效定义都不会造成部分写入。
+            AddRange(defs.Select(static definition =>
+            {
+                ArgumentNullException.ThrowIfNull(definition);
+                return definition.ToDataPoint();
+            }));
         }
 
         /// <summary>移除数据点</summary>

@@ -1,4 +1,6 @@
+using CommunicationNew.Abstractions;
 using CommunicationNew.Core.EventArgs;
+using CommunicationNew.Runtime;
 
 namespace CommunicationNew.Core
 {
@@ -6,7 +8,7 @@ namespace CommunicationNew.Core
     /// 通信设备抽象基类 —— 封装公共逻辑（事件触发、重试、超时、资源释放），
     /// 各协议设备继承此类只需关注协议特定的 Connect/Read/Write/Send 实现。
     /// </summary>
-    public abstract class CommunicationDeviceBase : ICommunicationDevice
+    public abstract class CommunicationDeviceBase : ICommunicationDevice, IAddressReader
     {
         // ===== 识别与状态 =====
 
@@ -28,11 +30,11 @@ namespace CommunicationNew.Core
         protected readonly CommunicationParam Param;
         protected readonly object SyncRoot = new();
         protected CancellationTokenSource? _receiveLoopCts;
-        protected CancellationTokenSource? _reconnectCts;
         protected Task? _receiveLoopTask;
-        private Task? _reconnectTask;
-        private readonly Dictionary<long, Task> _backgroundOperations = new();
-        private long _nextBackgroundOperationId;
+        private readonly BoundedEventDispatcher<DataReceivedEventArgs> _dataDispatcher;
+        private readonly BoundedOperationTracker _backgroundOperations;
+        private readonly object _disposeSync = new();
+        private Task? _disposeTask;
         protected bool _disposed;
 
         protected CommunicationDeviceBase(CommunicationParam param)
@@ -41,6 +43,14 @@ namespace CommunicationNew.Core
             DeviceName = param.DeviceName;
             DeviceId = param.DeviceId;
             TimeoutMs = param.TimeoutMs;
+            _dataDispatcher = new BoundedEventDispatcher<DataReceivedEventArgs>(
+                param.EventQueueCapacity,
+                args => DataReceived?.Invoke(this, args),
+                OnErrorOccurred,
+                "data_received");
+            _backgroundOperations = new BoundedOperationTracker(
+                param.ServerRequestCapacity,
+                OnErrorOccurred);
         }
 
         // ===== 事件触发辅助 =====
@@ -53,13 +63,26 @@ namespace CommunicationNew.Core
 
         protected virtual void OnDataReceived(byte[] data, string? remoteAddress = null)
         {
-            DataReceived?.Invoke(this, new DataReceivedEventArgs(data, remoteAddress));
+            _dataDispatcher.TryPublish(
+                new DataReceivedEventArgs(data, remoteAddress),
+                CreateEventDiagnosticContext());
         }
 
         protected virtual void OnErrorOccurred(Exception ex)
         {
             ErrorOccurred?.Invoke(this, new CommunicationErrorEventArgs(ex, DeviceName));
         }
+
+        private CommunicationDiagnosticContext CreateEventDiagnosticContext() =>
+            new(ProtocolType.ToString(), ProtocolType switch
+            {
+                ProtocolType.Tcp or ProtocolType.ModbusTcp or ProtocolType.MitsubishiMc => "tcp",
+                ProtocolType.Udp => "udp",
+                ProtocolType.Serial or ProtocolType.ModbusRtu => "serial",
+                ProtocolType.Http or ProtocolType.WebApi => "http",
+                ProtocolType.OpcUa => "opcua",
+                _ => "unknown",
+            });
 
         // ===== 重试包装 =====
 
@@ -98,45 +121,6 @@ namespace CommunicationNew.Core
             return await action(cts.Token).ConfigureAwait(false);
         }
 
-        // ===== 自动重连 =====
-
-        protected virtual void StartAutoReconnect(CancellationToken ct)
-        {
-            if (!Param.AutoReconnect || _reconnectTask is { IsCompleted: false })
-            {
-                return;
-            }
-
-            _reconnectCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            var token = _reconnectCts.Token;
-
-            _reconnectTask = Task.Run(async () =>
-            {
-                while (!token.IsCancellationRequested && !IsConnected)
-                {
-                    try
-                    {
-                        await Task.Delay(Param.ReconnectIntervalMs, token).ConfigureAwait(false);
-                        if (token.IsCancellationRequested) break;
-                        await ConnectAsync(token).ConfigureAwait(false);
-                    }
-                    catch (OperationCanceledException) { break; }
-                    catch (Exception ex)
-                    {
-                        // 单次重连失败不结束循环，但必须把原因暴露给调用方。
-                        OnErrorOccurred(ex);
-                    }
-                }
-            }, token);
-        }
-
-        protected virtual void StopAutoReconnect()
-        {
-            _reconnectCts?.Cancel();
-            _reconnectCts?.Dispose();
-            _reconnectCts = null;
-        }
-
         /// <summary>等待设备拥有的接收循环退出；由断开流程在关闭底层句柄后调用。</summary>
         protected async Task WaitForReceiveLoopAsync()
         {
@@ -163,57 +147,24 @@ namespace CommunicationNew.Core
             }
         }
 
-        /// <summary>启动并持有一个短生命周期后台操作，防止异常和停止过程失去所有者。</summary>
+        /// <summary>
+        /// 启动并持有一个短生命周期后台操作；容量不足时抛出异常。
+        /// </summary>
         protected void StartBackgroundOperation(Func<Task> operation)
         {
-            ArgumentNullException.ThrowIfNull(operation);
-            var operationId = Interlocked.Increment(ref _nextBackgroundOperationId);
-            var startSignal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            var task = RunBackgroundOperationAsync(operationId, startSignal.Task, operation);
-            lock (SyncRoot)
+            if (!TryStartBackgroundOperation(operation))
             {
-                _backgroundOperations.Add(operationId, task);
+                throw new InvalidOperationException(
+                    $"服务端在途请求已达到容量上限 {Param.ServerRequestCapacity}。");
             }
-            startSignal.SetResult();
         }
+
+        /// <summary>尝试启动并持有后台操作；容量已满时不调用委托并返回 false。</summary>
+        protected bool TryStartBackgroundOperation(Func<Task> operation) =>
+            _backgroundOperations.TryStart(operation);
 
         /// <summary>等待当前设备拥有的所有短生命周期后台操作结束。</summary>
-        protected async Task WaitForBackgroundOperationsAsync()
-        {
-            Task[] tasks;
-            lock (SyncRoot)
-            {
-                tasks = _backgroundOperations.Values.ToArray();
-            }
-            await Task.WhenAll(tasks).ConfigureAwait(false);
-        }
-
-        private async Task RunBackgroundOperationAsync(
-            long operationId,
-            Task startSignal,
-            Func<Task> operation)
-        {
-            await startSignal.ConfigureAwait(false);
-            try
-            {
-                await operation().ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                // 设备停止时取消在途操作属于正常生命周期。
-            }
-            catch (Exception ex)
-            {
-                OnErrorOccurred(ex);
-            }
-            finally
-            {
-                lock (SyncRoot)
-                {
-                    _backgroundOperations.Remove(operationId);
-                }
-            }
-        }
+        protected Task WaitForBackgroundOperationsAsync() => _backgroundOperations.DrainAsync();
 
         // ===== 抽象方法（子类实现）=====
 
@@ -239,49 +190,59 @@ namespace CommunicationNew.Core
 
         public void Dispose()
         {
-            if (_disposed) return;
-            _receiveLoopCts?.Cancel();
-            StopAutoReconnect();
-            try
-            {
-                DisconnectAsync(CancellationToken.None).GetAwaiter().GetResult();
-            }
-            finally
-            {
-                Dispose(true);
-                GC.SuppressFinalize(this);
-            }
+            DisposeAsync().AsTask().GetAwaiter().GetResult();
         }
 
-        /// <summary>等待断开与后台重连任务退出后释放资源。</summary>
-        public async ValueTask DisposeAsync()
+        /// <summary>等待断开与后台任务退出；所有并发调用共享同一个完成过程。</summary>
+        public ValueTask DisposeAsync()
         {
-            if (_disposed) return;
+            TaskCompletionSource? completion = null;
+            Task disposeTask;
+            lock (_disposeSync)
+            {
+                if (_disposeTask is null)
+                {
+                    completion = new TaskCompletionSource(
+                        TaskCreationOptions.RunContinuationsAsynchronously);
+                    _disposeTask = completion.Task;
+                }
 
-            _receiveLoopCts?.Cancel();
-            StopAutoReconnect();
+                disposeTask = _disposeTask;
+            }
+
+            if (completion is not null)
+            {
+                // 唯一任务已经发布后才调用虚拟方法，避免协议代码重入或阻塞协调锁。
+                _ = CompleteDisposeAsync(completion);
+            }
+
+            return new ValueTask(disposeTask);
+        }
+
+        private async Task CompleteDisposeAsync(TaskCompletionSource completion)
+        {
             try
             {
-                await DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
-                await WaitForReceiveLoopAsync().ConfigureAwait(false);
-                await WaitForBackgroundOperationsAsync().ConfigureAwait(false);
-                if (_reconnectTask is not null)
+                try
                 {
-                    try
-                    {
-                        await _reconnectTask.ConfigureAwait(false);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        // 释放触发的取消属于正常退出。
-                    }
+                    _receiveLoopCts?.Cancel();
+                    await DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+                    await WaitForReceiveLoopAsync().ConfigureAwait(false);
+                    await WaitForBackgroundOperationsAsync().ConfigureAwait(false);
+                }
+                finally
+                {
+                    Dispose(true);
+                    GC.SuppressFinalize(this);
                 }
             }
-            finally
+            catch (Exception ex)
             {
-                Dispose(true);
-                GC.SuppressFinalize(this);
+                completion.TrySetException(ex);
+                return;
             }
+
+            completion.TrySetResult();
         }
 
         protected virtual void Dispose(bool disposing)
@@ -291,7 +252,7 @@ namespace CommunicationNew.Core
             {
                 _receiveLoopCts?.Cancel();
                 _receiveLoopCts?.Dispose();
-                StopAutoReconnect();
+                _dataDispatcher.DisposeAsync().AsTask().GetAwaiter().GetResult();
             }
             _disposed = true;
         }

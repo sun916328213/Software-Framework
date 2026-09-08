@@ -8,13 +8,19 @@ namespace CommunicationNew.Protocols.OpcUa
         /// <summary>端点URL（如 opc.tcp://127.0.0.1:4840）</summary>
         public string EndpointUrl { get; set; } = "opc.tcp://127.0.0.1:4840";
 
-        /// <summary>安全模式（None/Sign/SignAndEncrypt）</summary>
+        /// <summary>
+        /// 期望的安全模式（None/Sign/SignAndEncrypt）。
+        /// 生产环境建议使用 SignAndEncrypt。
+        /// </summary>
         public string SecurityMode { get; set; } = "None";
 
-        /// <summary>安全策略</summary>
+        /// <summary>
+        /// 期望的安全策略。支持 None、Basic256Sha256、
+        /// Aes128_Sha256_RsaOaep 和 Aes256_Sha256_RsaPss。
+        /// </summary>
         public string SecurityPolicy { get; set; } = "None";
 
-        /// <summary>用户名（空=匿名）</summary>
+        /// <summary>用户名（空=匿名）；None 安全模式下拒绝发送凭据。</summary>
         public string? UserName { get; set; }
 
         /// <summary>密码</summary>
@@ -25,6 +31,21 @@ namespace CommunicationNew.Protocols.OpcUa
 
         /// <summary>应用名称</summary>
         public string ApplicationName { get; set; } = "CommunicationNew";
+
+        /// <summary>
+        /// OPC UA PKI 根目录。为空时使用当前用户 LocalApplicationData 下的 CommunicationNew/pki。
+        /// 服务端即使只开放 None 端点，也需要在该目录持有应用实例证书。
+        /// </summary>
+        public string? PkiRootPath { get; set; }
+
+        /// <summary>
+        /// 是否自动接受未受信任的应用证书。默认关闭；仅建议在本地回环或测试环境显式开启。
+        /// 生产环境应将对端证书放入 trusted 存储。
+        /// </summary>
+        public bool AutoAcceptUntrustedCertificates { get; set; }
+
+        /// <summary>OPC UA 对端 RSA 证书允许的最小密钥长度，默认 2048 位。</summary>
+        public ushort MinimumCertificateKeySize { get; set; } = 2048;
 
         /// <summary>服务器模式下节点命名空间URI</summary>
         public string ServerNamespaceUri { get; set; } = "http://communicationnew.org/UA";

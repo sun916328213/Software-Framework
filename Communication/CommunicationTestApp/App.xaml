@@ -1,0 +1,18 @@
+<prism:PrismApplication x:Class="CommunicationTestApp.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:prism="http://prismlibrary.com/"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- MaterialDesign 主题（BaseTheme 初始为深色，运行时由 ThemeService 切换） -->
+                <md:BundledTheme BaseTheme="Dark" PrimaryColor="Indigo" SecondaryColor="Blue" />
+                <!-- MD 5.x：Defaults 拆分为 MaterialDesign2 / MaterialDesign3，此处用 MD2（即 4.x 外观） -->
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign2.Defaults.xaml" />
+                <ResourceDictionary Source="Themes/Theme.xaml" />
+                <ResourceDictionary Source="Themes/Controls.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</prism:PrismApplication>

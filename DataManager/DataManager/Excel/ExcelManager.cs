@@ -18,15 +18,19 @@ namespace DataManager.Excel
 
         public override IExcel Create(ExcelParam param)
         {
+            ArgumentNullException.ThrowIfNull(param);
+            param.Validate();
+            if (Contains(param.Name))
+                throw new InvalidOperationException($"已存在同名Excel实例: {param.Name}");
             switch (param.ToolType)
             {
                 case ExcelType.MiniExcel:
                     var miniExcel = new MiniExcelHelper() { ExcelParam = param };
-                    DataManagers.Add(miniExcel);
+                    Add(miniExcel);
                     return miniExcel;
                 case ExcelType.EPPlus:
                     var epPlus = new EPPlusHelper() { ExcelParam = param };
-                    DataManagers.Add(epPlus);
+                    Add(epPlus);
                     return epPlus;
                 default: throw new NotSupportedException($"{param.ToolType} not support.");
             }

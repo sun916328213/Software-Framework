@@ -14,8 +14,8 @@ namespace DataManager.Workbench.ViewModels
     {
         private readonly SQLManager _sqlManager;
         private readonly Random _random = new();
-        private ISQL<TestEntity> _db;
-        private string _currentKey;
+        private ISQL<TestEntity>? _db;
+        private string? _currentKey;
 
         public SqlViewModel(SQLManager sqlManager)
         {
@@ -77,7 +77,7 @@ namespace DataManager.Workbench.ViewModels
             {
                 var db = EnsureDb();
                 db.DeleteAll();
-                Results.Clear();
+                Infrastructure.UiThread.Invoke(() => Results.Clear());
             }));
             SplitTablesCommand = new DelegateCommand(() => Run(() =>
             {
@@ -145,8 +145,8 @@ namespace DataManager.Workbench.ViewModels
             set => SetProperty(ref _results, value);
         }
 
-        private TestEntity _selectedEntity;
-        public TestEntity SelectedEntity
+        private TestEntity? _selectedEntity;
+        public TestEntity? SelectedEntity
         {
             get => _selectedEntity;
             set => SetProperty(ref _selectedEntity, value);
@@ -165,19 +165,16 @@ namespace DataManager.Workbench.ViewModels
         public DelegateCommand SplitTablesCommand { get; }
 
         // ---------- 私有方法 ----------
+        /// <summary>
+        /// 连接指纹：全部连接要素参与，任一改动（含密码纠错）都重建实例。
+        /// 曾用“工具+库类型”做键，导致密码改对后仍复用旧实例，一直报密码错误。
+        /// </summary>
+        public static string BuildDbKey(SQLParam param) =>
+            $"{param.ToolType}:{param.DBType}:{param.ServerIP}:{param.Port}:{param.UserName}:{param.Password}:{param.DBName}";
+
         private ISQL<TestEntity> EnsureDb()
         {
-            var key = $"{SelectedToolType}:{SelectedDbType}";
-            if (_db != null && _currentKey == key)
-                return _db;
-
-            if (_db != null)
-            {
-                try { _db.DisConnect(); } catch { }
-                _sqlManager.Remove(_db);
-            }
-
-            _db = _sqlManager.Create<TestEntity>(new SQLParam
+            var param = new SQLParam
             {
                 Name = "workbench",
                 ServerIP = ServerIP,
@@ -187,7 +184,18 @@ namespace DataManager.Workbench.ViewModels
                 DBName = DBName,
                 DBType = SelectedDbType,
                 ToolType = SelectedToolType,
-            });
+            };
+            var key = BuildDbKey(param);
+            if (_db != null && _currentKey == key)
+                return _db;
+
+            if (_db != null)
+            {
+                try { _db.DisConnect(); } catch { }
+                _sqlManager.Remove(_db);
+            }
+
+            _db = _sqlManager.Create<TestEntity>(param);
             _currentKey = key;
             IsConnected = false;
             StatusText = "未连接";
@@ -202,7 +210,8 @@ namespace DataManager.Workbench.ViewModels
             CreateTime = DateTime.Now,
         };
 
-        private void Log(string msg) => OutputText = $"[{DateTime.Now:HH:mm:ss}] {msg}\n" + OutputText;
+        private void Log(string msg) => Infrastructure.UiThread.Invoke(
+            () => OutputText = $"[{DateTime.Now:HH:mm:ss}] {msg}\n" + OutputText);
 
         private Task RunWork(string title, Action action) => Task.Run(() =>
         {

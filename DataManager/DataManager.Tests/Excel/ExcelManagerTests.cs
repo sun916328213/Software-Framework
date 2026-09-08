@@ -51,5 +51,24 @@ namespace DataManager.Tests.Excel
             Assert.Equal(ExcelType.MiniExcel, param.ToolType);
             Assert.Equal(180, param.SaveDays);
         }
+
+        [Fact]
+        public void Create_MissingFilePath_ThrowsArgumentException()
+        {
+            var manager = new ExcelManager();
+            var param = CreateParam("v1", ExcelType.EPPlus);
+            param.FilePath = string.Empty;
+
+            Assert.Throws<ArgumentException>(() => manager.Create(param));
+        }
+
+        [Fact]
+        public void Create_DuplicateName_Throws()
+        {
+            var manager = new ExcelManager();
+            manager.Create(CreateParam("dup", ExcelType.EPPlus));
+
+            Assert.Throws<InvalidOperationException>(() => manager.Create(CreateParam("dup", ExcelType.MiniExcel)));
+        }
     }
 }

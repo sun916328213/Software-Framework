@@ -119,6 +119,35 @@ namespace DataManager.Tests.Excel
             Assert.Empty(helper.Query<PersonRecord>());
         }
 
+        private enum Level { Low, High }
+
+        private class TypedRecord
+        {
+            public string Name { get; set; } = string.Empty;
+            public int? Score { get; set; }
+            public Level Level { get; set; }
+            public DateTime? When { get; set; }
+        }
+
+        [Fact]
+        public void WriteThenQuery_NullableEnumDate_RoundTrip()
+        {
+            var helper = CreateHelper("typed.xlsx");
+            helper.Write(new[]
+            {
+                new TypedRecord { Name = "A", Score = null, Level = Level.High, When = new DateTime(2026, 2, 3) },
+                new TypedRecord { Name = "B", Score = 95, Level = Level.Low, When = null },
+            });
+
+            var result = helper.Query<TypedRecord>().OrderBy(x => x.Name).ToList();
+
+            Assert.Equal(2, result.Count);
+            Assert.Null(result[0].Score);
+            Assert.Equal(Level.High, result[0].Level);
+            Assert.Equal(new DateTime(2026, 2, 3), result[0].When);
+            Assert.Equal(95, result[1].Score);
+        }
+
         public void Dispose()
         {
             try { Directory.Delete(_dir, true); } catch { }

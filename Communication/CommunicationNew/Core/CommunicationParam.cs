@@ -32,5 +32,18 @@ namespace CommunicationNew.Core
 
         /// <summary>自动重连间隔（毫秒）</summary>
         public int ReconnectIntervalMs { get; set; } = 3000;
+
+        /// <summary>异步用户事件队列容量；队列满时丢弃最旧通知。</summary>
+        public int EventQueueCapacity { get; set; } = 256;
+
+        /// <summary>
+        /// 等待单请求执行权的队列容量；队列满时明确拒绝新请求。
+        /// </summary>
+        public int RequestQueueCapacity { get; set; } = 256;
+
+        /// <summary>
+        /// 服务端允许同时处理的在途请求数；容量耗尽时新请求会被明确拒绝。
+        /// </summary>
+        public int ServerRequestCapacity { get; set; } = 100;
     }
 }

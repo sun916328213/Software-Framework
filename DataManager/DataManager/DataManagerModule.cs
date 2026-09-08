@@ -1,13 +1,8 @@
 using DataManager.Excel;
-using DataManager.Excel.MiniExcel;
 using DataManager.Log;
-using DataManager.Log.Definition;
-using DataManager.Log.SeriLog;
 using DataManager.SQL;
-using Extension.Core.ReflectionEx;
 using Prism.Ioc;
 using Prism.Modularity;
-using System.Reflection;
 
 
 namespace DataManager
@@ -26,8 +21,8 @@ namespace DataManager
             containerRegistry.RegisterSingleton<LogManager>();
             containerRegistry.RegisterSingleton<SQLManager>();
             containerRegistry.RegisterSingleton<ExcelManager>();
-
-            containerRegistry.RegisterSingleton<IExcel, MiniExcelHelper>();
+            // 说明：IExcel 实例必须带 ExcelParam（文件路径等）经 ExcelManager.Create 创建，
+            // 此处不再注册无参 IExcel 单例（旧注册解析后 ExcelParam 为空，调用即 NRE）。
         }
 
         /// <summary>
@@ -36,10 +31,17 @@ namespace DataManager
         /// <param name="containerProvider">容器提供者</param>
         public void OnInitialized(IContainerProvider containerProvider)
         {
-            // 在这里执行模块初始化完成后的操作
-            // 例如获取服务实例等
+            ApplyNpgsqlLegacyTimestampBehavior();
+        }
 
-            // 恢复 Npgsql 6.0 之前的时间戳兼容行为，允许写入 Local 时间
+        /// <summary>
+        /// P2-4：Npgsql 时间戳兼容开关（原先是 OnInitialized 里的一行魔法代码，现显式命名+文档化）。
+        /// 原因：Npgsql 6.0+ 默认拒绝写入 Local(DateTime.Now) 时间戳并抛错；
+        /// 本库 EFCore/Dapper/SQL 测试大量使用 DateTime.Now/Today，保持 Legacy 行为可避免全量改 UTC。
+        /// 如未来统一用 UTC 存储，在此删除调用并将实体时间改为 DateTime.UtcNow 即可。
+        /// </summary>
+        public static void ApplyNpgsqlLegacyTimestampBehavior()
+        {
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         }
     }

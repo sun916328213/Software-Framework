@@ -15,7 +15,8 @@ namespace DataManager.Workbench.ViewModels
     public class LogViewModel : BindableBase
     {
         private readonly LogManager _logManager;
-        private ILog _log;
+        private ILog? _log;
+        private string? _currentKey;
 
         public LogViewModel(LogManager logManager)
         {
@@ -23,45 +24,31 @@ namespace DataManager.Workbench.ViewModels
 
             InitLogCommand = new DelegateCommand(() => Run(() =>
             {
-                if (SelectedLogType != ELogType.SeriLog)
-                {
-                    Log("⚠ 当前仅支持 Serilog 实现");
-                    return;
-                }
-                if (_log != null)
-                    _logManager.Remove(_log);
-
-                _log = _logManager.Create(new LogParam
-                {
-                    Name = LogName,
-                    FilePath = FilePath,
-                    Separator = Separator,
-                    SaveDays = SaveDays,
-                    LogType = SelectedLogType,
-                });
-                Log($"✓ 日志已初始化: {FilePath}");
+                ResetLog(CurrentParam());
+                Log($"✓ 日志已初始化 ({SelectedLogType}): {FilePath}");
             }));
 
             WriteCommand = new DelegateCommand(async () => await RunAsync("写入日志", () =>
             {
-                EnsureLog();
-                return _log.AddAsync(Message, SelectedLevel);
+                var log = EnsureLog();
+                return log.AddAsync(Message, SelectedLevel);
             }));
 
             WriteManyCommand = new DelegateCommand(async () => await RunAsync("批量写入 100 条", async () =>
             {
-                EnsureLog();
+                var log = EnsureLog();
                 for (int i = 1; i <= 100; i++)
                 {
-                    await _log.AddAsync($"第 {i} 条批量测试日志 - {_random.Next(1000, 9999)}", (ELogLevel)(i % 5));
+                    await log.AddAsync($"第 {i} 条批量测试日志 - {_random.Next(1000, 9999)}", (ELogLevel)(i % 5));
                 }
             }));
 
             RefreshFilesCommand = new DelegateCommand(() => Run(() =>
             {
+                // 日志文件名为 logyyyyMMdd（无扩展名，三种实现一致），不能用 *.txt 过滤
                 Files = new ObservableCollection<string>(
                     Directory.Exists(FilePath)
-                        ? Directory.GetFiles(FilePath, "*.txt").Select(Path.GetFileName)
+                        ? Directory.GetFiles(FilePath, "log*").Select(f => Path.GetFileName(f)!)
                         : Enumerable.Empty<string>());
                 SelectedFile = Files.LastOrDefault();
                 Log($"✓ 共 {Files.Count} 个日志文件");
@@ -69,31 +56,34 @@ namespace DataManager.Workbench.ViewModels
 
             QueryByFileCommand = new DelegateCommand(async () => await RunAsync("按文件查询", () =>
             {
-                EnsureLog();
+                var log = EnsureLog();
+                var file = SelectedFile ?? throw new InvalidOperationException("请先刷新并选择日志文件");
                 return Task.Run(() =>
                 {
-                    var infos = _log.Query(SelectedFile);
-                    Results = new ObservableCollection<LogInfo>(infos);
+                    var infos = log.Query(file);
+                    Infrastructure.UiThread.Invoke(() => Results = new ObservableCollection<LogInfo>(infos));
                 });
             }));
 
             QueryByRangeCommand = new DelegateCommand(async () => await RunAsync("按时间范围查询", () =>
             {
-                EnsureLog();
+                var log = EnsureLog();
                 return Task.Run(() =>
                 {
-                    var infos = _log.Query(StartDate, EndDate);
-                    Results = new ObservableCollection<LogInfo>(infos);
+                    var infos = log.Query(StartDate, EndDate);
+                    Infrastructure.UiThread.Invoke(() => Results = new ObservableCollection<LogInfo>(infos));
                 });
             }));
 
             QueryMultiCommand = new DelegateCommand(async () => await RunAsync("多行读取", () =>
             {
-                EnsureLog();
+                var log = EnsureLog();
+                var file = SelectedFile ?? throw new InvalidOperationException("请先刷新并选择日志文件");
                 return Task.Run(() =>
                 {
-                    var lines = _log.Query_Multi(SelectedFile);
-                    MultiText = string.Join(Environment.NewLine, lines);
+                    var lines = log.Query_Multi(file);
+                    var text = string.Join(Environment.NewLine, lines);
+                    Infrastructure.UiThread.Invoke(() => MultiText = text);
                 });
             }));
 
@@ -133,7 +123,7 @@ namespace DataManager.Workbench.ViewModels
         }
 
         // ---------- 查询 ----------
-        public string SelectedFile { get; set; }
+        public string? SelectedFile { get; set; }
 
         private ObservableCollection<string> _files = new();
         public ObservableCollection<string> Files
@@ -189,14 +179,49 @@ namespace DataManager.Workbench.ViewModels
         public DelegateCommand OpenFolderCommand { get; }
 
         // ---------- 私有方法 ----------
+        /// <summary>
+        /// 连接指纹：全部配置要素参与，任一改动都重建实例（与 SqlViewModel.BuildDbKey 同款）。
+        /// </summary>
+        public static string BuildLogKey(LogParam param) =>
+            $"{param.LogType}:{param.Name}:{param.FilePath}:{param.Separator}:{param.SaveDays}";
+
+        private LogParam CurrentParam() => new()
+        {
+            Name = LogName,
+            FilePath = FilePath,
+            Separator = Separator,
+            SaveDays = SaveDays,
+            LogType = SelectedLogType,
+        };
+
+        private ILog ResetLog(LogParam param)
+        {
+            if (_log != null)
+            {
+                try { (_log as IDisposable)?.Dispose(); } catch { }
+                _logManager.Remove(_log);
+                _log = null;
+            }
+            _log = _logManager.Create(param);
+            _currentKey = BuildLogKey(param);
+            return _log;
+        }
+
         private ILog EnsureLog()
         {
-            if (_log == null)
-                InitLogCommand.Execute();
+            var param = CurrentParam();
+            var key = BuildLogKey(param);
+            if (_log == null || _currentKey != key)
+            {
+                var changed = _log != null;
+                ResetLog(param);
+                if (changed) Log("配置已变更，日志实例已重建");
+            }
             return _log ?? throw new InvalidOperationException("日志初始化失败");
         }
 
-        private void Log(string msg) => OutputText = $"[{DateTime.Now:HH:mm:ss}] {msg}\n" + OutputText;
+        private void Log(string msg) => Infrastructure.UiThread.Invoke(
+            () => OutputText = $"[{DateTime.Now:HH:mm:ss}] {msg}\n" + OutputText);
 
         private async Task RunAsync(string title, Func<Task> action)
         {

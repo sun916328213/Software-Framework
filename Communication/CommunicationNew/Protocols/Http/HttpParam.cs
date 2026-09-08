@@ -20,8 +20,13 @@ namespace CommunicationNew.Protocols.Http
         /// <summary>是否启用KeepAlive</summary>
         public bool KeepAlive { get; set; } = true;
 
-        /// <summary>最大并发连接数</summary>
-        public int MaxConnections { get; set; } = 100;
+        /// <summary>服务端最大在途请求数的兼容别名。</summary>
+        [Obsolete("请使用 ServerRequestCapacity；该属性将在后续主版本移除。")]
+        public int MaxConnections
+        {
+            get => ServerRequestCapacity;
+            set => ServerRequestCapacity = value;
+        }
 
         /// <summary>TLS忽略证书错误</summary>
         public bool IgnoreSslErrors { get; set; } = false;

@@ -15,7 +15,8 @@ namespace DataManager.Workbench.ViewModels
     public class ExcelViewModel : BindableBase
     {
         private readonly ExcelManager _excelManager;
-        private IExcel _excel;
+        private IExcel? _excel;
+        private string? _currentKey;
 
         public ExcelViewModel(ExcelManager excelManager)
         {
@@ -23,18 +24,7 @@ namespace DataManager.Workbench.ViewModels
 
             ApplyCommand = new DelegateCommand(() => Run(() =>
             {
-                if (_excel != null)
-                    _excelManager.Remove(_excel);
-
-                Directory.CreateDirectory(ExcelFilePath);
-                _excel = _excelManager.Create(new ExcelParam
-                {
-                    Name = "workbench",
-                    FilePath = ExcelFilePath,
-                    FileName = ExcelFileName,
-                    HasHeader = HasHeader,
-                    ToolType = SelectedExcelType,
-                });
+                ResetExcel(CurrentParam());
                 Log($"✓ Excel 实例已创建: {SelectedExcelType} → {ExcelFileName}");
             }));
 
@@ -61,7 +51,7 @@ namespace DataManager.Workbench.ViewModels
             QueryConditionCommand = new DelegateCommand(() => RunWork("条件查询 Age>25", () =>
             {
                 var data = EnsureExcel().Query<ExcelPerson>(x => x.Age > 25).ToList();
-                Results = new ObservableCollection<ExcelPerson>(data);
+                Infrastructure.UiThread.Invoke(() => Results = new ObservableCollection<ExcelPerson>(data));
             }));
 
             UpdateSelectedCommand = new DelegateCommand(() => RunWork("更新选中行", () =>
@@ -113,8 +103,8 @@ namespace DataManager.Workbench.ViewModels
             set => SetProperty(ref _results, value);
         }
 
-        private ExcelPerson _selectedEntity;
-        public ExcelPerson SelectedEntity
+        private ExcelPerson? _selectedEntity;
+        public ExcelPerson? SelectedEntity
         {
             get => _selectedEntity;
             set => SetProperty(ref _selectedEntity, value);
@@ -138,10 +128,44 @@ namespace DataManager.Workbench.ViewModels
         public DelegateCommand OpenFolderCommand { get; }
 
         // ---------- 私有方法 ----------
+        /// <summary>
+        /// 连接指纹：全部配置要素参与，任一改动都重建实例（与 SqlViewModel.BuildDbKey 同款）。
+        /// </summary>
+        public static string BuildExcelKey(ExcelParam param) =>
+            $"{param.ToolType}:{param.Name}:{param.FilePath}:{param.FileName}:{param.HasHeader}";
+
+        private ExcelParam CurrentParam() => new()
+        {
+            Name = "workbench",
+            FilePath = ExcelFilePath,
+            FileName = ExcelFileName,
+            HasHeader = HasHeader,
+            ToolType = SelectedExcelType,
+        };
+
+        private IExcel ResetExcel(ExcelParam param)
+        {
+            if (_excel != null)
+            {
+                _excelManager.Remove(_excel);
+                _excel = null;
+            }
+            Directory.CreateDirectory(param.FilePath);
+            _excel = _excelManager.Create(param);
+            _currentKey = BuildExcelKey(param);
+            return _excel;
+        }
+
         private IExcel EnsureExcel()
         {
-            if (_excel == null)
-                ApplyCommand.Execute();
+            var param = CurrentParam();
+            var key = BuildExcelKey(param);
+            if (_excel == null || _currentKey != key)
+            {
+                var changed = _excel != null;
+                ResetExcel(param);
+                if (changed) Log("配置已变更，Excel 实例已重建");
+            }
             return _excel ?? throw new InvalidOperationException("Excel 初始化失败");
         }
 
@@ -157,10 +181,11 @@ namespace DataManager.Workbench.ViewModels
         private void QueryAll()
         {
             var data = EnsureExcel().Query<ExcelPerson>().ToList();
-            Results = new ObservableCollection<ExcelPerson>(data);
+            Infrastructure.UiThread.Invoke(() => Results = new ObservableCollection<ExcelPerson>(data));
         }
 
-        private void Log(string msg) => OutputText = $"[{DateTime.Now:HH:mm:ss}] {msg}\n" + OutputText;
+        private void Log(string msg) => Infrastructure.UiThread.Invoke(
+            () => OutputText = $"[{DateTime.Now:HH:mm:ss}] {msg}\n" + OutputText);
 
         private Task RunWork(string title, Action action) => Task.Run(() =>
         {

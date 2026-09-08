@@ -32,13 +32,25 @@ namespace CommunicationNew.Core.Models
         }
 
         /// <summary>获取强类型值</summary>
+        /// <exception cref="InvalidCastException">当前值无法转换为目标类型。</exception>
         public T? GetValue<T>()
         {
             if (Value is T t) return t;
             if (Value != null)
             {
-                try { return (T)Convert.ChangeType(Value, typeof(T)); }
-                catch { return default; }
+                try
+                {
+                    return (T)Convert.ChangeType(Value, typeof(T));
+                }
+                catch (Exception ex) when (
+                    ex is InvalidCastException or FormatException or OverflowException)
+                {
+                    // 已有值转换失败必须显式暴露，不能用 default 冒充设备的合法采样值。
+                    throw new InvalidCastException(
+                        $"无法将设备值从 {Value.GetType().FullName} 转换为 " +
+                        $"{typeof(T).FullName ?? typeof(T).Name}。",
+                        ex);
+                }
             }
             return default;
         }

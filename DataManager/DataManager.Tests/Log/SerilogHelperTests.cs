@@ -32,21 +32,28 @@ namespace DataManager.Tests.Log
             };
         }
 
+        private static string ReadAllTextShared(string path)
+        {
+            using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var sr = new StreamReader(fs);
+            return sr.ReadToEnd();
+        }
+
         [Fact]
         public void Add_CreatesFileContainingMessage()
         {
-            var helper = CreateHelper();
+            using var helper = CreateHelper();
             helper.Add("hello-serilog", ELogLevel.Information);
 
             var files = Directory.GetFiles(_dir);
             Assert.NotEmpty(files);
-            Assert.Contains("hello-serilog", File.ReadAllText(files[0]));
+            Assert.Contains("hello-serilog", ReadAllTextShared(files[0]));
         }
 
         [Fact]
         public void Add_FileName_ContainsDateAndIsNotHidden()
         {
-            var helper = CreateHelper();
+            using var helper = CreateHelper();
             helper.Add("naming-check", ELogLevel.Information);
 
             var fileName = Path.GetFileName(Directory.GetFiles(_dir)[0]);
@@ -58,12 +65,12 @@ namespace DataManager.Tests.Log
         [Fact]
         public void Add_MultipleCalls_AllMessagesPersisted()
         {
-            var helper = CreateHelper();
+            using var helper = CreateHelper();
             helper.Add("msg-1", ELogLevel.Information);
             helper.Add("msg-2", ELogLevel.Warning);
             helper.Add("msg-3", ELogLevel.Error);
 
-            var all = File.ReadAllText(Directory.GetFiles(_dir)[0]);
+            var all = ReadAllTextShared(Directory.GetFiles(_dir)[0]);
             Assert.Contains("msg-1", all);
             Assert.Contains("msg-2", all);
             Assert.Contains("msg-3", all);
@@ -72,7 +79,7 @@ namespace DataManager.Tests.Log
         [Fact]
         public void Query_ByFileName_ParsesLevelAndInfo()
         {
-            var helper = CreateHelper();
+            using var helper = CreateHelper();
             helper.Add("parse-me", ELogLevel.Warning);
 
             var fileName = Path.GetFileName(Directory.GetFiles(_dir)[0]);
@@ -87,7 +94,7 @@ namespace DataManager.Tests.Log
         [Fact]
         public void Query_ByTimeRange_FindsTodayFile()
         {
-            var helper = CreateHelper();
+            using var helper = CreateHelper();
             helper.Add("range-check", ELogLevel.Error);
 
             var infos = helper.Query(DateTime.Today, DateTime.Today);
@@ -98,13 +105,38 @@ namespace DataManager.Tests.Log
         [Fact]
         public void Query_Multi_ByFileName_ReturnsRawLines()
         {
-            var helper = CreateHelper();
+            using var helper = CreateHelper();
             helper.Add("multi-check", ELogLevel.Information);
 
             var fileName = Path.GetFileName(Directory.GetFiles(_dir)[0]);
             var lines = helper.Query_Multi(fileName);
 
             Assert.Contains(lines, x => x.Contains("multi-check"));
+        }
+
+        [Fact]
+        public void Dispose_ReleasesFileLock()
+        {
+            var helper = CreateHelper();
+            helper.Add("lock-check", ELogLevel.Information);
+            helper.Dispose();
+
+            // 释放后可用独占方式打开（证明句柄已释放）
+            var file = Directory.GetFiles(_dir)[0];
+            using var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.None);
+            Assert.True(fs.Length > 0);
+        }
+
+        [Fact]
+        public void Add_ParallelWrites_AllPersisted()
+        {
+            using var helper = CreateHelper();
+            const int count = 50;
+            Parallel.For(0, count, i => helper.Add($"parallel-{i:00}", ELogLevel.Information));
+
+            var all = ReadAllTextShared(Directory.GetFiles(_dir)[0]);
+            for (int i = 0; i < count; i++)
+                Assert.Contains($"parallel-{i:00}", all);
         }
 
         public void Dispose()

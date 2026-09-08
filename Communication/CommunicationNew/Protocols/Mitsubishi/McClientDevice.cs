@@ -1,306 +1,287 @@
-﻿﻿﻿﻿using System.Net.Sockets;
-using System.Text;
+using CommunicationNew.Abstractions;
 using CommunicationNew.Core;
+using CommunicationNew.Transports;
 
-namespace CommunicationNew.Protocols.Mitsubishi
+namespace CommunicationNew.Protocols.Mitsubishi;
+
+/// <summary>
+/// 三菱 MC 客户端兼容 adapter。
+/// 旧地址读写接口保留，后端可由 SLMP Socket 或其他 <see cref="IMcClientAdapter"/> 提供。
+/// </summary>
+public class McClientDevice : CommunicationDeviceBase, IConnection
 {
-    /// <summary>
-    /// 三菱 MC 协议客户端设备
-    /// 支持 MC Binary 3E/4E 帧格式 over TCP
-    /// 地址格式: "D100" / "M10" / "T5" / "C20" / "W0" / "R100"
-    /// </summary>
-    public class McClientDevice : CommunicationDeviceBase
+    private new McParam Param => (McParam)base.Param;
+    private readonly IMcClientAdapter _adapter;
+
+    /// <summary>使用 MC 参数创建生产 TCP transport。</summary>
+    public McClientDevice(McParam param)
+        : this(param, CreateAdapter(param))
     {
-        private new McParam Param => (McParam)base.Param;
-        private TcpClient? _tcpClient;
-        private NetworkStream? _stream;
+    }
 
-        public McClientDevice(McParam param) : base(param)
+    /// <summary>使用指定字节流 transport 创建 MC 客户端。</summary>
+    public McClientDevice(McParam param, IByteStreamTransport transport)
+        : this(param, new SlmpMcClientAdapter(param, transport))
+    {
+    }
+
+    /// <summary>
+    /// 使用指定 MC 后端 adapter 创建设备，并接管 adapter 生命周期。
+    /// 此入口用于并存接入 SLMP、MX Component 桥接或其他受支持的三菱通信后端。
+    /// </summary>
+    public McClientDevice(McParam param, IMcClientAdapter adapter) : base(param)
+    {
+        _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
+        ProtocolType = Core.ProtocolType.MitsubishiMc;
+    }
+
+    /// <inheritdoc />
+    public override DeviceRole Role => DeviceRole.Client;
+
+    /// <summary>新连接 seam 暴露的显式状态。</summary>
+    public ConnectionState State => _adapter.State;
+
+    /// <inheritdoc />
+    public override async Task<bool> ConnectAsync(CancellationToken ct = default)
+    {
+        if (_adapter.State == ConnectionState.Connected)
         {
-            ProtocolType = Core.ProtocolType.MitsubishiMc;
+            return true;
         }
-        public override DeviceRole Role => DeviceRole.Client;
-
-        public override async Task<bool> ConnectAsync(CancellationToken ct = default)
+        try
         {
-            try
-            {
-                _tcpClient = new TcpClient();
-                await _tcpClient.ConnectAsync(System.Net.IPAddress.Parse(Param.ServerIP), Param.Port, ct);
-                _stream = _tcpClient.GetStream();
-                _stream.ReadTimeout = Param.CommunicationTimeout;
-                _stream.WriteTimeout = Param.CommunicationTimeout;
+            await _adapter.ConnectAsync(ct).ConfigureAwait(false);
+            OnConnectionStateChanged(
+                true,
+                CreateConnectionDescription());
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            OnConnectionStateChanged(false, "连接已取消");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            OnErrorOccurred(ex);
+            OnConnectionStateChanged(false, ex.Message);
+            return false;
+        }
+    }
 
-                IsConnected = true;
-                OnConnectionStateChanged(true, $"MC协议客户端已连接: {Param.ServerIP}:{Param.Port} (帧类型:{Param.FrameType})");
-                return true;
+    /// <inheritdoc />
+    public override async Task DisconnectAsync(CancellationToken ct = default)
+    {
+        await _adapter.DisconnectAsync(ct).ConfigureAwait(false);
+        OnConnectionStateChanged(false, "MC协议客户端已断开");
+    }
+
+    /// <summary>按设备地址批量读取指定点数。</summary>
+    public override Task<byte[]> ReadAsync(
+        string address,
+        int length,
+        CancellationToken ct = default)
+    {
+        if (length is <= 0 or > ushort.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(length));
+        }
+        var request = McRequest.Read(McAddressValue.Parse(address), (ushort)length);
+        return ExecuteWithRetryAsync(async () =>
+        {
+            var response = await _adapter.ExecuteAsync(request, ct).ConfigureAwait(false);
+            return response.Data.ToArray();
+        }, ct);
+    }
+
+    /// <summary>
+    /// 批量写入设备；字设备沿用旧接口的大端字节输入，adapter 转换为 MC 小端线格式。
+    /// 位设备把每个输入字节解释为一个布尔点。
+    /// </summary>
+    public override async Task<bool> WriteAsync(
+        string address,
+        byte[] data,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(data);
+        var parsedAddress = McAddressValue.Parse(address);
+        McRequest request;
+        if (parsedAddress.IsBit)
+        {
+            var quantity = ValidateWriteQuantity(parsedAddress, data.Length);
+            var packed = PackBits(data);
+            request = McRequest.Write(
+                parsedAddress,
+                quantity,
+                packed);
+        }
+        else
+        {
+            if (data.Length == 0 || (data.Length & 1) != 0)
+            {
+                throw new ArgumentException("MC 字设备写入数据必须是非空的偶数字节。", nameof(data));
             }
-            catch (Exception ex)
+            var quantity = ValidateWriteQuantity(parsedAddress, data.Length / 2);
+            request = McRequest.Write(
+                parsedAddress,
+                quantity,
+                SwapWordByteOrder(data));
+        }
+
+        // 写操作默认不重试，避免响应丢失时重复执行非幂等 PLC 写入。
+        await _adapter.ExecuteAsync(request, ct).ConfigureAwait(false);
+        return true;
+    }
+
+    /// <inheritdoc />
+    public override Task<bool> SendAsync(byte[] data, CancellationToken ct = default) =>
+        throw new NotSupportedException("MC codec 模式不支持绕过协议的原始发送，请使用 ReadAsync/WriteAsync。");
+
+    /// <inheritdoc />
+    public override Task<byte[]> SendAndReceiveAsync(byte[] data, CancellationToken ct = default) =>
+        throw new NotSupportedException("MC codec 模式不支持原始收发，请使用 ReadAsync/WriteAsync。");
+
+    async ValueTask IConnection.ConnectAsync(CancellationToken cancellationToken)
+    {
+        if (!await ConnectAsync(cancellationToken).ConfigureAwait(false))
+        {
+            throw new IOException("MC 客户端连接失败。");
+        }
+    }
+
+    ValueTask IConnection.DisconnectAsync(CancellationToken cancellationToken) =>
+        new(DisconnectAsync(cancellationToken));
+
+    private static IByteStreamTransport CreateTransport(McParam param)
+    {
+        ArgumentNullException.ThrowIfNull(param);
+        if (!string.IsNullOrWhiteSpace(param.SerialPortName))
+        {
+            throw new NotSupportedException(
+                "当前 MC adapter 仅实现官方 3E/4E TCP 二进制帧，不支持 MC Serial 模式。");
+        }
+        return new TcpByteStreamTransport(param.ServerIP, param.Port);
+    }
+
+    private string CreateConnectionDescription()
+    {
+        if (Param.Backend == McClientBackend.MxComponent)
+        {
+            var mode = string.IsNullOrWhiteSpace(Param.MxBridgeExecutablePath)
+                ? "直接模式"
+                : "桥接模式";
+            return $"MC协议客户端已连接: MX Component 逻辑站 {Param.MxLogicalStationNumber} ({mode})";
+        }
+
+        return $"MC协议客户端已连接: {Param.ServerIP}:{Param.Port} (帧类型:{Param.FrameType})";
+    }
+
+    private static IMcClientAdapter CreateAdapter(McParam param)
+    {
+        ArgumentNullException.ThrowIfNull(param);
+        return param.Backend switch
+        {
+            McClientBackend.Slmp => new SlmpMcClientAdapter(param, CreateTransport(param)),
+            McClientBackend.MxComponent => CreateMxComponentAdapter(param),
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(param),
+                param.Backend,
+                "不支持的 MC 客户端后端。"),
+        };
+    }
+
+    private static IMcClientAdapter CreateMxComponentAdapter(McParam param)
+    {
+        if (param.CommunicationTimeout <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(param.CommunicationTimeout),
+                param.CommunicationTimeout,
+                "MX Component 通信超时必须大于零。");
+        }
+        if (param.MxLogicalStationNumber is < 0 or > 1023)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(param.MxLogicalStationNumber),
+                param.MxLogicalStationNumber,
+                "MX Component 逻辑站号必须在 0 到 1023 之间。");
+        }
+
+        if (string.IsNullOrWhiteSpace(param.MxBridgeExecutablePath))
+        {
+            return new MxComponentMcClientAdapter(
+                param.MxLogicalStationNumber,
+                param.MxPassword);
+        }
+
+        if (param.MxBridgeStartupTimeoutMs <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(param.MxBridgeStartupTimeoutMs),
+                param.MxBridgeStartupTimeoutMs,
+                "MX 桥接启动超时必须大于零。");
+        }
+
+        return new MxComponentBridgeClientAdapter(
+            new MxComponentBridgeOptions
             {
-                OnErrorOccurred(ex);
-                OnConnectionStateChanged(false, ex.Message);
-                return false;
+                ExecutablePath = param.MxBridgeExecutablePath,
+                LogicalStationNumber = param.MxLogicalStationNumber,
+                Password = param.MxPassword,
+                StartupTimeout = TimeSpan.FromMilliseconds(param.MxBridgeStartupTimeoutMs),
+                OperationTimeout = TimeSpan.FromMilliseconds(param.CommunicationTimeout),
+            });
+    }
+
+    private static ushort ValidateWriteQuantity(McAddressValue address, int quantity)
+    {
+        if (quantity is <= 0 or > ushort.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(quantity), "MC 写入点数必须在 1 到 65535 之间。");
+        }
+
+        var protocolQuantity = (ushort)quantity;
+        // 先验证协议上限和访问末地址，再进行位打包或字节序复制。
+        McRequest.ValidateQuantity(address, protocolQuantity);
+        return protocolQuantity;
+    }
+
+    private static byte[] PackBits(ReadOnlySpan<byte> values)
+    {
+        if (values.IsEmpty)
+        {
+            throw new ArgumentException("MC 位设备写入数据不能为空。", nameof(values));
+        }
+        var packed = new byte[(values.Length + 1) / 2];
+        for (var index = 0; index < values.Length; index++)
+        {
+            if (values[index] == 0)
+            {
+                continue;
             }
+            packed[index / 2] |= index % 2 == 0 ? (byte)0x10 : (byte)0x01;
         }
+        return packed;
+    }
 
-        public override async Task DisconnectAsync(CancellationToken ct = default)
+    private static byte[] SwapWordByteOrder(ReadOnlySpan<byte> data)
+    {
+        var result = new byte[data.Length];
+        for (var index = 0; index < data.Length; index += 2)
         {
-            _stream?.Dispose();
-            _tcpClient?.Dispose();
-            _stream = null;
-            _tcpClient = null;
-            IsConnected = false;
-            OnConnectionStateChanged(false, "MC协议客户端已断开");
-            await Task.CompletedTask;
+            result[index] = data[index + 1];
+            result[index + 1] = data[index];
         }
+        return result;
+    }
 
-        /// <summary>
-        /// 读取数据
-        /// address: 设备地址，如 "D100", "M10"
-        /// length: 字数(Word)或位数量(Bit)
-        /// </summary>
-        public override async Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default)
+    /// <inheritdoc />
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
         {
-            if (_stream == null || !IsConnected) throw new InvalidOperationException("设备未连接");
-
-            return await ExecuteWithRetryAsync(async () =>
-            {
-                var (deviceType, deviceNo, isBit) = ParseAddress(address);
-                var isWord = !isBit;
-
-                // 构建MC请求帧
-                var request = BuildReadRequest(deviceType, deviceNo, (ushort)length, isWord);
-                var response = await SendFrameAsync(request, ct);
-
-                // 解析响应
-                return ParseReadResponse(response, (ushort)length, isWord);
-            }, ct);
+            _adapter.DisposeAsync().AsTask().GetAwaiter().GetResult();
         }
-
-        /// <summary>
-        /// 写入数据
-        /// address: 设备地址
-        /// data: 字数据(大端序)或位数据
-        /// </summary>
-        public override async Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default)
-        {
-            if (_stream == null || !IsConnected) throw new InvalidOperationException("设备未连接");
-
-            return await ExecuteWithRetryAsync(async () =>
-            {
-                var (deviceType, deviceNo, isBit) = ParseAddress(address);
-                var isWord = !isBit;
-                var length = isWord ? (ushort)(data.Length / 2) : (ushort)data.Length;
-
-                var request = BuildWriteRequest(deviceType, deviceNo, length, data, isWord);
-                var response = await SendFrameAsync(request, ct);
-
-                // 检查响应是否成功
-                return response.Length >= 2 && response[0] == 0x00 && response[1] == 0x00;
-            }, ct);
-        }
-
-        public override async Task<bool> SendAsync(byte[] data, CancellationToken ct = default)
-        {
-            if (_stream == null || !IsConnected) return false;
-            try
-            {
-                await _stream.WriteAsync(data, ct);
-                return true;
-            }
-            catch (Exception ex) { OnErrorOccurred(ex); return false; }
-        }
-
-        public override async Task<byte[]> SendAndReceiveAsync(byte[] data, CancellationToken ct = default)
-        {
-            if (_stream == null || !IsConnected) return Array.Empty<byte>();
-            await SendAsync(data, ct);
-
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            cts.CancelAfter(TimeoutMs);
-            var buffer = new byte[4096];
-            var read = await _stream.ReadAsync(buffer, cts.Token);
-            return buffer.AsSpan(0, read).ToArray();
-        }
-
-        // ===== MC 协议帧构建 =====
-
-        private byte[] BuildReadRequest(byte deviceType, int deviceNo, ushort count, bool isWord)
-        {
-            // 命令: 0401(位读) / 0403(字读)
-            var command = isWord ? McCommand.ReadWord : McCommand.ReadBit;
-
-            // 子命令: 0000(单点/连续)
-            var subCommand = new byte[] { 0x00, 0x00 };
-
-            // 设备地址(3字节)
-            var deviceAddr = BuildDeviceAddress(deviceNo);
-
-            // 设备代码(1字节)
-            var deviceCode = deviceType;
-
-            // 读取点数(2字节)
-            var countBytes = BitConverter.GetBytes(count);
-
-            // 数据部
-            var dataPart = new List<byte>();
-            dataPart.AddRange(HexToBytes(command));  // 命令 2字节
-            dataPart.AddRange(subCommand);           // 子命令 2字节
-            dataPart.AddRange(deviceAddr);           // 起始地址 3字节
-            dataPart.Add(deviceCode);                // 设备代码 1字节
-            dataPart.AddRange(countBytes);           // 点数 2字节
-
-            return BuildFrame(dataPart.ToArray());
-        }
-
-        private byte[] BuildWriteRequest(byte deviceType, int deviceNo, ushort count, byte[] writeData, bool isWord)
-        {
-            // 命令: 1401(位写) / 1403(字写)
-            var command = isWord ? McCommand.WriteWord : McCommand.WriteBit;
-
-            var subCommand = new byte[] { 0x00, 0x01 }; // 连续写入
-
-            var deviceAddr = BuildDeviceAddress(deviceNo);
-            var deviceCode = deviceType;
-            var countBytes = BitConverter.GetBytes(count);
-
-            var dataPart = new List<byte>();
-            dataPart.AddRange(HexToBytes(command));
-            dataPart.AddRange(subCommand);
-            dataPart.AddRange(deviceAddr);
-            dataPart.Add(deviceCode);
-            dataPart.AddRange(countBytes);
-            dataPart.AddRange(writeData); // 写入数据
-
-            return BuildFrame(dataPart.ToArray());
-        }
-
-        private byte[] BuildFrame(byte[] dataPart)
-        {
-            var frame = new List<byte>();
-
-            if (Param.FrameType == "4E")
-            {
-                // 4E帧: 子标题(2) + 网络编号(1) + PLC编号(1) + 请求目标模块IO(2) + 请求目标模块站号(1)
-                frame.AddRange(new byte[] { 0x54, 0x00 }); // 子标题
-                frame.Add(Param.NetworkNo);                 // 网络编号
-                frame.Add(Param.StationNo);                 // PLC编号
-                frame.AddRange(BitConverter.GetBytes(Param.ModuleNo)); // 模块IO
-                frame.Add(0x00);                             // 模块站号
-            }
-            // 3E帧: 子标题(2) + 网络编号(1) + PLC编号(1) + 请求目标模块IO(2) + 请求目标模块站号(1)
-
-            // 请求数据长度(2字节, 小端)
-            frame.AddRange(BitConverter.GetBytes((ushort)dataPart.Length));
-
-            // 保留(2字节)
-            frame.AddRange(new byte[] { 0x00, 0x00 });
-
-            // 数据部
-            frame.AddRange(dataPart);
-
-            return frame.ToArray();
-        }
-
-        private async Task<byte[]> SendFrameAsync(byte[] request, CancellationToken ct)
-        {
-            await _stream!.WriteAsync(request, ct);
-
-            // 读取响应
-            var headerBuffer = new byte[Param.FrameType == "4E" ? 15 : 9];
-            await _stream.ReadExactlyAsync(headerBuffer, ct);
-
-            // 从头部提取数据长度
-            var dataLength = BitConverter.ToUInt16(headerBuffer, headerBuffer.Length - 4);
-
-            var dataBuffer = new byte[dataLength];
-            await _stream.ReadExactlyAsync(dataBuffer, ct);
-
-            // 跳过结束码(2字节)后的数据
-            if (dataBuffer.Length >= 2)
-            {
-                var endCode = (dataBuffer[0] << 8) | dataBuffer[1];
-                if (endCode != 0)
-                {
-                    throw new InvalidOperationException($"MC协议错误码: 0x{endCode:X4}");
-                }
-                return dataBuffer[2..];
-            }
-            return dataBuffer;
-        }
-
-        private byte[] ParseReadResponse(byte[] responseData, ushort count, bool isWord)
-        {
-            // 响应数据部 = 结束码(2) + 数据
-            // responseData 已经去掉了结束码
-            return responseData;
-        }
-
-        // ===== 地址解析 =====
-
-        private (byte deviceType, int deviceNo, bool isBit) ParseAddress(string address)
-        {
-            if (string.IsNullOrWhiteSpace(address))
-                throw new ArgumentException("地址不能为空");
-
-            var addr = address.Trim().ToUpperInvariant();
-
-            // 解析设备类型
-            (byte type, bool isBit) = addr switch
-            {
-                _ when addr.StartsWith("M")  => ((byte)McDeviceType.M, true),
-                _ when addr.StartsWith("L")  => ((byte)McDeviceType.L, true),
-                _ when addr.StartsWith("B")  => ((byte)McDeviceType.B, true),
-                _ when addr.StartsWith("S")  => ((byte)McDeviceType.S, true),
-                _ when addr.StartsWith("X")  => ((byte)0x9C, true),
-                _ when addr.StartsWith("Y")  => ((byte)0x9D, true),
-                _ when addr.StartsWith("F")  => ((byte)0x93, true),
-                _ when addr.StartsWith("V")  => ((byte)McDeviceType.V, true),
-                _ when addr.StartsWith("SB") => ((byte)McDeviceType.SB, true),
-                _ when addr.StartsWith("SM") => ((byte)0x91, true),
-                _ when addr.StartsWith("T")  => ((byte)McDeviceType.T, false),
-                _ when addr.StartsWith("C")  => ((byte)McDeviceType.C, false),
-                _ when addr.StartsWith("D")  => ((byte)McDeviceType.D, false),
-                _ when addr.StartsWith("W")  => ((byte)McDeviceType.W, false),
-                _ when addr.StartsWith("R")  => ((byte)McDeviceType.R, false),
-                _ when addr.StartsWith("ZR") => ((byte)McDeviceType.R, false),
-                _ when addr.StartsWith("SW") => ((byte)McDeviceType.SW, false),
-                _ when addr.StartsWith("SD") => ((byte)0xA9, false),
-                _ => throw new NotSupportedException($"不支持的设备类型: {addr}")
-            };
-
-            // 提取设备编号
-            var numStr = addr.SkipWhile(c => !char.IsDigit(c)).ToArray();
-            var deviceNo = numStr.Length > 0 ? int.Parse(new string(numStr)) : 0;
-
-            return (type, deviceNo, isBit);
-        }
-
-        private static byte[] BuildDeviceAddress(int deviceNo)
-        {
-            // MC地址为3字节，小端
-            var b0 = (byte)(deviceNo & 0xFF);
-            var b1 = (byte)((deviceNo >> 8) & 0xFF);
-            var b2 = (byte)((deviceNo >> 16) & 0xFF);
-            return new[] { b0, b1, b2 };
-        }
-
-        private static byte[] HexToBytes(string hex)
-        {
-            var bytes = new byte[hex.Length / 2];
-            for (int i = 0; i < bytes.Length; i++)
-                bytes[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
-            return bytes;
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _stream?.Dispose();
-                _tcpClient?.Dispose();
-            }
-            base.Dispose(disposing);
-        }
+        base.Dispose(disposing);
     }
 }

@@ -14,7 +14,8 @@ public interface IByteStreamTransport : IAsyncDisposable
     /// <summary>传输是否已打开。</summary>
     bool IsOpen { get; }
 
-    /// <summary>打开底层传输。</summary>
+    /// <summary>打开底层传输；释放开始后拒绝新的打开请求。</summary>
+    /// <exception cref="ObjectDisposedException">传输已经开始释放。</exception>
     ValueTask OpenAsync(CancellationToken cancellationToken = default);
 
     /// <summary>取消挂起 IO 并关闭底层传输。</summary>

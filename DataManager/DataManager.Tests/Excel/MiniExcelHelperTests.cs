@@ -70,6 +70,29 @@ namespace DataManager.Tests.Excel
             Assert.Equal(2, result.Count());
         }
 
+        [Fact]
+        public void Add_ThrowsNotSupported()
+        {
+            var helper = CreateHelper();
+            Assert.Throws<NotSupportedException>(() => helper.Add(Sample(1)[0]));
+        }
+
+        [Fact]
+        public void Update_ThrowsNotSupported()
+        {
+            var helper = CreateHelper();
+            Assert.Throws<NotSupportedException>(() => helper.Update<PersonRecord>(x => true, Sample(1)[0]));
+        }
+
+        [Fact]
+        public void AsReader_Works()
+        {
+            var helper = CreateHelper();
+            helper.Write(Sample(2));
+            DataManager.Excel.IExcelReader reader = helper;
+            Assert.Equal(2, reader.Query<PersonRecord>().Count());
+        }
+
         public void Dispose()
         {
             try { Directory.Delete(_dir, true); } catch { }

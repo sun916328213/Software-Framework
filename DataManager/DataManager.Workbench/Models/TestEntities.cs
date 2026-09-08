@@ -18,7 +18,7 @@ namespace DataManager.Workbench.Models
         public long Id { get; set; }
 
         [SugarColumn(IsNullable = true)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         public int Age { get; set; }
 

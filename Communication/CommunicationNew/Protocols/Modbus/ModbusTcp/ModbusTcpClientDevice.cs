@@ -1,5 +1,7 @@
 using CommunicationNew.Abstractions;
 using CommunicationNew.Core;
+using CommunicationNew.Core.Interfaces;
+using CommunicationNew.Core.Models;
 using CommunicationNew.Runtime;
 using CommunicationNew.Transports;
 
@@ -10,7 +12,7 @@ namespace CommunicationNew.Protocols.Modbus.ModbusTcp;
 /// 对外保留旧 <see cref="ICommunicationDevice"/> 接口，内部将请求交给新的
 /// <see cref="ConnectionSession{TRequest,TResponse}"/>。
 /// </summary>
-public class ModbusTcpClientDevice : CommunicationDeviceBase, IConnection
+public class ModbusTcpClientDevice : CommunicationDeviceBase, IConnection, IDataPointBatchReader
 {
     private new ModbusTcpParam Param => (ModbusTcpParam)base.Param;
     private ConnectionSession<ModbusTcpRequest, ModbusTcpResponse>? _session;
@@ -47,7 +49,9 @@ public class ModbusTcpClientDevice : CommunicationDeviceBase, IConnection
             var session = new ConnectionSession<ModbusTcpRequest, ModbusTcpResponse>(
                 transport,
                 new ModbusTcpCodec(),
-                TimeSpan.FromMilliseconds(TimeoutMs));
+                TimeSpan.FromMilliseconds(TimeoutMs),
+                reconnectOptions: CreateReconnectOptions(),
+                maxQueuedRequests: Param.RequestQueueCapacity);
             await session.ConnectAsync(ct).ConfigureAwait(false);
             _session = session;
 
@@ -90,11 +94,10 @@ public class ModbusTcpClientDevice : CommunicationDeviceBase, IConnection
         CancellationToken ct = default)
     {
         var session = GetConnectedSession();
-        var (region, startAddress, quantity) = ModbusAddress.Parse(address, length);
+        var (parsedAddress, quantity) = ModbusAddress.ParseValue(address, length);
         var request = ModbusTcpRequest.Read(
             Param.SlaveId,
-            region,
-            startAddress,
+            parsedAddress,
             quantity);
 
         return await ExecuteWithRetryAsync(async () =>
@@ -113,7 +116,8 @@ public class ModbusTcpClientDevice : CommunicationDeviceBase, IConnection
     {
         ArgumentNullException.ThrowIfNull(data);
         var session = GetConnectedSession();
-        var (region, startAddress, _) = ModbusAddress.Parse(address, data.Length);
+        var (parsedAddress, _) = ModbusAddress.ParseValue(address, data.Length);
+        var region = parsedAddress.Region;
 
         ReadOnlyMemory<byte> payload = data;
         ushort quantity;
@@ -134,8 +138,7 @@ public class ModbusTcpClientDevice : CommunicationDeviceBase, IConnection
 
         var request = ModbusTcpRequest.Write(
             Param.SlaveId,
-            region,
-            startAddress,
+            parsedAddress,
             quantity,
             payload);
 
@@ -164,12 +167,26 @@ public class ModbusTcpClientDevice : CommunicationDeviceBase, IConnection
     ValueTask IConnection.DisconnectAsync(CancellationToken cancellationToken) =>
         new(DisconnectAsync(cancellationToken));
 
+    /// <inheritdoc />
+    Task<IReadOnlyList<DataPointReadResult>> IDataPointBatchReader.ReadPointsAsync(
+        IReadOnlyList<IDataPoint> points,
+        CancellationToken cancellationToken) =>
+        ModbusDataPointBatchReader.ReadPointsAsync(
+            points,
+            ReadAsync,
+            cancellationToken);
+
     private ConnectionSession<ModbusTcpRequest, ModbusTcpResponse> GetConnectedSession()
     {
         return _session is { State: ConnectionState.Connected } session
             ? session
             : throw new InvalidOperationException("设备未连接。");
     }
+
+    private ConnectionReconnectOptions? CreateReconnectOptions() =>
+        Param.AutoReconnect
+            ? new ConnectionReconnectOptions(TimeSpan.FromMilliseconds(Param.ReconnectIntervalMs))
+            : null;
 
     private static void ValidateResponse(
         ModbusTcpRequest request,

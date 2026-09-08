@@ -2,6 +2,7 @@ using DataManager.Excel.Definition;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,11 +14,19 @@ namespace DataManager.Excel.EPPlus
     public class EPPlusHelper : ExcelBase
     {
        
-        public override ExcelParam ExcelParam { get; set; }
-        
-        // EPPlus特有的属性
-        public ExcelPackage ExcelPackage { get; private set; }
-        public ExcelWorksheet CurrentWorksheet { get; private set; }
+        public override ExcelParam ExcelParam { get; set; } = new();
+
+        // P1-5：PropertyInfo 缓存，避免每次反射
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> _propsCache = new();
+
+        private static PropertyInfo[] GetProps<T>() =>
+            _propsCache.GetOrAdd(typeof(T), t => t.GetProperties());
+
+        // P1-5：有状态常驻包已废弃，主流程均为无状态 using；保留仅为兼容旧调用
+        [Obsolete("有状态API已废弃，主流程为无状态，请使用Write/Query/Add/Update。")]
+        public ExcelPackage? ExcelPackage { get; private set; }
+        [Obsolete("有状态API已废弃，主流程为无状态，请使用Write/Query/Add/Update。")]
+        public ExcelWorksheet? CurrentWorksheet { get; private set; }
 
         public EPPlusHelper()
         {
@@ -45,8 +54,8 @@ namespace DataManager.Excel.EPPlus
 
             using var package = new ExcelPackage(new FileInfo(path));
             var worksheet = GetOrCreateWorksheet(package);
-            
-            var properties = typeof(T).GetProperties();
+
+            var properties = GetProps<T>();
             var headerRow = 1;
             int startRow;
 
@@ -59,7 +68,8 @@ namespace DataManager.Excel.EPPlus
             }
             else
             {
-                startRow = worksheet.Dimension.Rows;// + 1;
+                // P1-5：用实际有值最后一行+1，避免样式幽灵行/覆盖最后一行
+                startRow = GetLastUsedRow(worksheet) + 1;
             }
 
             // 写入数据
@@ -115,7 +125,7 @@ namespace DataManager.Excel.EPPlus
             if (worksheet == null || worksheet.Dimension == null)
                 return;
 
-            var properties = typeof(T).GetProperties();
+            var properties = GetProps<T>();
             var headerRow = 1;
 
             var headers = GetHeaders(worksheet, headerRow);
@@ -160,7 +170,7 @@ namespace DataManager.Excel.EPPlus
             ClearWorkbook(package);
             var worksheet = package.Workbook.Worksheets.Add("Sheet1");
             
-            var properties = typeof(T).GetProperties();
+            var properties = GetProps<T>();
             var headerRow = 1;
 
             // 写入表头并设置样式
@@ -182,6 +192,7 @@ namespace DataManager.Excel.EPPlus
         }
 
         // EPPlus特有功能：打开Excel文件
+        [Obsolete("有状态API已废弃，主流程为无状态。")]
         public void OpenExcel()
         {
             string path = Path.Combine(ExcelParam.FilePath, ExcelParam.FileName);
@@ -193,6 +204,7 @@ namespace DataManager.Excel.EPPlus
         }
 
         // EPPlus特有功能：保存Excel文件
+        [Obsolete("有状态API已废弃，主流程为无状态。")]
         public void SaveExcel()
         {
             if (ExcelPackage != null)
@@ -202,6 +214,7 @@ namespace DataManager.Excel.EPPlus
         }
 
         // EPPlus特有功能：关闭Excel文件
+        [Obsolete("有状态API已废弃，主流程为无状态。")]
         public void CloseExcel()
         {
             if (ExcelPackage != null)
@@ -213,6 +226,7 @@ namespace DataManager.Excel.EPPlus
         }
 
         // EPPlus特有功能：设置单元格样式
+        [Obsolete("有状态API已废弃，主流程为无状态。")]
         public void SetCellStyle(int row, int col, Action<ExcelStyle> styleAction)
         {
             if (CurrentWorksheet != null)
@@ -223,6 +237,7 @@ namespace DataManager.Excel.EPPlus
         }
 
         // EPPlus特有功能：添加图表
+        [Obsolete("有状态API已废弃，主流程为无状态。")]
         public void AddChart(string chartTitle, int startRow, int startCol, int endRow, int endCol)
         {
             if (CurrentWorksheet != null)
@@ -303,7 +318,7 @@ namespace DataManager.Excel.EPPlus
 
         private IEnumerable<T> WorksheetToEnumerable<T>(ExcelWorksheet worksheet) where T : new()
         {
-            var properties = typeof(T).GetProperties();
+            var properties = GetProps<T>();
             var headerRow = 1;
             var dataRows = worksheet.Dimension?.Rows - headerRow ?? 0;
 
@@ -315,7 +330,10 @@ namespace DataManager.Excel.EPPlus
                 return Enumerable.Empty<T>();
 
             var result = new List<T>();
-            for (int row = headerRow + 1; row <= worksheet.Dimension.Rows; row++)
+            var dim = worksheet.Dimension;
+            if (dim == null)
+                return Enumerable.Empty<T>();
+            for (int row = headerRow + 1; row <= dim.Rows; row++)
             {
                 var item = CreateItem<T>(worksheet, properties, headers, row);
                 if (item != null)
@@ -329,7 +347,10 @@ namespace DataManager.Excel.EPPlus
         private Dictionary<string, int> GetHeaders(ExcelWorksheet worksheet, int headerRow)
         {
             var headers = new Dictionary<string, int>();
-            for (int col = 1; col <= worksheet.Dimension.Columns; col++)
+            var dim = worksheet.Dimension;
+            if (dim == null)
+                return headers;
+            for (int col = 1; col <= dim.Columns; col++)
             {
                 var header = worksheet.Cells[headerRow, col].Value?.ToString();
                 if (!string.IsNullOrEmpty(header))
@@ -340,7 +361,7 @@ namespace DataManager.Excel.EPPlus
             return headers;
         }
 
-        private T CreateItem<T>(ExcelWorksheet worksheet, PropertyInfo[] properties, Dictionary<string, int> headers, int row) where T : new()
+        private T? CreateItem<T>(ExcelWorksheet worksheet, PropertyInfo[] properties, Dictionary<string, int> headers, int row) where T : new()
         {
             var item = new T();
             var hasValue = false;
@@ -354,7 +375,7 @@ namespace DataManager.Excel.EPPlus
                         hasValue = true;
                         try
                         {
-                            prop.SetValue(item, Convert.ChangeType(cellValue, prop.PropertyType));
+                            prop.SetValue(item, SafeConvert(cellValue, prop.PropertyType));
                         }
                         catch { }
                     }
@@ -364,7 +385,39 @@ namespace DataManager.Excel.EPPlus
             return hasValue ? item : default;
         }
 
-        private T CreateTempItem<T>(ExcelWorksheet worksheet, PropertyInfo[] properties, Dictionary<string, int> headers, int row) where T : new()
+        /// <summary>
+        /// P1-5：支持 Nullable/Enum/DateTime/Guid/bool 数值互转的类型转换。
+        /// </summary>
+        private static object? SafeConvert(object value, Type targetType)
+        {
+            if (value == null) return null;
+            var underlying = Nullable.GetUnderlyingType(targetType) ?? targetType;
+            if (underlying.IsInstanceOfType(value)) return value;
+            if (underlying.IsEnum)
+            {
+                if (value is string s) return Enum.Parse(underlying, s, ignoreCase: true);
+                return Enum.ToObject(underlying, value);
+            }
+            if (underlying == typeof(DateTime))
+            {
+                if (value is DateTime dt) return dt;
+                if (value is double oa) return DateTime.FromOADate(oa);
+                return Convert.ChangeType(value, underlying);
+            }
+            if (underlying == typeof(Guid))
+            {
+                if (value is string gs) return Guid.Parse(gs);
+                return new Guid(value.ToString()!);
+            }
+            if (underlying == typeof(bool))
+            {
+                if (value is double d) return d != 0;
+                if (value is string bs && double.TryParse(bs, out var bd)) return bd != 0;
+            }
+            return Convert.ChangeType(value, underlying);
+        }
+
+        private T? CreateTempItem<T>(ExcelWorksheet worksheet, PropertyInfo[] properties, Dictionary<string, int> headers, int row) where T : new()
         {
             return CreateItem<T>(worksheet, properties, headers, row);
         }

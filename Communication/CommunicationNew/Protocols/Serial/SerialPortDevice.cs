@@ -1,168 +1,281 @@
-﻿﻿﻿﻿using System.IO.Ports;
+using System.Buffers;
 using System.Text;
+using CommunicationNew.Abstractions;
 using CommunicationNew.Core;
+using CommunicationNew.Transports;
 
-namespace CommunicationNew.Protocols.Serial
+namespace CommunicationNew.Protocols.Serial;
+
+/// <summary>
+/// 串口设备兼容 adapter。
+/// 旧事件和原始收发接口保留，端口生命周期与连续字节流由 transport 管理。
+/// </summary>
+public class SerialPortDevice : CommunicationDeviceBase, IConnection
 {
-    /// <summary>
-    /// 串口通信设备
-    /// </summary>
-    public class SerialPortDevice : CommunicationDeviceBase
+    private new SerialParam Param => (SerialParam)base.Param;
+    private readonly IByteStreamTransport _transport;
+    private readonly SemaphoreSlim _lifecycleGate = new(1, 1);
+    private readonly StringBuilder _receiveText = new();
+    private TaskCompletionSource<byte[]>? _pendingResponse;
+    private ConnectionState _state = ConnectionState.Disconnected;
+
+    /// <summary>使用 SerialParam 创建生产串口 transport。</summary>
+    public SerialPortDevice(SerialParam param)
+        : this(param, CreateTransport(param))
     {
-        private new SerialParam Param => (SerialParam)base.Param;
-        private System.IO.Ports.SerialPort? _serialPort;
-        private readonly StringBuilder _recvBuffer = new();
+    }
 
-        public SerialPortDevice(SerialParam param) : base(param)
-        {
-            ProtocolType = Core.ProtocolType.Serial;
-        }
-        public override DeviceRole Role => DeviceRole.Client;
+    /// <summary>
+    /// 使用指定字节流 transport 创建串口设备；设备释放时会一并释放 transport。
+    /// </summary>
+    public SerialPortDevice(SerialParam param, IByteStreamTransport transport) : base(param)
+    {
+        ArgumentNullException.ThrowIfNull(transport);
+        _transport = transport;
+        ProtocolType = Core.ProtocolType.Serial;
+    }
 
-        public override Task<bool> ConnectAsync(CancellationToken ct = default)
+    /// <inheritdoc />
+    public override DeviceRole Role => DeviceRole.Client;
+
+    /// <summary>新连接 seam 暴露的显式状态。</summary>
+    public ConnectionState State => _state;
+
+    /// <inheritdoc />
+    public override async Task<bool> ConnectAsync(CancellationToken ct = default)
+    {
+        await _lifecycleGate.WaitAsync(ct).ConfigureAwait(false);
+        try
         {
-            try
+            if (_state == ConnectionState.Connected)
             {
-                _serialPort = new System.IO.Ports.SerialPort(
-                    Param.PortName, Param.BaudRate, Param.Parity, Param.DataBits)
-                {
-                    StopBits = Param.StopBits,
-                    Handshake = Param.Handshake,
-                    ReadBufferSize = Param.BufferSize,
-                    WriteBufferSize = Param.BufferSize,
-                    ReadTimeout = TimeoutMs,
-                    WriteTimeout = TimeoutMs,
-                    DtrEnable = Param.DtrEnable,
-                    RtsEnable = Param.RtsEnable
-                };
-
-                _serialPort.DataReceived += OnSerialDataReceived;
-                _serialPort.ErrorReceived += OnSerialErrorReceived;
-                _serialPort.Open();
-
-                IsConnected = true;
-                OnConnectionStateChanged(true, $"串口 {Param.PortName} 已打开 ({Param.BaudRate},{Param.DataBits},{Param.Parity},{Param.StopBits})");
-                return Task.FromResult(true);
-            }
-            catch (Exception ex)
-            {
-                OnErrorOccurred(ex);
-                OnConnectionStateChanged(false, ex.Message);
-                return Task.FromResult(false);
-            }
-        }
-
-        public override Task DisconnectAsync(CancellationToken ct = default)
-        {
-            if (_serialPort != null)
-            {
-                _serialPort.DataReceived -= OnSerialDataReceived;
-                _serialPort.ErrorReceived -= OnSerialErrorReceived;
-                if (_serialPort.IsOpen) _serialPort.Close();
-                _serialPort.Dispose();
-                _serialPort = null;
-            }
-            IsConnected = false;
-            OnConnectionStateChanged(false, $"串口 {Param.PortName} 已关闭");
-            return Task.CompletedTask;
-        }
-
-        private void OnSerialDataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
-            if (_serialPort == null || !_serialPort.IsOpen) return;
-
-            var bytesToRead = _serialPort.BytesToRead;
-            if (bytesToRead <= 0) return;
-
-            var buffer = new byte[bytesToRead];
-            _serialPort.Read(buffer, 0, bytesToRead);
-            OnDataReceived(buffer, Param.PortName);
-
-            if (!string.IsNullOrEmpty(Param.Delimiter))
-            {
-                _recvBuffer.Append(Encoding.UTF8.GetString(buffer));
-                while (true)
-                {
-                    var text = _recvBuffer.ToString();
-                    var idx = text.IndexOf(Param.Delimiter, StringComparison.Ordinal);
-                    if (idx < 0) break;
-                    var frame = text[..idx];
-                    OnDataReceived(Encoding.UTF8.GetBytes(frame), Param.PortName);
-                    _recvBuffer.Remove(0, idx + Param.Delimiter.Length);
-                }
-            }
-        }
-
-        private void OnSerialErrorReceived(object sender, SerialErrorReceivedEventArgs e)
-        {
-            OnErrorOccurred(new InvalidOperationException($"串口错误: {e.EventType}"));
-        }
-
-        public override async Task<bool> SendAsync(byte[] data, CancellationToken ct = default)
-        {
-            if (_serialPort == null || !_serialPort.IsOpen) return false;
-            try
-            {
-                await Task.Run(() => _serialPort.Write(data, 0, data.Length), ct);
                 return true;
             }
-            catch (Exception ex) { OnErrorOccurred(ex); return false; }
+
+            _state = ConnectionState.Connecting;
+            await _transport.OpenAsync(ct).ConfigureAwait(false);
+            _receiveLoopCts?.Dispose();
+            _receiveLoopCts = new CancellationTokenSource();
+            _receiveLoopTask = ReceiveLoopAsync(_receiveLoopCts.Token);
+            _state = ConnectionState.Connected;
+            OnConnectionStateChanged(
+                true,
+                $"串口 {Param.PortName} 已打开 ({Param.BaudRate},{Param.DataBits},{Param.Parity},{Param.StopBits})");
+            return true;
         }
-
-        public override async Task<byte[]> SendAndReceiveAsync(byte[] data, CancellationToken ct = default)
+        catch (OperationCanceledException)
         {
-            if (_serialPort == null || !_serialPort.IsOpen) return Array.Empty<byte>();
+            _state = ConnectionState.Disconnected;
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _state = ConnectionState.Faulted;
+            OnErrorOccurred(ex);
+            OnConnectionStateChanged(false, ex.Message);
+            return false;
+        }
+        finally
+        {
+            _lifecycleGate.Release();
+        }
+    }
 
-            _recvBuffer.Clear();
-            await SendAsync(data, ct);
-
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            cts.CancelAfter(TimeoutMs);
-
-            while (!cts.IsCancellationRequested)
+    /// <inheritdoc />
+    public override async Task DisconnectAsync(CancellationToken ct = default)
+    {
+        await _lifecycleGate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            if (_state == ConnectionState.Disconnected)
             {
-                if (_serialPort.BytesToRead > 0)
-                {
-                    await Task.Delay(50, ct); // 等待数据完整到达
-                    var len = _serialPort.BytesToRead;
-                    var buffer = new byte[len];
-                    _serialPort.Read(buffer, 0, len);
-                    return buffer;
-                }
-                await Task.Delay(10, ct);
+                return;
             }
-            throw new TimeoutException($"串口 {Param.PortName} 等待回复超时");
-        }
 
-        public override Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default)
-        {
-            if (_serialPort == null || !_serialPort.IsOpen) return Task.FromResult(Array.Empty<byte>());
-            var toRead = Math.Min(length, _serialPort.BytesToRead);
-            if (toRead <= 0) return Task.FromResult(Array.Empty<byte>());
-            var buffer = new byte[toRead];
-            _serialPort.Read(buffer, 0, toRead);
-            return Task.FromResult(buffer);
+            _state = ConnectionState.Stopping;
+            _receiveLoopCts?.Cancel();
+            await _transport.CloseAsync(CancellationToken.None).ConfigureAwait(false);
+            await WaitForReceiveLoopAsync().ConfigureAwait(false);
+            _state = ConnectionState.Disconnected;
+            OnConnectionStateChanged(false, $"串口 {Param.PortName} 已关闭");
         }
-
-        public override Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default)
+        finally
         {
-            return SendAsync(data, ct);
+            _lifecycleGate.Release();
         }
+    }
 
-        protected override void Dispose(bool disposing)
+    private async Task ReceiveLoopAsync(CancellationToken ct)
+    {
+        try
         {
-            if (disposing)
+            while (!ct.IsCancellationRequested)
             {
-                if (_serialPort != null)
+                var result = await _transport.Input.ReadAsync(ct).ConfigureAwait(false);
+                var buffer = result.Buffer;
+                if (!buffer.IsEmpty)
                 {
-                    _serialPort.DataReceived -= OnSerialDataReceived;
-                    _serialPort.ErrorReceived -= OnSerialErrorReceived;
-                    if (_serialPort.IsOpen) _serialPort.Close();
-                    _serialPort.Dispose();
-                    _serialPort = null;
+                    var data = buffer.ToArray();
+                    TaskCompletionSource<byte[]>? pendingResponse;
+                    lock (SyncRoot)
+                    {
+                        // 在发布事件前固定关联对象，事件处理器新建的请求不能认领当前旧数据。
+                        pendingResponse = _pendingResponse;
+                    }
+                    OnDataReceived(data, Param.PortName);
+                    PublishDelimitedFrames(data);
+                    pendingResponse?.TrySetResult(data);
+                }
+                _transport.Input.AdvanceTo(buffer.End);
+                if (result.IsCompleted)
+                {
+                    break;
                 }
             }
-            base.Dispose(disposing);
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // 主动断开通过取消令牌结束接收循环。
+        }
+        catch (ObjectDisposedException) when (ct.IsCancellationRequested)
+        {
+            // 关闭串口 BaseStream 会解除底层等待。
+        }
+        catch (Exception ex)
+        {
+            _state = ConnectionState.Faulted;
+            OnErrorOccurred(ex);
+            OnConnectionStateChanged(false, ex.Message);
+        }
+    }
+
+    private void PublishDelimitedFrames(byte[] data)
+    {
+        if (string.IsNullOrEmpty(Param.Delimiter))
+        {
+            return;
+        }
+
+        _receiveText.Append(Encoding.UTF8.GetString(data));
+        while (true)
+        {
+            var text = _receiveText.ToString();
+            var index = text.IndexOf(Param.Delimiter, StringComparison.Ordinal);
+            if (index < 0)
+            {
+                return;
+            }
+            var frame = text[..index];
+            OnDataReceived(Encoding.UTF8.GetBytes(frame), Param.PortName);
+            _receiveText.Remove(0, index + Param.Delimiter.Length);
+        }
+    }
+
+    /// <inheritdoc />
+    public override async Task<bool> SendAsync(byte[] data, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(data);
+        EnsureConnected();
+        try
+        {
+            await _transport.Output.WriteAsync(data, ct).ConfigureAwait(false);
+            return true;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            OnErrorOccurred(ex);
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public override async Task<byte[]> SendAndReceiveAsync(
+        byte[] data,
+        CancellationToken ct = default)
+    {
+        var response = new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+        lock (SyncRoot)
+        {
+            if (_pendingResponse is not null)
+            {
+                throw new InvalidOperationException("串口一次只允许一个请求等待响应。");
+            }
+            _pendingResponse = response;
+        }
+
+        try
+        {
+            if (!await SendAsync(data, ct).ConfigureAwait(false))
+            {
+                throw new IOException("串口数据发送失败。");
+            }
+            return await response.Task
+                .WaitAsync(TimeSpan.FromMilliseconds(TimeoutMs), ct)
+                .ConfigureAwait(false);
+        }
+        finally
+        {
+            lock (SyncRoot)
+            {
+                if (ReferenceEquals(_pendingResponse, response))
+                {
+                    _pendingResponse = null;
+                }
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    public override Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default) =>
+        Task.FromResult(Array.Empty<byte>());
+
+    /// <inheritdoc />
+    public override Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default) =>
+        SendAsync(data, ct);
+
+    async ValueTask IConnection.ConnectAsync(CancellationToken cancellationToken)
+    {
+        if (!await ConnectAsync(cancellationToken).ConfigureAwait(false))
+        {
+            throw new IOException($"串口 {Param.PortName} 打开失败。");
+        }
+    }
+
+    ValueTask IConnection.DisconnectAsync(CancellationToken cancellationToken) =>
+        new(DisconnectAsync(cancellationToken));
+
+    private void EnsureConnected()
+    {
+        if (_state != ConnectionState.Connected || !_transport.IsOpen)
+        {
+            throw new InvalidOperationException("串口设备未连接。");
+        }
+    }
+
+    private static SerialByteStreamTransport CreateTransport(SerialParam param)
+    {
+        ArgumentNullException.ThrowIfNull(param);
+        return new SerialByteStreamTransport(new SerialTransportOptions(param.PortName, param.BaudRate)
+        {
+            DataBits = param.DataBits,
+            StopBits = param.StopBits,
+            Parity = param.Parity,
+            Handshake = param.Handshake,
+            BufferSize = param.BufferSize,
+            TimeoutMs = param.TimeoutMs,
+            DtrEnable = param.DtrEnable,
+            RtsEnable = param.RtsEnable,
+        });
+    }
+
+    /// <inheritdoc />
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _transport.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            _lifecycleGate.Dispose();
+        }
+        base.Dispose(disposing);
     }
 }

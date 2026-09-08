@@ -12,6 +12,7 @@ public sealed class TcpByteStreamTransport : IByteStreamTransport
     private readonly string _host;
     private readonly int _port;
     private readonly SemaphoreSlim _lifecycleGate = new(1, 1);
+    private readonly AsyncDisposeOnce _disposeOnce;
     private TcpClient? _client;
     private NetworkStream? _stream;
     private PipeReader? _input;
@@ -31,6 +32,7 @@ public sealed class TcpByteStreamTransport : IByteStreamTransport
 
         _host = host;
         _port = port;
+        _disposeOnce = new AsyncDisposeOnce(DisposeCoreAsync);
     }
 
     /// <inheritdoc />
@@ -47,10 +49,12 @@ public sealed class TcpByteStreamTransport : IByteStreamTransport
     /// <inheritdoc />
     public async ValueTask OpenAsync(CancellationToken cancellationToken = default)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
+        ThrowIfDisposing();
         await _lifecycleGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            // 释放可能在等待生命周期锁期间开始，获得锁后必须再次确认。
+            ThrowIfDisposing();
             if (IsOpen)
             {
                 return;
@@ -122,15 +126,15 @@ public sealed class TcpByteStreamTransport : IByteStreamTransport
     }
 
     /// <inheritdoc />
-    public async ValueTask DisposeAsync()
-    {
-        if (_disposed)
-        {
-            return;
-        }
+    public ValueTask DisposeAsync() => _disposeOnce.RunAsync();
 
+    private async Task DisposeCoreAsync()
+    {
         await CloseAsync(CancellationToken.None).ConfigureAwait(false);
         _disposed = true;
         _lifecycleGate.Dispose();
     }
+
+    private void ThrowIfDisposing() =>
+        ObjectDisposedException.ThrowIf(_disposed || _disposeOnce.IsStarted, this);
 }

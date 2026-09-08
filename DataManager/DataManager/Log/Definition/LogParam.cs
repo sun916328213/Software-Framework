@@ -11,11 +11,11 @@ namespace DataManager.Log.Definition
         /// <summary>
         /// 名称
         /// </summary>
-        public string Name { get; set; } 
+        public string Name { get; set; } = string.Empty;
         /// <summary>
         /// 文件路径
         /// </summary>
-        public string FilePath { get; set; }
+        public string FilePath { get; set; } = string.Empty;
         /// <summary>
         /// 间隔符号
         /// </summary>
@@ -28,5 +28,18 @@ namespace DataManager.Log.Definition
         /// Log类型
         /// </summary>
         public ELogType LogType { get; set; }= ELogType.SeriLog;
+
+        /// <summary>
+        /// P2-3：参数校验，缺失必填项抛 ArgumentException。
+        /// </summary>
+        public void Validate()
+        {
+            if (string.IsNullOrWhiteSpace(Name))
+                throw new ArgumentException("LogParam.Name 不能为空。", nameof(Name));
+            if (string.IsNullOrWhiteSpace(FilePath))
+                throw new ArgumentException("LogParam.FilePath 不能为空。", nameof(FilePath));
+            if (string.IsNullOrWhiteSpace(Separator))
+                throw new ArgumentException("LogParam.Separator 不能为空。", nameof(Separator));
+        }
     }
 }

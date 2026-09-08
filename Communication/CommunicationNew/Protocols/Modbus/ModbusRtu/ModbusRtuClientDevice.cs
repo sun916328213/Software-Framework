@@ -1,129 +1,206 @@
-﻿using System.IO.Ports;
+using CommunicationNew.Abstractions;
 using CommunicationNew.Core;
-using NModbus;
-using NModbus.IO;
+using CommunicationNew.Core.Interfaces;
+using CommunicationNew.Core.Models;
+using CommunicationNew.Runtime;
+using CommunicationNew.Transports;
 
-namespace CommunicationNew.Protocols.Modbus.ModbusRtu
+namespace CommunicationNew.Protocols.Modbus.ModbusRtu;
+
+/// <summary>
+/// Modbus RTU 客户端兼容 adapter。
+/// 旧地址读写接口保留，内部使用 Serial transport、RTU codec 和 ConnectionSession。
+/// </summary>
+public class ModbusRtuClientDevice : CommunicationDeviceBase, IConnection, IDataPointBatchReader
 {
-    /// <summary>
-    /// Modbus RTU 客户端设备
-    /// 支持 Function Code: 01(读线圈) 02(读离散输入) 03(读保持寄存器) 04(读输入寄存器)
-    ///                   05(写单个线圈) 06(写单个寄存器) 15(写多个线圈) 16(写多个寄存器)
-    /// </summary>
-    public class ModbusRtuClientDevice : CommunicationDeviceBase
+    private new ModbusRtuParam Param => (ModbusRtuParam)base.Param;
+    private readonly ConnectionSession<ModbusRtuRequest, ModbusRtuResponse> _session;
+
+    /// <summary>使用 Modbus RTU 参数创建生产串口 transport。</summary>
+    public ModbusRtuClientDevice(ModbusRtuParam param)
+        : this(param, CreateTransport(param))
     {
-        private new ModbusRtuParam Param => (ModbusRtuParam)base.Param;
-        private System.IO.Ports.SerialPort? _serialPort;
-        private IModbusMaster? _master;
+    }
 
-        public ModbusRtuClientDevice(ModbusRtuParam param) : base(param)
+    /// <summary>
+    /// 使用指定字节流 transport 创建客户端；session 负责 transport 的最终释放。
+    /// </summary>
+    public ModbusRtuClientDevice(ModbusRtuParam param, IByteStreamTransport transport)
+        : base(param)
+    {
+        ArgumentNullException.ThrowIfNull(transport);
+        ProtocolType = Core.ProtocolType.ModbusRtu;
+        _session = new ConnectionSession<ModbusRtuRequest, ModbusRtuResponse>(
+            transport,
+            new ModbusRtuCodec(),
+            TimeSpan.FromMilliseconds(TimeoutMs),
+            reconnectOptions: param.AutoReconnect
+                ? new ConnectionReconnectOptions(TimeSpan.FromMilliseconds(param.ReconnectIntervalMs))
+                : null,
+            maxQueuedRequests: param.RequestQueueCapacity);
+    }
+
+    /// <inheritdoc />
+    public override DeviceRole Role => DeviceRole.Client;
+
+    /// <summary>新连接 seam 暴露的显式状态。</summary>
+    public ConnectionState State => _session.State;
+
+    /// <inheritdoc />
+    public override async Task<bool> ConnectAsync(CancellationToken ct = default)
+    {
+        if (_session.State == ConnectionState.Connected)
         {
-            ProtocolType = Core.ProtocolType.ModbusRtu;
+            return true;
         }
 
-        public override DeviceRole Role => DeviceRole.Client;
-
-        public override Task<bool> ConnectAsync(CancellationToken ct = default)
+        try
         {
-            try
+            await _session.ConnectAsync(ct).ConfigureAwait(false);
+            OnConnectionStateChanged(
+                true,
+                $"Modbus RTU客户端已连接: {Param.PortName} (SlaveId={Param.SlaveId})");
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            OnConnectionStateChanged(false, "连接已取消");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            OnErrorOccurred(ex);
+            OnConnectionStateChanged(false, ex.Message);
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public override async Task DisconnectAsync(CancellationToken ct = default)
+    {
+        await _session.DisconnectAsync(ct).ConfigureAwait(false);
+        OnConnectionStateChanged(false, "Modbus RTU客户端已断开");
+    }
+
+    /// <inheritdoc />
+    public override Task<byte[]> ReadAsync(
+        string address,
+        int length,
+        CancellationToken ct = default)
+    {
+        var (parsedAddress, quantity) = ModbusAddress.ParseValue(address, length);
+        var request = ModbusRtuRequest.Read(
+            Param.SlaveId,
+            parsedAddress,
+            quantity);
+        return ExecuteWithRetryAsync(async () =>
+        {
+            var response = await _session.ExecuteAsync(request, ct).ConfigureAwait(false);
+            ValidateResponse(request, response);
+            return response.Data.ToArray();
+        }, ct);
+    }
+
+    /// <inheritdoc />
+    public override async Task<bool> WriteAsync(
+        string address,
+        byte[] data,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(data);
+        var (parsedAddress, _) = ModbusAddress.ParseValue(address, data.Length);
+        var region = parsedAddress.Region;
+        ReadOnlyMemory<byte> payload = data;
+        ushort quantity;
+        if (region == ModbusRegion.Coil)
+        {
+            quantity = checked((ushort)(data.Length * 8));
+        }
+        else
+        {
+            quantity = checked((ushort)((data.Length + 1) / 2));
+            if ((data.Length & 1) != 0)
             {
-                _serialPort = new System.IO.Ports.SerialPort(
-                    Param.PortName, Param.BaudRate, Param.Parity, Param.DataBits)
-                {
-                    StopBits = Param.StopBits,
-                    ReadTimeout = TimeoutMs,
-                    WriteTimeout = TimeoutMs,
-                };
-                _serialPort.Open();
-
-                var factory = new ModbusFactory();
-                // NModbus needs IStreamResource; use a simple adapter
-                var streamResource = new SerialPortStreamResource(_serialPort);
-                _master = factory.CreateRtuMaster(streamResource);
-
-                IsConnected = true;
-                OnConnectionStateChanged(true, $"Modbus RTU客户端已连接: {Param.PortName} (SlaveId={Param.SlaveId})");
-                return Task.FromResult(true);
+                var padded = new byte[data.Length + 1];
+                data.CopyTo(padded, 0);
+                payload = padded;
             }
-            catch (Exception ex)
-            {
-                OnErrorOccurred(ex);
-                OnConnectionStateChanged(false, ex.Message);
-                return Task.FromResult(false);
-            }
         }
 
-        public override Task DisconnectAsync(CancellationToken ct = default)
+        var request = ModbusRtuRequest.Write(
+            Param.SlaveId,
+            parsedAddress,
+            quantity,
+            payload);
+        // 写操作默认不重试，避免响应丢失时重复执行非幂等写入。
+        var response = await _session.ExecuteAsync(request, ct).ConfigureAwait(false);
+        ValidateResponse(request, response);
+        return true;
+    }
+
+    /// <inheritdoc />
+    public override Task<bool> SendAsync(byte[] data, CancellationToken ct = default) =>
+        throw new NotSupportedException("Modbus RTU 不支持原始字节发送，请使用 ReadAsync/WriteAsync。");
+
+    /// <inheritdoc />
+    public override Task<byte[]> SendAndReceiveAsync(byte[] data, CancellationToken ct = default) =>
+        throw new NotSupportedException("Modbus RTU 不支持原始收发，请使用 ReadAsync/WriteAsync。");
+
+    async ValueTask IConnection.ConnectAsync(CancellationToken cancellationToken)
+    {
+        if (!await ConnectAsync(cancellationToken).ConfigureAwait(false))
         {
-            _master?.Dispose();
-            if (_serialPort?.IsOpen == true) _serialPort.Close();
-            _serialPort?.Dispose();
-            _serialPort = null;
-            _master = null;
-            IsConnected = false;
-            OnConnectionStateChanged(false, "Modbus RTU客户端已断开");
-            return Task.CompletedTask;
+            throw new IOException("Modbus RTU 连接失败。");
         }
+    }
 
-        public override async Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default)
+    ValueTask IConnection.DisconnectAsync(CancellationToken cancellationToken) =>
+        new(DisconnectAsync(cancellationToken));
+
+    /// <inheritdoc />
+    Task<IReadOnlyList<DataPointReadResult>> IDataPointBatchReader.ReadPointsAsync(
+        IReadOnlyList<IDataPoint> points,
+        CancellationToken cancellationToken) =>
+        ModbusDataPointBatchReader.ReadPointsAsync(
+            points,
+            ReadAsync,
+            cancellationToken);
+
+    private static void ValidateResponse(
+        ModbusRtuRequest request,
+        ModbusRtuResponse response)
+    {
+        if (response.UnitId != request.UnitId)
         {
-            if (_master == null || !IsConnected) throw new InvalidOperationException("设备未连接");
-
-            var (region, startAddr, quantity) = ModbusAddress.Parse(address, length);
-
-            return await ExecuteWithRetryAsync(async () =>
-            {
-                switch (region)
-                {
-                    case ModbusRegion.Coil:
-                        return (await _master.ReadCoilsAsync(Param.SlaveId, startAddr, quantity)).ToBytes();
-                    case ModbusRegion.DiscreteInput:
-                        return (await _master.ReadInputsAsync(Param.SlaveId, startAddr, quantity)).ToBytes();
-                    case ModbusRegion.InputRegister:
-                        return (await _master.ReadInputRegistersAsync(Param.SlaveId, startAddr, quantity)).ToBytes();
-                    case ModbusRegion.HoldingRegister:
-                    default:
-                        return (await _master.ReadHoldingRegistersAsync(Param.SlaveId, startAddr, quantity)).ToBytes();
-                }
-            }, ct);
+            throw new ModbusProtocolException(
+                $"响应从站地址 {response.UnitId} 与请求 {request.UnitId} 不一致。");
         }
-
-        public override async Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default)
+        if (response.FunctionCode != request.FunctionCode)
         {
-            if (_master == null || !IsConnected) throw new InvalidOperationException("设备未连接");
-
-            var (region, startAddr, _) = ModbusAddress.Parse(address, data.Length);
-
-            return await ExecuteWithRetryAsync(async () =>
-            {
-                switch (region)
-                {
-                    case ModbusRegion.Coil:
-                        await _master.WriteMultipleCoilsAsync(Param.SlaveId, startAddr, data.ToBoolArray());
-                        return true;
-                    case ModbusRegion.HoldingRegister:
-                    default:
-                        await _master.WriteMultipleRegistersAsync(Param.SlaveId, startAddr, data.ToShortArray());
-                        return true;
-                }
-            }, ct);
+            throw new ModbusProtocolException(
+                $"响应功能码 {response.FunctionCode} 与请求 {request.FunctionCode} 不一致。");
         }
+    }
 
-        public override Task<bool> SendAsync(byte[] data, CancellationToken ct = default)
-            => throw new NotSupportedException("Modbus RTU 不支持原始字节发送，请使用 ReadAsync/WriteAsync");
-
-        public override Task<byte[]> SendAndReceiveAsync(byte[] data, CancellationToken ct = default)
-            => throw new NotSupportedException("Modbus RTU 不支持原始收发，请使用 ReadAsync/WriteAsync");
-
-        protected override void Dispose(bool disposing)
+    private static SerialByteStreamTransport CreateTransport(ModbusRtuParam param)
+    {
+        ArgumentNullException.ThrowIfNull(param);
+        return new SerialByteStreamTransport(new SerialTransportOptions(param.PortName, param.BaudRate)
         {
-            if (disposing)
-            {
-                _master?.Dispose();
-                if (_serialPort?.IsOpen == true) _serialPort.Close();
-                _serialPort?.Dispose();
-            }
-            base.Dispose(disposing);
+            DataBits = param.DataBits,
+            StopBits = param.StopBits,
+            Parity = param.Parity,
+            TimeoutMs = param.TimeoutMs,
+        });
+    }
+
+    /// <inheritdoc />
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _session.DisposeAsync().AsTask().GetAwaiter().GetResult();
         }
+        base.Dispose(disposing);
     }
 }

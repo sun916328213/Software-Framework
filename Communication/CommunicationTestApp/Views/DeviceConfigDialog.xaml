@@ -1,0 +1,140 @@
+﻿<UserControl x:Class="CommunicationTestApp.Views.DeviceConfigDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:CommunicationTestApp.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:DeviceConfigDialogViewModel}"
+        d:DesignWidth="560" d:DesignHeight="640"
+        Background="{DynamicResource Brush.Bg.0}"
+        FontFamily="{StaticResource FontFamily.Default}">
+    <UserControl.Resources>
+        <!-- 通用参数行模板 -->
+        <DataTemplate x:Key="TextFieldTemplate">
+            <Grid Margin="0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Label}"
+                           VerticalAlignment="Center" ToolTip="{Binding Key}" />
+                <TextBox Grid.Column="1"
+                         Text="{Binding Text, UpdateSourceTrigger=PropertyChanged, Delay=150}"
+                         ToolTip="{Binding Key}">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox" BasedOn="{StaticResource Input}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasError}" Value="True">
+                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Danger}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+            </Grid>
+        </DataTemplate>
+
+        <!-- 布尔参数行模板 -->
+        <DataTemplate x:Key="BoolFieldTemplate">
+            <Grid Margin="0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Label}"
+                           VerticalAlignment="Center" ToolTip="{Binding Key}" />
+                <CheckBox Grid.Column="1" IsChecked="{Binding IsChecked}"
+                          VerticalAlignment="Center" />
+            </Grid>
+        </DataTemplate>
+
+        <!-- 枚举参数行模板 -->
+        <DataTemplate x:Key="OptionFieldTemplate">
+            <Grid Margin="0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Label}"
+                           VerticalAlignment="Center" ToolTip="{Binding Key}" />
+                <ComboBox Grid.Column="1" Style="{StaticResource Combo}"
+                          ItemsSource="{Binding Options}"
+                          SelectedItem="{Binding Text, Mode=TwoWay}" />
+            </Grid>
+        </DataTemplate>
+
+        <!-- 模板选择器 -->
+        <v:ParamFieldTemplateSelector x:Key="FieldTemplateSelector"
+                                      TextTemplate="{StaticResource TextFieldTemplate}"
+                                      BoolTemplate="{StaticResource BoolFieldTemplate}"
+                                      OptionTemplate="{StaticResource OptionFieldTemplate}"
+                                      xmlns:v="clr-namespace:CommunicationTestApp.Views" />
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 标题 -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+            <TextBlock Text="&#9881;" FontSize="20" Foreground="{DynamicResource Brush.Accent}"
+                       VerticalAlignment="Center" Margin="0,0,10,0" />
+            <TextBlock Text="新建通信设备" Style="{StaticResource Text.Header}" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- 基础信息 -->
+        <Border Grid.Row="1" Style="{StaticResource Panel}" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="设备名称" Style="{StaticResource Text.Label}"
+                           VerticalAlignment="Center" Margin="0,0,12,0" />
+                <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource Input}"
+                         Text="{Binding DeviceName, UpdateSourceTrigger=PropertyChanged}" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="协议类型" Style="{StaticResource Text.Label}"
+                           VerticalAlignment="Center" Margin="0,0,12,0" />
+                <ComboBox Grid.Row="2" Grid.Column="1" Style="{StaticResource Combo}"
+                          ItemsSource="{Binding ProtocolOptions}" DisplayMemberPath="DisplayName"
+                          SelectedIndex="{Binding SelectedProtocolIndex, Mode=TwoWay}" />
+                <TextBlock Grid.Row="2" Grid.Column="2" Text="角色" Style="{StaticResource Text.Label}"
+                           VerticalAlignment="Center" Margin="16,0,12,0" />
+                <ComboBox Grid.Row="2" Grid.Column="3" Style="{StaticResource Combo}" Width="120"
+                          ItemsSource="{Binding RoleOptions}" DisplayMemberPath="DisplayName"
+                          SelectedIndex="{Binding SelectedRoleIndex, Mode=TwoWay}"
+                          IsEnabled="{Binding RoleServerEnabled}" />
+            </Grid>
+        </Border>
+
+        <!-- 协议参数动态表单 -->
+        <Border Grid.Row="2" Style="{StaticResource Panel}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Fields}"
+                              ItemTemplateSelector="{StaticResource FieldTemplateSelector}" />
+            </ScrollViewer>
+        </Border>
+
+        <!-- 操作 -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="取消" Style="{StaticResource Button.Secondary}" Width="88"
+                    Command="{Binding CancelCommand}" />
+            <Button Content="创建" Style="{StaticResource Button.Primary}" Width="88" Margin="10,0,0,0"
+                    Command="{Binding ConfirmCommand}" />
+        </StackPanel>
+    </Grid>
+</UserControl>
