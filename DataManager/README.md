@@ -132,7 +132,7 @@ dotnet test DataManager.Tests/DataManager.Tests.csproj
 - 130 用例构成：Excel 20（EPPlus 8 + MiniExcel 6 + Manager 6）/ Log 28（Serilog 8 + NLog 6 + log4net 6 + Manager 8）/ Manager 12 / SQL 50（EFCore 分表 6 + PG 真库 5 + 工厂/命名/方言等 39）/ Workbench 20（SQL 指纹 6 + Log/Excel 指纹 9 + 刷新 3 + 冒烟 2）。
 - 工作台冒烟（`Tests/Workbench/SqlViewModelSmokeTests`）无头驱动 `SqlViewModel` 全命令连真库；`LogViewModelRefreshTests` 端到端验证刷新能找到 `logyyyyMMdd` 文件。
 
-## 工作台（手动测试）
+## 工作台（手动测试，MaterialDesign + Prism）
 
 ```powershell
 dotnet run --project DataManager.Workbench/DataManager.Workbench.csproj

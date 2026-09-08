@@ -2,7 +2,7 @@
 
 > 生成日期：2026-09-07
 > 仓库子目录：`DataManager/`
-> 现状基线：`dotnet build DataManager.sln` 0 错误（DataManager 三工程 0 警告；Extension 旧警告与本库无关）；`dotnet test` 130/130 通过（需 `DM_PG_PASSWORD` 环境变量）。
+> 现状基线：`dotnet build DataManager.sln` 0 错误（DataManager 三工程 0 警告；Extension 旧警告与本库无关）；`dotnet test` 131/131 通过（需 `DM_PG_PASSWORD` 环境变量）。
 > 本文档 = 上次架构评审的落盘版，后续 Codex/人工按 P0（已完成） → P1 → P2 顺序执行。
 
 ---
@@ -134,7 +134,7 @@ DataManager.Workbench/              # WPF + Prism.DryIoc + .NET9 测试台
 ## 5. 测试程序存档
 
 - 位置：`DataManager.Tests/DataManager.Tests.csproj`（xunit 2.9.2）。
-- 用例分布（130 个）：Excel 20（EPPlus 8 + MiniExcel 6 + Manager 6）/ Log 28（Serilog 8 + NLog 6 + log4net 6 + Manager 8）/ Manager 12 / SQL 50（EFCore 分表 6 + PG 真库集成 5 + 工厂/命名/方言等 39）/ Workbench 20（SQL 指纹 6 + Log/Excel 指纹 9 + 刷新 3 + 冒烟 2），TDD 证据同下。
+- 用例分布（131 个）：Excel 20 / Log 28 / Manager 12 / SQL 50 / Workbench 21（SQL 指纹 6 + Log/Excel 指纹 9 + 刷新 3 + 冒烟 2 + XAML 启动 1），TDD 证据同下。
 - TDD 证据：`Tests/Excel/EPPlusHelperTests.cs` 追加覆盖回归；`Tests/Log/LogManagerTests.cs` 曾把坏味道显式断言（P0 已转正）。
 - 运行：`dotnet test DataManager.Tests/DataManager.Tests.csproj --nologo -v minimal`
 
@@ -207,6 +207,17 @@ DataManager.Workbench/              # WPF + Prism.DryIoc + .NET9 测试台
 - 冒烟首跑失败定位真 bug：批量写 `DateTime.Now`（Local）被 Npgsql 拒绝，而冒烟文件没设兼容开关（集成测试/探针设了，所以它们能过）。根因是库把开关责任推给宿主（`DataManagerModule`）。
 - 修：`EFCoreBase<T>` 与 `DapperBase<T>` 静态构造中自行 `AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true)`（时序早于首次连接，幂等；宿主/测试原有设置保留无害）。
 - 结果：`dotnet build`（DataManager 三工程）0 警告 0 错误；`dotnet test` 130/130。
+
+## 16. 工作台 MaterialDesign 改造记录
+
+- 包：`MaterialDesignThemes 5.3.0`（csproj 里已有引用，删掉了笔者误加的 5.1.0 重复项）；Prism 保持 8.1.97，导航/区域/模块零改动。
+- `App.xaml`：`BundledTheme`（Light + Indigo + Teal）+ `MaterialDesign3.Defaults.xaml` + 自有 `Theme.xaml`。
+- `Theme.xaml` 瘦身：删自绘按钮/输入框/表格/导航样式（Material 接管），仅保留标题字阶、终端风输出框、深色侧栏导航（Chip 徽标 + 硬编码 Indigo 选中）。
+- 四视图：`materialDesign:Card` 分区 + `OutlinedTextBox/ComboBox` 浮动提示 + `Raised/Outlined` 图标按钮 + `MaterialDesignDataGrid` + 页头 `PackIcon`；全部绑定/命令原样不动。
+- 测试 `Tests/Workbench/WorkbenchXamlSmokeTests` 1 用例：STA 无头完整启动 Prism App，三页逐一导航创建（构建验不了 StaticResource，必须运行时验）。
+- 冒烟修过 2 个真问题：① `MaterialDesignTheme.Defaults.xaml` 在 5.3.0 已改名 `MaterialDesign3.Defaults.xaml`（包内 BAML 清单实证）；② 测试脚手架漏调 `InitializeComponent()`（生产入口自动调）。
+- 结果：`dotnet build` 0 错误；`dotnet test` 131/131。
+- 取舍：未做运行时明暗切换（5.x 主题 API 未经验证，不上未经实证的代码）。
 
 ---
 
