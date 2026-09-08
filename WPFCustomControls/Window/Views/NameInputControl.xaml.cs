@@ -9,8 +9,6 @@ namespace WPFCustomControls.Window.Views;
 /// </summary>
 public partial class NameInputControl : System.Windows.Window
 {
-    public static readonly DependencyProperty TitleProperty =
-        DependencyProperty.Register(nameof(Title), typeof(string), typeof(NameInputControl), new PropertyMetadata("输入名称"));
     public static readonly DependencyProperty DescriptionProperty =
         DependencyProperty.Register(nameof(Description), typeof(string), typeof(NameInputControl), new PropertyMetadata("请输入名称："));
     public static readonly DependencyProperty PlaceholderProperty =
@@ -18,7 +16,6 @@ public partial class NameInputControl : System.Windows.Window
     public static readonly DependencyProperty InputTextProperty =
         DependencyProperty.Register(nameof(InputText), typeof(string), typeof(NameInputControl), new FrameworkPropertyMetadata("", FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
-    public string Title { get => (string)GetValue(TitleProperty); set => SetValue(TitleProperty, value); }
     public string Description { get => (string)GetValue(DescriptionProperty); set => SetValue(DescriptionProperty, value); }
     public string Placeholder { get => (string)GetValue(PlaceholderProperty); set => SetValue(PlaceholderProperty, value); }
     public string InputText { get => (string)GetValue(InputTextProperty); set => SetValue(InputTextProperty, value); }
@@ -38,6 +35,7 @@ public partial class NameInputControl : System.Windows.Window
     public NameInputControl()
     {
         InitializeComponent();
+        Title = "输入名称";
         DataContext = this;
         Loaded += (_, _) => InputBox.Focus();
     }

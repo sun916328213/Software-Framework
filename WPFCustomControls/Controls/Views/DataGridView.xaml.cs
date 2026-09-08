@@ -17,15 +17,16 @@ namespace WPFCustomControls.Controls
             AutoGeneratingColumn += DataGridView_AutoGeneratingColumn;
         }
 
-        private void DataGridView_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
+        private void DataGridView_AutoGeneratingColumn(object? sender, DataGridAutoGeneratingColumnEventArgs e)
         {
-            PropertyInfo propertyInfo = null;
+            PropertyInfo? propertyInfo = null;
             
             var itemsSource = ItemsSource;
             if (itemsSource != null)
             {
-                var itemType = itemsSource.GetType().GetGenericArguments()[0];
-                propertyInfo = itemType.GetProperty(e.PropertyName);
+                var genericArguments = itemsSource.GetType().GetGenericArguments();
+                if (genericArguments.Length > 0)
+                    propertyInfo = genericArguments[0].GetProperty(e.PropertyName);
             }
 
             if (propertyInfo != null)

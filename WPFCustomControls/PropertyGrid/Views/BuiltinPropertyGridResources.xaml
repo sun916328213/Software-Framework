@@ -4,7 +4,7 @@
     xmlns:conv="clr-namespace:WPFCustomControls.ValueConvert"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:svc="clr-namespace:WPFCustomControls.PropertyGrid.Services"
-    xmlns:vm="clr-namespace:WPFCustomControls.PropertyGrid.ViewModels">
+    xmlns:vm="clr-namespace:WPFCustomControls.PropertyGrid.ViewModels;assembly=WPFCustomControls.PropertyGrid.Core">
 
     <BooleanToVisibilityConverter x:Key="PG_BoolToVis" />
     <conv:BoolInverseConverter x:Key="PG_InverseBool" />

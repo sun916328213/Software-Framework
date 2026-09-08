@@ -71,7 +71,7 @@ namespace WPFCustomControls.Controls
         private static void OnElementSizeChanged(object sender, SizeChangedEventArgs e) =>
             ApplyClip((FrameworkElement)sender);
 
-        private static void OnElementLayoutUpdated(object sender, EventArgs e)
+        private static void OnElementLayoutUpdated(object? sender, EventArgs e)
         {
             // 布局完成后再裁剪一次，保证与最终尺寸一致
             if (sender is FrameworkElement element && GetIsEnabled(element))

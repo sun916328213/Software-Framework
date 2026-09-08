@@ -45,7 +45,7 @@ public partial class ProgramLoading : System.Windows.Window
     /// </summary>
     public static ProgramLoading StartOnOwnThread()
     {
-        ProgramLoading window = null;
+        ProgramLoading? window = null;
         var ready = new ManualResetEventSlim(false);
 
         var thread = new Thread(() =>
@@ -60,7 +60,7 @@ public partial class ProgramLoading : System.Windows.Window
         thread.Start();
         ready.Wait();
 
-        return window;
+        return window!;
     }
 
     /// <summary>

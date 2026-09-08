@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>13.0</LangVersion>
+    <RootNamespace>WPFCustomControls.PropertyGrid</RootNamespace>
+    <AssemblyName>WPFCustomControls.PropertyGrid.Core</AssemblyName>
+    <!-- 不引用 WPF,纯托管类库,供 WPFCustomControls 与单元测试共用。 -->
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+</Project>
