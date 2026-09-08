@@ -21,8 +21,8 @@ public partial class PortRowViewModel : ObservableObject
     /// <summary>是否为自定义端口（未绑定属性）</summary>
     public bool IsCustomPort => string.IsNullOrEmpty(BoundPropertyName);
 
-    /// <summary>是否显示为只读文本（已绑定的输入端口 或 输出端口 显示 TextBlock）</summary>
-    public bool ShowAsTextBlock => IsBound || (!IsInput && !IsCustomPort);
+    /// <summary>是否显示为只读文本（已绑定数据/已绑定属性的端口 显示 TextBlock）</summary>
+    public bool ShowAsTextBlock => IsBound || !IsCustomPort;
 
     /// <summary>是否显示为可编辑文本框（未绑定的自定义输入端口 显示 TextBox）</summary>
     public bool ShowAsTextBox => !IsBound && IsInput && IsCustomPort;
@@ -76,6 +76,14 @@ public partial class PortRowViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowAsTextBlock));
         OnPropertyChanged(nameof(ShowAsTextBox));
         OnPropertyChanged(nameof(ShowAsComboBox));
+    }
+
+    partial void OnIsInputChanged(bool oldValue, bool newValue)
+    {
+        OnPropertyChanged(nameof(ShowAsTextBlock));
+        OnPropertyChanged(nameof(ShowAsTextBox));
+        OnPropertyChanged(nameof(ShowAsComboBox));
+        OnPropertyChanged(nameof(IsUnbound));
     }
 
     partial void OnIsBoundChanged(bool oldValue, bool newValue)
