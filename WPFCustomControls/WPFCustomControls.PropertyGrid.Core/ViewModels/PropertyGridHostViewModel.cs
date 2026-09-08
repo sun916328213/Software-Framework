@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using WPFCustomControls.PropertyGrid.Composition;
 using WPFCustomControls.PropertyGrid.Models;
 using WPFCustomControls.PropertyGrid.Services;
 
@@ -17,6 +18,7 @@ public partial class PropertyGridHostViewModel : ObservableObject
 {
     private readonly IPropertyGridBuilderService _builderService;
     private readonly IPortDialogService _dialogService;
+    private readonly IUiDispatcher _dispatcher;
 
     /// <summary>全量分组母版（过滤只影响 <see cref="Groups"/>，不重建属性行，避免反复订阅/释放）。</summary>
     private readonly List<PropertyGroupViewModel> _allGroups = new();
@@ -58,9 +60,21 @@ public partial class PropertyGridHostViewModel : ObservableObject
     public PropertyGridHostViewModel(
         IPropertyGridBuilderService builderService,
         IPortDialogService dialogService)
+        : this(builderService, dialogService, NullUiDispatcher.Instance)
     {
+    }
+
+    public PropertyGridHostViewModel(
+        IPropertyGridBuilderService builderService,
+        IPortDialogService dialogService,
+        IUiDispatcher dispatcher)
+    {
+        ArgumentNullException.ThrowIfNull(builderService);
+        ArgumentNullException.ThrowIfNull(dialogService);
+        ArgumentNullException.ThrowIfNull(dispatcher);
         _builderService = builderService;
         _dialogService = dialogService;
+        _dispatcher = dispatcher;
     }
 
     /// <summary>搜索关键字变更时刷新可见分组/属性行。</summary>
@@ -109,7 +123,7 @@ public partial class PropertyGridHostViewModel : ObservableObject
         if (_targetObject is IPortManageable manageable)
         {
             var bindable = _builderService.CollectBindableProperties(_targetObject.GetType());
-            PortManagement = new PortManagementViewModel(manageable, bindable, _dialogService);
+            PortManagement = new PortManagementViewModel(manageable, bindable, _dialogService, _dispatcher);
         }
 
         ApplyFilter();

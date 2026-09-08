@@ -1,13 +1,14 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- ==================================================================
-         MaterialDesign 样式映射层
-         - Button.* / Input / Combo 映射到 MD 内置样式，随主题切换
-         - Card / Panel / List 等容器保留 token，引用别名片刷实例
-         ================================================================== -->
+    <!--
+        ==================================================================
+        MaterialDesign 样式映射层
+        - Button.* / Input / Combo 映射到 MD 内置样式，随主题切换
+        - Card / Panel / List 等容器保留 token，引用别名片刷实例
+        ==================================================================
+    -->
 
-    <!-- ===== 卡片容器 ===== -->
+    <!--  ===== 卡片容器 =====  -->
     <Style x:Key="Card" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource Brush.Bg.1}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
@@ -24,23 +25,29 @@
         <Setter Property="Padding" Value="{StaticResource Metric.Panel.Padding}" />
     </Style>
 
-    <!-- ===== 按钮（MaterialDesign 映射）===== -->
-    <Style x:Key="Button.Primary" TargetType="Button"
-           BasedOn="{StaticResource MaterialDesignRaisedButton}">
+    <!--  ===== 按钮（MaterialDesign 映射）=====  -->
+    <Style
+        x:Key="Button.Primary"
+        BasedOn="{StaticResource MaterialDesignRaisedButton}"
+        TargetType="Button">
         <Setter Property="FontSize" Value="{StaticResource FontSize.S}" />
         <Setter Property="Padding" Value="14,7" />
         <Setter Property="Cursor" Value="Hand" />
     </Style>
 
-    <Style x:Key="Button.Secondary" TargetType="Button"
-           BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+    <Style
+        x:Key="Button.Secondary"
+        BasedOn="{StaticResource MaterialDesignOutlinedButton}"
+        TargetType="Button">
         <Setter Property="FontSize" Value="{StaticResource FontSize.S}" />
         <Setter Property="Padding" Value="14,7" />
         <Setter Property="Cursor" Value="Hand" />
     </Style>
 
-    <Style x:Key="Button.Danger" TargetType="Button"
-           BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+    <Style
+        x:Key="Button.Danger"
+        BasedOn="{StaticResource MaterialDesignOutlinedButton}"
+        TargetType="Button">
         <Setter Property="FontSize" Value="{StaticResource FontSize.S}" />
         <Setter Property="Padding" Value="14,7" />
         <Setter Property="Cursor" Value="Hand" />
@@ -48,8 +55,10 @@
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Danger}" />
     </Style>
 
-    <Style x:Key="Button.Success" TargetType="Button"
-           BasedOn="{StaticResource MaterialDesignRaisedButton}">
+    <Style
+        x:Key="Button.Success"
+        BasedOn="{StaticResource MaterialDesignRaisedButton}"
+        TargetType="Button">
         <Setter Property="FontSize" Value="{StaticResource FontSize.S}" />
         <Setter Property="Padding" Value="14,7" />
         <Setter Property="Cursor" Value="Hand" />
@@ -58,21 +67,28 @@
         <Setter Property="Foreground" Value="White" />
     </Style>
 
-    <!-- 图标按钮（标题栏主题切换等） -->
-    <Style x:Key="Button.Icon" TargetType="Button"
-           BasedOn="{StaticResource MaterialDesignFlatButton}">
+    <!--  图标按钮（标题栏主题切换等）  -->
+    <Style
+        x:Key="Button.Icon"
+        BasedOn="{StaticResource MaterialDesignFlatButton}"
+        TargetType="Button">
         <Setter Property="Padding" Value="6" />
         <Setter Property="Cursor" Value="Hand" />
     </Style>
 
-    <!-- ===== 输入框（MaterialDesign Filled 风格）===== -->
-    <Style x:Key="Input" TargetType="TextBox"
-           BasedOn="{StaticResource MaterialDesignFilledTextBox}">
+    <!--  ===== 输入框（MaterialDesign Filled 风格）=====  -->
+    <Style
+        x:Key="Input"
+        BasedOn="{StaticResource MaterialDesignFilledTextBox}"
+        TargetType="TextBox">
         <Setter Property="FontSize" Value="{StaticResource FontSize.S}" />
         <Setter Property="Margin" Value="0,8,0,0" />
     </Style>
 
-    <Style x:Key="Input.Mono" TargetType="TextBox" BasedOn="{StaticResource Input}">
+    <Style
+        x:Key="Input.Mono"
+        BasedOn="{StaticResource Input}"
+        TargetType="TextBox">
         <Setter Property="FontFamily" Value="{StaticResource FontFamily.Mono}" />
         <Setter Property="AcceptsReturn" Value="True" />
         <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
@@ -80,21 +96,22 @@
         <Setter Property="TextWrapping" Value="NoWrap" />
     </Style>
 
-    <!-- ===== ComboBox（MaterialDesign Filled 风格）===== -->
-    <Style x:Key="Combo" TargetType="ComboBox"
-           BasedOn="{StaticResource MaterialDesignFilledComboBox}">
+    <!--  ===== ComboBox（MaterialDesign Filled 风格）=====  -->
+    <Style
+        x:Key="Combo"
+        BasedOn="{StaticResource MaterialDesignFilledComboBox}"
+        TargetType="ComboBox">
         <Setter Property="FontSize" Value="{StaticResource FontSize.S}" />
         <Setter Property="Margin" Value="0,8,0,0" />
     </Style>
 
-    <!-- ===== CheckBox（MD 默认样式已在 Defaults 字典中，此处仅覆盖前景）===== -->
-    <Style TargetType="CheckBox"
-           BasedOn="{StaticResource MaterialDesignCheckBox}">
+    <!--  ===== CheckBox（MD 默认样式已在 Defaults 字典中，此处仅覆盖前景）=====  -->
+    <Style BasedOn="{StaticResource MaterialDesignCheckBox}" TargetType="CheckBox">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Fg.Primary}" />
         <Setter Property="FontSize" Value="{StaticResource FontSize.S}" />
     </Style>
 
-    <!-- ===== 数据表格 ===== -->
+    <!--  ===== 数据表格 =====  -->
     <Style x:Key="DataGrid.Base" TargetType="DataGrid">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.Fg.Primary}" />
@@ -116,7 +133,7 @@
         <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
     </Style>
 
-    <!-- ===== ListBox ===== -->
+    <!--  ===== ListBox =====  -->
     <Style x:Key="List.Base" TargetType="ListBox">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
@@ -124,7 +141,7 @@
         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
     </Style>
 
-    <!-- ===== ScrollBar（保留极简细滚动条，颜色随主题）===== -->
+    <!--  ===== ScrollBar（保留极简细滚动条，颜色随主题）=====  -->
     <Style TargetType="{x:Type ScrollBar}">
         <Setter Property="Width" Value="8" />
         <Setter Property="Background" Value="Transparent" />
@@ -143,7 +160,10 @@
                                 <Thumb>
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
-                                            <Border Background="{DynamicResource Brush.Fg.Muted}" CornerRadius="4" Opacity="0.35" />
+                                            <Border
+                                                Background="{DynamicResource Brush.Fg.Muted}"
+                                                CornerRadius="4"
+                                                Opacity="0.35" />
                                         </ControlTemplate>
                                     </Thumb.Template>
                                 </Thumb>
@@ -161,14 +181,14 @@
         </Style.Triggers>
     </Style>
 
-    <!-- ===== 状态徽标 ===== -->
+    <!--  ===== 状态徽标 =====  -->
     <Style x:Key="Badge" TargetType="Border">
         <Setter Property="CornerRadius" Value="9" />
         <Setter Property="Width" Value="9" />
         <Setter Property="Height" Value="9" />
     </Style>
 
-    <!-- ===== 分隔线 ===== -->
+    <!--  ===== 分隔线 =====  -->
     <Style x:Key="Separator.H" TargetType="Separator">
         <Setter Property="Background" Value="{DynamicResource Brush.Border.Subtle}" />
         <Setter Property="Height" Value="1" />
@@ -176,7 +196,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Separator">
-                    <Border Background="{TemplateBinding Background}" Height="{TemplateBinding Height}" />
+                    <Border Height="{TemplateBinding Height}" Background="{TemplateBinding Background}" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

@@ -13,6 +13,7 @@ namespace WPFCustomControls.PropertyGrid.ViewModels;
 public partial class PropertyItemViewModel : ObservableObject, IDisposable
 {
     private readonly PropertyValueAccessor _accessor;
+    private readonly IUiDispatcher _dispatcher;
     private readonly IPortConfigurable? _portConfigurable;
     private readonly INotifyPropertyChanged? _notifier;
     private bool _disposed;
@@ -22,11 +23,23 @@ public partial class PropertyItemViewModel : ObservableObject, IDisposable
         PropertyInfo propertyInfo,
         NodePropertyAttribute? attribute,
         IPortConfigurable? portConfigurable = null)
+        : this(target, propertyInfo, attribute, portConfigurable, NullUiDispatcher.Instance)
+    {
+    }
+
+    internal PropertyItemViewModel(
+        object target,
+        PropertyInfo propertyInfo,
+        NodePropertyAttribute? attribute,
+        IPortConfigurable? portConfigurable,
+        IUiDispatcher dispatcher)
     {
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(propertyInfo);
+        ArgumentNullException.ThrowIfNull(dispatcher);
 
         _accessor = new PropertyValueAccessor(target, propertyInfo, attribute);
+        _dispatcher = dispatcher;
         _portConfigurable = portConfigurable;
         IsPortConfigurable = attribute?.PortConfigurable == true && portConfigurable != null;
 
@@ -147,11 +160,11 @@ public partial class PropertyItemViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsOutputPort));
     });
 
-    private static void Dispatch(Action action)
+    private void Dispatch(Action action)
     {
-        if (UiDispatcher.Current.CheckAccess())
+        if (_dispatcher.CheckAccess())
             action();
         else
-            UiDispatcher.Current.Post(action);
+            _dispatcher.Post(action);
     }
 }

@@ -3,7 +3,6 @@ using Prism.Modularity;
 using System;
 using System.Windows;
 using WPFCustomControls.Common.Composition;
-using WPFCustomControls.PropertyGrid.Wpf;
 
 namespace WPFCustomControls;
 
@@ -30,7 +29,6 @@ public sealed class WPFCustomControlsModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        WpfUiDispatcher.RegisterForCurrentApplication();
         MergeResourceDictionaries();
     }
 

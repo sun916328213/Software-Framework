@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using WPFCustomControls.PropertyGrid.Composition;
 using WPFCustomControls.PropertyGrid.Models;
 using WPFCustomControls.PropertyGrid.Services;
 using WPFCustomControls.PropertyGrid.ViewModels;
@@ -228,6 +229,28 @@ public class PropertyGridBuilderServiceTests
         Assert.Equal("Enabled", item.DisplayName);
     }
 
+    [Fact]
+    public void BuildGroups_PropagatesInjectedDispatcherToPropertyItems()
+    {
+        var dispatcher = new QueuedDispatcher();
+        var service = new PropertyGridBuilderService(dispatcher);
+        var node = new TestNode();
+        var item = Flat(service.BuildGroups(node, null)).First(i => i.PropertyName == "Name");
+        var valueNotifications = 0;
+        item.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(PropertyItemViewModel.Value))
+                valueNotifications++;
+        };
+
+        node.Name = "changed";
+
+        Assert.Equal(0, valueNotifications);
+        Assert.Single(dispatcher.Pending);
+        dispatcher.RunPending();
+        Assert.Equal(1, valueNotifications);
+    }
+
     // ── CollectBindableProperties ───────────────────────────────
 
     [Fact]
@@ -263,5 +286,21 @@ public class PropertyGridBuilderServiceTests
 
         var again = _sut.CollectBindableProperties(typeof(TestNode));
         Assert.NotEmpty(again);
+    }
+
+    private sealed class QueuedDispatcher : IUiDispatcher
+    {
+        public List<Action> Pending { get; } = [];
+
+        public bool CheckAccess() => false;
+
+        public void Post(Action action) => Pending.Add(action);
+
+        public void RunPending()
+        {
+            foreach (var action in Pending.ToArray())
+                action();
+            Pending.Clear();
+        }
     }
 }

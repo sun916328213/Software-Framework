@@ -62,62 +62,14 @@ internal sealed class FluentModbusRtuServerAdapter : IModbusRtuServerAdapter
     }
 
     /// <inheritdoc />
-    public byte[] Read(string address, int length)
-    {
-        var server = GetRunningServer();
-        var (parsedAddress, quantity) = ModbusAddress.ParseValue(address, length);
-        var (region, startAddress) = parsedAddress;
-        return region switch
-        {
-            ModbusRegion.Coil => server.GetCoils(_param.SlaveId)
-                .Slice(startAddress / 8, (quantity + 7) / 8).ToArray(),
-            ModbusRegion.DiscreteInput => server.GetDiscreteInputs(_param.SlaveId)
-                .Slice(startAddress / 8, (quantity + 7) / 8).ToArray(),
-            ModbusRegion.InputRegister => server.GetInputRegisters(_param.SlaveId)
-                .Slice(startAddress, quantity).ToArray().ToBytes(),
-            _ => server.GetHoldingRegisters(_param.SlaveId)
-                .Slice(startAddress, quantity).ToArray().ToBytes(),
-        };
-    }
+    public byte[] Read(string address, int length) =>
+        FluentModbusServerDataAccessor.Read(
+            GetRunningServer(), _param.SlaveId, address, length);
 
     /// <inheritdoc />
-    public void Write(string address, byte[] data)
-    {
-        ArgumentNullException.ThrowIfNull(data);
-        var server = GetRunningServer();
-        var (parsedAddress, _) = ModbusAddress.ParseValue(address, data.Length);
-        var (region, startAddress) = parsedAddress;
-
-        switch (region)
-        {
-            case ModbusRegion.Coil:
-                var coils = server.GetCoils(_param.SlaveId);
-                for (var index = 0; index < data.Length; index++)
-                {
-                    var byteIndex = (startAddress + index) / 8;
-                    var bitIndex = (startAddress + index) % 8;
-                    if (data[index] != 0)
-                    {
-                        coils[byteIndex] |= (byte)(1 << bitIndex);
-                    }
-                    else
-                    {
-                        coils[byteIndex] &= (byte)~(1 << bitIndex);
-                    }
-                }
-                break;
-            case ModbusRegion.HoldingRegister:
-                var values = data.ToShortArray();
-                var registers = server.GetHoldingRegisters(_param.SlaveId);
-                for (var index = 0; index < values.Length; index++)
-                {
-                    registers[startAddress + index] = (short)values[index];
-                }
-                break;
-            default:
-                throw new NotSupportedException($"{region} 是只读数据区，不能通过从站接口写入。");
-        }
-    }
+    public void Write(string address, byte[] data) =>
+        FluentModbusServerDataAccessor.Write(
+            GetRunningServer(), _param.SlaveId, address, data);
 
     /// <inheritdoc />
     public void Dispose() => Stop();

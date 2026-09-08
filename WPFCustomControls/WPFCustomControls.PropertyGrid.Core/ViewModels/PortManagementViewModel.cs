@@ -16,6 +16,7 @@ public partial class PortManagementViewModel : ObservableObject, IDisposable
     private readonly IDataBindingProvider? _dataBindingProvider;
     private readonly PortBindingCoordinator? _bindings;
     private readonly IPortDialogService _dialogService;
+    private readonly IUiDispatcher _dispatcher;
     private readonly IPortConfigurable? _portConfigurable;
     private readonly List<PortRowSession> _sessions = [];
     private bool _isReloading;
@@ -37,14 +38,25 @@ public partial class PortManagementViewModel : ObservableObject, IDisposable
         IPortManageable target,
         List<string> availableProperties,
         IPortDialogService dialogService)
+        : this(target, availableProperties, dialogService, NullUiDispatcher.Instance)
+    {
+    }
+
+    internal PortManagementViewModel(
+        IPortManageable target,
+        List<string> availableProperties,
+        IPortDialogService dialogService,
+        IUiDispatcher dispatcher)
     {
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(availableProperties);
         ArgumentNullException.ThrowIfNull(dialogService);
+        ArgumentNullException.ThrowIfNull(dispatcher);
 
         _portManager = target;
         _availableProperties = availableProperties;
         _dialogService = dialogService;
+        _dispatcher = dispatcher;
         _dataBindingProvider = target as IDataBindingProvider;
         _bindings = _dataBindingProvider == null ? null : new PortBindingCoordinator(_dataBindingProvider);
         _portConfigurable = target as IPortConfigurable;
@@ -262,11 +274,11 @@ public partial class PortManagementViewModel : ObservableObject, IDisposable
         _sessions.Clear();
     }
 
-    private static void Dispatch(Action action)
+    private void Dispatch(Action action)
     {
-        if (UiDispatcher.Current.CheckAccess())
+        if (_dispatcher.CheckAccess())
             action();
         else
-            UiDispatcher.Current.Post(action);
+            _dispatcher.Post(action);
     }
 }

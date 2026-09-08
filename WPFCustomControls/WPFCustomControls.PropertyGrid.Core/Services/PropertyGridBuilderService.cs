@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using WPFCustomControls.PropertyGrid.Composition;
 using WPFCustomControls.PropertyGrid.Models;
 using WPFCustomControls.PropertyGrid.ViewModels;
 
@@ -23,6 +24,19 @@ public class PropertyGridBuilderService : IPropertyGridBuilderService
 
     /// <summary>可绑定属性名缓存。</summary>
     private static readonly ConcurrentDictionary<Type, List<string>> BindableCache = new();
+
+    private readonly IUiDispatcher _dispatcher;
+
+    public PropertyGridBuilderService()
+        : this(NullUiDispatcher.Instance)
+    {
+    }
+
+    public PropertyGridBuilderService(IUiDispatcher dispatcher)
+    {
+        ArgumentNullException.ThrowIfNull(dispatcher);
+        _dispatcher = dispatcher;
+    }
 
     private sealed class CachedTypeInfo
     {
@@ -51,7 +65,7 @@ public class PropertyGridBuilderService : IPropertyGridBuilderService
                          .OrderBy(x => x.Attr.Order)
                          .ThenBy(x => x.Info.Name, System.StringComparer.Ordinal))
             {
-                vm.AddItem(new PropertyItemViewModel(target, item.Info, item.Attr, portConfig));
+                vm.AddItem(new PropertyItemViewModel(target, item.Info, item.Attr, portConfig, _dispatcher));
             }
             result.Add(vm);
         }

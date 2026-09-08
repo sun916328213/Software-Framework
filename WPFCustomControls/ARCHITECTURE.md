@@ -22,15 +22,15 @@ dialogs, Dispatcher adapters, and the Prism composition root.
 | Module | Responsibility | May depend on |
 | --- | --- | --- |
 | `WPFCustomControls.PropertyGrid.Core` | Property metadata, view-model state, reflection-based property construction, UI-neutral seams | BCL, CommunityToolkit.Mvvm |
-| `WPFCustomControls` | WPF controls, Views, dialogs, resources, WPF adapters, Prism registration | Core, WPF, Prism, MaterialDesign, compatibility Extension |
+| `WPFCustomControls` | WPF controls, Views, dialogs, resources, WPF adapters, Prism registration | Core, WPF, Prism, MaterialDesign |
 | `WPFCustomControls.Tests` | Core behavior, WPF smoke tests, architecture rules | Core and WPF assemblies |
 
 ## Dependency rules
 
 1. Core code must not reference `System.Windows`, `PresentationFramework`,
    `PresentationCore`, `WindowsBase`, or the outer WPF assembly.
-2. A ViewModel crosses into WPF through a small seam such as `IUiDispatcher` or
-   `IPortDialogService`; concrete WPF adapters remain in the outer assembly.
+2. A ViewModel crosses into WPF through constructor-injected seams such as `IUiDispatcher`
+   or `IPortDialogService`; concrete WPF adapters remain in the outer assembly.
 3. Prism registrations belong to `Common/Composition`. Feature registrars are stateless;
    `WPFCustomControlsModule` only orchestrates them and initializes resources.
 4. XAML that consumes Core types must specify
@@ -62,9 +62,10 @@ internal refactoring local and prevents internal seams from leaking into consume
 - A new external dependency requires a seam only when production and test adapters are both
   useful; avoid pass-through interfaces that add no leverage.
 
-## Migration note
+## Compatibility note
 
-The nested `WPFCustomControls/` directory is retained as an excluded migration draft to
-avoid destroying uncommitted work. It is not part of the canonical build. The canonical
-entry remains the root `WPFCustomControls.csproj`; the canonical Core project is the sibling
-`WPFCustomControls.PropertyGrid.Core/WPFCustomControls.PropertyGrid.Core.csproj`.
+The canonical entry is the root `WPFCustomControls.csproj`; the canonical Core project is
+`WPFCustomControls.PropertyGrid.Core/WPFCustomControls.PropertyGrid.Core.csproj`. Core types
+that previously lived in `WPFCustomControls.dll` are type-forwarded to preserve binary
+compatibility. The legacy static `UiDispatcher` entry also remains available, while new Core
+code receives `IUiDispatcher` through constructor injection and does not read global state.

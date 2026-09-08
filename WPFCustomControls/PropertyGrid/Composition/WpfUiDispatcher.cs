@@ -23,9 +23,8 @@ internal sealed class WpfUiDispatcher : IUiDispatcher
             _dispatcher.BeginInvoke(action);
     }
 
-    public static void RegisterForCurrentApplication()
-    {
-        if (Application.Current is { } application)
-            UiDispatcher.Register(new WpfUiDispatcher(application.Dispatcher));
-    }
+    public static IUiDispatcher CreateForCurrentApplication() =>
+        Application.Current is { } application
+            ? new WpfUiDispatcher(application.Dispatcher)
+            : NullUiDispatcher.Instance;
 }

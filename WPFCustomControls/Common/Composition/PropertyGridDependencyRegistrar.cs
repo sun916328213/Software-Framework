@@ -1,7 +1,9 @@
 using Prism.Ioc;
+using WPFCustomControls.PropertyGrid.Composition;
 using WPFCustomControls.PropertyGrid.Models;
 using WPFCustomControls.PropertyGrid.Services;
 using WPFCustomControls.PropertyGrid.ViewModels;
+using WPFCustomControls.PropertyGrid.Wpf;
 
 namespace WPFCustomControls.Common.Composition;
 
@@ -12,6 +14,7 @@ public sealed class PropertyGridDependencyRegistrar : IDependencyRegistrar
 
     public void Register(IContainerRegistry registry)
     {
+        registry.RegisterInstance<IUiDispatcher>(WpfUiDispatcher.CreateForCurrentApplication());
         registry.RegisterSingleton<IPropertyGridBuilderService, PropertyGridBuilderService>();
         registry.RegisterSingleton<IPortDialogService, PortDialogService>();
         registry.Register<PropertyGridHostViewModel>();

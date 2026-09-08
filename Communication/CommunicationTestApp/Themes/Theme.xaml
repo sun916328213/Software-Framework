@@ -1,16 +1,19 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
-    <!-- ==================================================================
-         别名画刷层（MaterialDesign 适配）
-         - Brush.* 由 ThemeService.EnsureAliasBrushes() 在启动最早期
-           用代码创建（BAML 编译的 Freezable 会被冻结，无法运行时改色），
-           此处不定义任何画刷
-         - 初始值为深色主题，应用启动后由 ThemeService 同步为 MD 实际值
-         ================================================================== -->
+    <!--
+        ==================================================================
+        别名画刷层（MaterialDesign 适配）
+        - Brush.* 由 ThemeService.EnsureAliasBrushes() 在启动最早期
+        用代码创建（BAML 编译的 Freezable 会被冻结，无法运行时改色），
+        此处不定义任何画刷
+        - 初始值为深色主题，应用启动后由 ThemeService 同步为 MD 实际值
+        ==================================================================
+    -->
 
-    <!-- ===== 字体 ===== -->
+    <!--  ===== 字体 =====  -->
     <FontFamily x:Key="FontFamily.Default">Segoe UI, Microsoft YaHei UI, Microsoft YaHei</FontFamily>
     <FontFamily x:Key="FontFamily.Mono">Cascadia Mono, Consolas, Courier New</FontFamily>
 
@@ -21,14 +24,14 @@
     <sys:Double x:Key="FontSize.XL">19</sys:Double>
     <sys:Double x:Key="FontSize.Title">22</sys:Double>
 
-    <!-- ===== 布局度量 ===== -->
+    <!--  ===== 布局度量 =====  -->
     <CornerRadius x:Key="Metric.Radius.S">4</CornerRadius>
     <CornerRadius x:Key="Metric.Radius.M">6</CornerRadius>
     <CornerRadius x:Key="Metric.Radius.L">10</CornerRadius>
     <Thickness x:Key="Metric.Card.Padding">16</Thickness>
     <Thickness x:Key="Metric.Panel.Padding">14</Thickness>
 
-    <!-- ===== 文本样式（引用别名片刷实例，主题切换自动跟随）===== -->
+    <!--  ===== 文本样式（引用别名片刷实例，主题切换自动跟随）=====  -->
     <Style x:Key="Text.Header" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{StaticResource FontSize.XL}" />
         <Setter Property="FontWeight" Value="SemiBold" />
