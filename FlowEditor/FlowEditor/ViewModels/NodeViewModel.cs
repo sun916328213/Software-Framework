@@ -108,6 +108,13 @@ public class NodeViewModel : ObservableObject, INodeExecutable, INodeFaultPolicy
         set => Model.Permission = value;
     }
 
+    /// <summary>节点是否位于不执行容器。</summary>
+    public bool IsExcludedFromExecution
+    {
+        get => Model.IsExcludedFromExecution;
+        set => Model.IsExcludedFromExecution = value;
+    }
+
     /// <summary>是否可拖动。</summary>
     public bool IsDraggable => Model.IsDraggable;
 
@@ -116,6 +123,9 @@ public class NodeViewModel : ObservableObject, INodeExecutable, INodeFaultPolicy
 
     /// <summary>底部操作按钮。</summary>
     public ObservableCollection<NodeActionButton> ActionButtons => Model.ActionButtons;
+
+    /// <summary>将模型声明的控制流汇聚策略转发给执行引擎。</summary>
+    public FlowJoinMode FlowJoinMode => Model.FlowJoinMode;
 
     private bool _isSelected;
     /// <summary>是否被选中（高亮显示）。</summary>

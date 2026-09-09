@@ -9,7 +9,6 @@
     <LangVersion>13.0</LangVersion>
     <RootNamespace>CommunicationTestApp</RootNamespace>
     <AssemblyName>CommunicationTestApp</AssemblyName>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
     <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
 

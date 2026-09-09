@@ -1,0 +1,29 @@
+<Window
+    x:Class="FlowNodes.Workbench.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:prism="http://prismlibrary.com/"
+    Title="FlowNodes 测试工作台"
+    Width="1600"
+    Height="900"
+    WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            Grid.Row="0"
+            Margin="12,8"
+            FontSize="14"
+            FontWeight="SemiBold"
+            Text="FlowNodes 测试工作台 — 左侧工具箱拖拽节点，连线后 F5 运行，底部查看输出" />
+
+        <!-- 完整流程编辑器（工具箱 + 画布 + 属性面板 + 输出日志）：
+             由 App.OnInitialized 在模块加载完成后经区域导航装配。
+             不能在 XAML 里直接内嵌 FlowChartContainerView——CreateShell 时模块尚未加载，
+             AutoWire 会因容器中没有 VM 注册而抛 XamlParseException。 -->
+        <ContentControl Grid.Row="1" prism:RegionManager.RegionName="FlowRegion" />
+    </Grid>
+</Window>

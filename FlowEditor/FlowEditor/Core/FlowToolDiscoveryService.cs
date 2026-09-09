@@ -80,7 +80,7 @@ public class FlowToolDiscoveryService : IFlowToolDiscoveryService
                         if (!type.IsAbstract && type.IsSubclassOf(typeof(NodeModel)))
                         {
                             var attr = type.GetCustomAttribute<FlowToolAttribute>();
-                            if (attr == null) continue;
+                            if (attr == null || !attr.VisibleInToolbox) continue;
 
                             var iconKind = PackIconKind.CubeOutline;
                             if (!string.IsNullOrEmpty(attr.IconResource))

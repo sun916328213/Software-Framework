@@ -10,6 +10,7 @@ using FlowEditor.Core;
 using FlowEditor.Interfaces;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
+using FlowEditor.Nodes.FlowControl;
 using FlowEditor.ViewModels;
 using Prism.Ioc;
 
@@ -55,6 +56,7 @@ public class FlowChartService : IFlowChartService
     private readonly object _logGate = new();
     private readonly StringBuilder _logBuilder = new();
     private long _lastLogFlushTimestamp;
+    private int _logFlushScheduled;
 
     /// <summary>日志缓冲最大字符数，超过后丢弃较早的一半。</summary>
     private const int MaxLogChars = 200_000;
@@ -108,6 +110,7 @@ public class FlowChartService : IFlowChartService
         Model.IsRunning = true;
         Model.IsDebugMode = debugMode;
         Debug.StepMode = debugMode;
+        Model.StatusText = "正在执行...";
         _executionCts = new CancellationTokenSource();
         _executionOrder.Clear();
         CurrentExecutionIndex = 0;
@@ -126,7 +129,7 @@ public class FlowChartService : IFlowChartService
             // 进入流程（容器级）与任务作用域：节点日志按「流程名\任务名」路由落盘
             using (FlowLogContext.EnterProcess(ProcessName ?? FlowLogName))
             using (FlowLogContext.EnterFlow(FlowLogName))
-            using (ConsoleOutputRouter.EnterScope(msg => Application.Current?.Dispatcher.Invoke(() => logCallback(msg))))
+            using (ConsoleOutputRouter.EnterScope(msg => DispatchLog(logCallback, msg)))
             {
                 // 面板输出（引擎执行轨迹与运行标记）同步落盘到流程日志文件：
                 // NodeLog/节点 Console 已有独立落盘通道，此处只覆盖引擎 log 轨迹，避免重复写入。
@@ -136,9 +139,10 @@ public class FlowChartService : IFlowChartService
 
                 flowRunId = FlowLogContext.RunId;
                 Panel("=== 开始执行流程 ===", flowRunId);
+                var executionGraph = ExecutionGraphScope.Create(Nodes, Connections);
                 await _engine.ExecuteAsync(
-                    Nodes.ToList(),
-                    Connections.ToList(),
+                    executionGraph.Nodes,
+                    executionGraph.Connections,
                     _executionCts.Token,
                     msg => Panel(msg, flowRunId),
                     Model.IsDebugMode ? OnBeforeNodeExecute : null,
@@ -196,6 +200,52 @@ public class FlowChartService : IFlowChartService
         Model.IsPaused = false;
     }
 
+    /// <summary>仅执行当前选中节点一次，不调度上下游。</summary>
+    public async Task StepContinueAsync(NodeViewModel node, Action<string> logCallback)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        if (!Nodes.Contains(node))
+            throw new ArgumentException("选中节点不属于当前画布。", nameof(node));
+        if (node.IsExcludedFromExecution)
+        {
+            Model.StatusText = "不执行容器中的节点不能单步执行";
+            logCallback($"[单步] [{node.Name}] 位于不执行节点容器，已跳过");
+            return;
+        }
+        if (Model.IsRunning)
+        {
+            Model.StatusText = "流程运行中，不能单独执行节点";
+            return;
+        }
+
+        Model.IsRunning = true;
+        Model.StatusText = $"正在单步执行节点 [{node.Name}]...";
+        _executionCts = new CancellationTokenSource();
+        node.ResetStatus();
+        try
+        {
+            var graph = ExecutionGraphScope.Create(Nodes, Connections);
+            await _engine.ExecuteNodeAsync(
+                node, graph.Nodes, graph.Connections, _executionCts.Token, logCallback, Journal);
+            Model.StatusText = $"节点 [{node.Name}] 单步执行完成";
+        }
+        catch (OperationCanceledException)
+        {
+            Model.StatusText = $"节点 [{node.Name}] 单步执行已取消";
+        }
+        catch (Exception ex)
+        {
+            logCallback($"[单步][错误] [{node.Name}] {ex.Message}");
+            Model.StatusText = $"节点 [{node.Name}] 单步执行失败";
+        }
+        finally
+        {
+            Model.IsRunning = false;
+            _executionCts.Dispose();
+            _executionCts = null;
+        }
+    }
+
     /// <summary>停止执行。</summary>
     public void Stop()
     {
@@ -219,6 +269,7 @@ public class FlowChartService : IFlowChartService
 
         Model.IsLoopRunning = true;
         Model.IsRunning = true;
+        Model.StatusText = "正在循环执行...";
         Model.CurrentLoopIndex = 0;
         _executionCts = new CancellationTokenSource();
 
@@ -232,7 +283,7 @@ public class FlowChartService : IFlowChartService
             logCallback($"循环模式：间隔 {Model.LoopInterval}ms");
 
             var iteration = 0;
-            using (ConsoleOutputRouter.EnterScope(msg => Application.Current?.Dispatcher.Invoke(() => logCallback(msg))))
+            using (ConsoleOutputRouter.EnterScope(msg => DispatchLog(logCallback, msg)))
             {
                 while (true)
                 {
@@ -259,9 +310,10 @@ public class FlowChartService : IFlowChartService
 
                         loopRunId = FlowLogContext.RunId;
 
+                        var executionGraph = ExecutionGraphScope.Create(Nodes, Connections);
                         await _engine.ExecuteAsync(
-                            Nodes.ToList(),
-                            Connections.ToList(),
+                            executionGraph.Nodes,
+                            executionGraph.Connections,
                             _executionCts.Token,
                             Panel,
                             Model.IsDebugMode ? OnBeforeNodeExecute : null,
@@ -276,14 +328,7 @@ public class FlowChartService : IFlowChartService
                     if (interval > 0)
                     {
                         logCallback($"[等待 {interval}ms 后开始下一次循环...]");
-                        try
-                        {
-                            await Task.Delay(interval, _executionCts.Token);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            break;
-                        }
+                        await Task.Delay(interval, _executionCts.Token);
                     }
                 }
             }
@@ -325,7 +370,7 @@ public class FlowChartService : IFlowChartService
         if (!msg.StartsWith("#") && id > 0)
             msg = $"#{id} {msg}";
 
-        Application.Current?.Dispatcher.Invoke(() => logCallback(msg));
+        DispatchLog(logCallback, msg);
 
         var level = (msg.Contains("[错误]") || msg.Contains("[类型错误]") || msg.Contains("[堆栈]"))
             ? ELogLevel.Error
@@ -333,6 +378,39 @@ public class FlowChartService : IFlowChartService
                 ? ELogLevel.Warning
                 : ELogLevel.Information;
         FlowLogContext.Write(msg, level);
+    }
+
+    /// <summary>
+    /// 有可用 WPF Dispatcher 时将日志切回 UI 线程；无头运行或应用关闭期间直接回调，
+    /// 避免日志展示故障中断执行引擎。
+    /// </summary>
+    private static void DispatchLog(Action<string> logCallback, string message)
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher == null || dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished)
+        {
+            logCallback(message);
+            return;
+        }
+
+        if (dispatcher.CheckAccess())
+        {
+            logCallback(message);
+            return;
+        }
+
+        try
+        {
+            dispatcher.Invoke(() => logCallback(message));
+        }
+        catch (TaskCanceledException)
+        {
+            logCallback(message);
+        }
+        catch (InvalidOperationException) when (dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished)
+        {
+            logCallback(message);
+        }
     }
 
     /// <summary>停止循环执行。</summary>
@@ -354,7 +432,11 @@ public class FlowChartService : IFlowChartService
     /// 之后可用 FlowInstance.Create(program) 创建任意多个相互隔离的运行实例（并发/无头场景）。
     /// </summary>
     public FlowProgram CompileProgram()
-        => FlowProgram.FromDocument(_persistence.BuildDocument(Model.TabTitle, Nodes, Connections, Model));
+    {
+        var graph = ExecutionGraphScope.Create(Nodes, Connections);
+        return FlowProgram.FromDocument(
+            _persistence.BuildDocument(Model.TabTitle, graph.Nodes, graph.Connections, Model));
+    }
 
     // ── 静态校验（P2）──
 
@@ -364,7 +446,8 @@ public class FlowChartService : IFlowChartService
     /// </summary>
     private bool RunPreValidation(Action<string> logCallback)
     {
-        var report = FlowValidator.Analyze(Nodes.ToList(), Connections.ToList());
+        var graph = ExecutionGraphScope.Create(Nodes, Connections);
+        var report = FlowValidator.Analyze(graph.Nodes, graph.Connections);
         foreach (var diag in report.Diagnostics)
         {
             var tag = diag.Severity switch
@@ -544,8 +627,10 @@ public class FlowChartService : IFlowChartService
 
         var minX = Nodes.Min(n => n.X);
         var minY = Nodes.Min(n => n.Y);
-        var maxX = Nodes.Max(n => n.X + FlowChartModel.NodeWidth);
-        var maxY = Nodes.Max(n => n.Y + FlowChartModel.NodeHeight);
+        var maxX = Nodes.Max(n => n.X +
+            (n.Model is InactiveNodeContainerNode container ? container.ContainerWidth : FlowChartModel.NodeWidth));
+        var maxY = Nodes.Max(n => n.Y +
+            (n.Model is InactiveNodeContainerNode container ? container.ContainerHeight : FlowChartModel.NodeHeight));
 
         var contentWidth = maxX - minX + 200;
         var contentHeight = maxY - minY + 200;
@@ -574,6 +659,29 @@ public class FlowChartService : IFlowChartService
         }
         if (shouldFlush)
             FlushLog();
+        else
+            ScheduleLogFlush();
+    }
+
+    /// <summary>
+    /// 节流窗口内没有后续日志时，也要在窗口结束后刷新最后一批内容。
+    /// 只允许一个延迟刷新任务在途，避免高频日志为每一行创建任务。
+    /// </summary>
+    private void ScheduleLogFlush()
+    {
+        if (Interlocked.Exchange(ref _logFlushScheduled, 1) != 0)
+            return;
+
+        _ = FlushLogAfterDelayAsync();
+    }
+
+    private async Task FlushLogAfterDelayAsync()
+    {
+        await Task.Delay(LogFlushIntervalMs).ConfigureAwait(false);
+
+        // 先释放调度标记，确保恰好在 FlushLog 期间追加的新日志仍能安排下一次刷新。
+        Interlocked.Exchange(ref _logFlushScheduled, 0);
+        FlushLog();
     }
 
     /// <summary>立即将日志缓冲冲刷到输出面板（节流期间的最后一批日志在执行结束时调用）。</summary>
@@ -585,7 +693,30 @@ public class FlowChartService : IFlowChartService
             text = _logBuilder.ToString();
             _lastLogFlushTimestamp = Stopwatch.GetTimestamp();
         }
-        Model.OutputText = text;
+        PublishOutputText(text);
+    }
+
+    private void PublishOutputText(string text)
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher == null || dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished || dispatcher.CheckAccess())
+        {
+            Model.OutputText = text;
+            return;
+        }
+
+        try
+        {
+            dispatcher.Invoke(() => Model.OutputText = text);
+        }
+        catch (TaskCanceledException)
+        {
+            Model.OutputText = text;
+        }
+        catch (InvalidOperationException) when (dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished)
+        {
+            Model.OutputText = text;
+        }
     }
 
     /// <summary>清空日志缓冲与输出面板。</summary>
@@ -593,7 +724,7 @@ public class FlowChartService : IFlowChartService
     {
         lock (_logGate)
             _logBuilder.Clear();
-        Model.OutputText = string.Empty;
+        PublishOutputText(string.Empty);
     }
 
     /// <summary>查找节点。</summary>

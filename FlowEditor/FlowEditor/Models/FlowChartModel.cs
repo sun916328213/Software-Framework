@@ -186,7 +186,7 @@ public partial class FlowChartModel : ObservableObject
 
     #region 数据连线显示
 
-    private bool _showDataConnections = false;
+    private bool _showDataConnections = true;
 
     /// <summary>是否显示数据连线（非 Flow 类型的数据传输连线）。</summary>
     public bool ShowDataConnections

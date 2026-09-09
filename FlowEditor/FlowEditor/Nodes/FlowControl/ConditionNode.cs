@@ -11,7 +11,8 @@ namespace FlowEditor.Nodes.FlowControl;
 /// 旧图兼容：激活端口无任何出线时（旧图仅用 Next_Out），由引擎回退为全放行。
 /// 如需 N 路分发（输入 1 走 OUT1、输入 2 走 OUT2），请使用「条件分发」节点。
 /// </summary>
-[FlowTool("条件分支", "SourceBranch", ToolGroup = "流程控制", SortIndex = 2, Description = "根据条件表达式决定执行路径")]
+[FlowTool("条件分支", "SourceBranch", ToolGroup = "流程控制", SortIndex = 2,
+    Description = "旧版二选一节点，请改用条件分发", VisibleInToolbox = false)]
 public class ConditionNode : NodeModel
 {
     private bool _condition = true;

@@ -26,6 +26,11 @@ public sealed class CompiledFlowGraph<TNode> where TNode : INodeExecutable
         SuccessorConnections = successorConnections;
         Predecessors = predecessors;
         IncomingConnections = incomingConnections;
+        NodesWithFlowInput = nodes
+            .Where(node => incomingConnections[node.Id].Any(connection =>
+                node.FindPortById(connection.TargetPortId)?.DataType == PortType.Flow))
+            .Select(node => node.Id)
+            .ToHashSet();
         BackEdges = backEdges;
         Layers = layers;
 
@@ -60,6 +65,9 @@ public sealed class CompiledFlowGraph<TNode> where TNode : INodeExecutable
 
     /// <summary>入边连线索引（按目标节点分组，保持原始连线顺序）。</summary>
     public IReadOnlyDictionary<string, List<ConnectionModel>> IncomingConnections { get; }
+
+    /// <summary>至少具有一条 Flow 入边的节点 ID；用于区分执行令牌和纯数据依赖。</summary>
+    public IReadOnlySet<string> NodesWithFlowInput { get; }
 
     /// <summary>回边集合（DFS 中指向递归栈内节点的边，即构成环路的边）。</summary>
     public IReadOnlyCollection<(string Source, string Target)> BackEdges { get; }

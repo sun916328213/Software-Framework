@@ -71,6 +71,14 @@
                             FontWeight="SemiBold"
                             Foreground="{StaticResource Flow_Text_Primary}"
                             Text="{Binding Name}" />
+                        <Border
+                            Margin="6,0,0,0"
+                            Padding="4,0"
+                            Background="#DCE3EA"
+                            CornerRadius="3"
+                            Visibility="{Binding IsExcludedFromExecution, Converter={StaticResource BoolToVis}}">
+                            <TextBlock FontSize="9" Foreground="#526273" Text="不执行" />
+                        </Border>
                         <TextBlock
                             Margin="8,0,0,0"
                             VerticalAlignment="Center"

@@ -14,7 +14,7 @@ public partial class DeviceConfigDialog : UserControl
     }
 }
 
-/// <summary>参数字段模板选择器：布尔 → CheckBox，枚举 → ComboBox，其余 → 文本框。</summary>
+/// <summary>参数字段模板选择器：可编辑下拉（串口号）→ 可输入 ComboBox，布尔 → CheckBox，枚举 → ComboBox，其余 → 文本框。</summary>
 public sealed class ParamFieldTemplateSelector : DataTemplateSelector
 {
     public DataTemplate? TextTemplate { get; set; }
@@ -23,11 +23,18 @@ public sealed class ParamFieldTemplateSelector : DataTemplateSelector
 
     public DataTemplate? OptionTemplate { get; set; }
 
+    public DataTemplate? EditableOptionTemplate { get; set; }
+
     public override DataTemplate? SelectTemplate(object item, DependencyObject container)
     {
         if (item is not ParamField field)
         {
             return TextTemplate;
+        }
+
+        if (field.IsEditableCombo)
+        {
+            return EditableOptionTemplate ?? OptionTemplate;
         }
 
         if (field.IsBoolean)

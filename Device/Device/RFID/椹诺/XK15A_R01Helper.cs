@@ -1,9 +1,7 @@
 ﻿
 using Communication.Serial;
 using Device.RFID.Abstract;
-using Dm;
 using Extension.Core.ConvertEx;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Device.RFID
 {

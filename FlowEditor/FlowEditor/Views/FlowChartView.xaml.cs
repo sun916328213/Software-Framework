@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
+using FlowEditor.Nodes.FlowControl;
 using FlowEditor.ViewModels;
 
 namespace FlowEditor.Views;
@@ -20,10 +21,14 @@ public partial class FlowChartView : UserControl
     private FlowChartViewModel? _currentViewModel;
     private FlowChartViewModel ViewModel => _currentViewModel!;
 
-    private readonly Dictionary<NodeViewModel, NodeView> _nodeViewCache = new();
+    private readonly Dictionary<NodeViewModel, FrameworkElement> _nodeViewCache = new();
     private readonly Dictionary<NodeViewModel, PropertyChangedEventHandler> _nodeSubscriptions = new();
     private Point _boxSelectStart;
     private bool _isBoxSelecting;
+    private bool _isPanning;
+    private Point _panStart;
+    private double _panStartHorizontalOffset;
+    private double _panStartVerticalOffset;
     private PortConnectorView? _connectionCandidate;
     private const double PortSnapRadius = 28;
 
@@ -104,9 +109,12 @@ public partial class FlowChartView : UserControl
 
     private void AddNodeViewToCanvas(NodeViewModel vm)
     {
-        var nodeView = new NodeView { DataContext = vm };
+        FrameworkElement nodeView = vm.Model is InactiveNodeContainerNode
+            ? new InactiveNodeContainerView { DataContext = vm }
+            : new NodeView { DataContext = vm };
         Canvas.SetLeft(nodeView, vm.X);
         Canvas.SetTop(nodeView, vm.Y);
+        Panel.SetZIndex(nodeView, vm.Model is InactiveNodeContainerNode ? -10 : 0);
 
         PropertyChangedEventHandler propertyChanged = (_, e) =>
         {
@@ -123,7 +131,10 @@ public partial class FlowChartView : UserControl
         {
             if (PortConnectorLocator.FindAncestor(e.OriginalSource as DependencyObject) != null)
                 return;
-            ViewModel.SelectedNode = vm;
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+                ViewModel.ToggleNodeSelection(vm);
+            else if (!vm.IsSelected)
+                ViewModel.SetSelectedNodes([vm]);
             e.Handled = true; // 阻止冒泡到画布，否则 OnCanvasMouseDown 会清空选中
         };
 
@@ -230,11 +241,28 @@ public partial class FlowChartView : UserControl
 
     #region 画布鼠标事件
 
+    private void OnCanvasDragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = e.Data.GetDataPresent(typeof(NodePaletteItem))
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void OnCanvasDrop(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetData(typeof(NodePaletteItem)) is not NodePaletteItem item) return;
+        ViewModel.AddNodeAt(item, e.GetPosition(ZoomContainer));
+        e.Effects = DragDropEffects.Copy;
+        e.Handled = true;
+    }
+
     private void OnCanvasMouseDown(object sender, MouseButtonEventArgs e)
     {
+        if (_isPanning || e.ChangedButton != MouseButton.Left) return;
         Focus(); // 确保键盘焦点在 UserControl 上，否则 Delete 键无效
 
-        ViewModel.SelectedNode = null;
+        ViewModel.SetSelectedNodes([]);
         ViewModel.SelectedConnection = null;
 
         var point = e.GetPosition(ConnectionCanvas);
@@ -252,6 +280,13 @@ public partial class FlowChartView : UserControl
             ClearConnectionCandidate();
             _boxSelectStart = e.GetPosition(FlowChartCanvas);
             _isBoxSelecting = true;
+            Canvas.SetLeft(SelectionRectangle, _boxSelectStart.X);
+            Canvas.SetTop(SelectionRectangle, _boxSelectStart.Y);
+            SelectionRectangle.Width = 0;
+            SelectionRectangle.Height = 0;
+            SelectionRectangle.Visibility = Visibility.Visible;
+            FlowChartCanvas.CaptureMouse();
+            e.Handled = true;
         }
     }
 
@@ -278,6 +313,11 @@ public partial class FlowChartView : UserControl
     private void OnCanvasMouseMove(object sender, MouseEventArgs e)
     {
         if (_currentViewModel == null) return;
+        if (_isBoxSelecting && e.LeftButton == MouseButtonState.Pressed)
+        {
+            UpdateBoxSelection(e.GetPosition(FlowChartCanvas));
+            return;
+        }
         if (ViewModel.IsDrawingConnection)
         {
             var pos = e.GetPosition(FlowChartCanvas);
@@ -287,7 +327,7 @@ public partial class FlowChartView : UserControl
             if (ViewModel.ConnectionSourcePort != null)
             {
                 var sourceNode = ViewModel.FindNode(ViewModel.ConnectionSourcePort.OwnerNodeId);
-                if (sourceNode != null && _nodeViewCache.TryGetValue(sourceNode, out var nodeView))
+                if (sourceNode != null && _nodeViewCache.TryGetValue(sourceNode, out var element) && element is NodeView nodeView)
                 {
                     var portCenter = FindPortCenterOnCanvas(nodeView, ViewModel.ConnectionSourcePort.Id);
                     var endPoint = _connectionCandidate == null
@@ -303,7 +343,33 @@ public partial class FlowChartView : UserControl
     private void OnCanvasMouseUp(object sender, MouseButtonEventArgs e)
     {
         if (!_isBoxSelecting) return;
+        UpdateBoxSelection(e.GetPosition(FlowChartCanvas));
         _isBoxSelecting = false;
+        SelectionRectangle.Visibility = Visibility.Collapsed;
+        FlowChartCanvas.ReleaseMouseCapture();
+        e.Handled = true;
+    }
+
+    private void UpdateBoxSelection(Point current)
+    {
+        var rect = new Rect(_boxSelectStart, current);
+        Canvas.SetLeft(SelectionRectangle, rect.Left);
+        Canvas.SetTop(SelectionRectangle, rect.Top);
+        SelectionRectangle.Width = rect.Width;
+        SelectionRectangle.Height = rect.Height;
+
+        var selected = _nodeViewCache
+            .Where(pair =>
+            {
+                var nodeRect = new Rect(
+                    pair.Key.X,
+                    pair.Key.Y,
+                    pair.Value.ActualWidth > 0 ? pair.Value.ActualWidth : FlowChartModel.NodeWidth,
+                    pair.Value.ActualHeight > 0 ? pair.Value.ActualHeight : FlowChartModel.NodeHeight);
+                return rect.IntersectsWith(nodeRect);
+            })
+            .Select(pair => pair.Key);
+        ViewModel.SetSelectedNodes(selected);
     }
 
     private void OnCanvasRightClick(object sender, MouseButtonEventArgs e)
@@ -369,6 +435,19 @@ public partial class FlowChartView : UserControl
 
         menu.Items.Add(new Separator());
 
+        if (nodeVm.Model is not InactiveNodeContainerNode)
+        {
+            menu.Items.Add(new MenuItem
+            {
+                Header = nodeVm.IsExcludedFromExecution ? "移回执行画布" : "移入不执行节点容器",
+                Command = nodeVm.IsExcludedFromExecution
+                    ? ViewModel.RestoreFromInactiveContainerCommand
+                    : ViewModel.MoveToInactiveContainerCommand,
+                CommandParameter = nodeVm
+            });
+            menu.Items.Add(new Separator());
+        }
+
         var permissionItem = new MenuItem { Header = "权限" };
         permissionItem.Items.Add(new MenuItem
         {
@@ -421,6 +500,18 @@ public partial class FlowChartView : UserControl
 
     private void OnFlowChartKeyDown(object sender, KeyEventArgs e)
     {
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key == Key.C)
+        {
+            ViewModel.CopyCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key == Key.V)
+        {
+            ViewModel.PasteCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
         if (e.Key == Key.Delete)
         {
             if (ViewModel.SelectedConnection != null)
@@ -428,7 +519,7 @@ public partial class FlowChartView : UserControl
                 ViewModel.DeleteConnectionCommand.Execute(ViewModel.SelectedConnection);
                 e.Handled = true;
             }
-            else if (ViewModel.SelectedNode != null)
+            else if (ViewModel.SelectedNodes.Count > 0 || ViewModel.SelectedNode != null)
             {
                 ViewModel.DeleteSelectedCommand.Execute(null);
                 e.Handled = true;
@@ -440,9 +531,41 @@ public partial class FlowChartView : UserControl
 
     #region 缩放控制
 
+    private void OnPanMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (_currentViewModel == null || e.ChangedButton != MouseButton.Left) return;
+        if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control)) return;
+
+        _isPanning = true;
+        _panStart = e.GetPosition(ScrollViewerHost);
+        _panStartHorizontalOffset = ScrollViewerHost.HorizontalOffset;
+        _panStartVerticalOffset = ScrollViewerHost.VerticalOffset;
+        ZoomContainer.Cursor = Cursors.Hand;
+        ZoomContainer.CaptureMouse();
+        e.Handled = true;
+    }
+
+    private void OnPanMouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_isPanning || e.LeftButton != MouseButtonState.Pressed) return;
+        var current = e.GetPosition(ScrollViewerHost);
+        var delta = current - _panStart;
+        ScrollViewerHost.ScrollToHorizontalOffset(_panStartHorizontalOffset - delta.X);
+        ScrollViewerHost.ScrollToVerticalOffset(_panStartVerticalOffset - delta.Y);
+        e.Handled = true;
+    }
+
+    private void OnPanMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_isPanning) return;
+        _isPanning = false;
+        ZoomContainer.ReleaseMouseCapture();
+        ZoomContainer.Cursor = Cursors.Arrow;
+        e.Handled = true;
+    }
+
     private void OnScrollViewerPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if (Keyboard.Modifiers != ModifierKeys.Control) return;
         e.Handled = true;
 
         var containerPos = e.GetPosition(ZoomContainer);

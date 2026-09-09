@@ -1,3 +1,5 @@
+using WPFCustomControls.Common.Composition;
+
 namespace WPFCustomControls.Tests.Composition;
 
 /// <summary>

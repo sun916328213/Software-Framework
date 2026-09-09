@@ -12,6 +12,59 @@ public class ExecutionEngineTests
 {
     private readonly FlowChartExecutionEngine _engine = new();
 
+    private sealed class ConcurrencyProbe
+    {
+        private int _active;
+        public int MaxActive;
+
+        public void Enter()
+        {
+            var active = Interlocked.Increment(ref _active);
+            int observed;
+            do
+            {
+                observed = MaxActive;
+                if (active <= observed) break;
+            } while (Interlocked.CompareExchange(ref MaxActive, active, observed) != observed);
+        }
+
+        public void Exit() => Interlocked.Decrement(ref _active);
+    }
+
+    private sealed class SynchronousWorkNode(ConcurrencyProbe probe) : NodeModel
+    {
+        public override Task ExecuteAsync(CancellationToken ct)
+        {
+            probe.Enter();
+            try
+            {
+                Thread.Sleep(120);
+                return Task.CompletedTask;
+            }
+            finally
+            {
+                probe.Exit();
+            }
+        }
+    }
+
+    private sealed class ControlledNode : NodeModel
+    {
+        private readonly TaskCompletionSource _release =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource Started { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public override async Task ExecuteAsync(CancellationToken ct)
+        {
+            Started.TrySetResult();
+            await _release.Task.WaitAsync(ct);
+        }
+
+        public void Complete() => _release.TrySetResult();
+    }
+
     // ── DAG 模式 ──
 
     [Fact]
@@ -52,6 +105,51 @@ public class ExecutionEngineTests
         Assert.Equal(NodeStatus.Error, fail.Status);
         Assert.Equal(NodeStatus.Idle, downstream.Status);  // 跳过不执行
         Assert.Equal(NodeStatus.Success, independent.Status);
+    }
+
+    [Fact]
+    public async Task Dag_OneOutputToTwoSynchronousTools_RunsBothBranchesConcurrently()
+    {
+        var start = New<ValueNode>("Start").Vm;
+        var probe = new ConcurrencyProbe();
+        var left = new NodeViewModel(new SynchronousWorkNode(probe) { Name = "Left" });
+        var right = new NodeViewModel(new SynchronousWorkNode(probe) { Name = "Right" });
+
+        await _engine.ExecuteAsync(
+            new List<NodeViewModel> { start, left, right },
+            new List<ConnectionModel> { Flow(start, left), Flow(start, right) },
+            CancellationToken.None,
+            _ => { });
+
+        Assert.Equal(2, probe.MaxActive);
+    }
+
+    [Fact]
+    public async Task Dag_TwoActiveBranchesRejoin_WaitsForBothBeforeRunningJoin()
+    {
+        var start = New<ValueNode>("Start").Vm;
+        var slowModel = new ControlledNode { Name = "Slow" };
+        var slow = new NodeViewModel(slowModel);
+        var (fast, fastModel) = New<CountingNode>("Fast");
+        var (join, joinModel) = New<CountingNode>("Join");
+        var runTask = _engine.ExecuteAsync(
+            new List<NodeViewModel> { start, slow, fast, join },
+            new List<ConnectionModel>
+            {
+                Flow(start, slow), Flow(start, fast),
+                Flow(slow, join), Flow(fast, join)
+            },
+            CancellationToken.None,
+            _ => { });
+
+        await slowModel.Started.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await WaitUntilAsync(() => Volatile.Read(ref fastModel.Executions) == 1);
+        Assert.Equal(0, Volatile.Read(ref joinModel.Executions));
+
+        slowModel.Complete();
+        await runTask.WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.Equal(1, joinModel.Executions);
     }
 
     // ── 环路模式 ──
@@ -119,5 +217,12 @@ public class ExecutionEngineTests
 
         var entry = Assert.Single(logs);
         Assert.Contains("画布为空", entry);
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        while (!condition())
+            await Task.Delay(10, cts.Token);
     }
 }

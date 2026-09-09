@@ -6,22 +6,28 @@ namespace CommunicationTestApp.Services;
 
 /// <summary>
 /// 黑白主题切换服务。
-/// 调用 PaletteHelper.SetTheme 切换 MaterialDesign 基础主题，
-/// 并把 MD 的中性色/主色同步写入 Theme.xaml 中的别名画刷实例
-/// （未冻结的 SolidColorBrush），使所有 StaticResource 引用即时跟随。
+/// 说明：Prism 没有换肤功能，主题切换是 MaterialDesign 的职责。
+/// MaterialDesign 5.x 的正解是直接改 <see cref="BundledTheme"/>.BaseTheme；
+/// 之前用的 PaletteHelper 是旧 API，与 BundledTheme 混用会导致切换无效果，
+/// 因此改用 BundledTheme，并把深浅两套颜色写死，不再从旧 API 取色。
+/// 自家别名画刷（Brush.*）切换时直接替换实例，DynamicResource 即时生效。
 /// </summary>
 public sealed class ThemeService
 {
-    private readonly PaletteHelper _palette = new();
+    private BundledTheme? _bundledTheme;
 
     /// <summary>当前是否深色主题。</summary>
     public bool IsDarkTheme { get; private set; } = true;
 
+    /// <summary>最近一次切换的诊断信息：为 null 表示 MD 与别名画刷都已同步。</summary>
+    public string? LastError { get; private set; }
+
     public event EventHandler? ThemeChanged;
 
-    /// <summary>应用启动时调用：App.xaml 的 BundledTheme 初始为深色，同步别名画刷。</summary>
+    /// <summary>应用启动时调用：找到 App.xaml 中的 BundledTheme，同步深色初始值。</summary>
     public void Initialize()
     {
+        _bundledTheme = FindBundledTheme();
         Apply(IsDarkTheme);
     }
 
@@ -35,18 +41,54 @@ public sealed class ThemeService
     {
         IsDarkTheme = dark;
 
-        var theme = _palette.GetTheme();
-        theme.SetBaseTheme(dark ? BaseTheme.Dark : BaseTheme.Light);
-        _palette.SetTheme(theme);
+        // MaterialDesign 5.x：改 BundledTheme.BaseTheme 即全局换肤。
+        var bundled = _bundledTheme ??= FindBundledTheme();
+        var expected = dark ? BaseTheme.Dark : BaseTheme.Light;
+        if (bundled is null)
+        {
+            LastError = "未找到 BundledTheme，MD 控件未换肤（别名画刷已切换）";
+        }
+        else
+        {
+            bundled.BaseTheme = expected;
+            LastError = bundled.BaseTheme != expected
+                ? $"BundledTheme 回读为 {bundled.BaseTheme}，MD 控件可能未换肤"
+                : null;
+        }
 
-        SyncAliasBrushes(theme, dark);
+        SyncAliasBrushes(dark);
         ThemeChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private static BundledTheme? FindBundledTheme()
+    {
+        var app = Application.Current;
+        if (app is null)
+        {
+            return null;
+        }
+
+        foreach (var dict in app.Resources.MergedDictionaries)
+        {
+            if (dict is BundledTheme bundled)
+            {
+                return bundled;
+            }
+            foreach (var inner in dict.MergedDictionaries)
+            {
+                if (inner is BundledTheme innerBundled)
+                {
+                    return innerBundled;
+                }
+            }
+        }
+        return null;
     }
 
     /// <summary>
     /// 启动时（CreateShell 之前）注入别名画刷。
-    /// BAML 编译的资源字典会把 Freezable 冻结（po:Freeze="False" 也无法阻止），
-    /// 因此 Brush.* 必须由代码创建为未冻结实例，ThemeService 才能运行时改 Color。
+    /// BAML 编译的资源字典会把 Freezable 冻结，因此 Brush.* 必须由代码创建为未冻结实例，
+    /// ThemeService 才能运行时改 Color。
     /// </summary>
     public static void EnsureAliasBrushes()
     {
@@ -56,7 +98,7 @@ public sealed class ThemeService
             return;
         }
 
-        // 中性色（深色初始值，启动后由 Initialize 同步为 MD 实际值）
+        // 中性色（深色初始值，启动后由 Initialize 同步）
         res["Brush.Bg.0"] = NewBrush(0xFF1E1E1E);
         res["Brush.Bg.1"] = NewBrush(0xFF2D2D2D);
         res["Brush.Bg.2"] = NewBrush(0xFF262626);
@@ -84,31 +126,31 @@ public sealed class ThemeService
     private static SolidColorBrush NewBrush(uint argb) =>
         new(Color.FromArgb((byte)(argb >> 24), (byte)(argb >> 16), (byte)(argb >> 8), (byte)argb));
 
-    /// <summary>把 MD 主题的中性色/主色写入 Theme.xaml 别名画刷实例。</summary>
-    private static void SyncAliasBrushes(Theme theme, bool dark)
+    /// <summary>按深浅两套固定色同步别名画刷（不再依赖旧调色板 API，保证可预测）。</summary>
+    private static void SyncAliasBrushes(bool dark)
     {
         // 中性色：窗口/表面/边框/文字
-        SetBrush("Brush.Bg.0", theme.Background);
-        SetBrush("Brush.Bg.1", dark ? Lift(theme.Background, 0.06) : Lift(theme.Background, -0.03));
-        SetBrush("Brush.Bg.2", dark ? Lift(theme.Background, 0.03) : Lift(theme.Background, -0.015));
-        SetBrush("Brush.Bg.3", dark ? Lift(theme.Background, 0.09) : Lift(theme.Background, -0.05));
-        SetBrush("Brush.Border.Subtle", dark ? Lift(theme.Background, 0.12) : Darken(theme.Background, 0.86));
-        SetBrush("Brush.Border.Default", dark ? Lift(theme.Background, 0.18) : Darken(theme.Background, 0.72));
-        SetBrush("Brush.Fg.Primary", theme.Foreground);
-        SetBrush("Brush.Fg.Secondary", dark ? Lift(theme.Background, 0.62) : Darken(theme.Background, 0.45));
-        SetBrush("Brush.Fg.Muted", dark ? Lift(theme.Background, 0.46) : Darken(theme.Background, 0.62));
+        SetBrush("Brush.Bg.0", dark ? Rgb(0x1E, 0x1E, 0x1E) : Rgb(0xFA, 0xFA, 0xFA));
+        SetBrush("Brush.Bg.1", dark ? Rgb(0x2D, 0x2D, 0x2D) : Rgb(0xFF, 0xFF, 0xFF));
+        SetBrush("Brush.Bg.2", dark ? Rgb(0x26, 0x26, 0x26) : Rgb(0xF5, 0xF5, 0xF5));
+        SetBrush("Brush.Bg.3", dark ? Rgb(0x33, 0x33, 0x33) : Rgb(0xEE, 0xEE, 0xEE));
+        SetBrush("Brush.Border.Subtle", dark ? Rgb(0x3D, 0x3D, 0x3D) : Rgb(0xE0, 0xE0, 0xE0));
+        SetBrush("Brush.Border.Default", dark ? Rgb(0x4E, 0x4E, 0x4E) : Rgb(0xBD, 0xBD, 0xBD));
+        SetBrush("Brush.Fg.Primary", dark ? Rgb(0xF2, 0xF2, 0xF2) : Rgb(0x21, 0x21, 0x21));
+        SetBrush("Brush.Fg.Secondary", dark ? Rgb(0xB2, 0xB2, 0xB2) : Rgb(0x61, 0x61, 0x61));
+        SetBrush("Brush.Fg.Muted", dark ? Rgb(0x8A, 0x8A, 0x8A) : Rgb(0x9E, 0x9E, 0x9E));
 
-        // 强调色：跟随 MD Primary
-        var primary = theme.PrimaryMid.Color;
+        // 强调色：跟随 MD Primary（Indigo），深浅共用
+        var primary = Rgb(0x3F, 0x51, 0xB5);
         SetBrush("Brush.Accent", primary);
-        SetBrush("Brush.Accent.Hover", dark ? Lift(primary, 0.12) : Darken(primary, 0.88));
+        SetBrush("Brush.Accent.Hover", dark ? Rgb(0x5C, 0x6B, 0xC0) : Rgb(0x30, 0x3D, 0x8C));
         SetBrush("Brush.Accent.Soft", WithAlpha(primary, 0x1F));
 
-        // 语义色（深浅主题下保持可辨识）
-        var success = Color.FromRgb(0x22, 0xC5, 0x5E);
-        var warning = Color.FromRgb(dark ? (byte)0xF5 : (byte)0xC7, 0x9E, dark ? (byte)0x0B : (byte)0x8A);
-        var danger = Color.FromRgb(0xEF, 0x44, 0x44);
-        var info = dark ? Color.FromRgb(0x38, 0xBD, 0xF8) : Color.FromRgb(0x02, 0x86, 0xC4);
+        // 语义色（浅色下压暗，保证文字可读）
+        var success = dark ? Rgb(0x22, 0xC5, 0x5E) : Rgb(0x16, 0x82, 0x3D);
+        var warning = dark ? Rgb(0xF5, 0x9E, 0x0B) : Rgb(0xB4, 0x53, 0x09);
+        var danger = Rgb(0xEF, 0x44, 0x44);
+        var info = dark ? Rgb(0x38, 0xBD, 0xF8) : Rgb(0x02, 0x86, 0xC4);
         SetBrush("Brush.Success", success);
         SetBrush("Brush.Success.Soft", WithAlpha(success, 0x1F));
         SetBrush("Brush.Warning", warning);
@@ -119,31 +161,20 @@ public sealed class ThemeService
         SetBrush("Brush.Info.Soft", WithAlpha(info, 0x1F));
     }
 
-    /// <summary>修改别名片刷实例的 Color（画刷由代码创建、未冻结，所有引用即时生效）。</summary>
+    private static Color Rgb(byte r, byte g, byte b) => Color.FromRgb(r, g, b);
+
+    /// <summary>
+    /// 用新画刷实例替换旧值。DynamicResource 遇到字典替换必重新求值，
+    /// 即使旧画刷曾被冻结也能生效；改旧实例 Color 在被冻结时会静默失败。
+    /// </summary>
     private static void SetBrush(string key, Color color)
     {
-        if (Application.Current?.Resources[key] is SolidColorBrush brush && !brush.IsFrozen)
+        if (Application.Current is null)
         {
-            brush.Color = color;
+            return;
         }
-    }
 
-    /// <summary>向白色方向提升亮度。</summary>
-    private static Color Lift(Color color, double ratio)
-    {
-        return Color.FromRgb(
-            (byte)(color.R + (255 - color.R) * ratio),
-            (byte)(color.G + (255 - color.G) * ratio),
-            (byte)(color.B + (255 - color.B) * ratio));
-    }
-
-    /// <summary>向黑色方向压暗（ratio 为保留亮度比例）。</summary>
-    private static Color Darken(Color color, double ratio)
-    {
-        return Color.FromRgb(
-            (byte)(color.R * ratio),
-            (byte)(color.G * ratio),
-            (byte)(color.B * ratio));
+        Application.Current.Resources[key] = new SolidColorBrush(color);
     }
 
     private static Color WithAlpha(Color color, byte alpha) =>

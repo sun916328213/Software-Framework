@@ -59,6 +59,44 @@ public sealed class CommunicationSessionService : IDisposable
     public Task<bool> RemoveDeviceAsync(string deviceId) =>
         _manager.RemoveDeviceAsync(deviceId);
 
+    /// <summary>连接会话内全部设备（按提交顺序执行，单设备失败不阻止其余设备）。</summary>
+    public Task ConnectAllAsync(CancellationToken ct = default) =>
+        _manager.ConnectAllAsync(ct);
+
+    /// <summary>断开会话内全部设备。</summary>
+    public Task DisconnectAllAsync(CancellationToken ct = default) =>
+        _manager.DisconnectAllAsync(ct);
+
+    /// <summary>取设备创建时的参数快照（用于持久化）。</summary>
+    public CommunicationParam? GetParam(string deviceId)
+    {
+        var device = _manager.GetDevice(deviceId);
+        return device is null ? null : SnapshotParam(device);
+    }
+
+    /// <summary>全部设备的参数快照（用于持久化）。</summary>
+    public IReadOnlyList<CommunicationParam> GetAllParams()
+    {
+        var list = new List<CommunicationParam>();
+        foreach (var device in _manager.Devices)
+        {
+            list.Add(SnapshotParam(device));
+        }
+        return list;
+    }
+
+    /// <summary>按参数重建设备并纳入管理（配置恢复入口）。</summary>
+    public ICommunicationDevice RestoreDevice(CommunicationParam param)
+    {
+        var device = _manager.CreateDevice(param);
+        HookDevice(device);
+        _log.Info("Session", $"恢复设备 [{device.ProtocolType}] {param.DeviceName}");
+        return device;
+    }
+
+    private static CommunicationParam SnapshotParam(ICommunicationDevice device) =>
+        DeviceConfigStore.CloneParamFor(device);
+
     /// <summary>连接单个设备。</summary>
     public async Task<bool> ConnectDeviceAsync(ICommunicationDevice device, CancellationToken ct = default)
     {
@@ -153,34 +191,49 @@ public static class ProtocolCatalog
         string Icon,
         bool SupportsServer,
         bool SupportsAddressRead,
+        bool SupportsRaw,
         string AddressHint,
         string AddressRegexHint)
     {
-        public DeviceRole DefaultRole => SupportsServer ? DeviceRole.Client : DeviceRole.Client;
+        public DeviceRole DefaultRole => DeviceRole.Client;
     }
 
     public static ProtocolInfo Describe(ProtocolType protocol) => protocol switch
     {
-        ProtocolType.ModbusTcp => new(ProtocolType.ModbusTcp, "Modbus TCP", "\u2699", true, true,
+        // 地址读写走 CommunicationNew IAddressReader；原始收发仅 TCP/UDP/Serial（字节流/数据报）。
+        // HTTP/WebApi 是高层 adapter，不走原始收发 seam。
+        ProtocolType.ModbusTcp => new(ProtocolType.ModbusTcp, "Modbus TCP", "\u2699", true, true, false,
             "HR0 / 30001 / 40001 (地址)", "地址如 HR0、IR0、C0、DI0 或 40001"),
-        ProtocolType.ModbusRtu => new(ProtocolType.ModbusRtu, "Modbus RTU", "\u2699", true, true,
+        ProtocolType.ModbusRtu => new(ProtocolType.ModbusRtu, "Modbus RTU", "\u2699", true, true, false,
             "HR0 / 40001 (地址)", "地址如 HR0、C0、40001"),
-        ProtocolType.MitsubishiMc => new(ProtocolType.MitsubishiMc, "三菱 MC", "\u25B8", false, true,
+        ProtocolType.MitsubishiMc => new(ProtocolType.MitsubishiMc, "三菱 MC", "\u25B8", false, true, false,
             "D100 / M10 (软元件)", "如 D100、M10、W0F0、R0"),
-        ProtocolType.OpcUa => new(ProtocolType.OpcUa, "OPC UA", "\u25CE", true, true,
+        ProtocolType.OpcUa => new(ProtocolType.OpcUa, "OPC UA", "\u25CE", true, true, false,
             "ns=2;s=Tag1 (节点ID)", "OPC UA NodeId，如 ns=2;s=Temperature"),
-        ProtocolType.Tcp => new(ProtocolType.Tcp, "TCP Socket", "\u25A1", true, false,
-            "-", "TCP 支持原始收发与按地址读（部分设备）"),
-        ProtocolType.Udp => new(ProtocolType.Udp, "UDP Socket", "\u25A1", true, false,
+        ProtocolType.Tcp => new(ProtocolType.Tcp, "TCP Socket", "\u25A1", true, false, true,
+            "-", "TCP 字节流原始收发"),
+        ProtocolType.Udp => new(ProtocolType.Udp, "UDP Socket", "\u25A1", true, false, true,
             "-", "UDP 数据报收发"),
-        ProtocolType.Serial => new(ProtocolType.Serial, "串口 Raw", "\u2248", false, false,
+        ProtocolType.Serial => new(ProtocolType.Serial, "串口 Raw", "\u2248", false, false, true,
             "-", "原始串口收发"),
-        ProtocolType.Http => new(ProtocolType.Http, "HTTP", "\u21C4", true, true,
+        ProtocolType.Http => new(ProtocolType.Http, "HTTP", "\u21C4", true, true, false,
             "/api/path (相对路径)", "GET 相对路径，如 /api/data"),
-        ProtocolType.WebApi => new(ProtocolType.WebApi, "Web API", "\u21C4", true, true,
+        ProtocolType.WebApi => new(ProtocolType.WebApi, "Web API", "\u21C4", true, true, false,
             "/api/v1/resource", "RESTful 路径"),
         _ => throw new NotSupportedException(protocol.ToString()),
     };
+
+    /// <summary>
+    /// 能力判定：生命周期一律走 <see cref="CommunicationNew.Abstractions.IConnection"/>；
+    /// 地址能力以 <see cref="CommunicationNew.Abstractions.IAddressReader"/> + 协议目录双重判定，
+    /// 避免 TCP/UDP/Serial 伪装地址读取；原始收发仅字节流/数据报协议。
+    /// </summary>
+    public static bool SupportsAddress(ICommunicationDevice device) =>
+        device is CommunicationNew.Abstractions.IAddressReader
+        && Describe(device.ProtocolType).SupportsAddressRead;
+
+    public static bool SupportsRaw(ProtocolType protocol) =>
+        Describe(protocol).SupportsRaw;
 
     /// <summary>列出全部可用协议信息（按常用度排序）。</summary>
     public static IReadOnlyList<ProtocolInfo> All() =>

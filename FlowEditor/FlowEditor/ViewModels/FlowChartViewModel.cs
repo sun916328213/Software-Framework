@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using FlowEditor.Interfaces;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
+using FlowEditor.Nodes.FlowControl;
 using FlowEditor.Services;
 using Prism.Ioc;
 using WPFCustomControls.PropertyGrid.Models;
@@ -43,7 +44,7 @@ public partial class FlowChartViewModel : ObservableObject
     public RelayCommand DeleteSelectedCommand { get; private set; } = null!;
     public RelayCommand UndoCommand { get; private set; } = null!;
     public RelayCommand RedoCommand { get; private set; } = null!;
-    public RelayCommand StepContinueCommand { get; private set; } = null!;
+    public AsyncRelayCommand StepContinueCommand { get; private set; } = null!;
     public RelayCommand<FrameworkElement?> ExportPngCommand { get; private set; } = null!;
     public RelayCommand<FrameworkElement?> ExportSvgCommand { get; private set; } = null!;
     public RelayCommand CopyCommand { get; private set; } = null!;
@@ -72,6 +73,12 @@ public partial class FlowChartViewModel : ObservableObject
 
     /// <summary>设置节点权限为禁用。</summary>
     public RelayCommand<NodeViewModel> SetDisabledPermissionCommand { get; private set; } = null!;
+
+    /// <summary>将节点移入不执行节点容器。</summary>
+    public RelayCommand<NodeViewModel> MoveToInactiveContainerCommand { get; private set; } = null!;
+
+    /// <summary>将节点移回执行画布。</summary>
+    public RelayCommand<NodeViewModel> RestoreFromInactiveContainerCommand { get; private set; } = null!;
 
     /// <summary>流程图运行时模型。View 直接绑定到此模型属性。</summary>
     public FlowChartModel Model => Service.Model;
@@ -133,7 +140,7 @@ public partial class FlowChartViewModel : ObservableObject
         DeleteSelectedCommand = new RelayCommand(DeleteSelected);
         UndoCommand = new RelayCommand(Undo, () => Service.UndoRedo.CanUndo);
         RedoCommand = new RelayCommand(Redo, () => Service.UndoRedo.CanRedo);
-        StepContinueCommand = new RelayCommand(Service.StepContinue);
+        StepContinueCommand = new AsyncRelayCommand(StepContinueSelectedAsync, CanStepContinue);
         ExportPngCommand = new RelayCommand<FrameworkElement?>(ExportPng);
         ExportSvgCommand = new RelayCommand<FrameworkElement?>(ExportSvg);
         CopyCommand = new RelayCommand(CopySelected);
@@ -148,6 +155,8 @@ public partial class FlowChartViewModel : ObservableObject
         SetNormalPermissionCommand = new RelayCommand<NodeViewModel>(node => SetPermission(node, NodePermission.Normal));
         SetReadOnlyPermissionCommand = new RelayCommand<NodeViewModel>(node => SetPermission(node, NodePermission.ReadOnly));
         SetDisabledPermissionCommand = new RelayCommand<NodeViewModel>(node => SetPermission(node, NodePermission.Disabled));
+        MoveToInactiveContainerCommand = new RelayCommand<NodeViewModel>(MoveToInactiveContainer);
+        RestoreFromInactiveContainerCommand = new RelayCommand<NodeViewModel>(RestoreFromInactiveContainer);
     }
 
     #endregion
@@ -163,14 +172,85 @@ public partial class FlowChartViewModel : ObservableObject
         {
             if (SetProperty(ref _selectedNode, value))
             {
+                SelectedNodes.Clear();
+                if (value != null) SelectedNodes.Add(value);
                 foreach (var n in Nodes)
                     n.IsSelected = n == value;
+                StepContinueCommand.NotifyCanExecuteChanged();
             }
         }
     }
 
     /// <summary>多选节点集合（框选时使用）。</summary>
     public ObservableCollection<NodeViewModel> SelectedNodes { get; } = new();
+
+    /// <summary>用一组节点替换当前选择；集合中最后一个节点作为属性面板主节点。</summary>
+    public void SetSelectedNodes(IEnumerable<NodeViewModel> nodes)
+    {
+        var selection = nodes.Distinct().ToList();
+        SelectedNodes.Clear();
+        foreach (var node in selection)
+            SelectedNodes.Add(node);
+
+        _selectedNode = selection.LastOrDefault();
+        OnPropertyChanged(nameof(SelectedNode));
+        foreach (var node in Nodes)
+            node.IsSelected = selection.Contains(node);
+        StepContinueCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>切换单个节点的多选状态。</summary>
+    public void ToggleNodeSelection(NodeViewModel node)
+    {
+        var selection = SelectedNodes.ToList();
+        if (selection.Contains(node)) selection.Remove(node);
+        else selection.Add(node);
+        SetSelectedNodes(selection);
+    }
+
+    private Dictionary<NodeViewModel, Point>? _groupDragOrigins;
+    private Point _groupDragStart;
+
+    public void BeginNodeDrag(NodeViewModel node, Point mousePosition)
+    {
+        if (!node.IsSelected) SetSelectedNodes([node]);
+        IEnumerable<NodeViewModel> selected = SelectedNodes.Count > 0 ? SelectedNodes : [node];
+        var movingContainer = node.Model as InactiveNodeContainerNode;
+        if (movingContainer != null)
+        {
+            selected = selected.Concat(Nodes.Where(candidate =>
+                candidate != node && IsInsideContainer(node, candidate))).Distinct();
+        }
+        _groupDragStart = mousePosition;
+        _groupDragOrigins = selected
+            .Where(n => movingContainer != null || n.IsDraggable)
+            .ToDictionary(n => n, n => new Point(n.X, n.Y));
+        node.BeginDrag(mousePosition);
+    }
+
+    public void UpdateNodeDrag(NodeViewModel node, Point mousePosition)
+    {
+        if (_groupDragOrigins == null) return;
+        var delta = mousePosition - _groupDragStart;
+        foreach (var (selected, origin) in _groupDragOrigins)
+        {
+            selected.X = Math.Max(0, origin.X + delta.X);
+            selected.Y = Math.Max(0, origin.Y + delta.Y);
+        }
+    }
+
+    public void EndNodeDrag(NodeViewModel node)
+    {
+        node.EndDrag();
+        if (_groupDragOrigins != null)
+        {
+            foreach (var moved in _groupDragOrigins.Keys.ToList())
+                RefreshNodeExecutionMembership(moved);
+        }
+        _groupDragOrigins = null;
+        Model.IsModified = true;
+        RecalculateCanvasSize();
+    }
 
     private ConnectionModel? _selectedConnection;
     /// <summary>当前选中的连线。</summary>
@@ -209,49 +289,120 @@ public partial class FlowChartViewModel : ObservableObject
 
     #region 复制粘贴
 
-    private NodeModel? _clipboardNode;
+    private readonly List<NodeDocumentModel> _clipboardNodes = new();
+    private readonly List<ConnectionDocumentModel> _clipboardConnections = new();
 
     /// <summary>复制选中的节点。</summary>
     private void CopySelected()
     {
-        if (SelectedNode == null) return;
-        _clipboardNode = SelectedNode.Model;
-        Model.StatusText = "已复制节点";
+        var selected = SelectedNodes.Count > 0
+            ? SelectedNodes.ToList()
+            : SelectedNode == null ? [] : [SelectedNode];
+        if (selected.Count == 0) return;
+
+        _clipboardNodes.Clear();
+        _clipboardNodes.AddRange(selected.Select(n => Service.BuildNodeDocument(n.Model)));
+        var selectedIds = selected.Select(n => n.Id).ToHashSet();
+        _clipboardConnections.Clear();
+        _clipboardConnections.AddRange(Connections
+            .Where(c => selectedIds.Contains(c.SourceNodeId) && selectedIds.Contains(c.TargetNodeId))
+            .Select(c => new ConnectionDocumentModel
+            {
+                Id = c.Id,
+                SourceNodeId = c.SourceNodeId,
+                SourcePortId = c.SourcePortId,
+                TargetNodeId = c.TargetNodeId,
+                TargetPortId = c.TargetPortId
+            }));
+        Model.StatusText = $"已复制 {selected.Count} 个节点";
     }
 
     /// <summary>粘贴节点到画布中心。</summary>
     private void PasteAtCenter()
     {
-        if (_clipboardNode == null) return;
-        var newNode = RebuildNodeFromClipboard(_clipboardNode);
-        newNode.X += 50;
-        newNode.Y += 50;
+        if (_clipboardNodes.Count == 0) return;
+        var action = CreateAction(UndoRedoActionType.NodeAdded, $"粘贴 {_clipboardNodes.Count} 个节点");
+        var nodeIdMap = new Dictionary<string, string>();
+        var portIdMap = new Dictionary<string, string>();
+        var pasted = new List<NodeViewModel>();
 
-        var action = CreateAction(UndoRedoActionType.NodeAdded, $"粘贴节点: {newNode.Name}", nodeId: newNode.Id);
-        Service.AddNode(newNode);
+        foreach (var sourceDoc in _clipboardNodes)
+        {
+            var sourceId = sourceDoc.Id;
+            var clone = CloneDocumentForPaste(sourceDoc);
+            nodeIdMap[sourceId] = clone.Id;
+            var newNode = Service.RebuildNodeFromDocument(clone);
+            EnsureUniqueName(newNode);
+            var vm = Service.AddNode(newNode);
+            pasted.Add(vm);
+
+            foreach (var (key, oldPortId) in sourceDoc.PortIdMap)
+            {
+                var separator = key.IndexOf(':');
+                if (separator < 0) continue;
+                var direction = key[..separator];
+                var name = key[(separator + 1)..];
+                var newPort = direction == "IN"
+                    ? newNode.InputPorts.FirstOrDefault(p => p.Name == name)
+                    : newNode.OutputPorts.FirstOrDefault(p => p.Name == name);
+                if (newPort != null) portIdMap[oldPortId] = newPort.Id;
+            }
+        }
+
+        foreach (var connection in _clipboardConnections)
+        {
+            if (!nodeIdMap.TryGetValue(connection.SourceNodeId, out var sourceNodeId) ||
+                !nodeIdMap.TryGetValue(connection.TargetNodeId, out var targetNodeId) ||
+                !portIdMap.TryGetValue(connection.SourcePortId, out var sourcePortId) ||
+                !portIdMap.TryGetValue(connection.TargetPortId, out var targetPortId)) continue;
+            Connections.Add(new ConnectionModel
+            {
+                SourceNodeId = sourceNodeId,
+                SourcePortId = sourcePortId,
+                TargetNodeId = targetNodeId,
+                TargetPortId = targetPortId
+            });
+        }
+
         action.AfterData = Service.CaptureSnapshot();
         Service.UndoRedo.Push(action);
-
+        SetSelectedNodes(pasted);
         Model.IsModified = true;
-        Model.StatusText = "已粘贴节点";
+        Model.StatusText = $"已粘贴 {pasted.Count} 个节点";
         RecalculateCanvasSize();
     }
 
-    private NodeModel RebuildNodeFromClipboard(NodeModel source)
+    private static NodeDocumentModel CloneDocumentForPaste(NodeDocumentModel source)
     {
-        var type = source.GetType();
-        var newNode = _containerProvider.Resolve(type) as NodeModel
-                      ?? (NodeModel)Activator.CreateInstance(type)!;
-        newNode.Name = source.Name + "_副本";
-        newNode.IsInEnabled = source.IsInEnabled;
-        newNode.IsOutEnabled = source.IsOutEnabled;
-        newNode.X = source.X;
-        newNode.Y = source.Y;
-        foreach (var port in source.CustomInputPorts)
-            newNode.AddCustomInputPort(port.Name);
-        foreach (var port in source.CustomOutputPorts)
-            newNode.AddCustomOutputPort(port.Name, port.PropertyName);
-        return newNode;
+        var clone = new NodeDocumentModel
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            TypeName = source.TypeName,
+            Name = source.Name + "_副本",
+            X = source.X + 50,
+            Y = source.Y + 50,
+            IsInEnabled = source.IsInEnabled,
+            IsOutEnabled = source.IsOutEnabled,
+            Permission = source.Permission,
+            IsExcludedFromExecution = source.IsExcludedFromExecution,
+            ErrorPolicy = source.ErrorPolicy,
+            RetryCount = source.RetryCount,
+            RetryDelayMs = source.RetryDelayMs,
+            TimeoutMs = source.TimeoutMs,
+            Properties = new Dictionary<string, object?>(source.Properties),
+            PortIdMap = new Dictionary<string, string>(source.PortIdMap)
+        };
+        clone.CustomInputPorts.AddRange(source.CustomInputPorts.Select(p => new CustomPortDocument
+        {
+            Id = Guid.NewGuid().ToString("N"), Name = p.Name, BoundProperty = p.BoundProperty,
+            DataType = p.DataType
+        }));
+        clone.CustomOutputPorts.AddRange(source.CustomOutputPorts.Select(p => new CustomPortDocument
+        {
+            Id = Guid.NewGuid().ToString("N"), Name = p.Name, BoundProperty = p.BoundProperty,
+            DataType = p.DataType
+        }));
+        return clone;
     }
 
     #endregion
@@ -280,7 +431,8 @@ public partial class FlowChartViewModel : ObservableObject
         node.Y = 150 + Nodes.Count * 30.0;
 
         var action = CreateAction(UndoRedoActionType.NodeAdded, $"添加节点: {node.Name}", nodeId: node.Id);
-        Service.AddNode(node);
+        var added = Service.AddNode(node);
+        RefreshNodeExecutionMembership(added);
         action.AfterData = Service.CaptureSnapshot();
         Service.UndoRedo.Push(action);
 
@@ -298,7 +450,8 @@ public partial class FlowChartViewModel : ObservableObject
         node.Y = canvasPosition.Y;
 
         var action = CreateAction(UndoRedoActionType.NodeAdded, $"添加节点: {node.Name}", nodeId: node.Id);
-        Service.AddNode(node);
+        var added = Service.AddNode(node);
+        RefreshNodeExecutionMembership(added);
         action.AfterData = Service.CaptureSnapshot();
         Service.UndoRedo.Push(action);
 
@@ -340,22 +493,26 @@ public partial class FlowChartViewModel : ObservableObject
     /// <summary>删除选中的节点及其相关连线。</summary>
     private void DeleteSelected()
     {
-        if (SelectedNode == null) return;
-        var nodeId = SelectedNode.Id;
-        var nodeName = SelectedNode.Name;
-
-        var action = CreateAction(UndoRedoActionType.NodeDeleted, $"删除节点: {nodeName}", nodeId: nodeId);
+        var selected = SelectedNodes.Count > 0
+            ? SelectedNodes.ToList()
+            : SelectedNode == null ? [] : [SelectedNode];
+        if (selected.Count == 0) return;
+        var selectedIds = selected.Select(n => n.Id).ToHashSet();
+        var action = CreateAction(UndoRedoActionType.NodeDeleted, $"删除 {selected.Count} 个节点");
         var toRemove = Connections.Where(c =>
-            c.SourceNodeId == nodeId || c.TargetNodeId == nodeId).ToList();
+            selectedIds.Contains(c.SourceNodeId) || selectedIds.Contains(c.TargetNodeId)).ToList();
         foreach (var conn in toRemove)
             Connections.Remove(conn);
-        Service.RemoveNode(SelectedNode);
+        foreach (var node in selected)
+            Service.RemoveNode(node);
+        foreach (var remaining in Nodes.Where(n => n.Model is not InactiveNodeContainerNode).ToList())
+            RefreshNodeExecutionMembership(remaining);
         action.AfterData = Service.CaptureSnapshot();
         Service.UndoRedo.Push(action);
 
-        SelectedNode = null;
+        SetSelectedNodes([]);
         Model.IsModified = true;
-        Model.StatusText = "已删除节点";
+        Model.StatusText = $"已删除 {selected.Count} 个节点";
         RecalculateCanvasSize();
     }
 
@@ -442,6 +599,90 @@ public partial class FlowChartViewModel : ObservableObject
         Model.IsModified = true;
     }
 
+    private void MoveToInactiveContainer(NodeViewModel? node)
+    {
+        if (node == null || node.IsExcludedFromExecution) return;
+        var container = Nodes.FirstOrDefault(n => n.Model is InactiveNodeContainerNode);
+        if (container == null)
+        {
+            Model.StatusText = "请先从流程工具箱添加不执行容器";
+            return;
+        }
+        var action = CreateAction(UndoRedoActionType.NodeMoved, $"移入不执行容器: {node.Name}", node.Id);
+        foreach (var connection in Connections.Where(c =>
+                     c.SourceNodeId == node.Id || c.TargetNodeId == node.Id).ToList())
+            Connections.Remove(connection);
+
+        node.IsExcludedFromExecution = true;
+        node.X = container.X + 20;
+        node.Y = container.Y + 80 + Nodes.Count(n => n.IsExcludedFromExecution && n != node && n.Model is not InactiveNodeContainerNode) * 130;
+        action.AfterData = Service.CaptureSnapshot();
+        Service.UndoRedo.Push(action);
+        Model.IsModified = true;
+        Model.StatusText = $"[{node.Name}] 已移入不执行节点容器";
+    }
+
+    private void RestoreFromInactiveContainer(NodeViewModel? node)
+    {
+        if (node == null || !node.IsExcludedFromExecution) return;
+        var action = CreateAction(UndoRedoActionType.NodeMoved, $"移回执行画布: {node.Name}", node.Id);
+        node.IsExcludedFromExecution = false;
+        node.X = Math.Max(320, node.X + 300);
+        action.AfterData = Service.CaptureSnapshot();
+        Service.UndoRedo.Push(action);
+        Model.IsModified = true;
+        Model.StatusText = $"[{node.Name}] 已移回执行画布";
+        RecalculateCanvasSize();
+    }
+
+    /// <summary>根据节点中心是否位于工具箱添加的容器内，刷新其执行资格。</summary>
+    private void RefreshNodeExecutionMembership(NodeViewModel node)
+    {
+        if (node.Model is InactiveNodeContainerNode)
+        {
+            node.IsExcludedFromExecution = true;
+            foreach (var candidate in Nodes.Where(n => n != node && n.Model is not InactiveNodeContainerNode).ToList())
+                RefreshNodeExecutionMembership(candidate);
+            return;
+        }
+
+        var isInside = Nodes.Any(container =>
+            container.Model is InactiveNodeContainerNode &&
+            IsInsideContainer(container, node));
+        if (node.IsExcludedFromExecution == isInside) return;
+
+        node.IsExcludedFromExecution = isInside;
+        if (isInside)
+        {
+            foreach (var connection in Connections.Where(c =>
+                         c.SourceNodeId == node.Id || c.TargetNodeId == node.Id).ToList())
+                Connections.Remove(connection);
+            Model.StatusText = $"节点 [{node.Name}] 已放入不执行容器";
+        }
+        else
+        {
+            Model.StatusText = $"节点 [{node.Name}] 已移回执行画布";
+        }
+    }
+
+    private static bool IsInsideContainer(NodeViewModel container, NodeViewModel node)
+    {
+        if (container.Model is not InactiveNodeContainerNode model) return false;
+        var center = new Point(
+            node.X + FlowChartModel.NodeWidth / 2,
+            node.Y + FlowChartModel.NodeHeight / 2);
+        return new Rect(container.X, container.Y, model.ContainerWidth, model.ContainerHeight)
+            .Contains(center);
+    }
+
+    /// <summary>容器调整大小后重新计算成员归属和画布范围。</summary>
+    public void RefreshContainerMembership(NodeViewModel container)
+    {
+        RefreshNodeExecutionMembership(container);
+        Model.IsModified = true;
+        RecalculateCanvasSize();
+    }
+
     #endregion
 
     #region 执行命令
@@ -454,6 +695,24 @@ public partial class FlowChartViewModel : ObservableObject
     private bool CanRun() => !Model.IsRunning && Nodes.Count > 0;
     private void Stop() => Service.Stop();
     private bool CanStop() => Model.IsRunning;
+
+    private async Task StepContinueSelectedAsync()
+    {
+        // 保留调试运行中的“继续”语义；普通状态下执行当前选中节点一次。
+        if (Model.IsPaused)
+        {
+            Service.StepContinue();
+            return;
+        }
+
+        var selected = SelectedNode;
+        if (selected != null)
+            await Service.StepContinueAsync(selected, AppendLog);
+    }
+
+    private bool CanStepContinue()
+        => Model.IsPaused ||
+           (!Model.IsRunning && SelectedNode is { IsExcludedFromExecution: false });
 
     private async Task LoopRunAsync()
     {
@@ -660,6 +919,7 @@ public partial class FlowChartViewModel : ObservableObject
         LoopStopCommand.NotifyCanExecuteChanged();
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();
+        StepContinueCommand.NotifyCanExecuteChanged();
         DeleteSelectedCommand.NotifyCanExecuteChanged();
         CopyCommand.NotifyCanExecuteChanged();
         PasteCommand.NotifyCanExecuteChanged();
@@ -674,8 +934,12 @@ public partial class FlowChartViewModel : ObservableObject
             Model.CanvasHeight = FlowChartModel.MinCanvasHeight;
             return;
         }
-        var maxX = Nodes.Max(n => n.X) + FlowChartModel.NodeWidth + FlowChartModel.CanvasPadding;
-        var maxY = Nodes.Max(n => n.Y) + FlowChartModel.NodeHeight + FlowChartModel.CanvasPadding;
+        var maxX = Nodes.Max(n => n.X +
+            (n.Model is InactiveNodeContainerNode container ? container.ContainerWidth : FlowChartModel.NodeWidth)) +
+            FlowChartModel.CanvasPadding;
+        var maxY = Nodes.Max(n => n.Y +
+            (n.Model is InactiveNodeContainerNode container ? container.ContainerHeight : FlowChartModel.NodeHeight)) +
+            FlowChartModel.CanvasPadding;
         Model.CanvasWidth = Math.Max(maxX, FlowChartModel.MinCanvasWidth);
         Model.CanvasHeight = Math.Max(maxY, FlowChartModel.MinCanvasHeight);
     }
@@ -685,6 +949,17 @@ public partial class FlowChartViewModel : ObservableObject
     {
         if (element != null) _exportService.ExportToPngWithDialog(element);
     }
+
+    /// <summary>以 2 倍分辨率导出指定画布区域，背景透明。</summary>
+    public void ExportPng(FrameworkElement? element, Rect contentBounds)
+    {
+        if (element != null)
+            _exportService.ExportToPngWithDialog(element, contentBounds, 2.0);
+    }
+
+    /// <summary>PNG 应使用完整逻辑画布范围，与视口和滚动位置无关。</summary>
+    public Rect GetCanvasExportBounds() =>
+        new(0, 0, Model.CanvasWidth, Model.CanvasHeight);
 
     /// <summary>导出 SVG（由 View 层调用）。</summary>
     public void ExportSvg(FrameworkElement? element)

@@ -109,6 +109,34 @@ public class FlowChartExecutionEngine
         await ExecuteDagAsync(graph, ct, log, executionOrder, journal);
     }
 
+    /// <summary>
+    /// 仅执行指定节点一次。使用完整画布编译图，以便从已连接的上游端口读取当前值，
+    /// 但不会调度任何前驱或后继节点。
+    /// </summary>
+    public async Task ExecuteNodeAsync<TNode>(
+        TNode node,
+        IReadOnlyList<TNode> nodes,
+        IReadOnlyList<ConnectionModel> connections,
+        CancellationToken ct,
+        Action<string> log,
+        ExecutionJournal? journal = null) where TNode : INodeExecutable
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        if (!nodes.Any(n => n.Id == node.Id))
+            throw new ArgumentException("待执行节点不属于当前执行图。", nameof(node));
+
+        _runSeqCounter = 0;
+        if (node is FlowEditor.ViewModels.NodeViewModel nvm)
+            nvm.CurrentRunCount = 0;
+        else if (node is FlowEditor.Nodes.NodeModel model)
+            model.CurrentRunCount = 0;
+        var graph = CompiledFlowGraph<TNode>.Compile(nodes, connections);
+        log($"[单步] 开始执行选中节点 [{node.Name}]");
+        await ExecuteSingleNodeAsync(
+            node, graph, ct, log, orderBag: null, onExecuted: null, journal: journal);
+        log($"[单步] 选中节点 [{node.Name}] 执行完成");
+    }
+
     #region 单节点执行核心（三种模式共享）
 
     /// <summary>单节点执行结果。</summary>
@@ -296,8 +324,13 @@ public class FlowChartExecutionEngine
         CompiledFlowGraph<TNode> graph) where TNode : INodeExecutable
     {
         var names = nodeVm.GetActivatedOutputNames();
-        if (names == null || names.Count == 0)
+        if (names == null)
             return null;
+
+        // 显式上报但未指定任何端口 = 本路径在此终止。与“从未上报激活信息”区分，
+        // 供条件分发的空输入等场景剪掉全部下游，无需制造可见的假端口。
+        if (names.Count == 0)
+            return new HashSet<string>();
 
         HashSet<string>? ids = null;
         foreach (var port in nodeVm.OutputPorts)
@@ -352,6 +385,14 @@ public class FlowChartExecutionEngine
         var failedPredecessorCount = new ConcurrentDictionary<string, int>(
             graph.Nodes.ToDictionary(n => n.Id, _ => 0));
 
+        // 与硬失败分开记录：未激活的条件分支不是失败。汇聚节点只要存在至少一条
+        // 已激活且成功完成的入边，就应在全部入边解析后继续执行。
+        var activePredecessorCount = new ConcurrentDictionary<string, int>(
+            graph.Nodes.ToDictionary(n => n.Id, _ => 0));
+
+        // OR 汇聚可在其余前驱尚未结束时提前启动；统一用此集合保证每个 DAG 节点只投递一次。
+        var scheduledNodes = new ConcurrentDictionary<string, byte>();
+
         var orderBag = executionOrder != null ? new ConcurrentQueue<TNode>() : null;
 
         var entryNodes = graph.EntryNodes.ToList();
@@ -360,9 +401,9 @@ public class FlowChartExecutionEngine
 
         foreach (var entry in entryNodes)
         {
-            _ = RunNodeDagAsync(entry, graph, linkedCts.Token, log,
+            QueueNodeDag(entry, graph, linkedCts.Token, log,
                 completionSources, remainingPredecessors,
-                failedPredecessorCount, exceptionList,
+                failedPredecessorCount, activePredecessorCount, scheduledNodes, exceptionList,
                 counter, totalCount, orderBag, linkedCts, journal);
         }
 
@@ -382,6 +423,33 @@ public class FlowChartExecutionEngine
         log($"[引擎] 全部 {totalCount} 个节点执行完成");
     }
 
+    /// <summary>
+    /// 将可运行节点投递到线程池。仅调用 async 方法并不等于并行：若工具在首次 await 前执行
+    /// 同步计算，调用线程会被占住，导致同一输出的多个分支逐个启动。
+    /// </summary>
+    private void QueueNodeDag<TNode>(
+        TNode nodeVm,
+        CompiledFlowGraph<TNode> graph,
+        CancellationToken ct,
+        Action<string> log,
+        Dictionary<string, TaskCompletionSource> completionSources,
+        ConcurrentDictionary<string, int> remainingPredecessors,
+        ConcurrentDictionary<string, int> failedPredecessorCount,
+        ConcurrentDictionary<string, int> activePredecessorCount,
+        ConcurrentDictionary<string, byte> scheduledNodes,
+        ConcurrentBag<Exception> exceptionList,
+        ExecutionCounter counter,
+        int totalCount,
+        ConcurrentQueue<TNode>? orderBag,
+        CancellationTokenSource linkedCts,
+        ExecutionJournal? journal) where TNode : INodeExecutable
+    {
+        if (!scheduledNodes.TryAdd(nodeVm.Id, 0)) return;
+        _ = Task.Run(() => RunNodeDagAsync(nodeVm, graph, ct, log,
+            completionSources, remainingPredecessors, failedPredecessorCount, activePredecessorCount, scheduledNodes,
+            exceptionList, counter, totalCount, orderBag, linkedCts, journal));
+    }
+
     /// <summary>DAG 模式单节点任务：执行核心 + 异常策略收集 + 下游调度。</summary>
     private async Task RunNodeDagAsync<TNode>(
         TNode nodeVm,
@@ -391,6 +459,8 @@ public class FlowChartExecutionEngine
         Dictionary<string, TaskCompletionSource> completionSources,
         ConcurrentDictionary<string, int> remainingPredecessors,
         ConcurrentDictionary<string, int> failedPredecessorCount,
+        ConcurrentDictionary<string, int> activePredecessorCount,
+        ConcurrentDictionary<string, byte> scheduledNodes,
         ConcurrentBag<Exception> exceptionList,
         ExecutionCounter counter,
         int totalCount,
@@ -437,17 +507,17 @@ public class FlowChartExecutionEngine
                 foreach (var conn in outConns)
                 {
                     ScheduleSuccessorDag(conn, propagateFailure, result, graph, ct, log,
-                        completionSources, remainingPredecessors, failedPredecessorCount,
-                        exceptionList, counter, totalCount, orderBag, linkedCts, journal);
+                        completionSources, remainingPredecessors, failedPredecessorCount, activePredecessorCount,
+                        scheduledNodes, exceptionList, counter, totalCount, orderBag, linkedCts, journal);
                 }
             }
         }
     }
 
     /// <summary>
-    /// DAG 下游调度：FailFast 失败与激活边过滤（未激活 = 软失败）计入 failedPredecessorCount；
-    /// 被容错策略吞掉的失败不标记，下游照常调度（ErrorPort 路由已通过 ActivatedIds 表达走向）。
-    /// 前驱归零时按失败/正常分别跳过或调度，共用同一套记账，天然处理多前驱混合场景。
+    /// DAG 下游调度：分别记录硬失败、活动边与未激活边。
+    /// 全部静态入边都解析后：有硬失败则跳过；否则至少有一条活动边就执行；
+    /// 所有入边均未激活才剪枝。这样条件分支可以安全汇聚，而并行分支仍会等待全部完成。
     /// </summary>
     private void ScheduleSuccessorDag<TNode>(
         ConnectionModel conn,
@@ -459,6 +529,8 @@ public class FlowChartExecutionEngine
         Dictionary<string, TaskCompletionSource> completionSources,
         ConcurrentDictionary<string, int> remainingPredecessors,
         ConcurrentDictionary<string, int> failedPredecessorCount,
+        ConcurrentDictionary<string, int> activePredecessorCount,
+        ConcurrentDictionary<string, byte> scheduledNodes,
         ConcurrentBag<Exception> exceptionList,
         ExecutionCounter counter,
         int totalCount,
@@ -468,55 +540,82 @@ public class FlowChartExecutionEngine
     {
         var succId = conn.TargetNodeId;
 
+        var activeEdge = false;
         if (propagateFailure)
         {
             // FailFast 失败：下游全部标记待跳过
             failedPredecessorCount.AddOrUpdate(succId, 1, (_, v) => v + 1);
         }
-        else if (result?.ActivatedIds != null && !result.ActivatedIds.Contains(conn.SourcePortId))
+        else if (result?.ActivatedIds != null &&
+                 graph.NodeMap[conn.SourceNodeId].FindPortById(conn.SourcePortId)?.DataType == PortType.Flow &&
+                 !result.ActivatedIds.Contains(conn.SourcePortId))
         {
-            // 激活边过滤：源端口未被激活 → 该连线视同上游失效。
-            // 对成功节点是分支剪枝；对 RouteToErrorPort 失败节点则是"仅沿 Error 边继续"的实现。
-            failedPredecessorCount.AddOrUpdate(succId, 1, (_, v) => v + 1);
-            log($"[分支] [{graph.NodeMap[conn.SourceNodeId].Name}] 未激活端口连线，[{graph.NodeMap[succId].Name}] 及其下游将被跳过");
+            // 激活选择只过滤 Flow 控制流边。数据边始终完成传值/依赖解析，不能因为
+            // 同一源节点本轮选择了另一个 Flow 端口就被误当作未激活分支。
+            log($"[分支] [{graph.NodeMap[conn.SourceNodeId].Name}] 未激活端口连线 → [{graph.NodeMap[succId].Name}]");
         }
-        // 其余情况（成功全放行 / ContinueOnError 吞掉且未声明激活）：不标记，下游照常调度
+        else
+        {
+            // 有 Flow 入边时，只有 Flow 连线携带执行令牌；数据连线仅用于等待与传值，
+            // 不能越过未命中的条件分支激活节点。若目标完全没有 Flow 入边，则保留旧图中
+            // “纯数据连线驱动后继”的兼容行为（FlowInstance/子流程历史文档依赖此语义）。
+            var targetPort = graph.NodeMap[succId].FindPortById(conn.TargetPortId);
+            if (targetPort?.DataType == PortType.Flow || !graph.NodesWithFlowInput.Contains(succId))
+            {
+                activePredecessorCount.AddOrUpdate(succId, 1, (_, v) => v + 1);
+                activeEdge = true;
+            }
+        }
 
         var remaining = remainingPredecessors.AddOrUpdate(succId, _ => 0, (_, c) => c - 1);
-        if (remaining != 0) return;
         if (!graph.NodeMap.TryGetValue(succId, out var succNode)) return;
+
+        if (activeEdge && succNode.FlowJoinMode == FlowJoinMode.AnyActive)
+        {
+            QueueNodeDag(succNode, graph, ct, log,
+                completionSources, remainingPredecessors,
+                failedPredecessorCount, activePredecessorCount, scheduledNodes, exceptionList,
+                counter, totalCount, orderBag, linkedCts, journal);
+        }
+
+        if (remaining != 0 || scheduledNodes.ContainsKey(succId)) return;
 
         if (failedPredecessorCount.GetValueOrDefault(succId, 0) > 0)
         {
             SkipDownstream(succNode, graph,
-                completionSources, remainingPredecessors, failedPredecessorCount, log, journal);
+                completionSources, remainingPredecessors, failedPredecessorCount, activePredecessorCount,
+                scheduledNodes, log, propagateFailure: true, ct, exceptionList, counter, totalCount, orderBag, linkedCts, journal);
+        }
+        else if (ShouldRunAfterAllInputsResolved(succNode, graph, activePredecessorCount.GetValueOrDefault(succId, 0)))
+        {
+            QueueNodeDag(succNode, graph, ct, log,
+                completionSources, remainingPredecessors,
+                failedPredecessorCount, activePredecessorCount, scheduledNodes, exceptionList,
+                counter, totalCount, orderBag, linkedCts, journal);
         }
         else
         {
-            _ = RunNodeDagAsync(succNode, graph, ct, log,
-                completionSources, remainingPredecessors,
-                failedPredecessorCount, exceptionList,
-                counter, totalCount, orderBag, linkedCts, journal);
+            SkipDownstream(succNode, graph,
+                completionSources, remainingPredecessors, failedPredecessorCount, activePredecessorCount,
+                scheduledNodes, log, propagateFailure: false, ct, exceptionList, counter, totalCount, orderBag, linkedCts, journal);
         }
     }
 
-    /// <summary>标记节点失败，将其所有后继节点的 failedPredecessorCount +1。</summary>
-    private static void MarkNodeFailed<TNode>(
-        string failedNodeId,
+    private static bool ShouldRunAfterAllInputsResolved<TNode>(
+        TNode node,
         CompiledFlowGraph<TNode> graph,
-        ConcurrentDictionary<string, int> failedPredecessorCount) where TNode : INodeExecutable
+        int activeCount) where TNode : INodeExecutable
     {
-        if (graph.Successors.TryGetValue(failedNodeId, out var succList))
-        {
-            foreach (var succId in succList)
-            {
-                failedPredecessorCount.AddOrUpdate(succId, 1, (_, v) => v + 1);
-            }
-        }
+        if (activeCount == 0) return false;
+        if (node.FlowJoinMode != FlowJoinMode.AllActive) return true;
+
+        var requiredFlowInputs = graph.IncomingConnections[node.Id].Count(connection =>
+            node.FindPortById(connection.TargetPortId)?.DataType == PortType.Flow);
+        return requiredFlowInputs > 0 && activeCount >= requiredFlowInputs;
     }
 
     /// <summary>
-    /// 递归跳过下游链：解析 completionSource + 标记后继的 failedPredecessorCount。
+    /// 递归解析被跳过节点的出边。硬失败继续传播失败；未激活分支只传播“无令牌”。
     /// 被跳过的节点不执行，状态保持 Idle。
     /// </summary>
     private void SkipDownstream<TNode>(
@@ -525,14 +624,20 @@ public class FlowChartExecutionEngine
         Dictionary<string, TaskCompletionSource> completionSources,
         ConcurrentDictionary<string, int> remainingPredecessors,
         ConcurrentDictionary<string, int> failedPredecessorCount,
+        ConcurrentDictionary<string, int> activePredecessorCount,
+        ConcurrentDictionary<string, byte> scheduledNodes,
         Action<string> log,
+        bool propagateFailure,
+        CancellationToken ct,
+        ConcurrentBag<Exception> exceptionList,
+        ExecutionCounter counter,
+        int totalCount,
+        ConcurrentQueue<TNode>? orderBag,
+        CancellationTokenSource linkedCts,
         ExecutionJournal? journal = null) where TNode : INodeExecutable
     {
         log($"[跳过] {nodeVm.Name} - 上游未执行（失败或分支未选中）");
         journal?.RecordNodeSkipped(nodeVm.Id, nodeVm.Name);
-
-        // 标记该节点"被跳过"，但其后继仍需标记
-        MarkNodeFailed(nodeVm.Id, graph, failedPredecessorCount);
 
         // 解析完成信号
         completionSources[nodeVm.Id].TrySetResult();
@@ -542,6 +647,9 @@ public class FlowChartExecutionEngine
         {
             foreach (var succId in succList)
             {
+                if (propagateFailure)
+                    failedPredecessorCount.AddOrUpdate(succId, 1, (_, value) => value + 1);
+
                 var remaining = remainingPredecessors.AddOrUpdate(
                     succId, _ => 0, (_, current) => current - 1);
 
@@ -549,9 +657,27 @@ public class FlowChartExecutionEngine
                 {
                     if (graph.NodeMap.TryGetValue(succId, out var succNode))
                     {
-                        SkipDownstream(succNode, graph,
-                            completionSources, remainingPredecessors,
-                            failedPredecessorCount, log, journal);
+                        if (scheduledNodes.ContainsKey(succId))
+                            continue;
+                        if (failedPredecessorCount.GetValueOrDefault(succId, 0) > 0)
+                        {
+                            SkipDownstream(succNode, graph,
+                                completionSources, remainingPredecessors, failedPredecessorCount, activePredecessorCount,
+                                scheduledNodes, log, true, ct, exceptionList, counter, totalCount, orderBag, linkedCts, journal);
+                        }
+                        else if (ShouldRunAfterAllInputsResolved(
+                                     succNode, graph, activePredecessorCount.GetValueOrDefault(succId, 0)))
+                        {
+                            QueueNodeDag(succNode, graph, ct, log,
+                                completionSources, remainingPredecessors, failedPredecessorCount, activePredecessorCount,
+                                scheduledNodes, exceptionList, counter, totalCount, orderBag, linkedCts, journal);
+                        }
+                        else
+                        {
+                            SkipDownstream(succNode, graph,
+                                completionSources, remainingPredecessors, failedPredecessorCount, activePredecessorCount,
+                                scheduledNodes, log, false, ct, exceptionList, counter, totalCount, orderBag, linkedCts, journal);
+                        }
                     }
                 }
             }
@@ -594,11 +720,16 @@ public class FlowChartExecutionEngine
         // 该集合跨节点持久（区别于旧实现的单次执行局部去重），目标出队执行时移除。
         var pendingBackEdgeTargets = new HashSet<string>();
 
+        // 环路模式也必须遵守 OR 汇聚：任一活动输入到达即可调度。
+        // 目标出队前保持占位，避免同一批同时到达的输入重复投递同一个汇聚节点。
+        var pendingAnyJoinTargets = new HashSet<string>();
+
         while (queue.Count > 0)
         {
             ct.ThrowIfCancellationRequested();
 
             var nodeId = queue.Dequeue();
+            pendingAnyJoinTargets.Remove(nodeId);
             if (!nodeMap.TryGetValue(nodeId, out var nodeVm))
             {
                 pendingBackEdgeTargets.Remove(nodeId);
@@ -632,7 +763,9 @@ public class FlowChartExecutionEngine
             {
                 var succId = conn.TargetNodeId;
 
-                if (activated != null && !activated.Contains(conn.SourcePortId))
+                var sourcePort = nodeVm.FindPortById(conn.SourcePortId);
+                if (activated != null && sourcePort?.DataType == PortType.Flow &&
+                    !activated.Contains(conn.SourcePortId))
                 {
                     log($"[分支] [{nodeVm.Name}] 未激活该端口连线，剪枝 → [{nodeMap[succId].Name}]");
                     continue;
@@ -653,8 +786,26 @@ public class FlowChartExecutionEngine
                 }
                 else
                 {
-                    // 普通边 → 递减后继的前驱计数
-                    var rem = remaining.GetValueOrDefault(succId, graph.Predecessors[succId].Count) - 1;
+                    // OR 汇聚只消费首个实际到达的活动令牌，不能等待静态图中未被条件
+                    // 分发激活的其他前驱；否则一旦图中存在回边就会永久卡在汇聚前。
+                    if (nodeMap[succId].FlowJoinMode == FlowJoinMode.AnyActive)
+                    {
+                        if (pendingAnyJoinTargets.Add(succId))
+                        {
+                            remaining[succId] = 0;
+                            queue.Enqueue(succId);
+                        }
+                        continue;
+                    }
+
+                    // 普通/AND 汇聚边 → 递减后继的前驱计数
+                    var currentRemaining = remaining.GetValueOrDefault(
+                        succId, graph.Predecessors[succId].Count);
+                    // 环路进入下一轮后，上一轮已经归零的依赖计数必须重新装载；否则
+                    // 第一条边会减成负数并提前/重复调度目标节点。
+                    if (currentRemaining <= 0)
+                        currentRemaining = graph.Predecessors[succId].Count;
+                    var rem = currentRemaining - 1;
                     remaining[succId] = rem;
                     if (rem <= 0)
                     {

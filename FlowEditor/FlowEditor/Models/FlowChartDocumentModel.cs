@@ -57,6 +57,9 @@ public class NodeDocumentModel
     /// <summary>节点权限。</summary>
     public NodePermission Permission { get; set; } = NodePermission.Normal;
 
+    /// <summary>是否位于不执行节点容器。</summary>
+    public bool IsExcludedFromExecution { get; set; }
+
     /// <summary>失败处理策略。</summary>
     public NodeErrorPolicy ErrorPolicy { get; set; } = NodeErrorPolicy.FailFast;
 
@@ -93,6 +96,9 @@ public class CustomPortDocument
 
     /// <summary>绑定的节点属性名（仅输出端口有效）。</summary>
     public string? BoundProperty { get; set; }
+
+    /// <summary>端口数据类型；null 表示旧版文档未保存该字段，恢复时沿用节点默认类型。</summary>
+    public PortType? DataType { get; set; }
 }
 
 /// <summary>连线文档模型。</summary>

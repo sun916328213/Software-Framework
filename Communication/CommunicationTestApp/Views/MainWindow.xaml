@@ -201,28 +201,80 @@
                         Padding="8"
                         Style="{StaticResource Panel}">
                         <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="8" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="8" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Button
-                                Grid.Column="0"
-                                Command="{Binding ConnectCommand}"
-                                Content="连接"
-                                Style="{StaticResource Button.Success}" />
-                            <Button
-                                Grid.Column="2"
-                                Command="{Binding DisconnectCommand}"
-                                Content="断开"
-                                Style="{StaticResource Button.Secondary}" />
-                            <Button
-                                Grid.Column="4"
-                                Command="{Binding RemoveDeviceCommand}"
-                                Content="移除"
-                                Style="{StaticResource Button.Danger}" />
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="8" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="8" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button
+                                    Grid.Column="0"
+                                    Command="{Binding ConnectCommand}"
+                                    Content="连接"
+                                    Style="{StaticResource Button.Success}" />
+                                <Button
+                                    Grid.Column="2"
+                                    Command="{Binding DisconnectCommand}"
+                                    Content="断开"
+                                    Style="{StaticResource Button.Secondary}" />
+                                <Button
+                                    Grid.Column="4"
+                                    Command="{Binding RemoveDeviceCommand}"
+                                    Content="移除"
+                                    Style="{StaticResource Button.Danger}" />
+                            </Grid>
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button
+                                    Grid.Column="0"
+                                    Command="{Binding ConnectAllCommand}"
+                                    Content="全部连接"
+                                    Style="{StaticResource Button.Secondary}" />
+                                <Button
+                                    Grid.Column="2"
+                                    Command="{Binding DisconnectAllCommand}"
+                                    Content="全部断开"
+                                    Style="{StaticResource Button.Secondary}" />
+                            </Grid>
+                            <Grid Grid.Row="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button
+                                    Grid.Column="0"
+                                    Command="{Binding SaveConfigCommand}"
+                                    Content="保存配置"
+                                    Style="{StaticResource Button.Secondary}"
+                                    ToolTip="设备参数 JSON（全部协议走 CommunicationNew）" />
+                                <Button
+                                    Grid.Column="2"
+                                    Command="{Binding LoadConfigCommand}"
+                                    Content="加载配置"
+                                    Style="{StaticResource Button.Secondary}" />
+                                <Button
+                                    Grid.Column="4"
+                                    Command="{Binding CancelOperationCommand}"
+                                    Content="取消"
+                                    Style="{StaticResource Button.Danger}"
+                                    ToolTip="取消当前耗时操作" />
+                            </Grid>
                         </Grid>
                     </Border>
 
@@ -336,7 +388,7 @@
                             <TextBlock
                                 Margin="0,0,0,10"
                                 Style="{StaticResource Text.Label}"
-                                Text="适用于 TCP / UDP / 串口 / HTTP" />
+                                Text="仅 TCP / UDP / 串口（字节流/数据报）" />
                             <TextBox
                                 MinHeight="52"
                                 Margin="0,0,0,8"
@@ -422,11 +474,32 @@
                                 </Border>
                             </StackPanel>
                             <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                <ComboBox
+                                    Width="86"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    ItemsSource="{Binding LogLevelOptions}"
+                                    SelectedItem="{Binding LogLevelFilter, Mode=TwoWay}"
+                                    Style="{StaticResource Combo}"
+                                    ToolTip="日志级别过滤" />
+                                <TextBox
+                                    Width="140"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource Input}"
+                                    Text="{Binding LogKeyword, UpdateSourceTrigger=PropertyChanged}"
+                                    ToolTip="关键字过滤（来源/内容）" />
                                 <CheckBox
                                     Margin="0,0,12,0"
                                     VerticalAlignment="Center"
                                     Content="自动滚动"
                                     IsChecked="{Binding AutoScrollLog}" />
+                                <Button
+                                    Margin="0,0,8,0"
+                                    Padding="10,4"
+                                    Command="{Binding ExportLogCommand}"
+                                    Content="导出"
+                                    Style="{StaticResource Button.Secondary}" />
                                 <Button
                                     Margin="0,0,8,0"
                                     Padding="10,4"
@@ -502,15 +575,28 @@
             BorderBrush="{DynamicResource Brush.Border.Subtle}"
             BorderThickness="0,1,0,0">
             <Grid Margin="18,6">
-                <TextBlock
-                    VerticalAlignment="Center"
-                    Style="{StaticResource Text.Label}"
-                    Text="{Binding SelectedDevice.Name, FallbackValue='未选择设备', StringFormat='当前设备：{0}'}" />
+                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                    <TextBlock
+                        Style="{StaticResource Text.Label}"
+                        Text="{Binding SelectedDevice.Name, FallbackValue='未选择设备', StringFormat='当前设备：{0}'}" />
+                    <TextBlock
+                        Margin="16,0,0,0"
+                        Style="{StaticResource Text.Label}"
+                        Text="{Binding DeviceSummary}" />
+                    <TextBlock
+                        Margin="16,0,0,0"
+                        Style="{StaticResource Text.Label}"
+                        Text="{Binding LastElapsed, StringFormat='耗时：{0}'}" />
+                    <TextBlock
+                        Margin="16,0,0,0"
+                        Style="{StaticResource Text.Label}"
+                        Text="{Binding StatusHint}" />
+                </StackPanel>
                 <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                     <TextBlock
                         VerticalAlignment="Center"
                         Style="{StaticResource Text.Label}"
-                        Text="CommunicationNew 1.0 · Prism 9 · .NET 9.0" />
+                        Text="CommunicationNew · Prism 9 · .NET 9.0" />
                 </StackPanel>
             </Grid>
         </Border>

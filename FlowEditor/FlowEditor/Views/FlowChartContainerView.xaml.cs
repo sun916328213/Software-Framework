@@ -11,6 +11,7 @@ public partial class FlowChartContainerView : UserControl
 {
     private FlowChartContainerViewModel VM => (FlowChartContainerViewModel)DataContext;
     private NodePaletteItem? _draggingPaletteItem;
+    private Point _paletteDragStart;
 
     public FlowChartContainerView()
     {
@@ -51,6 +52,7 @@ public partial class FlowChartContainerView : UserControl
         if (e.LeftButton == MouseButtonState.Pressed)
         {
             _draggingPaletteItem = item;
+            _paletteDragStart = e.GetPosition(this);
 
             if (e.ClickCount == 2)
             {
@@ -58,6 +60,18 @@ public partial class FlowChartContainerView : UserControl
                 _draggingPaletteItem = null;
             }
         }
+    }
+
+    private void OnPaletteItemMouseMove(object sender, MouseEventArgs e)
+    {
+        if (_draggingPaletteItem == null || e.LeftButton != MouseButtonState.Pressed) return;
+        var current = e.GetPosition(this);
+        if (Math.Abs(current.X - _paletteDragStart.X) < SystemParameters.MinimumHorizontalDragDistance &&
+            Math.Abs(current.Y - _paletteDragStart.Y) < SystemParameters.MinimumVerticalDragDistance) return;
+
+        var item = _draggingPaletteItem;
+        _draggingPaletteItem = null;
+        DragDrop.DoDragDrop((DependencyObject)sender, item, DragDropEffects.Copy);
     }
 
     /// <summary>拖放释放：如果鼠标在激活标签的画布内，则放置节点。</summary>
@@ -87,19 +101,31 @@ public partial class FlowChartContainerView : UserControl
 
     #endregion
 
+    #region 输出日志
+
+    private void OnOutputTextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (sender is TextBox textBox && textBox.Text.Length > 0)
+            textBox.ScrollToEnd();
+    }
+
+    #endregion
+
     #region 导出 PNG
 
     private void OnExportPngClick(object sender, RoutedEventArgs e)
     {
         if (VM.ActiveTab == null) return;
 
-        var tabItem = FlowTabControl.ItemContainerGenerator.ContainerFromItem(VM.ActiveTab) as TabItem;
-        if (tabItem == null) return;
+        var activeTabItem = FlowTabControl.ItemContainerGenerator.ContainerFromItem(VM.ActiveTab) as TabItem;
+        if (activeTabItem == null) return;
 
-        var flowChartView = FindVisualChild<FlowChartView>(tabItem);
+        var flowChartView = FindVisualChild<FlowChartView>(activeTabItem);
         if (flowChartView == null) return;
 
-        VM.ActiveTab.ExportPngCommand.Execute(flowChartView.ZoomContainerElement);
+        VM.ActiveTab.ExportPng(
+            flowChartView.ZoomContainerElement,
+            VM.ActiveTab.GetCanvasExportBounds());
     }
 
     #endregion

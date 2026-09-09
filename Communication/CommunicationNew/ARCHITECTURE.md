@@ -1,6 +1,6 @@
 # CommunicationNew 架构优化方案
 
-> 更新日期：2026-09-07
+> 更新日期：2026-09-08
 > 范围：`Communication/CommunicationNew`  
 > 口径：本文是 CommunicationNew 架构优化的唯一入口，合并代码审计、外部项目调研、目标架构、迁移顺序和验收标准。
 
@@ -25,7 +25,7 @@ CommunicationNew 已覆盖 Socket、Serial、Modbus、MC、HTTP、WebApi 和 OPC
 | P0 稳定性地基 | 已完成 | 现有 251 个主库自动化测试；真实 IO 接收 timeout/cancellation；设备、轮询器和后台任务支持异步停止；`CommunicationDeviceBase` 为全部派生协议设备统一持有唯一释放任务，使断开、接收循环等待、后台操作排空和派生资源清理只执行一次；`DataPointAutoReader` 释放时共享唯一完成任务，释放开始后拒绝新的后台和手动轮询；Runtime `ReconnectSupervisor` 统一持有请求/响应 Session 与原始 TCP 的恢复循环，`ConnectionSession` 的并发释放调用共享同一个完成任务并只释放一次底层 transport，释放开始后不再接受排队或新发起的连接与请求；TCP、Serial、UDP transport 通过内部一次性释放 module 共享并发完成结果，避免重复关闭或释放底层资源，并在释放开始后拒绝排队或新发起的打开请求；`CommunicationManager` 拒绝重复设备 ID，并明确区分 factory 创建设备与外部注册设备的所有权转移；释放后不再接受设备注册、创建或移除，并发释放调用共享同一个完成任务；批量连接与断开优先使用新 `IConnection` seam，均支持调用方取消，旧接口的 `false` 连接结果会转换为带设备上下文的显式失败，单设备失败保持原异常，多设备失败保留全部异常，adapter 同步抛错也不会阻止其余设备获得生命周期命令，多个批量生命周期命令按提交顺序执行；设备移除、批量生命周期操作与整体释放通过同一生命周期门仲裁，移除和整体释放都会先等待此前已接纳的批量操作停止，再执行设备最终清理，且每个设备只调用一次 `DisposeAsync` seam；手工断开会取消并等待 supervisor，手工重连会替换失效 transport 代际；引入 generation 防止旧连接迟到结果破坏新状态；一天的重连间隔可由注入的虚拟计时器立即推进，测试不等待真实重连时间 |
 | P1 Modbus TCP 竖切 | 已完成 | `TcpByteStreamTransport → Pipe → ModbusTcpCodec → ConnectionSession`；旧 `ModbusTcpClientDevice` 作为兼容 adapter；固定报文、任意两段切分、两帧粘包、loopback、挂起读取取消、真实远端关闭与旧 API 测试通过；请求队列有界，连接代际隔离迟到结果；写操作不做隐式重试 |
 | 组合与宿主解耦 | 已完成 | 核心改为普通 `net9.0`；Prism 移至 `CommunicationNew.Prism`；设备 factory seam 已迁入 Core，Composition 旧接口已成为无成员的弃用兼容别名；新 `CreateDefaultFactory()` 直接返回 Core seam，旧 `CreateFactory()` 仅保留兼容转发；真实 Microsoft DI 宿主测试证明新旧接口解析到同一实例，Prism 在独立 integration 项目采用相同注册语义；`CommunicationManager` 主构造器要求显式注入 factory，无参构造与静态 `CommunicationFactory` 已标记为兼容入口；新增协议不再修改 Core 的 switch |
-| 架构防回退 | 已完成 | 反射测试约束 Abstractions、Core、Transports、Runtime 的当前公开依赖方向，并扫描构造器、字段、属性、事件和方法；带弃用标记的兼容面由专门兼容测试管理；Abstractions 与 Protocols 的公共 API 均禁止暴露第三方 SDK 类型；旧 `ICommunicationDevice` 的成员集合已冻结；全部公开具体协议设备实现新 `IConnection` seam，设备基类实现新的 `IAddressReader` 读取能力 seam |
+| 架构防回退 | 已完成；能力契约精化待办 | 反射测试约束 Abstractions、Core、Transports、Runtime 的当前公开依赖方向，并扫描构造器、字段、属性、事件和方法；带弃用标记的兼容面由专门兼容测试管理；Abstractions 与 Protocols 的公共 API 均禁止暴露第三方 SDK 类型；旧 `ICommunicationDevice` 的成员集合已冻结；全部公开具体协议设备实现新 `IConnection` seam。当前设备基类统一实现 `IAddressReader`，导致 TCP/UDP/Serial 在类型上宣称支持地址读取、运行时却返回空数组；第 4.5 节已将能力契约精化列为后续架构工作 |
 | 数据转换 | 已完成 | 删除进程级 `ByteUtils.BigEndian`；纯端序 codec 归属 Core，旧 Runtime 类型仅保留弃用兼容 adapter；按设备/点位注入不可变 `DataFormat`；ABCD/BADC/CDAB/DCBA 往返测试和每种格式 10,000 次的并发转换验证均通过 |
 | P2 UDP 与 Serial | 已完成 | 新增 `IDatagramTransport`、`UdpDatagramTransport` 和 `SerialByteStreamTransport`；UDP/Serial 旧设备改为 `IConnection` 兼容 adapter；TCP、Serial、UDP 均验证重复打开、关闭幂等、释放不可逆及挂起读取或接收取消；loopback、数据报边界和旧事件测试通过 |
 | P2 TCP 与 Modbus RTU 客户端 | 已完成 | 原始 TCP 客户端改用 `TcpByteStreamTransport` 且只有一个 Pipe reader，并把远端断线恢复交给 Runtime supervisor；新增类型化 RTU request/response、CRC codec，并将旧 RTU 客户端迁移到 `SerialByteStreamTransport → ModbusRtuCodec → ConnectionSession`；Modbus TCP/RTU 已把旧自动重连配置交给同一 supervisor；无调用者的旧 `SerialPortStreamResource` 已删除，主库不再依赖 NModbus；TCP/RTU 从站通过显式 `ModbusServerDataCodec` 共享大端寄存器与压缩位窗口转换，寄存器读取不再产生中间数组，奇数字节补零兼容行为由测试固定，非 8 对齐位地址会正确重打包并保护范围外相邻位 |
@@ -280,6 +280,33 @@ Connected → Stopping → Disconnected / Disposed
 
 手工断开设置“期望离线”，重连 supervisor 不应撤销用户操作。旧 generation 的接收任务完成后，也不能更新新 generation 的状态。
 
+### 4.5 上层节点与能力契约
+
+流程节点不应按每个协议复制一整套连接、读、写、发送和接收类，也不应用一个“万能读写节点”覆盖所有协议。推荐按通讯语义拆分节点，再由小型能力接口决定设备是否可用：
+
+| 节点能力 | 适用协议 | 建议契约 | 语义 |
+| --- | --- | --- | --- |
+| 地址读取 | Modbus TCP/RTU、MC、OPC UA、HTTP/WebApi | `IAddressReader` | 按协议地址和明确单位读取 |
+| 地址写入 | Modbus TCP/RTU、MC、OPC UA、HTTP/WebApi | `IAddressWriter` | 按协议地址写入，显式声明幂等性 |
+| 原始发送 | TCP、UDP、Serial | `IRawSender` | 只发送数据，不隐式等待回复 |
+| 请求/回复 | TCP、UDP、Serial 客户端 | `IRequestReplyClient` | 一次请求只关联一次回复，并有明确超时 |
+| 被动接收 | TCP、UDP、Serial | `IReceiveSource<ReceivedPacket>` | 连接建立后持续收取，上层逐条消费 |
+| 生命周期 | 所有需要连接的设备 | `IConnection` | 连接、断开、重连、状态和释放 |
+
+能力接口必须由真正支持该语义的具体 adapter 实现。`CommunicationDeviceBase` 不再统一实现 `IAddressReader`；TCP、UDP 和 Serial 不能通过返回空数组伪装成功，也不能仅在调用后才以 `NotSupportedException` 暴露能力不匹配。冻结的 `ICommunicationDevice` 仍可保留这些方法作为兼容面，但新节点和新 Runtime 只依赖小型能力接口。
+
+被动接收不应由流程节点在执行时临时订阅 `DataReceived`：节点还未运行时到达的数据会丢失，多节点并行订阅还会重复消费同一报文。收件箱应由 Runtime/session 自连接建立时开始持有，并暴露可取消的异步消费接口。队列必须有界且有可观测满载策略：UDP 保留数据报边界；TCP/Serial 在协议分帧前只能称为“字节块”，不得宣称一次接收就是一条完整消息。需要完整帧时，分包必须位于 transport 之上的 codec/frame splitter，而不是流程节点内。
+
+迁移期间，FlowNodes 可以使用集中的协议能力映射防止误调用，但该映射只是兼容层，不是最终架构。当上述契约落地后，节点应改为通过 `is IAddressReader`、`is IRawSender` 等类型检查发现能力，删除协议枚举判断。
+
+验收标准：
+
+1. TCP/UDP/Serial 不再实现 `IAddressReader`/`IAddressWriter`，地址节点在执行前即可排除它们。
+2. 地址读写、原始发送、请求/回复、被动接收各有独立 contract test，不允许空数组或 `false` 代表“不支持”。
+3. 从连接成功到接收节点启动之间到达的数据可被消费，且多消费者不会意外重复处理同一数据。
+4. 取消、超时、断开、重连和释放都能结束挂起的接收，不留事件订阅或后台任务。
+5. 有界收件箱的深度、丢弃/拒绝计数可通过 `Meter` 观测，满载策略有压力测试锁定。
+
 ## 5. 错误、超时和重试
 
 操作方法接收 `CancellationToken`，Runtime 将三个来源链接后传到真实 IO：
@@ -453,6 +480,8 @@ Runtime 注入 `TimeProvider`，测试使用 `FakeTimeProvider` 推进虚拟时�
 | --- | --- |
 | 分层 | 使用四个逻辑边界，稳定后再拆程序集 |
 | 统一接口 | 冻结 `ICommunicationDevice`，新增小型语义能力接口 |
+| 上层节点 | 按地址访问、原始发送、请求/回复、被动接收拆分；不按协议机械复制整套节点 |
+| 被动接收 | Runtime/session 持有有界收件箱；UDP 保留数据报边界，TCP/Serial 在分帧前仅为字节块 |
 | 传输 | 区分 byte stream、datagram 和高层 adapter |
 | 生命周期 | 一个 `ConnectionSession` 拥有状态和后台任务 |
 | 背压 | 按数据语义选择策略，协议字节与事务请求不丢 |

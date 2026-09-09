@@ -1,6 +1,8 @@
 using System.Text.Json;
+using System.Windows;
 using FlowEditor.Core;
 using FlowEditor.Models;
+using FlowEditor.Views;
 using WPFCustomControls.PropertyGrid.Models;
 
 namespace FlowEditor.Nodes.FlowControl;
@@ -10,7 +12,7 @@ namespace FlowEditor.Nodes.FlowControl;
 /// <para>
 /// <b>用法示例</b>：上游把数据连入「输入值」，分发规则写
 /// <c>1=OUT1</c>、<c>2=OUT2</c>，输入 1 时只激活 OUT1 分支，
-/// 输入 2 时只激活 OUT2 分支，未命中时走 Default 分支（可关闭）。
+/// 输入 2 时只激活 OUT2 分支；输入为空或没有规则命中时节点报错。
 /// </para>
 /// <para>
 /// 激活边语义：每次执行只激活命中（或默认）的一个 Flow 端口，
@@ -18,12 +20,12 @@ namespace FlowEditor.Nodes.FlowControl;
 /// 控制流端口整体无出线的情形，本节点新建即带分支端口，不受影响）。
 /// </para>
 /// <para>
-/// 自定义配置：分支数量在面板上增减（OUT1..OUTn），自定义分支名直接写在规则
-/// 右侧即可（如 <c>1=合格</c>），执行/同步时自动补齐对应 Flow 端口；
-/// 自定义名称的端口不会被分支数量收缩误删，只能通过画布端口菜单删除。
+/// 自定义配置统一通过“编辑分发规则”窗口维护；保存后自动同步 Flow 输出端口，
+/// 已存在连线的废弃端口会被安全保留，但不再被规则激活。
 /// </para>
 /// </summary>
-[FlowTool("条件分发", "Shuffle", ToolGroup = "流程控制", SortIndex = 3, Description = "按输入值匹配规则走不同分支（1→OUT1、2→OUT2），分支与规则均可自定义")]
+[FlowTool("条件分发", "Shuffle", ToolGroup = "流程控制", SortIndex = 3,
+    Description = "按输入值匹配自定义规则；输入为空时终止全部下游")]
 public class SwitchNode : NodeModel
 {
     private object? _inputValue;
@@ -43,18 +45,22 @@ public class SwitchNode : NodeModel
     /// 分发规则（每行一条 <c>匹配值=分支名</c>，也可用冒号分隔；# 开头为注释）。
     /// 右侧分支名不存在时会自动创建对应的 Flow 输出端口。
     /// </summary>
-    [NodeProperty(DisplayName = "分发规则", Group = "2.分发配置", Order = 1, PortConfigurable = false,
-        Description = "每行一条：匹配值=分支名（如 1=OUT1）。未命中时走 Default 分支")]
+    [NodeProperty(DisplayName = "分发规则", Group = "2.分发配置", Order = 1, PortConfigurable = false, IsDisplay = false,
+        Description = "每行一条：匹配值=分支名（如 1=OUT1）。未命中时节点报错")]
     public string RulesText
     {
         get => _rulesText;
-        set => SetProperty(ref _rulesText, value ?? string.Empty);
+        set
+        {
+            if (SetProperty(ref _rulesText, value ?? string.Empty))
+                EnsurePortsFromRules();
+        }
     }
 
     private int _branchCount = 2;
 
     /// <summary>编号分支数量（OUT1..OUTn），增减时自动补齐/回收编号端口。</summary>
-    [NodeProperty(DisplayName = "分支数量", Group = "2.分发配置", Order = 0, Min = 2, Max = 12, Step = 1, PortConfigurable = false,
+    [NodeProperty(DisplayName = "分支数量", Group = "2.分发配置", Order = 0, Min = 2, Max = 12, Step = 1, PortConfigurable = false, IsDisplay = false,
         Description = "OUT1..OUTn 编号分支的数量；自定义名称分支不受此数量影响")]
     public int BranchCount
     {
@@ -70,7 +76,7 @@ public class SwitchNode : NodeModel
     private bool _ignoreCase = true;
 
     /// <summary>匹配时是否忽略大小写（纯数字匹配不受影响）。</summary>
-    [NodeProperty(DisplayName = "忽略大小写", Group = "2.分发配置", Order = 2,
+    [NodeProperty(DisplayName = "忽略大小写", Group = "2.分发配置", Order = 2, IsDisplay = false,
         Description = "匹配值比较时是否忽略大小写")]
     public bool IgnoreCase
     {
@@ -81,7 +87,7 @@ public class SwitchNode : NodeModel
     private bool _trimInput = true;
 
     /// <summary>匹配前是否去除输入值首尾空白。</summary>
-    [NodeProperty(DisplayName = "去除首尾空格", Group = "2.分发配置", Order = 3,
+    [NodeProperty(DisplayName = "去除首尾空格", Group = "2.分发配置", Order = 3, IsDisplay = false,
         Description = "匹配前是否去除输入值与规则两侧的首尾空白")]
     public bool TrimInput
     {
@@ -89,11 +95,11 @@ public class SwitchNode : NodeModel
         set => SetProperty(ref _trimInput, value);
     }
 
-    private bool _useDefaultBranch = true;
+    private bool _useDefaultBranch;
 
-    /// <summary>未命中任何规则时是否走 Default 分支（关闭则所有分支都不执行）。</summary>
-    [NodeProperty(DisplayName = "启用默认分支", Group = "2.分发配置", Order = 4,
-        Description = "未命中规则时走 Default 分支；关闭则未命中时所有分支都不执行")]
+    /// <summary>旧流程兼容字段；当前版本未命中规则统一报错。</summary>
+    [NodeProperty(DisplayName = "启用默认分支", Group = "2.分发配置", Order = 4, IsDisplay = false,
+        Description = "旧流程兼容字段，当前版本未命中规则统一报错")]
     public bool UseDefaultBranch
     {
         get => _useDefaultBranch;
@@ -115,10 +121,7 @@ public class SwitchNode : NodeModel
     public const string DefaultBranchName = "Default";
 
     /// <summary>
-    /// 空分支端口名：未命中且关闭默认分支时激活的兜底端口（正常不接线）。
-    /// 引擎把"未声明激活端口"视为全放行，因此"一个都不走"必须显式激活一个无出线的
-    /// 汇点端口才能表达；该端口刻意排除在 <see cref="ControlFlowPorts"/> 之外，
-    /// 避免循环归一化器从它合成回边（空分支语义 = 本路径终止，含循环退出）。
+    /// 历史流程曾使用的空分支端口名；新节点不再显示此端口。
     /// </summary>
     public const string EmptyBranchName = "空分支";
 
@@ -126,7 +129,7 @@ public class SwitchNode : NodeModel
     {
         Name = "条件分发";
         IsInEnabled = true;
-        // 不再生成通用 Out 端口，以各分支/Default 端口表达分发走向
+        // 不再生成通用 Out 端口，以各规则分支端口表达分发走向
         IsOutEnabled = false;
 
         // 输入值接受任意上游类型：object 映射为 Object，手动放宽为 Any，
@@ -135,8 +138,8 @@ public class SwitchNode : NodeModel
         input.DataType = PortType.Any;
 
         EnsureNumberedBranches(_branchCount);
-        EnsureFlowPort(DefaultBranchName);
-        EnsureFlowPort(EmptyBranchName);
+        RemoveUnwiredReservedPort(DefaultBranchName);
+        RemoveLegacyEmptyBranchPort();
     }
 
     public override Task ExecuteAsync(CancellationToken ct)
@@ -144,7 +147,14 @@ public class SwitchNode : NodeModel
         // 规则右侧写了新分支名时自动补端口，保证 ActivateOutput 的目标端口真实存在
         EnsurePortsFromRules();
 
-        var key = NormalizeKey(InputToString(InputValue));
+        var inputText = InputToString(InputValue);
+        if (string.IsNullOrWhiteSpace(inputText))
+        {
+            LastMatchedBranch = "(错误：输入为空)";
+            throw new InvalidOperationException($"条件分发节点 [{Name}] 的输入值为空，无法匹配分发规则");
+        }
+
+        var key = NormalizeKey(inputText);
         foreach (var (match, branch) in ParseRules(RulesText))
         {
             if (NormalizeKey(match) == key)
@@ -155,28 +165,17 @@ public class SwitchNode : NodeModel
             }
         }
 
-        if (UseDefaultBranch)
-        {
-            LastMatchedBranch = DefaultBranchName;
-            ActivateOutput(DefaultBranchName);
-        }
-        else
-        {
-            // 显式激活无出线的空分支汇点：引擎据此剪掉所有分支下游。
-            // 不可直接"什么都不激活"——引擎会将其理解为全放行（旧行为兼容）。
-            LastMatchedBranch = "(未命中)";
-            ActivateOutput(EmptyBranchName);
-        }
-        return Task.CompletedTask;
+        LastMatchedBranch = "(错误：未命中)";
+        throw new InvalidOperationException(
+            $"条件分发节点 [{Name}] 的输入值 [{inputText}] 没有匹配的分发规则");
     }
 
     /// <summary>
-    /// 控制流端口 = 全部 Flow 输出端口（动态，含自定义分支与 Default），
-    /// 但不含空分支汇点（见 <see cref="EmptyBranchName"/> 说明）。
+    /// 控制流端口 = 全部可见 Flow 输出端口（动态自定义分支）。
     /// </summary>
     public override IReadOnlyList<string>? ControlFlowPorts
         => CustomOutputPorts
-            .Where(p => p.DataType == PortType.Flow && p.Name != EmptyBranchName)
+            .Where(p => p.DataType == PortType.Flow)
             .Select(p => p.Name).ToList();
 
     #region 分支端口管理
@@ -187,7 +186,7 @@ public class SwitchNode : NodeModel
         var result = new List<(string Match, string Branch)>();
         if (string.IsNullOrWhiteSpace(rulesText))
             return result;
-        foreach (var rawLine in rulesText.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+        foreach (var rawLine in rulesText.Split(['\r', '\n', ';', '；'], StringSplitOptions.RemoveEmptyEntries))
         {
             var line = rawLine.Trim();
             if (line.Length == 0 || line.StartsWith('#') || line.StartsWith("//"))
@@ -257,6 +256,51 @@ public class SwitchNode : NodeModel
             EnsureFlowPort(branch);
     }
 
+    private void RemoveLegacyEmptyBranchPort()
+    {
+        var port = CustomOutputPorts.FirstOrDefault(candidate => candidate.Name == EmptyBranchName);
+        if (port != null && !IsPortWired(port.Id))
+            CustomOutputPorts.Remove(port);
+    }
+
+    private void RemoveUnwiredReservedPort(string portName)
+    {
+        var port = CustomOutputPorts.FirstOrDefault(candidate => candidate.Name == portName);
+        if (port != null && !IsPortWired(port.Id))
+            CustomOutputPorts.Remove(port);
+    }
+
+    /// <summary>从规则编辑窗口一次性提交配置，并同步实际输出端口。</summary>
+    public void ApplyRuleConfiguration(
+        IReadOnlyList<(string Match, string Branch)> rules,
+        bool ignoreCase,
+        bool trimInput)
+    {
+        UseDefaultBranch = false;
+        IgnoreCase = ignoreCase;
+        TrimInput = trimInput;
+        SetProperty(ref _branchCount, Math.Clamp(rules.Count, 2, 12), nameof(BranchCount));
+        RulesText = string.Join("\n", rules.Select(rule => $"{rule.Match}={rule.Branch}"));
+
+        var desiredPorts = rules.Select(rule => rule.Branch).ToHashSet(StringComparer.Ordinal);
+        foreach (var port in CustomOutputPorts
+                     .Where(port => port.DataType == PortType.Flow && !desiredPorts.Contains(port.Name))
+                     .ToList())
+        {
+            // 编辑规则不能破坏现有流程连线；已接线的废弃端口保留，但不会再被激活。
+            if (!IsPortWired(port.Id))
+                CustomOutputPorts.Remove(port);
+        }
+
+        foreach (var name in desiredPorts)
+            EnsureFlowPort(name);
+        RemoveUnwiredReservedPort(DefaultBranchName);
+        RemoveLegacyEmptyBranchPort();
+        InvalidatePorts();
+        if (Service != null)
+            Service.Model.IsModified = true;
+    }
+
     /// <summary>端口是否仍被画布连线引用（收缩分支数量时避免误删已接线端口）。</summary>
     private bool IsPortWired(string portId)
     {
@@ -283,47 +327,15 @@ public class SwitchNode : NodeModel
 
     #endregion
 
-    #region 画布操作按钮（Flow 端口被属性面板过滤，需经由此处增删分支）
+    #region 画布操作按钮
 
-    [NodeAction("同步分支端口", Order = 0, IconResource = "Sync")]
-    public void SyncBranches()
+    [NodeAction("编辑分发规则", Order = 0, IconResource = "TableEdit")]
+    public void EditDispatchRules()
     {
-        EnsureNumberedBranches(BranchCount);
-        EnsurePortsFromRules();
-        EnsureFlowPort(DefaultBranchName);
-        EnsureFlowPort(EmptyBranchName);
-    }
-
-    [NodeAction("添加分支", Order = 1, IconResource = "Plus")]
-    public void AddBranch()
-    {
-        if (BranchCount >= 12)
-            return;
-        BranchCount++;
-        PruneNumberedBranches(BranchCount);
-    }
-
-    [NodeAction("删除末分支", Order = 2, IconResource = "Minus")]
-    public void RemoveLastBranch()
-    {
-        if (BranchCount <= 2)
-            return;
-        BranchCount--;
-        PruneNumberedBranches(BranchCount);
-    }
-
-    [NodeAction("预览规则", Order = 3, IconResource = "EyeOutline")]
-    public void PreviewRules()
-    {
-        var rules = ParseRules(RulesText);
-        var body = rules.Count == 0
-            ? "（无有效规则，未命中时走 Default 分支）"
-            : string.Join("\n", rules.Select(r => $"{r.Match} → {r.Branch}"));
-        System.Windows.MessageBox.Show(
-            $"输入值: {InputValue}\n上次命中: {LastMatchedBranch}\n\n{body}",
-            "分发规则预览",
-            System.Windows.MessageBoxButton.OK,
-            System.Windows.MessageBoxImage.Information);
+        var window = new DispatchRuleEditorWindow(this);
+        var owner = Application.Current?.Windows.OfType<Window>().FirstOrDefault(candidate => candidate.IsActive);
+        if (owner != window) window.Owner = owner;
+        window.ShowDialog();
     }
 
     #endregion

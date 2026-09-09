@@ -7,7 +7,7 @@ using Xunit;
 
 namespace FlowEditorTest;
 
-/// <summary>条件分发节点验收：输入 1 走 OUT1、输入 2 走 OUT2，未命中走 Default，分支与规则可自定义。</summary>
+/// <summary>条件分发节点验收：输入命中唯一分支；空值或未命中时报错；分支与规则可自定义。</summary>
 public class SwitchDispatchTests
 {
     private readonly FlowChartExecutionEngine _engine = new();
@@ -79,14 +79,13 @@ public class SwitchDispatchTests
         var (o2, _) = New(new CountingNode { Name = "OUT2-T" });
         var (d, _) = New(new CountingNode { Name = "DEF-T" });
         out1 = o1; out2 = o2; def = d;
-        var nodes = new List<NodeViewModel> { src, sw, o1, o2, d };
+        var nodes = new List<NodeViewModel> { src, sw, o1, o2 };
         var conns = new List<ConnectionModel>
         {
             Flow(src, sw),
             Data(src, "Value", sw, "输入值"),
             Branch(sw, "OUT1", o1),
             Branch(sw, "OUT2", o2),
-            Branch(sw, "Default", d),
         };
         return (nodes, conns);
     }
@@ -121,30 +120,80 @@ public class SwitchDispatchTests
     }
 
     [Fact]
-    public async Task UnmatchedInput_GoesToDefault()
+    public async Task UnmatchedInput_ReportsDispatchError_EvenWhenLegacyDefaultIsEnabled()
     {
         var (nodes, conns) = BuildIntGraph(9, new SwitchNode { Name = "SW" }, out var o1, out var o2, out var d);
 
-        await _engine.ExecuteAsync(nodes, conns, CancellationToken.None, _ => { });
-
-        Assert.Equal(0, Executions(o1));
-        Assert.Equal(0, Executions(o2));
-        Assert.Equal(1, Executions(d));
-        Assert.Equal("Default", ((SwitchNode)nodes[1].Model).LastMatchedBranch);
-    }
-
-    [Fact]
-    public async Task UnmatchedInput_WithoutDefault_SkipsAll()
-    {
-        var sw = new SwitchNode { Name = "SW", UseDefaultBranch = false };
-        var (nodes, conns) = BuildIntGraph(9, sw, out var o1, out var o2, out var d);
-
-        await _engine.ExecuteAsync(nodes, conns, CancellationToken.None, _ => { });
+        var error = await Assert.ThrowsAsync<AggregateException>(() =>
+            _engine.ExecuteAsync(nodes, conns, CancellationToken.None, _ => { }));
 
         Assert.Equal(0, Executions(o1));
         Assert.Equal(0, Executions(o2));
         Assert.Equal(0, Executions(d));
-        Assert.Equal(NodeStatus.Success, nodes[1].Status); // 分发节点自身仍算成功
+        Assert.Contains("没有匹配的分发规则", error.ToString());
+        Assert.Equal(NodeStatus.Error, nodes[1].Status);
+    }
+
+    [Fact]
+    public async Task UnmatchedInput_ReportsDispatchError_WhenLegacyDefaultIsDisabled()
+    {
+        var sw = new SwitchNode { Name = "SW", UseDefaultBranch = false };
+        var (nodes, conns) = BuildIntGraph(9, sw, out var o1, out var o2, out var d);
+
+        var error = await Assert.ThrowsAsync<AggregateException>(() =>
+            _engine.ExecuteAsync(nodes, conns, CancellationToken.None, _ => { }));
+
+        Assert.Equal(0, Executions(o1));
+        Assert.Equal(0, Executions(o2));
+        Assert.Equal(0, Executions(d));
+        Assert.Contains("没有匹配的分发规则", error.ToString());
+        Assert.Equal(NodeStatus.Error, nodes[1].Status);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task EmptyInput_ReportsDispatchError_AndStopsEveryDownstreamBranch(string? input)
+    {
+        var sw = new SwitchNode
+        {
+            Name = "SW",
+            InputValue = input,
+            RulesText = "1=OUT1;2=OUT2",
+            UseDefaultBranch = true
+        };
+        var swVm = new NodeViewModel(sw);
+        var out1 = New(new CountingNode { Name = "OUT1" }).Vm;
+        var after1 = New(new CountingNode { Name = "AFTER1" }).Vm;
+        var nodes = new List<NodeViewModel> { swVm, out1, after1 };
+        var conns = new List<ConnectionModel>
+        {
+            Branch(swVm, "OUT1", out1),
+            Flow(out1, after1)
+        };
+
+        var error = await Assert.ThrowsAsync<AggregateException>(() =>
+            _engine.ExecuteAsync(nodes, conns, CancellationToken.None, _ => { }));
+
+        Assert.Contains("输入值为空", error.ToString());
+        Assert.Equal(NodeStatus.Error, swVm.Status);
+        Assert.All([out1, after1], node =>
+        {
+            Assert.Equal(0, Executions(node));
+            Assert.Equal(NodeStatus.Idle, node.Status);
+        });
+    }
+
+    [Fact]
+    public void NodeCanvas_OnlyProvidesRuleEditorAction()
+    {
+        var sw = new SwitchNode();
+
+        var action = Assert.Single(sw.ActionButtons);
+        Assert.Equal("编辑分发规则", action.Name);
+        Assert.DoesNotContain(sw.OutputPorts, port => port.Name == SwitchNode.EmptyBranchName);
+        Assert.DoesNotContain(sw.OutputPorts, port => port.Name == SwitchNode.DefaultBranchName);
     }
 
     [Fact]
@@ -209,7 +258,7 @@ public class SwitchDispatchTests
         Assert.Contains(sw.CustomOutputPorts, p => p.Name == "OUT3");
         Assert.Contains(sw.CustomOutputPorts, p => p.Name == "OUT4");
         Assert.Contains(sw.ControlFlowPorts!, n => n == "OUT4");
-        Assert.Contains(sw.ControlFlowPorts!, n => n == "Default");
+        Assert.DoesNotContain(sw.ControlFlowPorts!, n => n == SwitchNode.DefaultBranchName);
     }
 
     [Fact]
@@ -217,6 +266,21 @@ public class SwitchDispatchTests
     {
         var rules = SwitchNode.ParseRules("# 注释\n1:OUT1\n// 注释\n2=OUT2\n\n无效行\n");
         Assert.Equal([( "1", "OUT1" ), ( "2", "OUT2" )], rules);
+    }
+
+    [Fact]
+    public void CustomRules_SupportSemicolons_AndSynchronizeNamedFlowPortsImmediately()
+    {
+        var sw = new SwitchNode
+        {
+            RulesText = "A=通过;B=返工；C:报废"
+        };
+
+        Assert.Equal(
+            [("A", "通过"), ("B", "返工"), ("C", "报废")],
+            SwitchNode.ParseRules(sw.RulesText));
+        Assert.All(["通过", "返工", "报废"], name =>
+            Assert.Contains(sw.OutputPorts, port => port.Name == name && port.DataType == PortType.Flow));
     }
 
     [Fact]

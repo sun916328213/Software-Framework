@@ -1,5 +1,7 @@
 using Extension.Struct;
 
+using System.Diagnostics;
+
 namespace FlowEditor.Core;
 
 /// <summary>
@@ -146,7 +148,17 @@ public static class FlowLogContext
     {
         if (SuppressSink.Value) return;
         var line = Format(message);
-        if (line != null) FileSink?.Invoke(line, level);
+        if (line == null) return;
+
+        try
+        {
+            FileSink?.Invoke(line, level);
+        }
+        catch (Exception ex)
+        {
+            // 日志是诊断边界：磁盘、权限或第三方 Sink 故障不应改写工具执行结果。
+            Debug.WriteLine($"[FlowLog] 日志落盘失败: {ex.Message}");
+        }
     }
 
     private sealed class Scope(Action restore) : IDisposable

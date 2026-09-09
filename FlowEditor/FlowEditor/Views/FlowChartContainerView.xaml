@@ -30,6 +30,9 @@
             <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
             <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter" />
 
+
+            <Style BasedOn="{StaticResource ScrollViewer_Style}" TargetType="ScrollViewer" />
+
             <!--  通用分隔条  -->
             <Style x:Key="ToolbarSeparatorStyle" TargetType="Rectangle">
                 <Setter Property="Width" Value="1" />
@@ -299,7 +302,7 @@
                     <Button
                         Command="{Binding ActiveTab.StepContinueCommand}"
                         Style="{StaticResource ToolBarButtonStyle}"
-                        ToolTip="单步继续">
+                        ToolTip="执行当前选中节点（调试暂停时继续）">
                         <materialDesign:PackIcon Kind="StepForward" />
                     </Button>
                     <Button
@@ -413,6 +416,7 @@
                         Grid.Row="2"
                         Background="Transparent"
                         BorderThickness="0"
+                        HorizontalScrollBarVisibility="Auto"
                         VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding ToolboxCategories}">
                             <ItemsControl.Resources>
@@ -424,6 +428,7 @@
                                         CornerRadius="6"
                                         Cursor="Hand"
                                         MouseLeftButtonDown="OnPaletteItemMouseDown"
+                                        MouseMove="OnPaletteItemMouseMove"
                                         ToolTip="{Binding Description}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
@@ -588,7 +593,8 @@
                     HeaderRenamed="OnHeaderRenamed"
                     ItemsSource="{Binding Tabs}"
                     SelectedItem="{Binding ActiveTab, Mode=TwoWay}"
-                    ShowCloseButton="True">
+                    ShowCloseButton="True"
+                    TabStripPlacement="Top">
                     <ctl:EditTabControl.ContentTemplate>
                         <DataTemplate DataType="{x:Type vm:FlowChartViewModel}">
                             <local:FlowChartView DataContext="{Binding}" />
@@ -612,6 +618,7 @@
                     BorderBrush="{StaticResource Flow_Border_Divider}"
                     BorderThickness="0,1,0,0">
                     <TextBox
+                        x:Name="OutputTextBox"
                         Padding="10,2"
                         BorderThickness="0"
                         FontFamily="Consolas"
@@ -619,6 +626,7 @@
                         Foreground="{StaticResource Flow_Text_Primary}"
                         IsReadOnly="True"
                         Text="{Binding ActiveTab.Model.OutputText, Mode=OneWay}"
+                        TextChanged="OnOutputTextChanged"
                         TextWrapping="Wrap"
                         VerticalScrollBarVisibility="Auto" />
                 </Border>

@@ -22,15 +22,19 @@ public sealed class ParamField : INotifyPropertyChanged
         Target = target;
         Value = property.GetValue(target);
         Text = ValueToString(Value);
-        Description = property.Name;
+        Description = ParamMetadata.GetLabel(property.Name);
+        Hint = ParamMetadata.GetHint(property.Name);
     }
 
     public PropertyInfo Property { get; }
 
     public object Target { get; }
 
-    /// <summary>显示名。</summary>
+    /// <summary>中文显示名（查 ParamMetadata，查不到回退英文）。</summary>
     public string Description { get; }
+
+    /// <summary>中文提示（含英文名，绑定到 ToolTip）。</summary>
+    public string Hint { get; }
 
     public string Key => Property.Name;
 
@@ -59,6 +63,9 @@ public sealed class ParamField : INotifyPropertyChanged
     public bool IsOption => Options is { Count: > 0 };
 
     public bool IsBoolean => Property.PropertyType == typeof(bool);
+
+    /// <summary>可编辑下拉（串口号：下拉选 + 可手工输入）。</summary>
+    public bool IsEditableCombo { get; set; }
 
     /// <summary>布尔编辑值。</summary>
     public bool IsChecked
@@ -95,8 +102,44 @@ public sealed class ParamField : INotifyPropertyChanged
     private void OnPropertyChanged(string name) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-    /// <summary>把编辑结果写回参数对象。</summary>
-    public void Commit() => Property.SetValue(Target, Convert.ChangeType(Value, Property.PropertyType));
+    /// <summary>把编辑结果写回参数对象（枚举/布尔/byte[]/可空类型分别处理，避免 Convert.ChangeType 误转）。</summary>
+    public void Commit()
+    {
+        var type = Property.PropertyType;
+        var value = Value;
+        if (value is null)
+        {
+            if (!type.IsValueType || Nullable.GetUnderlyingType(type) is not null)
+            {
+                Property.SetValue(Target, null);
+            }
+            return;
+        }
+
+        var target = Nullable.GetUnderlyingType(type) ?? type;
+        object? converted;
+        if (target.IsEnum)
+        {
+            converted = Enum.Parse(target, value.ToString()!, ignoreCase: true);
+        }
+        else if (target == typeof(byte[]))
+        {
+            converted = value is byte[] bytes ? bytes : ConvertHexText(value.ToString() ?? string.Empty);
+        }
+        else if (target == typeof(bool))
+        {
+            converted = value is bool b ? b : bool.Parse(value.ToString()!);
+        }
+        else if (target == typeof(string))
+        {
+            converted = value.ToString();
+        }
+        else
+        {
+            converted = Convert.ChangeType(value, target, System.Globalization.CultureInfo.InvariantCulture);
+        }
+        Property.SetValue(Target, converted);
+    }
 
     private static object? ConvertText(string text, Type type)
     {
@@ -108,16 +151,42 @@ public sealed class ParamField : INotifyPropertyChanged
 
         if (type.IsEnum)
         {
-            return Enum.Parse(type, text.Trim());
+            return Enum.Parse(type, text.Trim(), ignoreCase: true);
+        }
+
+        if (type == typeof(byte[]))
+        {
+            return string.IsNullOrWhiteSpace(text) ? null : ConvertHexText(text);
+        }
+
+        if (type == typeof(bool))
+        {
+            return bool.Parse(text.Trim());
         }
 
         return Convert.ChangeType(text.Trim(), type, System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>byte[] 参数按十六进制文本编辑（空格分隔，可为空表示 null）。</summary>
+    private static byte[]? ConvertHexText(string text)
+    {
+        var hex = new string([.. text.Where(c => !char.IsWhiteSpace(c))]);
+        if (hex.Length == 0)
+        {
+            return null;
+        }
+        if (hex.Length % 2 != 0)
+        {
+            throw new FormatException("十六进制长度必须为偶数。");
+        }
+        return Convert.FromHexString(hex);
     }
 
     private static string ValueToString(object? value) => value switch
     {
         null => string.Empty,
         bool b => b ? bool.TrueString : bool.FalseString,
+        byte[] bytes => BitConverter.ToString(bytes).Replace("-", " "),
         _ => Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty,
     };
 
@@ -162,6 +231,9 @@ public sealed class DeviceConfigDialogViewModel : IDialogAware, INotifyPropertyC
     public DialogCloseListener RequestClose { get; }
 
     public ObservableCollection<ParamField> Fields { get; } = [];
+
+    /// <summary>通用通信参数（超时/重试/重连/队列容量），对应 CommunicationParam 基类，单独成组编辑。</summary>
+    public ObservableCollection<ParamField> CommonFields { get; } = [];
 
     public IReadOnlyList<ProtocolCatalog.ProtocolInfo> ProtocolOptions { get; }
 
@@ -239,7 +311,9 @@ public sealed class DeviceConfigDialogViewModel : IDialogAware, INotifyPropertyC
         }
     }
 
-    public bool CanConfirm() => !string.IsNullOrWhiteSpace(DeviceName) && Fields.All(f => !f.HasError);
+    public bool CanConfirm() => !string.IsNullOrWhiteSpace(DeviceName)
+        && Fields.All(f => !f.HasError)
+        && CommonFields.All(f => !f.HasError);
 
     public bool CanCloseDialog() => true;
 
@@ -269,7 +343,7 @@ public sealed class DeviceConfigDialogViewModel : IDialogAware, INotifyPropertyC
             return;
         }
 
-        foreach (var field in Fields)
+        foreach (var field in Fields.Concat(CommonFields))
         {
             field.Commit();
         }
@@ -302,25 +376,55 @@ public sealed class DeviceConfigDialogViewModel : IDialogAware, INotifyPropertyC
         _param.DeviceName = DeviceName;
 
         Fields.Clear();
+        CommonFields.Clear();
         foreach (var property in EditableProperties(_param))
         {
             var field = new ParamField(property, _param)
             {
                 Options = property.PropertyType.IsEnum
                     ? Enum.GetNames(property.PropertyType)
-                    : null,
+                    : property.Name == nameof(CommunicationNew.Protocols.Serial.SerialParam.PortName)
+                        ? SerialPortNames.ToList()
+                        : null,
+                IsEditableCombo = property.Name == nameof(CommunicationNew.Protocols.Serial.SerialParam.PortName),
             };
             Fields.Add(field);
         }
+        foreach (var property in CommonProperties())
+        {
+            var value = property.GetValue(_param);
+            var field = new ParamField(property, _param)
+            {
+                Options = property.PropertyType.IsEnum
+                    ? Enum.GetNames(property.PropertyType)
+                    : null,
+            };
+            _ = value;
+            CommonFields.Add(field);
+        }
     }
 
-    /// <summary>排除基类公共字段（超时/重试等在通用区域单独编辑）与集合/复杂类型。</summary>
+    /// <summary>基类通用参数（超时/重试/重连/队列容量），全部走 CommunicationNew 基类语义。</summary>
+    private static IEnumerable<PropertyInfo> CommonProperties() =>
+        typeof(CommunicationParam).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.CanWrite && p.Name is
+                nameof(CommunicationParam.TimeoutMs) or
+                nameof(CommunicationParam.RetryCount) or
+                nameof(CommunicationParam.RetryDelayMs) or
+                nameof(CommunicationParam.AutoReconnect) or
+                nameof(CommunicationParam.ReconnectIntervalMs) or
+                nameof(CommunicationParam.EventQueueCapacity) or
+                nameof(CommunicationParam.RequestQueueCapacity) or
+                nameof(CommunicationParam.ServerRequestCapacity));
+
+    /// <summary>排除基类公共字段（超时/重试等在通用区域单独编辑）、[Obsolete] 兼容别名与集合/复杂类型。</summary>
     private static IEnumerable<PropertyInfo> EditableProperties(CommunicationParam param)
     {
         var baseProps = typeof(CommunicationParam).GetProperties().Select(p => p.Name).ToHashSet();
         return param.GetType()
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => !baseProps.Contains(p.Name) && p.CanWrite)
+            .Where(p => p.GetCustomAttribute<ObsoleteAttribute>() is null)
             .Where(p => IsEditableType(p.PropertyType));
     }
 

@@ -33,13 +33,28 @@ public partial class NodeView : UserControl
 
         var flowChartVm = FindFlowChartViewModel(this);
         if (flowChartVm != null)
-            flowChartVm.SelectedNode = vm;
+        {
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+            {
+                flowChartVm.ToggleNodeSelection(vm);
+                if (!vm.IsSelected)
+                {
+                    e.Handled = true;
+                    return;
+                }
+            }
+            else if (!vm.IsSelected)
+            {
+                flowChartVm.SetSelectedNodes([vm]);
+            }
+        }
 
         var canvas = FindParentCanvas(this);
         if (canvas == null) return;
 
         var mousePos = e.GetPosition(canvas);
-        vm.BeginDrag(mousePos);
+        if (flowChartVm != null) flowChartVm.BeginNodeDrag(vm, mousePos);
+        else vm.BeginDrag(mousePos);
 
         TitleBar.CaptureMouse();
         TitleBar.MouseMove += OnTitleBarMouseMove;
@@ -52,7 +67,9 @@ public partial class NodeView : UserControl
         var canvas = FindParentCanvas(this);
         if (canvas == null) return;
         var mousePos = e.GetPosition(canvas);
-        vm.UpdateDrag(mousePos);
+        var flowChartVm = FindFlowChartViewModel(this);
+        if (flowChartVm != null) flowChartVm.UpdateNodeDrag(vm, mousePos);
+        else vm.UpdateDrag(mousePos);
     }
 
     private void OnTitleBarMouseUp(object sender, MouseButtonEventArgs e)
@@ -60,7 +77,9 @@ public partial class NodeView : UserControl
         if (DataContext is not NodeViewModel vm) return;
         TitleBar.ReleaseMouseCapture();
         TitleBar.MouseMove -= OnTitleBarMouseMove;
-        vm.EndDrag();
+        var flowChartVm = FindFlowChartViewModel(this);
+        if (flowChartVm != null) flowChartVm.EndNodeDrag(vm);
+        else vm.EndDrag();
     }
 
     #endregion

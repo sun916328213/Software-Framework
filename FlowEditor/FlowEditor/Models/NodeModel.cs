@@ -159,6 +159,14 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         set => SetProperty(ref _permission, value);
     }
 
+    private bool _isExcludedFromExecution;
+    /// <summary>是否存放在“不执行节点容器”中；保留配置，但不参与校验、编译和运行。</summary>
+    public bool IsExcludedFromExecution
+    {
+        get => _isExcludedFromExecution;
+        set => SetProperty(ref _isExcludedFromExecution, value);
+    }
+
     // ── 容错策略（P2）──
 
     private NodeErrorPolicy _errorPolicy = NodeErrorPolicy.FailFast;
@@ -322,7 +330,9 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         {
             CustomInputPorts.Remove(inPort);
             RemovePortConnections(portId);
+            SynchronizeRemovedPortConfig(inPort);
             InvalidatePorts();
+            ConfigChanged?.Invoke();
             return true;
         }
         var outPort = CustomOutputPorts.FirstOrDefault(p => p.Id == portId);
@@ -330,10 +340,34 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         {
             CustomOutputPorts.Remove(outPort);
             RemovePortConnections(portId);
+            SynchronizeRemovedPortConfig(outPort);
             InvalidatePorts();
+            ConfigChanged?.Invoke();
             return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// 属性网格内联 Check 不应维护第二份状态；删除端口后根据剩余端口回写配置。
+    /// 兼容旧文档中 PropertyName 缺失、以 CLR 属性名作为端口名的情况。
+    /// </summary>
+    private void SynchronizeRemovedPortConfig(PortModel port)
+    {
+        var propertyName = port.PropertyName;
+        if (string.IsNullOrWhiteSpace(propertyName) && GetType().GetProperty(port.Name) != null)
+            propertyName = port.Name;
+        if (string.IsNullOrWhiteSpace(propertyName))
+            return;
+
+        var hasInput = CustomInputPorts.Any(candidate =>
+            candidate.PropertyName == propertyName || candidate.Name == propertyName);
+        var hasOutput = CustomOutputPorts.Any(candidate =>
+            candidate.PropertyName == propertyName || candidate.Name == propertyName);
+        if (hasInput || hasOutput)
+            _portConfigs[propertyName] = (hasInput, hasOutput);
+        else
+            _portConfigs.Remove(propertyName);
     }
 
     /// <summary>删除引用该端口的连线（避免端口删除后残留悬空连线，阻塞目标端口再次连线）。</summary>
@@ -501,15 +535,19 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         var cached = BindablePropertiesCache.GetOrAdd(GetType(), static type =>
         {
             var props = new List<string> { "Name" };
-            foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            var seen = new HashSet<string>(StringComparer.Ordinal) { "Name" };
+            // 节点工具常通过多层基类复用领域属性（例如 TCP 连接节点的 DeviceName
+            // 定义在 NetConnectNodeBase）。逐层扫描到 NodeModel 为止，既包含工具基类
+            // 属性，又不会把端口集合、状态等编辑器基础设施暴露成输出属性。
+            for (var current = type; current != null && current != typeof(NodeModel); current = current.BaseType)
             {
-                if (prop.Name is "Name" or "Value" or "Id" or "X" or "Y" or "Status" or "Permission"
-                    or "IsInEnabled" or "IsOutEnabled" or "IsEditable" or "IsDraggable"
-                    or "InputPorts" or "OutputPorts" or "CustomInputPorts" or "CustomOutputPorts"
-                    or "ActionButtons")
-                    continue;
-                if (prop.CanRead)
+                foreach (var prop in current.GetProperties(
+                             BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+                {
+                    if (!prop.CanRead || !seen.Add(prop.Name))
+                        continue;
                     props.Add(prop.Name);
+                }
             }
             return props.ToArray();
         });
@@ -572,6 +610,9 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
     /// </summary>
     public virtual IReadOnlyList<string>? ControlFlowPorts => null;
 
+    /// <summary>多输入控制流的默认汇聚策略。</summary>
+    public virtual FlowJoinMode FlowJoinMode => FlowJoinMode.WaitAllAnyActive;
+
     /// <summary>
     /// 流程图保存到文件时回调（此时 .flow 文档已写入磁盘）。
     /// 子类可在此持久化自身依赖的外部数据（如视觉工具的 Halcon 参数文件）。
@@ -626,7 +667,10 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         if (!enabled)
         {
             if (existing != null)
+            {
+                RemovePortConnections(existing.Id);
                 ports.Remove(existing);
+            }
             return;
         }
 
@@ -728,19 +772,30 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         _dataBindingsChanged?.Invoke();
     }
 
-    /// <summary>获取所有上游节点（当前流程图中除自身外的所有节点）。</summary>
+    /// <summary>获取通过流程连线可反向到达的直接或间接上游节点。</summary>
     IReadOnlyList<UpstreamNodeInfo> IDataBindingProvider.GetUpstreamFlowNodes()
     {
         var service = Service;
         if (service == null) return Array.Empty<UpstreamNodeInfo>();
 
-        var result = new List<UpstreamNodeInfo>();
-        foreach (var nodeVm in service.Nodes)
+        var upstreamIds = new HashSet<string>(StringComparer.Ordinal);
+        var pending = new Queue<string>();
+        pending.Enqueue(Id);
+        while (pending.TryDequeue(out var targetId))
         {
-            if (nodeVm.Id == Id) continue;
-            result.Add(new UpstreamNodeInfo { NodeId = nodeVm.Id, NodeName = nodeVm.Name });
+            foreach (var connection in service.Connections.Where(connection => connection.TargetNodeId == targetId))
+            {
+                if (connection.SourceNodeId == Id || !upstreamIds.Add(connection.SourceNodeId))
+                    continue;
+                pending.Enqueue(connection.SourceNodeId);
+            }
         }
-        return result;
+
+        // 保持画布节点顺序稳定，避免每次打开绑定窗口时条目跳动。
+        return service.Nodes
+            .Where(nodeVm => upstreamIds.Contains(nodeVm.Id))
+            .Select(nodeVm => new UpstreamNodeInfo { NodeId = nodeVm.Id, NodeName = nodeVm.Name })
+            .ToList();
     }
 
     /// <summary>获取指定上游节点的可绑定属性列表。</summary>

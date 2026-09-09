@@ -4,7 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="RootFlowChart"
-    Background="White"
+    AllowDrop="True"
+    Background="Transparent"
+    DragOver="OnCanvasDragOver"
+    Drop="OnCanvasDrop"
     Focusable="True">
 
     <UserControl.Resources>
@@ -22,9 +25,9 @@
     <ScrollViewer
         x:Name="ScrollViewerHost"
         Background="{x:Null}"
-        HorizontalScrollBarVisibility="Auto"
+        HorizontalScrollBarVisibility="Hidden"
         PreviewMouseWheel="OnScrollViewerPreviewMouseWheel"
-        VerticalScrollBarVisibility="Auto">
+        VerticalScrollBarVisibility="Hidden">
         <ScrollViewer.Resources>
             <Style BasedOn="{StaticResource {x:Type ScrollViewer}}" TargetType="ScrollViewer">
                 <Setter Property="Background" Value="{x:Null}" />
@@ -34,9 +37,12 @@
         <!--  缩放容器  -->
         <Grid
             x:Name="ZoomContainer"
-            Width="3000"
-            Height="2000"
-            MouseRightButtonDown="OnCanvasRightClick">
+            Width="{Binding Model.CanvasWidth}"
+            Height="{Binding Model.CanvasHeight}"
+            MouseRightButtonDown="OnCanvasRightClick"
+            PreviewMouseLeftButtonDown="OnPanMouseDown"
+            PreviewMouseLeftButtonUp="OnPanMouseUp"
+            PreviewMouseMove="OnPanMouseMove">
             <Grid.Background>
                 <DrawingBrush
                     Stretch="None"
@@ -75,6 +81,17 @@
 
             <!--  临时连线层  -->
             <Canvas x:Name="PendingCanvas" IsHitTestVisible="False" />
+
+            <!--  ROI 框选层  -->
+            <Canvas IsHitTestVisible="False">
+                <Rectangle
+                    x:Name="SelectionRectangle"
+                    Fill="#284A90E2"
+                    Stroke="#4A90E2"
+                    StrokeDashArray="4,2"
+                    StrokeThickness="1"
+                    Visibility="Collapsed" />
+            </Canvas>
         </Grid>
     </ScrollViewer>
 </UserControl>

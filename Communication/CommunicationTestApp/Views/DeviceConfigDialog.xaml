@@ -6,22 +6,29 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:DeviceConfigDialogViewModel}"
-        d:DesignWidth="560" d:DesignHeight="640"
+        d:DesignWidth="780" d:DesignHeight="640"
+        Width="780"
         Background="{DynamicResource Brush.Bg.0}"
         FontFamily="{StaticResource FontFamily.Default}">
     <UserControl.Resources>
+        <!-- 双列表单面板：两列均分，列内标签+编辑器左右排 -->
+        <ItemsPanelTemplate x:Key="TwoColumnPanel">
+            <UniformGrid Columns="2" />
+        </ItemsPanelTemplate>
+
         <!-- 通用参数行模板 -->
         <DataTemplate x:Key="TextFieldTemplate">
-            <Grid Margin="0,4">
+            <Grid Margin="0,4,12,4">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="118" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Label}"
-                           VerticalAlignment="Center" ToolTip="{Binding Key}" />
+                           VerticalAlignment="Center" ToolTip="{Binding Hint}"
+                           TextTrimming="CharacterEllipsis" />
                 <TextBox Grid.Column="1"
                          Text="{Binding Text, UpdateSourceTrigger=PropertyChanged, Delay=150}"
-                         ToolTip="{Binding Key}">
+                         ToolTip="{Binding Hint}">
                     <TextBox.Style>
                         <Style TargetType="TextBox" BasedOn="{StaticResource Input}">
                             <Style.Triggers>
@@ -37,30 +44,51 @@
 
         <!-- 布尔参数行模板 -->
         <DataTemplate x:Key="BoolFieldTemplate">
-            <Grid Margin="0,4">
+            <Grid Margin="0,4,12,4">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="118" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Label}"
-                           VerticalAlignment="Center" ToolTip="{Binding Key}" />
+                           VerticalAlignment="Center" ToolTip="{Binding Hint}"
+                           TextTrimming="CharacterEllipsis" />
                 <CheckBox Grid.Column="1" IsChecked="{Binding IsChecked}"
-                          VerticalAlignment="Center" />
+                          VerticalAlignment="Center" ToolTip="{Binding Hint}" />
             </Grid>
         </DataTemplate>
 
         <!-- 枚举参数行模板 -->
         <DataTemplate x:Key="OptionFieldTemplate">
-            <Grid Margin="0,4">
+            <Grid Margin="0,4,12,4">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="118" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Label}"
-                           VerticalAlignment="Center" ToolTip="{Binding Key}" />
+                           VerticalAlignment="Center" ToolTip="{Binding Hint}"
+                           TextTrimming="CharacterEllipsis" />
                 <ComboBox Grid.Column="1" Style="{StaticResource Combo}"
                           ItemsSource="{Binding Options}"
-                          SelectedItem="{Binding Text, Mode=TwoWay}" />
+                          SelectedItem="{Binding Text, Mode=TwoWay}"
+                          ToolTip="{Binding Hint}" />
+            </Grid>
+        </DataTemplate>
+
+        <!-- 可编辑下拉行模板（串口号：下拉选 + 可手工输入，输入即校验） -->
+        <DataTemplate x:Key="EditableOptionFieldTemplate">
+            <Grid Margin="0,4,12,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="118" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Label}"
+                           VerticalAlignment="Center" ToolTip="{Binding Hint}"
+                           TextTrimming="CharacterEllipsis" />
+                <ComboBox Grid.Column="1" Style="{StaticResource Combo}"
+                          ItemsSource="{Binding Options}"
+                          Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Delay=150}"
+                          IsEditable="True"
+                          ToolTip="{Binding Hint}" />
             </Grid>
         </DataTemplate>
 
@@ -69,6 +97,7 @@
                                       TextTemplate="{StaticResource TextFieldTemplate}"
                                       BoolTemplate="{StaticResource BoolFieldTemplate}"
                                       OptionTemplate="{StaticResource OptionFieldTemplate}"
+                                      EditableOptionTemplate="{StaticResource EditableOptionFieldTemplate}"
                                       xmlns:v="clr-namespace:CommunicationTestApp.Views" />
     </UserControl.Resources>
 
@@ -121,11 +150,21 @@
             </Grid>
         </Border>
 
-        <!-- 协议参数动态表单 -->
+        <!-- 参数动态表单：双列排布，协议参数 + 通用参数（超时/重试/重连/队列，全部走 CommunicationNew 基类） -->
         <Border Grid.Row="2" Style="{StaticResource Panel}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding Fields}"
-                              ItemTemplateSelector="{StaticResource FieldTemplateSelector}" />
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="420">
+                <StackPanel>
+                    <TextBlock Text="协议参数" Style="{StaticResource Text.Section}" Margin="0,0,0,4" />
+                    <ItemsControl ItemsSource="{Binding Fields}"
+                                  ItemTemplateSelector="{StaticResource FieldTemplateSelector}"
+                                  ItemsPanel="{StaticResource TwoColumnPanel}" />
+                    <TextBlock Text="通用参数（超时/重试/重连/队列）" Style="{StaticResource Text.Section}" Margin="0,12,0,4" />
+                    <ItemsControl ItemsSource="{Binding CommonFields}"
+                                  ItemTemplateSelector="{StaticResource FieldTemplateSelector}"
+                                  ItemsPanel="{StaticResource TwoColumnPanel}" />
+                    <TextBlock Text="byte[] 按十六进制编辑（如心跳数据）；串口号下拉选择或手工输入 COM 口。"
+                               Style="{StaticResource Text.Label}" TextWrapping="Wrap" Margin="0,8,0,0" />
+                </StackPanel>
             </ScrollViewer>
         </Border>
 

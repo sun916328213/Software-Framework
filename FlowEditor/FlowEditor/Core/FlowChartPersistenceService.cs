@@ -88,6 +88,7 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
                 IsInEnabled = nodeModel.IsInEnabled,
                 IsOutEnabled = nodeModel.IsOutEnabled,
                 Permission = nodeModel.Permission,
+                IsExcludedFromExecution = nodeModel.IsExcludedFromExecution,
                 ErrorPolicy = nodeModel.ErrorPolicy,
                 RetryCount = nodeModel.RetryCount,
                 RetryDelayMs = nodeModel.RetryDelayMs,
@@ -103,7 +104,8 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
                 {
                     Id = port.Id,
                     Name = port.Name,
-                    BoundProperty = port.PropertyName
+                    BoundProperty = port.PropertyName,
+                    DataType = port.DataType
                 });
             }
             foreach (var port in nodeModel.CustomOutputPorts)
@@ -112,7 +114,8 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
                 {
                     Id = port.Id,
                     Name = port.Name,
-                    BoundProperty = port.PropertyName
+                    BoundProperty = port.PropertyName,
+                    DataType = port.DataType
                 });
             }
 
@@ -134,6 +137,7 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
             IsInEnabled = nodeModel.IsInEnabled,
             IsOutEnabled = nodeModel.IsOutEnabled,
             Permission = nodeModel.Permission,
+            IsExcludedFromExecution = nodeModel.IsExcludedFromExecution,
             ErrorPolicy = nodeModel.ErrorPolicy,
             RetryCount = nodeModel.RetryCount,
             RetryDelayMs = nodeModel.RetryDelayMs,
@@ -148,7 +152,8 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
             {
                 Id = port.Id,
                 Name = port.Name,
-                BoundProperty = port.PropertyName
+                BoundProperty = port.PropertyName,
+                DataType = port.DataType
             });
         }
         foreach (var port in nodeModel.CustomOutputPorts)
@@ -157,7 +162,8 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
             {
                 Id = port.Id,
                 Name = port.Name,
-                BoundProperty = port.PropertyName
+                BoundProperty = port.PropertyName,
+                DataType = port.DataType
             });
         }
 
@@ -184,6 +190,7 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
         node.IsInEnabled = doc.IsInEnabled;
         node.IsOutEnabled = doc.IsOutEnabled;
         node.Permission = doc.Permission;
+        node.IsExcludedFromExecution = doc.IsExcludedFromExecution;
         node.ErrorPolicy = doc.ErrorPolicy;
         node.RetryCount = doc.RetryCount;
         node.RetryDelayMs = doc.RetryDelayMs;
@@ -200,7 +207,10 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
                        ?? node.AddCustomInputPort(portDoc.Name, portDoc.BoundProperty);
             if (!string.IsNullOrEmpty(portDoc.BoundProperty))
                 port.PropertyName = portDoc.BoundProperty;
+            if (portDoc.DataType.HasValue)
+                port.DataType = portDoc.DataType.Value;
             port.Id = portDoc.Id;
+            port.OwnerNodeId = node.Id;
         }
         foreach (var portDoc in doc.CustomOutputPorts)
         {
@@ -208,7 +218,10 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
                        ?? node.AddCustomOutputPort(portDoc.Name, portDoc.BoundProperty);
             if (!string.IsNullOrEmpty(portDoc.BoundProperty))
                 port.PropertyName = portDoc.BoundProperty;
+            if (portDoc.DataType.HasValue)
+                port.DataType = portDoc.DataType.Value;
             port.Id = portDoc.Id;
+            port.OwnerNodeId = node.Id;
         }
 
         // 还原附加属性

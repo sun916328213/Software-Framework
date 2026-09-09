@@ -51,6 +51,22 @@ public interface INodeExecutable
 
     /// <summary>控制流端口名列表；非控制流节点返回 null。</summary>
     IReadOnlyList<string>? ControlFlowPorts { get; }
+
+    /// <summary>多个控制流输入的汇聚策略；普通节点使用全部依赖解析后继续。</summary>
+    FlowJoinMode FlowJoinMode { get; }
+}
+
+/// <summary>节点具有多个控制流输入时的调度策略。</summary>
+public enum FlowJoinMode
+{
+    /// <summary>兼容模式：等待全部入边解析，任一活动路径到达即可继续。</summary>
+    WaitAllAnyActive,
+
+    /// <summary>AND：全部控制流输入都实际完成后才继续。</summary>
+    AllActive,
+
+    /// <summary>OR：任一控制流输入实际完成后立即继续。</summary>
+    AnyActive
 }
 
 /// <summary>

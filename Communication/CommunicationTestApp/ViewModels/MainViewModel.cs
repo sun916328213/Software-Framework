@@ -1,12 +1,15 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
 using CommunicationNew.Core;
 using CommunicationTestApp.Services;
 using CommunicationTestApp.Views;
+using Microsoft.Win32;
 
 namespace CommunicationTestApp.ViewModels;
 
@@ -37,6 +40,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _txCountText = "0";
     private long _rxCount;
     private long _txCount;
+    private string _deviceSummary = "设备 0 · 在线 0";
+    private string _lastElapsed = "-";
+    private bool _isBusy;
+    private CancellationTokenSource? _operationCts;
+    private string _logKeyword = string.Empty;
+    private string _logLevelFilter = "全部";
+    private string _statusHint = "就绪";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -54,7 +64,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
         CommunicationSessionService.ReceiveDisplayFormat = _useHex ? "HEX" : "文本";
         _log.RxReceived += OnRxCounted;
         _log.TxReceived += OnTxCounted;
+
+        LogLevelOptions = ["全部", "INFO", "OK", "WARN", "FAIL", "RX", "TX"];
+        var view = CollectionViewSource.GetDefaultView(Logs);
+        view.Filter = FilterLog;
     }
+
+    public IReadOnlyList<string> LogLevelOptions { get; }
 
     // ===== 绑定属性 =====
 
@@ -150,15 +166,69 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public string AddressHint => SelectedDevice?.Info.AddressHint ?? "-";
 
+    /// <summary>设备总数/在线数汇总（状态栏与标题区共用）。</summary>
+    public string DeviceSummary
+    {
+        get => _deviceSummary;
+        private set => SetField(ref _deviceSummary, value);
+    }
+
+    /// <summary>最近一次读写/收发耗时。</summary>
+    public string LastElapsed
+    {
+        get => _lastElapsed;
+        private set => SetField(ref _lastElapsed, value);
+    }
+
+    /// <summary>是否有耗时操作正在执行（批量/读写共用，驱动取消按钮与忙指示）。</summary>
+    public bool IsBusy
+    {
+        get => _isBusy;
+        private set => SetField(ref _isBusy, value);
+    }
+
+    /// <summary>状态提示（就绪/执行中/已取消/失败原因）。</summary>
+    public string StatusHint
+    {
+        get => _statusHint;
+        private set => SetField(ref _statusHint, value);
+    }
+
+    /// <summary>日志级别过滤（全部/INFO/OK/WARN/FAIL/RX/TX）。</summary>
+    public string LogLevelFilter
+    {
+        get => _logLevelFilter;
+        set
+        {
+            if (SetField(ref _logLevelFilter, value))
+            {
+                RefreshLogFilter();
+            }
+        }
+    }
+
+    /// <summary>日志关键字过滤（匹配来源与内容，不区分大小写）。</summary>
+    public string LogKeyword
+    {
+        get => _logKeyword;
+        set
+        {
+            if (SetField(ref _logKeyword, value))
+            {
+                RefreshLogFilter();
+            }
+        }
+    }
+
     public bool HasDevice => SelectedDevice is not null;
 
-    public bool DeviceSupportsAddress => SelectedDevice is { Info.SupportsAddressRead: true };
+    /// <summary>地址读写能力：IAddressReader + 协议目录双重判定，避免 TCP/UDP/Serial 伪装成功。</summary>
+    public bool DeviceSupportsAddress => SelectedDevice is not null
+        && ProtocolCatalog.SupportsAddress(SelectedDevice.Device);
 
+    /// <summary>原始收发能力：仅 TCP/UDP/Serial 字节流/数据报；HTTP/WebApi 高层 adapter 不走此 seam。</summary>
     public bool DeviceSupportsRaw => SelectedDevice is not null
-        && SelectedDevice.Device.ProtocolType is ProtocolType.Tcp
-            or ProtocolType.Udp
-            or ProtocolType.Serial
-            or ProtocolType.Http;
+        && ProtocolCatalog.SupportsRaw(SelectedDevice.Device.ProtocolType);
 
     // ===== 命令 =====
 
@@ -192,6 +262,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
         async _ => await SendAndReceiveSelectedAsync(),
         _ => DeviceSupportsRaw);
 
+    public ICommand ConnectAllCommand => new RelayCommand(
+        async _ => await ConnectAllAsync(),
+        _ => Devices.Count > 0 && !IsBusy);
+
+    public ICommand DisconnectAllCommand => new RelayCommand(
+        async _ => await DisconnectAllAsync(),
+        _ => Devices.Count > 0 && !IsBusy);
+
+    public ICommand CancelOperationCommand => new RelayCommand(
+        _ => _operationCts?.Cancel(),
+        _ => IsBusy);
+
+    public ICommand ExportLogCommand => new RelayCommand(_ => ExportLog());
+
+    public ICommand SaveConfigCommand => new RelayCommand(_ => SaveConfig());
+
+    public ICommand LoadConfigCommand => new RelayCommand(async _ => await LoadConfigAsync());
+
     public ICommand ClearLogCommand => new RelayCommand(_ => _log.Clear());
 
     public ICommand ResetCountersCommand => new RelayCommand(() =>
@@ -202,12 +290,22 @@ public sealed class MainViewModel : INotifyPropertyChanged
         TxCountText = "0";
     });
 
-    /// <summary>黑白主题切换。</summary>
+    /// <summary>黑白主题切换（切换后写日志 + 状态栏反馈，点下去一定看得见）。</summary>
     public ICommand ToggleThemeCommand => new RelayCommand(() =>
     {
         _theme.Toggle();
         OnPropertyChanged(nameof(IsDarkTheme));
         OnPropertyChanged(nameof(ThemeIcon));
+        var name = _theme.IsDarkTheme ? "深色" : "浅色";
+        StatusHint = $"{name}主题";
+        if (_theme.LastError is null)
+        {
+            _log.Success("Session", $"已切换{name}主题");
+        }
+        else
+        {
+            _log.Warning("Session", $"已切换{name}主题，但{_theme.LastError}");
+        }
     });
 
     /// <summary>当前是否深色主题（控制切换按钮图标）。</summary>
@@ -228,11 +326,78 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     return;
                 }
 
-                var device = _session.CreateDevice(param);
-                var vm = new DeviceViewModel(device);
-                Devices.Add(vm);
-                SelectedDevice = vm;
+                try
+                {
+                    var device = _session.CreateDevice(param);
+                    var vm = new DeviceViewModel(device);
+                    vm.PropertyChanged += (_, e) =>
+                    {
+                        if (e.PropertyName == nameof(DeviceViewModel.IsConnected))
+                        {
+                            UpdateSummary();
+                        }
+                    };
+                    Devices.Add(vm);
+                    SelectedDevice = vm;
+                    UpdateSummary();
+                }
+                catch (Exception ex)
+                {
+                    _log.Error("Session", $"创建设备失败: {ex.Message}");
+                }
             }));
+    }
+
+    private async Task ConnectAllAsync()
+    {
+        if (Devices.Count == 0)
+        {
+            return;
+        }
+        await RunBatchOperation("全部连接", ct => _session.ConnectAllAsync(ct));
+    }
+
+    private async Task DisconnectAllAsync()
+    {
+        if (Devices.Count == 0)
+        {
+            return;
+        }
+        await RunBatchOperation("全部断开", ct => _session.DisconnectAllAsync(ct));
+    }
+
+    private async Task RunBatchOperation(string name, Func<CancellationToken, Task> operation)
+    {
+        IsBusy = true;
+        StatusHint = $"{name}执行中…（可取消）";
+        _operationCts = new CancellationTokenSource();
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        try
+        {
+            await operation(_operationCts.Token);
+            _log.Success("Session", $"{name}完成, {sw.ElapsedMilliseconds} ms");
+            StatusHint = $"{name}完成";
+        }
+        catch (OperationCanceledException)
+        {
+            _log.Warning("Session", $"{name}已取消");
+            StatusHint = $"{name}已取消";
+        }
+        catch (Exception ex)
+        {
+            _log.Error("Session", $"{name}失败: {ex.Message}");
+            StatusHint = $"{name}失败";
+        }
+        finally
+        {
+            sw.Stop();
+            LastElapsed = $"{sw.ElapsedMilliseconds} ms";
+            _operationCts?.Dispose();
+            _operationCts = null;
+            IsBusy = false;
+            UpdateSummary();
+            CommandManager.InvalidateRequerySuggested();
+        }
     }
 
     private async Task ConnectSelectedAsync()
@@ -242,15 +407,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
-        device.IsBusy = true;
-        try
-        {
-            await RunDeviceOperation(device, () => _session.ConnectDeviceAsync(device.Device));
-        }
-        finally
-        {
-            device.IsBusy = false;
-        }
+        await RunDeviceOperation(device, ct => _session.ConnectDeviceAsync(device.Device, ct));
     }
 
     private async Task DisconnectSelectedAsync()
@@ -260,15 +417,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
-        device.IsBusy = true;
-        try
-        {
-            await RunDeviceOperation(device, () => _session.DisconnectDeviceAsync(device.Device));
-        }
-        finally
-        {
-            device.IsBusy = false;
-        }
+        await RunDeviceOperation(device, ct => _session.DisconnectDeviceAsync(device.Device, ct));
     }
 
     private async Task RemoveSelectedAsync()
@@ -279,11 +428,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         var index = Devices.IndexOf(device);
-        await RunDeviceOperation(device, () => _session.RemoveDeviceAsync(device.Id));
+        await RunDeviceOperation(device, async ct => { await _session.RemoveDeviceAsync(device.Id); });
         Devices.Remove(device);
         SelectedDevice = Devices.Count > 0
             ? Devices[Math.Clamp(index, 0, Devices.Count - 1)]
             : null;
+        UpdateSummary();
+    }
+
+    private void UpdateSummary()
+    {
+        var online = Devices.Count(d => d.IsConnected);
+        DeviceSummary = $"设备 {Devices.Count} · 在线 {online}";
     }
 
     private async Task ReadSelectedAsync()
@@ -294,11 +450,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         var address = ReadAddress.Trim();
-        await RunDeviceOperation(device, async () =>
+        await RunDeviceOperation(device, async ct =>
         {
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            var data = await device.Device.ReadAsync(address, length);
+            var data = await device.Device.ReadAsync(address, length, ct);
             sw.Stop();
+            LastElapsed = $"{sw.ElapsedMilliseconds} ms";
             ReadResult = data.Length > 0 ? ToHex(data) : "(空响应)";
             _log.Success(device.Name, $"读取 {address}×{length} → {data.Length} 字节, {sw.ElapsedMilliseconds} ms");
             _log.Rx(device.Name, ReadResult);
@@ -319,11 +476,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
-        await RunDeviceOperation(device, async () =>
+        await RunDeviceOperation(device, async ct =>
         {
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            var ok = await device.Device.WriteAsync(address, data);
+            var ok = await device.Device.WriteAsync(address, data, ct);
             sw.Stop();
+            LastElapsed = $"{sw.ElapsedMilliseconds} ms";
             _log.Success(device.Name, $"写入 {address} → {(ok ? "成功" : "失败")}, {sw.ElapsedMilliseconds} ms");
             _log.Tx(device.Name, ToHex(data));
         });
@@ -342,11 +500,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
-        await RunDeviceOperation(device, async () =>
+        await RunDeviceOperation(device, async ct =>
         {
-            var ok = await device.Device.SendAsync(payload);
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var ok = await device.Device.SendAsync(payload, ct);
+            sw.Stop();
+            LastElapsed = $"{sw.ElapsedMilliseconds} ms";
             _log.Tx(device.Name, ToDisplay(payload));
-            _log.Success(device.Name, ok ? "发送成功" : "发送失败");
+            _log.Success(device.Name, ok ? $"发送成功, {sw.ElapsedMilliseconds} ms" : "发送失败");
         });
     }
 
@@ -363,33 +524,172 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
-        await RunDeviceOperation(device, async () =>
+        await RunDeviceOperation(device, async ct =>
         {
-            var response = await device.Device.SendAndReceiveAsync(payload);
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var response = await device.Device.SendAndReceiveAsync(payload, ct);
+            sw.Stop();
+            LastElapsed = $"{sw.ElapsedMilliseconds} ms";
             _lastResponse = response;
             RawResult = ToDisplayRx(response);
             _log.Tx(device.Name, ToDisplay(payload));
-            _log.Rx(device.Name, RawResult);
+            _log.Rx(device.Name, $"{RawResult} ({sw.ElapsedMilliseconds} ms)");
         });
     }
 
     // ===== 辅助 =====
 
-    private async Task RunDeviceOperation(DeviceViewModel device, Func<Task> operation)
+    /// <summary>单设备操作：可取消（超时/取消按钮），耗时计入 LastElapsed，取消与失败分别记录。</summary>
+    private async Task RunDeviceOperation(DeviceViewModel device, Func<CancellationToken, Task> operation)
     {
         device.IsBusy = true;
+        IsBusy = true;
+        StatusHint = $"{device.Name} 执行中…（可取消）";
+        _operationCts = new CancellationTokenSource();
         try
         {
-            await operation();
+            await operation(_operationCts.Token);
+            StatusHint = "就绪";
+        }
+        catch (OperationCanceledException)
+        {
+            _log.Warning(device.Name, "操作已取消");
+            StatusHint = "已取消";
         }
         catch (Exception ex)
         {
             _log.Error(device.Name, ex.Message);
+            StatusHint = $"失败: {ex.Message}";
         }
         finally
         {
             device.IsBusy = false;
+            _operationCts?.Dispose();
+            _operationCts = null;
+            IsBusy = false;
+            UpdateSummary();
+            CommandManager.InvalidateRequerySuggested();
         }
+    }
+
+    private bool FilterLog(object item)
+    {
+        if (item is not LogEntry entry)
+        {
+            return false;
+        }
+        if (_logLevelFilter != "全部" && entry.LevelText.Trim() != _logLevelFilter)
+        {
+            return false;
+        }
+        if (!string.IsNullOrWhiteSpace(_logKeyword))
+        {
+            var keyword = _logKeyword.Trim();
+            if (!entry.Source.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                && !entry.Message.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void RefreshLogFilter() =>
+        CollectionViewSource.GetDefaultView(Logs).Refresh();
+
+    private void ExportLog()
+    {
+        var dialog = new SaveFileDialog
+        {
+            Filter = "文本文件 (*.txt)|*.txt|CSV (*.csv)|*.csv",
+            FileName = $"comm-log-{DateTime.Now:yyyyMMdd-HHmmss}.txt",
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+        try
+        {
+            var lines = Logs.Select(e => $"{e.TimeText}\t{e.LevelText.Trim()}\t{e.Source}\t{e.Message}");
+            File.WriteAllLines(dialog.FileName, lines, Encoding.UTF8);
+            _log.Success("Session", $"日志已导出 {Logs.Count} 条 → {dialog.FileName}");
+        }
+        catch (Exception ex)
+        {
+            _log.Error("Session", $"导出日志失败: {ex.Message}");
+        }
+    }
+
+    private void SaveConfig()
+    {
+        var dialog = new SaveFileDialog
+        {
+            Filter = "JSON (*.json)|*.json",
+            FileName = $"comm-devices-{DateTime.Now:yyyyMMdd-HHmmss}.json",
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+        try
+        {
+            DeviceConfigStore.Save(dialog.FileName, _session.GetAllParams());
+            _log.Success("Session", $"配置已保存 {Devices.Count} 台 → {dialog.FileName}");
+        }
+        catch (Exception ex)
+        {
+            _log.Error("Session", $"保存配置失败: {ex.Message}");
+        }
+    }
+
+    private async Task LoadConfigAsync()
+    {
+        var dialog = new OpenFileDialog { Filter = "JSON (*.json)|*.json" };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+        List<CommunicationParam> parameters;
+        int skipped;
+        try
+        {
+            (parameters, skipped) = DeviceConfigStore.Load(dialog.FileName);
+        }
+        catch (Exception ex)
+        {
+            _log.Error("Session", $"加载配置失败: {ex.Message}");
+            return;
+        }
+        var restored = 0;
+        foreach (var param in parameters)
+        {
+            try
+            {
+                var device = _session.RestoreDevice(param);
+                var vm = new DeviceViewModel(device);
+                vm.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName == nameof(DeviceViewModel.IsConnected))
+                    {
+                        UpdateSummary();
+                    }
+                };
+                Devices.Add(vm);
+                restored++;
+            }
+            catch (Exception ex)
+            {
+                _log.Error("Session", $"恢复 [{param.DeviceName}] 失败: {ex.Message}");
+                skipped++;
+            }
+        }
+        if (Devices.Count > 0 && SelectedDevice is null)
+        {
+            SelectedDevice = Devices[0];
+        }
+        UpdateSummary();
+        _log.Success("Session", $"配置恢复 {restored} 台，跳过 {skipped} 条");
+        await Task.CompletedTask;
     }
 
     private void UpdateOperationHints()

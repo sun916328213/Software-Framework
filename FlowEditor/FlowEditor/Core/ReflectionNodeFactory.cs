@@ -117,7 +117,10 @@ public sealed class ReflectionNodeFactory : INodeFactory
                 if (!string.IsNullOrEmpty(portDoc.BoundProperty))
                     port.PropertyName = portDoc.BoundProperty;
             }
+            if (portDoc.DataType.HasValue)
+                port.DataType = portDoc.DataType.Value;
             port.Id = portDoc.Id;
+            port.OwnerNodeId = node.Id;
         }
     }
 

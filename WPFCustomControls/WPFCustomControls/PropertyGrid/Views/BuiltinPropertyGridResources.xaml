@@ -34,6 +34,16 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="HorizontalAlignment" Value="Left" />
         <Setter Property="Foreground" Value="{StaticResource Color_Gray11}" />
+        <Setter Property="ToolTip" Value="{Binding Description}" />
+        <Setter Property="ToolTip.Placement" Value="Right" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Description}" Value="">
+                <Setter Property="ToolTip" Value="{x:Null}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Description}" Value="{x:Null}">
+                <Setter Property="ToolTip" Value="{x:Null}" />
+            </DataTrigger>
+        </Style.Triggers>
     </Style>
 
     <Style
@@ -513,11 +523,6 @@
                     Style="{StaticResource LabelStyle}"
                     Text="{Binding DisplayName}"
                     TextTrimming="CharacterEllipsis" />
-                <TextBlock
-                    Margin="3,0,0,0"
-                    Text="ⓘ"
-                    ToolTip="{Binding Description}"
-                    Visibility="{Binding Description, Converter={StaticResource PG_StringNotEmptyToVis}}" />
             </StackPanel>
             <TextBox
                 Grid.Column="1"
@@ -553,11 +558,7 @@
                     Style="{StaticResource LabelStyle}"
                     Text="{Binding DisplayName}"
                     TextTrimming="CharacterEllipsis" />
-                <TextBlock
-                    Margin="3,0,0,0"
-                    Text="ⓘ"
-                    ToolTip="{Binding Description}"
-                    Visibility="{Binding Description, Converter={StaticResource PG_StringNotEmptyToVis}}" />
+
             </StackPanel>
             <CheckBox
                 Grid.Column="1"
@@ -594,11 +595,7 @@
                     Style="{StaticResource LabelStyle}"
                     Text="{Binding DisplayName}"
                     TextTrimming="CharacterEllipsis" />
-                <TextBlock
-                    Margin="3,0,0,0"
-                    Text="ⓘ"
-                    ToolTip="{Binding Description}"
-                    Visibility="{Binding Description, Converter={StaticResource PG_StringNotEmptyToVis}}" />
+
             </StackPanel>
             <ComboBox
                 Grid.Column="1"
@@ -637,11 +634,7 @@
                     Style="{StaticResource LabelStyle}"
                     Text="{Binding DisplayName}"
                     TextTrimming="CharacterEllipsis" />
-                <TextBlock
-                    Margin="3,0,0,0"
-                    Text="ⓘ"
-                    ToolTip="{Binding Description}"
-                    Visibility="{Binding Description, Converter={StaticResource PG_StringNotEmptyToVis}}" />
+
             </StackPanel>
             <Grid Grid.Column="1">
                 <Grid.ColumnDefinitions>
@@ -714,12 +707,8 @@
                 <TextBlock
                     FontWeight="SemiBold"
                     Text="{Binding DisplayName}"
-                    TextTrimming="CharacterEllipsis" />
-                <TextBlock
-                    Margin="3,0,0,0"
-                    Text="ⓘ"
-                    ToolTip="{Binding Description}"
-                    Visibility="{Binding Description, Converter={StaticResource PG_StringNotEmptyToVis}}" />
+                    TextTrimming="CharacterEllipsis"
+                    ToolTip="{Binding Description}" />
                 <Border
                     Margin="6,0,0,0"
                     Padding="6,1,6,1"
@@ -781,7 +770,7 @@
         </StackPanel>
     </DataTemplate>
 
-        <svc:PropertyEditorSelector
+    <svc:PropertyEditorSelector
         x:Key="PG_PropertyEditorSelector"
         BoolTemplate="{StaticResource PG_BoolEditorTemplate}"
         CollectionTemplate="{StaticResource PG_CollectionEditorTemplate}"

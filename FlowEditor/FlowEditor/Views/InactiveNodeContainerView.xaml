@@ -1,0 +1,78 @@
+<UserControl
+    x:Class="FlowEditor.Views.InactiveNodeContainerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:FlowEditor.Converters"
+    xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
+    Width="{Binding Model.ContainerWidth}"
+    Height="{Binding Model.ContainerHeight}"
+    Background="Transparent"
+    IsHitTestVisible="True">
+
+    <UserControl.Resources>
+        <converters:NodeStatusToBrushConverter x:Key="NodeStatusToBrushConverter" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <!--  容器的颜色、尺寸、线型均集中在此 XAML，可在设计器中直接实时调整。  -->
+    <Grid Background="Transparent">
+        <Border
+            x:Name="NodeBorder"
+            Background="Transparent"
+            BorderBrush="{Binding Status, Converter={StaticResource NodeStatusToBrushConverter}}"
+            BorderThickness="2"
+            CornerRadius="20" />
+        <Rectangle
+            Fill="Gray"
+            RadiusX="20"
+            RadiusY="20"
+            Stroke="#8A98A8"
+            StrokeDashArray="8,4" Opacity="0.4"
+            StrokeThickness="1.5" />
+        <StackPanel
+            x:Name="TitleBar"
+            Margin="14,12"
+            VerticalAlignment="Top"
+            Background="Transparent"
+            Cursor="SizeAll">
+            <TextBlock
+                FontSize="14"
+                FontWeight="SemiBold"
+                Foreground="#526273"
+                Text="{Binding Name}" />
+            <TextBlock
+                Margin="0,4,0,0"
+                FontSize="10"
+                Foreground="#7C8998"
+                Text="拖入此区域的节点仅保存配置，不参与校验和执行"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        <Ellipse
+            x:Name="SelectionIndicator"
+            Width="10"
+            Height="10"
+            Margin="0,16,16,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Fill="{StaticResource Flow_Indicator_Active}"
+            Visibility="{Binding IsSelected, Converter={StaticResource BoolToVis}}" />
+        <primitives:Thumb
+            x:Name="ResizeThumb"
+            Width="20"
+            Height="20"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Background="Transparent"
+            Cursor="SizeNWSE"
+            DragCompleted="OnResizeCompleted"
+            DragDelta="OnResizeDelta">
+            <primitives:Thumb.Template>
+                <ControlTemplate TargetType="primitives:Thumb">
+                    <Grid Background="Transparent">
+                        <Path Margin="3" Data="M 2,14 L 14,2 M 8,14 L 14,8" Stroke="#657587" StrokeThickness="1.5" />
+                    </Grid>
+                </ControlTemplate>
+            </primitives:Thumb.Template>
+        </primitives:Thumb>
+    </Grid>
+</UserControl>

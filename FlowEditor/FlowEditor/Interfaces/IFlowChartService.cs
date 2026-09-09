@@ -49,6 +49,9 @@ public interface IFlowChartService
     /// <summary>单步继续（调试模式）。</summary>
     void StepContinue();
 
+    /// <summary>仅执行用户当前选中的一个节点，不沿连线调度下游。</summary>
+    Task StepContinueAsync(NodeViewModel node, Action<string> logCallback);
+
     /// <summary>调试控制器：断点与单步门闩（P4）。</summary>
     DebugController Debug { get; }
 

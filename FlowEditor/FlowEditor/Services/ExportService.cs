@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FlowEditor.Interfaces;
@@ -38,6 +39,57 @@ public class ExportService : IExportService
         encoder.Save(stream);
     }
 
+    public void ExportToPng(FrameworkElement element, string filePath, Rect contentBounds, double scale)
+    {
+        ArgumentNullException.ThrowIfNull(element);
+        if (contentBounds.IsEmpty || contentBounds.Width <= 0 || contentBounds.Height <= 0)
+            throw new ArgumentOutOfRangeException(nameof(contentBounds), "导出区域必须具有有效尺寸。");
+
+        scale = Math.Clamp(scale, 0.5, 4.0);
+        element.UpdateLayout();
+        var pixelWidth = Math.Max(1, (int)Math.Ceiling(contentBounds.Width * scale));
+        var pixelHeight = Math.Max(1, (int)Math.Ceiling(contentBounds.Height * scale));
+
+        // 画布点阵仅用于编辑，不写入 PNG；节点自身背景仍按各自 XAML 样式渲染。
+        Brush? originalBackground = null;
+        if (element is Panel panel)
+        {
+            originalBackground = panel.Background;
+            panel.Background = Brushes.Transparent;
+        }
+
+        try
+        {
+            var visual = new DrawingVisual();
+            using (var drawing = visual.RenderOpen())
+            {
+                var brush = new VisualBrush(element)
+                {
+                    Stretch = Stretch.None,
+                    AlignmentX = AlignmentX.Left,
+                    AlignmentY = AlignmentY.Top,
+                    ViewboxUnits = BrushMappingMode.Absolute,
+                    Viewbox = contentBounds
+                };
+                drawing.DrawRectangle(brush, null,
+                    new Rect(0, 0, contentBounds.Width, contentBounds.Height));
+            }
+
+            var bitmap = new RenderTargetBitmap(
+                pixelWidth, pixelHeight, 96 * scale, 96 * scale, PixelFormats.Pbgra32);
+            bitmap.Render(visual);
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+            using var stream = File.Create(filePath);
+            encoder.Save(stream);
+        }
+        finally
+        {
+            if (element is Panel restorePanel)
+                restorePanel.Background = originalBackground;
+        }
+    }
+
     /// <summary>
     /// 将 FrameworkElement 导出为 SVG 文件（简化版，使用矩形占位 + 尺寸元信息）。
     /// 完整节点/连线矢量导出建议接入专业库。
@@ -73,6 +125,20 @@ public class ExportService : IExportService
             return true;
         }
         return false;
+    }
+
+    public bool ExportToPngWithDialog(
+        FrameworkElement element, Rect contentBounds, double scale = 2.0)
+    {
+        var dlg = new SaveFileDialog
+        {
+            Filter = "PNG 图片 (*.png)|*.png",
+            FileName = "FlowChart.png",
+            DefaultExt = ".png"
+        };
+        if (dlg.ShowDialog() != true) return false;
+        ExportToPng(element, dlg.FileName, contentBounds, scale);
+        return true;
     }
 
     /// <summary>

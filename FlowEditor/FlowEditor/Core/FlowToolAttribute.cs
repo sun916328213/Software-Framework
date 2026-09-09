@@ -27,6 +27,9 @@ public class FlowToolAttribute : Attribute
     /// <summary>鼠标悬浮提示描述。</summary>
     public string Description { get; set; } = string.Empty;
 
+    /// <summary>是否显示在新建节点工具箱；关闭后仍可反序列化历史流程。</summary>
+    public bool VisibleInToolbox { get; set; } = true;
+
     /// <summary>
     /// 标记节点工具。
     /// </summary>

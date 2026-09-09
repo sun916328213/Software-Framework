@@ -59,6 +59,66 @@ public class ActivationControlFlowTests
     }
 
     [Fact]
+    public async Task Condition_SelectedBranchRejoinsCommonSuccessor_CommonSuccessorExecutes()
+    {
+        var dispatch = new NodeViewModel(new SwitchNode
+        {
+            Name = "Dispatch",
+            InputValue = 1,
+            RulesText = "1=OUT1\n2=OUT2"
+        });
+        var (delay1, delay1Model) = New<CountingNode>("Delay1");
+        var (delay2, delay2Model) = New<CountingNode>("Delay2");
+        var (delay3, delay3Model) = New<CountingNode>("Delay3");
+        var nodes = new List<NodeViewModel> { dispatch, delay1, delay2, delay3 };
+        var conns = new List<ConnectionModel>
+        {
+            Branch(dispatch, "OUT1", delay1),
+            Branch(dispatch, "OUT2", delay2),
+            Flow(delay1, delay3),
+            Flow(delay2, delay3),
+        };
+
+        await _engine.ExecuteAsync(nodes, conns, CancellationToken.None, _ => { });
+
+        Assert.Equal(1, delay1Model.Executions);
+        Assert.Equal(0, delay2Model.Executions);
+        Assert.Equal(1, delay3Model.Executions);
+        Assert.Equal(NodeStatus.Success, delay3.Status);
+    }
+
+    [Fact]
+    public async Task Dispatch_NoRuleMatched_RejoinIsStoppedByDispatchError()
+    {
+        var dispatch = new NodeViewModel(new SwitchNode
+        {
+            Name = "Dispatch",
+            InputValue = 99,
+            RulesText = "1=OUT1\n2=OUT2",
+            UseDefaultBranch = false
+        });
+        var delay1 = New<CountingNode>("Delay1").Vm;
+        var delay2 = New<CountingNode>("Delay2").Vm;
+        var (delay3, delay3Model) = New<CountingNode>("Delay3");
+        var nodes = new List<NodeViewModel> { dispatch, delay1, delay2, delay3 };
+        var conns = new List<ConnectionModel>
+        {
+            Branch(dispatch, "OUT1", delay1),
+            Branch(dispatch, "OUT2", delay2),
+            Flow(delay1, delay3),
+            Flow(delay2, delay3),
+        };
+
+        var error = await Assert.ThrowsAsync<AggregateException>(() =>
+            _engine.ExecuteAsync(nodes, conns, CancellationToken.None, _ => { }));
+
+        Assert.Contains("没有匹配的分发规则", error.ToString());
+        Assert.Equal(NodeStatus.Error, dispatch.Status);
+        Assert.Equal(0, delay3Model.Executions);
+        Assert.Equal(NodeStatus.Idle, delay3.Status);
+    }
+
+    [Fact]
     public async Task Condition_LegacyFallback_NoBranchWiring_RunsAllSuccessors()
     {
         var (a, _) = New<ValueNode>("A");
