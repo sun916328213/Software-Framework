@@ -2,7 +2,7 @@ using System.IO;
 using System.Text.Json;
 using CommunicationNew.Core;
 
-namespace CommunicationTestApp.Services;
+namespace Communication.Workbench.Services;
 
 /// <summary>
 /// 设备配置持久化 —— 把 <see cref="CommunicationNew"/> 具体 Param 按协议类型 JSON 化，

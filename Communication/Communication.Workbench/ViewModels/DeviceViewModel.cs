@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using System.Windows.Media;
 using CommunicationNew.Core;
-using CommunicationTestApp.Services;
+using Communication.Workbench.Services;
 
-namespace CommunicationTestApp.ViewModels;
+namespace Communication.Workbench.ViewModels;
 
 /// <summary>设备列表行视图模型。</summary>
 public sealed class DeviceViewModel : INotifyPropertyChanged

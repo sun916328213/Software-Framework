@@ -7,11 +7,11 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
 using CommunicationNew.Core;
-using CommunicationTestApp.Services;
-using CommunicationTestApp.Views;
+using Communication.Workbench.Services;
+using Communication.Workbench.Views;
 using Microsoft.Win32;
 
-namespace CommunicationTestApp.ViewModels;
+namespace Communication.Workbench.ViewModels;
 
 /// <summary>
 /// 主窗口视图模型 —— 通讯测试程序的核心。
@@ -68,6 +68,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         LogLevelOptions = ["全部", "INFO", "OK", "WARN", "FAIL", "RX", "TX"];
         var view = CollectionViewSource.GetDefaultView(Logs);
         view.Filter = FilterLog;
+        _log.Info("Session", $"主题引擎 {Services.ThemeService.EngineTag} 就绪，当前{(_theme.IsDarkTheme ? "深色" : "浅色")}");
     }
 
     public IReadOnlyList<string> LogLevelOptions { get; }

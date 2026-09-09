@@ -1,9 +1,9 @@
 using System.Windows;
 using System.Windows.Media;
-using CommunicationTestApp.Services;
-using CommunicationTestApp.ViewModels;
+using Communication.Workbench.Services;
+using Communication.Workbench.ViewModels;
 
-namespace CommunicationTestApp.Views;
+namespace Communication.Workbench.Views;
 
 /// <summary>主窗口。</summary>
 public partial class MainWindow : Window

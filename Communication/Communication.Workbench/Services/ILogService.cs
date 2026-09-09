@@ -3,7 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace CommunicationTestApp.Services;
+namespace Communication.Workbench.Services;
 
 /// <summary>日志级别</summary>
 public enum LogLevel

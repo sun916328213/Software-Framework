@@ -3,9 +3,9 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Windows.Input;
 using CommunicationNew.Core;
-using CommunicationTestApp.Services;
+using Communication.Workbench.Services;
 
-namespace CommunicationTestApp.ViewModels;
+namespace Communication.Workbench.ViewModels;
 
 /// <summary>单个参数编辑字段（反射驱动，含枚举/布尔/数值/文本四种编辑形态）。</summary>
 public sealed class ParamField : INotifyPropertyChanged

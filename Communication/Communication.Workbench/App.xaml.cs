@@ -1,7 +1,7 @@
 using Prism.DryIoc;
 using System.Windows;
 
-namespace CommunicationTestApp;
+namespace Communication.Workbench;
 
 public partial class App : PrismApplication
 {

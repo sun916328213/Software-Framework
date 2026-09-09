@@ -1,8 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
-using CommunicationTestApp.ViewModels;
+using Communication.Workbench.ViewModels;
 
-namespace CommunicationTestApp.Views;
+namespace Communication.Workbench.Views;
 
 /// <summary>设备配置对话框视图（由 Prism DialogWindow 宿主承载）—— 按参数类型选择编辑模板。</summary>
 public partial class DeviceConfigDialog : UserControl

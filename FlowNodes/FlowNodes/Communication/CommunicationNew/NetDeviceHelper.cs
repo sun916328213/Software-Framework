@@ -14,7 +14,7 @@ namespace FlowNodes.Communication.CommunicationNew;
 
 /// <summary>
 /// 新通讯节点的共享逻辑：设备查找、连接/断开（含 <see cref="IConnection"/> 快捷路径，
-/// 与 CommunicationTestApp 的 CommunicationSessionService 保持一致）、文本/HEX 编解码。
+/// 与 Communication.Workbench 的 CommunicationSessionService 保持一致）、文本/HEX 编解码。
 /// </summary>
 internal static class NetDeviceHelper
 {

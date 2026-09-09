@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication", "Communicat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunicationNew", "CommunicationNew\CommunicationNew.csproj", "{98EC4EAF-2C6D-49AC-A651-F69018232419}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunicationTestApp", "CommunicationTestApp\CommunicationTestApp.csproj", "{E201BB1D-C854-47AB-9A9F-59CAD57694B8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication.Workbench", "Communication.Workbench\Communication.Workbench.csproj", "{E201BB1D-C854-47AB-9A9F-59CAD57694B8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunicationNew.MxComponentBridge", "CommunicationNew.MxComponentBridge\CommunicationNew.MxComponentBridge.csproj", "{B468E7BA-E55B-4B67-A77E-28EED14C06B0}"
 EndProject

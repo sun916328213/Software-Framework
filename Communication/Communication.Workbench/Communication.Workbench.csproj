@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -7,8 +7,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>13.0</LangVersion>
-    <RootNamespace>CommunicationTestApp</RootNamespace>
-    <AssemblyName>CommunicationTestApp</AssemblyName>
+    <RootNamespace>Communication.Workbench</RootNamespace>
+    <AssemblyName>Communication.Workbench</AssemblyName>
     <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
 

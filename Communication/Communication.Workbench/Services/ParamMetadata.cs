@@ -1,4 +1,4 @@
-namespace CommunicationTestApp.Services;
+namespace Communication.Workbench.Services;
 
 /// <summary>
 /// 参数中文字典 —— CommunicationNew 的 Param 属性名是英文，

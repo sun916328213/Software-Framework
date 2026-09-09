@@ -85,7 +85,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor", "FlowEditor\Fl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Tests", "FlowEditor\FlowEditorTest\FlowEditor.Tests.csproj", "{35924ED8-6AE7-0EE5-B410-37DA13AB0C01}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication.Workbench", "Communication\CommunicationTestApp\Communication.Workbench.csproj", "{EBAA3804-A5AB-D8D1-30F7-D1041109D60B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication.Workbench", "Communication\Communication.Workbench\Communication.Workbench.csproj", "{EBAA3804-A5AB-D8D1-30F7-D1041109D60B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFCustomControls.PropertyGrid.Core", "WPFCustomControls\WPFCustomControls.PropertyGrid.Core\WPFCustomControls.PropertyGrid.Core.csproj", "{8F79A21F-6303-44F3-AEB2-57664FA4F394}"
 EndProject

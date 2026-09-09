@@ -1,10 +1,10 @@
 ﻿<Window
-    x:Class="CommunicationTestApp.Views.MainWindow"
+    x:Class="Communication.Workbench.Views.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:vm="clr-namespace:CommunicationTestApp.ViewModels"
+    xmlns:vm="clr-namespace:Communication.Workbench.ViewModels"
     Title="通讯测试台 · CommunicationNew Workbench"
     Width="1280"
     Height="800"
@@ -18,8 +18,8 @@
     mc:Ignorable="d">
 
     <Window.Resources>
-        <v:LevelToBrushConverter xmlns:v="clr-namespace:CommunicationTestApp.Views" x:Key="LevelBrush" />
-        <v:ConnectedToBrushConverter xmlns:v="clr-namespace:CommunicationTestApp.Views" x:Key="ConnectedBrush" />
+        <v:LevelToBrushConverter xmlns:v="clr-namespace:Communication.Workbench.Views" x:Key="LevelBrush" />
+        <v:ConnectedToBrushConverter xmlns:v="clr-namespace:Communication.Workbench.Views" x:Key="ConnectedBrush" />
 
         <!--  设备列表行模板  -->
         <DataTemplate x:Key="DeviceItemTemplate" DataType="{x:Type vm:DeviceViewModel}">

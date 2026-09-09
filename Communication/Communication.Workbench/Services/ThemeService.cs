@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Media;
 using MaterialDesignThemes.Wpf;
 
-namespace CommunicationTestApp.Services;
+namespace Communication.Workbench.Services;
 
 /// <summary>
 /// 黑白主题切换服务。
@@ -14,6 +14,9 @@ namespace CommunicationTestApp.Services;
 /// </summary>
 public sealed class ThemeService
 {
+    /// <summary>主题引擎版本标记（启动日志自证，防止旧 exe 误报）。</summary>
+    public const string EngineTag = "v3-BundledTheme-Replace";
+
     private BundledTheme? _bundledTheme;
 
     /// <summary>当前是否深色主题。</summary>

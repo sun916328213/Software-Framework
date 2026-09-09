@@ -10,7 +10,7 @@ using CommunicationNew.Protocols.Serial;
 using CommunicationNew.Protocols.Socket;
 using CommunicationNew.Protocols.WebApi;
 
-namespace CommunicationTestApp.Services;
+namespace Communication.Workbench.Services;
 
 /// <summary>
 /// 设备会话服务 —— 全部设备的生命周期所有者。
