@@ -8,7 +8,7 @@ namespace WPFControl.ProgramControl.Models
     /// 日志统一配置模型（仿 CamManagerModel）：数据项为 LogParam（Name/FilePath/SaveDays...），
     /// 由 LogConfigView 内嵌的 DeviceManagerView 编辑并保存到 Config\LogConfig.json。
     /// </summary>
-    public class LogConfigModel : ManagerModel<LogParam>
+    public class LogConfigModel : ConfigManagerModel<LogParam>
     {
         public LogConfigModel()
         {

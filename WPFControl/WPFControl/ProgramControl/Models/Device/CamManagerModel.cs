@@ -19,10 +19,8 @@ namespace WPFControl.ProgramControl.Models
         public static readonly string[] 实时关闭 = { "实时关闭", "Live Stop" };
     }
 
-    public class CamManagerModel : ManagerModel<GigeCamParam>
+    public class CamManagerModel : ConfigManagerModel<GigeCamParam>
     {
-       
-
         public CamManagerModel()
         {
             Name = LangSwitchEx.GetMessage(CamManagerMessage.相机);

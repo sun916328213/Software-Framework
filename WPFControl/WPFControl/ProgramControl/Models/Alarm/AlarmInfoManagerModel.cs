@@ -154,7 +154,7 @@ namespace WPFControl.ProgramControl.Models
       
     }
 
-    internal class AlarmInfoManagerModel : ManagerModel<AlarmInfoManager>
+    internal class AlarmInfoManagerModel : ConfigManagerModel<AlarmInfoManager>
     {
         public AlarmInfoManagerModel()
         {

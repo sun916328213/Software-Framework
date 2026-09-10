@@ -8,7 +8,7 @@ using WPFCustomControls.Controls;
 
 namespace WPFControl.ProgramControl.Models
 {
-    public class ScanManagerModel : ManagerModel<ScanParam >
+    public class ScanManagerModel : ConfigManagerModel<ScanParam >
     {
         public ScanManagerModel()
         {

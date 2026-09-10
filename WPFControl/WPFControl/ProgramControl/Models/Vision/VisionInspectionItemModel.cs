@@ -95,7 +95,7 @@ namespace WPFControl.ProgramControl.Models
     /// <summary>
     /// 视觉检测项目
     /// </summary>
-    public class VisionInspectionItemModel : ManagerModel<VisionInspectionItem>
+    public class VisionInspectionItemModel : ConfigManagerModel<VisionInspectionItem>
     {
         public VisionInspectionItemModel()
         {

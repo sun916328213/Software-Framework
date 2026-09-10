@@ -5,7 +5,7 @@ using WPFCustomControls.Controls;
 
 namespace WPFControl.ProgramControl.Models
 {
-    public class RFIDManagerModel : ManagerModel<RFIDParam>
+    public class RFIDManagerModel : ConfigManagerModel<RFIDParam>
     {
         public RFIDManagerModel()
         {

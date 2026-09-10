@@ -16,10 +16,10 @@
     mc:Ignorable="d">
 
     <!--  日志统一配置界面（仿 CamManagerView）：内嵌 DeviceManagerView 编辑保存 Config\LogConfig.json  -->
-    <wpfcc:DeviceManagerView
+    <wpfcc:ConfigManagerView
         AddVisibility="Collapsed"
-        DeletVisibility="Collapsed"
-        DeviceName="{Binding Datas.Name}"
+        DeleteVisibility="Collapsed"
+        Title="{Binding Datas.Name}"
         FileName="{Binding Datas.FileName}"
         FilePath="{Binding Datas.FilePath}"
         IsReadOnly="True"

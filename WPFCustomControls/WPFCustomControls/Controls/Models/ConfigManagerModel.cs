@@ -15,7 +15,7 @@ public class ConfigManagerModel<T> : ObservableObject
     /// <summary>
     /// 路径
     /// </summary>
-    public string? FilePath
+    public   string? FilePath
     {
         get => filepath;
         set => SetProperty(ref filepath, value);
@@ -23,7 +23,7 @@ public class ConfigManagerModel<T> : ObservableObject
     /// <summary>
     /// 用户信息文件路径
     /// </summary>
-    public string? FileName
+    public   string?  FileName
     {
         get => filename;
         set => SetProperty(ref filename, value);
@@ -32,7 +32,7 @@ public class ConfigManagerModel<T> : ObservableObject
     /// <summary>
     /// 配置名称 
     /// </summary>
-    public string? Name
+    public   string? Name
     {
         get => devicename;
         set => SetProperty(ref devicename, value);

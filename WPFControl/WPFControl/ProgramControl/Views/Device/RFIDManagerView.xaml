@@ -38,8 +38,8 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <wpfcc:DeviceManagerView
-            DeviceName="{Binding Datas.Name}"
+        <wpfcc:ConfigManagerView
+            Title="{Binding Datas.Name}"
             FileName="{Binding Datas.FileName}"
             FilePath="{Binding Datas.FilePath}"
             IsReadOnly="True"

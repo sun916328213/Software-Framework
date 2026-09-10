@@ -31,8 +31,8 @@ namespace WPFCustomControls.Controls
         public static readonly DependencyProperty FileNameProperty =
             DependencyProperty.Register("FileName", typeof(string), typeof(ConfigManagerView), new PropertyMetadata(null));
 
-        public static readonly DependencyProperty DeviceNameProperty =
-        DependencyProperty.Register("DeviceName", typeof(string), typeof(ConfigManagerView), new PropertyMetadata(null));
+        public static readonly DependencyProperty TitleProperty =
+        DependencyProperty.Register("Title", typeof(string), typeof(ConfigManagerView), new PropertyMetadata(null));
 
         public static readonly DependencyProperty SelectVisibilityProperty =
        DependencyProperty.Register("SelectVisibility", typeof(Visibility), typeof(ConfigManagerView), new PropertyMetadata(Visibility.Visible));
@@ -40,8 +40,8 @@ namespace WPFCustomControls.Controls
         public static readonly DependencyProperty AddVisibilityProperty =
         DependencyProperty.Register("AddVisibility", typeof(Visibility), typeof(ConfigManagerView), new PropertyMetadata(Visibility.Visible));
 
-        public static readonly DependencyProperty DeletVisibilityProperty =
-         DependencyProperty.Register("DeletVisibility", typeof(Visibility), typeof(ConfigManagerView), new PropertyMetadata(Visibility.Visible));
+        public static readonly DependencyProperty DeleteVisibilityProperty =
+         DependencyProperty.Register("DeleteVisibility", typeof(Visibility), typeof(ConfigManagerView), new PropertyMetadata(Visibility.Visible));
 
 
 
@@ -148,14 +148,14 @@ namespace WPFCustomControls.Controls
         }
 
         /// <summary>
-        /// 设备名称
+        /// 标题
         /// </summary>
         [Bindable(true)]
-        [Category("自定义属性"), Description("设备名称"), DisplayName("设备名称")]
-        public string DeviceName
+        [Category("自定义属性"), Description("标题"), DisplayName("标题")]
+        public string Title
         {
-            get { return (string)GetValue(DeviceNameProperty); }
-            set { SetValue(DeviceNameProperty, value); }
+            get { return (string)GetValue(TitleProperty); }
+            set { SetValue(TitleProperty, value); }
         }
 
         /// <summary>
@@ -185,10 +185,10 @@ namespace WPFCustomControls.Controls
         /// </summary>
         [Bindable(true)]
         [Category("自定义属性"), Description("删除按钮显示状态"), DisplayName("删除按钮显示状态")]
-        public Visibility DeletVisibility
+        public Visibility DeleteVisibility
         {
-            get { return (Visibility)GetValue(DeletVisibilityProperty); }
-            set { SetValue(DeletVisibilityProperty, value); }
+            get { return (Visibility)GetValue(DeleteVisibilityProperty); }
+            set { SetValue(DeleteVisibilityProperty, value); }
         }
 
         /// <summary>

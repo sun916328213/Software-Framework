@@ -12,10 +12,10 @@
     mc:Ignorable="d">
 
     <Border Style="{StaticResource Border_Style}">
-        <wpfcc:DeviceManagerView
+        <wpfcc:ConfigManagerView
             AddVisibility="Collapsed"
-            DeletVisibility="Collapsed"
-            DeviceName="{Binding Datas. Name}"
+            DeleteVisibility="Collapsed"
+            Title="{Binding Datas.Name}"
             FileName="{Binding Datas.FileName}"
             FilePath="{Binding Datas.FilePath}"
             IsReadOnly="True"

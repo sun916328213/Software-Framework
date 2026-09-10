@@ -7,7 +7,7 @@ using WPFCustomControls.Controls;
 
 namespace WPFControl.ProgramControl.Models
 {
-    public class LightControlManagerModel : ManagerModel<LightParam>
+    public class LightControlManagerModel : ConfigManagerModel<LightParam>
     {
         public LightControlManagerModel()
         {
