@@ -1,5 +1,6 @@
-using DataManager.Log.Definition;
+﻿using DataManager.Log.Definition;
 using WPFControl.CustomControl.Models;
+using WPFCustomControls.Controls;
 
 namespace WPFControl.ProgramControl.Models
 {

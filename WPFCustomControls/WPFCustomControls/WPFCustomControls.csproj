@@ -18,6 +18,7 @@
     <Folder Include="Window\ViewModels\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
     <ProjectReference Include="..\WPFCustomControls.PropertyGrid.Core\WPFCustomControls.PropertyGrid.Core.csproj" />
   </ItemGroup>
 </Project>

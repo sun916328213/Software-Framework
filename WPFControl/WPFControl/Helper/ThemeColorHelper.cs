@@ -9,6 +9,7 @@ namespace WPFControl.Helper
     /// <summary>
     /// 初始化控制类，用于配置MaterialDesignThemes颜色主题
     /// </summary>
+    [Obsolete("与 BundledTheme 混用会被忽略，请改用 WPFCustomControls.Services.AppThemeService（三属性自由切换，深浅+主色+辅色）。")]
     public static class ThemeColorHelper
     {
  

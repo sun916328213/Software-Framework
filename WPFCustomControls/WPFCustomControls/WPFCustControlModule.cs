@@ -39,9 +39,17 @@ public sealed class WPFCustomControlsModule : IModule
             if (Application.Current is not { } application)
                 return;
 
+            // 幂等：同一字典只合一次，避免重复 StaticResource 绑定到旧实例。
+            var uri = new Uri("pack://application:,,,/WPFCustomControls;component/Resources/Resources.xaml");
+            foreach (var existing in application.Resources.MergedDictionaries)
+            {
+                if (existing.Source is not null && existing.Source.Equals(uri))
+                    return;
+            }
+
             application.Resources.MergedDictionaries.Add(new ResourceDictionary
             {
-                Source = new Uri("pack://application:,,,/WPFCustomControls;component/Resources/Resources.xaml")
+                Source = uri
             });
         }
         catch (Exception exception)

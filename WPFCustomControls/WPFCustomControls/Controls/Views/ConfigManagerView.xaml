@@ -1,11 +1,10 @@
-﻿<UserControl
-    x:Class="WPFControl.CustomControl.Views.DeviceManagerView"
+<UserControl
+    x:Class="WPFCustomControls.Controls.ConfigManagerView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:converters="clr-namespace:WPFControl.ValueConvert"
-    xmlns:custm="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    xmlns:converters="clr-namespace:WPFCustomControls.ValueConvert"
+    xmlns:local="clr-namespace:WPFCustomControls.Controls"   
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:WPFControl.CustomControl.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     x:Name="UserControl"
     d:DesignHeight="450"
@@ -36,9 +35,9 @@
 
 
             <GroupBox Margin="8" Header="{Binding ElementName=UserControl, Path=DeviceName}">
-                <custm:DataGridView
+                <local:DataGridView
                     x:Name="DataGridView"
-                    Grid.Column="0"  
+                    Grid.Column="0"
                     Background="{Binding ElementName=UserControl, Path=Background}"
                     FontSize="{Binding ElementName=UserControl, Path=FontSize}"
                     IsReadOnly="{Binding ElementName=UserControl, Path=IsReadOnly}"

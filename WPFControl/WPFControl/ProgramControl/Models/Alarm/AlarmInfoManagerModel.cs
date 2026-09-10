@@ -15,6 +15,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WPFControl.CustomControl.Models;
+using WPFCustomControls.Controls;
 
 namespace WPFControl.ProgramControl.Models
 {

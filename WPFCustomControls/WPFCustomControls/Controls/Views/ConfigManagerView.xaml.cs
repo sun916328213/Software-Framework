@@ -1,77 +1,75 @@
-﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Input;
 using Extension.Core.ConvertEx;
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using WPFCustomControls.Controls;
 using WPFCustomControls.Window.Views;
 
-namespace WPFControl.CustomControl.Views
+namespace WPFCustomControls.Controls
 {
     /// <summary>
-    /// DeviceManagerView.xaml 的交互逻辑
-    /// </summary>
-    public partial class DeviceManagerView : UserControl
+    /// ConfigManagerView.xaml 的交互逻辑
+    /// 通用配置管理视图：内嵌 DataGridView，支持增加/删除/保存/解锁/选择与 Json 持久化。
+     /// </summary>
+    public partial class ConfigManagerView : UserControl
     {
         public static readonly DependencyProperty IsReadOnlyProperty =
-            DependencyProperty.Register("IsReadOnly", typeof(bool), typeof(DeviceManagerView), new PropertyMetadata(false));
+            DependencyProperty.Register("IsReadOnly", typeof(bool), typeof(ConfigManagerView), new PropertyMetadata(false));
 
         public static readonly DependencyProperty ItemsSourceProperty =
-            DependencyProperty.Register("ItemsSource", typeof(System.Collections.IEnumerable), typeof(DeviceManagerView), new PropertyMetadata(null));
+            DependencyProperty.Register("ItemsSource", typeof(System.Collections.IEnumerable), typeof(ConfigManagerView), new PropertyMetadata(null));
 
         public static readonly DependencyProperty SelectItemProperty =
-            DependencyProperty.Register("SelectItem", typeof(object), typeof(DeviceManagerView), new PropertyMetadata(null));
+            DependencyProperty.Register("SelectItem", typeof(object), typeof(ConfigManagerView), new PropertyMetadata(null));
 
         public static readonly DependencyProperty FilePathProperty =
-            DependencyProperty.Register("FilePath", typeof(string), typeof(DeviceManagerView), new PropertyMetadata(null));
+            DependencyProperty.Register("FilePath", typeof(string), typeof(ConfigManagerView), new PropertyMetadata(null));
 
         public static readonly DependencyProperty FileNameProperty =
-            DependencyProperty.Register("FileName", typeof(string), typeof(DeviceManagerView), new PropertyMetadata(null));
+            DependencyProperty.Register("FileName", typeof(string), typeof(ConfigManagerView), new PropertyMetadata(null));
 
         public static readonly DependencyProperty DeviceNameProperty =
-        DependencyProperty.Register("DeviceName", typeof(string), typeof(DeviceManagerView), new PropertyMetadata(null));
+        DependencyProperty.Register("DeviceName", typeof(string), typeof(ConfigManagerView), new PropertyMetadata(null));
 
         public static readonly DependencyProperty SelectVisibilityProperty =
-       DependencyProperty.Register("SelectVisibility", typeof(Visibility), typeof(DeviceManagerView), new PropertyMetadata(Visibility.Visible));
+       DependencyProperty.Register("SelectVisibility", typeof(Visibility), typeof(ConfigManagerView), new PropertyMetadata(Visibility.Visible));
 
         public static readonly DependencyProperty AddVisibilityProperty =
-        DependencyProperty.Register("AddVisibility", typeof(Visibility), typeof(DeviceManagerView), new PropertyMetadata( Visibility.Visible));
+        DependencyProperty.Register("AddVisibility", typeof(Visibility), typeof(ConfigManagerView), new PropertyMetadata(Visibility.Visible));
 
         public static readonly DependencyProperty DeletVisibilityProperty =
-         DependencyProperty.Register("DeletVisibility", typeof(Visibility), typeof(DeviceManagerView), new PropertyMetadata(Visibility.Visible));
+         DependencyProperty.Register("DeletVisibility", typeof(Visibility), typeof(ConfigManagerView), new PropertyMetadata(Visibility.Visible));
 
 
 
         // 新增事件回调依赖属性-------------------------------------------------------------------------------------
         public static readonly DependencyProperty SelectedCallbackProperty =
-            DependencyProperty.Register("SelectedCallback", typeof(Action), typeof(DeviceManagerView), new PropertyMetadata(null));
+            DependencyProperty.Register("SelectedCallback", typeof(Action), typeof(ConfigManagerView), new PropertyMetadata(null));
 
         public static readonly DependencyProperty AddCallbackProperty =
-            DependencyProperty.Register("AddCallback", typeof(Action), typeof(DeviceManagerView), new PropertyMetadata(null));
+            DependencyProperty.Register("AddCallback", typeof(Action), typeof(ConfigManagerView), new PropertyMetadata(null));
 
         public static readonly DependencyProperty DeletedCallbackProperty =
-            DependencyProperty.Register("DeletedCallback", typeof(Action), typeof(DeviceManagerView), new PropertyMetadata(null));
+            DependencyProperty.Register("DeletedCallback", typeof(Action), typeof(ConfigManagerView), new PropertyMetadata(null));
 
         public static readonly DependencyProperty SaveCallbackProperty =
-          DependencyProperty.Register("SaveCallback", typeof(Action), typeof(DeviceManagerView), new PropertyMetadata(null));
+          DependencyProperty.Register("SaveCallback", typeof(Action), typeof(ConfigManagerView), new PropertyMetadata(null));
 
-        public static   readonly DependencyProperty RowHeightProperty =
-        DependencyProperty.Register("RowHeight", typeof(double), typeof(DeviceManagerView), new PropertyMetadata(double.NaN));
+        public static readonly DependencyProperty RowHeightProperty =
+        DependencyProperty.Register("RowHeight", typeof(double), typeof(ConfigManagerView), new PropertyMetadata(double.NaN));
 
- 
+
         public static readonly DependencyProperty DataGridColumnsProperty =
           DependencyProperty.Register(
               nameof(DataGridColumns),
               typeof(ObservableCollection<DataGridColumn>),
-              typeof(DeviceManagerView),
+              typeof(ConfigManagerView),
               new PropertyMetadata(null));
 
-      
+
         /// <summary>
         /// 公开 DataGrid 列集合，外部可直接赋值
         /// </summary>
@@ -245,18 +243,18 @@ namespace WPFControl.CustomControl.Views
         public RelayCommand AddCommand { get; }
         public RelayCommand DeleteCommand { get; }
 
-        public DeviceManagerView()
+        public ConfigManagerView()
         {
             InitializeComponent();
-            DataGridColumns=new ObservableCollection<System.Windows.Controls.DataGridColumn>();
-             // 初始化内部命令
-             SelectCommand = new RelayCommand(SelecItem);
+            DataGridColumns = new ObservableCollection<System.Windows.Controls.DataGridColumn>();
+            // 初始化内部命令
+            SelectCommand = new RelayCommand(SelecItem);
             LockCommand = new RelayCommand(Lock);
             SaveCommand = new RelayCommand(SaveData);
             AddCommand = new RelayCommand(AddItem);
             DeleteCommand = new RelayCommand(DeleteItem);
 
-            Loaded +=(s,e)=>
+            Loaded += (s, e) =>
             {
                 if (DataGridColumns != null && DataGridColumns.Count > 0)
                 {
@@ -269,7 +267,7 @@ namespace WPFControl.CustomControl.Views
             };
         }
 
-      
+
 
         public void SelecItem()
         {
@@ -314,7 +312,7 @@ namespace WPFControl.CustomControl.Views
                     {
                         Directory.CreateDirectory(directory);
                     }
-                    
+
                     // 保存数据
                     JsonEx.Save(ItemsSource, FilePath, FileName);
                 }
@@ -326,7 +324,7 @@ namespace WPFControl.CustomControl.Views
             }
         }
 
- 
+
         // 添加项
         private void AddItem()
         {
@@ -335,11 +333,11 @@ namespace WPFControl.CustomControl.Views
             {
                 return;
             }
-            
+
             // 如果无法直接创建项，则通过回调让外部创建
             AddCallback?.Invoke();
         }
-        
+
         // 尝试向集合中添加新项
         private bool TryAddItemToCollection()
         {
@@ -363,16 +361,16 @@ namespace WPFControl.CustomControl.Views
                     }
                 }
             }
-            
+
             return false;
         }
-        
+
         // 获取IList集合中元素的类型
         private Type GetListItemType(IList list)
         {
             // 检查是否是ObservableCollection<T>或其它泛型IList<T>实现
             var listType = list.GetType();
-            
+
             // 获取泛型接口
             foreach (var interfaceType in listType.GetInterfaces())
             {
@@ -381,16 +379,16 @@ namespace WPFControl.CustomControl.Views
                     return interfaceType.GetGenericArguments()[0];
                 }
             }
-            
+
             // 如果是ObservableCollection<T>的直接实例
             if (listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(ObservableCollection<>))
             {
                 return listType.GetGenericArguments()[0];
             }
-            
+
             return null;
         }
- 
+
 
         // 删除项
         private void DeleteItem()
@@ -398,8 +396,8 @@ namespace WPFControl.CustomControl.Views
             if (DataGridView.SelectedItem != null)
             {
                 var itemToDelete = DataGridView.SelectedItem;
-              
-                
+
+
                 // 如果ItemsSource是ObservableCollection，我们可以直接从中移除
                 if (ItemsSource is IList list)
                 {
@@ -416,7 +414,7 @@ namespace WPFControl.CustomControl.Views
 
 
         private void Prompt()
-        { 
+        {
             MessagePrompt messagePrompt = new MessagePrompt();
             messagePrompt.Title = "提示";
             messagePrompt.Message = "请先选择后再进行操作!!";

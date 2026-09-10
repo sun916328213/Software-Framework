@@ -4,6 +4,7 @@ using Device.Camera.Gige.Definition;
 using Extension.Core.SystemEx;
 using HalconDotNet;
 using WPFControl.CustomControl.Models;
+using WPFCustomControls.Controls;
 
 namespace WPFControl.ProgramControl.Models
 {

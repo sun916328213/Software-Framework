@@ -3,6 +3,7 @@ using Device.Light.Definition;
 using Device.RFID;
 using Device.RFID.Definition;
 using WPFControl.CustomControl.Models;
+using WPFCustomControls.Controls;
 
 namespace WPFControl.ProgramControl.Models
 {

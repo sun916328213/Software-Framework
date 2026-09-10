@@ -2,8 +2,9 @@
     x:Class="WPFControl.ProgramControl.Views.VisionInspectionItemView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:converters="clr-namespace:WPFControl.ValueConvert"
+    xmlns:converters="clr-namespace:WPFCustomControls.ValueConvert;assembly=WPFCustomControls"
     xmlns:cust="clr-namespace:WPFControl.CustomControl.Views"
+    xmlns:wpfcc="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
     xmlns:custm="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:WPFControl.ProgramControl.Views"
@@ -55,16 +56,16 @@
 
     <Grid>
 
-        <cust:DeviceManagerView
+        <wpfcc:ConfigManagerView
             x:Name="deviceManagerView"
-            DeviceName="{Binding Datas.Name}"
+            Title="{Binding Datas.Name}"
             FileName="{Binding Datas.FileName}"
             FilePath="{Binding Datas.FilePath}"
             IsReadOnly="True"
             ItemsSource="{Binding Datas.DataCollection}"
             SelectItem="{Binding Datas.CurVisionInspectionItem, Mode=TwoWay}">
 
-            <cust:DeviceManagerView.DataGridColumns>
+            <wpfcc:ConfigManagerView.DataGridColumns>
                 <DataGridTextColumn
                     MinWidth="100"
                     Binding="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -137,8 +138,8 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-            </cust:DeviceManagerView.DataGridColumns>
+            </wpfcc:ConfigManagerView.DataGridColumns>
 
-        </cust:DeviceManagerView>
+        </wpfcc:ConfigManagerView>
     </Grid>
 </UserControl>

@@ -3,11 +3,11 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace WPFControl.ValueConvert
+namespace WPFCustomControls.ValueConvert
 {
     /// <summary>
-    /// IsReadToIsEnableConverter
-    /// true转换为"false"，false转换为"true"
+    /// IsReadToIsEnableConverter（从 WPFControl 迁移，随 DeviceManagerView 下沉）。
+    /// true 转换成 false，false 转换成 true。
     /// </summary>
     public class IsReadToIsEnableConverter : IValueConverter
     {

@@ -4,6 +4,7 @@ using Device.RFID;
 using Device.RFID.Definition;
 using Device.Scan.Definition;
 using WPFControl.CustomControl.Models;
+using WPFCustomControls.Controls;
 
 namespace WPFControl.ProgramControl.Models
 {
