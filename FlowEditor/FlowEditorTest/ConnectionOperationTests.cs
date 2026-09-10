@@ -14,7 +14,7 @@ namespace FlowEditorTest;
 /// </summary>
 public class ConnectionOperationTests
 {
-    private readonly FlowChartExecutionEngine _engine = new();
+    private readonly TestFlowChartExecutionEngine _engine = new();
 
     // ── 连线方向校验 ──
 
@@ -38,7 +38,7 @@ public class ConnectionOperationTests
         var conns = new List<ConnectionModel> { reverseConn };
 
         // 编译不应崩溃
-        var graph = CompiledFlowGraph<NodeViewModel>.Compile(nodes, conns);
+        var graph = TestGraph.Compile(nodes, conns);
         // 反向连线在编译后是有效的边（编译器不校验方向），但不会形成环路
         Assert.False(graph.HasCycle);
     }
@@ -56,7 +56,7 @@ public class ConnectionOperationTests
         var nodes = new List<NodeViewModel> { a, b };
         var conns = new List<ConnectionModel> { conn, conn };  // 同一条连线加两次
 
-        var graph = CompiledFlowGraph<NodeViewModel>.Compile(nodes, conns);
+        var graph = TestGraph.Compile(nodes, conns);
         // successors 应包含 b（可能重复，但不崩溃）
         Assert.Contains(b.Id, graph.Successors[a.Id]);
         Assert.False(graph.HasCycle);
@@ -81,7 +81,7 @@ public class ConnectionOperationTests
         var nodes = new List<NodeViewModel> { a };
         var conns = new List<ConnectionModel> { selfConn };
 
-        var graph = CompiledFlowGraph<NodeViewModel>.Compile(nodes, conns);
+        var graph = TestGraph.Compile(nodes, conns);
         Assert.True(graph.HasCycle);
     }
 
@@ -242,7 +242,7 @@ public class ConnectionOperationTests
         for (int i = 0; i < nodes.Count - 1; i++)
             conns.Add(Flow(nodes[i], nodes[i + 1]));
 
-        var graph = CompiledFlowGraph<NodeViewModel>.Compile(nodes, conns);
+        var graph = TestGraph.Compile(nodes, conns);
         Assert.Equal(50, graph.Nodes.Count);
         Assert.False(graph.HasCycle);
     }

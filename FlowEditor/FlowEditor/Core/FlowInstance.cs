@@ -107,15 +107,26 @@ public sealed class FlowInstance
     public async Task RunAsync(CancellationToken ct, Action<string>? log = null)
     {
         Journal.Clear();
+        var activeNodes = _nodes.Where(node => !node.IsExcludedFromExecution).ToList();
+        var activeIds = activeNodes.Select(node => node.Id).ToHashSet();
+        var activeConnections = _connections.Where(connection =>
+                activeIds.Contains(connection.SourceNodeId) && activeIds.Contains(connection.TargetNodeId))
+            .ToList();
+        var runtime = new ExecutionScopeRuntime(activeNodes, activeConnections);
+        foreach (var node in activeNodes)
+            node.ExecutionScopeRuntime = runtime;
+        var topLevel = ExecutionGraphScope.CreateTopLevel(
+            activeNodes, activeConnections, node => node);
+
         // 进入流程作用域：节点日志按当前流程（+节点+运行序号）路由落盘
         using (FlowLogContext.EnterFlow(Name))
         {
             await _engine.ExecuteAsync(
-                _nodes,
-                _connections,
+                topLevel.Nodes,
+                topLevel.Connections,
                 ct,
                 log ?? (_ => { }),
-                onBeforeNode: Debug == null ? null : node => Debug.WaitIfPausedAsync(node.Id, ct),
+                onBeforeNode: Debug == null ? null : nodeId => Debug.WaitIfPausedAsync(nodeId, ct),
                 executionOrder: null,
                 journal: Journal);
         }

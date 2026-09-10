@@ -18,21 +18,31 @@ namespace FlowEditor.Views;
 /// </summary>
 public partial class ToolBlockFlowWindow : Window
 {
-    private readonly ToolBlockNode _toolBlockNode;
+    private readonly IInternalFlowContainerNode _containerNode;
     private readonly IFlowChartService _parentService;
     private readonly IContainerProvider _containerProvider;
     private FlowChartContainerDocumentService? _documentService;
     private FlowChartContainerViewModel? _containerVm;
 
     public ToolBlockFlowWindow(ToolBlockNode node, IFlowChartService parentService)
+        : this((IInternalFlowContainerNode)node, parentService)
+    {
+    }
+
+    public ToolBlockFlowWindow(IInternalFlowContainerNode node, IFlowChartService parentService)
     {
         InitializeComponent();
-        _toolBlockNode = node;
+        _containerNode = node;
         _parentService = parentService;
         _containerProvider = parentService.ContainerProvider!;
+        Title = node.InternalEditorTitle;
 
         // 通过 IoC 容器创建独立的容器 ViewModel 实例，不共享主窗口的实例
         _containerVm = _containerProvider.Resolve<FlowChartContainerViewModel>();
+        _containerVm.ConfigureTabLimits(
+            node.MinimumInternalFlows,
+            node.MaximumInternalFlows,
+            node.InternalFlowNamePrefix);
         _documentService = _containerProvider.Resolve<FlowChartContainerDocumentService>();
         FlowContainer.DataContext = _containerVm;
 
@@ -46,8 +56,8 @@ public partial class ToolBlockFlowWindow : Window
 
         if (_containerVm?.ActiveTab != null)
         {
-            // 排除 ToolBlock 自身，防止无限嵌套
-            _containerVm.ExcludeToolByName("ToolBlock");
+            foreach (var toolName in _containerNode.ExcludedInternalTools)
+                _containerVm.ExcludeToolByName(toolName);
 
             LoadInternalData(_containerVm);
         }
@@ -64,7 +74,7 @@ public partial class ToolBlockFlowWindow : Window
     private void LoadInternalData(FlowChartContainerViewModel containerVm)
     {
         if (_documentService == null) return;
-        var data = _toolBlockNode.InternalData;
+        var data = _containerNode.InternalData;
         if (data == null || data.Count == 0) return;
 
         // 使用第一个标签页加载第一个流程
@@ -89,7 +99,7 @@ public partial class ToolBlockFlowWindow : Window
         foreach (var tab in containerVm.Tabs)
             data.Add(_documentService.BuildFlowDocument(tab));
 
-        _toolBlockNode.InternalData = data;
+        _containerNode.InternalData = data;
         _parentService.Model.IsModified = true;
     }
 }

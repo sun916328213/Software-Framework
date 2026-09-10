@@ -1,3 +1,4 @@
+using FlowEditor.Core;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
 using FlowEditor.ViewModels;
@@ -60,6 +61,13 @@ public class CountingNode : NodeModel
 /// <summary>测试辅助：节点/连线构造。</summary>
 public static class TestGraph
 {
+    /// <summary>将以 ViewModel 构造的测试图作为模型图编译。</summary>
+    public static CompiledFlowGraph<NodeModel> Compile(
+        IReadOnlyList<NodeViewModel> nodes,
+        IReadOnlyList<ConnectionModel> connections) =>
+        CompiledFlowGraph<NodeModel>.Compile(
+            nodes.Select(node => node.Model).ToList(), connections);
+
     public static (NodeViewModel Vm, T Model) New<T>(string name) where T : NodeModel, new()
     {
         var model = new T { Name = name };

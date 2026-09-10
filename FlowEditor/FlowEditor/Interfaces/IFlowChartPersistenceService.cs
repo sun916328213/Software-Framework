@@ -18,7 +18,7 @@ public interface IFlowChartPersistenceService
     /// <summary>构建流程图文档模型（从当前画布状态）。</summary>
     FlowChartDocumentModel BuildDocument(
         string name,
-        IEnumerable<ViewModels.NodeViewModel> nodes,
+        IEnumerable<NodeModel> nodes,
         IEnumerable<ConnectionModel> connections,
         FlowChartModel model);
 

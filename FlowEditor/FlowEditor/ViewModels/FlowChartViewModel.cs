@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+using FlowEditor.Core;
 using FlowEditor.Interfaces;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
@@ -26,59 +26,6 @@ public partial class FlowChartViewModel : ObservableObject
     private readonly IDialogService _dialogService;
     private readonly IContainerProvider _containerProvider;
     private readonly ConnectionService _connectionService;
-
-    // ── 命令属性 ──
-    public AsyncRelayCommand RunCommand { get; private set; } = null!;
-    public RelayCommand StopCommand { get; private set; } = null!;
-    public AsyncRelayCommand LoopRunCommand { get; private set; } = null!;
-    public RelayCommand LoopStopCommand { get; private set; } = null!;
-    public RelayCommand SaveCommand { get; private set; } = null!;
-    public RelayCommand SaveAsCommand { get; private set; } = null!;
-    public RelayCommand LoadCommand { get; private set; } = null!;
-    public RelayCommand ClearAllCommand { get; private set; } = null!;
-    public RelayCommand NewFlowCommand { get; private set; } = null!;
-    public RelayCommand ZoomInCommand { get; private set; } = null!;
-    public RelayCommand ZoomOutCommand { get; private set; } = null!;
-    public RelayCommand ZoomResetCommand { get; private set; } = null!;
-    public RelayCommand ZoomToFitCommand { get; private set; } = null!;
-    public RelayCommand DeleteSelectedCommand { get; private set; } = null!;
-    public RelayCommand UndoCommand { get; private set; } = null!;
-    public RelayCommand RedoCommand { get; private set; } = null!;
-    public AsyncRelayCommand StepContinueCommand { get; private set; } = null!;
-    public RelayCommand<FrameworkElement?> ExportPngCommand { get; private set; } = null!;
-    public RelayCommand<FrameworkElement?> ExportSvgCommand { get; private set; } = null!;
-    public RelayCommand CopyCommand { get; private set; } = null!;
-    public RelayCommand PasteCommand { get; private set; } = null!;
-
-    /// <summary>删除连线命令。</summary>
-    public RelayCommand<ConnectionModel?> DeleteConnectionCommand { get; private set; } = null!;
-
-    /// <summary>新增输入端口命令（节点右键菜单）。</summary>
-    public RelayCommand<NodeViewModel> AddInputPortCommand { get; private set; } = null!;
-
-    /// <summary>新增输出端口命令（节点右键菜单）。</summary>
-    public RelayCommand<NodeViewModel> AddOutputPortCommand { get; private set; } = null!;
-
-    /// <summary>复制节点命令。</summary>
-    public RelayCommand<NodeViewModel> CopyNodeCommand { get; private set; } = null!;
-
-    /// <summary>删除节点命令。</summary>
-    public RelayCommand<NodeViewModel> DeleteNodeCommand { get; private set; } = null!;
-
-    /// <summary>设置节点权限为正常。</summary>
-    public RelayCommand<NodeViewModel> SetNormalPermissionCommand { get; private set; } = null!;
-
-    /// <summary>设置节点权限为只读。</summary>
-    public RelayCommand<NodeViewModel> SetReadOnlyPermissionCommand { get; private set; } = null!;
-
-    /// <summary>设置节点权限为禁用。</summary>
-    public RelayCommand<NodeViewModel> SetDisabledPermissionCommand { get; private set; } = null!;
-
-    /// <summary>将节点移入不执行节点容器。</summary>
-    public RelayCommand<NodeViewModel> MoveToInactiveContainerCommand { get; private set; } = null!;
-
-    /// <summary>将节点移回执行画布。</summary>
-    public RelayCommand<NodeViewModel> RestoreFromInactiveContainerCommand { get; private set; } = null!;
 
     /// <summary>流程图运行时模型。View 直接绑定到此模型属性。</summary>
     public FlowChartModel Model => Service.Model;
@@ -122,42 +69,6 @@ public partial class FlowChartViewModel : ObservableObject
         };
     }
 
-    private void InitializeCommands()
-    {
-        RunCommand = new AsyncRelayCommand(RunAsync, CanRun);
-        StopCommand = new RelayCommand(Stop, CanStop);
-        LoopRunCommand = new AsyncRelayCommand(LoopRunAsync, CanLoopRun);
-        LoopStopCommand = new RelayCommand(LoopStop, CanLoopStop);
-        SaveCommand = new RelayCommand(Save);
-        SaveAsCommand = new RelayCommand(SaveAs);
-        LoadCommand = new RelayCommand(Load);
-        ClearAllCommand = new RelayCommand(ClearAll);
-        NewFlowCommand = new RelayCommand(NewFlow);
-        ZoomInCommand = new RelayCommand(Service.ZoomIn);
-        ZoomOutCommand = new RelayCommand(Service.ZoomOut);
-        ZoomResetCommand = new RelayCommand(Service.ZoomReset);
-        ZoomToFitCommand = new RelayCommand(Service.ZoomToFit);
-        DeleteSelectedCommand = new RelayCommand(DeleteSelected);
-        UndoCommand = new RelayCommand(Undo, () => Service.UndoRedo.CanUndo);
-        RedoCommand = new RelayCommand(Redo, () => Service.UndoRedo.CanRedo);
-        StepContinueCommand = new AsyncRelayCommand(StepContinueSelectedAsync, CanStepContinue);
-        ExportPngCommand = new RelayCommand<FrameworkElement?>(ExportPng);
-        ExportSvgCommand = new RelayCommand<FrameworkElement?>(ExportSvg);
-        CopyCommand = new RelayCommand(CopySelected);
-        PasteCommand = new RelayCommand(PasteAtCenter);
-        DeleteConnectionCommand = new RelayCommand<ConnectionModel?>(DeleteConnection);
-
-        // 节点右键菜单命令
-        AddInputPortCommand = new RelayCommand<NodeViewModel>(AddInputPort);
-        AddOutputPortCommand = new RelayCommand<NodeViewModel>(AddOutputPort);
-        CopyNodeCommand = new RelayCommand<NodeViewModel>(node => { SelectedNode = node; CopySelected(); });
-        DeleteNodeCommand = new RelayCommand<NodeViewModel>(node => { SelectedNode = node; DeleteSelected(); });
-        SetNormalPermissionCommand = new RelayCommand<NodeViewModel>(node => SetPermission(node, NodePermission.Normal));
-        SetReadOnlyPermissionCommand = new RelayCommand<NodeViewModel>(node => SetPermission(node, NodePermission.ReadOnly));
-        SetDisabledPermissionCommand = new RelayCommand<NodeViewModel>(node => SetPermission(node, NodePermission.Disabled));
-        MoveToInactiveContainerCommand = new RelayCommand<NodeViewModel>(MoveToInactiveContainer);
-        RestoreFromInactiveContainerCommand = new RelayCommand<NodeViewModel>(RestoreFromInactiveContainer);
-    }
 
     #endregion
 
@@ -170,14 +81,17 @@ public partial class FlowChartViewModel : ObservableObject
         get => _selectedNode;
         set
         {
-            if (SetProperty(ref _selectedNode, value))
-            {
-                SelectedNodes.Clear();
-                if (value != null) SelectedNodes.Add(value);
-                foreach (var n in Nodes)
-                    n.IsSelected = n == value;
-                StepContinueCommand.NotifyCanExecuteChanged();
-            }
+            if (EqualityComparer<NodeViewModel?>.Default.Equals(_selectedNode, value)) return;
+
+            _selectedNode = value;
+            SelectedNodes.Clear();
+            if (value != null) SelectedNodes.Add(value);
+            foreach (var node in Nodes)
+                node.IsSelected = node == value;
+
+            // 先让节点的选中视觉生效，再通知属性面板等较重的订阅者。
+            OnPropertyChanged(nameof(SelectedNode));
+            StepContinueCommand.NotifyCanExecuteChanged();
         }
     }
 
@@ -188,14 +102,17 @@ public partial class FlowChartViewModel : ObservableObject
     public void SetSelectedNodes(IEnumerable<NodeViewModel> nodes)
     {
         var selection = nodes.Distinct().ToList();
+        var selectedSet = selection.ToHashSet();
         SelectedNodes.Clear();
         foreach (var node in selection)
             SelectedNodes.Add(node);
 
         _selectedNode = selection.LastOrDefault();
-        OnPropertyChanged(nameof(SelectedNode));
         foreach (var node in Nodes)
-            node.IsSelected = selection.Contains(node);
+            node.IsSelected = selectedSet.Contains(node);
+
+        // SelectedNode 的订阅者可能会重建属性面板，因此必须在视觉状态同步之后通知。
+        OnPropertyChanged(nameof(SelectedNode));
         StepContinueCommand.NotifyCanExecuteChanged();
     }
 
@@ -215,15 +132,20 @@ public partial class FlowChartViewModel : ObservableObject
     {
         if (!node.IsSelected) SetSelectedNodes([node]);
         IEnumerable<NodeViewModel> selected = SelectedNodes.Count > 0 ? SelectedNodes : [node];
-        var movingContainer = node.Model as InactiveNodeContainerNode;
-        if (movingContainer != null)
+        var movingContainer = IsCanvasContainer(node);
+        if (node.Model is InactiveNodeContainerNode)
         {
             selected = selected.Concat(Nodes.Where(candidate =>
                 candidate != node && IsInsideContainer(node, candidate))).Distinct();
         }
+        else if (node.Model is IExecutionScopeContainer)
+        {
+            selected = selected.Concat(Nodes.Where(candidate =>
+                candidate != node && IsExecutionDescendantOf(candidate, node.Id))).Distinct();
+        }
         _groupDragStart = mousePosition;
         _groupDragOrigins = selected
-            .Where(n => movingContainer != null || n.IsDraggable)
+            .Where(n => movingContainer || n.IsDraggable)
             .ToDictionary(n => n, n => new Point(n.X, n.Y));
         node.BeginDrag(mousePosition);
     }
@@ -505,6 +427,13 @@ public partial class FlowChartViewModel : ObservableObject
             Connections.Remove(conn);
         foreach (var node in selected)
             Service.RemoveNode(node);
+        foreach (var remaining in Nodes.Where(n =>
+                     n.Model.ParentExecutionContainerId != null &&
+                     selectedIds.Contains(n.Model.ParentExecutionContainerId)).ToList())
+        {
+            remaining.Model.ParentExecutionContainerId = null;
+            remaining.Model.ExecutionLaneId = null;
+        }
         foreach (var remaining in Nodes.Where(n => n.Model is not InactiveNodeContainerNode).ToList())
             RefreshNodeExecutionMembership(remaining);
         action.AfterData = Service.CaptureSnapshot();
@@ -614,6 +543,8 @@ public partial class FlowChartViewModel : ObservableObject
             Connections.Remove(connection);
 
         node.IsExcludedFromExecution = true;
+        node.Model.ParentExecutionContainerId = null;
+        node.Model.ExecutionLaneId = null;
         node.X = container.X + 20;
         node.Y = container.Y + 80 + Nodes.Count(n => n.IsExcludedFromExecution && n != node && n.Model is not InactiveNodeContainerNode) * 130;
         action.AfterData = Service.CaptureSnapshot();
@@ -635,7 +566,7 @@ public partial class FlowChartViewModel : ObservableObject
         RecalculateCanvasSize();
     }
 
-    /// <summary>根据节点中心是否位于工具箱添加的容器内，刷新其执行资格。</summary>
+    /// <summary>根据节点中心位置刷新“不执行”状态以及执行容器/泳道归属。</summary>
     private void RefreshNodeExecutionMembership(NodeViewModel node)
     {
         if (node.Model is InactiveNodeContainerNode)
@@ -646,39 +577,140 @@ public partial class FlowChartViewModel : ObservableObject
             return;
         }
 
-        var isInside = Nodes.Any(container =>
+        var inactiveContainer = Nodes.FirstOrDefault(container =>
             container.Model is InactiveNodeContainerNode &&
             IsInsideContainer(container, node));
-        if (node.IsExcludedFromExecution == isInside) return;
+        if (inactiveContainer != null)
+        {
+            var changed = !node.IsExcludedFromExecution || node.Model.ParentExecutionContainerId != null;
+            node.IsExcludedFromExecution = true;
+            node.Model.ParentExecutionContainerId = null;
+            node.Model.ExecutionLaneId = null;
+            if (changed)
+            {
+                RemoveConnectionsOutsideCurrentScope(node);
+                Model.StatusText = $"节点 [{node.Name}] 已放入不执行容器";
+            }
+            return;
+        }
 
-        node.IsExcludedFromExecution = isInside;
-        if (isInside)
+        node.IsExcludedFromExecution = false;
+        var executionContainer = Nodes
+            .Where(container =>
+                container != node &&
+                container.Model is IExecutionScopeContainer &&
+                !IsExecutionDescendantOf(container, node.Id) &&
+                IsInsideContainer(container, node))
+            .OrderBy(container => GetNodeWidth(container) * GetNodeHeight(container))
+            .FirstOrDefault();
+
+        var oldParentId = node.Model.ParentExecutionContainerId;
+        var newParentId = executionContainer?.Id;
+        var newLaneId = executionContainer == null ? null : ResolveLaneId(executionContainer, node);
+        var membershipChanged = node.Model.ParentExecutionContainerId != newParentId ||
+                                node.Model.ExecutionLaneId != newLaneId;
+        node.Model.ParentExecutionContainerId = newParentId;
+        node.Model.ExecutionLaneId = newLaneId;
+
+        if (membershipChanged)
         {
-            foreach (var connection in Connections.Where(c =>
-                         c.SourceNodeId == node.Id || c.TargetNodeId == node.Id).ToList())
-                Connections.Remove(connection);
-            Model.StatusText = $"节点 [{node.Name}] 已放入不执行容器";
+            if (!ShouldPreserveLoopBoundaryConnections(oldParentId, newParentId))
+                RemoveConnectionsOutsideCurrentScope(node);
+            Model.StatusText = executionContainer == null
+                ? $"节点 [{node.Name}] 已移回主流程"
+                : $"节点 [{node.Name}] 已加入 [{executionContainer.Name}] / [{GetLaneName(executionContainer, newLaneId)}]";
         }
-        else
-        {
-            Model.StatusText = $"节点 [{node.Name}] 已移回执行画布";
-        }
+    }
+
+    private bool ShouldPreserveLoopBoundaryConnections(string? oldParentId, string? newParentId)
+    {
+        if (oldParentId == newParentId) return true;
+        var oldIsLoop = oldParentId != null && Nodes.Any(candidate =>
+            candidate.Id == oldParentId && candidate.Model is LoopContainerNode);
+        var newIsLoop = newParentId != null && Nodes.Any(candidate =>
+            candidate.Id == newParentId && candidate.Model is LoopContainerNode);
+        return (oldIsLoop && newParentId == null) || (newIsLoop && oldParentId == null);
     }
 
     private static bool IsInsideContainer(NodeViewModel container, NodeViewModel node)
     {
-        if (container.Model is not InactiveNodeContainerNode model) return false;
         var center = new Point(
-            node.X + FlowChartModel.NodeWidth / 2,
-            node.Y + FlowChartModel.NodeHeight / 2);
-        return new Rect(container.X, container.Y, model.ContainerWidth, model.ContainerHeight)
+            node.X + GetNodeWidth(node) / 2,
+            node.Y + GetNodeHeight(node) / 2);
+        return new Rect(container.X, container.Y, GetNodeWidth(container), GetNodeHeight(container))
             .Contains(center);
+    }
+
+    private static bool IsCanvasContainer(NodeViewModel node) =>
+        node.Model is InactiveNodeContainerNode or IExecutionScopeContainer;
+
+    private static double GetNodeWidth(NodeViewModel node) => node.Model switch
+    {
+        InactiveNodeContainerNode inactive => inactive.ContainerWidth,
+        IExecutionScopeContainer execution => execution.ContainerWidth,
+        _ => FlowChartModel.NodeWidth
+    };
+
+    private static double GetNodeHeight(NodeViewModel node) => node.Model switch
+    {
+        InactiveNodeContainerNode inactive => inactive.ContainerHeight,
+        IExecutionScopeContainer execution => execution.ContainerHeight,
+        _ => FlowChartModel.NodeHeight
+    };
+
+    private bool IsExecutionDescendantOf(NodeViewModel candidate, string containerId)
+    {
+        var parentId = candidate.Model.ParentExecutionContainerId;
+        var visited = new HashSet<string>();
+        while (parentId != null && visited.Add(parentId))
+        {
+            if (parentId == containerId) return true;
+            parentId = Nodes.FirstOrDefault(node => node.Id == parentId)?.Model.ParentExecutionContainerId;
+        }
+        return false;
+    }
+
+    private static string? ResolveLaneId(NodeViewModel container, NodeViewModel node)
+    {
+        if (container.Model is not IExecutionScopeContainer scope || scope.ExecutionLanes.Count == 0)
+            return null;
+        const double headerHeight = 64;
+        const double bottomMargin = 16;
+        var contentHeight = Math.Max(1, scope.ContainerHeight - headerHeight - bottomMargin);
+        var centerY = node.Y + GetNodeHeight(node) / 2;
+        var relativeY = Math.Clamp(centerY - container.Y - headerHeight, 0, contentHeight - 0.001);
+        var index = Math.Clamp((int)(relativeY / contentHeight * scope.ExecutionLanes.Count),
+            0, scope.ExecutionLanes.Count - 1);
+        return scope.ExecutionLanes[index].Id;
+    }
+
+    private static string GetLaneName(NodeViewModel container, string? laneId) =>
+        container.Model is IExecutionScopeContainer scope
+            ? scope.ExecutionLanes.FirstOrDefault(lane => lane.Id == laneId)?.Name ?? "未指定泳道"
+            : "未指定泳道";
+
+    private void RemoveConnectionsOutsideCurrentScope(NodeViewModel node)
+    {
+        foreach (var connection in Connections.Where(connection =>
+                     connection.SourceNodeId == node.Id || connection.TargetNodeId == node.Id).ToList())
+        {
+            var otherId = connection.SourceNodeId == node.Id
+                ? connection.TargetNodeId
+                : connection.SourceNodeId;
+            var other = Nodes.FirstOrDefault(candidate => candidate.Id == otherId);
+            if (other == null ||
+                node.IsExcludedFromExecution ||
+                other.Model.ParentExecutionContainerId != node.Model.ParentExecutionContainerId ||
+                other.Model.ExecutionLaneId != node.Model.ExecutionLaneId)
+                Connections.Remove(connection);
+        }
     }
 
     /// <summary>容器调整大小后重新计算成员归属和画布范围。</summary>
     public void RefreshContainerMembership(NodeViewModel container)
     {
-        RefreshNodeExecutionMembership(container);
+        foreach (var candidate in Nodes.Where(node => node.Model is not InactiveNodeContainerNode).ToList())
+            RefreshNodeExecutionMembership(candidate);
         Model.IsModified = true;
         RecalculateCanvasSize();
     }
@@ -875,7 +907,11 @@ public partial class FlowChartViewModel : ObservableObject
     public bool CanCompleteConnection(PortModel targetPort)
         => IsDrawingConnection &&
            ConnectionSourcePort != null &&
-           _connectionService.GetRejectionReason(ConnectionSourcePort, targetPort, Connections) == null;
+           _connectionService.GetRejectionReason(
+               ConnectionSourcePort,
+               targetPort,
+               Connections,
+               Nodes.Select(node => node.Model)) == null;
 
     public void SetPendingGeometry(Geometry geometry)
     {
@@ -934,20 +970,12 @@ public partial class FlowChartViewModel : ObservableObject
             Model.CanvasHeight = FlowChartModel.MinCanvasHeight;
             return;
         }
-        var maxX = Nodes.Max(n => n.X +
-            (n.Model is InactiveNodeContainerNode container ? container.ContainerWidth : FlowChartModel.NodeWidth)) +
+        var maxX = Nodes.Max(n => n.X + GetNodeWidth(n)) +
             FlowChartModel.CanvasPadding;
-        var maxY = Nodes.Max(n => n.Y +
-            (n.Model is InactiveNodeContainerNode container ? container.ContainerHeight : FlowChartModel.NodeHeight)) +
+        var maxY = Nodes.Max(n => n.Y + GetNodeHeight(n)) +
             FlowChartModel.CanvasPadding;
         Model.CanvasWidth = Math.Max(maxX, FlowChartModel.MinCanvasWidth);
         Model.CanvasHeight = Math.Max(maxY, FlowChartModel.MinCanvasHeight);
-    }
-
-    /// <summary>导出 PNG（由 View 层调用）。</summary>
-    public void ExportPng(FrameworkElement? element)
-    {
-        if (element != null) _exportService.ExportToPngWithDialog(element);
     }
 
     /// <summary>以 2 倍分辨率导出指定画布区域，背景透明。</summary>

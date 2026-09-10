@@ -11,7 +11,7 @@ public class StepExecutionTests
     [Fact]
     public async Task StepContinueAsync_SelectedNode_ExecutesOnlyThatNode()
     {
-        var service = new FlowChartService(null!, new FlowChartExecutionEngine(), null!);
+        var service = new FlowChartService(null!, new TestFlowChartExecutionEngine(), null!);
         var selectedModel = new CountingNode { Name = "Selected" };
         var otherModel = new CountingNode { Name = "Other" };
         var selected = service.AddNode(selectedModel);
@@ -26,7 +26,7 @@ public class StepExecutionTests
     [Fact]
     public async Task StepContinueAsync_SelectedNode_ReadsCurrentConnectedInputWithoutRunningUpstream()
     {
-        var service = new FlowChartService(null!, new FlowChartExecutionEngine(), null!);
+        var service = new FlowChartService(null!, new TestFlowChartExecutionEngine(), null!);
         var (source, sourceModel) = New<SourceNode>("Source");
         var (selected, selectedModel) = New<ValueNode>("Selected");
         service.AddNode(source);
@@ -43,7 +43,7 @@ public class StepExecutionTests
     [Fact]
     public async Task StepContinueAsync_ExcludedNode_DoesNotExecute()
     {
-        var service = new FlowChartService(null!, new FlowChartExecutionEngine(), null!);
+        var service = new FlowChartService(null!, new TestFlowChartExecutionEngine(), null!);
         var model = new CountingNode { Name = "Parked", IsExcludedFromExecution = true };
         var selected = service.AddNode(model);
         var logs = new List<string>();

@@ -15,7 +15,7 @@ namespace FlowEditorTest;
 /// </summary>
 public class MultiLoopTests
 {
-    private readonly FlowChartExecutionEngine _engine = new();
+    private readonly TestFlowChartExecutionEngine _engine = new();
 
     // ── 单循环基础验证 ──
 

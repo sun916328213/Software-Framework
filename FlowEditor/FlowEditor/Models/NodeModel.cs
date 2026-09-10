@@ -167,6 +167,26 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         set => SetProperty(ref _isExcludedFromExecution, value);
     }
 
+    private string? _parentExecutionContainerId;
+    /// <summary>所属结构化执行容器；null 表示位于主流程作用域。</summary>
+    public string? ParentExecutionContainerId
+    {
+        get => _parentExecutionContainerId;
+        set => SetProperty(ref _parentExecutionContainerId, value);
+    }
+
+    private string? _executionLaneId;
+    /// <summary>所属容器内的泳道标识。</summary>
+    public string? ExecutionLaneId
+    {
+        get => _executionLaneId;
+        set => SetProperty(ref _executionLaneId, value);
+    }
+
+    /// <summary>当前运行的完整图上下文；仅运行期赋值，不参与保存。</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public ExecutionScopeRuntime? ExecutionScopeRuntime { get; set; }
+
     // ── 容错策略（P2）──
 
     private NodeErrorPolicy _errorPolicy = NodeErrorPolicy.FailFast;

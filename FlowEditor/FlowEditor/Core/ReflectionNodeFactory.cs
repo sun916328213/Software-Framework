@@ -76,6 +76,9 @@ public sealed class ReflectionNodeFactory : INodeFactory
         node.IsInEnabled = descriptor.IsInEnabled;
         node.IsOutEnabled = descriptor.IsOutEnabled;
         node.Permission = descriptor.Permission;
+        node.IsExcludedFromExecution = descriptor.IsExcludedFromExecution;
+        node.ParentExecutionContainerId = descriptor.ParentExecutionContainerId;
+        node.ExecutionLaneId = descriptor.ExecutionLaneId;
         node.ErrorPolicy = descriptor.ErrorPolicy;
         node.RetryCount = descriptor.RetryCount;
         node.RetryDelayMs = descriptor.RetryDelayMs;

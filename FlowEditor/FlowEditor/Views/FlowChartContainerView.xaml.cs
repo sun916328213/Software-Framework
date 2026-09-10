@@ -1,25 +1,21 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
 using FlowEditor.ViewModels;
 using WPFCustomControls.Controls;
 
 namespace FlowEditor.Views;
 
+/// <summary>组合流程命令栏、工具箱、编辑画布、属性面板和输出区域。</summary>
 public partial class FlowChartContainerView : UserControl
 {
+    /// <summary>获取当前视图的数据上下文。</summary>
     private FlowChartContainerViewModel VM => (FlowChartContainerViewModel)DataContext;
-    private NodePaletteItem? _draggingPaletteItem;
-    private Point _paletteDragStart;
-
+    /// <summary>初始化流程容器。</summary>
     public FlowChartContainerView()
     {
         InitializeComponent();
         Loaded += (_, _) => Focusable = true;
-
-        // 容器级 PreviewMouseLeftButtonUp：处理从工具箱拖放到画布
-        PreviewMouseLeftButtonUp += OnContainerMouseLeftButtonUp;
     }
 
     #region 标签页重命名
@@ -35,111 +31,67 @@ public partial class FlowChartContainerView : UserControl
 
     #endregion
 
-    #region 工具箱交互
-
-    private void OnCategoryHeaderClick(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is FrameworkElement fe && fe.Tag is ToolboxCategory category)
-            category.IsExpanded = !category.IsExpanded;
-    }
-
-    private void OnPaletteItemMouseDown(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is not FrameworkElement fe) return;
-        if (fe.DataContext is not NodePaletteItem item) return;
-        if (VM.ActiveTab == null) return;
-
-        if (e.LeftButton == MouseButtonState.Pressed)
-        {
-            _draggingPaletteItem = item;
-            _paletteDragStart = e.GetPosition(this);
-
-            if (e.ClickCount == 2)
-            {
-                VM.ActiveTab.AddNode(item);
-                _draggingPaletteItem = null;
-            }
-        }
-    }
-
-    private void OnPaletteItemMouseMove(object sender, MouseEventArgs e)
-    {
-        if (_draggingPaletteItem == null || e.LeftButton != MouseButtonState.Pressed) return;
-        var current = e.GetPosition(this);
-        if (Math.Abs(current.X - _paletteDragStart.X) < SystemParameters.MinimumHorizontalDragDistance &&
-            Math.Abs(current.Y - _paletteDragStart.Y) < SystemParameters.MinimumVerticalDragDistance) return;
-
-        var item = _draggingPaletteItem;
-        _draggingPaletteItem = null;
-        DragDrop.DoDragDrop((DependencyObject)sender, item, DragDropEffects.Copy);
-    }
-
-    /// <summary>拖放释放：如果鼠标在激活标签的画布内，则放置节点。</summary>
-    private void OnContainerMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-    {
-        if (_draggingPaletteItem == null || VM.ActiveTab == null) return;
-
-        var tabItem = FlowTabControl.ItemContainerGenerator.ContainerFromItem(VM.ActiveTab) as TabItem;
-        if (tabItem == null) { _draggingPaletteItem = null; return; }
-
-        var fcv = FindVisualChild<FlowChartView>(tabItem);
-        if (fcv == null) { _draggingPaletteItem = null; return; }
-
-        try
-        {
-            var canvasPos = e.GetPosition(fcv.ZoomContainerElement);
-            var w = fcv.ZoomContainerElement.ActualWidth;
-            var h = fcv.ZoomContainerElement.ActualHeight;
-            if (canvasPos.X >= 0 && canvasPos.Y >= 0 && canvasPos.X <= w && canvasPos.Y <= h)
-            {
-                VM.ActiveTab.AddNodeAt(_draggingPaletteItem, canvasPos);
-            }
-        }
-        catch { }
-        _draggingPaletteItem = null;
-    }
-
-    #endregion
-
-    #region 输出日志
-
-    private void OnOutputTextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (sender is TextBox textBox && textBox.Text.Length > 0)
-            textBox.ScrollToEnd();
-    }
-
-    #endregion
-
     #region 导出 PNG
 
-    private void OnExportPngClick(object sender, RoutedEventArgs e)
+    /// <summary>根据是否存在活动标签页更新 PNG 导出命令状态。</summary>
+    private void OnExportPngCanExecute(object sender, System.Windows.Input.CanExecuteRoutedEventArgs e)
     {
-        if (VM.ActiveTab == null) return;
+        e.CanExecute = e.Parameter is FlowChartViewModel;
+        e.Handled = true;
+    }
 
-        var activeTabItem = FlowTabControl.ItemContainerGenerator.ContainerFromItem(VM.ActiveTab) as TabItem;
-        if (activeTabItem == null) return;
+    /// <summary>执行活动标签页的 PNG 导出。</summary>
+    private void OnExportPngExecuted(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
+    {
+        if (e.Parameter is not FlowChartViewModel activeTab) return;
 
-        var flowChartView = FindVisualChild<FlowChartView>(activeTabItem);
-        if (flowChartView == null) return;
+        var flowChartView = FindActiveFlowChart(FlowTabControl, activeTab);
+        if (flowChartView == null)
+        {
+            FlowTabControl.UpdateLayout();
+            flowChartView = FindActiveFlowChart(FlowTabControl, activeTab);
+        }
 
-        VM.ActiveTab.ExportPng(
+        if (flowChartView == null)
+        {
+            activeTab.Model.StatusText = "导出失败：活动画布尚未加载";
+            e.Handled = true;
+            return;
+        }
+
+        activeTab.ExportPng(
             flowChartView.ZoomContainerElement,
-            VM.ActiveTab.GetCanvasExportBounds());
+            activeTab.GetCanvasExportBounds());
+        e.Handled = true;
     }
 
     #endregion
 
     #region 查找控件
 
-    private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+    /// <summary>从标签宿主的内容视觉树中查找绑定到活动标签页的流程画布。</summary>
+    /// <param name="tabHost">承载选中内容的标签控件。</param>
+    /// <param name="activeTab">活动标签页的数据上下文。</param>
+    /// <returns>活动流程画布；内容尚未实现时返回 <see langword="null"/>。</returns>
+    internal static FlowChartView? FindActiveFlowChart(DependencyObject tabHost, object activeTab) =>
+        FindVisualChild<FlowChartView>(
+            tabHost,
+            candidate => ReferenceEquals(candidate.DataContext, activeTab));
+
+    /// <summary>在指定视觉树下递归查找第一个满足条件的目标类型子元素。</summary>
+    /// <typeparam name="T">要查找的视觉元素类型。</typeparam>
+    /// <param name="parent">搜索起点。</param>
+    /// <param name="predicate">目标元素必须满足的条件。</param>
+    /// <returns>找到的元素；不存在时返回 <see langword="null"/>。</returns>
+    private static T? FindVisualChild<T>(DependencyObject parent, Predicate<T> predicate)
+        where T : DependencyObject
     {
         for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
         {
             var child = VisualTreeHelper.GetChild(parent, i);
-            if (child is T found)
+            if (child is T found && predicate(found))
                 return found;
-            var result = FindVisualChild<T>(child);
+            var result = FindVisualChild(child, predicate);
             if (result != null)
                 return result;
         }

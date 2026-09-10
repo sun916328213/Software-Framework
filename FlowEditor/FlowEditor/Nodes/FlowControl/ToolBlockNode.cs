@@ -1,8 +1,5 @@
-using System.Windows;
 using FlowEditor.Core;
 using FlowEditor.Models;
-using FlowEditor.ViewModels;
-using FlowEditor.Views;
 using WPFCustomControls.PropertyGrid.Models;
 
 namespace FlowEditor.Nodes.FlowControl;
@@ -14,7 +11,7 @@ namespace FlowEditor.Nodes.FlowControl;
 /// </summary>
 [FlowTool("ToolBlock", "PackageVariantClosed", ToolGroup = "流程控制", SortIndex = 7,
     Description = "工具块：将多个工具封装为一个，减少主流程显示")]
-public class ToolBlockNode : NodeModel
+public class ToolBlockNode : NodeModel, IInternalFlowContainerNode
 {
     /// <summary>
     /// 内部流程数据（可序列化）。
@@ -22,6 +19,16 @@ public class ToolBlockNode : NodeModel
     /// </summary>
     [NodeProperty(DisplayName = "内部流程数据", Group = "0.容器", Order = 0, IsDisplay = false)]
     public List<FlowChartDocumentModel>? InternalData { get; set; }
+
+    public string InternalEditorTitle => $"[{Name}] 内部流程编辑";
+
+    public IReadOnlyCollection<string> ExcludedInternalTools => ["ToolBlock"];
+
+    public int MinimumInternalFlows => 0;
+
+    public int MaximumInternalFlows => int.MaxValue;
+
+    public string InternalFlowNamePrefix => "流程图";
 
     public ToolBlockNode()
     {
@@ -36,12 +43,7 @@ public class ToolBlockNode : NodeModel
     [NodeAction("打开内部流程", Order = 0, IconResource = "CodeBraces")]
     public void OpenInternalFlow()
     {
-        var service = Service;
-        if (service == null) return;
-
-        var window = new ToolBlockFlowWindow(this, service);
-        window.Owner = Application.Current?.MainWindow;
-        window.ShowDialog();
+        Service?.OpenInternalFlowEditor(this);
     }
 
     public override async Task ExecuteAsync(CancellationToken ct)
@@ -57,12 +59,18 @@ public class ToolBlockNode : NodeModel
         var tasks = InternalData.Select(async flowDoc =>
         {
             // 重建节点
-            var nodeVms = flowDoc.Nodes
-                .Select(n => new NodeViewModel(service.RebuildNodeFromDocument(n)))
+            var nodeModels = flowDoc.Nodes
+                .Select(n =>
+                {
+                    var model = service.RebuildNodeFromDocument(n);
+                    model.Service = service;
+                    model.OnAttached(service);
+                    return model;
+                })
                 .ToList();
 
             // 执行
-            await engine.ExecuteAsync(nodeVms, flowDoc.Connections, ct, _ => { });
+            await engine.ExecuteAsync(nodeModels, flowDoc.Connections, ct, _ => { });
         });
         await Task.WhenAll(tasks);
     }

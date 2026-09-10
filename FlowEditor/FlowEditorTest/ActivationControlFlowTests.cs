@@ -1,4 +1,4 @@
-﻿using FlowEditor.Core;
+using FlowEditor.Core;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
 using FlowEditor.Nodes.FlowControl;
@@ -11,7 +11,7 @@ namespace FlowEditorTest;
 /// <summary>P1 验收：激活边控制流语义（分支只走选中路径；循环计数生效并自然终止）。</summary>
 public class ActivationControlFlowTests
 {
-    private readonly FlowChartExecutionEngine _engine = new();
+    private readonly TestFlowChartExecutionEngine _engine = new();
 
     // ── 条件分支 ──
 

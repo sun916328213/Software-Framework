@@ -10,6 +10,7 @@ using static FlowEditorTest.TestGraph;
 namespace FlowEditorTest;
 
 /// <summary>从 FlowChartService 运行入口到执行引擎的集成回归。</summary>
+[Collection(FlowLogContextCollection.Name)]
 public class FlowChartServiceExecutionTests
 {
     private sealed class CancellableNode : NodeModel
@@ -189,7 +190,7 @@ public class FlowChartServiceExecutionTests
     }
 
     private static FlowChartService CreateService() =>
-        new(null!, new FlowChartExecutionEngine(), null!);
+        new(null!, new TestFlowChartExecutionEngine(), null!);
 
     private static async Task WaitUntilAsync(Func<bool> condition)
     {

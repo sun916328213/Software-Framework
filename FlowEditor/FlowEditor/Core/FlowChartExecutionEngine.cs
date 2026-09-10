@@ -58,12 +58,19 @@ public class FlowChartExecutionEngine
     /// 支持环路：回边自动重新调度；当环内节点（如循环节点）不再激活回边时自然终止。
     /// 用户通过 CancellationToken 停止。
     /// </summary>
+    /// <param name="nodes">本次要调度的节点快照。</param>
+    /// <param name="connections">节点之间的连线快照。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <param name="log">执行日志回调。</param>
+    /// <param name="onBeforeNode">可选的节点前置回调；只传递节点 ID，避免将调用方节点类型泄漏给调试协作方。</param>
+    /// <param name="executionOrder">可选的实际执行顺序收集器。</param>
+    /// <param name="journal">可选的执行追踪日志。</param>
     public async Task ExecuteAsync<TNode>(
         IReadOnlyList<TNode> nodes,
         IReadOnlyList<ConnectionModel> connections,
         CancellationToken ct,
         Action<string> log,
-        Func<TNode, Task>? onBeforeNode = null,
+        Func<string, Task>? onBeforeNode = null,
         List<TNode>? executionOrder = null,
         ExecutionJournal? journal = null) where TNode : INodeExecutable
     {
@@ -76,14 +83,8 @@ public class FlowChartExecutionEngine
         // 重置本轮执行的所有节点 CurrentRunCount；RunSequence 由 Interlocked.Increment 在节点执行入口处推进
         // (重置时机：每次 ExecuteAsync 调用，即"按一次执行按钮"=一个完整执行周期；循环回边 BumpRun 不在此处重置)
         _runSeqCounter = 0;
-        foreach (var n in nodes)
-        {
-            if (n is FlowEditor.ViewModels.NodeViewModel nvm)
-                nvm.CurrentRunCount = 0;
-            // FlowInstance 直接使用 NodeModel（非 NodeViewModel），同样需要重置周期计数
-            else if (n is FlowEditor.Nodes.NodeModel nm)
-                nm.CurrentRunCount = 0;
-        }
+        foreach (var node in nodes)
+            node.CurrentRunCount = 0;
 
         // 编译期：一次性预计算邻接表、回边、前驱表、拓扑序（O(N+E)）
         var compileStart = Timestamp();
@@ -126,10 +127,7 @@ public class FlowChartExecutionEngine
             throw new ArgumentException("待执行节点不属于当前执行图。", nameof(node));
 
         _runSeqCounter = 0;
-        if (node is FlowEditor.ViewModels.NodeViewModel nvm)
-            nvm.CurrentRunCount = 0;
-        else if (node is FlowEditor.Nodes.NodeModel model)
-            model.CurrentRunCount = 0;
+        node.CurrentRunCount = 0;
         var graph = CompiledFlowGraph<TNode>.Compile(nodes, connections);
         log($"[单步] 开始执行选中节点 [{node.Name}]");
         await ExecuteSingleNodeAsync(
@@ -148,6 +146,23 @@ public class FlowChartExecutionEngine
         bool Failed,
         bool FailureSwallowed);
 
+    private long BeginNodeExecution<TNode>(
+        TNode nodeVm,
+        Action<string> log,
+        ConcurrentQueue<TNode>? orderBag,
+        ExecutionJournal? journal) where TNode : INodeExecutable
+    {
+        var startTimestamp = Timestamp();
+        nodeVm.Status = NodeStatus.Running;
+        orderBag?.Enqueue(nodeVm);
+        log($"#{FlowLogContext.RunId} [{nodeVm.Name}] [开始]");
+        journal?.RecordNodeStart(nodeVm.Id, nodeVm.Name);
+        nodeVm.Count++;
+        nodeVm.CurrentRunCount++;
+        nodeVm.RunSequence = Interlocked.Increment(ref _runSeqCounter);
+        return startTimestamp;
+    }
+
     /// <summary>
     /// 执行单个节点：状态切换、日志、输入填充、执行、输出同步、计时、激活端口解析，
     /// 以及超时控制 / 失败重试 / 容错策略（FailFast / ContinueOnError / RouteToErrorPort）。
@@ -163,30 +178,13 @@ public class FlowChartExecutionEngine
         ConcurrentQueue<TNode>? orderBag,
         Func<string>? onExecuted,
         bool enforceFailFast = false,
-        ExecutionJournal? journal = null) where TNode : INodeExecutable
+        ExecutionJournal? journal = null,
+        long? prestartedTimestamp = null) where TNode : INodeExecutable
     {
-        var startTimestamp = Timestamp();
-        nodeVm.Status = NodeStatus.Running;
-        orderBag?.Enqueue(nodeVm);
         // 节点级日志统一为「#运行序号 [节点名] 内容」，与 NodeLog 面板/文件格式一致
         Action<string> nodeLog = msg => log($"#{FlowLogContext.RunId} [{nodeVm.Name}] {msg}");
-        nodeLog("[开始]");
-        journal?.RecordNodeStart(nodeVm.Id, nodeVm.Name);
-
-        // 计数更新：Count 永远累加；CurrentRunCount 在 ExecuteAsync 入口处已重置过；RunSequence 走本轮共享累加器
-        // 失败也累加（节点尝试执行了就算"跑过一次"，与 UI 期望一致）
-        // INodeExecutable.Count 接口属性覆盖 NodeViewModel 和 NodeModel 两种执行面
-        nodeVm.Count++;
-        if (nodeVm is FlowEditor.ViewModels.NodeViewModel nvmCounter)
-        {
-            nvmCounter.CurrentRunCount++;
-            nvmCounter.RunSequence = Interlocked.Increment(ref _runSeqCounter);
-        }
-        else if (nodeVm is FlowEditor.Nodes.NodeModel nmCounter)
-        {
-            nmCounter.CurrentRunCount++;
-            nmCounter.RunSequence = Interlocked.Increment(ref _runSeqCounter);
-        }
+        var startTimestamp = prestartedTimestamp ??
+            BeginNodeExecution(nodeVm, log, orderBag, journal);
 
         // 容错参数（未实现 INodeFaultPolicy 的执行面按默认处理）
         var policyNode = nodeVm as INodeFaultPolicy;
@@ -570,6 +568,16 @@ public class FlowChartExecutionEngine
         var remaining = remainingPredecessors.AddOrUpdate(succId, _ => 0, (_, c) => c - 1);
         if (!graph.NodeMap.TryGetValue(succId, out var succNode)) return;
 
+        // AND 汇聚收到第一条活动分支后立即显示“运行中/等待”，但只有全部输入
+        // 都到达后才真正执行并变为完成。这样 UI 能准确表达汇聚正在等待另一支路。
+        if (activeEdge && remaining > 0 &&
+            succNode.FlowJoinMode == FlowJoinMode.AllActive &&
+            succNode.Status == NodeStatus.Idle)
+        {
+            succNode.Status = NodeStatus.Running;
+            log($"[汇聚] [{succNode.Name}] 已收到分支，等待其余输入");
+        }
+
         if (activeEdge && succNode.FlowJoinMode == FlowJoinMode.AnyActive)
         {
             QueueNodeDag(succNode, graph, ct, log,
@@ -638,6 +646,8 @@ public class FlowChartExecutionEngine
     {
         log($"[跳过] {nodeVm.Name} - 上游未执行（失败或分支未选中）");
         journal?.RecordNodeSkipped(nodeVm.Id, nodeVm.Name);
+        if (nodeVm.Status == NodeStatus.Running)
+            nodeVm.Status = NodeStatus.Idle;
 
         // 解析完成信号
         completionSources[nodeVm.Id].TrySetResult();
@@ -713,7 +723,7 @@ public class FlowChartExecutionEngine
             remaining[entry] = 0;
         }
 
-        var seq = new int[1];
+        var cycleSequence = 0;
 
         // 队列级回边目标去重：循环体存在多条并行末端时，归一化器会为每个末端各合成一条回边，
         // 若不去重则循环头一轮被入队多次 → 计数翻倍、Completed 后残留调度复活循环（无限活锁）。
@@ -723,42 +733,89 @@ public class FlowChartExecutionEngine
         // 环路模式也必须遵守 OR 汇聚：任一活动输入到达即可调度。
         // 目标出队前保持占位，避免同一批同时到达的输入重复投递同一个汇聚节点。
         var pendingAnyJoinTargets = new HashSet<string>();
+        // AND 汇聚首个令牌到达即进入 Running，保留开始时刻以计算完整等待耗时。
+        var pendingAllJoinStarts = new Dictionary<string, long>();
+        var runningNodeIds = new HashSet<string>();
+        var running = new List<(
+            string Id,
+            TNode Node,
+            Task<NodeRunResult> Task)>();
+        using var cycleCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var runToken = cycleCts.Token;
 
-        while (queue.Count > 0)
+        while (queue.Count > 0 || running.Count > 0)
         {
             ct.ThrowIfCancellationRequested();
 
-            var nodeId = queue.Dequeue();
-            pendingAnyJoinTargets.Remove(nodeId);
-            if (!nodeMap.TryGetValue(nodeId, out var nodeVm))
+            // 立即启动当前所有 ready 节点；已在运行的同一节点不可重入。
+            var waveSize = queue.Count;
+            for (var index = 0; index < waveSize; index++)
             {
-                pendingBackEdgeTargets.Remove(nodeId);
-                continue;
-            }
-
-            // 前驱未全部完成 → 重新入队尾部等待
-            if (remaining.GetValueOrDefault(nodeId, 0) > 0)
-            {
-                queue.Enqueue(nodeId);
-                continue;
-            }
-
-            pendingBackEdgeTargets.Remove(nodeId);
-
-            executionOrder?.Add(nodeVm);
-
-            var result = await ExecuteSingleNodeAsync(nodeVm, graph, ct, log, orderBag: null,
-                onExecuted: () =>
+                var candidateId = queue.Dequeue();
+                pendingAnyJoinTargets.Remove(candidateId);
+                if (!nodeMap.TryGetValue(candidateId, out var candidateNode))
                 {
-                    // 节点本地 Count/CurrentRunCount 已在 ExecuteSingleNodeAsync 入口处累加，此处只推进本轮全局执行序号
-                    seq[0]++;
-                    return $" (#{seq[0]})";
-                },
-                journal: journal);
+                    pendingBackEdgeTargets.Remove(candidateId);
+                    continue;
+                }
+
+                if (remaining.GetValueOrDefault(candidateId, 0) > 0 || runningNodeIds.Contains(candidateId))
+                {
+                    queue.Enqueue(candidateId);
+                    continue;
+                }
+
+                pendingBackEdgeTargets.Remove(candidateId);
+                var prestarted = pendingAllJoinStarts.Remove(candidateId, out var startedAt)
+                    ? startedAt
+                    : (long?)null;
+                if (prestarted == null)
+                    executionOrder?.Add(candidateNode);
+                runningNodeIds.Add(candidateId);
+                var task = Task.Run(() =>
+                ExecuteSingleNodeAsync(candidateNode, graph, runToken, log, orderBag: null,
+                    onExecuted: () =>
+                    {
+                        var sequence = Interlocked.Increment(ref cycleSequence);
+                        return $" (#{sequence})";
+                    },
+                    journal: journal,
+                    prestartedTimestamp: prestarted), runToken);
+                running.Add((candidateId, candidateNode, task));
+            }
+
+            // 没有可执行节点，只剩未收齐的 AND 汇聚：本次路径自然结束。
+            if (running.Count == 0)
+                break;
+
+            // 任意一个节点完成就立即传播后继，不等待同批的最长分支。
+            var completedTask = await Task.WhenAny(running.Select(item => item.Task));
+            var completedIndex = running.FindIndex(item => ReferenceEquals(item.Task, completedTask));
+            var completed = running[completedIndex];
+            NodeRunResult result;
+            try
+            {
+                result = await completed.Task;
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw new OperationCanceledException(ct);
+            }
+            catch
+            {
+                cycleCts.Cancel();
+                try { await Task.WhenAll(running.Select(item => item.Task)); }
+                catch { /* 保留首个失败作为对外异常 */ }
+                throw;
+            }
+            running.RemoveAt(completedIndex);
+            runningNodeIds.Remove(completed.Id);
+
+            var nodeId = completed.Id;
+            var nodeVm = completed.Node;
             var activated = result.ActivatedIds;
 
-            // 通知后继（激活边过滤：未激活的出边直接剪枝，包括回边——这是环路自然终止的关键；
-            // 容错吞掉的失败经 ErrorPort 路由或全放行表达走向）
+            // 完成事件在调度线程上串行传播，保证 remaining/回边集合无竞态。
             foreach (var conn in graph.SuccessorConnections[nodeId])
             {
                 var succId = conn.TargetNodeId;
@@ -773,48 +830,56 @@ public class FlowChartExecutionEngine
 
                 if (graph.BackEdges.Contains((conn.SourceNodeId, succId)))
                 {
-                    // 队列级去重：同一轮内多条并行末端回边指向同一循环头时，只重新调度一次。
-                    // （单次执行内的多条回边同样被此集合覆盖，替代旧的局部 rescheduled 方案）
                     if (!pendingBackEdgeTargets.Add(succId)) continue;
 
-                    // 回边 → 进入新一轮：运行序号自增（使循环各轮日志的 #运行序号 可区分），重置目标节点前驱计数后重新调度
                     FlowLogContext.BumpRun();
                     log($"[环路] 重新调度 {nodeMap[succId].Name}");
-                    remaining[succId] = 0;
-                    nodeMap[succId].Status = NodeStatus.Idle;
-                    queue.Enqueue(succId);
-                }
-                else
-                {
-                    // OR 汇聚只消费首个实际到达的活动令牌，不能等待静态图中未被条件
-                    // 分发激活的其他前驱；否则一旦图中存在回边就会永久卡在汇聚前。
-                    if (nodeMap[succId].FlowJoinMode == FlowJoinMode.AnyActive)
+
+                    if (nodeMap[succId].FlowJoinMode != FlowJoinMode.AllActive)
                     {
-                        if (pendingAnyJoinTargets.Add(succId))
-                        {
-                            remaining[succId] = 0;
-                            queue.Enqueue(succId);
-                        }
+                        remaining[succId] = 0;
+                        nodeMap[succId].Status = NodeStatus.Idle;
+                        queue.Enqueue(succId);
                         continue;
                     }
+                    // AND 汇聚的回边也只是其中一个输入令牌，不能绕过其他输入直接执行。
+                }
 
-                    // 普通/AND 汇聚边 → 递减后继的前驱计数
-                    var currentRemaining = remaining.GetValueOrDefault(
-                        succId, graph.Predecessors[succId].Count);
-                    // 环路进入下一轮后，上一轮已经归零的依赖计数必须重新装载；否则
-                    // 第一条边会减成负数并提前/重复调度目标节点。
-                    if (currentRemaining <= 0)
-                        currentRemaining = graph.Predecessors[succId].Count;
-                    var rem = currentRemaining - 1;
-                    remaining[succId] = rem;
-                    if (rem <= 0)
+                if (nodeMap[succId].FlowJoinMode == FlowJoinMode.AnyActive)
+                {
+                    if (pendingAnyJoinTargets.Add(succId))
                     {
                         remaining[succId] = 0;
                         queue.Enqueue(succId);
                     }
+                    continue;
+                }
+
+                var currentRemaining = remaining.GetValueOrDefault(
+                    succId, graph.Predecessors[succId].Count);
+                if (currentRemaining <= 0)
+                    currentRemaining = graph.Predecessors[succId].Count;
+                var rem = currentRemaining - 1;
+                remaining[succId] = rem;
+                if (rem <= 0)
+                {
+                    remaining[succId] = 0;
+                    queue.Enqueue(succId);
+                }
+                else if (nodeMap[succId].FlowJoinMode == FlowJoinMode.AllActive &&
+                         !pendingAllJoinStarts.ContainsKey(succId))
+                {
+                    executionOrder?.Add(nodeMap[succId]);
+                    pendingAllJoinStarts[succId] = BeginNodeExecution(
+                        nodeMap[succId], log, orderBag: null, journal);
                 }
             }
         }
+
+        // 条件分支剪枝后可能有 AND 汇聚永远收不齐；流程自然结束时恢复 Idle。
+        foreach (var nodeId in pendingAllJoinStarts.Keys)
+            if (nodeMap[nodeId].Status == NodeStatus.Running)
+                nodeMap[nodeId].Status = NodeStatus.Idle;
 
         log($"[引擎] 全部节点执行完成");
     }
@@ -844,7 +909,7 @@ public class FlowChartExecutionEngine
         CompiledFlowGraph<TNode> graph,
         CancellationToken ct,
         Action<string> log,
-        Func<TNode, Task> onBeforeNode,
+        Func<string, Task> onBeforeNode,
         List<TNode>? executionOrder,
         ExecutionJournal? journal) where TNode : INodeExecutable
     {
@@ -865,7 +930,7 @@ public class FlowChartExecutionEngine
             foreach (var nodeVm in sorted)
             {
                 ct.ThrowIfCancellationRequested();
-                await onBeforeNode(nodeVm);
+                await onBeforeNode(nodeVm.Id);
                 executionOrder?.Add(nodeVm);
 
                 // 调试模式强制 FailFast：失败立即中断步进（重试/超时仍然生效）

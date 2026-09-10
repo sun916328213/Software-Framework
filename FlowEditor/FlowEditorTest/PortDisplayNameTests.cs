@@ -169,100 +169,60 @@ public class PortDisplayNameTests
     [Fact]
     public void EnablingIterationsInput_RendersVisiblePortNameInNodeView()
     {
-        Exception? failure = null;
-        var thread = new Thread(() =>
+        WpfTestHost.Run(() =>
         {
-            try
+            var node = new LoopNode();
+            node.SetPortConfig(nameof(LoopNode.Iterations), false, false);
+            var view = new NodeView
             {
-                EnsureApplicationResources();
-                var node = new LoopNode();
-                node.SetPortConfig(nameof(LoopNode.Iterations), false, false);
-                var view = new NodeView
-                {
-                    DataContext = new NodeViewModel(node),
-                    Width = 160
-                };
-                view.Measure(new Size(160, 500));
-                view.Arrange(new Rect(0, 0, 160, view.DesiredSize.Height));
+                DataContext = new NodeViewModel(node),
+                Width = 160
+            };
+            view.Measure(new Size(160, 500));
+            view.Arrange(new Rect(0, 0, 160, view.DesiredSize.Height));
 
-                node.SetPortConfig(nameof(LoopNode.Iterations), true, false);
-                view.Dispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
-                view.Measure(new Size(160, 500));
-                view.Arrange(new Rect(0, 0, 160, view.DesiredSize.Height));
-                view.UpdateLayout();
+            node.SetPortConfig(nameof(LoopNode.Iterations), true, false);
+            view.Dispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
+            view.Measure(new Size(160, 500));
+            view.Arrange(new Rect(0, 0, 160, view.DesiredSize.Height));
+            view.UpdateLayout();
 
-                var inputPorts = FindVisualChildren<ItemsControl>(view)
-                    .Single(control => control.Name == "InputPortsItemsControl");
-                var label = FindVisualChildren<TextBlock>(inputPorts)
-                    .FirstOrDefault(text => text.Text == "循环次数");
-                Assert.NotNull(label);
-                Assert.True(label.ActualWidth >= 20, $"端口名称宽度应可见，实际为 {label.ActualWidth}");
-                var foreground = Assert.IsType<SolidColorBrush>(label.Foreground).Color;
-                var contrast = GetContrastRatio(foreground, Colors.White);
-                Assert.True(contrast >= 4.5,
-                    $"端口名称与节点背景对比度应至少为 4.5，实际为 {contrast:F2}");
+            var inputPorts = FindVisualChildren<ItemsControl>(view)
+                .Single(control => control.Name == "InputPortsItemsControl");
+            var label = FindVisualChildren<TextBlock>(inputPorts)
+                .FirstOrDefault(text => text.Text == "循环次数");
+            Assert.NotNull(label);
+            Assert.True(label.ActualWidth >= 20, $"端口名称宽度应可见，实际为 {label.ActualWidth}");
+            var foreground = Assert.IsType<SolidColorBrush>(label.Foreground).Color;
+            var contrast = GetContrastRatio(foreground, Colors.White);
+            Assert.True(contrast >= 4.5,
+                $"端口名称与节点背景对比度应至少为 4.5，实际为 {contrast:F2}");
 
-                using var portManagement = new PortManagementViewModel(
-                    node,
-                    [nameof(LoopNode.Iterations)],
-                    new NullPortDialogService());
-                var row = Assert.Single(portManagement.InputPorts);
-                var propertyGridResources = new ResourceDictionary
-                {
-                    Source = new Uri(
-                        "pack://application:,,,/WPFCustomControls;component/PropertyGrid/Views/BuiltinPropertyGridResources.xaml")
-                };
-                var rowPresenter = new ContentControl
-                {
-                    Content = row,
-                    ContentTemplate = Assert.IsType<DataTemplate>(propertyGridResources["PG_PortRowTemplate"]),
-                    Width = 320
-                };
-                rowPresenter.Measure(new Size(320, 100));
-                rowPresenter.Arrange(new Rect(0, 0, 320, rowPresenter.DesiredSize.Height));
-                rowPresenter.UpdateLayout();
-
-                var propertyPanelLabel = FindVisualChildren<TextBlock>(rowPresenter)
-                    .FirstOrDefault(text => text.Text == "循环次数" && text.Visibility == Visibility.Visible);
-                Assert.NotNull(propertyPanelLabel);
-                Assert.True(propertyPanelLabel.ActualWidth >= 20,
-                    $"属性面板端口名称宽度应可见，实际为 {propertyPanelLabel.ActualWidth}");
-            }
-            catch (Exception ex)
+            using var portManagement = new PortManagementViewModel(
+                node,
+                [nameof(LoopNode.Iterations)],
+                new NullPortDialogService());
+            var row = Assert.Single(portManagement.InputPorts);
+            var propertyGridResources = new ResourceDictionary
             {
-                failure = ex;
-            }
-            finally
+                Source = new Uri(
+                    "pack://application:,,,/WPFCustomControls;component/PropertyGrid/Views/BuiltinPropertyGridResources.xaml")
+            };
+            var rowPresenter = new ContentControl
             {
-                Dispatcher.CurrentDispatcher.InvokeShutdown();
-            }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
+                Content = row,
+                ContentTemplate = Assert.IsType<DataTemplate>(propertyGridResources["PG_PortRowTemplate"]),
+                Width = 320
+            };
+            rowPresenter.Measure(new Size(320, 100));
+            rowPresenter.Arrange(new Rect(0, 0, 320, rowPresenter.DesiredSize.Height));
+            rowPresenter.UpdateLayout();
 
-        if (failure != null)
-            throw failure;
-    }
-
-    private static void EnsureApplicationResources()
-    {
-        var application = Application.Current ?? new Application();
-        if (!application.Resources.MergedDictionaries.OfType<BundledTheme>().Any())
-        {
-            application.Resources.MergedDictionaries.Add(new BundledTheme
-            {
-                BaseTheme = BaseTheme.Light,
-                PrimaryColor = PrimaryColor.Teal,
-                SecondaryColor = SecondaryColor.Amber
-            });
-        }
-        if (application.Resources.MergedDictionaries.Any(dictionary =>
-                dictionary.Source?.OriginalString.Contains("FlowEditor;component/Resources/Resources.xaml") == true))
-            return;
-        application.Resources.MergedDictionaries.Add(new ResourceDictionary
-        {
-            Source = new Uri("pack://application:,,,/FlowEditor;component/Resources/Resources.xaml")
+            var propertyPanelLabel = FindVisualChildren<TextBlock>(rowPresenter)
+                .FirstOrDefault(text => text.Text == "循环次数" && text.Visibility == Visibility.Visible);
+            Assert.NotNull(propertyPanelLabel);
+            Assert.True(propertyPanelLabel.ActualWidth >= 20,
+                $"属性面板端口名称宽度应可见，实际为 {propertyPanelLabel.ActualWidth}");
         });
     }
 

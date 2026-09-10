@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using FlowEditor.Interfaces;
 using FlowEditor.Services;
 using Prism.Ioc;
@@ -17,7 +17,25 @@ namespace FlowEditor.ViewModels;
 /// </summary>
 public partial class FlowChartContainerViewModel : ObservableObject
 {
+    internal const string ShortcutHelpText =
+        "运行与文件\n" +
+        "F5：运行全部流程\n" +
+        "Ctrl+N：新建流程\n" +
+        "Ctrl+S：保存当前 .flow 流程\n" +
+        "Ctrl+O：打开单个 .flow 流程\n\n" +
+        "画布与节点\n" +
+        "鼠标滚轮：缩放画布\n" +
+        "Shift+左键拖动：平移画布\n" +
+        "鼠标中键拖动：平移画布\n" +
+        "Ctrl+左键：添加或移除多选节点\n" +
+        "Ctrl+C / Ctrl+V：复制、粘贴节点\n" +
+        "Delete：删除选中节点或连线";
+
     public ObservableCollection<FlowChartViewModel> Tabs { get; } = new();
+
+    private int _minimumTabCount;
+    private int _maximumTabCount = int.MaxValue;
+    private string _newTabNamePrefix = "流程图";
 
     private readonly IDialogService _dialogService;
     private readonly IContainerProvider _containerProvider;
@@ -43,18 +61,6 @@ public partial class FlowChartContainerViewModel : ObservableObject
 
     // ── 属性面板 ViewModel（经 IoC 容器解析，生命周期由容器管理） ──
     public PropertyGridHostViewModel PropertyGridVM { get; }
-
-    // ── 容器级命令 ──
-    public AsyncRelayCommand RunCurrentCommand { get; }
-    public AsyncRelayCommand RunAllCommand { get; }
-    public RelayCommand StopAllCommand { get; }
-    public AsyncRelayCommand LoopRunAllCommand { get; }
-    public RelayCommand LoopStopAllCommand { get; }
-    public RelayCommand NewFlowCommand { get; }
-    public RelayCommand<FlowChartViewModel> CloseTabCommand { get; }
-    public RelayCommand SaveAllCommand { get; }
-    public RelayCommand SaveAllAsCommand { get; }
-    public RelayCommand LoadAllCommand { get; }
 
     // ── 共享工具箱（委托给 ToolboxService） ──
     public ObservableCollection<ToolboxCategory> ToolboxCategories => _toolboxService.Categories;
@@ -83,16 +89,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
 
         PropertyGridVM = containerProvider.Resolve<PropertyGridHostViewModel>();
 
-        RunCurrentCommand = new AsyncRelayCommand(RunCurrentAsync, () => ActiveTab != null);
-        RunAllCommand = new AsyncRelayCommand(RunAllAsync);
-        StopAllCommand = new RelayCommand(StopAll);
-        LoopRunAllCommand = new AsyncRelayCommand(LoopRunAllAsync);
-        LoopStopAllCommand = new RelayCommand(LoopStopAll);
-        NewFlowCommand = new RelayCommand(AddNewTab);
-        CloseTabCommand = new RelayCommand<FlowChartViewModel>(CloseTab);
-        SaveAllCommand = new RelayCommand(SaveAll);
-        SaveAllAsCommand = new RelayCommand(SaveAllAs);
-        LoadAllCommand = new RelayCommand(LoadAll);
+        InitializeCommands();
 
         _ = _toolboxService.RefreshAsync();
         AddNewTab();
@@ -157,9 +154,10 @@ public partial class FlowChartContainerViewModel : ObservableObject
         foreach (var tab in Tabs)
         {
             var title = tab.Model.TabTitle;
-            if (title.StartsWith("流程图") && title.Length > 3)
+            if (title.StartsWith(_newTabNamePrefix, StringComparison.Ordinal) &&
+                title.Length > _newTabNamePrefix.Length)
             {
-                if (int.TryParse(title[3..], out var num))
+                if (int.TryParse(title[_newTabNamePrefix.Length..], out var num))
                     usedNumbers.Add(num);
             }
         }
@@ -172,15 +170,33 @@ public partial class FlowChartContainerViewModel : ObservableObject
 
     public void AddNewTab()
     {
+        if (Tabs.Count >= _maximumTabCount) return;
         var vm = _containerProvider.Resolve<FlowChartViewModel>();
         vm.SetProcessName(ProcessName);
-        vm.Model.TabTitle = $"流程图{GetNextFlowNumber()}";
+        vm.Model.TabTitle = $"{_newTabNamePrefix}{GetNextFlowNumber()}";
         vm.Model.StatusText = "就绪";
         // 监听选中变化，更新属性面板 ViewModel
         AttachPropertyGridHook(vm);
         Tabs.Add(vm);
         ActiveTab = vm;
+        NewFlowCommand.NotifyCanExecuteChanged();
+        CloseTabCommand.NotifyCanExecuteChanged();
     }
+
+    /// <summary>限制内部流程编辑器可创建和删除的标签页数量。</summary>
+    public void ConfigureTabLimits(int minimum, int maximum, string namePrefix)
+    {
+        _minimumTabCount = Math.Max(0, minimum);
+        _maximumTabCount = Math.Max(_minimumTabCount, maximum);
+        _newTabNamePrefix = string.IsNullOrWhiteSpace(namePrefix) ? "流程图" : namePrefix;
+        NewFlowCommand.NotifyCanExecuteChanged();
+        CloseTabCommand.NotifyCanExecuteChanged();
+    }
+
+    private bool CanAddNewTab() => Tabs.Count < _maximumTabCount;
+
+    private bool CanCloseTab(FlowChartViewModel? tab)
+        => tab != null && Tabs.Contains(tab) && Tabs.Count > _minimumTabCount;
 
     /// <summary>为标签页绑定属性面板联动逻辑。</summary>
     private void AttachPropertyGridHook(FlowChartViewModel vm)
@@ -188,13 +204,22 @@ public partial class FlowChartContainerViewModel : ObservableObject
         vm.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(FlowChartViewModel.SelectedNode))
-                PropertyGridVM.TargetObject = ActiveTab?.SelectedNode?.Model;
+            {
+                var expectedTarget = vm.SelectedNode?.Model;
+                Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+                {
+                    // 连续快速点击时丢弃已过期的属性面板刷新。
+                    if (ReferenceEquals(vm, ActiveTab) &&
+                        ReferenceEquals(expectedTarget, vm.SelectedNode?.Model))
+                        PropertyGridVM.TargetObject = expectedTarget;
+                }));
+            }
         };
     }
 
     private void CloseTab(FlowChartViewModel? tab)
     {
-        if (tab == null) return;
+        if (tab == null || !CanCloseTab(tab)) return;
 
         if (tab.Model.IsModified)
         {
@@ -224,6 +249,8 @@ public partial class FlowChartContainerViewModel : ObservableObject
             ActiveTab = Tabs[Math.Min(index, Tabs.Count - 1)];
         else
             ActiveTab = null;
+        NewFlowCommand.NotifyCanExecuteChanged();
+        CloseTabCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>用单个流程替换当前所有标签页（用于自动流程等默认流程自动加载）。</summary>
@@ -335,6 +362,9 @@ public partial class FlowChartContainerViewModel : ObservableObject
         => _toolboxService.ExcludeToolByName(toolName);
 
     // ═══════════════════ 辅助 ═══════════════════
+
+    private void ShowShortcutHelp() =>
+        _dialogService.ShowInfo(ShortcutHelpText, "流程图快捷键");
 
     private void NotifyAllCanExecuteChanged()
     {

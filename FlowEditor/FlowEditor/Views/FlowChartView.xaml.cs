@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using FlowEditor.Core;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
 using FlowEditor.Nodes.FlowControl;
@@ -26,10 +27,16 @@ public partial class FlowChartView : UserControl
     private Point _boxSelectStart;
     private bool _isBoxSelecting;
     private bool _isPanning;
+    private MouseButton? _panButton;
     private Point _panStart;
     private double _panStartHorizontalOffset;
     private double _panStartVerticalOffset;
     private PortConnectorView? _connectionCandidate;
+    private Point _connectionCandidatePoint;
+    private Path? _pendingConnectionPath;
+    private PortModel? _cachedConnectionSource;
+    private Point _cachedConnectionSourcePoint;
+    private readonly List<(PortConnectorView Connector, Point Center)> _cachedConnectionTargets = [];
     private const double PortSnapRadius = 28;
 
     /// <summary>暴露画布容器供容器层导出 PNG 等操作使用。</summary>
@@ -109,12 +116,20 @@ public partial class FlowChartView : UserControl
 
     private void AddNodeViewToCanvas(NodeViewModel vm)
     {
-        FrameworkElement nodeView = vm.Model is InactiveNodeContainerNode
-            ? new InactiveNodeContainerView { DataContext = vm }
-            : new NodeView { DataContext = vm };
+        FrameworkElement nodeView = vm.Model switch
+        {
+            InactiveNodeContainerNode => new InactiveNodeContainerView { DataContext = vm },
+            IExecutionScopeContainer => new ExecutionContainerView { DataContext = vm },
+            _ => new NodeView { DataContext = vm }
+        };
         Canvas.SetLeft(nodeView, vm.X);
         Canvas.SetTop(nodeView, vm.Y);
-        Panel.SetZIndex(nodeView, vm.Model is InactiveNodeContainerNode ? -10 : 0);
+        Panel.SetZIndex(nodeView, vm.Model switch
+        {
+            InactiveNodeContainerNode => -10,
+            IExecutionScopeContainer => -5,
+            _ => 0
+        });
 
         PropertyChangedEventHandler propertyChanged = (_, e) =>
         {
@@ -161,7 +176,7 @@ public partial class FlowChartView : UserControl
         _nodeSubscriptions.Clear();
         _nodeViewCache.Clear();
         FlowChartCanvas.Children.Clear();
-        ClearConnectionCandidate();
+        ResetConnectionDragCache();
     }
 
     #endregion
@@ -211,13 +226,26 @@ public partial class FlowChartView : UserControl
     {
         if (e.PropertyName == nameof(FlowChartViewModel.PendingConnectionGeometry))
         {
-            PendingCanvas.Children.Clear();
-            if (ViewModel.PendingConnectionGeometry != null)
+            var geometry = ViewModel.PendingConnectionGeometry;
+            if (geometry == null)
             {
-                var path = new Path { Data = ViewModel.PendingConnectionGeometry };
-                path.SetResourceReference(Path.StyleProperty, "ConnectionPathStyle_Pending");
-                PendingCanvas.Children.Add(path);
+                if (_pendingConnectionPath != null)
+                    PendingCanvas.Children.Remove(_pendingConnectionPath);
+                return;
             }
+
+            _pendingConnectionPath ??= CreatePendingConnectionPath();
+            _pendingConnectionPath.Data = geometry;
+            if (!PendingCanvas.Children.Contains(_pendingConnectionPath))
+                PendingCanvas.Children.Add(_pendingConnectionPath);
+        }
+        else if (e.PropertyName is nameof(FlowChartViewModel.IsDrawingConnection)
+                 or nameof(FlowChartViewModel.ConnectionSourcePort))
+        {
+            if (!ViewModel.IsDrawingConnection || ViewModel.ConnectionSourcePort == null)
+                ResetConnectionDragCache();
+            else
+                InvalidateConnectionDragCache();
         }
         else if (e.PropertyName == nameof(FlowChartViewModel.SelectedConnection))
         {
@@ -321,22 +349,12 @@ public partial class FlowChartView : UserControl
         if (ViewModel.IsDrawingConnection)
         {
             var pos = e.GetPosition(FlowChartCanvas);
-            ViewModel.UpdateConnectionEndPoint(pos);
+            EnsureConnectionDragCache();
             UpdateConnectionCandidate(pos);
 
-            if (ViewModel.ConnectionSourcePort != null)
-            {
-                var sourceNode = ViewModel.FindNode(ViewModel.ConnectionSourcePort.OwnerNodeId);
-                if (sourceNode != null && _nodeViewCache.TryGetValue(sourceNode, out var element) && element is NodeView nodeView)
-                {
-                    var portCenter = FindPortCenterOnCanvas(nodeView, ViewModel.ConnectionSourcePort.Id);
-                    var endPoint = _connectionCandidate == null
-                        ? pos
-                        : PortConnectorLocator.GetCenter(_connectionCandidate, FlowChartCanvas);
-                    var geometry = ConnectionRenderer.BuildBezierGeometry(portCenter, endPoint);
-                    ViewModel.SetPendingGeometry(geometry);
-                }
-            }
+            var endPoint = _connectionCandidate == null ? pos : _connectionCandidatePoint;
+            var geometry = ConnectionRenderer.BuildBezierGeometry(_cachedConnectionSourcePoint, endPoint);
+            ViewModel.SetPendingGeometry(geometry);
         }
     }
 
@@ -393,97 +411,15 @@ public partial class FlowChartView : UserControl
 
     private void ShowNodeContextMenu(NodeViewModel nodeVm)
     {
-        var menu = new ContextMenu();
-        if (nodeVm.IsEditable)
-        {
-            var addInPort = new MenuItem
-            {
-                Header = "新增输入端口",
-                Command = ViewModel.AddInputPortCommand,
-                CommandParameter = nodeVm
-            };
-            menu.Items.Add(addInPort);
-
-            var addOutPort = new MenuItem
-            {
-                Header = "新增输出端口",
-                Command = ViewModel.AddOutputPortCommand,
-                CommandParameter = nodeVm
-            };
-            menu.Items.Add(addOutPort);
-
-            menu.Items.Add(new Separator());
-
-            var copyItem = new MenuItem
-            {
-                Header = "复制节点",
-                InputGestureText = "Ctrl+C",
-                Command = ViewModel.CopyNodeCommand,
-                CommandParameter = nodeVm
-            };
-            menu.Items.Add(copyItem);
-
-            var deleteItem = new MenuItem
-            {
-                Header = "删除节点",
-                InputGestureText = "Delete",
-                Command = ViewModel.DeleteNodeCommand,
-                CommandParameter = nodeVm
-            };
-            menu.Items.Add(deleteItem);
-        }
-
-        menu.Items.Add(new Separator());
-
-        if (nodeVm.Model is not InactiveNodeContainerNode)
-        {
-            menu.Items.Add(new MenuItem
-            {
-                Header = nodeVm.IsExcludedFromExecution ? "移回执行画布" : "移入不执行节点容器",
-                Command = nodeVm.IsExcludedFromExecution
-                    ? ViewModel.RestoreFromInactiveContainerCommand
-                    : ViewModel.MoveToInactiveContainerCommand,
-                CommandParameter = nodeVm
-            });
-            menu.Items.Add(new Separator());
-        }
-
-        var permissionItem = new MenuItem { Header = "权限" };
-        permissionItem.Items.Add(new MenuItem
-        {
-            Header = "正常",
-            Command = ViewModel.SetNormalPermissionCommand,
-            CommandParameter = nodeVm
-        });
-        permissionItem.Items.Add(new MenuItem
-        {
-            Header = "只读",
-            Command = ViewModel.SetReadOnlyPermissionCommand,
-            CommandParameter = nodeVm
-        });
-        permissionItem.Items.Add(new MenuItem
-        {
-            Header = "禁用",
-            Command = ViewModel.SetDisabledPermissionCommand,
-            CommandParameter = nodeVm
-        });
-        menu.Items.Add(permissionItem);
-
+        var menu = (ContextMenu)FindResource("NodeContextMenu");
+        menu.DataContext = new NodeContextMenuContext(ViewModel, nodeVm);
         menu.IsOpen = true;
     }
 
     private void ShowCanvasContextMenu()
     {
-        var menu = new ContextMenu();
-
-        var fitView = new MenuItem { Header = "自适应画布视图", Command = ViewModel.ZoomToFitCommand };
-        menu.Items.Add(fitView);
-
-        menu.Items.Add(new Separator());
-
-        menu.Items.Add(new MenuItem { Header = "撤销", InputGestureText = "Ctrl+Z", Command = ViewModel.UndoCommand });
-        menu.Items.Add(new MenuItem { Header = "重做", InputGestureText = "Ctrl+Y", Command = ViewModel.RedoCommand });
-
+        var menu = (ContextMenu)FindResource("CanvasContextMenu");
+        menu.DataContext = ViewModel;
         menu.IsOpen = true;
     }
 
@@ -531,12 +467,17 @@ public partial class FlowChartView : UserControl
 
     #region 缩放控制
 
+    internal static bool ShouldStartCanvasPan(MouseButton button, ModifierKeys modifiers) =>
+        button == MouseButton.Middle ||
+        (button == MouseButton.Left && modifiers.HasFlag(ModifierKeys.Shift));
+
     private void OnPanMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (_currentViewModel == null || e.ChangedButton != MouseButton.Left) return;
-        if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control)) return;
+        if (_currentViewModel == null ||
+            !ShouldStartCanvasPan(e.ChangedButton, Keyboard.Modifiers)) return;
 
         _isPanning = true;
+        _panButton = e.ChangedButton;
         _panStart = e.GetPosition(ScrollViewerHost);
         _panStartHorizontalOffset = ScrollViewerHost.HorizontalOffset;
         _panStartVerticalOffset = ScrollViewerHost.VerticalOffset;
@@ -547,7 +488,14 @@ public partial class FlowChartView : UserControl
 
     private void OnPanMouseMove(object sender, MouseEventArgs e)
     {
-        if (!_isPanning || e.LeftButton != MouseButtonState.Pressed) return;
+        if (!_isPanning) return;
+        var panButtonPressed = _panButton switch
+        {
+            MouseButton.Middle => e.MiddleButton == MouseButtonState.Pressed,
+            MouseButton.Left => e.LeftButton == MouseButtonState.Pressed,
+            _ => false
+        };
+        if (!panButtonPressed) return;
         var current = e.GetPosition(ScrollViewerHost);
         var delta = current - _panStart;
         ScrollViewerHost.ScrollToHorizontalOffset(_panStartHorizontalOffset - delta.X);
@@ -557,8 +505,9 @@ public partial class FlowChartView : UserControl
 
     private void OnPanMouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (!_isPanning) return;
+        if (!_isPanning || e.ChangedButton != _panButton) return;
         _isPanning = false;
+        _panButton = null;
         ZoomContainer.ReleaseMouseCapture();
         ZoomContainer.Cursor = Cursors.Arrow;
         e.Handled = true;
@@ -610,34 +559,55 @@ public partial class FlowChartView : UserControl
 
     #region 辅助
 
-    private Point FindPortCenterOnCanvas(NodeView nodeView, string portId)
+    private Path CreatePendingConnectionPath()
     {
-        var connector = PortConnectorLocator.FindByPortId(nodeView, portId);
-        if (connector == null) return new Point(0, 0);
-        try
+        var path = new Path();
+        path.SetResourceReference(Path.StyleProperty, "ConnectionPathStyle_Pending");
+        return path;
+    }
+
+    private void EnsureConnectionDragCache()
+    {
+        var source = ViewModel.ConnectionSourcePort;
+        if (source == null || ReferenceEquals(source, _cachedConnectionSource)) return;
+
+        _cachedConnectionTargets.Clear();
+        _cachedConnectionSource = source;
+        _cachedConnectionSourcePoint = new Point(0, 0);
+
+        foreach (var connector in PortConnectorLocator.Enumerate(FlowChartCanvas))
         {
-            return PortConnectorLocator.GetCenter(connector, FlowChartCanvas);
+            if (connector.Port is not { } port) continue;
+            Point center;
+            try { center = PortConnectorLocator.GetCenter(connector, FlowChartCanvas); }
+            catch (InvalidOperationException) { continue; }
+
+            if (port.Id == source.Id)
+                _cachedConnectionSourcePoint = center;
+            else if (ViewModel.CanCompleteConnection(port))
+                _cachedConnectionTargets.Add((connector, center));
         }
-        catch { return new Point(0, 0); }
+    }
+
+    private void InvalidateConnectionDragCache()
+    {
+        _cachedConnectionSource = null;
+        _cachedConnectionTargets.Clear();
     }
 
     private void UpdateConnectionCandidate(Point mousePosition)
     {
-        var source = ViewModel.ConnectionSourcePort;
         PortConnectorView? nearest = null;
+        var nearestPoint = default(Point);
         var nearestDistance = PortSnapRadius;
 
-        foreach (var connector in PortConnectorLocator.Enumerate(FlowChartCanvas))
+        foreach (var (connector, center) in _cachedConnectionTargets)
         {
-            var target = connector.Port;
-            if (source == null || target == null || !ViewModel.CanCompleteConnection(target))
-                continue;
-
-            var center = PortConnectorLocator.GetCenter(connector, FlowChartCanvas);
             var distance = (center - mousePosition).Length;
             if (distance <= nearestDistance)
             {
                 nearest = connector;
+                nearestPoint = center;
                 nearestDistance = distance;
             }
         }
@@ -646,6 +616,7 @@ public partial class FlowChartView : UserControl
             return;
         ClearConnectionCandidate();
         _connectionCandidate = nearest;
+        _connectionCandidatePoint = nearestPoint;
         if (_connectionCandidate != null)
             _connectionCandidate.IsConnectionCandidate = true;
     }
@@ -655,6 +626,12 @@ public partial class FlowChartView : UserControl
         if (_connectionCandidate != null)
             _connectionCandidate.IsConnectionCandidate = false;
         _connectionCandidate = null;
+    }
+
+    private void ResetConnectionDragCache()
+    {
+        ClearConnectionCandidate();
+        InvalidateConnectionDragCache();
     }
 
     #endregion

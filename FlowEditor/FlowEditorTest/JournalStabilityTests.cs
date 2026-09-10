@@ -17,7 +17,7 @@ namespace FlowEditorTest;
 /// </summary>
 public class JournalStabilityTests
 {
-    private readonly FlowChartExecutionEngine _engine = new();
+    private readonly TestFlowChartExecutionEngine _engine = new();
 
     // ── 构造校验 ──
 

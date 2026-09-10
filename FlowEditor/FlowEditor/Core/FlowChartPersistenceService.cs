@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 using FlowEditor.Interfaces;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
-using FlowEditor.ViewModels;
 using Prism.Ioc;
 
 namespace FlowEditor.Core;
@@ -55,7 +54,7 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
     /// <summary>构建流程图文档模型（从当前画布状态）。</summary>
     public FlowChartDocumentModel BuildDocument(
         string name,
-        IEnumerable<NodeViewModel> nodes,
+        IEnumerable<NodeModel> nodes,
         IEnumerable<ConnectionModel> connections,
         FlowChartModel model)
     {
@@ -75,9 +74,8 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
             }).ToList()
         };
 
-        foreach (var nodeVm in nodes)
+        foreach (var nodeModel in nodes)
         {
-            var nodeModel = nodeVm.Model;
             var nodeDoc = new NodeDocumentModel
             {
                 Id = nodeModel.Id,
@@ -89,6 +87,8 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
                 IsOutEnabled = nodeModel.IsOutEnabled,
                 Permission = nodeModel.Permission,
                 IsExcludedFromExecution = nodeModel.IsExcludedFromExecution,
+                ParentExecutionContainerId = nodeModel.ParentExecutionContainerId,
+                ExecutionLaneId = nodeModel.ExecutionLaneId,
                 ErrorPolicy = nodeModel.ErrorPolicy,
                 RetryCount = nodeModel.RetryCount,
                 RetryDelayMs = nodeModel.RetryDelayMs,
@@ -138,6 +138,8 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
             IsOutEnabled = nodeModel.IsOutEnabled,
             Permission = nodeModel.Permission,
             IsExcludedFromExecution = nodeModel.IsExcludedFromExecution,
+            ParentExecutionContainerId = nodeModel.ParentExecutionContainerId,
+            ExecutionLaneId = nodeModel.ExecutionLaneId,
             ErrorPolicy = nodeModel.ErrorPolicy,
             RetryCount = nodeModel.RetryCount,
             RetryDelayMs = nodeModel.RetryDelayMs,
@@ -191,6 +193,8 @@ public class FlowChartPersistenceService : IFlowChartPersistenceService
         node.IsOutEnabled = doc.IsOutEnabled;
         node.Permission = doc.Permission;
         node.IsExcludedFromExecution = doc.IsExcludedFromExecution;
+        node.ParentExecutionContainerId = doc.ParentExecutionContainerId;
+        node.ExecutionLaneId = doc.ExecutionLaneId;
         node.ErrorPolicy = doc.ErrorPolicy;
         node.RetryCount = doc.RetryCount;
         node.RetryDelayMs = doc.RetryDelayMs;

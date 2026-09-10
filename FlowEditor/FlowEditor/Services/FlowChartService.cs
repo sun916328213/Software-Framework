@@ -12,6 +12,7 @@ using FlowEditor.Models;
 using FlowEditor.Nodes;
 using FlowEditor.Nodes.FlowControl;
 using FlowEditor.ViewModels;
+using FlowEditor.Views;
 using Prism.Ioc;
 
 namespace FlowEditor.Services;
@@ -123,6 +124,7 @@ public class FlowChartService : IFlowChartService
             // 重置所有节点状态
             foreach (var n in Nodes)
                 n.ResetStatus();
+            PrepareExecutionScopeRuntime();
 
             ClearLog();
 
@@ -139,15 +141,16 @@ public class FlowChartService : IFlowChartService
 
                 flowRunId = FlowLogContext.RunId;
                 Panel("=== 开始执行流程 ===", flowRunId);
-                var executionGraph = ExecutionGraphScope.Create(Nodes, Connections);
+                var executionGraph = ExecutionGraphScope.CreateTopLevel(
+                    Nodes.Select(node => node.Model), Connections, node => node);
                 await _engine.ExecuteAsync(
                     executionGraph.Nodes,
                     executionGraph.Connections,
                     _executionCts.Token,
                     msg => Panel(msg, flowRunId),
                     Model.IsDebugMode ? OnBeforeNodeExecute : null,
-                    _executionOrder,
-                    Journal);
+                    executionOrder: null,
+                    journal: Journal);
                 Panel("=== 执行完成 ===", flowRunId);
             }
 
@@ -178,14 +181,20 @@ public class FlowChartService : IFlowChartService
         }
     }
 
-    /// <summary>单步执行回调：命中断点或单步模式时经 TCS 门闩挂起（P4，替代轮询）。</summary>
-    private async Task OnBeforeNodeExecute(NodeViewModel node)
+    /// <summary>
+    /// 处理引擎的节点前回调：引擎只暴露节点 ID，本应用层将其映射回画布 ViewModel，
+    /// 然后在命中断点或单步模式时通过 TCS 门闩挂起。
+    /// </summary>
+    private async Task OnBeforeNodeExecute(string nodeId)
     {
+        var node = FindNode(nodeId)
+            ?? throw new InvalidOperationException($"执行引擎回调了当前画布不存在的节点: {nodeId}");
         _executionOrder.Add(node);
+        CurrentExecutionIndex = _executionOrder.Count - 1;
         Model.IsPaused = true;
         try
         {
-            await Debug.WaitIfPausedAsync(node.Id, _executionCts?.Token ?? CancellationToken.None);
+            await Debug.WaitIfPausedAsync(nodeId, _executionCts?.Token ?? CancellationToken.None);
         }
         finally
         {
@@ -224,9 +233,14 @@ public class FlowChartService : IFlowChartService
         node.ResetStatus();
         try
         {
-            var graph = ExecutionGraphScope.Create(Nodes, Connections);
+            PrepareExecutionScopeRuntime();
+            var graph = ExecutionGraphScope.Create(
+                Nodes.Select(item => item.Model),
+                Connections,
+                node.Model.ParentExecutionContainerId,
+                node.Model.ExecutionLaneId);
             await _engine.ExecuteNodeAsync(
-                node, graph.Nodes, graph.Connections, _executionCts.Token, logCallback, Journal);
+                node.Model, graph.Nodes, graph.Connections, _executionCts.Token, logCallback, Journal);
             Model.StatusText = $"节点 [{node.Name}] 单步执行完成";
         }
         catch (OperationCanceledException)
@@ -297,6 +311,7 @@ public class FlowChartService : IFlowChartService
                     // 重置所有节点状态
                     foreach (var n in Nodes)
                         n.ResetStatus();
+                    PrepareExecutionScopeRuntime();
 
                     _executionOrder.Clear();
                     CurrentExecutionIndex = 0;
@@ -310,15 +325,16 @@ public class FlowChartService : IFlowChartService
 
                         loopRunId = FlowLogContext.RunId;
 
-                        var executionGraph = ExecutionGraphScope.Create(Nodes, Connections);
+                        var executionGraph = ExecutionGraphScope.CreateTopLevel(
+                            Nodes.Select(node => node.Model), Connections, node => node);
                         await _engine.ExecuteAsync(
                             executionGraph.Nodes,
                             executionGraph.Connections,
                             _executionCts.Token,
                             Panel,
                             Model.IsDebugMode ? OnBeforeNodeExecute : null,
-                            _executionOrder,
-                            Journal);
+                            executionOrder: null,
+                            journal: Journal);
                     }
 
                     logCallback($"--- 第 {iteration} 次循环完成 ---");
@@ -433,9 +449,17 @@ public class FlowChartService : IFlowChartService
     /// </summary>
     public FlowProgram CompileProgram()
     {
-        var graph = ExecutionGraphScope.Create(Nodes, Connections);
+        var activeNodes = Nodes.Where(node => !node.IsExcludedFromExecution).ToList();
+        var activeIds = activeNodes.Select(node => node.Id).ToHashSet();
+        var activeConnections = Connections.Where(connection =>
+                activeIds.Contains(connection.SourceNodeId) && activeIds.Contains(connection.TargetNodeId))
+            .ToList();
         return FlowProgram.FromDocument(
-            _persistence.BuildDocument(Model.TabTitle, graph.Nodes, graph.Connections, Model));
+            _persistence.BuildDocument(
+                Model.TabTitle,
+                activeNodes.Select(node => node.Model),
+                activeConnections,
+                Model));
     }
 
     // ── 静态校验（P2）──
@@ -446,8 +470,15 @@ public class FlowChartService : IFlowChartService
     /// </summary>
     private bool RunPreValidation(Action<string> logCallback)
     {
-        var graph = ExecutionGraphScope.Create(Nodes, Connections);
-        var report = FlowValidator.Analyze(graph.Nodes, graph.Connections);
+        var activeNodes = Nodes.Where(node => !node.IsExcludedFromExecution).ToList();
+        var activeIds = activeNodes.Select(node => node.Id).ToHashSet();
+        var activeConnections = Connections.Where(connection =>
+                activeIds.Contains(connection.SourceNodeId) &&
+                activeIds.Contains(connection.TargetNodeId))
+            .ToList();
+        var report = FlowValidator.Analyze(
+            activeNodes.Select(node => node.Model).ToList(),
+            activeConnections);
         foreach (var diag in report.Diagnostics)
         {
             var tag = diag.Severity switch
@@ -467,6 +498,21 @@ public class FlowChartService : IFlowChartService
             return false;
         }
         return true;
+    }
+
+    private void PrepareExecutionScopeRuntime()
+    {
+        var activeNodes = Nodes
+            .Where(node => !node.IsExcludedFromExecution)
+            .Select(node => node.Model)
+            .ToList();
+        var activeIds = activeNodes.Select(node => node.Id).ToHashSet();
+        var activeConnections = Connections.Where(connection =>
+                activeIds.Contains(connection.SourceNodeId) && activeIds.Contains(connection.TargetNodeId))
+            .ToList();
+        var runtime = new ExecutionScopeRuntime(activeNodes, activeConnections);
+        foreach (var node in activeNodes)
+            node.ExecutionScopeRuntime = runtime;
     }
 
     // ── 持久化 ──
@@ -490,7 +536,11 @@ public class FlowChartService : IFlowChartService
 
         try
         {
-            var doc = _persistence.BuildDocument(Model.TabTitle, Nodes, Connections, Model);
+            var doc = _persistence.BuildDocument(
+                Model.TabTitle,
+                Nodes.Select(node => node.Model),
+                Connections,
+                Model);
             _persistence.Save(path, doc);
             CurrentFilePath = path;
             Model.IsModified = false;
@@ -563,7 +613,11 @@ public class FlowChartService : IFlowChartService
     /// <summary>捕获当前画布状态快照（JSON 文档），用于撤销/重做。</summary>
     public string CaptureSnapshot()
     {
-        var doc = _persistence.BuildDocument(Model.TabTitle, Nodes, Connections, Model);
+        var doc = _persistence.BuildDocument(
+            Model.TabTitle,
+            Nodes.Select(node => node.Model),
+            Connections,
+            Model);
         return JsonSerializer.Serialize(doc, SnapshotJsonOptions);
     }
 
@@ -627,10 +681,8 @@ public class FlowChartService : IFlowChartService
 
         var minX = Nodes.Min(n => n.X);
         var minY = Nodes.Min(n => n.Y);
-        var maxX = Nodes.Max(n => n.X +
-            (n.Model is InactiveNodeContainerNode container ? container.ContainerWidth : FlowChartModel.NodeWidth));
-        var maxY = Nodes.Max(n => n.Y +
-            (n.Model is InactiveNodeContainerNode container ? container.ContainerHeight : FlowChartModel.NodeHeight));
+        var maxX = Nodes.Max(n => n.X + GetVisualWidth(n.Model));
+        var maxY = Nodes.Max(n => n.Y + GetVisualHeight(n.Model));
 
         var contentWidth = maxX - minX + 200;
         var contentHeight = maxY - minY + 200;
@@ -639,6 +691,20 @@ public class FlowChartService : IFlowChartService
     }
 
     public event EventHandler<(double contentWidth, double contentHeight, double offsetX, double offsetY)>? ZoomToFitRequested;
+
+    private static double GetVisualWidth(NodeModel node) => node switch
+    {
+        InactiveNodeContainerNode inactive => inactive.ContainerWidth,
+        IExecutionScopeContainer execution => execution.ContainerWidth,
+        _ => FlowChartModel.NodeWidth
+    };
+
+    private static double GetVisualHeight(NodeModel node) => node switch
+    {
+        InactiveNodeContainerNode inactive => inactive.ContainerHeight,
+        IExecutionScopeContainer execution => execution.ContainerHeight,
+        _ => FlowChartModel.NodeHeight
+    };
 
     // ── 辅助 ──
 
@@ -752,6 +818,22 @@ public class FlowChartService : IFlowChartService
     /// <summary>从节点模型构建节点文档（用于 ToolBlock 内部节点序列化）。</summary>
     public NodeDocumentModel BuildNodeDocument(NodeModel node)
         => _persistence.BuildNodeDocument(node);
+
+    /// <summary>打开 ToolBlock、并行容器或循环容器的内部流程编辑器。</summary>
+    public void OpenInternalFlowEditor(NodeModel node)
+    {
+        if (node is not IInternalFlowContainerNode containerNode)
+        {
+            Model.StatusText = $"节点 [{node.Name}] 不支持内部流程编辑";
+            return;
+        }
+
+        var window = new ToolBlockFlowWindow(containerNode, this)
+        {
+            Owner = Application.Current?.MainWindow
+        };
+        window.ShowDialog();
+    }
 
     // ── 节点管理 ──
 

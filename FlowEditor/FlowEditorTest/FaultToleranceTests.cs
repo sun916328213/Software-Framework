@@ -11,7 +11,7 @@ namespace FlowEditorTest;
 /// <summary>P2 验收：节点级容错策略（重试 / 超时 / ContinueOnError / RouteToErrorPort）。</summary>
 public class FaultToleranceTests
 {
-    private readonly FlowChartExecutionEngine _engine = new();
+    private readonly TestFlowChartExecutionEngine _engine = new();
 
     /// <summary>前 FailTimes 次执行抛异常，之后成功。</summary>
     public class FlakyNode : NodeModel

@@ -34,7 +34,7 @@ public class PortBindingConsistencyTests
     [Fact]
     public void DisablePropertyOutput_RemovesItsConnection_AndReplacementPortCanReconnect()
     {
-        var service = new FlowChartService(null!, new FlowChartExecutionEngine(), null!);
+        var service = new FlowChartService(null!, new TestFlowChartExecutionEngine(), null!);
         var sourceModel = new PropertyNode { Name = "工具1" };
         var targetModel = new PropertyNode { Name = "工具2" };
         var source = service.AddNode(sourceModel);
@@ -64,7 +64,7 @@ public class PortBindingConsistencyTests
     [Fact]
     public void BindingUpstreamNodes_ContainsOnlyTransitivePredecessors()
     {
-        var service = new FlowChartService(null!, new FlowChartExecutionEngine(), null!);
+        var service = new FlowChartService(null!, new TestFlowChartExecutionEngine(), null!);
         var before = service.AddNode(new CountingNode { Name = "前置工具" });
         var current = service.AddNode(new PropertyNode { Name = "当前工具" });
         var after = service.AddNode(new CountingNode { Name = "后续工具" });

@@ -56,8 +56,17 @@ public static class ConnectionRenderer
         IReadOnlyList<NodeViewModel> nodes,
         string? selectedConnectionId = null)
     {
-        connectionCanvas.Children.Clear();
         var nodeMap = nodes.ToDictionary(n => n.Id, n => n);
+        var portPositions = CollectPortPositions(nodeCanvas);
+        var visiblePaths = new Dictionary<string, Path>();
+        var hitPaths = new Dictionary<string, Path>();
+        foreach (var path in connectionCanvas.Children.OfType<Path>())
+        {
+            if (path.Tag is not ConnectionModel existing) continue;
+            var target = path.IsHitTestVisible ? hitPaths : visiblePaths;
+            target.TryAdd(existing.Id, path);
+        }
+        var retainedPaths = new HashSet<Path>();
 
         foreach (var conn in connections)
         {
@@ -69,8 +78,8 @@ public static class ConnectionRenderer
             var targetPort = targetNode.FindPort(conn.TargetPortId);
             if (sourcePort == null || targetPort == null) continue;
 
-            var sourcePoint = FindPortPositionOnCanvas(nodeCanvas, sourceNode, sourcePort.Id);
-            var targetPoint = FindPortPositionOnCanvas(nodeCanvas, targetNode, targetPort.Id);
+            var sourcePoint = FindPortPositionOnCanvas(portPositions, sourceNode, sourcePort.Id);
+            var targetPoint = FindPortPositionOnCanvas(portPositions, targetNode, targetPort.Id);
 
             bool isSelected = conn.Id == selectedConnectionId;
             bool isActive = sourceNode.Status == Nodes.NodeStatus.Running ||
@@ -81,75 +90,78 @@ public static class ConnectionRenderer
             var styleKey = GetStyleKey(isSelected, isActive, isFlow);
 
             // 1) 可见连线 — 用 DynamicResource 引用 XAML 样式，支持热重载
-            var path = new Path
+            if (!visiblePaths.TryGetValue(conn.Id, out var path))
             {
-                Data = geometry,
-                Tag = conn,
-                IsHitTestVisible = false   // 命中测试交给下面的透明粗线
-            };
+                path = new Path { IsHitTestVisible = false };
+                connectionCanvas.Children.Add(path);
+            }
+            path.Data = geometry;
+            path.Tag = conn;
             path.SetResourceReference(Path.StyleProperty, styleKey);
+            path.ClearValue(Shape.StrokeProperty);
             // 普通数据线沿用端口类型色；选中、运行中和执行流继续使用状态样式。
             if (!isSelected && !isActive && !isFlow)
                 path.Stroke = PortColorConverter.ResolveBrush(sourcePort.DataType);
-            connectionCanvas.Children.Add(path);
+            retainedPaths.Add(path);
 
             // 2) 透明粗命中区域（12px 宽，便于点击选中）
-            var hitArea = new Path
+            if (!hitPaths.TryGetValue(conn.Id, out var hitArea))
             {
-                Data = geometry,
-                Stroke = Brushes.Transparent,
-                StrokeThickness = 12,
-                Tag = conn,
-                IsHitTestVisible = true,
-                Cursor = Cursors.Hand
-            };
-
-            // 左键选中连线
-            hitArea.MouseLeftButtonDown += (_, e) =>
-            {
-                var vm = FindFlowChartViewModel(connectionCanvas);
-                if (vm != null)
+                hitArea = new Path
                 {
-                    vm.SelectedConnection = vm.SelectedConnection?.Id == conn.Id ? null : conn;
-                    e.Handled = true;
-                }
-            };
-
-            // 右键删除连线
-            hitArea.MouseRightButtonDown += (_, e) =>
-            {
-                var vm = FindFlowChartViewModel(connectionCanvas);
-                if (vm != null)
-                {
-                    vm.DeleteConnectionCommand.Execute(conn);
-                    e.Handled = true;
-                }
-            };
-
-            connectionCanvas.Children.Add(hitArea);
+                    Stroke = Brushes.Transparent,
+                    StrokeThickness = 12,
+                    IsHitTestVisible = true,
+                    Cursor = Cursors.Hand
+                };
+                hitArea.MouseLeftButtonDown += OnConnectionMouseLeftButtonDown;
+                hitArea.MouseRightButtonDown += OnConnectionMouseRightButtonDown;
+                connectionCanvas.Children.Add(hitArea);
+            }
+            hitArea.Data = geometry;
+            hitArea.Tag = conn;
+            retainedPaths.Add(hitArea);
         }
+
+        foreach (var stalePath in connectionCanvas.Children.OfType<Path>()
+                     .Where(path => !retainedPaths.Contains(path)).ToArray())
+            connectionCanvas.Children.Remove(stalePath);
     }
 
-    /// <summary>在画布上查找端口的圆心坐标。</summary>
-    private static Point FindPortPositionOnCanvas(
-        Canvas nodeCanvas, NodeViewModel nodeVm, string portId)
+    private static Dictionary<string, Point> CollectPortPositions(Canvas nodeCanvas)
     {
-        foreach (UIElement child in nodeCanvas.Children)
+        var positions = new Dictionary<string, Point>();
+        foreach (var connector in PortConnectorLocator.Enumerate(nodeCanvas))
         {
-            if (child is not NodeView nodeView) continue;
-            if (nodeView.DataContext != nodeVm) continue;
-
-            var connector = PortConnectorLocator.FindByPortId(nodeView, portId);
-            if (connector == null) continue;
-
-            try
-            {
-                return PortConnectorLocator.GetCenter(connector, nodeCanvas);
-            }
-            catch { return new Point(nodeVm.X + 100, nodeVm.Y + 50); }
+            if (connector.Port is not { } port) continue;
+            try { positions[port.Id] = PortConnectorLocator.GetCenter(connector, nodeCanvas); }
+            catch (InvalidOperationException) { }
         }
+        return positions;
+    }
 
-        return new Point(nodeVm.X + 100, nodeVm.Y + 50);
+    private static Point FindPortPositionOnCanvas(
+        IReadOnlyDictionary<string, Point> portPositions, NodeViewModel nodeVm, string portId)
+        => portPositions.TryGetValue(portId, out var point)
+            ? point
+            : new Point(nodeVm.X + 100, nodeVm.Y + 50);
+
+    private static void OnConnectionMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not Path { Tag: ConnectionModel connection } path) return;
+        var vm = FindFlowChartViewModel(path);
+        if (vm == null) return;
+        vm.SelectedConnection = vm.SelectedConnection?.Id == connection.Id ? null : connection;
+        e.Handled = true;
+    }
+
+    private static void OnConnectionMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not Path { Tag: ConnectionModel connection } path) return;
+        var vm = FindFlowChartViewModel(path);
+        if (vm == null) return;
+        vm.DeleteConnectionCommand.Execute(connection);
+        e.Handled = true;
     }
 
     private static FlowChartViewModel? FindFlowChartViewModel(DependencyObject element)

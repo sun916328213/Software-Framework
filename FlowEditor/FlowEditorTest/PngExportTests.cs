@@ -15,7 +15,7 @@ public class PngExportTests
     [Fact]
     public void CanvasExportBounds_AlwaysUseWholeLogicalCanvas()
     {
-        var service = new FlowChartService(null!, new FlowChartExecutionEngine(), null!);
+        var service = new FlowChartService(null!, new TestFlowChartExecutionEngine(), null!);
         service.Model.CanvasWidth = 4200;
         service.Model.CanvasHeight = 3100;
         var vm = new FlowChartViewModel(service, null!, null!, null!, new ConnectionService());

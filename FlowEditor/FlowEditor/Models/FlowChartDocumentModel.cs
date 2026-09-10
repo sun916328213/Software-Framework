@@ -60,6 +60,12 @@ public class NodeDocumentModel
     /// <summary>是否位于不执行节点容器。</summary>
     public bool IsExcludedFromExecution { get; set; }
 
+    /// <summary>所属结构化执行容器 ID。</summary>
+    public string? ParentExecutionContainerId { get; set; }
+
+    /// <summary>所属容器泳道 ID。</summary>
+    public string? ExecutionLaneId { get; set; }
+
     /// <summary>失败处理策略。</summary>
     public NodeErrorPolicy ErrorPolicy { get; set; } = NodeErrorPolicy.FailFast;
 

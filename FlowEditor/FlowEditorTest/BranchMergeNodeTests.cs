@@ -27,6 +27,18 @@ public class BranchMergeNodeTests
         public void Complete() => _release.TrySetResult();
     }
 
+    private sealed class CancelFlowNode(CancellationTokenSource cancellation) : NodeModel
+    {
+        public int Executions;
+
+        public override Task ExecuteAsync(CancellationToken ct)
+        {
+            Interlocked.Increment(ref Executions);
+            cancellation.Cancel();
+            return Task.CompletedTask;
+        }
+    }
+
     [Fact]
     public void DefaultNode_ProvidesTwoNamedFlowInputsAndOneFlowOutput()
     {
@@ -73,7 +85,7 @@ public class BranchMergeNodeTests
             Flow(merge, after)
         };
 
-        await new FlowChartExecutionEngine().ExecuteAsync(
+        await new TestFlowChartExecutionEngine().ExecuteAsync(
             nodes, connections, CancellationToken.None, _ => { });
 
         Assert.Equal(1, delay1Model.Executions);
@@ -91,7 +103,7 @@ public class BranchMergeNodeTests
         var merge = new NodeViewModel(new BranchMergeNode { MergeOperator = BranchMergeOperator.AND });
         var (after, afterModel) = New<CountingNode>("After");
 
-        await new FlowChartExecutionEngine().ExecuteAsync(
+        await new TestFlowChartExecutionEngine().ExecuteAsync(
             [dispatch, branch1, branch2, merge, after],
             [Branch(dispatch, "OUT1", branch1), Branch(dispatch, "OUT2", branch2),
              ToMerge(branch1, merge, "分支1"), ToMerge(branch2, merge, "分支2"), Flow(merge, after)],
@@ -111,7 +123,7 @@ public class BranchMergeNodeTests
         var second = new NodeViewModel(secondModel);
         var merge = new NodeViewModel(new BranchMergeNode { MergeOperator = BranchMergeOperator.OR });
         var (after, afterModel) = New<CountingNode>("After");
-        var engineTask = new FlowChartExecutionEngine().ExecuteAsync(
+        var engineTask = new TestFlowChartExecutionEngine().ExecuteAsync(
             [start, first, second, merge, after],
             [Flow(start, first), Flow(start, second),
              ToMerge(first, merge, "分支1"), ToMerge(second, merge, "分支2"), Flow(merge, after)],
@@ -166,7 +178,7 @@ public class BranchMergeNodeTests
 
         try
         {
-            await new FlowChartExecutionEngine().ExecuteAsync(nodes, connections, cts.Token, _ => { });
+            await new TestFlowChartExecutionEngine().ExecuteAsync(nodes, connections, cts.Token, _ => { });
         }
         catch (OperationCanceledException)
         {
@@ -177,6 +189,100 @@ public class BranchMergeNodeTests
         Assert.True(dispatch.Count >= 2, "汇聚输出回边应启动下一轮条件分发");
         Assert.True(branch1Model.Executions >= 1);
         Assert.Equal(0, branch2Model.Executions);
+    }
+
+    [Fact]
+    public async Task Cycle_EntryFork_StartsBothBranchesBeforeEitherBranchCompletes()
+    {
+        var (start, _) = New<CountingNode>("Start");
+        var firstModel = new ControlledNode { Name = "ConditionLike" };
+        var secondModel = new ControlledNode { Name = "Delay" };
+        var first = new NodeViewModel(firstModel);
+        var second = new NodeViewModel(secondModel);
+        var (returnNode, _) = New<CountingNode>("Return");
+        var connections = new List<ConnectionModel>
+        {
+            Flow(start, first),
+            Flow(start, second),
+            Flow(first, returnNode),
+            Flow(returnNode, first)
+        };
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        var engineTask = new TestFlowChartExecutionEngine().ExecuteAsync(
+            [start, first, second, returnNode], connections, cts.Token, _ => { });
+
+        await Task.WhenAll(firstModel.Started.Task, secondModel.Started.Task)
+            .WaitAsync(TimeSpan.FromMilliseconds(500));
+
+        cts.Cancel();
+        firstModel.Complete();
+        secondModel.Complete();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => engineTask);
+    }
+
+    [Fact]
+    public async Task Cycle_ShortBranchAdvancesWhileParallelLongBranchIsStillRunning()
+    {
+        var (start, _) = New<CountingNode>("Start");
+        var (condition, conditionModel) = New<CountingNode>("Condition");
+        var delayModel = new ControlledNode { Name = "Delay" };
+        var delay = new NodeViewModel(delayModel);
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+        var downstreamModel = new CancelFlowNode(cts) { Name = "ShortBranchDownstream" };
+        var downstream = new NodeViewModel(downstreamModel);
+        var engineTask = new TestFlowChartExecutionEngine().ExecuteAsync(
+            [start, condition, delay, downstream],
+            [Flow(start, condition), Flow(start, delay),
+             Flow(condition, downstream), Flow(downstream, condition)],
+            cts.Token, _ => { });
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            engineTask.WaitAsync(TimeSpan.FromSeconds(2)));
+
+        Assert.True(delayModel.Started.Task.IsCompleted, "长分支应已与条件分支同时启动");
+        Assert.True(conditionModel.Executions >= 1);
+        Assert.Equal(1, downstreamModel.Executions);
+    }
+
+    [Fact]
+    public async Task AndMerge_FirstArrivalMarksRunning_ButCompletesOnlyAfterAllBranches()
+    {
+        var (start, _) = New<CountingNode>("Start");
+        var firstModel = new ControlledNode { Name = "First" };
+        var secondModel = new ControlledNode { Name = "Second" };
+        var first = new NodeViewModel(firstModel);
+        var second = new NodeViewModel(secondModel);
+        var merge = new NodeViewModel(new BranchMergeNode
+        {
+            Name = "Merge",
+            MergeOperator = BranchMergeOperator.AND
+        });
+        var logs = new List<string>();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        var afterModel = new CancelFlowNode(cts) { Name = "After" };
+        var after = new NodeViewModel(afterModel);
+        var engineTask = new TestFlowChartExecutionEngine().ExecuteAsync(
+            [start, first, second, merge, after],
+            [Flow(start, first), Flow(start, second),
+             ToMerge(first, merge, "分支1"), ToMerge(second, merge, "分支2"),
+             Flow(merge, after), Flow(after, start)],
+            cts.Token, logs.Add);
+
+        await Task.WhenAll(firstModel.Started.Task, secondModel.Started.Task)
+            .WaitAsync(TimeSpan.FromSeconds(2));
+        firstModel.Complete();
+        await WaitUntilAsync(() => merge.Status == NodeStatus.Running);
+
+        Assert.Equal(1, merge.Count);
+        Assert.Equal(0, Volatile.Read(ref afterModel.Executions));
+        Assert.False(engineTask.IsCompleted);
+
+        secondModel.Complete();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => engineTask);
+
+        Assert.Equal(NodeStatus.Success, merge.Status);
+        Assert.Equal(1, merge.Count);
+        Assert.Equal(1, afterModel.Executions);
     }
 
     [Fact]
@@ -199,7 +305,7 @@ public class BranchMergeNodeTests
         };
         var persistence = new FlowChartPersistenceService(null!);
         var document = persistence.BuildDocument(
-            "汇聚测试", [new NodeViewModel(source)], [], new FlowChartModel());
+            "汇聚测试", [source], [], new FlowChartModel());
         var descriptor = Assert.Single(document.Nodes);
         Assert.All(descriptor.CustomInputPorts,
             port => Assert.Equal(PortType.Flow, port.DataType));

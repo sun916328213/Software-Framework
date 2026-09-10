@@ -106,6 +106,9 @@ public interface IFlowChartService
     /// <summary>从节点模型构建节点文档（用于 ToolBlock 内部节点序列化）。</summary>
     NodeDocumentModel BuildNodeDocument(NodeModel node);
 
+    /// <summary>打开复合节点的内部流程编辑器。</summary>
+    void OpenInternalFlowEditor(NodeModel node);
+
     /// <summary>添加节点（NodeViewModel 重载）。</summary>
     void AddNode(NodeViewModel nodeVm);
 

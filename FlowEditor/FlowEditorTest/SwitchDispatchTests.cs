@@ -10,7 +10,7 @@ namespace FlowEditorTest;
 /// <summary>条件分发节点验收：输入命中唯一分支；空值或未命中时报错；分支与规则可自定义。</summary>
 public class SwitchDispatchTests
 {
-    private readonly FlowChartExecutionEngine _engine = new();
+    private readonly TestFlowChartExecutionEngine _engine = new();
 
     /// <summary>可设值的整数源节点（模拟上游数据）。</summary>
     private sealed class IntSource : NodeModel

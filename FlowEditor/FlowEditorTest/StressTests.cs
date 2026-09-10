@@ -15,7 +15,7 @@ namespace FlowEditorTest;
 /// </summary>
 public class StressTests
 {
-    private readonly FlowChartExecutionEngine _engine = new();
+    private readonly TestFlowChartExecutionEngine _engine = new();
 
     // ── 编译性能 ──
 
@@ -25,7 +25,7 @@ public class StressTests
     {
         var (nodes, conns) = BuildChain(500);
         var sw = Stopwatch.StartNew();
-        var graph = CompiledFlowGraph<NodeViewModel>.Compile(nodes, conns);
+        var graph = TestGraph.Compile(nodes, conns);
         sw.Stop();
 
         Assert.Equal(500, graph.Nodes.Count);
@@ -40,7 +40,7 @@ public class StressTests
     {
         var (nodes, conns) = BuildChain(1000);
         var sw = Stopwatch.StartNew();
-        var graph = CompiledFlowGraph<NodeViewModel>.Compile(nodes, conns);
+        var graph = TestGraph.Compile(nodes, conns);
         sw.Stop();
 
         Assert.Equal(1000, graph.Nodes.Count);
@@ -175,7 +175,7 @@ public class StressTests
         }
 
         var sw = Stopwatch.StartNew();
-        var graph = CompiledFlowGraph<NodeViewModel>.Compile(nodes, conns);
+        var graph = TestGraph.Compile(nodes, conns);
         sw.Stop();
 
         Assert.Equal(100, graph.Nodes.Count);
@@ -194,7 +194,7 @@ public class StressTests
 
         for (int i = 0; i < 50; i++)
         {
-            var graph = CompiledFlowGraph<NodeViewModel>.Compile(nodes, conns);
+            var graph = TestGraph.Compile(nodes, conns);
             Assert.Equal(200, graph.Nodes.Count);
         }
     }

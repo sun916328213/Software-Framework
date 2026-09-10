@@ -1,5 +1,6 @@
 using FlowEditor.Models;
 using FlowEditor.Nodes;
+using FlowEditor.Nodes.FlowControl;
 
 namespace FlowEditor.Services;
 
@@ -16,7 +17,7 @@ public sealed class ConnectionService
         IReadOnlyCollection<NodeModel> nodes,
         IReadOnlyCollection<ConnectionModel> existingConnections)
     {
-        var error = GetRejectionReason(sourcePort, targetPort, existingConnections);
+        var error = GetRejectionReason(sourcePort, targetPort, existingConnections, nodes);
         if (error != null)
             return ConnectionPlan.Rejected(error);
 
@@ -47,7 +48,8 @@ public sealed class ConnectionService
     public string? GetRejectionReason(
         PortModel sourcePort,
         PortModel targetPort,
-        IEnumerable<ConnectionModel> existingConnections)
+        IEnumerable<ConnectionModel> existingConnections,
+        IEnumerable<NodeModel>? nodes = null)
     {
         if (sourcePort.OwnerNodeId == targetPort.OwnerNodeId)
             return "不能连接同一节点的端口";
@@ -61,10 +63,49 @@ public sealed class ConnectionService
         if (existingConnections.Any(c => c.SourcePortId == sourcePort.Id && c.TargetPortId == targetPort.Id))
             return "这两个端口之间已存在连线";
 
-        if (targetPort.DataType != PortType.Flow && existingConnections.Any(c => c.TargetPortId == targetPort.Id))
-            return $"数据端口「{targetPort.Name}」已连接，仅允许一条连线";
+        if (sourcePort.DataType == PortType.Flow && existingConnections.Any(c => c.SourcePortId == sourcePort.Id))
+            return $"流程输出端口「{sourcePort.Name}」只能连接一个输入；需要并行时请使用并行分叉";
+
+        if (existingConnections.Any(c => c.TargetPortId == targetPort.Id))
+            return targetPort.DataType == PortType.Flow
+                ? $"流程输入端口「{targetPort.Name}」只能接受一条连线；需要汇聚时请使用分支汇聚的独立输入"
+                : $"数据端口「{targetPort.Name}」已连接，仅允许一条连线";
+
+        if (nodes != null)
+        {
+            var sourceNode = nodes.FirstOrDefault(node => node.Id == sourcePort.OwnerNodeId);
+            var targetNode = nodes.FirstOrDefault(node => node.Id == targetPort.OwnerNodeId);
+            if (sourceNode != null && targetNode != null &&
+                (sourceNode.ParentExecutionContainerId != targetNode.ParentExecutionContainerId ||
+                 sourceNode.ExecutionLaneId != targetNode.ExecutionLaneId) &&
+                !IsLoopBoundaryConnection(sourceNode, targetNode, nodes))
+                return "不能跨越执行容器或泳道连线，请连接容器自身的 IN/OUT";
+        }
 
         return null;
+    }
+
+    private static bool IsLoopBoundaryConnection(
+        NodeModel source,
+        NodeModel target,
+        IEnumerable<NodeModel> nodes)
+    {
+        var nodeList = nodes as IReadOnlyCollection<NodeModel> ?? nodes.ToList();
+        return IsInsideToOutside(source, target, nodeList) ||
+               IsInsideToOutside(target, source, nodeList);
+    }
+
+    private static bool IsInsideToOutside(
+        NodeModel inside,
+        NodeModel outside,
+        IEnumerable<NodeModel> nodes)
+    {
+        if (inside.ParentExecutionContainerId == null) return false;
+        var loop = nodes.FirstOrDefault(node =>
+            node.Id == inside.ParentExecutionContainerId && node is LoopContainerNode);
+        return loop != null &&
+               outside.ParentExecutionContainerId == loop.ParentExecutionContainerId &&
+               outside.ExecutionLaneId == loop.ExecutionLaneId;
     }
 
     private static bool WouldCreateCycle(

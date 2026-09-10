@@ -1,6 +1,6 @@
 using FlowEditor.Models;
 using FlowEditor.Nodes;
-using FlowEditor.ViewModels;
+using FlowEditor.Nodes.FlowControl;
 
 namespace FlowEditor.Core;
 
@@ -47,15 +47,177 @@ public sealed class FlowValidationReport
 /// </summary>
 public static class FlowValidator
 {
+    /// <summary>分析节点模型和连线，并返回执行前诊断报告。</summary>
+    /// <param name="nodes">待校验的节点模型。</param>
+    /// <param name="connections">待校验的连线。</param>
+    /// <returns>包含全部错误、警告和提示的报告。</returns>
     public static FlowValidationReport Analyze(
-        IReadOnlyList<NodeViewModel> nodes,
+        IReadOnlyList<NodeModel> nodes,
         IReadOnlyList<ConnectionModel> connections)
     {
         var report = new FlowValidationReport();
         if (nodes.Count == 0)
             return report;
 
-        var graph = CompiledFlowGraph<NodeViewModel>.Compile(nodes, connections);
+        foreach (var node in nodes)
+            if (node is IFlowStructureValidationSource structureSource)
+                report.Diagnostics.AddRange(structureSource.ValidateStructure());
+
+        ValidateFlowPortCardinality(nodes, connections, report);
+        ValidateParallelForks(nodes, connections, report);
+        ValidateExecutionContainers(nodes, connections, report);
+
+        var topLevel = ExecutionGraphScope.CreateTopLevel(nodes, connections, node => node);
+        AnalyzeScope(
+            topLevel.Nodes,
+            topLevel.Connections,
+            report,
+            allowImplicitEntry: false,
+            scopeName: null);
+
+        foreach (var container in nodes.OfType<IExecutionScopeContainer>())
+        {
+            var containerNode = (NodeModel)container;
+            foreach (var lane in container.ExecutionLanes)
+            {
+                var laneNodes = nodes.Where(node =>
+                        node.ParentExecutionContainerId == containerNode.Id &&
+                        node.ExecutionLaneId == lane.Id)
+                    .ToList();
+                AnalyzeScope(
+                    laneNodes,
+                    connections,
+                    report,
+                    allowImplicitEntry: true,
+                    scopeName: $"{containerNode.Name}/{lane.Name}");
+            }
+        }
+
+        return report;
+    }
+
+    /// <summary>
+    /// 控制流不允许用同一个端口表达隐式分叉或隐式汇聚。
+    /// 分叉节点通过多个输出端口表达，汇聚节点通过多个输入端口表达。
+    /// </summary>
+    private static void ValidateFlowPortCardinality(
+        IReadOnlyList<NodeModel> nodes,
+        IReadOnlyList<ConnectionModel> connections,
+        FlowValidationReport report)
+    {
+        var nodeMap = nodes.ToDictionary(node => node.Id);
+        foreach (var group in connections.GroupBy(connection => connection.SourcePortId))
+        {
+            if (group.Count() <= 1) continue;
+            var first = group.First();
+            if (!nodeMap.TryGetValue(first.SourceNodeId, out var source) ||
+                source.FindPortById(first.SourcePortId)?.DataType != PortType.Flow) continue;
+            report.Diagnostics.Add(new FlowDiagnostic(
+                FlowDiagnosticSeverity.Error, "E-FLOW-FANOUT",
+                $"节点 [{source.Name}] 的流程输出端口只能连接一个输入；需要并行时请使用并行分叉"));
+        }
+
+        foreach (var group in connections.GroupBy(connection => connection.TargetPortId))
+        {
+            if (group.Count() <= 1) continue;
+            var first = group.First();
+            if (!nodeMap.TryGetValue(first.TargetNodeId, out var target) ||
+                target.FindPortById(first.TargetPortId)?.DataType != PortType.Flow) continue;
+            report.Diagnostics.Add(new FlowDiagnostic(
+                FlowDiagnosticSeverity.Error, "E-FLOW-FANIN",
+                $"节点 [{target.Name}] 的流程输入端口只能接受一条连线；需要汇聚时请使用分支汇聚的独立输入"));
+        }
+    }
+
+    /// <summary>并行分叉的全部输出必须有线，并在下游收束到同一个 AND 汇聚。</summary>
+    private static void ValidateParallelForks(
+        IReadOnlyList<NodeModel> nodes,
+        IReadOnlyList<ConnectionModel> connections,
+        FlowValidationReport report)
+    {
+        var nodeMap = nodes.ToDictionary(node => node.Id);
+        var flowConnections = connections.Where(connection =>
+                nodeMap.TryGetValue(connection.SourceNodeId, out var source) &&
+                source.FindPortById(connection.SourcePortId)?.DataType == PortType.Flow)
+            .ToList();
+        var outgoing = flowConnections.GroupBy(connection => connection.SourceNodeId)
+            .ToDictionary(group => group.Key, group => group.ToList());
+
+        foreach (var fork in nodes.OfType<ParallelForkNode>())
+        {
+            var branchPorts = fork.OutputPorts.Where(port => port.DataType == PortType.Flow).ToList();
+            var branchStarts = new List<string>(branchPorts.Count);
+            foreach (var port in branchPorts)
+            {
+                var branchConnections = flowConnections
+                    .Where(connection => connection.SourceNodeId == fork.Id &&
+                                         connection.SourcePortId == port.Id)
+                    .ToList();
+                if (branchConnections.Count == 0)
+                {
+                    report.Diagnostics.Add(new FlowDiagnostic(
+                        FlowDiagnosticSeverity.Error, "E-PAR-BRANCH-UNCONNECTED",
+                        $"并行分叉 [{fork.Name}] 的输出 [{port.Name}] 未连接"));
+                    continue;
+                }
+                branchStarts.Add(branchConnections[0].TargetNodeId);
+            }
+
+            if (branchStarts.Count != branchPorts.Count)
+                continue;
+
+            HashSet<string>? commonMerges = null;
+            foreach (var startId in branchStarts)
+            {
+                var reachable = FindReachableAndMerges(startId, nodeMap, outgoing);
+                if (commonMerges == null)
+                    commonMerges = reachable;
+                else
+                    commonMerges.IntersectWith(reachable);
+            }
+
+            if (commonMerges is not { Count: > 0 })
+                report.Diagnostics.Add(new FlowDiagnostic(
+                    FlowDiagnosticSeverity.Error, "E-PAR-JOIN-MISSING",
+                    $"并行分叉 [{fork.Name}] 的全部分支必须汇入同一个 AND 分支汇聚节点"));
+        }
+    }
+
+    private static HashSet<string> FindReachableAndMerges(
+        string startId,
+        IReadOnlyDictionary<string, NodeModel> nodeMap,
+        IReadOnlyDictionary<string, List<ConnectionModel>> outgoing)
+    {
+        var result = new HashSet<string>();
+        var visited = new HashSet<string>();
+        var queue = new Queue<string>();
+        queue.Enqueue(startId);
+        while (queue.TryDequeue(out var current) && visited.Count <= nodeMap.Count)
+        {
+            if (!visited.Add(current)) continue;
+            if (nodeMap.TryGetValue(current, out var node) &&
+                node is BranchMergeNode { MergeOperator: BranchMergeOperator.AND })
+                result.Add(current);
+            if (!outgoing.TryGetValue(current, out var next)) continue;
+            foreach (var connection in next)
+                queue.Enqueue(connection.TargetNodeId);
+        }
+        return result;
+    }
+
+    private static void AnalyzeScope(
+        IReadOnlyList<NodeModel> nodes,
+        IReadOnlyList<ConnectionModel> allConnections,
+        FlowValidationReport report,
+        bool allowImplicitEntry,
+        string? scopeName)
+    {
+        if (nodes.Count == 0) return;
+        var ids = nodes.Select(node => node.Id).ToHashSet();
+        var connections = allConnections.Where(connection =>
+                ids.Contains(connection.SourceNodeId) && ids.Contains(connection.TargetNodeId))
+            .ToList();
+        var graph = CompiledFlowGraph<NodeModel>.Compile(nodes, connections);
 
         // 可达性：从入口沿出边 BFS
         var reachable = new HashSet<string>();
@@ -69,15 +231,14 @@ public static class FlowValidator
                 queue.Enqueue(succ);
         }
 
-        foreach (var nodeVm in nodes)
+        foreach (var node in nodes)
         {
-            var node = nodeVm.Model;
-
             // IN 必连检查
             if (node.IsInEnabled)
             {
                 var inPort = node.InputPorts.FirstOrDefault(p => p.Name == "Next_IN");
-                if (inPort != null && graph.IncomingConnections[nodeVm.Id].Count == 0)
+                if (inPort != null && graph.IncomingConnections[node.Id].Count == 0 &&
+                    !allowImplicitEntry)
                 {
                     report.Diagnostics.Add(new FlowDiagnostic(
                         FlowDiagnosticSeverity.Error, "E-IN-REQ",
@@ -88,9 +249,10 @@ public static class FlowValidator
             // 不可达 / 完全孤立节点：
             // - 非入口且从入口不可达
             // - 或无任何连线相连（零度数节点会被入口判定误收，需单独识别）
-            var hasOutgoing = graph.Successors[nodeVm.Id].Count > 0;
-            var hasIncoming = graph.IncomingConnections[nodeVm.Id].Count > 0;
-            if (!reachable.Contains(nodeVm.Id) || (!hasOutgoing && !hasIncoming))
+            var hasOutgoing = graph.Successors[node.Id].Count > 0;
+            var hasIncoming = graph.IncomingConnections[node.Id].Count > 0;
+            if (!reachable.Contains(node.Id) ||
+                (!allowImplicitEntry && !hasOutgoing && !hasIncoming))
             {
                 report.Diagnostics.Add(new FlowDiagnostic(
                     FlowDiagnosticSeverity.Warning, "W-ORPHAN",
@@ -98,11 +260,11 @@ public static class FlowValidator
             }
 
             // 连线级检查：类型兼容 + 端口存在 + 绑定属性有效
-            foreach (var conn in graph.IncomingConnections[nodeVm.Id])
+            foreach (var conn in graph.IncomingConnections[node.Id])
             {
                 if (!graph.NodeMap.TryGetValue(conn.SourceNodeId, out var sourceNode))
                     continue;
-                var sourcePort = sourceNode.FindPort(conn.SourcePortId);
+                var sourcePort = sourceNode.FindPortById(conn.SourcePortId);
                 var targetPort = node.FindPortById(conn.TargetPortId);
 
                 if (sourcePort == null || targetPort == null)
@@ -138,10 +300,105 @@ public static class FlowValidator
         {
             report.Diagnostics.Add(new FlowDiagnostic(
                 FlowDiagnosticSeverity.Info, "I-CYCLE",
-                $"流程图包含 {graph.BackEdges.Count} 条回边（环路），将以路径追踪模式执行；请确保环路可通过循环节点或分支自然终止"));
+                $"{(scopeName == null ? "流程图" : $"作用域 [{scopeName}]")}包含 {graph.BackEdges.Count} 条回边（环路），将以路径追踪模式执行；请确保环路可自然终止"));
+        }
+    }
+
+    private static void ValidateExecutionContainers(
+        IReadOnlyList<NodeModel> nodes,
+        IReadOnlyList<ConnectionModel> connections,
+        FlowValidationReport report)
+    {
+        var nodeMap = nodes.ToDictionary(node => node.Id);
+        var containers = nodes.OfType<IExecutionScopeContainer>()
+            .ToDictionary(container => ((NodeModel)container).Id);
+
+        foreach (var node in nodes.Where(node => node.ParentExecutionContainerId != null))
+        {
+            if (!containers.TryGetValue(node.ParentExecutionContainerId!, out var parent))
+            {
+                report.Diagnostics.Add(new FlowDiagnostic(
+                    FlowDiagnosticSeverity.Error, "E-SCOPE-PARENT",
+                    $"节点 [{node.Name}] 所属的执行容器不存在"));
+                continue;
+            }
+
+            if (node.ExecutionLaneId == null ||
+                parent.ExecutionLanes.All(lane => lane.Id != node.ExecutionLaneId))
+                report.Diagnostics.Add(new FlowDiagnostic(
+                    FlowDiagnosticSeverity.Error, "E-SCOPE-LANE",
+                    $"节点 [{node.Name}] 未归属到 [{((NodeModel)parent).Name}] 的有效泳道"));
         }
 
-        return report;
+        foreach (var (containerId, container) in containers)
+        {
+            var containerNode = (NodeModel)container;
+            foreach (var lane in container.ExecutionLanes)
+            {
+                var members = nodes.Where(node =>
+                        node.ParentExecutionContainerId == containerId &&
+                        node.ExecutionLaneId == lane.Id)
+                    .ToList();
+                if (members.Count == 0)
+                {
+                    var code = container.ScopeKind == ExecutionScopeKind.Parallel
+                        ? "E-PAR-BRANCH-EMPTY"
+                        : "E-LOOP-BODY-EMPTY";
+                    report.Diagnostics.Add(new FlowDiagnostic(
+                        FlowDiagnosticSeverity.Error, code,
+                        $"{(container.ScopeKind == ExecutionScopeKind.Parallel ? "并行" : "循环")}容器 [{containerNode.Name}] 的{(container.ScopeKind == ExecutionScopeKind.Parallel ? "泳道" : "循环体")} [{lane.Name}] 没有节点"));
+                    continue;
+                }
+
+                var memberIds = members.Select(member => member.Id).ToHashSet();
+                var internalFlowConnections = connections.Where(connection =>
+                {
+                    if (!memberIds.Contains(connection.SourceNodeId) ||
+                        !memberIds.Contains(connection.TargetNodeId)) return false;
+                    var source = nodeMap[connection.SourceNodeId];
+                    return source.FindPortById(connection.SourcePortId)?.DataType == PortType.Flow;
+                }).ToList();
+                var targets = internalFlowConnections.Select(connection => connection.TargetNodeId).ToHashSet();
+                var entryCount = members.Count(member => !targets.Contains(member.Id));
+                if (entryCount != 1)
+                    report.Diagnostics.Add(new FlowDiagnostic(
+                        FlowDiagnosticSeverity.Error, "E-SCOPE-ENTRY",
+                        $"容器 [{containerNode.Name}] 的泳道 [{lane.Name}] 必须且只能有一个入口节点，当前为 {entryCount} 个"));
+            }
+        }
+
+        foreach (var connection in connections)
+        {
+            if (!nodeMap.TryGetValue(connection.SourceNodeId, out var source) ||
+                !nodeMap.TryGetValue(connection.TargetNodeId, out var target)) continue;
+            if (source.ParentExecutionContainerId == target.ParentExecutionContainerId &&
+                source.ExecutionLaneId == target.ExecutionLaneId) continue;
+            if (source.ParentExecutionContainerId == null && target.ParentExecutionContainerId == null) continue;
+            if (IsLoopBoundaryConnection(source, target, nodeMap)) continue;
+
+            report.Diagnostics.Add(new FlowDiagnostic(
+                FlowDiagnosticSeverity.Error, "E-SCOPE-CROSS",
+                $"连线 [{source.Name}] → [{target.Name}] 跨越了容器或泳道边界；请连接容器自身的 IN/OUT"));
+        }
+    }
+
+    private static bool IsLoopBoundaryConnection(
+        NodeModel source,
+        NodeModel target,
+        IReadOnlyDictionary<string, NodeModel> nodes) =>
+        IsInsideToOutsideLoop(source, target, nodes) ||
+        IsInsideToOutsideLoop(target, source, nodes);
+
+    private static bool IsInsideToOutsideLoop(
+        NodeModel inside,
+        NodeModel outside,
+        IReadOnlyDictionary<string, NodeModel> nodes)
+    {
+        if (inside.ParentExecutionContainerId == null ||
+            !nodes.TryGetValue(inside.ParentExecutionContainerId, out var owner) ||
+            owner is not LoopContainerNode) return false;
+        return outside.ParentExecutionContainerId == owner.ParentExecutionContainerId &&
+               outside.ExecutionLaneId == owner.ExecutionLaneId;
     }
 
     private static string Short(string? name, string fallback) => name ?? fallback;

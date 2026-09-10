@@ -43,7 +43,7 @@ public class LoopDispatchMergeTests
             FromPort(loop, "Completed", done, "Next_IN")
         };
 
-        await new FlowChartExecutionEngine().ExecuteAsync(
+        await new TestFlowChartExecutionEngine().ExecuteAsync(
             nodes, connections, CancellationToken.None, _ => { });
 
         Assert.Equal(iterations + 1, loop.Count); // Body N次 + Completed 1次
@@ -81,7 +81,7 @@ public class LoopDispatchMergeTests
             FromPort(loop, "Completed", done, "Next_IN")
         };
 
-        await new FlowChartExecutionEngine().ExecuteAsync(
+        await new TestFlowChartExecutionEngine().ExecuteAsync(
             nodes, connections, CancellationToken.None, _ => { });
 
         Assert.Equal(3, dispatch.Count);
@@ -115,7 +115,7 @@ public class LoopDispatchMergeTests
         };
 
         var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            new FlowChartExecutionEngine().ExecuteAsync(
+            new TestFlowChartExecutionEngine().ExecuteAsync(
                 nodes, connections, CancellationToken.None, _ => { }));
 
         Assert.Contains("输入值 [2] 没有匹配的分发规则", error.ToString());

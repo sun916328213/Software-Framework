@@ -11,7 +11,9 @@ namespace FlowEditor.Nodes.FlowControl;
 ///   输出端口在执行后读取子流程对应节点的同名输出端口值。
 /// - 递归防护：嵌套深度受 FlowRecursionGuard.MaxDepth 限制，循环引用会抛出异常。
 /// </summary>
-[FlowTool("子流程", "SourceMerge", ToolGroup = "流程控制", SortIndex = 6, Description = "执行内嵌子流程并按名称映射端口数据")]
+[FlowTool("子流程", "SourceMerge", ToolGroup = "流程控制", SortIndex = 6,
+    Description = "旧版内嵌子流程节点；保留用于加载历史流程",
+    VisibleInToolbox = false)]
 public class SubFlowNode : NodeModel
 {
     /// <summary>

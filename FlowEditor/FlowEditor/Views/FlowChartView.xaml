@@ -19,6 +19,53 @@
             <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
 
             <Style BasedOn="{StaticResource ScrollViewer_Style}" TargetType="ScrollViewer" />
+
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+            <ContextMenu x:Key="CanvasContextMenu" x:Shared="False">
+                <MenuItem Header="自适应画布视图" Command="{Binding ZoomToFitCommand}" />
+                <Separator />
+                <MenuItem Header="撤销" Command="{Binding UndoCommand}" InputGestureText="Ctrl+Z" />
+                <MenuItem Header="重做" Command="{Binding RedoCommand}" InputGestureText="Ctrl+Y" />
+            </ContextMenu>
+
+            <ContextMenu x:Key="NodeContextMenu" x:Shared="False">
+                <MenuItem
+                    Header="新增输入端口"
+                    Command="{Binding FlowChart.AddInputPortCommand}"
+                    CommandParameter="{Binding Node}"
+                    Visibility="{Binding IsEditable, Converter={StaticResource BoolToVis}}" />
+                <MenuItem
+                    Header="新增输出端口"
+                    Command="{Binding FlowChart.AddOutputPortCommand}"
+                    CommandParameter="{Binding Node}"
+                    Visibility="{Binding IsEditable, Converter={StaticResource BoolToVis}}" />
+                <Separator Visibility="{Binding IsEditable, Converter={StaticResource BoolToVis}}" />
+                <MenuItem
+                    Header="复制节点"
+                    Command="{Binding FlowChart.CopyNodeCommand}"
+                    CommandParameter="{Binding Node}"
+                    InputGestureText="Ctrl+C"
+                    Visibility="{Binding IsEditable, Converter={StaticResource BoolToVis}}" />
+                <MenuItem
+                    Header="删除节点"
+                    Command="{Binding FlowChart.DeleteNodeCommand}"
+                    CommandParameter="{Binding Node}"
+                    InputGestureText="Delete"
+                    Visibility="{Binding IsEditable, Converter={StaticResource BoolToVis}}" />
+                <Separator />
+                <MenuItem
+                    Header="{Binding MoveHeader}"
+                    Command="{Binding MoveCommand}"
+                    CommandParameter="{Binding Node}"
+                    Visibility="{Binding CanMoveToInactiveContainer, Converter={StaticResource BoolToVis}}" />
+                <Separator Visibility="{Binding CanMoveToInactiveContainer, Converter={StaticResource BoolToVis}}" />
+                <MenuItem Header="权限">
+                    <MenuItem Header="正常" Command="{Binding FlowChart.SetNormalPermissionCommand}" CommandParameter="{Binding Node}" />
+                    <MenuItem Header="只读" Command="{Binding FlowChart.SetReadOnlyPermissionCommand}" CommandParameter="{Binding Node}" />
+                    <MenuItem Header="禁用" Command="{Binding FlowChart.SetDisabledPermissionCommand}" CommandParameter="{Binding Node}" />
+                </MenuItem>
+            </ContextMenu>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -40,8 +87,8 @@
             Width="{Binding Model.CanvasWidth}"
             Height="{Binding Model.CanvasHeight}"
             MouseRightButtonDown="OnCanvasRightClick"
-            PreviewMouseLeftButtonDown="OnPanMouseDown"
-            PreviewMouseLeftButtonUp="OnPanMouseUp"
+            PreviewMouseDown="OnPanMouseDown"
+            PreviewMouseUp="OnPanMouseUp"
             PreviewMouseMove="OnPanMouseMove">
             <Grid.Background>
                 <DrawingBrush

@@ -59,7 +59,11 @@ public class FlowChartContainerDocumentService
         var containerDoc = new FlowChartContainerDocumentModel();
         foreach (var tab in tabs)
         {
-            var doc = _persistence.BuildDocument(tab.Model.TabTitle, tab.Nodes, tab.Connections, tab.Model);
+            var doc = _persistence.BuildDocument(
+                tab.Model.TabTitle,
+                tab.Nodes.Select(node => node.Model),
+                tab.Connections,
+                tab.Model);
             containerDoc.Flows.Add(doc);
         }
         return containerDoc;
@@ -101,7 +105,11 @@ public class FlowChartContainerDocumentService
 
     /// <summary>构建单个流程文档（用于 ToolBlock 内部数据保存等场景）。</summary>
     public FlowChartDocumentModel BuildFlowDocument(FlowChartViewModel tab)
-        => _persistence.BuildDocument(tab.Model.TabTitle, tab.Nodes, tab.Connections, tab.Model);
+        => _persistence.BuildDocument(
+            tab.Model.TabTitle,
+            tab.Nodes.Select(node => node.Model),
+            tab.Connections,
+            tab.Model);
 
     /// <summary>将一个流程文档加载到指定标签页（用于 ToolBlock 内部数据加载）。</summary>
     public void LoadFlowToTab(FlowChartViewModel tab, FlowChartDocumentModel flowDoc)

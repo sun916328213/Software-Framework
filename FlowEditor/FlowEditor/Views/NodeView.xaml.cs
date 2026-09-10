@@ -13,6 +13,9 @@ namespace FlowEditor.Views;
 /// </summary>
 public partial class NodeView : UserControl
 {
+    private Canvas? _dragCanvas;
+    private FlowChartViewModel? _dragFlowChartViewModel;
+
     public NodeView()
     {
         InitializeComponent();
@@ -52,6 +55,9 @@ public partial class NodeView : UserControl
         var canvas = FindParentCanvas(this);
         if (canvas == null) return;
 
+        _dragCanvas = canvas;
+        _dragFlowChartViewModel = flowChartVm;
+
         var mousePos = e.GetPosition(canvas);
         if (flowChartVm != null) flowChartVm.BeginNodeDrag(vm, mousePos);
         else vm.BeginDrag(mousePos);
@@ -64,10 +70,10 @@ public partial class NodeView : UserControl
     private void OnTitleBarMouseMove(object sender, MouseEventArgs e)
     {
         if (DataContext is not NodeViewModel vm || !vm.IsDragging) return;
-        var canvas = FindParentCanvas(this);
+        var canvas = _dragCanvas;
         if (canvas == null) return;
         var mousePos = e.GetPosition(canvas);
-        var flowChartVm = FindFlowChartViewModel(this);
+        var flowChartVm = _dragFlowChartViewModel;
         if (flowChartVm != null) flowChartVm.UpdateNodeDrag(vm, mousePos);
         else vm.UpdateDrag(mousePos);
     }
@@ -77,9 +83,11 @@ public partial class NodeView : UserControl
         if (DataContext is not NodeViewModel vm) return;
         TitleBar.ReleaseMouseCapture();
         TitleBar.MouseMove -= OnTitleBarMouseMove;
-        var flowChartVm = FindFlowChartViewModel(this);
+        var flowChartVm = _dragFlowChartViewModel;
         if (flowChartVm != null) flowChartVm.EndNodeDrag(vm);
         else vm.EndDrag();
+        _dragCanvas = null;
+        _dragFlowChartViewModel = null;
     }
 
     #endregion

@@ -9,6 +9,18 @@ namespace FlowEditorTest;
 /// <summary>P5 验收：子流程节点（端口映射 / 递归深度防护 / 取消传播）。</summary>
 public class SubFlowTests
 {
+    [Fact]
+    public void SubFlow_RemainsLoadableButIsHiddenFromToolbox()
+    {
+        var attribute = typeof(SubFlowNode)
+            .GetCustomAttributes(typeof(FlowToolAttribute), false)
+            .Cast<FlowToolAttribute>()
+            .Single();
+
+        Assert.False(attribute.VisibleInToolbox);
+        Assert.IsType<SubFlowNode>(new SubFlowNode());
+    }
+
     /// <summary>构造子流程文档：N1(ValueNode) → N2(ValueNode)，数据连线 N1.Value→N2.Value。</summary>
     private static FlowChartDocumentModel BuildInnerPlusChain()
     {

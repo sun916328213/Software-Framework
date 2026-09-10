@@ -5,7 +5,7 @@ namespace FlowEditor.Core;
 
 /// <summary>
 /// 执行引擎所需的最小节点执行面。
-/// 引擎只面向此接口调度，与 ViewModel 解耦；NodeModel 与 NodeViewModel 均可实现，
+/// 引擎只面向此接口调度，与具体节点包装类型解耦；领域节点和表现层适配类型均可实现，
 /// 未来抽离 FlowCore 程序集时随本接口一起迁移即可。
 /// </summary>
 public interface INodeExecutable
@@ -24,6 +24,21 @@ public interface INodeExecutable
 
     /// <summary>执行次数累加，由引擎写入。</summary>
     int Count { get; set; }
+
+    /// <summary>当前完整执行周期内该节点被触发的次数，由引擎重置并累加。</summary>
+    int CurrentRunCount { get; set; }
+
+    /// <summary>当前完整执行周期内最近一次执行的全局顺序号，由引擎写入。</summary>
+    int RunSequence { get; set; }
+
+    /// <summary>节点是否被排除在编译、校验和执行图之外。</summary>
+    bool IsExcludedFromExecution { get; set; }
+
+    /// <summary>所属主画布执行容器 ID；null 表示位于当前作用域顶层。</summary>
+    string? ParentExecutionContainerId { get; set; }
+
+    /// <summary>在父执行容器内所属的稳定泳道 ID。</summary>
+    string? ExecutionLaneId { get; set; }
 
     /// <summary>输入端口列表（内置标准端口 + 自定义端口）。</summary>
     IReadOnlyList<PortModel> InputPorts { get; }

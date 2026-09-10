@@ -61,6 +61,68 @@ public class ConnectionServiceTests
         Assert.Equal(PortType.Integer, targetModel.InputPorts.First(p => p.Name == "Value").DataType);
     }
 
+    [Fact]
+    public void PlanConnection_RejectsSecondTargetFromSameFlowOutput()
+    {
+        var (source, _) = New<CountingNode>("source");
+        var (first, _) = New<CountingNode>("first");
+        var (second, _) = New<CountingNode>("second");
+        var existing = new List<ConnectionModel> { Flow(source, first) };
+
+        var result = _service.PlanConnection(
+            source.OutputPorts.Single(),
+            second.InputPorts.Single(),
+            [source.Model, first.Model, second.Model],
+            existing);
+
+        Assert.False(result.Success);
+        Assert.Contains("并行分叉", result.Error);
+    }
+
+    [Fact]
+    public void PlanConnection_RejectsSecondSourceIntoSameFlowInput()
+    {
+        var (first, _) = New<CountingNode>("first");
+        var (second, _) = New<CountingNode>("second");
+        var (target, _) = New<CountingNode>("target");
+        var existing = new List<ConnectionModel> { Flow(first, target) };
+
+        var result = _service.PlanConnection(
+            second.OutputPorts.Single(),
+            target.InputPorts.Single(),
+            [first.Model, second.Model, target.Model],
+            existing);
+
+        Assert.False(result.Success);
+        Assert.Contains("分支汇聚", result.Error);
+    }
+
+    [Fact]
+    public void PlanConnection_DataOutputMayFanOutToDifferentInputs()
+    {
+        var (source, _) = New<SourceNode>("source");
+        var (first, _) = New<ValueNode>("first");
+        var (second, _) = New<ValueNode>("second");
+        var output = source.OutputPorts.Single(port => port.Name == "Value");
+        var firstInput = first.InputPorts.Single(port => port.Name == "Value");
+        var secondInput = second.InputPorts.Single(port => port.Name == "Value");
+        var existing = new List<ConnectionModel>
+        {
+            new()
+            {
+                SourceNodeId = source.Id,
+                SourcePortId = output.Id,
+                TargetNodeId = first.Id,
+                TargetPortId = firstInput.Id
+            }
+        };
+
+        var result = _service.PlanConnection(
+            output, secondInput, [source.Model, first.Model, second.Model], existing);
+
+        Assert.True(result.Success, result.Error);
+    }
+
     [Theory]
     [InlineData(typeof(bool), PortType.Boolean)]
     [InlineData(typeof(int), PortType.Integer)]

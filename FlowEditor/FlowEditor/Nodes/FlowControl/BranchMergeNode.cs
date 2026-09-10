@@ -8,7 +8,7 @@ namespace FlowEditor.Nodes.FlowControl;
 /// 分支汇聚节点：用于承接二选一、三选一等条件分支，也可汇聚普通并行分支。
 /// 调度语义由执行引擎统一提供：OR 任一路径完成即继续；AND 要求全部已连接输入都实际完成。
 /// </summary>
-[FlowTool("分支汇聚", "SourceMerge", ToolGroup = "流程控制", SortIndex = 4,
+[FlowTool("分支汇聚", "SourceMerge", ToolGroup = "流程控制", SortIndex = 5,
     Description = "汇聚二选一、三选一或并行分支，可选择 OR 任一完成或 AND 全部完成")]
 public class BranchMergeNode : NodeModel
 {

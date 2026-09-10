@@ -10,7 +10,7 @@ namespace FlowEditorTest;
 /// <summary>执行引擎三种模式的行为回归（P0 重构验收）。</summary>
 public class ExecutionEngineTests
 {
-    private readonly FlowChartExecutionEngine _engine = new();
+    private readonly TestFlowChartExecutionEngine _engine = new();
 
     private sealed class ConcurrencyProbe
     {
@@ -170,19 +170,54 @@ public class ExecutionEngineTests
         Assert.True(yModel.Executions >= 2, $"Y 应被重复调度（实际 {yModel.Executions} 次）");
     }
 
+    [Fact]
+    public async Task Cycle_ForkedBranchesRemainConcurrentBeforeAndMerge()
+    {
+        var (start, _) = New<CountingNode>("Start");
+        var (fork, _) = New<CountingNode>("Fork");
+        var probe = new ConcurrencyProbe();
+        var left = new NodeViewModel(new SynchronousWorkNode(probe) { Name = "Left" });
+        var right = new NodeViewModel(new SynchronousWorkNode(probe) { Name = "Right" });
+        var merge = new NodeViewModel(new FlowEditor.Nodes.FlowControl.BranchMergeNode
+        {
+            Name = "Merge",
+            MergeOperator = FlowEditor.Nodes.FlowControl.BranchMergeOperator.AND
+        });
+        var connections = new List<ConnectionModel>
+        {
+            Flow(start, fork),
+            Flow(fork, left),
+            Flow(fork, right),
+            ToMergeInput(left, merge, "分支1"),
+            ToMergeInput(right, merge, "分支2"),
+            Flow(merge, fork)
+        };
+
+        using var cts = new CancellationTokenSource(650);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            _engine.ExecuteAsync(
+                [start, fork, left, right, merge], connections, cts.Token, _ => { }));
+
+        Assert.Equal(2, probe.MaxActive);
+    }
+
     // ── 调试串行模式 ──
 
     [Fact]
     public async Task SequentialDebug_ExecutesTopologicallyWithStepCallback()
     {
-        var a = New<ValueNode>("A").Vm;
-        var b = New<ValueNode>("B").Vm;
-        var nodes = new List<NodeViewModel> { b, a }; // 故意乱序传入
-        var conns = new List<ConnectionModel> { Flow(a, b) };
+        var (aVm, a) = New<ValueNode>("A");
+        var (bVm, b) = New<ValueNode>("B");
+        var nodes = new List<NodeModel> { b, a }; // 故意乱序传入
+        var conns = new List<ConnectionModel> { Flow(aVm, bVm) };
 
         var steps = new List<string>();
         await _engine.ExecuteAsync(nodes, conns, CancellationToken.None, _ => { },
-            onBeforeNode: n => { steps.Add(n.Name); return Task.CompletedTask; });
+            onBeforeNode: nodeId =>
+            {
+                steps.Add(nodes.Single(node => node.Id == nodeId).Name);
+                return Task.CompletedTask;
+            });
 
         Assert.Equal(["A", "B"], steps);
     }
@@ -213,7 +248,7 @@ public class ExecutionEngineTests
     public async Task Execute_EmptyCanvas_LogsAndReturns()
     {
         var logs = new List<string>();
-        await _engine.ExecuteAsync<NodeViewModel>([], [], CancellationToken.None, logs.Add);
+        await _engine.ExecuteAsync<NodeModel>([], [], CancellationToken.None, logs.Add);
 
         var entry = Assert.Single(logs);
         Assert.Contains("画布为空", entry);
@@ -225,4 +260,14 @@ public class ExecutionEngineTests
         while (!condition())
             await Task.Delay(10, cts.Token);
     }
+
+    private static ConnectionModel ToMergeInput(
+        NodeViewModel source, NodeViewModel merge, string inputName)
+        => new()
+        {
+            SourceNodeId = source.Id,
+            SourcePortId = source.OutputPorts.First(port => port.Name == "Next_Out").Id,
+            TargetNodeId = merge.Id,
+            TargetPortId = merge.InputPorts.First(port => port.Name == inputName).Id
+        };
 }

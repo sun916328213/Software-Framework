@@ -23,9 +23,9 @@ public class CompiledFlowGraphTests
             conns.Add(Flow(nodes[i], nodes[i + 1]));
 
         // 预热 JIT 后测量
-        CompiledFlowGraph<NodeViewModel>.Compile([nodes[0], nodes[1]], []);
+        TestGraph.Compile([nodes[0], nodes[1]], []);
         var sw = Stopwatch.StartNew();
-        var graph = CompiledFlowGraph<NodeViewModel>.Compile(nodes, conns);
+        var graph = TestGraph.Compile(nodes, conns);
         sw.Stop();
 
         Assert.Equal(N, graph.TopologicalOrder.Count);
@@ -41,7 +41,7 @@ public class CompiledFlowGraphTests
         var nodes = new List<NodeViewModel> { c, b, a }; // 故意乱序
         var conns = new List<ConnectionModel> { Flow(a, b), Flow(b, c) };
 
-        var graph = CompiledFlowGraph<NodeViewModel>.Compile(nodes, conns);
+        var graph = TestGraph.Compile(nodes, conns);
 
         Assert.False(graph.HasCycle);
         Assert.Equal(["A", "B", "C"], graph.TopologicalOrder.Select(n => n.Name));
@@ -57,11 +57,12 @@ public class CompiledFlowGraphTests
         var nodes = new List<NodeViewModel> { x, y };
         var conns = new List<ConnectionModel> { Flow(x, y), Flow(y, x) };
 
-        var graph = CompiledFlowGraph<NodeViewModel>.Compile(nodes, conns);
+        var graph = TestGraph.Compile(nodes, conns);
 
         Assert.True(graph.HasCycle);
         Assert.Single(graph.BackEdges);          // 恰好一条回边
-        Assert.All(graph.EntryNodes, n => Assert.Contains(n, nodes)); // 环路下入口回退不抛异常
+        Assert.All(graph.EntryNodes,
+            node => Assert.Contains(nodes, viewModel => viewModel.Id == node.Id)); // 环路下入口回退不抛异常
     }
 
     [Fact]
@@ -73,7 +74,7 @@ public class CompiledFlowGraphTests
         var dataConn = Data(a, b);
         var conns = new List<ConnectionModel> { dataConn, flowConn };
 
-        var graph = CompiledFlowGraph<NodeViewModel>.Compile([a, b], conns);
+        var graph = TestGraph.Compile([a, b], conns);
 
         var incoming = graph.IncomingConnections[b.Id];
         Assert.Equal(2, incoming.Count);

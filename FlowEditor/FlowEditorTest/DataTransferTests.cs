@@ -13,7 +13,7 @@ namespace FlowEditorTest;
 /// </summary>
 public class DataTransferTests
 {
-    private readonly FlowChartExecutionEngine _engine = new();
+    private readonly TestFlowChartExecutionEngine _engine = new();
 
     // ── 单链数据传递 ──
 

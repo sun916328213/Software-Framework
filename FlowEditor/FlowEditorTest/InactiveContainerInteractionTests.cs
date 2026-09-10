@@ -13,7 +13,7 @@ public class InactiveContainerInteractionTests
     [Fact]
     public void DragContainer_MovesContainedNodesBySameDelta()
     {
-        var service = new FlowChartService(null!, new FlowChartExecutionEngine(), null!);
+        var service = new FlowChartService(null!, new TestFlowChartExecutionEngine(), null!);
         var vm = new FlowChartViewModel(service, null!, null!, null!, new ConnectionService());
         var container = service.AddNode(new InactiveNodeContainerNode { X = 100, Y = 100 });
         var child = service.AddNode(new CountingNode
