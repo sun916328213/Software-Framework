@@ -126,10 +126,11 @@ public class LoopNode : NodeModel, ILoopControlNode
     [NodeAction("预览参数", Order = 1, IconResource = "EyeOutline")]
     public void PreviewParams()
     {
-        System.Windows.MessageBox.Show(
-            $"循环次数: {Iterations}\n当前索引: {CurrentIndex}",
-            "循环参数预览",
-            System.Windows.MessageBoxButton.OK,
-            System.Windows.MessageBoxImage.Information);
+        Service?.NodeNotifications.ShowInformation("循环参数预览", GetParameterSummary());
     }
+
+    /// <summary>生成不依赖具体 UI 的循环参数摘要。</summary>
+    /// <returns>适合面板、对话框或日志展示的多行文本。</returns>
+    public string GetParameterSummary()
+        => $"循环次数: {Iterations}\n当前索引: {CurrentIndex}";
 }

@@ -31,6 +31,11 @@
 
             <ContextMenu x:Key="NodeContextMenu" x:Shared="False">
                 <MenuItem
+                    Header="从此节点继续执行"
+                    Command="{Binding FlowChart.ContinueFromNodeCommand}"
+                    CommandParameter="{Binding Node}" />
+                <Separator />
+                <MenuItem
                     Header="新增输入端口"
                     Command="{Binding FlowChart.AddInputPortCommand}"
                     CommandParameter="{Binding Node}"

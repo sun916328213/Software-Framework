@@ -16,15 +16,15 @@ Nodes <------ Core <---- Models
 
 当前已知的历史依赖包括：
 
-- `Core` 已禁止引用 `ViewModels`，但持久化和工具发现仍引用 Prism。
-- `IFlowChartService` 和持久化接口仍暴露 `NodeViewModel`。
+- `Core` 已禁止引用 `ViewModels` 和 Prism；节点 factory 使用实例注册表，不再持有宿主级静态 resolver。
+- `IFlowChartService` 仍暴露 `NodeViewModel`，但已不再暴露 Prism 容器；文档存储 seam 也不暴露 ViewModel。
 - `NodeModel` 持有 `IFlowChartService`，用于查询和修改画布连接。
-- `ToolBlockNode`、`SwitchNode` 和 `LoopNode` 仍直接使用 WPF 窗口或 MessageBox。
-- `FlowChartService` 同时承担执行、编辑、持久化、输出和视口状态协调。
+- 节点编辑、信息提示和动作命令已通过 Presentation adapter 与 WPF 隔离。
+- `FlowChartService` 仍同时承担执行、编辑、持久化和视口状态协调；输出缓冲、截断与节流已迁入 `FlowOutputBuffer`。
 
 这些依赖是待消除的迁移基线，不是允许新增依赖的架构规则。架构约束测试使用显式 allowlist 锁定现有债务；新增同类依赖必须失败。
 
-当前迁移进展：执行引擎只依赖 `INodeExecutable`；执行范围使用保留调用方类型的泛型子图；静态校验和文档构建只接收节点模型。引擎的调试前置回调只传递节点 ID，由 `FlowChartService` 映射回当前画布 ViewModel。测试通过硬约束确保 `Core` 不再出现任何 ViewModel 引用。
+当前迁移进展：执行引擎只依赖 `INodeExecutable`；执行范围使用保留调用方类型的泛型子图；静态校验和文档构建只接收节点模型。引擎的调试前置回调只传递节点 ID，由 `FlowChartService` 映射回当前画布 ViewModel。`NodeViewModel` 不再实现任何运行时执行接口。输出栏由 `FlowOutputBuffer` 隐藏并发缓冲、容量截断和节流细节，通过 `IUiDispatcher` 连接 WPF 或无头宿主。`FlowDocumentMapper` 统一单流程、多流程、快照和节点复制的 DTO 转换，`IFlowDocumentStore` 通过 JSON 与内存 adapter 隔离存储介质。标签页和工具箱节点创建分别使用 `IFlowTabFactory` 与 `INodeFactory`；Prism 解析仅保留在组合入口和 WPF adapter。应用模块、ViewModel、工具箱模型和 ToolBlock 窗口已不再使用 Service Locator，测试通过硬约束防止依赖回流。
 
 ## 目标依赖方向
 

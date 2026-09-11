@@ -8,7 +8,6 @@ using FlowEditor.Models;
 using FlowEditor.Nodes;
 using FlowEditor.Nodes.FlowControl;
 using FlowEditor.Services;
-using Prism.Ioc;
 using WPFCustomControls.PropertyGrid.Models;
 
 namespace FlowEditor.ViewModels;
@@ -24,7 +23,6 @@ public partial class FlowChartViewModel : ObservableObject
     private readonly IFlowChartService Service;
     private readonly IExportService _exportService;
     private readonly IDialogService _dialogService;
-    private readonly IContainerProvider _containerProvider;
     private readonly ConnectionService _connectionService;
 
     /// <summary>流程图运行时模型。View 直接绑定到此模型属性。</summary>
@@ -44,18 +42,21 @@ public partial class FlowChartViewModel : ObservableObject
 
     #region 构造函数
 
+    /// <summary>创建单个流程标签页 ViewModel。</summary>
+    /// <param name="service">独立流程会话模块。</param>
+    /// <param name="exportService">画布导出模块。</param>
+    /// <param name="dialogService">宿主对话框模块。</param>
+    /// <param name="connectionService">连线规则模块。</param>
     public FlowChartViewModel(
         IFlowChartService service,
         IExportService exportService,
         IDialogService dialogService,
-        IContainerProvider containerProvider,
         ConnectionService connectionService)
     {
-        Service = service;
-        _exportService = exportService;
-        _dialogService = dialogService;
-        _containerProvider = containerProvider;
-        _connectionService = connectionService;
+        Service = service ?? throw new ArgumentNullException(nameof(service));
+        _exportService = exportService ?? throw new ArgumentNullException(nameof(exportService));
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+        _connectionService = connectionService ?? throw new ArgumentNullException(nameof(connectionService));
         InitializeCommands();
 
         // 节点集合变化时刷新命令状态
@@ -738,13 +739,31 @@ public partial class FlowChartViewModel : ObservableObject
         }
 
         var selected = SelectedNode;
-        if (selected != null)
+        if (selected == null)
+            return;
+
+        // 流程中存在失败状态时，“继续”应采用恢复/跳转语义：所选节点成为新入口，
+        // 可选择失败节点重试，也可选择它之前或之后的节点继续整条可达路径。
+        if (Nodes.Any(node => node.Status == NodeStatus.Error))
+            await Service.ContinueFromNodeAsync(selected, AppendLog);
+        else
             await Service.StepContinueAsync(selected, AppendLog);
     }
 
     private bool CanStepContinue()
         => Model.IsPaused ||
            (!Model.IsRunning && SelectedNode is { IsExcludedFromExecution: false });
+
+    /// <summary>从右键选中的节点恢复或跳转，并继续执行其后继路径。</summary>
+    private Task ContinueFromNodeAsync(NodeViewModel? node)
+        => node == null ? Task.CompletedTask : Service.ContinueFromNodeAsync(node, AppendLog);
+
+    /// <summary>空闲时允许任意执行节点跳转；运行中只允许恢复并行容器内的独立支路。</summary>
+    private bool CanContinueFromNode(NodeViewModel? node)
+        => node is { IsExcludedFromExecution: false } &&
+           (!Model.IsRunning ||
+            (node.Model.ParentExecutionContainerId is { } parentId &&
+             Service.FindNode(parentId)?.Model is ParallelContainerNode));
 
     private async Task LoopRunAsync()
     {
@@ -956,6 +975,7 @@ public partial class FlowChartViewModel : ObservableObject
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();
         StepContinueCommand.NotifyCanExecuteChanged();
+        ContinueFromNodeCommand.NotifyCanExecuteChanged();
         DeleteSelectedCommand.NotifyCanExecuteChanged();
         CopyCommand.NotifyCanExecuteChanged();
         PasteCommand.NotifyCanExecuteChanged();

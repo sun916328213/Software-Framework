@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Text.Json;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using WPFCustomControls.PropertyGrid;
 using FlowEditor.Core;
 using FlowEditor.Interfaces;
@@ -38,8 +37,7 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
     {
         var attr = GetType().GetCustomAttribute<FlowToolAttribute>();
         _name = attr?.ToolName ?? GetType().Name;
-        ActionButtons.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasActionButtons));
-        InitActionButtons();
+        InitActionDescriptors();
     }
 
     /// <summary>节点唯一标识。</summary>
@@ -430,16 +428,18 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         return true;
     }
 
-    // ── 底部按钮 ──
+    // ── 节点动作 ──
 
-    /// <summary>底部操作按钮列表（由 [NodeAction] 特性自动扫描生成）。</summary>
-    public ObservableCollection<NodeActionButton> ActionButtons { get; } = new();
+    private readonly Dictionary<string, MethodInfo> _actionMethods = new(StringComparer.Ordinal);
 
-    /// <summary>是否有底部操作按钮（用于 UI 显示/隐藏）。</summary>
-    public bool HasActionButtons => ActionButtons.Count > 0;
+    /// <summary>节点声明的动作元数据（由 <see cref="NodeActionAttribute"/> 特性自动扫描生成）。</summary>
+    public IReadOnlyList<NodeActionDescriptor> ActionDescriptors { get; private set; } = [];
 
-    private void InitActionButtons()
+    /// <summary>扫描节点类型层级，建立动作描述与实现方法的内部映射。</summary>
+    private void InitActionDescriptors()
     {
+        var descriptors = new List<NodeActionDescriptor>();
+
         // 沿类型层级（DeclaredOnly）收集 [NodeAction]，支持基类下沉的操作按钮
         for (var type = GetType(); type != null && type != typeof(object); type = type.BaseType)
         {
@@ -448,19 +448,36 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
             {
                 var attr = method.GetCustomAttribute<NodeActionAttribute>();
                 if (attr == null) continue;
-                ActionButtons.Add(new NodeActionButton
-                {
-                    Name = attr.ButtonName,
-                    IconResource = attr.IconResource,
-                    Order = attr.Order,
-                    Action = () => method.Invoke(this, null)
-                });
+                if (method.GetParameters().Length != 0)
+                    throw new InvalidOperationException(
+                        $"节点动作 [{type.FullName}.{method.Name}] 不能声明参数。");
+
+                var actionId = $"{type.FullName}.{method.Name}";
+                if (!_actionMethods.TryAdd(actionId, method))
+                    throw new InvalidOperationException($"节点动作标识重复: {actionId}");
+                descriptors.Add(new NodeActionDescriptor(
+                    actionId,
+                    attr.ButtonName,
+                    attr.IconResource,
+                    attr.Order));
             }
         }
-        // 按 Order 排序
-        var sorted = ActionButtons.OrderBy(b => b.Order).ToList();
-        ActionButtons.Clear();
-        foreach (var btn in sorted) ActionButtons.Add(btn);
+
+        ActionDescriptors = descriptors
+            .OrderBy(descriptor => descriptor.Order)
+            .ThenBy(descriptor => descriptor.Id, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    /// <summary>执行节点已声明的动作。</summary>
+    /// <param name="actionId"><see cref="NodeActionDescriptor.Id"/> 中的动作标识。</param>
+    /// <exception cref="ArgumentException">动作标识不属于当前节点。</exception>
+    public void ExecuteAction(string actionId)
+    {
+        if (!_actionMethods.TryGetValue(actionId, out var method))
+            throw new ArgumentException($"节点 [{Name}] 不存在动作: {actionId}", nameof(actionId));
+
+        method.Invoke(this, null);
     }
 
     // ── 端口查找 ──
@@ -995,23 +1012,4 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
     /// <summary>打开脚本编辑器命令。子类重写后可被 PropertyGridHost 自动检测为扩展按钮。</summary>
     [PropertyGridAction("打开脚本编辑器")]
     public virtual ICommand? OpenScriptEditorCommand => null;
-}
-
-/// <summary>节点底部操作按钮模型。</summary>
-public class NodeActionButton
-{
-    /// <summary>按钮显示名称。</summary>
-    public string Name { get; set; } = string.Empty;
-
-    /// <summary>按钮图标。</summary>
-    public string IconResource { get; set; } = "DotsHorizontal";
-
-    /// <summary>排序权重。</summary>
-    public int Order { get; set; }
-
-    /// <summary>点击执行方法。</summary>
-    public Action? Action { get; set; }
-
-    /// <summary>点击命令（包装 Action 用于 WPF 绑定）。</summary>
-    public ICommand? Command => Action != null ? new RelayCommand(Action) : null;
 }

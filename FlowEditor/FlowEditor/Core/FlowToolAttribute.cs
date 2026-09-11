@@ -65,3 +65,14 @@ public class NodeActionAttribute : Attribute
         ButtonName = buttonName;
     }
 }
+
+/// <summary>节点动作的纯元数据描述，不包含 WPF 命令或 UI 回调。</summary>
+/// <param name="Id">节点类型内稳定的动作标识。</param>
+/// <param name="Name">用户可见名称。</param>
+/// <param name="IconResource">图标资源键。</param>
+/// <param name="Order">显示排序权重。</param>
+public sealed record NodeActionDescriptor(
+    string Id,
+    string Name,
+    string IconResource,
+    int Order);

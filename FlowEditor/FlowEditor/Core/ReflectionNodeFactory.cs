@@ -13,6 +13,11 @@ namespace FlowEditor.Core;
 /// </summary>
 public interface INodeFactory
 {
+    /// <summary>按运行时类型创建未应用文档状态的新节点。</summary>
+    /// <param name="nodeType">需要创建的节点类型。</param>
+    /// <returns>新的节点实例。</returns>
+    NodeModel Create(Type nodeType);
+
     /// <summary>按描述符实例化节点（含基础字段、端口与附加属性还原）。</summary>
     NodeModel Create(NodeDocumentModel descriptor);
 }
@@ -22,14 +27,15 @@ public interface INodeFactory
 /// 实例化策略：
 /// 1. 存在无参构造 → 直接使用（零依赖节点）；
 /// 2. 否则按"参数最多且全部可解析"贪心选择构造函数，
-///    参数依次来自 RegisterService 注册表 → FallbackResolver 回退解析器；
+///    参数依次来自 RegisterService 注册表 → 实例回退解析器；
 ///    全部不可满足时抛出含缺失服务清单的明确异常。
-/// 与编辑器的 Prism 容器路径互不影响：宿主只需在启动时设置
-/// FallbackResolver = t => container.Resolve(t)，即可让所有 DI 节点支持无头运行。
+/// 每个实例持有自己的注册表和可选回退解析器，不共享宿主可变状态；
+/// 无头宿主直接创建独立实例，桌面宿主通过 adapter 提供解析器。
 /// </summary>
 public sealed class ReflectionNodeFactory : INodeFactory
 {
-    public static ReflectionNodeFactory Instance { get; } = new();
+    private readonly ConcurrentDictionary<Type, Func<object>> _serviceResolvers = new();
+    private readonly Func<Type, object?>? _fallbackResolver;
 
     private static readonly JsonSerializerOptions PropertyJsonOptions = new()
     {
@@ -38,35 +44,50 @@ public sealed class ReflectionNodeFactory : INodeFactory
         Converters = { new JsonStringEnumConverter() }
     };
 
-    // ── 构造函数依赖的服务注册表 ──
-
-    private static readonly ConcurrentDictionary<Type, Func<object>> ServiceResolvers = new();
-
-    /// <summary>
-    /// 类型化服务兜底解析器（如接 Prism 容器）：注册表未命中时调用；
-    /// 返回 null 视为无法提供。宿主启动时设置一次即可让全部 DI 节点可物化。
-    /// </summary>
-    public static Func<Type, object?>? FallbackResolver { get; set; }
+    /// <summary>创建具有独立依赖注册表的反射节点 factory。</summary>
+    /// <param name="fallbackResolver">实例注册未命中时使用的宿主依赖解析函数。</param>
+    public ReflectionNodeFactory(Func<Type, object?>? fallbackResolver = null)
+    {
+        _fallbackResolver = fallbackResolver;
+    }
 
     /// <summary>注册单例服务实例。</summary>
-    public static void RegisterService<T>(T instance) where T : class
-        => ServiceResolvers[typeof(T)] = () => instance;
+    public void RegisterService<T>(T instance) where T : class
+    {
+        ArgumentNullException.ThrowIfNull(instance);
+        _serviceResolvers[typeof(T)] = () => instance;
+    }
 
     /// <summary>注册服务工厂（惰性创建）。</summary>
-    public static void RegisterService<T>(Func<T> factory) where T : class
-        => ServiceResolvers[typeof(T)] = () => factory();
+    public void RegisterService<T>(Func<T> factory) where T : class
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+        _serviceResolvers[typeof(T)] = () => factory();
+    }
 
-    /// <summary>清空服务注册表（测试隔离用）。</summary>
-    public static void ClearServices() => ServiceResolvers.Clear();
+    /// <summary>清空当前实例的服务注册表。</summary>
+    public void ClearServices() => _serviceResolvers.Clear();
 
+    /// <inheritdoc />
+    public NodeModel Create(Type nodeType)
+    {
+        ArgumentNullException.ThrowIfNull(nodeType);
+        if (nodeType.IsAbstract || !typeof(NodeModel).IsAssignableFrom(nodeType))
+            throw new ArgumentException($"类型 {nodeType.Name} 不是可实例化的节点类型。", nameof(nodeType));
+
+        return CreateInstance(nodeType);
+    }
+
+    /// <inheritdoc />
     public NodeModel Create(NodeDocumentModel descriptor)
     {
+        ArgumentNullException.ThrowIfNull(descriptor);
         var type = ResolveType(descriptor.TypeName)
                    ?? throw new TypeLoadException($"无法找到节点类型: {descriptor.TypeName}");
         if (!typeof(NodeModel).IsAssignableFrom(type))
             throw new InvalidOperationException($"类型 {type.Name} 不是有效的节点类型");
 
-        var node = CreateInstance(type);
+        var node = Create(type);
 
         // 基础字段
         node.Id = descriptor.Id;
@@ -131,7 +152,7 @@ public sealed class ReflectionNodeFactory : INodeFactory
     /// 实例化：与容器语义一致——按"可满足的构造函数中参数最多者"选择，
     /// 无参构造仅是参数量为零的候选（当更丰富的构造无法满足时兜底）。
     /// </summary>
-    private static NodeModel CreateInstance(Type type)
+    private NodeModel CreateInstance(Type type)
     {
         var candidates = type.GetConstructors(BindingFlags.Public | BindingFlags.Instance)
             .OrderByDescending(c => c.GetParameters().Length);
@@ -146,14 +167,14 @@ public sealed class ReflectionNodeFactory : INodeFactory
             for (var i = 0; i < parameters.Length; i++)
             {
                 var paramType = parameters[i].ParameterType;
-                if (ServiceResolvers.TryGetValue(paramType, out var resolver))
+                if (_serviceResolvers.TryGetValue(paramType, out var resolver))
                 {
                     args[i] = resolver();
                 }
                 else
                 {
                     object? resolved = null;
-                    try { resolved = FallbackResolver?.Invoke(paramType); }
+                    try { resolved = _fallbackResolver?.Invoke(paramType); }
                     catch { resolved = null; }
 
                     if (resolved == null)
@@ -173,7 +194,7 @@ public sealed class ReflectionNodeFactory : INodeFactory
 
         throw new InvalidOperationException(
             $"无法实例化节点 {type.Name}：没有任何构造函数的依赖可全部满足（缺: {missingReport ?? "未知"}）。" +
-            $"请通过 ReflectionNodeFactory.RegisterService 注册，或在宿主启动时设置 FallbackResolver 接入容器。");
+            $"请通过当前 ReflectionNodeFactory 实例的 RegisterService 注册，或提供 fallbackResolver。");
     }
 
     /// <summary>类型解析：全名 → 短名扫描已加载程序集；兼容 FlowEditor.Nodes.* → FlowNodes.* 迁移。</summary>

@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using FlowEditor.Core;
 using FlowEditor.Interfaces;
 using FlowEditor.ViewModels;
-using Prism.Ioc;
 
 namespace FlowEditor.Services;
 
@@ -14,7 +14,7 @@ namespace FlowEditor.Services;
 public partial class ToolboxService : ObservableObject
 {
     private readonly IFlowToolDiscoveryService _discovery;
-    private readonly IContainerProvider _containerProvider;
+    private readonly INodeFactory _nodeFactory;
 
     /// <summary>全部工具项。</summary>
     public ObservableCollection<NodePaletteItem> Items { get; } = new();
@@ -35,10 +35,13 @@ public partial class ToolboxService : ObservableObject
         }
     }
 
-    public ToolboxService(IFlowToolDiscoveryService discovery, IContainerProvider containerProvider)
+    /// <summary>创建工具箱模块。</summary>
+    /// <param name="discovery">工具元数据发现模块。</param>
+    /// <param name="nodeFactory">按类型创建节点的 factory。</param>
+    public ToolboxService(IFlowToolDiscoveryService discovery, INodeFactory nodeFactory)
     {
-        _discovery = discovery;
-        _containerProvider = containerProvider;
+        _discovery = discovery ?? throw new ArgumentNullException(nameof(discovery));
+        _nodeFactory = nodeFactory ?? throw new ArgumentNullException(nameof(nodeFactory));
     }
 
     /// <summary>重新发现工具并构建工具箱。</summary>
@@ -54,8 +57,7 @@ public partial class ToolboxService : ObservableObject
                 tool.ToolSubGroup,
                 tool.IconKind,
                 tool.Description,
-                tool.CreateFactory(),
-                _containerProvider));
+                () => _nodeFactory.Create(tool.ToolType)));
         }
         RebuildCategories();
     }
@@ -74,6 +76,7 @@ public partial class ToolboxService : ObservableObject
         return _loadingTask ??= LoadCoreAsync();
     }
 
+    /// <summary>在后台发现工具并在调用上下文恢复后更新工具箱集合。</summary>
     private async Task LoadCoreAsync()
     {
         // 后台：工具发现（若缓存未预热，全程序集反射也在这里完成）+ 构建条目。
@@ -90,8 +93,7 @@ public partial class ToolboxService : ObservableObject
                     tool.ToolSubGroup,
                     tool.IconKind,
                     tool.Description,
-                    tool.CreateFactory(),
-                    _containerProvider));
+                    () => _nodeFactory.Create(tool.ToolType)));
             }
             return list;
         });

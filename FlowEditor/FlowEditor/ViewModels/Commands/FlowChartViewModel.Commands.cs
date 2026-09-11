@@ -25,6 +25,8 @@ public partial class FlowChartViewModel
     public RelayCommand ClearAllCommand { get; private set; } = null!;
     /// <summary>获取重置当前流程的命令。</summary>
     public RelayCommand NewFlowCommand { get; private set; } = null!;
+    /// <summary>获取一键清空当前标签页输出栏的命令。</summary>
+    public RelayCommand ClearOutputCommand { get; private set; } = null!;
     /// <summary>获取放大画布的命令。</summary>
     public RelayCommand ZoomInCommand { get; private set; } = null!;
     /// <summary>获取缩小画布的命令。</summary>
@@ -41,6 +43,8 @@ public partial class FlowChartViewModel
     public RelayCommand RedoCommand { get; private set; } = null!;
     /// <summary>获取调试单步继续命令。</summary>
     public AsyncRelayCommand StepContinueCommand { get; private set; } = null!;
+    /// <summary>获取从指定节点恢复或跳转执行的命令。</summary>
+    public AsyncRelayCommand<NodeViewModel> ContinueFromNodeCommand { get; private set; } = null!;
     /// <summary>获取将指定视觉元素导出为 SVG 的兼容命令。</summary>
     public RelayCommand<FrameworkElement?> ExportSvgCommand { get; private set; } = null!;
     /// <summary>获取复制选中节点的命令。</summary>
@@ -80,6 +84,7 @@ public partial class FlowChartViewModel
         LoadCommand = new RelayCommand(Load);
         ClearAllCommand = new RelayCommand(ClearAll);
         NewFlowCommand = new RelayCommand(NewFlow);
+        ClearOutputCommand = new RelayCommand(Service.ClearOutput);
         ZoomInCommand = new RelayCommand(Service.ZoomIn);
         ZoomOutCommand = new RelayCommand(Service.ZoomOut);
         ZoomResetCommand = new RelayCommand(Service.ZoomReset);
@@ -88,6 +93,9 @@ public partial class FlowChartViewModel
         UndoCommand = new RelayCommand(Undo, () => Service.UndoRedo.CanUndo);
         RedoCommand = new RelayCommand(Redo, () => Service.UndoRedo.CanRedo);
         StepContinueCommand = new AsyncRelayCommand(StepContinueSelectedAsync, CanStepContinue);
+        ContinueFromNodeCommand = new AsyncRelayCommand<NodeViewModel>(
+            ContinueFromNodeAsync,
+            CanContinueFromNode);
         ExportSvgCommand = new RelayCommand<FrameworkElement?>(ExportSvg);
         CopyCommand = new RelayCommand(CopySelected);
         PasteCommand = new RelayCommand(PasteAtCenter);

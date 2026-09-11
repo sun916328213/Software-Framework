@@ -15,6 +15,45 @@ public sealed record ExecutionGraphScope<TNode>(
 public static class ExecutionGraphScope
 {
     /// <summary>
+    /// 从指定节点创建只包含其自身及所有可达后继的执行子图。
+    /// 指向起点的入边会自然被移除，因此起点可作为恢复或跳转入口立即执行。
+    /// </summary>
+    public static ExecutionGraphScope<TNode> CreateReachable<TNode>(
+        IEnumerable<TNode> nodes,
+        IEnumerable<ConnectionModel> connections,
+        string startNodeId)
+        where TNode : INodeExecutable
+    {
+        var nodeList = nodes.Where(node => !node.IsExcludedFromExecution).ToList();
+        if (nodeList.All(node => node.Id != startNodeId))
+            throw new ArgumentException("恢复起点不属于当前执行作用域。", nameof(startNodeId));
+
+        var connectionList = connections.ToList();
+        var reachableIds = new HashSet<string> { startNodeId };
+        var pending = new Queue<string>();
+        pending.Enqueue(startNodeId);
+        while (pending.Count > 0)
+        {
+            var current = pending.Dequeue();
+            foreach (var targetId in connectionList
+                         .Where(connection => connection.SourceNodeId == current)
+                         .Select(connection => connection.TargetNodeId))
+            {
+                if (reachableIds.Add(targetId))
+                    pending.Enqueue(targetId);
+            }
+        }
+
+        var reachableNodes = nodeList.Where(node => reachableIds.Contains(node.Id)).ToList();
+        var actualIds = reachableNodes.Select(node => node.Id).ToHashSet();
+        var reachableConnections = connectionList.Where(connection =>
+                actualIds.Contains(connection.SourceNodeId) &&
+                actualIds.Contains(connection.TargetNodeId))
+            .ToList();
+        return new ExecutionGraphScope<TNode>(reachableNodes, reachableConnections);
+    }
+
+    /// <summary>
     /// 创建顶层可执行图，并把穿过循环容器边界的原始控制流连线映射到循环容器。
     /// 画布仍保存并显示“外部节点 → 循环体入口 / 循环体出口 → 外部节点”，
     /// 调度器只看到一个可执行的循环复合节点。

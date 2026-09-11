@@ -25,14 +25,17 @@ public interface IFlowChartService
     /// <summary>撤销/重做服务。</summary>
     IUndoRedoService UndoRedo { get; }
 
+    /// <summary>宿主提供的节点专用编辑器启动器。</summary>
+    INodeEditorLauncher NodeEditorLauncher { get; }
+
+    /// <summary>宿主提供的节点信息提示通道。</summary>
+    INodeNotificationSink NodeNotifications { get; }
+
     /// <summary>当前文件路径。</summary>
     string? CurrentFilePath { get; set; }
 
     /// <summary>流程名（宿主设置，如 AutoFlow / InitializeFlow）；用于把节点日志路由到 D:\DeviceData\Log\Flow\{流程名}\{任务名}。</summary>
     string? ProcessName { get; set; }
-
-    /// <summary>容器提供器（用于 ToolBlock 内部编辑器创建子 ViewModel）。</summary>
-    Prism.Ioc.IContainerProvider? ContainerProvider { get; }
 
     /// <summary>执行流程图。</summary>
     Task RunAsync(Action<string> logCallback, bool debugMode = false);
@@ -51,6 +54,9 @@ public interface IFlowChartService
 
     /// <summary>仅执行用户当前选中的一个节点，不沿连线调度下游。</summary>
     Task StepContinueAsync(NodeViewModel node, Action<string> logCallback);
+
+    /// <summary>从选中节点恢复或跳转执行，并沿当前作用域及外层后继继续。</summary>
+    Task ContinueFromNodeAsync(NodeViewModel node, Action<string> logCallback);
 
     /// <summary>调试控制器：断点与单步门闩（P4）。</summary>
     DebugController Debug { get; }
@@ -88,6 +94,9 @@ public interface IFlowChartService
     /// <summary>立即将日志缓冲冲刷到输出面板（节流期间的最后一批日志在执行结束时调用）。</summary>
     void FlushLog();
 
+    /// <summary>清空日志缓冲和当前输出栏文本。</summary>
+    void ClearOutput();
+
     /// <summary>查找节点。</summary>
     NodeViewModel? FindNode(string nodeId);
 
@@ -105,9 +114,6 @@ public interface IFlowChartService
 
     /// <summary>从节点模型构建节点文档（用于 ToolBlock 内部节点序列化）。</summary>
     NodeDocumentModel BuildNodeDocument(NodeModel node);
-
-    /// <summary>打开复合节点的内部流程编辑器。</summary>
-    void OpenInternalFlowEditor(NodeModel node);
 
     /// <summary>添加节点（NodeViewModel 重载）。</summary>
     void AddNode(NodeViewModel nodeVm);

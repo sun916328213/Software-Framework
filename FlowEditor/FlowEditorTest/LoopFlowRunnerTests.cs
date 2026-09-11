@@ -48,4 +48,22 @@ public class LoopFlowRunnerTests
         Assert.Contains(logs, message => message.Contains("[任务] [开始]", StringComparison.Ordinal));
         Assert.Contains(logs, message => message.Contains("[任务] [完成]", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public async Task ExecuteAsync_MinusOneRunsUntilCancellation()
+    {
+        var node = new CountingNode { Name = "无限循环体" };
+        var body = new ParallelFlowLane<NodeModel>("body", "循环体", [node], []);
+        using var cts = new CancellationTokenSource(120);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            LoopFlowRunner.ExecuteAsync(
+                body,
+                -1,
+                cts.Token,
+                _ => { },
+                iterationDelayMs: 20));
+
+        Assert.True(node.Executions >= 2);
+    }
 }

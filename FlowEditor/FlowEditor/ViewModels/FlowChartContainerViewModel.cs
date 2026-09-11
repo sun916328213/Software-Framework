@@ -5,7 +5,6 @@ using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FlowEditor.Interfaces;
 using FlowEditor.Services;
-using Prism.Ioc;
 using WPFCustomControls.PropertyGrid.ViewModels;
 
 namespace FlowEditor.ViewModels;
@@ -38,7 +37,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
     private string _newTabNamePrefix = "流程图";
 
     private readonly IDialogService _dialogService;
-    private readonly IContainerProvider _containerProvider;
+    private readonly IFlowTabFactory _tabFactory;
     private readonly FlowChartContainerDocumentService _containerDocumentService;
     private readonly ToolboxService _toolboxService;
 
@@ -76,18 +75,25 @@ public partial class FlowChartContainerViewModel : ObservableObject
     /// <summary>容器所属流程名（AutoFlow / InitializeFlow ...，宿主设置）；向下传播到各标签页，用于节点日志按「流程名\任务名」路由。</summary>
     public string? ProcessName { get; set; }
 
+    /// <summary>创建流程图容器 ViewModel。</summary>
+    /// <param name="dialogService">宿主对话框模块。</param>
+    /// <param name="tabFactory">创建独立流程标签页的 factory。</param>
+    /// <param name="propertyGrid">共享属性面板 ViewModel。</param>
+    /// <param name="containerDocumentService">多流程文档协调模块。</param>
+    /// <param name="toolboxService">共享工具箱模块。</param>
     public FlowChartContainerViewModel(
         IDialogService dialogService,
-        IContainerProvider containerProvider,
+        IFlowTabFactory tabFactory,
+        PropertyGridHostViewModel propertyGrid,
         FlowChartContainerDocumentService containerDocumentService,
         ToolboxService toolboxService)
     {
-        _dialogService = dialogService;
-        _containerProvider = containerProvider;
-        _containerDocumentService = containerDocumentService;
-        _toolboxService = toolboxService;
-
-        PropertyGridVM = containerProvider.Resolve<PropertyGridHostViewModel>();
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+        _tabFactory = tabFactory ?? throw new ArgumentNullException(nameof(tabFactory));
+        PropertyGridVM = propertyGrid ?? throw new ArgumentNullException(nameof(propertyGrid));
+        _containerDocumentService = containerDocumentService ??
+                                    throw new ArgumentNullException(nameof(containerDocumentService));
+        _toolboxService = toolboxService ?? throw new ArgumentNullException(nameof(toolboxService));
 
         InitializeCommands();
 
@@ -168,10 +174,11 @@ public partial class FlowChartContainerViewModel : ObservableObject
         }
     }
 
+    /// <summary>在数量限制允许时创建并激活一个新流程标签页。</summary>
     public void AddNewTab()
     {
         if (Tabs.Count >= _maximumTabCount) return;
-        var vm = _containerProvider.Resolve<FlowChartViewModel>();
+        var vm = _tabFactory.Create();
         vm.SetProcessName(ProcessName);
         vm.Model.TabTitle = $"{_newTabNamePrefix}{GetNextFlowNumber()}";
         vm.Model.StatusText = "就绪";

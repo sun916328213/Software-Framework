@@ -3,7 +3,7 @@
 > 状态：实施中  
 > 基线日期：2026-09-10  
 > 范围：`FlowEditor` 类库及 `FlowEditorTest` 测试项目  
-> 当前验证基线：204 个测试全部通过（含 6 个架构约束测试、表现层、菜单与活动画布定位测试、Behavior 测试）
+> 当前验证基线：276 个测试全部通过（新增执行、文档和画布模块架构护栏、结构化容器恢复及独立输出栏回归测试；旧版 `SubFlowNode` 删除后同步移除 5 个失效用例）
 
 ## 1. 文档目的
 
@@ -300,7 +300,7 @@ FlowChartExecution -> IFlowLogSink
 - `FlowChartService` 不直接访问 `Application.Current.Dispatcher`。
 - 缓冲、截断、节流属于 `FlowOutputBuffer` 实现。
 - UI 自动滚动改为 Attached Behavior，不使用容器事件处理器。
-- 输出增加过滤、搜索、清空、暂停滚动或虚拟化时，再创建 `FlowOutputPaneView`。
+- 输出区域已因一键清空需求提取为 `FlowOutputPaneView`；后续过滤、搜索、暂停滚动或虚拟化继续在该视图内演进。
 - 若日志量继续增长，考虑 `ObservableCollection<LogEntry>` 加虚拟化列表，避免反复替换完整字符串。
 
 ## 6. 运行时解耦方案
@@ -405,7 +405,7 @@ IFlowDocumentStore       Save/Load 文档
 - `FlowChartContainerViewModel` 注入 `IFlowTabFactory`。
 - `FlowChartContainerDocumentService` 注入同一个 factory。
 - `ToolboxService` 使用已经构建好的节点 descriptor/factory，不直接暴露容器。
-- `ReflectionNodeFactory.FallbackResolver` 的全局静态状态应逐步替换为实例 factory，防止不同宿主互相覆盖。
+- `ReflectionNodeFactory` 使用实例注册表；Prism 回退解析只存在于 `PrismNodeFactory` adapter，不允许恢复全局静态 resolver。
 
 ## 8. 注释完整性计划
 
@@ -477,7 +477,7 @@ IFlowDocumentStore       Save/Load 文档
 | 工具栏/工具箱拆分 | 全部测试、WPF 加载测试 | 命令绑定、拖放、双击添加 smoke test |
 | FlowChartView 行为拆分 | 交互性能、NodeDrag、ConnectionOperation | 框选、平移、右键菜单生命周期测试 |
 | Core 去 ViewModel | ExecutionEngine、CompiledGraph、RuntimeSeparation、Stress | Core 禁止依赖 ViewModel 的架构测试 |
-| 节点去窗口 | Switch、Loop、SubFlow、BranchMerge | Recording NodeEditorLauncher 测试 |
+| 节点去窗口 | Switch、Loop、BranchMerge | Recording NodeEditorLauncher 测试 |
 | 服务拆分 | FlowChartServiceExecution、StepExecution、FaultTolerance | 每个深模块接口行为测试 |
 | 持久化统一 | Png 以外的全部文档测试 | `.flow`/`.flows` 旧样本兼容及 round-trip |
 | 输出链路 | FlowChartServiceExecution | 节流、截断、线程封送和关闭 Dispatcher 测试 |
@@ -500,9 +500,9 @@ IFlowDocumentStore       Save/Load 文档
 - [ ] 启用 XML 文档生成。
 - [ ] 补齐公共成员注释并逐步加入全部函数门禁。
 - [x] 增加架构依赖约束测试（以 allowlist 锁定现有债务）。
-- [x] 保存测试、构建和性能基线（模块项目可构建，204 个测试通过；旧 `Flow.sln` 含失效项目路径，不能作为当前入口）。
+- [x] 保存测试、构建和性能基线（模块项目可构建，260 个测试通过；旧 `Flow.sln` 含失效项目路径，不能作为当前入口）。
 
-验收：行为零变化，204 个当前测试通过；文档构建无 CS1591/CS1574 后完成本阶段。
+验收：行为零变化，260 个当前测试通过；文档构建无 CS1591/CS1574 后完成本阶段。
 
 ### Phase 1：表现层拆分（M）
 
@@ -515,33 +515,46 @@ IFlowDocumentStore       Save/Load 文档
 
 验收：布局、命令、快捷键、拖放和视觉行为不变；容器 XAML 只保留布局组合。
 
-### Phase 2：消除 Core 对 ViewModel 的依赖（L）
+### Phase 2：消除 Core 对 ViewModel 的依赖（L，已完成）
 
 - [x] 扩充 `INodeExecutable` 中的周期计数和全局执行序号属性。
 - [x] 执行引擎删除 `NodeViewModel` / `NodeModel` 具体类型判断。
 - [x] 执行范围改为保留调用方节点类型的 `INodeExecutable` 泛型子图。
 - [x] 调试回调仅传递节点 ID，由 `FlowChartService` 映射回当前画布 ViewModel。
 - [x] 持久化文档构建和静态校验均只接收节点模型，不再接收 ViewModel。
-- [ ] 将旧执行测试夹具迁移为直接使用 `NodeModel`，然后删除 `NodeViewModel` 的执行接口兼容转发；生产执行链已不再使用该转发。
+- [x] 测试执行 seam 统一映射到 `NodeModel`，并删除 `NodeViewModel` 的 `INodeExecutable` / `INodeFaultPolicy` / `ILoopControlNode` 转发。
 
 验收：Core 中无 ViewModel 引用，执行、循环、调试、容错和压力测试全部通过。
 
-### Phase 3：消除节点对 WPF 的依赖（M）
+### Phase 3：消除节点对 WPF 的依赖（M，已完成）
 
-- [ ] 引入 `INodeEditorLauncher` seam 及两个 adapter。
-- [ ] 迁移 ToolBlock/Switch 编辑窗口调用。
-- [ ] 迁移 Loop 参数预览。
-- [ ] 节点动作改为 descriptor + command adapter。
+- [x] 引入 `INodeEditorLauncher` / `INodeNotificationSink` seam，并提供 WPF、对话框和无头 adapter。
+- [x] ToolBlock/Switch 的编辑请求迁移到 `WpfNodeEditorLauncher`。
+- [x] Loop 只生成参数摘要，具体提示通过 `INodeNotificationSink`。
+- [x] 节点动作改为纯 `NodeActionDescriptor` + 表现层 `NodeActionViewModel` 命令 adapter。
 
 验收：Nodes 中无 `System.Windows`、Views 或 MessageBox 引用。
 
 ### Phase 4：深化应用模块（L）
 
-- [ ] 从 `FlowChartService` 提取编辑、执行、文档和输出模块。
-- [ ] 统一文档 mapper。
-- [ ] 引入 `IUiDispatcher`、`IFlowDocumentStore`、`IFlowTabFactory` 等真实 seam。
-- [ ] 清除测试中的 `null!` 构造依赖。
-- [ ] 移除 ViewModel 和文档模块中的 Service Locator。
+- [x] 提取 `FlowOutputBuffer`，封装输出缓冲、容量截断、节流和尾批刷新。
+- [x] 从 `FlowChartService` 提取编辑、执行和文档模块；保留兼容门面与依赖组装职责。
+  - [x] 提取内部 `FlowExecutionCoordinator` 深模块，集中校验、运行、循环、取消、调试、恢复和日志收尾。
+  - [x] 提取 `FlowDocumentSession`，集中保存、加载、快照、重建事务和错误反馈。
+  - [x] 提取 `FlowCanvasSession`，集中节点生命周期、批量清理、缩放和自适应视口。
+- [x] 统一 `FlowDocumentMapper`，由单流程、多流程、快照、节点复制共同复用节点、端口和连线映射。
+- [x] 引入 `IUiDispatcher`，提供 WPF 与无头 adapter，并移除 `FlowChartService` 对 WPF Dispatcher 的直接访问。
+- [x] 引入 `IFlowDocumentStore`，由 JSON 文件和内存 adapter 统一 `.flow` / `.flows` 存储。
+- [x] 引入 `IFlowTabFactory`，将标签页的 Prism `Resolve` 限制在 Presentation adapter。
+- [x] 通过 `TestFlowEditorFactory`、静默对话框和无操作导出 adapter 清除测试中的 `null!` 构造依赖，并增加防回退护栏。
+- [x] 移除 `FlowChartContainerDocumentService`、`FlowChartContainerViewModel` 和 `FlowChartViewModel` 中的 Service Locator。
+- [x] 移除工具箱 ViewModel、ToolBlock 窗口和 `IFlowChartService` 暴露的容器依赖；节点创建统一复用 `INodeFactory`。
+- [x] 删除 `ReflectionNodeFactory.FallbackResolver`、共享注册表和共享实例，改为实例级 `PrismNodeFactory` adapter。
+- [x] 并行容器改为支路故障隔离：单支路 FailFast 不再取消正在运行的兄弟支路。
+- [x] 增加“从此节点继续执行”：顶层节点可跳转执行；并行泳道可在兄弟支路运行期间独立恢复；循环体可恢复当前轮并继续剩余轮次。
+- [x] 统一工具栏“继续”和节点右键恢复语义：存在失败状态时，选中失败节点、前置节点或后续节点均可作为恢复入口；恢复成功后清除父容器错误状态。
+- [x] ToolBlock 内部图建立独立 `ExecutionScopeRuntime`，并统一经过顶层作用域编译，修复嵌套循环体丢失及成员重复执行。
+- [x] 循环容器支持 `-1` 无限循环和轮次间延时，延时可由取消令牌立即中断。
 
 验收：每个模块的职责可用一句话说明，调用方只依赖实际使用的接口。
 
@@ -557,8 +570,9 @@ IFlowDocumentStore       Save/Load 文档
 
 ### Phase 6：输出面板增强（可选，M）
 
-- [ ] 根据实际需求创建 `FlowOutputPaneView`。
-- [ ] 支持清空、级别过滤、搜索和暂停自动滚动。
+- [x] 根据一键清空需求创建 `FlowOutputPaneView`，容器仅保留布局组合。
+- [x] 支持一键清空当前标签页输出，并同步清除节流缓冲，防止旧日志回写。
+- [ ] 支持级别过滤、搜索和暂停自动滚动。
 - [ ] 评估结构化 `LogEntry` 与虚拟化列表。
 - [ ] 保持日志文件格式和执行编号兼容。
 

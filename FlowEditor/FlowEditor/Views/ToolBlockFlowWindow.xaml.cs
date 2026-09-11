@@ -7,7 +7,6 @@ using FlowEditor.Nodes;
 using FlowEditor.Nodes.FlowControl;
 using FlowEditor.Services;
 using FlowEditor.ViewModels;
-using Prism.Ioc;
 
 namespace FlowEditor.Views;
 
@@ -20,41 +19,43 @@ public partial class ToolBlockFlowWindow : Window
 {
     private readonly IInternalFlowContainerNode _containerNode;
     private readonly IFlowChartService _parentService;
-    private readonly IContainerProvider _containerProvider;
-    private FlowChartContainerDocumentService? _documentService;
-    private FlowChartContainerViewModel? _containerVm;
+    private readonly FlowChartContainerDocumentService _documentService;
+    private readonly FlowChartContainerViewModel _containerVm;
 
-    public ToolBlockFlowWindow(ToolBlockNode node, IFlowChartService parentService)
-        : this((IInternalFlowContainerNode)node, parentService)
-    {
-    }
-
-    public ToolBlockFlowWindow(IInternalFlowContainerNode node, IFlowChartService parentService)
+    /// <summary>创建已完成依赖组装的内部流程编辑窗口。</summary>
+    /// <param name="node">内部流程容器节点。</param>
+    /// <param name="parentService">父流程会话。</param>
+    /// <param name="containerViewModel">窗口独占的多流程容器 ViewModel。</param>
+    /// <param name="documentService">内部流程文档协调模块。</param>
+    public ToolBlockFlowWindow(
+        IInternalFlowContainerNode node,
+        IFlowChartService parentService,
+        FlowChartContainerViewModel containerViewModel,
+        FlowChartContainerDocumentService documentService)
     {
         InitializeComponent();
-        _containerNode = node;
-        _parentService = parentService;
-        _containerProvider = parentService.ContainerProvider!;
+        _containerNode = node ?? throw new ArgumentNullException(nameof(node));
+        _parentService = parentService ?? throw new ArgumentNullException(nameof(parentService));
+        _containerVm = containerViewModel ?? throw new ArgumentNullException(nameof(containerViewModel));
+        _documentService = documentService ?? throw new ArgumentNullException(nameof(documentService));
         Title = node.InternalEditorTitle;
 
-        // 通过 IoC 容器创建独立的容器 ViewModel 实例，不共享主窗口的实例
-        _containerVm = _containerProvider.Resolve<FlowChartContainerViewModel>();
         _containerVm.ConfigureTabLimits(
             node.MinimumInternalFlows,
             node.MaximumInternalFlows,
             node.InternalFlowNamePrefix);
-        _documentService = _containerProvider.Resolve<FlowChartContainerDocumentService>();
         FlowContainer.DataContext = _containerVm;
 
         Loaded += OnLoaded;
         Closing += OnClosing;
     }
 
+    /// <summary>窗口首次加载时应用工具排除规则并还原内部流程。</summary>
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         Loaded -= OnLoaded;
 
-        if (_containerVm?.ActiveTab != null)
+        if (_containerVm.ActiveTab != null)
         {
             foreach (var toolName in _containerNode.ExcludedInternalTools)
                 _containerVm.ExcludeToolByName(toolName);
@@ -66,14 +67,12 @@ public partial class ToolBlockFlowWindow : Window
     /// <summary>窗口关闭时自动保存到 ToolBlock。</summary>
     private void OnClosing(object? sender, CancelEventArgs e)
     {
-        if (_containerVm != null)
-            SaveInternalData(_containerVm);
+        SaveInternalData(_containerVm);
     }
 
     /// <summary>将 ToolBlockNode 内部所有流程数据加载到多标签页。</summary>
     private void LoadInternalData(FlowChartContainerViewModel containerVm)
     {
-        if (_documentService == null) return;
         var data = _containerNode.InternalData;
         if (data == null || data.Count == 0) return;
 
@@ -93,8 +92,6 @@ public partial class ToolBlockFlowWindow : Window
     /// <summary>保存所有标签页数据到 ToolBlockNode。</summary>
     private void SaveInternalData(FlowChartContainerViewModel containerVm)
     {
-        if (_documentService == null) return;
-
         var data = new List<FlowChartDocumentModel>();
         foreach (var tab in containerVm.Tabs)
             data.Add(_documentService.BuildFlowDocument(tab));

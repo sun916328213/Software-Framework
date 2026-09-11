@@ -2,7 +2,12 @@ using Extension.Core.ReflectionEx;
 using FlowEditor.Core;
 using FlowEditor.Interfaces;
 using FlowEditor.Nodes;
+using FlowEditor.Presentation.Factories;
+using FlowEditor.Presentation.NodeEditing;
+using FlowEditor.Presentation.Notifications;
+using FlowEditor.Presentation.Threading;
 using FlowEditor.Services;
+using FlowEditor.Services.Storage;
 using FlowEditor.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -21,14 +26,6 @@ using System.Windows;namespace FlowEditor
         /// </summary>
         public void OnInitialized(IContainerProvider containerProvider)
         {
-            // P3：让反射节点工厂可解析 DI 构造函数参数（接入 Prism 容器），
-            // 使 MC/Camera 等依赖注入节点在子流程与无头运行场景下也能被物化
-            ReflectionNodeFactory.FallbackResolver = t =>
-            {
-                try { return containerProvider.Resolve(t); }
-                catch { return null; }
-            };
-
             MergeResourceDictionaries();
         }
 
@@ -44,8 +41,18 @@ using System.Windows;namespace FlowEditor
             containerRegistry.RegisterSingleton<IDialogService, DialogService>();
             // 导出服务：单例，封装 PNG/SVG 导出
             containerRegistry.RegisterSingleton<IExportService, ExportService>();
-            // 持久化服务：瞬态，每个流程独立实例
-            containerRegistry.Register<IFlowChartPersistenceService, FlowChartPersistenceService>();
+            // 节点专用编辑器和信息提示 adapter：单例，集中隔离 WPF 窗口选择
+            containerRegistry.RegisterSingleton<INodeEditorLauncher, WpfNodeEditorLauncher>();
+            containerRegistry.RegisterSingleton<INodeNotificationSink, DialogNodeNotificationSink>();
+            // UI 调度 adapter：应用服务无需直接依赖 WPF Application/Dispatcher
+            containerRegistry.RegisterSingleton<IUiDispatcher, WpfUiDispatcher>();
+            // JSON 文档存储：统一 .flow 与 .flows 文件读写
+            containerRegistry.RegisterSingleton<IFlowDocumentStore, JsonFlowDocumentStore>();
+            // 标签页 factory：把 Prism Resolve 限制在表现层 adapter
+            containerRegistry.RegisterSingleton<IFlowTabFactory, PrismFlowTabFactory>();
+            // 文档 mapper：无状态，统一单流程、多流程、快照与节点复制的 DTO 转换
+            containerRegistry.RegisterSingleton<INodeFactory, PrismNodeFactory>();
+            containerRegistry.RegisterSingleton<FlowDocumentMapper>();
             // 执行引擎：单例（无状态纯算法）
             containerRegistry.RegisterSingleton<FlowChartExecutionEngine>();
             // 流程图服务：瞬态，每个标签页独立实例

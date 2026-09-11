@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -21,6 +20,9 @@ public class NodeViewModel : ObservableObject
     public NodeViewModel(NodeModel model)
     {
         Model = model ?? throw new ArgumentNullException(nameof(model));
+        ActionButtons = Model.ActionDescriptors
+            .Select(descriptor => new NodeActionViewModel(descriptor, Model.ExecuteAction))
+            .ToList();
 
         // 将 Model 的属性变化转发到 ViewModel
         Model.PropertyChanged += (_, e) =>
@@ -132,8 +134,11 @@ public class NodeViewModel : ObservableObject
     /// <summary>是否可编辑。</summary>
     public bool IsEditable => Model.IsEditable;
 
-    /// <summary>底部操作按钮。</summary>
-    public ObservableCollection<NodeActionButton> ActionButtons => Model.ActionButtons;
+    /// <summary>经表现层命令 adapter 包装的底部操作按钮。</summary>
+    public IReadOnlyList<NodeActionViewModel> ActionButtons { get; }
+
+    /// <summary>是否有底部操作按钮。</summary>
+    public bool HasActionButtons => ActionButtons.Count > 0;
 
     /// <summary>将模型声明的控制流汇聚策略转发给执行引擎。</summary>
     public FlowJoinMode FlowJoinMode => Model.FlowJoinMode;

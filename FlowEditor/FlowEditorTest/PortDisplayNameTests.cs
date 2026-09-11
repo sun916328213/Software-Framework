@@ -131,7 +131,7 @@ public class PortDisplayNameTests
             }
         };
 
-        var node = Assert.IsType<LoopNode>(ReflectionNodeFactory.Instance.Create(document));
+        var node = Assert.IsType<LoopNode>(new ReflectionNodeFactory().Create(document));
 
         var port = Assert.Single(node.CustomInputPorts);
         Assert.Equal("循环次数", port.Name);
@@ -158,7 +158,7 @@ public class PortDisplayNameTests
             }
         };
 
-        var node = Assert.IsType<LoopNode>(ReflectionNodeFactory.Instance.Create(document));
+        var node = Assert.IsType<LoopNode>(new ReflectionNodeFactory().Create(document));
 
         var port = Assert.Single(node.CustomInputPorts);
         Assert.Equal("循环次数", port.Name);

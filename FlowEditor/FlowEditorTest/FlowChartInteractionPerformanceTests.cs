@@ -18,9 +18,9 @@ public class FlowChartInteractionPerformanceTests
     [Fact]
     public void SelectingNode_SetsVisualStateBeforeSelectedNodeObserversRun()
     {
-        var service = new FlowChartService(null!, new TestFlowChartExecutionEngine(), null!);
+        var service = TestFlowEditorFactory.CreateService();
         var node = service.AddNode(new CountingNode { Name = "node" });
-        var vm = new FlowChartViewModel(service, null!, null!, null!, new ConnectionService());
+        var vm = TestFlowEditorFactory.CreateViewModel(service);
         bool? selectedWhenPropertyPanelObserverStarts = null;
         vm.PropertyChanged += (_, args) =>
         {
@@ -36,11 +36,11 @@ public class FlowChartInteractionPerformanceTests
     [Fact]
     public void RapidNodeSelection_LastClickWinsWithoutTransientUnselectedNotification()
     {
-        var service = new FlowChartService(null!, new TestFlowChartExecutionEngine(), null!);
+        var service = TestFlowEditorFactory.CreateService();
         var nodes = Enumerable.Range(0, 64)
             .Select(index => service.AddNode(new CountingNode { Name = $"node-{index}" }))
             .ToArray();
-        var vm = new FlowChartViewModel(service, null!, null!, null!, new ConnectionService());
+        var vm = TestFlowEditorFactory.CreateViewModel(service);
         var observerAlwaysSawSelectedNode = true;
         vm.PropertyChanged += (_, args) =>
         {
@@ -68,10 +68,10 @@ public class FlowChartInteractionPerformanceTests
     [Fact]
     public void ToggleNodeSelection_AccumulatesAndRemovesCtrlSelections()
     {
-        var service = new FlowChartService(null!, new TestFlowChartExecutionEngine(), null!);
+        var service = TestFlowEditorFactory.CreateService();
         var first = service.AddNode(new CountingNode { Name = "first" });
         var second = service.AddNode(new CountingNode { Name = "second" });
-        var vm = new FlowChartViewModel(service, null!, null!, null!, new ConnectionService());
+        var vm = TestFlowEditorFactory.CreateViewModel(service);
 
         vm.ToggleNodeSelection(first);
         vm.ToggleNodeSelection(second);
@@ -92,9 +92,9 @@ public class FlowChartInteractionPerformanceTests
     {
         WpfTestHost.Run(() =>
         {
-            var service = new FlowChartService(null!, new TestFlowChartExecutionEngine(), null!);
+            var service = TestFlowEditorFactory.CreateService();
             var node = service.AddNode(new CountingNode { Name = "node" });
-            var vm = new FlowChartViewModel(service, null!, null!, null!, new ConnectionService());
+            var vm = TestFlowEditorFactory.CreateViewModel(service);
             var view = new FlowChartView { DataContext = vm, Width = 800, Height = 600 };
             view.Measure(new Size(800, 600));
             view.Arrange(new Rect(0, 0, 800, 600));
@@ -121,8 +121,8 @@ public class FlowChartInteractionPerformanceTests
     {
         WpfTestHost.Run(() =>
         {
-            var service = new FlowChartService(null!, new TestFlowChartExecutionEngine(), null!);
-            var vm = new FlowChartViewModel(service, null!, null!, null!, new ConnectionService());
+            var service = TestFlowEditorFactory.CreateService();
+            var vm = TestFlowEditorFactory.CreateViewModel(service);
             var view = new FlowChartView { DataContext = vm };
             var pendingCanvas = Assert.IsType<Canvas>(view.FindName("PendingCanvas"));
 
@@ -169,9 +169,9 @@ public class FlowChartInteractionPerformanceTests
     {
         WpfTestHost.Run(() =>
         {
-            var service = new FlowChartService(null!, new TestFlowChartExecutionEngine(), null!);
+            var service = TestFlowEditorFactory.CreateService();
             service.AddNode(new LoopContainerNode { X = 100, Y = 100 });
-            var vm = new FlowChartViewModel(service, null!, null!, null!, new ConnectionService());
+            var vm = TestFlowEditorFactory.CreateViewModel(service);
             var view = new FlowChartView { DataContext = vm, Width = 1000, Height = 700 };
             view.Measure(new Size(1000, 700));
             view.Arrange(new Rect(0, 0, 1000, 700));

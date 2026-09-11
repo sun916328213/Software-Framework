@@ -303,14 +303,14 @@ public class BranchMergeNodeTests
             InputCount = 3,
             MergeOperator = BranchMergeOperator.AND
         };
-        var persistence = new FlowChartPersistenceService(null!);
-        var document = persistence.BuildDocument(
+        var mapper = new FlowDocumentMapper();
+        var document = mapper.ToDocument(
             "汇聚测试", [source], [], new FlowChartModel());
         var descriptor = Assert.Single(document.Nodes);
         Assert.All(descriptor.CustomInputPorts,
             port => Assert.Equal(PortType.Flow, port.DataType));
 
-        var restored = Assert.IsType<BranchMergeNode>(ReflectionNodeFactory.Instance.Create(descriptor));
+        var restored = Assert.IsType<BranchMergeNode>(new ReflectionNodeFactory().Create(descriptor));
 
         Assert.Equal(3, restored.InputCount);
         Assert.Equal(BranchMergeOperator.AND, restored.MergeOperator);

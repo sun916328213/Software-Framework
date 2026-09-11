@@ -106,6 +106,24 @@ public sealed class ParallelContainerNode : NodeModel, IExecutionScopeContainer,
             lanes, ct, message => Console.WriteLine($"[{Name}] {message}"));
     }
 
+    /// <summary>从指定泳道成员开始重新执行该成员及其可达后继，不重复已完成的兄弟泳道。</summary>
+    public async Task ResumeFromNodeAsync(string startNodeId, CancellationToken ct, Action<string> log)
+    {
+        var runtime = ExecutionScopeRuntime
+            ?? throw new InvalidOperationException($"并行容器 [{Name}] 缺少运行图上下文。");
+        var start = runtime.Nodes.FirstOrDefault(node => node.Id == startNodeId &&
+                                                        node.ParentExecutionContainerId == Id)
+            ?? throw new ArgumentException("恢复节点不属于该并行容器。", nameof(startNodeId));
+        var lane = Lanes.FirstOrDefault(item => item.Id == start.ExecutionLaneId)
+            ?? throw new InvalidOperationException($"恢复节点 [{start.Name}] 所在泳道不存在。");
+        var scope = ExecutionGraphScope.Create(runtime.Nodes, runtime.Connections, Id, lane.Id);
+        var recovery = ExecutionGraphScope.CreateReachable(scope.Nodes, scope.Connections, startNodeId);
+
+        log($"[恢复] 并行分支 [{lane.Name}] 从节点 [{start.Name}] 继续");
+        await new FlowChartExecutionEngine().ExecuteAsync(
+            recovery.Nodes, recovery.Connections, ct, log);
+    }
+
     private void ResizeLanes(int count)
     {
         if (count == Lanes.Count) return;

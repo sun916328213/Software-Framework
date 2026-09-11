@@ -2,7 +2,6 @@ using System.Reflection;
 using FlowEditor.Interfaces;
 using FlowEditor.Nodes;
 using MaterialDesignThemes.Wpf;
-using Prism.Ioc;
 
 namespace FlowEditor.Core;
 
@@ -32,12 +31,6 @@ public class ToolMetadata
     /// <summary>描述。</summary>
     public string Description { get; set; } = string.Empty;
 
-    /// <summary>创建节点工厂方法。</summary>
-    public Func<IContainerProvider, NodeModel> CreateFactory()
-    {
-        var type = ToolType;
-        return container => (NodeModel)container.Resolve(type);
-    }
 }
 
 /// <summary>

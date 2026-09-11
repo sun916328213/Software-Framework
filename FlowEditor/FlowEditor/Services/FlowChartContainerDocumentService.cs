@@ -1,11 +1,7 @@
-using System.IO;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using FlowEditor.Core;
 using FlowEditor.Interfaces;
 using FlowEditor.Models;
 using FlowEditor.ViewModels;
-using Prism.Ioc;
 
 namespace FlowEditor.Services;
 
@@ -16,42 +12,31 @@ namespace FlowEditor.Services;
 /// </summary>
 public class FlowChartContainerDocumentService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private readonly FlowDocumentMapper _documentMapper;
+    private readonly IFlowDocumentStore _documentStore;
+    private readonly IFlowTabFactory _tabFactory;
 
-    private readonly IFlowChartPersistenceService _persistence;
-    private readonly IContainerProvider _containerProvider;
-
+    /// <summary>创建多流程文档协调模块。</summary>
+    /// <param name="documentMapper">运行时模型与文档 DTO 之间的 mapper。</param>
+    /// <param name="documentStore">流程文档存储 adapter。</param>
+    /// <param name="tabFactory">创建独立流程标签页的 factory。</param>
     public FlowChartContainerDocumentService(
-        IFlowChartPersistenceService persistence,
-        IContainerProvider containerProvider)
+        FlowDocumentMapper documentMapper,
+        IFlowDocumentStore documentStore,
+        IFlowTabFactory tabFactory)
     {
-        _persistence = persistence;
-        _containerProvider = containerProvider;
+        _documentMapper = documentMapper ?? throw new ArgumentNullException(nameof(documentMapper));
+        _documentStore = documentStore ?? throw new ArgumentNullException(nameof(documentStore));
+        _tabFactory = tabFactory ?? throw new ArgumentNullException(nameof(tabFactory));
     }
 
     /// <summary>将容器文档保存到文件。</summary>
     public void Save(string path, FlowChartContainerDocumentModel containerDoc)
-    {
-        var dir = Path.GetDirectoryName(path);
-        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-            Directory.CreateDirectory(dir);
-        var json = JsonSerializer.Serialize(containerDoc, JsonOptions);
-        File.WriteAllText(path, json);
-    }
+        => _documentStore.Save(path, containerDoc);
 
     /// <summary>从文件加载容器文档。</summary>
     public FlowChartContainerDocumentModel Load(string path)
-    {
-        var json = File.ReadAllText(path);
-        return JsonSerializer.Deserialize<FlowChartContainerDocumentModel>(json, JsonOptions)
-               ?? throw new InvalidDataException("多流程文件内容为空");
-    }
+        => _documentStore.Load<FlowChartContainerDocumentModel>(path);
 
     /// <summary>从标签页集合构建容器文档。</summary>
     public FlowChartContainerDocumentModel BuildContainerDocument(IEnumerable<FlowChartViewModel> tabs)
@@ -59,7 +44,7 @@ public class FlowChartContainerDocumentService
         var containerDoc = new FlowChartContainerDocumentModel();
         foreach (var tab in tabs)
         {
-            var doc = _persistence.BuildDocument(
+            var doc = _documentMapper.ToDocument(
                 tab.Model.TabTitle,
                 tab.Nodes.Select(node => node.Model),
                 tab.Connections,
@@ -72,7 +57,7 @@ public class FlowChartContainerDocumentService
     /// <summary>根据容器文档创建一个新的标签页 ViewModel（含节点与连线还原）。</summary>
     public FlowChartViewModel CreateTabFromFlow(FlowChartDocumentModel flowDoc)
     {
-        var vm = _containerProvider.Resolve<FlowChartViewModel>();
+        var vm = _tabFactory.Create();
 
         // 还原标题与全局配置
         vm.Model.TabTitle = flowDoc.Name;
@@ -83,21 +68,14 @@ public class FlowChartContainerDocumentService
         // 重建节点
         foreach (var nodeDoc in flowDoc.Nodes)
         {
-            var node = _persistence.RebuildNode(nodeDoc);
+            var node = _documentMapper.ToNode(nodeDoc);
             vm.LoadNodeModel(node);
         }
 
         // 还原连线
         foreach (var connDoc in flowDoc.Connections)
         {
-            vm.Connections.Add(new ConnectionModel
-            {
-                Id = connDoc.Id,
-                SourceNodeId = connDoc.SourceNodeId,
-                SourcePortId = connDoc.SourcePortId,
-                TargetNodeId = connDoc.TargetNodeId,
-                TargetPortId = connDoc.TargetPortId
-            });
+            vm.Connections.Add(_documentMapper.ToConnection(connDoc));
         }
 
         return vm;
@@ -105,7 +83,7 @@ public class FlowChartContainerDocumentService
 
     /// <summary>构建单个流程文档（用于 ToolBlock 内部数据保存等场景）。</summary>
     public FlowChartDocumentModel BuildFlowDocument(FlowChartViewModel tab)
-        => _persistence.BuildDocument(
+        => _documentMapper.ToDocument(
             tab.Model.TabTitle,
             tab.Nodes.Select(node => node.Model),
             tab.Connections,
@@ -118,20 +96,13 @@ public class FlowChartContainerDocumentService
 
         foreach (var nodeDoc in flowDoc.Nodes)
         {
-            var node = _persistence.RebuildNode(nodeDoc);
+            var node = _documentMapper.ToNode(nodeDoc);
             tab.LoadNodeModel(node);
         }
 
         foreach (var connDoc in flowDoc.Connections)
         {
-            tab.Connections.Add(new ConnectionModel
-            {
-                Id = connDoc.Id,
-                SourceNodeId = connDoc.SourceNodeId,
-                SourcePortId = connDoc.SourcePortId,
-                TargetNodeId = connDoc.TargetNodeId,
-                TargetPortId = connDoc.TargetPortId
-            });
+            tab.Connections.Add(_documentMapper.ToConnection(connDoc));
         }
 
         tab.Model.ZoomLevel = flowDoc.ZoomLevel;

@@ -190,7 +190,7 @@ public class SwitchDispatchTests
     {
         var sw = new SwitchNode();
 
-        var action = Assert.Single(sw.ActionButtons);
+        var action = Assert.Single(sw.ActionDescriptors);
         Assert.Equal("编辑分发规则", action.Name);
         Assert.DoesNotContain(sw.OutputPorts, port => port.Name == SwitchNode.EmptyBranchName);
         Assert.DoesNotContain(sw.OutputPorts, port => port.Name == SwitchNode.DefaultBranchName);

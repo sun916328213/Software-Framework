@@ -43,7 +43,7 @@ public class ToolBlockNode : NodeModel, IInternalFlowContainerNode
     [NodeAction("打开内部流程", Order = 0, IconResource = "CodeBraces")]
     public void OpenInternalFlow()
     {
-        Service?.OpenInternalFlowEditor(this);
+        Service?.NodeEditorLauncher.Open(this);
     }
 
     public override async Task ExecuteAsync(CancellationToken ct)
@@ -69,8 +69,28 @@ public class ToolBlockNode : NodeModel, IInternalFlowContainerNode
                 })
                 .ToList();
 
-            // 执行
-            await engine.ExecuteAsync(nodeModels, flowDoc.Connections, ct, _ => { });
+            // 内部流程拥有独立运行图。结构化容器必须从这里取得自己的成员节点，
+            // 不能回退读取 ToolBlock 所在的外层画布。
+            var connections = flowDoc.Connections
+                .Select(connection => new ConnectionModel
+                {
+                    Id = connection.Id,
+                    SourceNodeId = connection.SourceNodeId,
+                    SourcePortId = connection.SourcePortId,
+                    TargetNodeId = connection.TargetNodeId,
+                    TargetPortId = connection.TargetPortId
+                })
+                .ToList();
+            var runtime = new ExecutionScopeRuntime(nodeModels, connections);
+            foreach (var node in nodeModels)
+                node.ExecutionScopeRuntime = runtime;
+
+            // 与主画布使用同一顶层作用域规则，避免容器成员既由容器执行、
+            // 又被内部引擎误判成独立入口额外执行一次。
+            var executionGraph = ExecutionGraphScope.CreateTopLevel(
+                nodeModels, connections, node => node);
+            await engine.ExecuteAsync(
+                executionGraph.Nodes, executionGraph.Connections, ct, _ => { });
         });
         await Task.WhenAll(tasks);
     }

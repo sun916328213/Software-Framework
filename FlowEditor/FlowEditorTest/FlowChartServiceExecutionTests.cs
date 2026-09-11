@@ -190,7 +190,7 @@ public class FlowChartServiceExecutionTests
     }
 
     private static FlowChartService CreateService() =>
-        new(null!, new TestFlowChartExecutionEngine(), null!);
+        TestFlowEditorFactory.CreateService();
 
     private static async Task WaitUntilAsync(Func<bool> condition)
     {

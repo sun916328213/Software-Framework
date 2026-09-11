@@ -223,6 +223,7 @@
                 </Button>
                 <Rectangle Style="{StaticResource ToolbarSeparatorStyle}" />
                 <Viewbox
+                    x:Name="DataConnectionsToggleHost"
                     Width="40"
                     Height="22"
                     Stretch="Uniform">

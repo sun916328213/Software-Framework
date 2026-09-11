@@ -19,6 +19,10 @@
     Focusable="True"
     mc:Ignorable="d">
 
+    <UserControl.Resources>
+        <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
+    </UserControl.Resources>
+
     <UserControl.CommandBindings>
         <CommandBinding
             CanExecute="OnExportPngCanExecute"
@@ -108,23 +112,7 @@
                     ResizeBehavior="PreviousAndNext" />
 
                 <!--  底部输出日志面板（仅画布下方）  -->
-                <Border
-                    Grid.Row="2"
-                    BorderBrush="{StaticResource Flow_Border_Divider}"
-                    BorderThickness="0,1,0,0">
-                    <TextBox
-                        x:Name="OutputTextBox"
-                        behaviors:TextBoxAutoScrollBehavior.IsEnabled="True"
-                        Padding="10,2"
-                        BorderThickness="0"
-                        FontFamily="Consolas"
-                        FontSize="12"
-                        Foreground="{StaticResource Flow_Text_Primary}"
-                        IsReadOnly="True"
-                        Text="{Binding ActiveTab.Model.OutputText, Mode=OneWay}"
-                        TextWrapping="Wrap"
-                        VerticalScrollBarVisibility="Auto" />
-                </Border>
+                <local:FlowOutputPaneView Grid.Row="2" />
             </Grid>
 
             <!--  画布与属性栏之间的分栏条  -->

@@ -10,12 +10,13 @@ namespace FlowEditor.Nodes.FlowControl;
     Description = "把节点拖入容器作为循环体，执行指定次数后继续")]
 public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFlowStructureValidationSource
 {
-    public const double DefaultWidth = 720;
-    public const double DefaultHeight = 360;
+    public const double DefaultWidth = 500;
+    public const double DefaultHeight = 300;
 
     private double _containerWidth = DefaultWidth;
     private double _containerHeight = DefaultHeight;
     private int _iterationCount = 1;
+    private int _iterationDelayMs;
     private int _currentIteration;
     private List<ExecutionLaneDefinition> _lanes = [new() { Name = "循环体" }];
 
@@ -49,12 +50,21 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
     }
 
     [NodeProperty(DisplayName = "循环次数", Group = "1.基础信息", Order = 0,
-        Min = 1, Max = 1000000, Step = 1, PortConfigurable = false,
-        Description = "完整执行容器内循环体的次数")]
+        Min = -1, Max = 1000000, Step = 1, PortConfigurable = false,
+        Description = "完整执行容器内循环体的次数；-1 表示无限循环")]
     public int IterationCount
     {
         get => _iterationCount;
-        set => SetProperty(ref _iterationCount, Math.Clamp(value, 1, 1_000_000));
+        set => SetProperty(ref _iterationCount, value == -1 ? -1 : Math.Clamp(value, 1, 1_000_000));
+    }
+
+    [NodeProperty(DisplayName = "循环延时(ms)", Group = "1.基础信息", Order = 1,
+        Min = 0, Max = 86400000, Step = 100, PortConfigurable = false,
+        Description = "每轮循环完成后、下一轮开始前等待的毫秒数；0 表示不等待")]
+    public int IterationDelayMs
+    {
+        get => _iterationDelayMs;
+        set => SetProperty(ref _iterationDelayMs, Math.Clamp(value, 0, 86_400_000));
     }
 
     [JsonIgnore]
@@ -111,7 +121,52 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
             {
                 CurrentIteration = iteration;
                 TransferBoundaryData(runtime, memberIds, importIntoBody: true);
-            });
+            },
+            IterationDelayMs);
+        TransferBoundaryData(runtime, memberIds, importIntoBody: false);
+    }
+
+    /// <summary>
+    /// 从循环体中的指定节点恢复当前失败轮次，然后继续剩余轮次。
+    /// 选择失败节点表示重试该节点；选择其后节点表示跳过故障点。
+    /// </summary>
+    public async Task ResumeFromNodeAsync(string startNodeId, CancellationToken ct, Action<string> log)
+    {
+        var runtime = ExecutionScopeRuntime
+            ?? throw new InvalidOperationException($"循环容器 [{Name}] 缺少运行图上下文。");
+        var lane = Lanes[0];
+        var body = ExecutionGraphScope.Create(runtime.Nodes, runtime.Connections, Id, lane.Id);
+        var start = body.Nodes.FirstOrDefault(node => node.Id == startNodeId)
+            ?? throw new ArgumentException("恢复节点不属于该循环容器。", nameof(startNodeId));
+        var recovery = ExecutionGraphScope.CreateReachable(body.Nodes, body.Connections, startNodeId);
+        var memberIds = body.Nodes.Select(node => node.Id).ToHashSet();
+        var current = Math.Max(1, CurrentIteration);
+
+        CurrentIteration = current;
+        TransferBoundaryData(runtime, memberIds, importIntoBody: true);
+        log($"[恢复] 循环第 {current} 轮从节点 [{start.Name}] 继续");
+        await new FlowChartExecutionEngine().ExecuteAsync(
+            recovery.Nodes, recovery.Connections, ct, log);
+
+        var nextIteration = current + 1;
+        if (IterationCount == -1 || nextIteration <= IterationCount)
+        {
+            if (IterationDelayMs > 0)
+                await Task.Delay(IterationDelayMs, ct);
+            await LoopFlowRunner.ExecuteAsync(
+                new ParallelFlowLane<NodeModel>(lane.Id, lane.Name, body.Nodes, body.Connections),
+                IterationCount,
+                ct,
+                log,
+                (iteration, _) =>
+                {
+                    CurrentIteration = iteration;
+                    TransferBoundaryData(runtime, memberIds, importIntoBody: true);
+                },
+                IterationDelayMs,
+                nextIteration);
+        }
+
         TransferBoundaryData(runtime, memberIds, importIntoBody: false);
     }
 

@@ -6,8 +6,8 @@
     Title="ToolBlock 内部流程编辑"
     Width="1200"
     Height="750"
-    WindowStartupLocation="CenterOwner"
-    Style="{StaticResource MaterialDesignWindow}">
+    Style="{StaticResource MaterialDesignWindow}"
+    WindowStartupLocation="CenterOwner">
 
     <Window.Resources>
         <ResourceDictionary>
@@ -20,5 +20,6 @@
     <!--  主体：FlowChartContainerView（自带工具栏、工具箱、画布、属性面板）  -->
     <local:FlowChartContainerView
         x:Name="FlowContainer"
-        Grid.Row="0" />
+        Grid.Row="0"
+        Background="White" />
 </Window>

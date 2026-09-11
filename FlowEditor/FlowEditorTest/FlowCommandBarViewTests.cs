@@ -51,11 +51,12 @@ public class FlowCommandBarViewTests
         WpfTestHost.Run(() =>
         {
             var view = new FlowCommandBarView();
-            var toggle = Assert.IsType<ToggleButton>(view.FindName("DataConnectionsToggle"));
+            var host = Assert.IsType<Viewbox>(view.FindName("DataConnectionsToggleHost"));
+            Assert.IsType<ToggleButton>(view.FindName("DataConnectionsToggle"));
 
-            Assert.Equal(32, toggle.Width);
-            Assert.Equal(28, toggle.Height);
-            Assert.Equal(new Thickness(1, 0, 1, 0), toggle.Margin);
+            Assert.Equal(40, host.Width);
+            Assert.Equal(22, host.Height);
+            Assert.Equal(Stretch.Uniform, host.Stretch);
         });
     }
 
@@ -72,6 +73,36 @@ public class FlowCommandBarViewTests
 
         Assert.Equal("{Binding ActiveTab.SaveCommand}", (string?)save.Attribute("Command"));
         Assert.Equal("{Binding ActiveTab.LoadCommand}", (string?)open.Attribute("Command"));
+    }
+
+    /// <summary>验证输出栏提供绑定到当前标签页的一键清除按钮。</summary>
+    [Fact]
+    public void OutputPane_ProvidesClearCurrentOutputCommand()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        var document = XDocument.Load(Path.Combine(root, "FlowEditor", "Views", "FlowOutputPaneView.xaml"));
+        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+
+        var button = Assert.Single(document.Descendants(presentation + "Button"),
+            element => (string?)element.Attribute("Name") == "ClearOutputButton" ||
+                       (string?)element.Attribute(XName.Get("Name", "http://schemas.microsoft.com/winfx/2006/xaml")) == "ClearOutputButton");
+
+        Assert.Equal("{Binding ActiveTab.ClearOutputCommand}", (string?)button.Attribute("Command"));
+        Assert.Equal("清除", (string?)button.Attribute("Content"));
+    }
+
+    /// <summary>验证输出栏可以独立加载并拥有清除按钮和日志文本框。</summary>
+    [Fact]
+    public void OutputPane_LoadsAsIndependentView()
+    {
+        WpfTestHost.Run(() =>
+        {
+            var pane = new FlowOutputPaneView();
+
+            Assert.NotNull(pane.Content);
+            Assert.IsType<Button>(pane.FindName("ClearOutputButton"));
+            Assert.IsType<TextBox>(pane.FindName("OutputTextBox"));
+        });
     }
 
     /// <summary>验证点击真实导出按钮时，PNG 命令可以沿视觉树路由到宿主。</summary>
@@ -187,7 +218,8 @@ public class FlowCommandBarViewTests
             var canvasMenu = Assert.IsType<ContextMenu>(view.FindResource("CanvasContextMenu"));
             var nodeMenu = Assert.IsType<ContextMenu>(view.FindResource("NodeContextMenu"));
             Assert.Equal(4, canvasMenu.Items.Count);
-            Assert.Equal(9, nodeMenu.Items.Count);
+            Assert.Equal(11, nodeMenu.Items.Count);
+            Assert.Equal("从此节点继续执行", Assert.IsType<MenuItem>(nodeMenu.Items[0]).Header);
         });
     }
 

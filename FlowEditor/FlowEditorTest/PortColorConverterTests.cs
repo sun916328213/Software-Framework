@@ -22,7 +22,7 @@ public class PortColorConverterTests
         var converter = new PortColorConverter();
 
         var brush = Assert.IsType<SolidColorBrush>(
-            converter.Convert(type, typeof(Brush), null!, CultureInfo.InvariantCulture));
+            converter.Convert(type, typeof(Brush), new object(), CultureInfo.InvariantCulture));
 
         Assert.Equal(Color.FromRgb(red, green, blue), brush.Color);
     }
@@ -33,7 +33,7 @@ public class PortColorConverterTests
         var converter = new PortColorConverter();
 
         var brush = Assert.IsType<SolidColorBrush>(
-            converter.Convert(new object(), typeof(Brush), null!, CultureInfo.InvariantCulture));
+            converter.Convert(new object(), typeof(Brush), new object(), CultureInfo.InvariantCulture));
 
         Assert.Equal(Color.FromRgb(0x7B, 0x87, 0x94), brush.Color);
     }

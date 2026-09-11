@@ -38,7 +38,6 @@ public static class ParallelFlowRunner
         if (duplicateId != null)
             throw new InvalidOperationException($"并行容器存在重复的分支标识 [{duplicateId}]。");
 
-        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var tasks = lanes.Select(lane => Task.Run(async () =>
         {
             log($"[并行容器] 分支 [{lane.Name}] 开始");
@@ -48,14 +47,17 @@ public static class ParallelFlowRunner
                 await engine.ExecuteAsync(
                     lane.Nodes,
                     lane.Connections,
-                    linkedCts.Token,
+                    ct,
                     message => log($"[并行:{lane.Name}] {message}"));
                 log($"[并行容器] 分支 [{lane.Name}] 完成");
             }
-            catch
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
-                linkedCts.Cancel();
                 throw;
+            }
+            catch (Exception ex)
+            {
+                log($"[并行容器] 分支 [{lane.Name}] 失败：{ex.Message}；其他分支继续执行");
             }
         }, CancellationToken.None)).ToArray();
 

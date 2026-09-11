@@ -1,8 +1,6 @@
 using System.Text.Json;
-using System.Windows;
 using FlowEditor.Core;
 using FlowEditor.Models;
-using FlowEditor.Views;
 using WPFCustomControls.PropertyGrid.Models;
 
 namespace FlowEditor.Nodes.FlowControl;
@@ -332,10 +330,7 @@ public class SwitchNode : NodeModel
     [NodeAction("编辑分发规则", Order = 0, IconResource = "TableEdit")]
     public void EditDispatchRules()
     {
-        var window = new DispatchRuleEditorWindow(this);
-        var owner = Application.Current?.Windows.OfType<Window>().FirstOrDefault(candidate => candidate.IsActive);
-        if (owner != window) window.Owner = owner;
-        window.ShowDialog();
+        Service?.NodeEditorLauncher.Open(this);
     }
 
     #endregion

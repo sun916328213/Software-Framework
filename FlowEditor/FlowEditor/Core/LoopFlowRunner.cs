@@ -10,22 +10,31 @@ public static class LoopFlowRunner
         int iterationCount,
         CancellationToken ct,
         Action<string> log,
-        Action<int, int>? onIterationStarted = null)
+        Action<int, int>? onIterationStarted = null,
+        int iterationDelayMs = 0,
+        int startingIteration = 1)
         where TNode : INodeExecutable
     {
         ArgumentNullException.ThrowIfNull(body);
         ArgumentNullException.ThrowIfNull(log);
-        if (iterationCount < 1)
-            throw new InvalidOperationException("循环容器的循环次数必须大于零。");
+        if (iterationCount != -1 && iterationCount < 1)
+            throw new InvalidOperationException("循环容器的循环次数必须为 -1（无限循环）或大于零。");
+        if (iterationDelayMs < 0)
+            throw new ArgumentOutOfRangeException(nameof(iterationDelayMs), "循环延时不能小于零。");
+        if (startingIteration < 1)
+            throw new ArgumentOutOfRangeException(nameof(startingIteration), "起始轮次必须大于零。");
         if (body.Nodes.Count == 0)
             throw new InvalidOperationException("循环容器的循环体没有节点。");
 
         var engine = new FlowChartExecutionEngine();
-        for (var iteration = 1; iteration <= iterationCount; iteration++)
+        for (var iteration = startingIteration;
+             iterationCount == -1 || iteration <= iterationCount;
+             iteration++)
         {
             ct.ThrowIfCancellationRequested();
             onIterationStarted?.Invoke(iteration, iterationCount);
-            log($"[循环] 第 {iteration}/{iterationCount} 轮开始");
+            var totalText = iterationCount == -1 ? "∞" : iterationCount.ToString();
+            log($"[循环] 第 {iteration}/{totalText} 轮开始");
             await engine.ExecuteAsync(
                 body.Nodes,
                 body.Connections,
@@ -37,7 +46,9 @@ public static class LoopFlowRunner
                     if (!message.StartsWith("[引擎]", StringComparison.Ordinal))
                         log(message);
                 });
-            log($"[循环] 第 {iteration}/{iterationCount} 轮完成");
+            log($"[循环] 第 {iteration}/{totalText} 轮完成");
+            if (iterationDelayMs > 0 && (iterationCount == -1 || iteration < iterationCount))
+                await Task.Delay(iterationDelayMs, ct);
         }
     }
 }

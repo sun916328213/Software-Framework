@@ -67,7 +67,7 @@ public sealed class FlowInstance
         FlowChartExecutionEngine? engine = null)
     {
         ArgumentNullException.ThrowIfNull(program);
-        factory ??= ReflectionNodeFactory.Instance;
+        factory ??= new ReflectionNodeFactory();
         engine ??= SharedEngine.Value;
 
         var nodeMap = new Dictionary<string, NodeModel>(program.Nodes.Count);

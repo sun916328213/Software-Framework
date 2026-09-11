@@ -195,7 +195,7 @@
                 ItemsSource="{Binding ActionButtons}"
                 Visibility="{Binding HasActionButtons, Converter={StaticResource BoolToVis}}">
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type nodes:NodeActionButton}">
+                    <DataTemplate DataType="{x:Type viewmodels:NodeActionViewModel}">
                         <Button
                             Margin="0,1"
                             Padding="4,2"

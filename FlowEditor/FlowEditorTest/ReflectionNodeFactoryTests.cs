@@ -7,21 +7,9 @@ using System.IO;
 namespace FlowEditorTest;
 
 /// <summary>P3 补充：ReflectionNodeFactory 的 DI 构造函数解析能力。</summary>
-public class ReflectionNodeFactoryTests : IDisposable
+public class ReflectionNodeFactoryTests
 {
-    public ReflectionNodeFactoryTests()
-    {
-        _previousFallback = ReflectionNodeFactory.FallbackResolver;
-    }
-
-    private readonly Func<Type, object?>? _previousFallback;
-
-    public void Dispose()
-    {
-        ReflectionNodeFactory.ClearServices();
-        ReflectionNodeFactory.FallbackResolver = _previousFallback;
-        GC.SuppressFinalize(this);
-    }
+    private readonly ReflectionNodeFactory _factory = new();
 
     // ── 测试用 DI 节点 ──
 
@@ -63,23 +51,48 @@ public class ReflectionNodeFactoryTests : IDisposable
     private static NodeDocumentModel Desc<T>() where T : NodeModel
         => new() { Id = "t", TypeName = typeof(T).AssemblyQualifiedName!, Name = "n" };
 
+    /// <summary>按节点类型创建时不需要先构造文档描述符。</summary>
+    [Fact]
+    public void CreateByType_ReturnsIndependentNode()
+    {
+        var first = _factory.Create(typeof(GreedyNode));
+        var second = _factory.Create(typeof(GreedyNode));
+
+        Assert.IsType<GreedyNode>(first);
+        Assert.IsType<GreedyNode>(second);
+        Assert.NotSame(first, second);
+    }
+
+    /// <summary>一个 factory 的依赖注册不会泄漏到另一个 factory。</summary>
+    [Fact]
+    public void RegisteredServices_AreIsolatedPerFactoryInstance()
+    {
+        var configured = new ReflectionNodeFactory();
+        var isolated = new ReflectionNodeFactory();
+        configured.RegisterService(new DiService());
+
+        Assert.IsType<DiOnlyNode>(configured.Create(typeof(DiOnlyNode)));
+        Assert.Throws<InvalidOperationException>(() => isolated.Create(typeof(DiOnlyNode)));
+    }
+
     [Fact]
     public void DiCtor_ResolvedViaRegisterService()
     {
-        ReflectionNodeFactory.RegisterService(new DiService());
+        _factory.RegisterService(new DiService());
 
-        var node = ReflectionNodeFactory.Instance.Create(Desc<DiOnlyNode>());
+        var node = _factory.Create(Desc<DiOnlyNode>());
 
         var di = Assert.IsType<DiOnlyNode>(node);
         Assert.Equal("svc", di.Injected.Tag);
     }
 
     [Fact]
-    public void DiCtor_ResolvedViaFallbackResolver()
+    public void DiCtor_ResolvedViaInstanceFallback()
     {
-        ReflectionNodeFactory.FallbackResolver = t => t == typeof(DiService) ? new DiService() : null;
+        var factory = new ReflectionNodeFactory(
+            type => type == typeof(DiService) ? new DiService() : null);
 
-        var node = ReflectionNodeFactory.Instance.Create(Desc<DiOnlyNode>());
+        var node = factory.Create(Desc<DiOnlyNode>());
 
         Assert.NotNull(Assert.IsType<DiOnlyNode>(node).Injected);
     }
@@ -87,9 +100,9 @@ public class ReflectionNodeFactoryTests : IDisposable
     [Fact]
     public void GreedyCtor_PrefersResolvableParameterful_OverParameterless()
     {
-        ReflectionNodeFactory.RegisterService(new DiService());
+        _factory.RegisterService(new DiService());
 
-        var node = (GreedyNode)ReflectionNodeFactory.Instance.Create(Desc<GreedyNode>());
+        var node = (GreedyNode)_factory.Create(Desc<GreedyNode>());
 
         // 无参构造存在，但两参构造可全部满足 → 贪心选择后者
         Assert.StartsWith("di:", node.Source);
@@ -98,7 +111,7 @@ public class ReflectionNodeFactoryTests : IDisposable
     [Fact]
     public void Parameterless_WinsWhenNoServicesRegistered()
     {
-        var node = (GreedyNode)ReflectionNodeFactory.Instance.Create(Desc<GreedyNode>());
+        var node = (GreedyNode)_factory.Create(Desc<GreedyNode>());
 
         Assert.Equal("parameterless", node.Source);
     }
@@ -107,7 +120,7 @@ public class ReflectionNodeFactoryTests : IDisposable
     public void MissingDependency_ThrowsWithServiceNames()
     {
         var ex = Assert.Throws<InvalidOperationException>(
-            () => ReflectionNodeFactory.Instance.Create(Desc<UnresolvedNode>()));
+            () => _factory.Create(Desc<UnresolvedNode>()));
 
         Assert.Contains("Stream", ex.Message);       // 报出缺失的服务类型
         Assert.Contains("RegisterService", ex.Message); // 给出修复指引
