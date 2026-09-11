@@ -17,7 +17,7 @@ namespace DataManager.Tests.Manager
 
             public override string Create(string param)
             {
-                DataManagers.Add(param);
+                AddInternal(param);
                 return param;
             }
 

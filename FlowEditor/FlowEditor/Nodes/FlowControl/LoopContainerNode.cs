@@ -49,7 +49,7 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
         }
     }
 
-    [NodeProperty(DisplayName = "循环次数", Group = "1.基础信息", Order = 0,
+    [NodeProperty(DisplayName = "循环次数", Group = "1.基础信息", Order = 1,
         Min = -1, Max = 1000000, Step = 1, PortConfigurable = false,
         Description = "完整执行容器内循环体的次数；-1 表示无限循环")]
     public int IterationCount
@@ -58,7 +58,7 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
         set => SetProperty(ref _iterationCount, value == -1 ? -1 : Math.Clamp(value, 1, 1_000_000));
     }
 
-    [NodeProperty(DisplayName = "循环延时(ms)", Group = "1.基础信息", Order = 1,
+    [NodeProperty(DisplayName = "循环延时(ms)", Group = "1.基础信息", Order = 2,
         Min = 0, Max = 86400000, Step = 100, PortConfigurable = false,
         Description = "每轮循环完成后、下一轮开始前等待的毫秒数；0 表示不等待")]
     public int IterationDelayMs

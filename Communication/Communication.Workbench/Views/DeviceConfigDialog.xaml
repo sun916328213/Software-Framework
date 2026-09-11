@@ -1,36 +1,46 @@
-﻿<UserControl x:Class="Communication.Workbench.Views.DeviceConfigDialog"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="clr-namespace:Communication.Workbench.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d"
-        d:DataContext="{d:DesignInstance Type=vm:DeviceConfigDialogViewModel}"
-        d:DesignWidth="780" d:DesignHeight="640"
-        Width="780"
-        Background="{DynamicResource Brush.Bg.0}"
-        FontFamily="{StaticResource FontFamily.Default}">
+﻿<UserControl
+    x:Class="Communication.Workbench.Views.DeviceConfigDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:Communication.Workbench.ViewModels"
+    Width="780"
+    d:DataContext="{d:DesignInstance Type=vm:DeviceConfigDialogViewModel}"
+    d:DesignHeight="640"
+    d:DesignWidth="780"
+    Background="{DynamicResource Brush.Bg.0}"
+    FontFamily="{StaticResource FontFamily.Default}"
+    mc:Ignorable="d">
     <UserControl.Resources>
-        <!-- 双列表单面板：两列均分，列内标签+编辑器左右排 -->
+        <!--  双列表单面板：两列均分，列内标签+编辑器左右排  -->
         <ItemsPanelTemplate x:Key="TwoColumnPanel">
             <UniformGrid Columns="2" />
         </ItemsPanelTemplate>
 
-        <!-- 通用参数行模板 -->
+        <!--  通用参数行模板  -->
         <DataTemplate x:Key="TextFieldTemplate">
             <Grid Margin="0,4,12,4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="118" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Label}"
-                           VerticalAlignment="Center" ToolTip="{Binding Hint}"
-                           TextTrimming="CharacterEllipsis" />
-                <TextBox Grid.Column="1"
-                         Text="{Binding Text, UpdateSourceTrigger=PropertyChanged, Delay=150}"
-                         ToolTip="{Binding Hint}">
+                <TextBlock
+                    Margin="3"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource Text.Label}"
+                    Text="{Binding Description}"
+                    TextTrimming="CharacterEllipsis"
+                    ToolTip="{Binding Hint}" />
+                <TextBox
+                    Grid.Column="1"
+                    Height="40"
+                    Margin="3"
+                    VerticalContentAlignment="Center"
+                    Text="{Binding Text, UpdateSourceTrigger=PropertyChanged, Delay=150}"
+                    ToolTip="{Binding Hint}">
                     <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource Input}">
+                        <Style BasedOn="{StaticResource Input}" TargetType="TextBox">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding HasError}" Value="True">
                                     <Setter Property="BorderBrush" Value="{DynamicResource Brush.Danger}" />
@@ -42,63 +52,80 @@
             </Grid>
         </DataTemplate>
 
-        <!-- 布尔参数行模板 -->
+        <!--  布尔参数行模板  -->
         <DataTemplate x:Key="BoolFieldTemplate">
             <Grid Margin="0,4,12,4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="118" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Label}"
-                           VerticalAlignment="Center" ToolTip="{Binding Hint}"
-                           TextTrimming="CharacterEllipsis" />
-                <CheckBox Grid.Column="1" IsChecked="{Binding IsChecked}"
-                          VerticalAlignment="Center" ToolTip="{Binding Hint}" />
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Style="{StaticResource Text.Label}"
+                    Text="{Binding Description}"
+                    TextTrimming="CharacterEllipsis"
+                    ToolTip="{Binding Hint}" />
+                <CheckBox
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding IsChecked}"
+                    ToolTip="{Binding Hint}" />
             </Grid>
         </DataTemplate>
 
-        <!-- 枚举参数行模板 -->
+        <!--  枚举参数行模板  -->
         <DataTemplate x:Key="OptionFieldTemplate">
             <Grid Margin="0,4,12,4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="118" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Label}"
-                           VerticalAlignment="Center" ToolTip="{Binding Hint}"
-                           TextTrimming="CharacterEllipsis" />
-                <ComboBox Grid.Column="1" Style="{StaticResource Combo}"
-                          ItemsSource="{Binding Options}"
-                          SelectedItem="{Binding Text, Mode=TwoWay}"
-                          ToolTip="{Binding Hint}" />
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Style="{StaticResource Text.Label}"
+                    Text="{Binding Description}"
+                    TextTrimming="CharacterEllipsis"
+                    ToolTip="{Binding Hint}" />
+                <ComboBox
+                    Grid.Column="1"
+                    ItemsSource="{Binding Options}"
+                    SelectedItem="{Binding Text, Mode=TwoWay}"
+                    Style="{StaticResource Combo}"
+                    ToolTip="{Binding Hint}" />
             </Grid>
         </DataTemplate>
 
-        <!-- 可编辑下拉行模板（串口号：下拉选 + 可手工输入，输入即校验） -->
+        <!--  可编辑下拉行模板（串口号：下拉选 + 可手工输入，输入即校验）  -->
         <DataTemplate x:Key="EditableOptionFieldTemplate">
             <Grid Margin="0,4,12,4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="118" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Label}"
-                           VerticalAlignment="Center" ToolTip="{Binding Hint}"
-                           TextTrimming="CharacterEllipsis" />
-                <ComboBox Grid.Column="1" Style="{StaticResource Combo}"
-                          ItemsSource="{Binding Options}"
-                          Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Delay=150}"
-                          IsEditable="True"
-                          ToolTip="{Binding Hint}" />
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Style="{StaticResource Text.Label}"
+                    Text="{Binding Description}"
+                    TextTrimming="CharacterEllipsis"
+                    ToolTip="{Binding Hint}" />
+                <ComboBox
+                    Grid.Column="1"
+                    IsEditable="True"
+                    ItemsSource="{Binding Options}"
+                    Style="{StaticResource Combo}"
+                    Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Delay=150}"
+                    ToolTip="{Binding Hint}" />
             </Grid>
         </DataTemplate>
 
-        <!-- 模板选择器 -->
-        <v:ParamFieldTemplateSelector x:Key="FieldTemplateSelector"
-                                      TextTemplate="{StaticResource TextFieldTemplate}"
-                                      BoolTemplate="{StaticResource BoolFieldTemplate}"
-                                      OptionTemplate="{StaticResource OptionFieldTemplate}"
-                                      EditableOptionTemplate="{StaticResource EditableOptionFieldTemplate}"
-                                      xmlns:v="clr-namespace:Communication.Workbench.Views" />
+        <!--  模板选择器  -->
+        <v:ParamFieldTemplateSelector
+            xmlns:v="clr-namespace:Communication.Workbench.Views"
+            x:Key="FieldTemplateSelector"
+            BoolTemplate="{StaticResource BoolFieldTemplate}"
+            EditableOptionTemplate="{StaticResource EditableOptionFieldTemplate}"
+            OptionTemplate="{StaticResource OptionFieldTemplate}"
+            TextTemplate="{StaticResource TextFieldTemplate}" />
     </UserControl.Resources>
 
     <Grid Margin="20">
@@ -109,15 +136,28 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- 标题 -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
-            <TextBlock Text="&#9881;" FontSize="20" Foreground="{DynamicResource Brush.Accent}"
-                       VerticalAlignment="Center" Margin="0,0,10,0" />
-            <TextBlock Text="新建通信设备" Style="{StaticResource Text.Header}" VerticalAlignment="Center" />
+        <!--  标题  -->
+        <StackPanel
+            Grid.Row="0"
+            Margin="0,0,0,16"
+            Orientation="Horizontal">
+            <TextBlock
+                Margin="0,0,10,0"
+                VerticalAlignment="Center"
+                FontSize="20"
+                Foreground="{DynamicResource Brush.Accent}"
+                Text="&#9881;" />
+            <TextBlock
+                VerticalAlignment="Center"
+                Style="{StaticResource Text.Header}"
+                Text="新建通信设备" />
         </StackPanel>
 
-        <!-- 基础信息 -->
-        <Border Grid.Row="1" Style="{StaticResource Panel}" Margin="0,0,0,12">
+        <!--  基础信息  -->
+        <Border
+            Grid.Row="1"
+            Margin="0,0,0,12"
+            Style="{StaticResource Panel}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
@@ -131,49 +171,105 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="设备名称" Style="{StaticResource Text.Label}"
-                           VerticalAlignment="Center" Margin="0,0,12,0" />
-                <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource Input}"
-                         Text="{Binding DeviceName, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Margin="0,0,12,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource Text.Label}"
+                    Text="设备名称" />
+                <TextBox
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Grid.ColumnSpan="3"
+                    Height="40"
+                    Margin="3"
+                    Style="{StaticResource Input}"
+                    Text="{Binding DeviceName, UpdateSourceTrigger=PropertyChanged}" />
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="协议类型" Style="{StaticResource Text.Label}"
-                           VerticalAlignment="Center" Margin="0,0,12,0" />
-                <ComboBox Grid.Row="2" Grid.Column="1" Style="{StaticResource Combo}"
-                          ItemsSource="{Binding ProtocolOptions}" DisplayMemberPath="DisplayName"
-                          SelectedIndex="{Binding SelectedProtocolIndex, Mode=TwoWay}" />
-                <TextBlock Grid.Row="2" Grid.Column="2" Text="角色" Style="{StaticResource Text.Label}"
-                           VerticalAlignment="Center" Margin="16,0,12,0" />
-                <ComboBox Grid.Row="2" Grid.Column="3" Style="{StaticResource Combo}" Width="120"
-                          ItemsSource="{Binding RoleOptions}" DisplayMemberPath="DisplayName"
-                          SelectedIndex="{Binding SelectedRoleIndex, Mode=TwoWay}"
-                          IsEnabled="{Binding RoleServerEnabled}" />
+                <TextBlock
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    Margin="0,0,12,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource Text.Label}"
+                    Text="协议类型" />
+                <ComboBox
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Height="40"
+                    Margin="3"
+                    DisplayMemberPath="DisplayName"
+                    ItemsSource="{Binding ProtocolOptions}"
+                    SelectedIndex="{Binding SelectedProtocolIndex, Mode=TwoWay}"
+                    Style="{StaticResource Combo}" />
+                <TextBlock
+                    Grid.Row="2"
+                    Grid.Column="2"
+                    Margin="16,0,12,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource Text.Label}"
+                    Text="角色" />
+                <ComboBox
+                    Grid.Row="2"
+                    Grid.Column="3"
+                    Width="120"
+                    Height="40"
+                    Margin="3"
+                    DisplayMemberPath="DisplayName"
+                    IsEnabled="{Binding RoleServerEnabled}"
+                    ItemsSource="{Binding RoleOptions}"
+                    SelectedIndex="{Binding SelectedRoleIndex, Mode=TwoWay}"
+                    Style="{StaticResource Combo}" />
             </Grid>
         </Border>
 
-        <!-- 参数动态表单：双列排布，协议参数 + 通用参数（超时/重试/重连/队列，全部走 CommunicationNew 基类） -->
+        <!--  参数动态表单：双列排布，协议参数 + 通用参数（超时/重试/重连/队列，全部走 CommunicationNew 基类）  -->
         <Border Grid.Row="2" Style="{StaticResource Panel}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="420">
+            <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <TextBlock Text="协议参数" Style="{StaticResource Text.Section}" Margin="0,0,0,4" />
-                    <ItemsControl ItemsSource="{Binding Fields}"
-                                  ItemTemplateSelector="{StaticResource FieldTemplateSelector}"
-                                  ItemsPanel="{StaticResource TwoColumnPanel}" />
-                    <TextBlock Text="通用参数（超时/重试/重连/队列）" Style="{StaticResource Text.Section}" Margin="0,12,0,4" />
-                    <ItemsControl ItemsSource="{Binding CommonFields}"
-                                  ItemTemplateSelector="{StaticResource FieldTemplateSelector}"
-                                  ItemsPanel="{StaticResource TwoColumnPanel}" />
-                    <TextBlock Text="byte[] 按十六进制编辑（如心跳数据）；串口号下拉选择或手工输入 COM 口。"
-                               Style="{StaticResource Text.Label}" TextWrapping="Wrap" Margin="0,8,0,0" />
+                    <TextBlock
+                        Margin="0,0,0,4"
+                        Style="{StaticResource Text.Section}"
+                        Text="协议参数" />
+                    <ItemsControl
+                        ItemTemplateSelector="{StaticResource FieldTemplateSelector}"
+                        ItemsPanel="{StaticResource TwoColumnPanel}"
+                        ItemsSource="{Binding Fields}" />
+                    <TextBlock
+                        Margin="0,12,0,4"
+                        Style="{StaticResource Text.Section}"
+                        Text="通用参数（超时/重试/重连/队列）" />
+                    <ItemsControl
+                        ItemTemplateSelector="{StaticResource FieldTemplateSelector}"
+                        ItemsPanel="{StaticResource TwoColumnPanel}"
+                        ItemsSource="{Binding CommonFields}" />
+                    <TextBlock
+                        Margin="0,8,0,0"
+                        Style="{StaticResource Text.Label}"
+                        Text="byte[] 按十六进制编辑（如心跳数据）；串口号下拉选择或手工输入 COM 口。"
+                        TextWrapping="Wrap" />
                 </StackPanel>
             </ScrollViewer>
         </Border>
 
-        <!-- 操作 -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="取消" Style="{StaticResource Button.Secondary}" Width="88"
-                    Command="{Binding CancelCommand}" />
-            <Button Content="创建" Style="{StaticResource Button.Primary}" Width="88" Margin="10,0,0,0"
-                    Command="{Binding ConfirmCommand}" />
+        <!--  操作  -->
+        <StackPanel
+            Grid.Row="3"
+            Margin="0,16,0,0"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <Button
+                Width="88"
+                Command="{Binding CancelCommand}"
+                Content="取消"
+                Style="{StaticResource Button.Secondary}" />
+            <Button
+                Width="88"
+                Margin="10,0,0,0"
+                Command="{Binding ConfirmCommand}"
+                Content="创建"
+                Style="{StaticResource Button.Primary}" />
         </StackPanel>
     </Grid>
 </UserControl>

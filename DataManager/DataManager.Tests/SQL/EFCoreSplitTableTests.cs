@@ -40,8 +40,7 @@ namespace DataManager.Tests.SQL
 
         private static EFCoreHelper<T> HelperOf<T>() where T : class
         {
-            var h = EFCoreHelper<T>.Create();
-            h.SQLParam = new SQLParam
+            return EFCoreHelper<T>.Create(new SQLParam
             {
                 Name = "split-test",
                 ServerIP = "127.0.0.1",
@@ -51,8 +50,7 @@ namespace DataManager.Tests.SQL
                 DBName = "db",
                 DBType = ESQLType.PostgreSQL,
                 ToolType = ESQLToolType.EFCore,
-            };
-            return h;
+            });
         }
 
         private static string TableOf<T>(EFCoreBase<T> helper) where T : class

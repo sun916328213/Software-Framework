@@ -11,10 +11,26 @@ namespace DataManager.Workbench.Infrastructure
         public static void Invoke(Action action)
         {
             var dispatcher = System.Windows.Application.Current?.Dispatcher;
-            if (dispatcher == null || dispatcher.CheckAccess())
+            // 无上下文 / 本线程 / 已关闭：直接执行（单测无 Dispatcher；XAML 冒烟关闭后并行测试仍可能命中）。
+            if (dispatcher == null || dispatcher.CheckAccess()
+                || dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished)
+            {
                 action();
-            else
+                return;
+            }
+            try
+            {
                 dispatcher.Invoke(action);
+            }
+            catch (TaskCanceledException)
+            {
+                // Dispatcher 正关闭或调用被取消：回退直行，保证 Log 等关键路径不丢。
+                action();
+            }
+            catch (InvalidOperationException)
+            {
+                action();
+            }
         }
     }
 }

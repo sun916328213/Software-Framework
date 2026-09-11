@@ -1,0 +1,21 @@
+<UserControl
+    x:Class="DataManager.Workbench.Views.Shared.PageHeaderView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root">
+
+    <!-- 测试页页头：图标 + 标题 + 副标题。三页共用，后续可给 WPFControl 复用（仅依赖 MD，无 VM 耦合）。 -->
+    <StackPanel Orientation="Horizontal">
+        <materialDesign:PackIcon
+            Width="28"
+            Height="28"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+            Kind="{Binding ElementName=Root, Path=IconKind}" />
+        <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+            <TextBlock Style="{StaticResource PageTitle}" Text="{Binding ElementName=Root, Path=Title}" />
+            <TextBlock Style="{StaticResource PageSubTitle}" Text="{Binding ElementName=Root, Path=SubTitle}" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

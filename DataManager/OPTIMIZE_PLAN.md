@@ -228,3 +228,90 @@ DataManager.Workbench/              # WPF + Prism.DryIoc + .NET9 测试台
 3. P0-3 注意读写路径一致性，先读 `LogBase.cs` 再改。
 4. P0-4 拆类时保持 `ISQL<T>` 签名不变，Workbench 不用改。
 5. 每做完一项更新本文档复选框 + `git commit` 一次。
+
+---
+
+## 8. P3–P7 续记（2026-09-10，`dotnet build` 0 警告 0 错误；`dotnet test` 182/182，需 `DM_PG_PASSWORD`）
+
+- **P3 四库补齐**：`SQLParam` 新增 `FilePath/ConnectionString（直通最高优）/TrustServerCertificate`，`Validate()` 按库分支；
+  新 `ISqlDialect/SqlDialectRegistry/SqlDialects`（PG/MySQL/SQLite/SQL Server），`SqlDialectHelper/SqlNamingHelper` 转调（旧 API 不变）；
+  Dapper/EFCore(`UseSqlite/UseSqlServer`)/SqlSugar(`DbType.Sqlite/SqlServer`) 全接；`DbConnectionProfile.ToSqlParam` 打通四库；
+  新增包 `Microsoft.Data.Sqlite/SqlClient + EFCore.Sqlite/SqlServer`；删 `SqlSugarBase` 误引 `using Dm`。
+  SQLite 三工具真库（文件自清，CI 可跑）；SQL Server 无本机库，仅方言生成层覆盖。
+- **P3 真 bug**：EFCore 分表 LIKE 被统一小写后 PG 查不到表（EF 表名保留大小写）→ EFCore 恢复原大小写 SQL。
+- **P4 接口硬化**：`ISQL` 参数/状态只读 + `IDisposable`；`SqlSugarBase.IsConnected` 去 setter 副作用 + `Dispose`；
+  `DeleteAll` 改 `Deleteable` 真异步（TRUNCATE→DELETE，自增种子不再重置）；维护类 Async 去 `Task.Run`；
+  `DapperBase` 拆 `DapperSqlBuilder/DapperSplitRouter`（附带修 `AddAsync` 不路由、`DeleteAsync/DeleteAllAsync` 漏分表）；
+  `ManagerBase.DataManagers` 私有化；`CancellationToken` 延期（Dommel/SqlSugar 无支撑）。
+- **P4 真 bug（旧伤）**：XAML 冒烟起真 Dispatcher 后并行 PG 冒烟 `Log()` 被封送到关闭中的 Dispatcher → `UiThread.Invoke` 加关闭态直行 + 取消回退（全量 40s→13s）。
+- **P5 Log 真异步**：查询路径 `ReadAllTextSharedAsync + Task.WhenAll` 去 `Task.Run`，解析抽 `ParseLogInfos` 共用；
+  `AddAsync` 改 virtual（sink 全同步，只能转交，留缝）。
+- **P6 下推**：EFCore 分表条件查改逐表服务端过滤；Dapper 新 `DapperPredicateTranslator`（比较/与或非/null/bool/枚举，全参数化，不可译回退）；
+  白盒 `InternalsVisibleTo(DataManager.Tests)`；实证：编译器把枚举 `==` 降为底层比较（右侧成 Int32 常量），断言按实际锁定。
+- **P7 裁剪**：Dapper 分表字段等值约束只查命中表（AND 链提取，多日期交集为空即空集；范围/OR/方法调用全表）；
+  约束：勿更新分表字段本身（行不迁移）；工作台分表命令补 EFCore。
+- **延期（需外部条件）**：SQL Server 真库（无服务/LocalDB/Docker）、CancellationToken（上游无支撑）、回退路径全表扫描（正确优先）。
+
+## 9. P8 续记（范围裁剪 + EFCore 裁剪 + 工作台 SQLite 端到端，198/198）
+
+- 新 `SplitDatePruner`（Dapper/EFCore 共用）：AND 链提等值/范围约束 → 候选后缀集；等值精确、多日期 AND 空集、
+  有界范围按周期枚举（Day/Month/Year，500 槽熔断超限不裁剪）、单边无界/OR/非日期一律 null（全表）。
+  边界 inclusive 枚举恒 sound（含边界槽，严格不等同样覆盖），等值+范围组合超界即空集。
+- Dapper 路由器改走共享器（删重复实现）；EFCore `ScopedForQuery(predicate?)` 同等裁剪（fork 精确大小写求交，
+  无参查询/清空保持全表）；谓词方法（查/改/删×同步异步）自动生效。
+- 工作台 SQLite 无头端到端 1 用例（`SqlViewModel` 全命令走真文件，CI 可跑）；Log 微清理（`ParseLogInfos` 分隔符 hoist、删死变量）。
+- 计数：198 = Excel 20 / Log 32 / Manager 12 / SQL 96 / Workbench 38。
+
+## 10. P9 续记（API 对齐，201/201）
+
+- `SqlSugarBase.GetSplitTables()`（DbMaintenance 前缀匹配，模板 `{` 前部分，双下划线坑已避），工作台分表命令三路全支持；
+  SQLite 实证揪出 2 个原生约束：long→BIGINT 与 SQLite AUTOINCREMENT 冲突（实体 `ColumnDataType="integer"`）、
+  分表禁自增主键（跨表撞号，改显式赋值）——已记 README。
+- SQL Server 向导补 `TrustServerCertificate` 字段（Compose 早自动补，界面不可见不可改）。
+- Month 周期 SQLite 端到端（路由 + 月裁剪）。
+- `ISQL<T>.Update(T)/UpdateAsync(T)` 入接口三路对齐（Dapper 早有未入接口；EFCore 整行语义 + 分表路由；
+  长驻 DbContext 跟踪冲突内部消化：已跟踪同键 `SetValues`，支持复合主键元数据判定）。
+- 计数：201 = Excel 20 / Log 32 / Manager 12 / SQL 99 / Workbench 38。
+
+## 11. P10 续记（单实例事务，205/205）
+
+- `ISQL<T>.ExecuteInTransaction(+Async)`：同连接原子提交，异常回滚；嵌套抛。
+  Dapper 环境事务（作用域释放器不断开共享连接；全部命令显式 enlist；Dommel 按连接运行时类型选方言，
+  故不用包装类——包装会破坏识别，作用域释放器一行替换无重排进）。
+- EFCore 显式连接事务（分表抛 NotSupported，fork 独立连接，静默非原子更危险）；
+  SqlSugar 显式 Begin/Commit/Rollback（不用 `Ado.UseTran`：它吞业务异常只回滚不抛，实证）。
+- SQLite 锁定：三路提交/回滚、嵌套抛、Dapper 跨表原子、EFCore 分表抛；
+  附带约束：SqlSugar 在 SQLite 下无自增（IsIdentity 不支持，显式 Id；连带解释此前 0 行之谜——Id=0 主键冲突）。
+- 计数：205 = Excel 20 / Log 32 / Manager 12 / SQL 103 / Workbench 38。
+
+## 12. P12 续记（新功能 PG 验证，210/210，两次连续全绿确认幂等）
+
+- 新 `Tests/SQL/PostgresFeatureTests` 5 用例：Dapper 下推+裁剪、事务回滚、单更新、EF 裁剪（大小写精确）、SqlSugar 分表列表。
+- 真 bug（旧伤）：集成测试 `DropTablesLike` 连 `postgres` 系统库，清表空转、跨 run 残留（旧测试靠 DeleteAll+自增扛住）。
+  修：新文件清真实测试库 + 测试先清 + Sugar 显式 Id 用 run 内唯一值。
+- 计数：210 = Excel 20 / Log 32 / Manager 12 / SQL 108 / Workbench 38。
+
+## 13. P13 续记（分析健全性锁，215/215）
+
+- MySQL 探活：3306 关、无服务无目录——同 SQL Server 被环境卡，方言层覆盖止步。
+- 裁剪新增锁：翻转边界、OR 嵌套（范围仍生效，不下钻）、null 等值不裁剪；
+  立规矩时亲手验算错两处（inclusive 上界含边界表、OR 顶层不裁剪），以实现为准，已修正断言。
+- EF Month 端到端 + SqlSugar 非分表空列表契约。
+- 计数：215 = Excel 20 / Log 32 / Manager 12 / SQL 113 / Workbench 38。
+
+## 14. P14 续记（无密码基线实证）
+
+- 不设 `DM_PG_PASSWORD` 全量：恰 12 失败（集成 5 + 新功能 5 + 冒烟 2），其余 203 全绿；
+  README 原写 17 系笔误，已校准为 12。
+
+## 15. P15 续记（Helper 归位 + 并行重构修复，218/218）
+
+- `SqlDialectHelper/SqlNamingHelper`：`Dapper/Helpers` → `SQL/Definition`（P3 起即共享层，原位置名不副实），空目录删除，Dapper/Workbench/Tests 引用跟随。
+- 并行重构（`SqlWorkspace` 抽取）修复：新 VM 补 using；`BuildDbKey` 被抽回 7 字段→恢复 10 字段（否则 SQLite 换文件不重建）；
+  字符集写坏的字面量、注释合并的死语句、最后一个旧构造、新字段指纹用例，逐一修复。
+- 计数：218 = Excel 20 / Log 32 / Manager 12 / SQL 113 / Workbench 41。
+
+## 12. P11 续记（覆盖补齐 + 卫生，205/205）
+
+- 事务同步/异步三路全覆盖（既有单测只覆盖半侧）；helper 杂散 using 清理。
+- 仍未动：SQL Server 真库、CancellationToken（上游）、回退全扫、EPPlus 废弃 API（兼容保留）。

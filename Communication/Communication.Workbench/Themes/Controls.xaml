@@ -77,7 +77,7 @@
     </Style>
 
     <!--  ===== 输入框（MaterialDesign Filled 风格）=====  -->
-    <!-- 前景/光标钉到自家别名（MD 的输入前景在主题切换时可能滞后，别名是实证可切换的） -->
+    <!--  前景/光标钉到自家别名（MD 的输入前景在主题切换时可能滞后，别名是实证可切换的）  -->
     <Style
         x:Key="Input"
         BasedOn="{StaticResource MaterialDesignFilledTextBox}"
@@ -109,7 +109,7 @@
         <Setter Property="Foreground" Value="{DynamicResource Brush.Fg.Primary}" />
     </Style>
 
-    <!-- 下拉项前景同样钉别名（弹出层不继承视觉树，MD 前景滞后时会黑字贴黑底） -->
+    <!--  下拉项前景同样钉别名（弹出层不继承视觉树，MD 前景滞后时会黑字贴黑底）  -->
     <Style TargetType="ComboBoxItem">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Fg.Primary}" />
         <Setter Property="FontSize" Value="{StaticResource FontSize.S}" />
@@ -171,6 +171,7 @@
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
                                             <Border
+                                                Width="8"
                                                 Background="{DynamicResource Brush.Fg.Muted}"
                                                 CornerRadius="4"
                                                 Opacity="0.35" />

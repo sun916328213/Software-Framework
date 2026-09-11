@@ -1,33 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 
 namespace DataManager.Log.Definition
 {
-    public class LogParam
+    /// <summary>
+    /// 日志参数（可观察模型，与 SQLParam 同款：工作台表格可直绑，JSON 字段名不变）。
+    /// </summary>
+    public partial class LogParam : ObservableObject
     {
         /// <summary>
         /// 名称
         /// </summary>
-        public string Name { get; set; } = string.Empty;
+        [ObservableProperty]
+        private string name = string.Empty;
         /// <summary>
         /// 文件路径
         /// </summary>
-        public string FilePath { get; set; } = string.Empty;
+        [ObservableProperty]
+        private string filePath = string.Empty;
         /// <summary>
         /// 间隔符号
         /// </summary>
-        public string Separator { get; set; } = "||";
+        [ObservableProperty]
+        private string separator = "||";
         /// <summary>
         /// 保存天数
         /// </summary>
-        public int SaveDays { get; set; } = 180;
+        [ObservableProperty]
+        private int saveDays = 180;
         /// <summary>
         /// Log类型
         /// </summary>
-        public ELogType LogType { get; set; }= ELogType.SeriLog;
+        [ObservableProperty]
+        private ELogType logType = ELogType.SeriLog;
 
         /// <summary>
         /// P2-3：参数校验，缺失必填项抛 ArgumentException。

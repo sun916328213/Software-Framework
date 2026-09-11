@@ -1,4 +1,3 @@
-using DataManager.SQL.Dapper;
 using DataManager.SQL.Definition;
 
 namespace DataManager.Tests.SQL
@@ -142,7 +141,95 @@ namespace DataManager.Tests.SQL
         public void CreateConnection_Unsupported_Throws()
         {
             Assert.Throws<NotSupportedException>(
-                () => SqlDialectHelper.CreateConnection(ESQLType.SQLite, "Data Source=test.db"));
+                () => SqlDialectHelper.CreateConnection((ESQLType)999, "Data Source=test.db"));
+        }
+
+        [Fact]
+        public void CreateConnection_Sqlite_ReturnsConnection()
+        {
+            using var conn = SqlDialectHelper.CreateConnection(ESQLType.SQLite, "Data Source=:memory:");
+            Assert.NotNull(conn);
+        }
+
+        [Fact]
+        public void CreateConnection_SqlServer_ReturnsConnection()
+        {
+            using var conn = SqlDialectHelper.CreateConnection(ESQLType.SQL_Server, "Server=localhost;Database=master;User Id=sa;Password=pwd;TrustServerCertificate=True;");
+            Assert.NotNull(conn);
+        }
+
+        [Fact]
+        public void BuildConnectionString_Sqlite_UsesFilePath()
+        {
+            var param = new SQLParam { Name = "lite", FilePath = "workbench.db", DBType = ESQLType.SQLite };
+            var connStr = SqlDialectHelper.BuildConnectionString(param);
+            Assert.Contains("Data Source=workbench.db", connStr);
+        }
+
+        [Fact]
+        public void BuildConnectionString_SqlServer_TrustsCertByDefault()
+        {
+            var param = new SQLParam
+            {
+                Name = "ms", ServerIP = "localhost", DBName = "workbench",
+                UserName = "sa", Password = "pwd", DBType = ESQLType.SQL_Server,
+            };
+            var connStr = SqlDialectHelper.BuildConnectionString(param);
+            Assert.Contains("TrustServerCertificate=True", connStr);
+        }
+
+        [Fact]
+        public void Validate_Sqlite_RequiresFilePath()
+        {
+            var param = new SQLParam { Name = "lite", DBType = ESQLType.SQLite };
+            Assert.Throws<ArgumentException>(() => param.Validate());
+            param.FilePath = "workbench.db";
+            param.Validate();
+        }
+
+        [Fact]
+        public void WrapTableName_SqlServer_UsesBrackets()
+        {
+            Assert.Equal("[t1]", SqlDialectHelper.WrapTableName("T1", ESQLType.SQL_Server));
+        }
+
+        [Fact]
+        public void SqlServer_Dialect_GeneratesExpectedSql()
+        {
+            // 建库幂等、无 IF NOT EXISTS（SQL Server 不支持该语法，由调用方先判存）。
+            Assert.Equal(
+                "IF DB_ID(N'mydb') IS NULL CREATE DATABASE [mydb]",
+                SqlDialectHelper.BuildCreateDatabaseSql("mydb", ESQLType.SQL_Server));
+            Assert.Contains("INFORMATION_SCHEMA.TABLES",
+                SqlDialectHelper.BuildCheckTableExistsSql("t1", "mydb", ESQLType.SQL_Server));
+            Assert.Equal("INT", SqlDialectHelper.GetDbType(typeof(int), ESQLType.SQL_Server));
+            Assert.Equal("DATETIME2", SqlDialectHelper.GetDbType(typeof(DateTime), ESQLType.SQL_Server));
+            var pk = SqlDialectHelper.BuildPrimaryKeyDefinition("Id", typeof(long), ESQLType.SQL_Server);
+            Assert.Contains("IDENTITY(1,1) PRIMARY KEY", pk);
+        }
+
+        [Fact]
+        public void Sqlite_Dialect_GeneratesExpectedSql()
+        {
+            Assert.Equal("INTEGER", SqlDialectHelper.GetDbType(typeof(int), ESQLType.SQLite));
+            Assert.Equal("TEXT", SqlDialectHelper.GetDbType(typeof(DateTime), ESQLType.SQLite));
+            var pk = SqlDialectHelper.BuildPrimaryKeyDefinition("Id", typeof(long), ESQLType.SQLite);
+            Assert.Contains("AUTOINCREMENT", pk);
+            Assert.Contains("sqlite_master",
+                SqlDialectHelper.BuildCheckTableExistsSql("t1", "f.db", ESQLType.SQLite));
+        }
+
+        [Fact]
+        public void Validate_ConnectionStringPassthrough_SkipsServerFields()
+        {
+            // P3-1 直通串：SQL Server 无需拆字段即可过校验。
+            var param = new SQLParam
+            {
+                Name = "ms",
+                DBType = ESQLType.SQL_Server,
+                ConnectionString = "Server=localhost;Database=m;User Id=sa;Password=p;TrustServerCertificate=True;",
+            };
+            param.Validate();
         }
     }
 }

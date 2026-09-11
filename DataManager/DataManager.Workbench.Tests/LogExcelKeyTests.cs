@@ -1,6 +1,6 @@
 using DataManager.Excel.Definition;
 using DataManager.Log.Definition;
-using DataManager.Workbench.ViewModels;
+using DataManager.Workbench.Services;
 
 namespace DataManager.Tests.Workbench
 {
@@ -30,7 +30,7 @@ namespace DataManager.Tests.Workbench
         [Fact]
         public void BuildLogKey_SameParams_SameKey()
         {
-            Assert.Equal(LogViewModel.BuildLogKey(BaseLogParam()), LogViewModel.BuildLogKey(BaseLogParam()));
+            Assert.Equal(LogWorkspace.BuildLogKey(BaseLogParam()), LogWorkspace.BuildLogKey(BaseLogParam()));
         }
 
         [Theory]
@@ -43,7 +43,7 @@ namespace DataManager.Tests.Workbench
             var after = BaseLogParam();
             typeof(LogParam).GetProperty(field)!.SetValue(after, value);
 
-            Assert.NotEqual(LogViewModel.BuildLogKey(before), LogViewModel.BuildLogKey(after));
+            Assert.NotEqual(LogWorkspace.BuildLogKey(before), LogWorkspace.BuildLogKey(after));
         }
 
         [Fact]
@@ -53,13 +53,13 @@ namespace DataManager.Tests.Workbench
             var after = BaseLogParam();
             after.LogType = ELogType.NLog;
 
-            Assert.NotEqual(LogViewModel.BuildLogKey(before), LogViewModel.BuildLogKey(after));
+            Assert.NotEqual(LogWorkspace.BuildLogKey(before), LogWorkspace.BuildLogKey(after));
         }
 
         [Fact]
         public void BuildExcelKey_SameParams_SameKey()
         {
-            Assert.Equal(ExcelViewModel.BuildExcelKey(BaseExcelParam()), ExcelViewModel.BuildExcelKey(BaseExcelParam()));
+            Assert.Equal(ExcelWorkspace.BuildExcelKey(BaseExcelParam()), ExcelWorkspace.BuildExcelKey(BaseExcelParam()));
         }
 
         [Theory]
@@ -71,7 +71,7 @@ namespace DataManager.Tests.Workbench
             var after = BaseExcelParam();
             typeof(ExcelParam).GetProperty(field)!.SetValue(after, value);
 
-            Assert.NotEqual(ExcelViewModel.BuildExcelKey(before), ExcelViewModel.BuildExcelKey(after));
+            Assert.NotEqual(ExcelWorkspace.BuildExcelKey(before), ExcelWorkspace.BuildExcelKey(after));
         }
 
         [Fact]
@@ -81,7 +81,7 @@ namespace DataManager.Tests.Workbench
             var after = BaseExcelParam();
             after.ToolType = ExcelType.EPPlus;
 
-            Assert.NotEqual(ExcelViewModel.BuildExcelKey(before), ExcelViewModel.BuildExcelKey(after));
+            Assert.NotEqual(ExcelWorkspace.BuildExcelKey(before), ExcelWorkspace.BuildExcelKey(after));
         }
     }
 }

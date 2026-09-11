@@ -1,13 +1,12 @@
-using DataManager.SQL.Definition;
 using System;
 
-namespace DataManager.SQL.Dapper
+namespace DataManager.SQL.Definition
 {
     /// <summary>
     /// SQL命名转换助手
-    /// 统一约定（与 DapperNaming 注册给 Dommel 的解析器同源）：
-    /// 表名/列名一律小写单数，显式 [Table]/[Column] 名同样小写化；
-    /// PG 不加引号（fold 后一致），MySQL 加反引号。
+    /// P15：从 DataManager.SQL.Dapper 搬到 Definition——命名约定是全工具共享的（手写 SQL 与 Dommel/EF/SqlSugar 映射同源）。
+    /// 统一约定：表名/列名一律小写单数，显式 [Table]/[Column] 名同样小写化；
+    /// 引号规则按方言（PG 无引号，MySQL 反引号，SQLite 双引号，SQL Server 中括号）。
     /// </summary>
     public static class SqlNamingHelper
     {
@@ -34,18 +33,13 @@ namespace DataManager.SQL.Dapper
         }
 
         /// <summary>
-        /// 格式化表名（包含引号）
+        /// 格式化表名（包含引号）P3-2：转调方言 Quote。
         /// </summary>
         public static string FormatTableName(string tableName, ESQLType dbType)
         {
-            var convertedName = ConvertTableName(tableName, dbType);
-            
-            return dbType switch
-            {
-                ESQLType.PostgreSQL => convertedName,
-                ESQLType.MySQL => $"`{convertedName}`",
-                _ => convertedName
-            };
+            if (string.IsNullOrEmpty(tableName))
+                return tableName;
+            return SqlDialectRegistry.Get(dbType).QuoteTable(tableName);
         }
 
         /// <summary>
@@ -53,14 +47,9 @@ namespace DataManager.SQL.Dapper
         /// </summary>
         public static string FormatColumnName(string columnName, ESQLType dbType)
         {
-            var convertedName = ConvertColumnName(columnName, dbType);
-            
-            return dbType switch
-            {
-                ESQLType.PostgreSQL => convertedName,
-                ESQLType.MySQL => $"`{convertedName}`",
-                _ => convertedName
-            };
+            if (string.IsNullOrEmpty(columnName))
+                return columnName;
+            return SqlDialectRegistry.Get(dbType).QuoteColumn(columnName);
         }
 
         /// <summary>

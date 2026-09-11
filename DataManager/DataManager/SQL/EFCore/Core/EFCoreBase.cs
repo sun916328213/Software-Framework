@@ -37,6 +37,31 @@ namespace DataManager.SQL.EFCore
                         con = $"server={SQLParam.ServerIP} ;port= {SQLParam.Port} ;username= {SQLParam.UserName};password={SQLParam.Password};database={SQLParam.DBName}";
                         optionsBuilder.UseNpgsql(con);
                         break;
+
+                    case ESQLType.SQLite:
+                        // SQLite 无需账号端口；直通串优先（SQLParam 契约），否则走文件路径（目录预建，文件懒建）。
+                        if (!string.IsNullOrWhiteSpace(SQLParam.ConnectionString))
+                        {
+                            optionsBuilder.UseSqlite(SQLParam.ConnectionString);
+                            break;
+                        }
+                        var file = SQLParam.EffectiveFilePath;
+                        var dir = Path.GetDirectoryName(Path.GetFullPath(file));
+                        if (!string.IsNullOrEmpty(dir))
+                            Directory.CreateDirectory(dir);
+                        optionsBuilder.UseSqlite($"Data Source={file}");
+                        break;
+
+                    case ESQLType.SQL_Server:
+                        var server = string.IsNullOrWhiteSpace(SQLParam.Port)
+                            ? SQLParam.ServerIP
+                            : $"{SQLParam.ServerIP},{SQLParam.Port}";
+                        con = $"Server={server};Database={SQLParam.DBName};User Id={SQLParam.UserName};Password={SQLParam.Password};TrustServerCertificate={(SQLParam.TrustServerCertificate ? "True" : "False")}";
+                        optionsBuilder.UseSqlServer(con);
+                        break;
+
+                    default:
+                        throw new NotSupportedException($"不支持的数据库类型: {SQLParam.DBType}");
                 }
             }
             base.OnConfiguring(optionsBuilder);
@@ -50,9 +75,9 @@ namespace DataManager.SQL.EFCore
         }
 
         /// <summary>
-        /// 数据库参数
+        /// 数据库参数（构造期确定；P4-1 起只读，外部不再可替换）
         /// </summary>
-        public virtual SQLParam SQLParam { get; set; } = new();
+        public virtual SQLParam SQLParam { get; protected set; } = new();
 
         /// <summary>
         /// 名称
@@ -60,7 +85,18 @@ namespace DataManager.SQL.EFCore
         public virtual string Name { get; set; } = string.Empty;
 
         // P1-3：IsConnected 改为纯状态位，不再在 setter 中隐式 Connect/DisConnect（副作用难追踪）。
-        public bool IsConnected { get; set; }
+        // P4-1：setter 收为 private，仅 Connect/DisConnect 内部改写。
+        public bool IsConnected { get; private set; }
+
+        protected EFCoreBase()
+        {
+        }
+
+        protected EFCoreBase(SQLParam param)
+        {
+            SQLParam = param;
+            Name = param.Name;
+        }
 
         /// <summary>
         /// 分表模式下本实例命中的物理表名；非分表实体始终为 null。
@@ -91,11 +127,15 @@ namespace DataManager.SQL.EFCore
         /// </summary>
         public List<string> GetSplitTables()
         {
+            // 注意：EF 物理表名保留大小写（不做 PG 小写化，与 Dapper 约定不同），LIKE 必须用原大小写；
+            // PG 的 LIKE 大小写敏感，转小写会导致分表查不到（冒烟测试实证）。故此处不用方言的 Dapper 口径。
             var baseTable = EFCoreSplitNaming.GetBaseTableName(typeof(T));
             var sql = SQLParam.DBType switch
             {
                 ESQLType.PostgreSQL => $"SELECT table_name FROM information_schema.tables WHERE table_name LIKE '{baseTable}_%'",
                 ESQLType.MySQL => $"SELECT table_name FROM information_schema.tables WHERE table_schema = '{SQLParam.DBName}' AND table_name LIKE '{baseTable}_%'",
+                ESQLType.SQLite => $"SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '{baseTable}_%'",
+                ESQLType.SQL_Server => $"SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_CATALOG = '{SQLParam.DBName}' AND TABLE_NAME LIKE '{baseTable}_%'",
                 _ => throw new NotSupportedException($"不支持的数据库类型: {SQLParam.DBType}")
             };
             return Database.SqlQueryRaw<string>(sql).ToList();
@@ -135,15 +175,33 @@ namespace DataManager.SQL.EFCore
                 ?? throw new InvalidOperationException($"实体 {typeof(T).Name} 未映射");
             var table = entityType.GetTableName()!;
             var schema = entityType.GetSchema()
-                ?? (SQLParam.DBType == ESQLType.MySQL ? SQLParam.DBName : "public");
+                ?? (SQLParam.DBType switch
+                {
+                    ESQLType.MySQL => SQLParam.DBName,
+                    ESQLType.SQLite => "main",
+                    ESQLType.SQL_Server => "dbo",
+                    _ => "public",
+                });
 
             // 表/库名来自本库模型映射而非用户输入，无注入风险；用 ADO 直查以避开 EF1002
             Database.OpenConnection();
             try
             {
                 using var cmd = Database.GetDbConnection().CreateCommand();
-                cmd.CommandText = "SELECT 1 FROM information_schema.tables WHERE table_schema = '"
-                    + schema + "' AND table_name = '" + table + "' LIMIT 1";
+                if (SQLParam.DBType == ESQLType.SQLite)
+                {
+                    cmd.CommandText = "SELECT 1 FROM sqlite_master WHERE type='table' AND name = '" + table + "' LIMIT 1";
+                }
+                else if (SQLParam.DBType == ESQLType.SQL_Server)
+                {
+                    cmd.CommandText = "SELECT TOP 1 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '"
+                        + schema + "' AND TABLE_NAME = '" + table + "'";
+                }
+                else
+                {
+                    cmd.CommandText = "SELECT 1 FROM information_schema.tables WHERE table_schema = '"
+                        + schema + "' AND table_name = '" + table + "' LIMIT 1";
+                }
                 using var reader = cmd.ExecuteReader();
                 if (reader.Read()) return;
             }
@@ -170,6 +228,12 @@ namespace DataManager.SQL.EFCore
                 ESQLType.PostgreSQL => ex is Npgsql.PostgresException pg && pg.SqlState == "42P07",
                 // MySQL ER_TABLE_EXISTS_ERROR
                 ESQLType.MySQL => ex is MySqlConnector.MySqlException my && my.Number == 1050,
+                // SQLite table already exists
+                ESQLType.SQLite => ex is Microsoft.Data.Sqlite.SqliteException lite
+                    && lite.SqliteErrorCode == 1
+                    && lite.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase),
+                // SQL Server There is already an object named ...
+                ESQLType.SQL_Server => ex is Microsoft.Data.SqlClient.SqlException ms && ms.Number is 2714 or 2715,
                 _ => false,
             };
         }
@@ -181,15 +245,32 @@ namespace DataManager.SQL.EFCore
             return ForkForTable(GetSplitTableName(EFCoreSplitNaming.GetSplitFieldValue(data)));
         }
 
-        private List<EFCoreBase<T>> ScopedForQuery()
+        private List<EFCoreBase<T>> ScopedForQuery(Expression<Func<T, bool>>? predicate = null)
         {
             if (!IsSplitTableEntity())
                 return new List<EFCoreBase<T>> { this };
-            var tables = GetSplitTables();
+            var tables = predicate == null ? GetSplitTables() : GetSplitTables(predicate);
             var scoped = new List<EFCoreBase<T>>(tables.Count);
             foreach (var table in tables)
                 scoped.Add(ForkForTable(table));
             return scoped;
+        }
+
+        /// <summary>
+        /// P8：谓词定表（EF 口径：表名保留大小写，精确求交）。无可用约束则全表。
+        /// </summary>
+        private List<string> GetSplitTables(Expression<Func<T, bool>> predicate)
+        {
+            var splitProp = SplitDatePruner.FindSplitFieldProperty(typeof(T));
+            if (splitProp == null)
+                return GetSplitTables();
+            var suffixes = SplitDatePruner.CandidateSuffixes(
+                predicate, splitProp, DbSplitPeriod.PeriodOf(typeof(T)));
+            if (suffixes == null)
+                return GetSplitTables();
+            var baseline = EFCoreSplitNaming.GetBaseTableName(typeof(T));
+            var candidates = suffixes.Select(s => $"{baseline}_{s}").ToHashSet(StringComparer.Ordinal);
+            return GetSplitTables().Where(t => candidates.Contains(t)).ToList();
         }
 
         private static void DisposeScoped(List<EFCoreBase<T>> scoped, EFCoreBase<T> self)
@@ -265,7 +346,7 @@ namespace DataManager.SQL.EFCore
 
         public virtual void Delete(Expression<Func<T, bool>> predicate)
         {
-            var scoped = ScopedForQuery();
+            var scoped = ScopedForQuery(predicate);
             try
             {
                 foreach (var s in scoped)
@@ -284,7 +365,7 @@ namespace DataManager.SQL.EFCore
 
         public virtual async Task DeleteAsync(Expression<Func<T, bool>> predicate)
         {
-            var scoped = ScopedForQuery();
+            var scoped = ScopedForQuery(predicate);
             try
             {
                 foreach (var s in scoped)
@@ -365,18 +446,20 @@ namespace DataManager.SQL.EFCore
             }
         }
 
+        /// <remarks>
+        /// P6-1：分表亦逐表服务端过滤（EF 原生翻译表达式，无需内存过滤；与 Dapper 手写路径不同）。
+        /// </remarks>
         public virtual IEnumerable<T> Query(Expression<Func<T, bool>> predicate)
         {
-            var scoped = ScopedForQuery();
+            var scoped = ScopedForQuery(predicate);
             try
             {
                 if (scoped.Count == 1)
                     return scoped[0].Set<T>().Where(predicate).AsNoTracking().ToList();
-                // 分表：逐表查后内存过滤（与 Dapper 一致的性能取舍，大表慎用）
                 var all = new List<T>();
                 foreach (var s in scoped)
-                    all.AddRange(s.Set<T>().AsNoTracking().ToList());
-                return all.AsEnumerable().Where(predicate.Compile()).ToList();
+                    all.AddRange(s.Set<T>().Where(predicate).AsNoTracking().ToList());
+                return all;
             }
             finally
             {
@@ -384,17 +467,18 @@ namespace DataManager.SQL.EFCore
             }
         }
 
+        /// <remarks>P6-1：分表亦逐表服务端过滤（见同步重载说明）。</remarks>
         public virtual async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate)
         {
-            var scoped = ScopedForQuery();
+            var scoped = ScopedForQuery(predicate);
             try
             {
                 if (scoped.Count == 1)
                     return await scoped[0].Set<T>().Where(predicate).AsNoTracking().ToListAsync();
                 var all = new List<T>();
                 foreach (var s in scoped)
-                    all.AddRange(await s.Set<T>().AsNoTracking().ToListAsync());
-                return all.AsEnumerable().Where(predicate.Compile()).ToList();
+                    all.AddRange(await s.Set<T>().Where(predicate).AsNoTracking().ToListAsync());
+                return all;
             }
             finally
             {
@@ -402,9 +486,126 @@ namespace DataManager.SQL.EFCore
             }
         }
 
+        /// <summary>
+        /// P9-3：单实体按主键更新（EF 原生语义：整行标记修改，null 会覆盖；分表按实体日期路由）。
+        /// 已跟踪同键实例时直接 SetValues，避免“已跟踪”冲突（本库 DbContext 长驻，Add 后 Update 同一行必踩）。
+        /// </summary>
+        public virtual void Update(T data)
+        {
+            if (!IsSplitTableEntity())
+            {
+                UpdateTrackedOrAttach(this, data);
+                SaveChangesOptimized();
+                return;
+            }
+            using var target = RouteFor(data);
+            target.Set<T>().Update(data);
+            target.SaveChangesOptimized();
+        }
+
+        public virtual async Task UpdateAsync(T data)
+        {
+            if (!IsSplitTableEntity())
+            {
+                UpdateTrackedOrAttach(this, data);
+                await SaveChangesOptimizedAsync();
+                return;
+            }
+            using var target = RouteFor(data);
+            target.Set<T>().Update(data);
+            await target.SaveChangesOptimizedAsync();
+        }
+
+        /// <summary>
+        /// 同键已跟踪则整行设值，否则按新增跟踪附加（Update 语义）。
+        /// 主键取 EF 模型元数据（支持复合主键）；无主键回退直接附加。
+        /// </summary>
+        private static void UpdateTrackedOrAttach(EFCoreBase<T> ctx, T data)
+        {
+            var keys = ctx.Model.FindEntityType(typeof(T))?.FindPrimaryKey()?.Properties;
+            if (keys == null || keys.Count == 0)
+            {
+                ctx.Set<T>().Update(data);
+                return;
+            }
+            var tracked = ctx.Set<T>().Local.FirstOrDefault(e => keys.All(k =>
+            {
+                var a = k.PropertyInfo?.GetValue(e);
+                var b = k.PropertyInfo?.GetValue(data);
+                return Equals(a, b);
+            }));
+            if (tracked != null)
+                ctx.Entry(tracked).CurrentValues.SetValues(data);
+            else
+                ctx.Set<T>().Update(data);
+        }
+
+        /// <summary>
+        /// P10：单实例事务（显式连接事务；作用域内各操作 SaveChanges 共享同一事务）。
+        /// 分表实体抛 NotSupportedException（fork 独立连接，无法加入本事务，静默非原子更危险）；
+        /// 嵌套抛 InvalidOperationException。
+        /// </summary>
+        public virtual void ExecuteInTransaction(Action action)
+        {
+            ArgumentNullException.ThrowIfNull(action);
+            if (IsSplitTableEntity())
+                throw new NotSupportedException("分表实体暂不支持事务（fork 独立连接）。");
+            if (_inTransaction)
+                throw new InvalidOperationException("嵌套事务不受支持。");
+            _inTransaction = true;
+            try
+            {
+                using var tx = Database.BeginTransaction();
+                try
+                {
+                    action();
+                    tx.Commit();
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
+                }
+            }
+            finally
+            {
+                _inTransaction = false;
+            }
+        }
+
+        public virtual async Task ExecuteInTransactionAsync(Func<Task> action)
+        {
+            ArgumentNullException.ThrowIfNull(action);
+            if (IsSplitTableEntity())
+                throw new NotSupportedException("分表实体暂不支持事务（fork 独立连接）。");
+            if (_inTransaction)
+                throw new InvalidOperationException("嵌套事务不受支持。");
+            _inTransaction = true;
+            try
+            {
+                using var tx = await Database.BeginTransactionAsync();
+                try
+                {
+                    await action();
+                    await tx.CommitAsync();
+                }
+                catch
+                {
+                    await tx.RollbackAsync();
+                    throw;
+                }
+            }
+            finally
+            {
+                _inTransaction = false;
+            }
+        }
+
+        private bool _inTransaction;
+
         public virtual void Update(Expression<Func<T, bool>> predicate, T updatedata)
         {
-            var scoped = ScopedForQuery();
+            var scoped = ScopedForQuery(predicate);
             try
             {
                 foreach (var s in scoped)
@@ -424,7 +625,7 @@ namespace DataManager.SQL.EFCore
 
         public virtual async Task UpdateAsync(Expression<Func<T, bool>> predicate, T updatedata)
         {
-            var scoped = ScopedForQuery();
+            var scoped = ScopedForQuery(predicate);
             try
             {
                 foreach (var s in scoped)

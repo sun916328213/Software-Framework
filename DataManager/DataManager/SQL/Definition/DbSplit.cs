@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 
 namespace DataManager.SQL.Definition
 {
@@ -33,5 +34,35 @@ namespace DataManager.SQL.Definition
     [AttributeUsage(AttributeTargets.Property)]
     public class DbSplitFieldAttribute : Attribute
     {
+    }
+
+    /// <summary>
+    /// P8：分表周期判定（共享特性优先，Dapper 旧特性兼容；非分表实体抛）。
+    /// </summary>
+    internal static class DbSplitPeriod
+    {
+        internal static SplitPeriod PeriodOf(Type entityType)
+        {
+            var shared = entityType.GetCustomAttribute<DbSplitTableAttribute>();
+            if (shared != null)
+                return shared.Period;
+            var legacy = entityType.GetCustomAttribute<Dapper.DapperSplitTableAttribute>()
+                ?? throw new InvalidOperationException($"实体 {entityType.Name} 未标记分表特性");
+            return legacy.SplitType switch
+            {
+                Dapper.SplitType.Day => SplitPeriod.Day,
+                Dapper.SplitType.Month => SplitPeriod.Month,
+                Dapper.SplitType.Year => SplitPeriod.Year,
+                _ => throw new NotSupportedException($"不支持的分表类型: {legacy.SplitType}")
+            };
+        }
+
+        internal static string SuffixFor(SplitPeriod period, DateTime date) => period switch
+        {
+            SplitPeriod.Day => date.ToString("yyyyMMdd"),
+            SplitPeriod.Month => date.ToString("yyyyMM"),
+            SplitPeriod.Year => date.ToString("yyyy"),
+            _ => throw new NotSupportedException($"不支持的分表类型: {period}")
+        };
     }
 }

@@ -7,11 +7,12 @@ using System.Linq;
 namespace DataManager
 {
     /// <summary>
-    /// 设备管理类基类（P1-1：实现 IManager，新增 Items/TryGet/重名检查；保留 DataManagers 兼容旧代码）。
+    /// 设备管理类基类（P1-1：实现 IManager，新增 Items/TryGet/重名检查；
+    /// P4-2：DataManagers 收为 private，外部经 Items/索引器/TryGet 访问）。
     /// </summary>
     public abstract class ManagerBase<T, TParam> : IManager<T, TParam>
     {
-        public readonly ConcurrentList<T> DataManagers = new ConcurrentList<T>();
+        private readonly ConcurrentList<T> DataManagers = new ConcurrentList<T>();
 
         public IReadOnlyList<T> Items => DataManagers.ToList().AsReadOnly();
 

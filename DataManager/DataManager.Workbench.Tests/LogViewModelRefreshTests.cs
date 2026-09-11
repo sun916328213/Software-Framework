@@ -1,5 +1,6 @@
 using DataManager.Log;
 using DataManager.Log.Definition;
+using DataManager.Workbench.Services;
 using DataManager.Workbench.ViewModels;
 using Extension.Struct;
 
@@ -26,18 +27,16 @@ namespace DataManager.Tests.Workbench
         public void RefreshFiles_FindsWrittenLogFile(ELogType logType)
         {
             var manager = new LogManager();
-            var vm = new LogViewModel(manager)
-            {
-                FilePath = _dir,
-                LogName = "workbench",
-                SelectedLogType = logType,
-            };
-            vm.InitLogCommand.Execute();
+            var vm = new LogViewModel(new LogWorkspace(manager));
+            vm.LogProfiles[0].FilePath = _dir;
+            vm.LogProfiles[0].Name = "workbench";
+            vm.LogProfiles[0].LogType = logType;
+            vm.InitLogCommand.Execute(null);
 
             var log = manager["workbench"] ?? throw new InvalidOperationException("日志实例未创建");
             log.Add("hello-refresh", ELogLevel.Information);
 
-            vm.RefreshFilesCommand.Execute();
+            vm.RefreshFilesCommand.Execute(null);
 
             Assert.NotEmpty(vm.Files);
             Assert.NotNull(vm.SelectedFile);

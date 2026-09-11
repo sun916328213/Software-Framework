@@ -16,17 +16,23 @@ namespace DataManager.Log
  
         public abstract void Add(string info, ELogLevel logLevel = ELogLevel.Information);
 
-        public async Task AddAsync(string info, ELogLevel logLevel = ELogLevel.Information)
+        /// <summary>
+        /// P5-1：virtual 留缝。三家 sink（Serilog/NLog/log4net）均为同步 API，
+        /// 基类只能线程池转交以避免阻塞调用方；未来若有真异步 sink 可 override。
+        /// </summary>
+        public virtual async Task AddAsync(string info, ELogLevel logLevel = ELogLevel.Information)
         {
              await Task.Run(() => Add(info, logLevel));
         }
 
-        public virtual List<LogInfo> Query(string fileName)
+        /// <summary>
+        /// P5-1：纯解析抽取（同步/异步共用，行为单点）。
+        /// </summary>
+        protected static List<LogInfo> ParseLogInfos(string datas, string separator)
         {
             List<LogInfo> logInfos = new List<LogInfo>();
-            string path = System.IO.Path.Combine(Param.FilePath, fileName);
-            var datas = ReadAllTextShared(path);
-            var dataselect = datas.SplitByDateTime().Select(s => s.Split(Param.Separator.ToCharArray()).Where(x => x != string.Empty));
+            var seps = separator.ToCharArray();
+            var dataselect = datas.SplitByDateTime().Select(s => s.Split(seps).Where(x => x != string.Empty));
             foreach (var info in dataselect)
             {
                 if (info.Count() >= 3)
@@ -36,9 +42,22 @@ namespace DataManager.Log
             }
             return logInfos;
         }
+
+        public virtual List<LogInfo> Query(string fileName)
+        {
+            string path = System.IO.Path.Combine(Param.FilePath, fileName);
+            var datas = ReadAllTextShared(path);
+            return ParseLogInfos(datas, Param.Separator);
+        }
+
+        /// <summary>
+        /// P5-1：真异步读（FileStream 异步 IO + 共享读），解析为同步 CPU，不占线程池。
+        /// </summary>
         public async Task<List<LogInfo>> QueryAsync(string fileName)
         {
-           return await Task.Run(() => Query(fileName));
+            string path = System.IO.Path.Combine(Param.FilePath, fileName);
+            var datas = await ReadAllTextSharedAsync(path);
+            return ParseLogInfos(datas, Param.Separator);
         }
 
         private List<T> QueryFunc<T>(DateTime startTime, DateTime endTime,Func<string ,List<T>> func)
@@ -49,7 +68,6 @@ namespace DataManager.Log
             TimeSpan timeSpan = JudgeDatetime(startTime, endTime);
             for (int index = 0; index < timeSpan.Days; index++)
             {
-                DirectoryInfo directoryInfo = new DirectoryInfo(Param.FilePath);
                 var selectfile = Param.FilePath.GetFiles(startTime.AddDays(index).ToDateNOSapce());
                 foreach (var item in selectfile)
                 {
@@ -72,7 +90,23 @@ namespace DataManager.Log
 
         public async Task<List<LogInfo>> QueryAsync(DateTime startTime, DateTime endTime)
         {
-            return await Task.Run(() => Query(startTime, endTime));
+            return await QueryFuncAsync(startTime, endTime, x => QueryAsync(x));
+        }
+
+        private async Task<List<T>> QueryFuncAsync<T>(DateTime startTime, DateTime endTime, Func<string, Task<List<T>>> func)
+        {
+            if (endTime < startTime) throw new Exception("The start time is greater than the end time!!");
+
+            TimeSpan timeSpan = JudgeDatetime(startTime, endTime);
+            var tasks = new List<Task<List<T>>>();
+            for (int index = 0; index < timeSpan.Days; index++)
+            {
+                var selectfile = Param.FilePath.GetFiles(startTime.AddDays(index).ToDateNOSapce());
+                foreach (var item in selectfile)
+                    tasks.Add(func(item.FullName));
+            }
+            var results = await Task.WhenAll(tasks);
+            return results.Where(data => data != null).SelectMany(data => data!).ToList();
         }
 
 
@@ -85,7 +119,9 @@ namespace DataManager.Log
 
         public async Task<List<string>> Query_MultiAsync(string fileName)
         {
-            return await Task.Run(() => Query_Multi(fileName));
+            string path = System.IO.Path.Combine(Param.FilePath, fileName);
+            var strings = await ReadAllTextSharedAsync(path);
+            return strings.SplitByDateTime().ToList();
         }
 
 
@@ -96,7 +132,7 @@ namespace DataManager.Log
 
         public async Task<List<string>> Query_MultiAsync(DateTime startTime, DateTime endTime)
         {
-            return await Task.Run(() => Query_Multi(startTime, endTime));
+            return await QueryFuncAsync(startTime, endTime, x => Query_MultiAsync(x));
         }
 
         /// <summary>
@@ -120,6 +156,16 @@ namespace DataManager.Log
             using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var sr = new StreamReader(fs);
             return sr.ReadToEnd();
+        }
+
+        /// <summary>
+        /// 共享读的真异步版（P5-1：useAsync 实现零线程池占用的异步文件 IO）。
+        /// </summary>
+        protected static async Task<string> ReadAllTextSharedAsync(string path)
+        {
+            using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, useAsync: true);
+            using var sr = new StreamReader(fs);
+            return await sr.ReadToEndAsync();
         }
 
        

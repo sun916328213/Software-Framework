@@ -139,6 +139,58 @@ namespace DataManager.Tests.Log
                 Assert.Contains($"parallel-{i:00}", all);
         }
 
+        [Fact]
+        public async Task AddAsync_PersistsMessage()
+        {
+            using var helper = CreateHelper();
+            await helper.AddAsync("async-add", ELogLevel.Warning);
+
+            var all = ReadAllTextShared(Directory.GetFiles(_dir)[0]);
+            Assert.Contains("async-add", all);
+        }
+
+        [Fact]
+        public async Task QueryAsync_ByFileName_MatchesSync()
+        {
+            using var helper = CreateHelper();
+            helper.Add("async-q", ELogLevel.Error);
+
+            var fileName = Path.GetFileName(Directory.GetFiles(_dir)[0]);
+            var sync = helper.Query(fileName);
+            var async = await helper.QueryAsync(fileName);
+
+            Assert.Equal(sync.Count, async.Count);
+            Assert.Contains(async, x => x.Info != null && x.Info.Contains("async-q"));
+        }
+
+        [Fact]
+        public async Task QueryAsync_ByTimeRange_MatchesSync()
+        {
+            using var helper = CreateHelper();
+            helper.Add("async-range", ELogLevel.Information);
+
+            var sync = helper.Query(DateTime.Today, DateTime.Today);
+            var async = await helper.QueryAsync(DateTime.Today, DateTime.Today);
+
+            Assert.Equal(sync.Count, async.Count);
+            Assert.Contains(async, x => x.Info != null && x.Info.Contains("async-range"));
+        }
+
+        [Fact]
+        public async Task Query_MultiAsync_ByFileNameAndRange_MatchesSync()
+        {
+            using var helper = CreateHelper();
+            helper.Add("async-multi", ELogLevel.Information);
+
+            var fileName = Path.GetFileName(Directory.GetFiles(_dir)[0]);
+            Assert.Equal(helper.Query_Multi(fileName), await helper.Query_MultiAsync(fileName));
+
+            var syncRange = helper.Query_Multi(DateTime.Today, DateTime.Today);
+            var asyncRange = await helper.Query_MultiAsync(DateTime.Today, DateTime.Today);
+            Assert.Equal(syncRange, asyncRange);
+            Assert.Contains(asyncRange, x => x.Contains("async-multi"));
+        }
+
         public void Dispose()
         {
             try { Directory.Delete(_dir, true); } catch { }

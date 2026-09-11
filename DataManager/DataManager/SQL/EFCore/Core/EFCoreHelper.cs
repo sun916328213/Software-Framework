@@ -8,6 +8,8 @@ namespace DataManager.SQL.EFCore
     {
         public EFCoreHelper() { }
 
+        public EFCoreHelper(Definition.SQLParam param) : base(param) { }
+
         public static EFCoreHelper<T> Create()
         {
             return new EFCoreHelper<T>();
@@ -18,10 +20,7 @@ namespace DataManager.SQL.EFCore
         /// </summary>
         public static EFCoreHelper<T> Create(Definition.SQLParam param)
         {
-            var instance = Create();
-            instance.SQLParam = param;
-            instance.Name = param.Name;
-            return instance;
+            return new EFCoreHelper<T>(param);
         }
 
         public override EFCoreBase<T> ForkForTable(string tableName)

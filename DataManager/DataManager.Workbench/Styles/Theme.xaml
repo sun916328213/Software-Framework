@@ -3,29 +3,52 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
-    <!-- 页面标题（Material 风格字阶，硬编码避免版本键差异） -->
+    <!-- 页面标题（Material 风格字阶；前景钉 MD 原生键，深浅切换自动跟随，不自定义画刷） -->
     <Style x:Key="PageTitle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="22" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="#0F172A" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
     </Style>
     <Style x:Key="PageSubTitle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="12" />
-        <Setter Property="Foreground" Value="#64748B" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        <Setter Property="Opacity" Value="0.6" />
         <Setter Property="Margin" Value="0,4,0,0" />
     </Style>
     <Style x:Key="SectionTitle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="15" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="#0F172A" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
     </Style>
 
-    <!-- 功能色（按钮 Background 直接引用，与 BundledTheme Indigo 主色搭配） -->
+    <!-- 品牌色（侧栏固定深色区专用，不随主题变；功能色仍走 MD 原生键） -->
     <SolidColorBrush x:Key="SuccessBrush" Color="#16A34A" />
     <SolidColorBrush x:Key="DangerBrush" Color="#DC2626" />
     <SolidColorBrush x:Key="SidebarBrush" Color="#0F172A" />
 
-    <!-- 运行输出框（深色终端风，Material 无对应件，保留定制） -->
+    <!-- 输入框（官方体系：基于 MD 默认样式，只把前景显式钉到 MD 原生键；
+         Outlined 默认不把主题前景赋到 Foreground 属性，深色下会回落黑色，故须显式钉） -->
+    <Style x:Key="DmInput" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}" TargetType="TextBox">
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+    </Style>
+
+    <!-- 下拉框（默认弹出项前景不跟随主题，显式钉原生键；控件与弹层各钉一次） -->
+    <Style x:Key="DmCombo" BasedOn="{StaticResource MaterialDesignComboBox}" TargetType="ComboBox">
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        <Style.Resources>
+            <Style TargetType="ComboBoxItem">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+            </Style>
+        </Style.Resources>
+    </Style>
+
+    <!-- 结果表格（MD 默认 DataGrid；单元格文字随原生前景键跟随主题） -->
+    <Style x:Key="DmGrid" BasedOn="{StaticResource MaterialDesignDataGrid}" TargetType="DataGrid">
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+    </Style>
+
+    <!-- 运行输出框（深色终端风，刻意不随主题，保留定制） -->
     <Style x:Key="OutputBox" TargetType="TextBox">
         <Setter Property="Background" Value="#0F172A" />
         <Setter Property="Foreground" Value="#E2E8F0" />
@@ -51,7 +74,8 @@
         </Setter>
     </Style>
 
-    <!-- 侧栏导航（Material Chip 徽标 + 硬编码 Indigo 选中态） -->
+    <!-- 侧栏导航（侧栏是固定深色品牌区：文字前景固定浅色保证两种主题下都可读；
+         选中强调色走 MD 原生 Primary，跟随主色切换） -->
     <Style x:Key="NavListBox" TargetType="ListBox">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
@@ -60,7 +84,10 @@
             <Setter.Value>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:Chip Content="{Binding Badge}" />
+                        <materialDesign:Chip
+                            Background="#334155"
+                            Content="{Binding Badge}"
+                            Foreground="#E2E8F0" />
                         <TextBlock
                             Margin="12,0,0,0"
                             VerticalAlignment="Center"
@@ -90,7 +117,7 @@
                                         <Setter TargetName="bd" Property="Background" Value="#1E293B" />
                                     </Trigger>
                                     <Trigger Property="IsSelected" Value="True">
-                                        <Setter TargetName="bd" Property="Background" Value="#3F51B5" />
+                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>

@@ -26,8 +26,8 @@ namespace DataManager.SQL.Dapper
 
         public void EnsureDatabase()
         {
-            if (!SqlDialectHelper.IsDatabaseExists(_param))
-                SqlDialectHelper.CreateDatabase(_param);
+            // P3-2：下沉到方言。SQLite=建目录；PG/MySQL/SQLServer=建库。
+            SqlDialectRegistry.Get(_param.DBType).EnsureDatabase(_param);
         }
     }
 }

@@ -1,4 +1,3 @@
-using DataManager.SQL.Dapper;
 using DataManager.SQL.Definition;
 
 namespace DataManager.Tests.SQL

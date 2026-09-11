@@ -1,5 +1,4 @@
 using DataManager.SQL.Definition;
-using Dm;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
@@ -22,17 +21,20 @@ namespace DataManager.SQL.SqlSugarSQL
 
         public virtual string Name { get; set; } = string.Empty;
 
-        public SQLParam SQLParam { get; set; } = new();
+        public SQLParam SQLParam { get; private set; } = new();
 
-        private bool _isConnected;
-        public bool IsConnected
+        // P4-1：纯状态位。旧 setter 隐式 Connect/DisConnect 的副作用已删除，
+        // 曾导致“读状态触发连接”的难追踪行为；现仅 Connect/DisConnect 内部改写。
+        public bool IsConnected { get; private set; }
+
+        public SqlSugarBase()
         {
-            get => _isConnected;
-            set
-            {
-                if (value) Connect();
-                else DisConnect();
-            }
+        }
+
+        public SqlSugarBase(SQLParam param)
+        {
+            SQLParam = param;
+            Name = param.Name;
         }
 
         public virtual void Connect()
@@ -40,12 +42,26 @@ namespace DataManager.SQL.SqlSugarSQL
             CreateDatabase();
             CreateTable();
             GetDbClient().Ado.CheckConnection();
-            _isConnected = true;
+            IsConnected = true;
         }
 
         public virtual void DisConnect()
         {
-            _isConnected = false;
+            IsConnected = false;
+        }
+
+        /// <summary>
+        /// 释放底层 SqlSugarClient（P4-1：ISQL 继承 IDisposable 后补齐）。
+        /// </summary>
+        public void Dispose()
+        {
+            IsConnected = false;
+            lock (_syncLock)
+            {
+                _dbClient?.Dispose();
+                _dbClient = null;
+            }
+            GC.SuppressFinalize(this);
         }
 
         public void Add(T data)
@@ -108,14 +124,24 @@ namespace DataManager.SQL.SqlSugarSQL
             }
         }
 
+        /// <summary>
+        /// 清空表（P4-1：改走 Deleteable，原生支持分表；不再用 TruncateTable——
+        /// 行为差异：自增种子不再重置，DELETE 语义跨四库一致）。
+        /// </summary>
         public void DeleteAll()
         {
-            GetDbClient().DbMaintenance.TruncateTable(typeof(T).Name);
+            var q = GetDbClient().Deleteable<T>();
+            if (IsSplitTableEntity())
+                q.SplitTable();
+            q.ExecuteCommand();
         }
 
         public async Task DeleteAllAsync()
         {
-            await Task.Run(DeleteAll);
+            var q = GetDbClient().Deleteable<T>();
+            if (IsSplitTableEntity())
+                q.SplitTable();
+            await q.ExecuteCommandAsync();
         }
 
         public async Task DeleteAsync(Expression<Func<T, bool>> predicate)
@@ -175,6 +201,93 @@ namespace DataManager.SQL.SqlSugarSQL
             return typeof(T).GetCustomAttributes(typeof(SplitTableAttribute), false).Any();
         }
  
+        /// <summary>
+        /// P9-3：单实体按主键更新（SqlSugar 原生语义；分表自动路由）。
+        /// </summary>
+        public void Update(T data)
+        {
+            if (IsSplitTableEntity())
+            {
+                GetDbClient().Updateable(data).SplitTable().ExecuteCommand();
+            }
+            else
+            {
+                GetDbClient().Updateable(data).ExecuteCommand();
+            }
+        }
+
+        public async Task UpdateAsync(T data)
+        {
+            if (IsSplitTableEntity())
+            {
+                await GetDbClient().Updateable(data).SplitTable().ExecuteCommandAsync();
+            }
+            else
+            {
+                await GetDbClient().Updateable(data).ExecuteCommandAsync();
+            }
+        }
+
+        /// <summary>
+        /// P10：单实例事务（同 client 连接，分表同样原子；嵌套抛）。
+        /// 不用 Ado.UseTran：它吞业务异常（回滚但不向外抛），此处显式 Begin/Commit/Rollback保证穿透。
+        /// </summary>
+        public void ExecuteInTransaction(Action action)
+        {
+            ArgumentNullException.ThrowIfNull(action);
+            if (_inTransaction)
+                throw new InvalidOperationException("嵌套事务不受支持。");
+            var ado = GetDbClient().Ado;
+            _inTransaction = true;
+            try
+            {
+                ado.BeginTran();
+                try
+                {
+                    action();
+                    ado.CommitTran();
+                }
+                catch
+                {
+                    ado.RollbackTran();
+                    throw;
+                }
+            }
+            finally
+            {
+                _inTransaction = false;
+            }
+        }
+
+        public async Task ExecuteInTransactionAsync(Func<Task> action)
+        {
+            ArgumentNullException.ThrowIfNull(action);
+            if (_inTransaction)
+                throw new InvalidOperationException("嵌套事务不受支持。");
+            var ado = GetDbClient().Ado;
+            _inTransaction = true;
+            try
+            {
+                ado.BeginTran();
+                try
+                {
+                    await action();
+                    ado.CommitTran();
+                }
+                catch
+                {
+                    ado.RollbackTran();
+                    throw;
+                }
+            }
+            finally
+            {
+                _inTransaction = false;
+            }
+        }
+
+        private bool _inTransaction;
+
         public void Update(Expression<Func<T, bool>> predicate, T updatedata)
         {
             if (IsSplitTableEntity())
@@ -235,6 +348,8 @@ namespace DataManager.SQL.SqlSugarSQL
             {
                 ESQLType.MySQL => DbType.MySqlConnector,
                 ESQLType.PostgreSQL => DbType.PostgreSQL,
+                ESQLType.SQLite => DbType.Sqlite,
+                ESQLType.SQL_Server => DbType.SqlServer,
                 _ => throw new NotSupportedException("未支持的数据库类型")
             };
         }
@@ -247,12 +362,27 @@ namespace DataManager.SQL.SqlSugarSQL
         /// <exception cref="NotSupportedException"></exception>
         private string GetConnectionString(string database)
         {
+            if (!string.IsNullOrWhiteSpace(SQLParam.ConnectionString))
+                return SQLParam.ConnectionString;
             return SQLParam.DBType switch
             {
                 ESQLType.MySQL => $"Server={SQLParam.ServerIP};Port={SQLParam.Port};Database={database};Uid={SQLParam.UserName};Pwd={SQLParam.Password};",
                 ESQLType.PostgreSQL => $"Host={SQLParam.ServerIP};Port={SQLParam.Port};Database={database};Username={SQLParam.UserName};Password={SQLParam.Password};",
+                ESQLType.SQLite => $"Data Source={SQLParam.EffectiveFilePath}",
+                ESQLType.SQL_Server => BuildSqlServerConnectionString(database),
                 _ => throw new NotSupportedException("未支持的数据库类型")
             };
+        }
+
+        private string BuildSqlServerConnectionString(string database)
+        {
+            var server = string.IsNullOrWhiteSpace(SQLParam.Port)
+                ? SQLParam.ServerIP
+                : $"{SQLParam.ServerIP},{SQLParam.Port}";
+            var cs = $"Server={server};Database={database};User Id={SQLParam.UserName};Password={SQLParam.Password};";
+            if (SQLParam.TrustServerCertificate)
+                cs += "TrustServerCertificate=True;";
+            return cs;
         }
  
         /// <summary>
@@ -291,10 +421,18 @@ namespace DataManager.SQL.SqlSugarSQL
         }
 
         /// <summary>
-        /// 创建数据库
+        /// 创建数据库（SQLite 无服务器：预建目录，文件由 CodeFirst 懒建）。
         /// </summary>
         private void CreateDatabase()
         {
+            if (SQLParam.DBType == ESQLType.SQLite)
+            {
+                var file = SQLParam.EffectiveFilePath;
+                var dir = Path.GetDirectoryName(Path.GetFullPath(file));
+                if (!string.IsNullOrEmpty(dir))
+                    Directory.CreateDirectory(dir);
+                return;
+            }
             var config = CreateConnectionConfig();
             // 切换到系统库连接
             config.ConnectionString = GetConnectionString(SQLParam.DBName);
@@ -328,6 +466,39 @@ namespace DataManager.SQL.SqlSugarSQL
         }
         #endregion
 
+        /// <summary>
+        /// P9-1：列出该实体的全部分表（原生分表经 SugarTable 模板前缀匹配；非分表实体返回空）。
+        /// </summary>
+        public List<string> GetSplitTables()
+        {
+            if (!IsSplitTableEntity())
+                return new List<string>();
+            // 模板前缀本身常带分隔符（如 t_），缺时才补，避免双下划线永不命中。
+            var prefix = GetSplitTablePrefix();
+            var head = prefix.EndsWith("_") ? prefix : prefix + "_";
+            return GetDbClient().DbMaintenance.GetTableInfoList(false)
+                .Select(t => t.Name)
+                .Where(n => n.StartsWith(head, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        /// <summary>
+        /// 分表名前缀：SugarTable 模板取 '{' 之前部分；无模板用默认表名。
+        /// </summary>
+        private string GetSplitTablePrefix()
+        {
+            var sugarTable = typeof(T).GetCustomAttribute<SugarTable>();
+            var template = sugarTable?.TableName;
+            if (!string.IsNullOrEmpty(template))
+            {
+                var brace = template.IndexOf('{');
+                if (brace > 0)
+                    return template.Substring(0, brace);
+                return template;
+            }
+            return GetDefaultTableName();
+        }
+
         #region ===================== 官方规范：删表 =====================
 
         /// <summary>
@@ -339,7 +510,12 @@ namespace DataManager.SQL.SqlSugarSQL
             if (!TableExists(tableName)) return;
             GetDbClient().DbMaintenance.DropTable(tableName);
         }
-        public async Task DropTableAsync(string tableName) => await Task.Run(() => DropTable(tableName));
+        public async Task DropTableAsync(string tableName)
+        {
+            // 底层 DbMaintenance 仅同步 API：原地执行后返回已完成任务，不占用线程池（P4-1 去 Task.Run）。
+            DropTable(tableName);
+            await Task.CompletedTask;
+        }
 
         /// <summary>
         /// 删除所有表
@@ -354,7 +530,11 @@ namespace DataManager.SQL.SqlSugarSQL
                 try { db.DbMaintenance.DropTable(table.Name); } catch { }
             }
         }
-        public async Task DropAllTablesAsync() => await Task.Run(() => DropAllTables());
+        public async Task DropAllTablesAsync()
+        {
+            DropAllTables();
+            await Task.CompletedTask;
+        }
         #endregion
 
         #region ===================== 官方规范：原生判断表是否存在 =====================
@@ -376,7 +556,12 @@ namespace DataManager.SQL.SqlSugarSQL
         /// </summary>
         /// <param name="tableName"></param>
         /// <returns></returns>
-        public async Task<bool> TableExistsAsync(string tableName) => await Task.Run(() => TableExists(tableName));
+        public async Task<bool> TableExistsAsync(string tableName)
+        {
+            var exists = TableExists(tableName);
+            await Task.CompletedTask;
+            return exists;
+        }
 
         /// <summary>
         /// 异步判断默认表是否存在

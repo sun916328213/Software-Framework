@@ -1,9 +1,9 @@
 # DataManager
 
-统一的数据 access 入口：日志（Serilog / NLog / log4net）、Excel（EPPlus / MiniExcel）、数据库（EFCore / SqlSugar / Dapper，支持 PostgreSQL / MySQL），外加测试工程与 WPF 测试工作台。
+统一的数据 access 入口：日志（Serilog / NLog / log4net）、Excel（EPPlus / MiniExcel）、数据库（EFCore / SqlSugar / Dapper，支持 PostgreSQL / MySQL / SQLite / SQL Server），外加测试工程与 WPF 测试工作台。
 
 - 构建：`dotnet build DataManager.sln`（0 警告 0 错误）
-- 测试：`dotnet test DataManager.Tests/DataManager.Tests.csproj`（130 用例，需本机 PG + 见“测试”一节）
+- 测试：`dotnet test DataManager.Tests/DataManager.Tests.csproj`（218 用例，需本机 PG + 见“测试”一节）
 
 ## 目录结构
 
@@ -92,13 +92,44 @@ db.Connect(); // 建库 + 建表（EF：库存在也会补建缺失表；Dapper�
 db.Add(item); db.AddRange(list);
 var all = db.Query(); var one = db.Query(x => x.Age > 20);
 db.Update(x => x.Id == 1, new MyEntity { Name = "B", Age = 21 }); // Dapper/EFCore：跳过 [Key]，null 不覆盖；SqlSugar 按原生语义全列更新
+db.Update(item); // P9-3 单实体按主键（三路对齐；EFCore 整行语义 null 会覆盖）
 db.Delete(x => x.Id == 1); db.DeleteAll();
 db.DisConnect();
 ```
 
+```csharp
+// P10 事务：单实例同连接原子提交，异常回滚
+db.ExecuteInTransaction(() =>
+{
+    db.Add(a); db.Add(b); db.Update(c);
+});
+// 矩阵：非分表三路全原子；Dapper/SqlSugar 分表同连接原子；
+// EFCore 分表抛（fork 独立连接）；嵌套抛。
+```
+
 - 时间：全链路用 `DateTime.Now/Today`（Local）；Npgsql 兼容开关由库内静态构造自行保证，宿主无需设置。
 - Dapper 命名约定：表/列一律小写单数（`[Table]/[Column]` 名同样小写化），已注册全局 Dommel 解析器对齐，手写 SQL 与 Dommel 一致。
-- `SQLParam` 有 `Validate()`（空值抛 `ArgumentException`），`Create` 入口自动校验；`Manager` 重名抛 `InvalidOperationException`。
+- `SQLParam` 有 `Validate()`（按库分支校验，空值抛 `ArgumentException`），`Create` 入口自动校验；`Manager` 重名抛 `InvalidOperationException`。
+- `ISQL` 参数与状态只读（构造期注入），`Dispose` 释放底层连接（EFCore 继承 DbContext；SqlSugar 关 client；Dapper 短连接仅置状态位）。
+- 方言策略：`ISqlDialect/SqlDialectRegistry`（PG/MySQL/SQLite/SQL Server），加库实现接口+注册即可，不再散落 switch。
+
+```csharp
+// SQLite：文件自建自清，无服务器
+var lite = mgr.Create<MyEntity>(new SQLParam
+{
+    Name = "lite", FilePath = @"C:\data\app.db", // 或 DBName 当路径
+    DBType = ESQLType.SQLite, ToolType = ESQLToolType.Dapper,
+});
+// SQL Server：端口可选，默认信任服务器证书
+var ms = mgr.Create<MyEntity>(new SQLParam
+{
+    Name = "ms", ServerIP = "localhost", DBName = "app",
+    UserName = "sa", Password = "pwd", TrustServerCertificate = true,
+    DBType = ESQLType.SQL_Server, ToolType = ESQLToolType.EFCore,
+});
+// 直通串（优先级最高，分字段可空）：
+// new SQLParam { Name = "x", DBType = ESQLType.SQL_Server, ConnectionString = "Server=...;..." }
+```
 
 ## 分表（按天/月/年，自动路由）
 
@@ -113,9 +144,10 @@ public class MyLog
 }
 ```
 
-- 表名规则：`[Table] 或类名 + _yyyyMMdd/_yyyyMM/_yyyy`；写入按实体日期自动路由建表，查询/更新/删除逐表（条件查询内存过滤，大表慎用）。
+- 表名规则：`[Table] 或类名 + _yyyyMMdd/_yyyyMM/_yyyy`；写入按实体日期自动路由建表，查询/更新/删除逐表。
+- 条件查询下推：EFCore/SqlSugar 逐表服务端过滤；Dapper 比较/与或非/null/bool/枚举谓词同样下推（`DapperPredicateTranslator`，全参数化），不可译（方法调用/算术等）自动回退内存过滤；谓词含分表字段等值/有界范围约束时仅查命中表（日期裁剪，500 槽熔断；范围/OR 全表，正确优先；勿更新分表字段本身），大表慎用。
 - EFCore：`IsSplitTableEntity/GetSplitTableName/ForkForTable/GetSplitTables` 公开，`Connect()` 建当期表，写前自动建目标期表。
-- SqlSugar：原生 `[SugarTable("t_{year}{month}{day}")]/[SplitTable]/[SplitField]` 同样直通。
+- SqlSugar：原生 `[SugarTable("t_{year}{month}{day}")]/[SplitTable]/[SplitField]` 同样直通；原生约束：分表主键禁自增（跨表撞号），须显式赋值；`GetSplitTables()` 三路对齐（工作台分表命令全支持）。
 - 注意：EF 沿用默认映射（不做 PG 小写化），同一实体在 EF 与 Dapper 下的物理表名大小写可能不同，各管各的表，行为一致。
 
 ## 测试
@@ -128,8 +160,8 @@ $env:DM_PG_PASSWORD="123"
 dotnet test DataManager.Tests/DataManager.Tests.csproj
 ```
 
-- 连接信息：`DM_PG_HOST/DM_PG_PORT/DM_PG_USER/DM_PG_PASSWORD/DM_PG_DB`，默认 `127.0.0.1:5432/postgres/dm_integration`，库表自建自清。
-- 130 用例构成：Excel 20（EPPlus 8 + MiniExcel 6 + Manager 6）/ Log 28（Serilog 8 + NLog 6 + log4net 6 + Manager 8）/ Manager 12 / SQL 50（EFCore 分表 6 + PG 真库 5 + 工厂/命名/方言等 39）/ Workbench 20（SQL 指纹 6 + Log/Excel 指纹 9 + 刷新 3 + 冒烟 2）。
+- 连接信息：`DM_PG_HOST/DM_PG_PORT/DM_PG_USER/DM_PG_PASSWORD/DM_PG_DB`，默认 `127.0.0.1:5432/postgres/dm_integration`，库表自建自清。无密码时仅 PG 真库 12 用例失败（5 集成 + 5 新功能 + 2 冒烟，环境问题，已实证其余 203 全绿）；SQLite 真库文件自建自清，CI 可跑；SQL Server/MySQL 暂无本机库，仅方言生成层覆盖。
+- 218 用例构成：Excel 20 / Log 32（含异步 4）/ Manager 12 / SQL 113（EFCore 分表 6 + PG 真库 10 + SQLite 真库 19 + 谓词翻译 14 + 日期裁剪 15 + 工厂/命名/方言等 49）/ Workbench 41（含 SQLite 端到端 1）。
 - 工作台冒烟（`Tests/Workbench/SqlViewModelSmokeTests`）无头驱动 `SqlViewModel` 全命令连真库；`LogViewModelRefreshTests` 端到端验证刷新能找到 `logyyyyMMdd` 文件。
 
 ## 工作台（手动测试，MaterialDesign + Prism）

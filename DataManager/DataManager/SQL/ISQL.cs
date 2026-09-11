@@ -8,16 +8,19 @@ using System.Threading.Tasks;
 
 namespace DataManager.SQL
 {
-    public interface ISQL
+    /// <summary>
+    /// P4-1：参数与状态只读（构造期注入，杜绝运行时替换导致的行为漂移）；可释放。
+    /// </summary>
+    public interface ISQL : IDisposable
     {
         /// <summary>
-        /// 数据库参数
+        /// 数据库参数（构造期确定，只读）
         /// </summary>
-        SQLParam SQLParam { get; set; }
+        SQLParam SQLParam { get; }
         /// <summary>
-        /// 是否连接成功
+        /// 是否连接成功（仅 Connect/DisConnect 内部改写）
         /// </summary>
-        bool IsConnected { get; set; }
+        bool IsConnected { get; }
         /// <summary>
         /// 连接
         /// </summary>
@@ -84,6 +87,25 @@ namespace DataManager.SQL
         /// 删除所有数据 异步
         /// </summary>
         Task DeleteAllAsync();
+        /// <summary>
+        /// 更新单个实体（按主键，各 provider 原生语义；与条件更新的非空合并语义不同，null 可能覆盖）。
+        /// 分表实体按实体日期自动路由。
+        /// </summary>
+        void Update(T data);
+        /// <summary>
+        /// 更新单个实体 异步（语义同同步重载）。
+        /// </summary>
+        Task UpdateAsync(T data);
+        /// <summary>
+        /// P10：单实例事务。作用域内所有操作同连接原子提交，异常回滚。
+        /// 矩阵：非分表三路全原子；Dapper/SqlSugar 分表同连接原子；
+        /// EFCore 分表抛 NotSupportedException（fork 独立连接）；嵌套抛 InvalidOperationException。
+        /// </summary>
+        void ExecuteInTransaction(Action action);
+        /// <summary>
+        /// P10：单实例事务 异步（语义同同步重载）。
+        /// </summary>
+        Task ExecuteInTransactionAsync(Func<Task> action);
         /// <summary>
         /// 更新数据
         /// </summary>

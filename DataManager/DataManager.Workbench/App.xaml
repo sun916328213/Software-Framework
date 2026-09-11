@@ -8,13 +8,15 @@
     <prism:PrismApplication.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- MaterialDesign：浅色 + Indigo 主色 + Teal 辅色（Prism 导航/区域不受影响） -->
+                <!--  MaterialDesign：浅色 + Indigo 主色 + Teal 辅色（Prism 导航/区域不受影响）  -->
                 <materialDesign:BundledTheme
                     BaseTheme="Light"
-                    PrimaryColor="Indigo"
-                    SecondaryColor="Teal" />
+                    PrimaryColor="Teal"
+                    SecondaryColor="Amber" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/WPFCustomControls;component/Resources/Resources.xaml" />
                 <ResourceDictionary Source="Styles/Theme.xaml" />
+
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </prism:PrismApplication.Resources>

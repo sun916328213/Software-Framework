@@ -1,13 +1,17 @@
-﻿using DataManager.SQL.EFCore;
-using DataManager.SQL.SqlSugarSQL;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using DataManager.SQL.SqlSugarSQL;
 
 namespace DataManager.SQL.SqlSugar
 {
     public class SqlSugarHelper<T>: SqlSugarBase<T> where T : class , new()
     {
+        public SqlSugarHelper()
+        {
+        }
+
+        public SqlSugarHelper(Definition.SQLParam param) : base(param)
+        {
+        }
+
         public static SqlSugarHelper<T> Create()
         {
             var instance = new SqlSugarHelper<T>();
@@ -16,10 +20,7 @@ namespace DataManager.SQL.SqlSugar
 
         public static SqlSugarHelper<T> Create(Definition.SQLParam param)
         {
-            var instance = Create();
-            instance.SQLParam = param;
-            instance.Name = param.Name;
-            return instance;
+            return new SqlSugarHelper<T>(param);
         }
     }
 }

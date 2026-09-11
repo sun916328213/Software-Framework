@@ -302,7 +302,12 @@ namespace WPFCustomControls.Controls
         // 保存数据
         private void SaveData()
         {
-            if (ItemsSource != null && !string.IsNullOrEmpty(FilePath) && !string.IsNullOrEmpty(FileName))
+            if (string.IsNullOrEmpty(FilePath) || string.IsNullOrEmpty(FileName))
+            {
+                MessageBox.Show("请检查文件路径(FilePath)和文件名称(FileName)","提示" );
+                return;
+            }
+            if (ItemsSource != null  )
             {
                 try
                 {

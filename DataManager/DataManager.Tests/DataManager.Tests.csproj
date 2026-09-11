@@ -13,6 +13,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataManager\DataManager.csproj" />
-    <ProjectReference Include="..\DataManager.Workbench\DataManager.Workbench.csproj" />
   </ItemGroup>
 </Project>

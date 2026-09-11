@@ -3,59 +3,90 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:excel="clr-namespace:DataManager.Excel.Definition;assembly=DataManager"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:shared="clr-namespace:DataManager.Workbench.Views.Shared"
+    xmlns:wpfcc="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
     d:DesignWidth="1000"
     mc:Ignorable="d">
 
+    <UserControl.Resources>
+        <!-- 追加/更新仅 EPPlus 支持，下拉只给这两项 -->
+        <x:Array x:Key="ExcelTools" Type="{x:Type excel:ExcelType}">
+            <excel:ExcelType>EPPlus</excel:ExcelType>
+            <excel:ExcelType>MiniExcel</excel:ExcelType>
+        </x:Array>
+    </UserControl.Resources>
+
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="24,20,24,8" MaxWidth="1100">
+        <!-- 宽屏双列：页头/配置/操作占满，查询结果与运行输出并排 -->
+        <Grid Margin="24,20,24,8" MaxWidth="1360">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
             <!-- 页头 -->
-            <StackPanel Margin="0,0,0,16" Orientation="Horizontal">
-                <materialDesign:PackIcon
-                    Width="28"
-                    Height="28"
-                    VerticalAlignment="Center"
-                    Foreground="#3F51B5"
-                    Kind="FileExcelOutline" />
-                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Style="{StaticResource PageTitle}" Text="Excel 测试" />
-                    <TextBlock Style="{StaticResource PageSubTitle}"
-                               Text="通过 DataManager 的 ExcelManager / IExcel 测试 EPPlus 与 MiniExcel 读写（追加与更新仅 EPPlus 支持）" />
-                </StackPanel>
-            </StackPanel>
+            <shared:PageHeaderView
+                Grid.Row="0"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Margin="0,0,0,16"
+                IconKind="FileExcelOutline"
+                SubTitle="通过 DataManager 的 ExcelManager / IExcel 测试 EPPlus 与 MiniExcel 读写（追加与更新仅 EPPlus 支持）"
+                Title="Excel 测试" />
 
-            <!-- 配置 -->
-            <materialDesign:Card Margin="0,0,0,16" Padding="20">
+            <!-- 配置：单行档案表，持久化走壳自带的保存按钮（Config/ExcelConfig.json） -->
+            <materialDesign:Card
+                Grid.Row="1"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Margin="0,0,0,16"
+                Padding="20">
                 <StackPanel>
                     <TextBlock Style="{StaticResource SectionTitle}" Text="文件配置" />
-                    <Grid Margin="0,14,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="2*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <TextBox
-                            Grid.Column="0"
-                            materialDesign:HintAssist.Hint="文件目录"
-                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                            Text="{Binding ExcelFilePath}" />
-                        <TextBox
-                            Grid.Column="2"
-                            materialDesign:HintAssist.Hint="文件名"
-                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                            Text="{Binding ExcelFileName}" />
-                        <ComboBox
-                            Grid.Column="4"
-                            materialDesign:HintAssist.Hint="Excel 库"
-                            ItemsSource="{Binding ExcelTypes}"
-                            SelectedItem="{Binding SelectedExcelType}"
-                            Style="{StaticResource MaterialDesignOutlinedComboBox}" />
-                    </Grid>
+                    <wpfcc:ConfigManagerView
+                        Margin="0,14,0,0"
+                        Title="文件配置档案"
+                        AddVisibility="Collapsed"
+                        DeleteVisibility="Collapsed"
+                        FileName="ExcelConfig.json"
+                        FilePath="{Binding ConfigDir}"
+                        ItemsSource="{Binding ExcelProfiles}"
+                        SaveCallback="{Binding ProfilesSavedAction}"
+                        SelectVisibility="Collapsed">
+                        <wpfcc:ConfigManagerView.DataGridColumns>
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                Header="名称" />
+                            <DataGridTextColumn
+                                Width="2*"
+                                Binding="{Binding FilePath, UpdateSourceTrigger=PropertyChanged}"
+                                Header="文件目录" />
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding FileName, UpdateSourceTrigger=PropertyChanged}"
+                                Header="文件名" />
+                            <DataGridCheckBoxColumn
+                                Width="90"
+                                Binding="{Binding HasHeader, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Header="首行表头" />
+                            <DataGridComboBoxColumn
+                                Width="110"
+                                Header="Excel 库"
+                                ItemsSource="{Binding Source={StaticResource ExcelTools}}"
+                                SelectedItemBinding="{Binding ToolType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </wpfcc:ConfigManagerView.DataGridColumns>
+                    </wpfcc:ConfigManagerView>
                     <WrapPanel Margin="0,14,0,0">
                         <Button Margin="0,0,8,8" Command="{Binding ApplyCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
                             <StackPanel Orientation="Horizontal">
@@ -69,13 +100,17 @@
                                 <TextBlock Margin="6,0,0,0" Text="打开文件夹" />
                             </StackPanel>
                         </Button>
-                        <CheckBox Margin="4,8,0,0" Content="首行为表头" IsChecked="{Binding HasHeader}" />
                     </WrapPanel>
                 </StackPanel>
             </materialDesign:Card>
 
             <!-- 数据操作 -->
-            <materialDesign:Card Margin="0,0,0,16" Padding="20">
+            <materialDesign:Card
+                Grid.Row="2"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Margin="0,0,0,16"
+                Padding="20">
                 <StackPanel>
                     <TextBlock Style="{StaticResource SectionTitle}" Text="数据操作（ExcelPerson：Name / Age / CreateTime）" />
                     <WrapPanel Margin="0,14,0,0">
@@ -90,7 +125,11 @@
             </materialDesign:Card>
 
             <!-- 查询结果 -->
-            <materialDesign:Card Margin="0,0,0,16" Padding="20">
+            <materialDesign:Card
+                Grid.Row="3"
+                Grid.Column="0"
+                Margin="0,0,0,16"
+                Padding="20">
                 <StackPanel>
                     <TextBlock Style="{StaticResource SectionTitle}" Text="查询结果" />
                     <DataGrid
@@ -98,18 +137,17 @@
                         Margin="0,12,0,0"
                         ItemsSource="{Binding Results}"
                         SelectedItem="{Binding SelectedEntity}"
-                        Style="{StaticResource MaterialDesignDataGrid}" />
+                        Style="{StaticResource DmGrid}" />
                 </StackPanel>
             </materialDesign:Card>
 
             <!-- 运行输出 -->
-            <materialDesign:Card Margin="0,0,0,16" Padding="20">
-                <StackPanel>
-                    <TextBlock Style="{StaticResource SectionTitle}" Text="运行输出" />
-                    <TextBox Height="130" Margin="0,12,0,0" Style="{StaticResource OutputBox}" Text="{Binding OutputText, Mode=OneWay}" />
-                </StackPanel>
-            </materialDesign:Card>
+            <shared:RunOutputView
+                Grid.Row="3"
+                Grid.Column="2"
+                Margin="0,0,0,16"
+                OutputHeight="130" />
 
-        </StackPanel>
+        </Grid>
     </ScrollViewer>
 </UserControl>

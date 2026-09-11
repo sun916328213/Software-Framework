@@ -5,145 +5,266 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:shared="clr-namespace:DataManager.Workbench.Views.Shared"
+    xmlns:sql="clr-namespace:DataManager.SQL.Definition;assembly=DataManager"
+    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+    xmlns:viewmodels="clr-namespace:DataManager.Workbench.ViewModels"
+    xmlns:wpfcc="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    d:DataContext="{d:DesignInstance Type=viewmodels:SqlViewModel}"
     d:DesignWidth="1000"
     mc:Ignorable="d">
 
+    <UserControl.Resources>
+        <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
+        <!--  连接表头：必须基于 MD 原生表头样式，裸样式会丢模板变成 WPF 默认灰表头  -->
+        <Style
+            x:Key="ConnHeader"
+            BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}"
+            TargetType="DataGridColumnHeader">
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        </Style>
+        <ObjectDataProvider
+            x:Key="DbTypes"
+            MethodName="GetValues"
+            ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="sql:ESQLType" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+        <ObjectDataProvider
+            x:Key="ToolTypes"
+            MethodName="GetValues"
+            ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="sql:ESQLToolType" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </UserControl.Resources>
+
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="24,20,24,8" MaxWidth="1100" HorizontalAlignment="Stretch">
+        <!-- 宽屏双列：页头/配置/操作占满，查询结果与运行输出并排 -->
+        <Grid
+            MaxWidth="1360"
+            Margin="24,20,24,8"
+            HorizontalAlignment="Stretch">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-            <!-- 页头 -->
-            <StackPanel Margin="0,0,0,16" Orientation="Horizontal">
-                <materialDesign:PackIcon
-                    Width="28"
-                    Height="28"
-                    VerticalAlignment="Center"
-                    Foreground="#3F51B5"
-                    Kind="Database" />
-                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Style="{StaticResource PageTitle}" Text="SQL 数据库测试" />
-                    <TextBlock Style="{StaticResource PageSubTitle}"
-                               Text="通过 DataManager 的 SQLManager / ISQL&lt;T&gt; 测试 EFCore、SqlSugar、Dapper 三种工具（数据库：MySQL / PostgreSQL）" />
-                </StackPanel>
-            </StackPanel>
+            <!--  页头  -->
+            <shared:PageHeaderView
+                Grid.Row="0"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Margin="0,0,0,16"
+                IconKind="Database"
+                SubTitle="通过 DataManager 的 SQLManager / ISQL&lt;T&gt; 测试 EFCore、SqlSugar、Dapper 三种工具（数据库：MySQL / PostgreSQL）"
+                Title="SQL 数据库测试" />
 
-            <!-- 连接配置 -->
-            <materialDesign:Card Margin="0,0,0,16" Padding="20">
+            <!--  连接配置  -->
+            <materialDesign:Card
+                Grid.Row="1"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Margin="0,0,0,16"
+                Padding="20">
                 <StackPanel>
                     <TextBlock Style="{StaticResource SectionTitle}" Text="连接配置" />
-                    <Grid Margin="0,14,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
+                    <!--
+                        连接档案表：通用配置壳，列与回调全 XAML 声明，零 code-behind。
+                        持久化走壳自带的保存按钮（Config/SqlConnections.json）
+                    -->
+                    <wpfcc:ConfigManagerView
+                        x:Name="ConnectionManager"
+                        Title="SQL 连接档案"
+                        Height="300"
+                        Margin="0,14,0,0"
+                        AddCallback="{Binding ConnectionAddedAction}"
+                        DeletedCallback="{Binding ConnectionDeletedAction}"
+                        FileName="SqlConnections.json"
+                        FilePath="{Binding ConfigDir}"
+                        ItemsSource="{Binding Connections}"
+                        SaveCallback="{Binding ProfilesSavedAction}"
+                        SelectItem="{Binding SelectedConnection, Mode=TwoWay}">
+                        <wpfcc:ConfigManagerView.DataGridColumns>
+                            <DataGridTextColumn
+                                Width="*"
+                                MinWidth="100"
+                                Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                Header="档案名"
+                                HeaderStyle="{StaticResource ConnHeader}" />
+                            <DataGridComboBoxColumn
+                                Width="*"
+                                MinWidth="100"
+                                Header="数据库类型"
+                                HeaderStyle="{StaticResource ConnHeader}"
+                                ItemsSource="{Binding Source={StaticResource DbTypes}}"
+                                SelectedItemBinding="{Binding DBType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <DataGridComboBoxColumn
+                                Width="*"
+                                MinWidth="100"
+                                Header="工具类型"
+                                HeaderStyle="{StaticResource ConnHeader}"
+                                ItemsSource="{Binding Source={StaticResource ToolTypes}}"
+                                SelectedItemBinding="{Binding ToolType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <DataGridTextColumn
+                                Width="*"
+                                MinWidth="100"
+                                Binding="{Binding ServerIP, UpdateSourceTrigger=PropertyChanged}"
+                                Header="服务器"
+                                HeaderStyle="{StaticResource ConnHeader}" />
+                            <DataGridTextColumn
+                                Width="*"
+                                MinWidth="100"
+                                Binding="{Binding Port, UpdateSourceTrigger=PropertyChanged}"
+                                Header="端口"
+                                HeaderStyle="{StaticResource ConnHeader}" />
+                            <DataGridTextColumn
+                                Width="*"
+                                MinWidth="100"
+                                Binding="{Binding DBName, UpdateSourceTrigger=PropertyChanged}"
+                                Header="数据库"
+                                HeaderStyle="{StaticResource ConnHeader}" />
+                            <DataGridTextColumn
+                                Width="*"
+                                MinWidth="100"
+                                Binding="{Binding UserName, UpdateSourceTrigger=PropertyChanged}"
+                                Header="用户名"
+                                HeaderStyle="{StaticResource ConnHeader}" />
+                            <DataGridTextColumn
+                                Width="*"
+                                MinWidth="100"
+                                Binding="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                                Header="密码"
+                                HeaderStyle="{StaticResource ConnHeader}" />
+                            <DataGridTextColumn
+                                Width="*"
+                                MinWidth="100"
+                                Binding="{Binding FilePath, UpdateSourceTrigger=PropertyChanged}"
+                                Header="文件路径"
+                                HeaderStyle="{StaticResource ConnHeader}" />
+                        </wpfcc:ConfigManagerView.DataGridColumns>
+                    </wpfcc:ConfigManagerView>
+                    <Expander
+                        Margin="0,12,0,0"
+                        Header="高级：标准连接字符串"
+                        IsExpanded="False"
+                        Style="{StaticResource MaterialDesignExpander}">
                         <TextBox
-                            Grid.Column="0"
-                            materialDesign:HintAssist.Hint="服务器 IP"
-                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                            Text="{Binding ServerIP}" />
-                        <TextBox
-                            Grid.Column="2"
-                            materialDesign:HintAssist.Hint="端口"
-                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                            Text="{Binding Port}" />
-                        <TextBox
-                            Grid.Column="4"
-                            materialDesign:HintAssist.Hint="用户名"
-                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                            Text="{Binding UserName}" />
-                        <TextBox
-                            Grid.Column="6"
-                            materialDesign:HintAssist.Hint="密码"
-                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                            Text="{Binding Password}" />
-                    </Grid>
-
-                    <Grid Margin="0,12,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <TextBox
-                            Grid.Column="0"
-                            materialDesign:HintAssist.Hint="数据库名"
-                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                            Text="{Binding DBName}" />
-                        <ComboBox
-                            Grid.Column="2"
-                            materialDesign:HintAssist.Hint="数据库类型"
-                            ItemsSource="{Binding DbTypes}"
-                            SelectedItem="{Binding SelectedDbType}"
-                            Style="{StaticResource MaterialDesignOutlinedComboBox}" />
-                        <ComboBox
-                            Grid.Column="4"
-                            materialDesign:HintAssist.Hint="工具类型"
-                            ItemsSource="{Binding ToolTypes}"
-                            SelectedItem="{Binding SelectedToolType}"
-                            Style="{StaticResource MaterialDesignOutlinedComboBox}" />
-                        <StackPanel Grid.Column="6" VerticalAlignment="Bottom" Orientation="Horizontal">
-                            <Button Command="{Binding ConnectCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon VerticalAlignment="Center" Kind="Connection" />
-                                    <TextBlock Margin="6,0,0,0" Text="连接" />
-                                </StackPanel>
-                            </Button>
-                            <Button
-                                Margin="8,0,0,0"
-                                Background="{StaticResource DangerBrush}"
-                                BorderBrush="{StaticResource DangerBrush}"
-                                Command="{Binding DisconnectCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon VerticalAlignment="Center" Kind="CloseCircleOutline" />
-                                    <TextBlock Margin="6,0,0,0" Text="断开" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
+                            MinHeight="64"
+                             materialDesign:HintAssist.Hint="直通串（非空时优先使用，覆盖上方分字段）例：Host=127.0.0.1;Port=5432;Database=workbench;Username=postgres;Password=postgres;"
+                            AcceptsReturn="True"
+                            FontFamily="Consolas"
+                            Style="{StaticResource DmInput}"
+                            Text="{Binding SelectedConnection.ConnectionString, UpdateSourceTrigger=PropertyChanged}"
+                            TextWrapping="Wrap"
+                            VerticalScrollBarVisibility="Auto" />
+                    </Expander>
 
                     <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
-                        <materialDesign:Chip Content="{Binding StatusText}" />
+                        <Button Command="{Binding ConnectCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon VerticalAlignment="Center" Kind="Connection" />
+                                <TextBlock Margin="6,0,0,0" Text="连接" />
+                            </StackPanel>
+                        </Button>
+                        <Button
+                            Margin="8,0,0,0"
+                            Background="{DynamicResource MaterialDesign.Brush.ValidationError}"
+                            BorderBrush="{DynamicResource MaterialDesign.Brush.ValidationError}"
+                            Command="{Binding DisconnectCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon VerticalAlignment="Center" Kind="CloseCircleOutline" />
+                                <TextBlock Margin="6,0,0,0" Text="断开" />
+                            </StackPanel>
+                        </Button>
+                        <Button
+                            Margin="8,0,0,0"
+                            Command="{Binding TestConnectionCommand}"
+                            Content="测试连接"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            ToolTip="连上即断开，只验证选中行的连接是否可用" />
+
+                        <materialDesign:Chip
+                            Margin="8,0,0,0"
+                            Content="{Binding StatusText}"
+                            Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
                     </StackPanel>
                 </StackPanel>
             </materialDesign:Card>
 
-            <!-- 数据操作 -->
-            <materialDesign:Card Margin="0,0,0,16" Padding="20">
+            <!--  数据操作  -->
+            <materialDesign:Card
+                Grid.Row="2"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Margin="0,0,0,16"
+                Padding="20">
                 <StackPanel>
                     <TextBlock Style="{StaticResource SectionTitle}" Text="数据操作（TestEntity：Id / Name / Age / CreateTime，Day 分表）" />
                     <WrapPanel Margin="0,14,0,0">
-                        <Button Margin="0,0,8,8" Command="{Binding AddCommand}" Content="单条添加" Style="{StaticResource MaterialDesignRaisedButton}" />
-                        <Button Margin="0,0,8,8" Command="{Binding AddRangeCommand}" Content="批量添加 10 条" Style="{StaticResource MaterialDesignRaisedButton}" />
-                        <Button Margin="0,0,8,8" Command="{Binding QueryAllCommand}" Content="查询全部" Style="{StaticResource MaterialDesignOutlinedButton}" />
-                        <Button Margin="0,0,8,8" Command="{Binding QueryConditionCommand}" Content="条件查询 Age>20" Style="{StaticResource MaterialDesignOutlinedButton}" />
-                        <Button Margin="0,0,8,8" Command="{Binding UpdateSelectedCommand}" Content="更新选中行" Style="{StaticResource MaterialDesignOutlinedButton}" />
-                        <Button Margin="0,0,8,8" Command="{Binding DeleteSelectedCommand}" Content="删除选中行" Style="{StaticResource MaterialDesignOutlinedButton}" />
                         <Button
                             Margin="0,0,8,8"
-                            Background="{StaticResource DangerBrush}"
-                            BorderBrush="{StaticResource DangerBrush}"
+                            Command="{Binding AddCommand}"
+                            Content="单条添加"
+                            Style="{StaticResource MaterialDesignRaisedButton}" />
+                        <Button
+                            Margin="0,0,8,8"
+                            Command="{Binding AddRangeCommand}"
+                            Content="批量添加 10 条"
+                            Style="{StaticResource MaterialDesignRaisedButton}" />
+                        <Button
+                            Margin="0,0,8,8"
+                            Command="{Binding QueryAllCommand}"
+                            Content="查询全部"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" />
+                        <Button
+                            Margin="0,0,8,8"
+                            Command="{Binding QueryConditionCommand}"
+                            Content="条件查询 Age&gt;20"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" />
+                        <Button
+                            Margin="0,0,8,8"
+                            Command="{Binding UpdateSelectedCommand}"
+                            Content="更新选中行"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" />
+                        <Button
+                            Margin="0,0,8,8"
+                            Command="{Binding DeleteSelectedCommand}"
+                            Content="删除选中行"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" />
+                        <Button
+                            Margin="0,0,8,8"
+                            Background="{DynamicResource MaterialDesign.Brush.ValidationError}"
+                            BorderBrush="{DynamicResource MaterialDesign.Brush.ValidationError}"
                             Command="{Binding DeleteAllCommand}"
                             Content="清空表"
                             Foreground="White"
                             Style="{StaticResource MaterialDesignRaisedButton}" />
-                        <Button Margin="0,0,8,8" Command="{Binding SplitTablesCommand}" Content="获取分表名" Style="{StaticResource MaterialDesignOutlinedButton}" />
+                        <Button
+                            Margin="0,0,8,8"
+                            Command="{Binding SplitTablesCommand}"
+                            Content="获取分表名"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" />
                     </WrapPanel>
                 </StackPanel>
             </materialDesign:Card>
 
-            <!-- 查询结果 -->
-            <materialDesign:Card Margin="0,0,0,16" Padding="20">
+            <!--  查询结果  -->
+            <materialDesign:Card
+                Grid.Row="3"
+                Grid.Column="0"
+                Margin="0,0,0,16"
+                Padding="20">
                 <StackPanel>
                     <TextBlock Style="{StaticResource SectionTitle}" Text="查询结果" />
                     <DataGrid
@@ -151,18 +272,17 @@
                         Margin="0,12,0,0"
                         ItemsSource="{Binding Results}"
                         SelectedItem="{Binding SelectedEntity}"
-                        Style="{StaticResource MaterialDesignDataGrid}" />
+                        Style="{StaticResource DmGrid}" />
                 </StackPanel>
             </materialDesign:Card>
 
-            <!-- 运行输出 -->
-            <materialDesign:Card Margin="0,0,0,16" Padding="20">
-                <StackPanel>
-                    <TextBlock Style="{StaticResource SectionTitle}" Text="运行输出" />
-                    <TextBox Height="140" Margin="0,12,0,0" Style="{StaticResource OutputBox}" Text="{Binding OutputText, Mode=OneWay}" />
-                </StackPanel>
-            </materialDesign:Card>
+            <!--  运行输出  -->
+            <shared:RunOutputView
+                Grid.Row="3"
+                Grid.Column="2"
+                Margin="0,0,0,16"
+                OutputHeight="140" />
 
-        </StackPanel>
+        </Grid>
     </ScrollViewer>
 </UserControl>
