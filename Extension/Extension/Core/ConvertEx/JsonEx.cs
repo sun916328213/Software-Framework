@@ -43,6 +43,13 @@ namespace Extension.Core.ConvertEx
         /// <param name="filePath">文件路径</param>
         public static void Save(this object data, string filePath )
         {
+            // 目录不存在则补建（配置类场景常见：首次运行、Config 目录尚未创建）。
+            var directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
             System.IO.File.WriteAllText(filePath, data.ToJson());
         }
 
@@ -99,6 +106,38 @@ namespace Extension.Core.ConvertEx
         {
             string path = Path.Combine(pFilePath, pName);
             return Read<T>(path);
+        }
+
+        /// <summary>
+        /// 以Json格式 从本地读取（不抛版本）：文件不存在、内容损坏、IO 失败一律返回默认值。
+        /// 需要区分「文件不存在」与「内容损坏」时用 <see cref="Read{T}(string)"/>。
+        /// 配置类场景（缺文件/缺节/坏值都回退默认）用这个。
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="filePath">文件路径</param>
+        /// <returns>反序列化后的对象；任何异常都返回默认值</returns>
+        public static T TryRead<T>(string filePath)
+        {
+            try
+            {
+                return Read<T>(filePath);
+            }
+            catch
+            {
+                return default(T);
+            }
+        }
+
+        /// <summary>
+        /// 以Json格式 从本地读取（不抛版本）。
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="pFilePath">文件路径</param>
+        /// <param name="pName">文件名称</param>
+        /// <returns>反序列化后的对象；任何异常都返回默认值</returns>
+        public static T TryRead<T>(string pFilePath, string pName)
+        {
+            return TryRead<T>(Path.Combine(pFilePath, pName));
         }
 
         /// <summary>

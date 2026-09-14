@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Threading;
 
 namespace Extension.Core.ControlEx
@@ -20,13 +15,7 @@ namespace Extension.Core.ControlEx
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            var dispatcher = GetUIDispatcher();
-            if (dispatcher == null)
-            {
-                throw new InvalidOperationException("无法获取UI Dispatcher，可能应用程序未正确初始化");
-            }
-            
-            dispatcher.Invoke(action);
+            GetRequiredDispatcher().Invoke(action);
         }
 
         /// <summary>
@@ -38,13 +27,7 @@ namespace Extension.Core.ControlEx
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            var dispatcher = GetUIDispatcher();
-            if (dispatcher == null)
-            {
-                throw new InvalidOperationException("无法获取UI Dispatcher，可能应用程序未正确初始化");
-            }
-
-            await dispatcher.InvokeAsync(action);
+            await GetRequiredDispatcher().InvokeAsync(action);
         }
 
         /// <summary>
@@ -56,52 +39,7 @@ namespace Extension.Core.ControlEx
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            var dispatcher = GetUIDispatcher();
-            if (dispatcher == null)
-            {
-                throw new InvalidOperationException("无法获取UI Dispatcher，可能应用程序未正确初始化");
-            }
-
-            dispatcher.BeginInvoke(action);
-        }
-
-        /// <summary>
-        /// 在WPF应用程序中跨线程异步更新UI时调用此方法，可指定优先级
-        /// </summary>
-        /// <param name="action">要在UI线程上执行的操作</param>
-        /// <param name="priority">调度优先级</param>
-        public static void UIBeginInvoke(this Action action, DispatcherPriority priority)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
-
-            var dispatcher = GetUIDispatcher();
-            if (dispatcher == null)
-            {
-                throw new InvalidOperationException("无法获取UI Dispatcher，可能应用程序未正确初始化");
-            }
-
-            dispatcher.BeginInvoke(priority, action);
-        }
-
-        /// <summary>
-        /// 在WPF应用程序中跨线程同步更新UI并返回结果时调用此方法
-        /// </summary>
-        /// <typeparam name="T">返回值类型</typeparam>
-        /// <param name="func">要在UI线程上执行的函数</param>
-        /// <returns>函数执行结果</returns>
-        public static T UIInvoke<T>(this Func<T> func)
-        {
-            if (func == null)
-                throw new ArgumentNullException(nameof(func));
-
-            var dispatcher = GetUIDispatcher();
-            if (dispatcher == null)
-            {
-                throw new InvalidOperationException("无法获取UI Dispatcher，可能应用程序未正确初始化");
-            }
-
-            return dispatcher.Invoke(func);
+            GetRequiredDispatcher().BeginInvoke(action);
         }
 
         /// <summary>
@@ -115,35 +53,41 @@ namespace Extension.Core.ControlEx
             if (func == null)
                 throw new ArgumentNullException(nameof(func));
 
-            var dispatcher = GetUIDispatcher();
-            if (dispatcher == null)
-            {
-                throw new InvalidOperationException("无法获取UI Dispatcher，可能应用程序未正确初始化");
-            }
-
-            var tcs = new TaskCompletionSource<T>();
-            dispatcher.BeginInvoke(new Action(() =>
-            {
-                try
-                {
-                    tcs.SetResult(func());
-                }
-                catch (Exception ex)
-                {
-                    tcs.SetException(ex);
-                }
-            }));
-            return tcs.Task;
+            return GetRequiredDispatcher().InvokeAsync(func).Task;
         }
 
         /// <summary>
-        /// 检查当前是否在UI线程上
+        /// 安全版 UI 封送（与 <see cref="UIInvoke(Action)"/> 的区别：无 Application 上下文
+        /// （如单测）、已是 UI 线程、或 Dispatcher 已关闭时直接执行，不抛；
+        /// 封送被取消/失效时回退直行，保证关键路径不丢。
         /// </summary>
-        /// <returns>如果当前在UI线程上返回true，否则返回false</returns>
-        public static bool IsUIThread()
+        /// <param name="action">要在UI线程上执行的操作</param>
+        public static void UIInvokeSafe(Action action)
         {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
             var dispatcher = GetUIDispatcher();
-            return dispatcher?.CheckAccess() ?? false;
+            // 无上下文 / 本线程 / 已关闭：直接执行。
+            if (dispatcher == null || dispatcher.CheckAccess()
+                || dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished)
+            {
+                action();
+                return;
+            }
+            try
+            {
+                dispatcher.Invoke(action);
+            }
+            catch (TaskCanceledException)
+            {
+                // Dispatcher 正关闭或调用被取消：回退直行。
+                action();
+            }
+            catch (InvalidOperationException)
+            {
+                action();
+            }
         }
 
         /// <summary>
@@ -157,23 +101,12 @@ namespace Extension.Core.ControlEx
         }
 
         /// <summary>
-        /// 在不同的线程中更新WinForms UI控件时调用此方法，以避免跨线程操作问题。
+        /// 获取UI线程的Dispatcher，拿不到时抛错（严格版方法共用）。
         /// </summary>
-        /// <param name="control">需要更新的UI控件。</param>
-        /// <param name="action">在线程安全的方式下执行的操作。</param>
-        //public static void CrossThreadDisplay(this System.Windows.Forms.Control control, Action action)
-        //{
-        //    // 判断是否需要跨线程调用
-        //    if (control.InvokeRequired)
-        //    {
-        //        // 开始跨线程调用，将操作委托给UI线程执行
-        //        control.BeginInvoke(action);
-        //    }
-        //    else
-        //    {
-        //        // 如果不需要跨线程调用，直接执行操作
-        //        action();
-        //    }
-        //}
+        private static Dispatcher GetRequiredDispatcher()
+        {
+            return GetUIDispatcher()
+                ?? throw new InvalidOperationException("无法获取UI Dispatcher，可能应用程序未正确初始化");
+        }
     }
 }
