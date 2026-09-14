@@ -161,8 +161,10 @@ public static class FlowLogContext
         }
     }
 
+    /// <summary>在释放时恢复进入作用域前的异步上下文。</summary>
     private sealed class Scope(Action restore) : IDisposable
     {
+        /// <inheritdoc />
         public void Dispose() => restore();
     }
 }

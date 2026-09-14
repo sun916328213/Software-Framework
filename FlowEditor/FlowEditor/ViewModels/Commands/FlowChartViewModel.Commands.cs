@@ -23,16 +23,12 @@ public partial class FlowChartViewModel
     public RelayCommand LoadCommand { get; private set; } = null!;
     /// <summary>获取清空当前流程的命令。</summary>
     public RelayCommand ClearAllCommand { get; private set; } = null!;
-    /// <summary>获取重置当前流程的命令。</summary>
-    public RelayCommand NewFlowCommand { get; private set; } = null!;
     /// <summary>获取一键清空当前标签页输出栏的命令。</summary>
     public RelayCommand ClearOutputCommand { get; private set; } = null!;
     /// <summary>获取放大画布的命令。</summary>
     public RelayCommand ZoomInCommand { get; private set; } = null!;
     /// <summary>获取缩小画布的命令。</summary>
     public RelayCommand ZoomOutCommand { get; private set; } = null!;
-    /// <summary>获取重置画布缩放的命令。</summary>
-    public RelayCommand ZoomResetCommand { get; private set; } = null!;
     /// <summary>获取画布自适应视口的命令。</summary>
     public RelayCommand ZoomToFitCommand { get; private set; } = null!;
     /// <summary>获取删除当前选中内容的命令。</summary>
@@ -83,11 +79,9 @@ public partial class FlowChartViewModel
         SaveAsCommand = new RelayCommand(SaveAs);
         LoadCommand = new RelayCommand(Load);
         ClearAllCommand = new RelayCommand(ClearAll);
-        NewFlowCommand = new RelayCommand(NewFlow);
         ClearOutputCommand = new RelayCommand(Service.ClearOutput);
         ZoomInCommand = new RelayCommand(Service.ZoomIn);
         ZoomOutCommand = new RelayCommand(Service.ZoomOut);
-        ZoomResetCommand = new RelayCommand(Service.ZoomReset);
         ZoomToFitCommand = new RelayCommand(Service.ZoomToFit);
         DeleteSelectedCommand = new RelayCommand(DeleteSelected);
         UndoCommand = new RelayCommand(Undo, () => Service.UndoRedo.CanUndo);

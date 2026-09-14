@@ -12,12 +12,14 @@ namespace FlowEditor.Converters;
 /// </summary>
 public class NodeStatusToBrushConverter : IValueConverter
 {
+    /// <summary>从当前应用资源中读取指定画刷。</summary>
     private static Brush? GetResourceBrush(string key)
     {
         var resource = Application.Current?.TryFindResource(key);
         return resource is Brush brush ? brush : null;
     }
 
+    /// <inheritdoc />
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is NodeStatus status)
@@ -39,6 +41,7 @@ public class NodeStatusToBrushConverter : IValueConverter
         return new SolidColorBrush(Color.FromRgb(0x9E, 0x9E, 0x9E));
     }
 
+    /// <inheritdoc />
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }

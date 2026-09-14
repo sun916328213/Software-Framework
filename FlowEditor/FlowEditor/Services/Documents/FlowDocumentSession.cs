@@ -111,6 +111,20 @@ internal sealed class FlowDocumentSession
         _model.IsModified = true;
     }
 
+    /// <summary>从节点文档重建节点模型。</summary>
+    public NodeModel RebuildNodeFromDocument(NodeDocumentModel document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        return _mapper.ToNode(document);
+    }
+
+    /// <summary>从节点模型构建可持久化的节点文档。</summary>
+    public NodeDocumentModel BuildNodeDocument(NodeModel node)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        return _mapper.ToNodeDocument(node);
+    }
+
     /// <summary>构建当前画布的完整文档。</summary>
     private FlowChartDocumentModel BuildDocument() =>
         _mapper.ToDocument(

@@ -5,13 +5,20 @@
 
 ## 当前状态
 
-FlowEditor 当前是单个 `net9.0-windows` WPF 类库。它采用 MVVM，但尚未形成完全单向的分层结构。
+FlowEditor 当前由 `FlowEditor.Runtime`（纯 `net9.0`）、`FlowEditor.Runtime.Smoke`（无界面控制台验收）和 `FlowEditor`（`net9.0-windows` WPF）组成。P5 已把运行节点与结构化作用域契约、端口、连线、文档 DTO、程序定义、图编译、校验、调试控制、执行追踪、运行实例、执行引擎及循环/并行 runner 迁入 Runtime；WPF 项目单向引用 Runtime。
 
 ```text
-Views <-> ViewModels <-> Services
-  ^             ^          |
-  |             |          v
-Nodes <------ Core <---- Models
+Views -> ViewModels -> IFlowChartService（兼容门面）
+                           |
+             +-------------+-------------+
+             v             v             v
+     FlowCanvasSession  FlowDocumentSession  FlowExecutionCoordinator
+             |             |             |
+             +-------------+-------------+
+                           v
+             FlowEditor.Runtime + Editor Models / Nodes
+
+Infrastructure adapters -> Application seams
 ```
 
 当前已知的历史依赖包括：
@@ -20,11 +27,23 @@ Nodes <------ Core <---- Models
 - `IFlowChartService` 仍暴露 `NodeViewModel`，但已不再暴露 Prism 容器；文档存储 seam 也不暴露 ViewModel。
 - `NodeModel` 持有 `IFlowChartService`，用于查询和修改画布连接。
 - 节点编辑、信息提示和动作命令已通过 Presentation adapter 与 WPF 隔离。
-- `FlowChartService` 仍同时承担执行、编辑、持久化和视口状态协调；输出缓冲、截断与节流已迁入 `FlowOutputBuffer`。
+- `FlowChartService` 保留兼容门面和依赖组装；执行、文档、画布生命周期分别由内部深模块拥有实现。
+- `FlowOutputBuffer` 拥有输出缓冲、容量截断、节流、尾批刷新和清空一致性。
 
 这些依赖是待消除的迁移基线，不是允许新增依赖的架构规则。架构约束测试使用显式 allowlist 锁定现有债务；新增同类依赖必须失败。
 
-当前迁移进展：执行引擎只依赖 `INodeExecutable`；执行范围使用保留调用方类型的泛型子图；静态校验和文档构建只接收节点模型。引擎的调试前置回调只传递节点 ID，由 `FlowChartService` 映射回当前画布 ViewModel。`NodeViewModel` 不再实现任何运行时执行接口。输出栏由 `FlowOutputBuffer` 隐藏并发缓冲、容量截断和节流细节，通过 `IUiDispatcher` 连接 WPF 或无头宿主。`FlowDocumentMapper` 统一单流程、多流程、快照和节点复制的 DTO 转换，`IFlowDocumentStore` 通过 JSON 与内存 adapter 隔离存储介质。标签页和工具箱节点创建分别使用 `IFlowTabFactory` 与 `INodeFactory`；Prism 解析仅保留在组合入口和 WPF adapter。应用模块、ViewModel、工具箱模型和 ToolBlock 窗口已不再使用 Service Locator，测试通过硬约束防止依赖回流。
+当前迁移进展：执行引擎只依赖 `INodeExecutable` 和 `IExecutionLogContext`；静态校验和顶层图只依赖 `IFlowValidationNode`、`IParallelForkNode`、`IExecutionScopeDescriptor` 等语义契约，不识别任何编辑器具体节点类。桌面端以 `FlowLogExecutionContextAdapter` 保留流程、节点及运行序号日志，无头宿主使用无副作用默认实现。`FlowRuntimeInstance<TNode>` 拥有活动图筛选、作用域注入、调试、追踪和执行，WPF `FlowInstance` 仅保留具体节点物化、属性通知和流程日志作用域适配。并行泳道、嵌套容器和运行实例使用独立引擎状态，避免共享运行序号竞争。输出栏由 `FlowOutputBuffer` 隐藏并发缓冲、容量截断和节流细节，通过 `IUiDispatcher` 连接 WPF 或无头宿主。`FlowDocumentMapper` 统一单流程、多流程、快照和节点复制的 DTO 转换，`IFlowDocumentStore` 通过 JSON 与内存 adapter 隔离存储介质。标签页和工具箱节点创建分别使用 `IFlowTabFactory` 与 `INodeFactory`；Prism 解析仅保留在组合入口和 WPF adapter。应用模块、ViewModel、工具箱模型和 ToolBlock 窗口已不再使用 Service Locator，测试通过硬约束防止依赖回流。
+
+## Phase 4 应用模块
+
+| 模块 | 拥有的实现 | 对外使用方式 |
+| --- | --- | --- |
+| `FlowExecutionCoordinator` | 校验、单次/循环运行、取消、调试、失败恢复、运行日志和状态收尾 | 由 `FlowChartService` 兼容门面委托 |
+| `FlowDocumentSession` | 保存、加载、快照、节点 DTO 映射、重建事务和错误反馈 | 由 `FlowChartService` 兼容门面委托 |
+| `FlowCanvasSession` | 节点附加/卸载、事件订阅释放、批量清理、缩放和自适应视口 | 由 `FlowChartService` 兼容门面委托 |
+| `FlowOutputBuffer` | 并发缓冲、容量限制、节流发布、尾批刷新和清空 | 由执行及画布模块复用 |
+
+这些模块属于 Application，实现保持 `internal`。它们只有一个实际实现，因此不额外创建浅接口；测试继续从现有 `IFlowChartService` seam 验证可观察行为，并用架构测试防止职责回流。节点复制和 ToolBlock 恢复所需的节点 DTO 转换也由文档模块完成，门面不直接持有 mapper。
 
 ## 目标依赖方向
 
@@ -41,7 +60,9 @@ Presentation -> Application -> Runtime/Domain
 - `Presentation`：WPF Views、ViewModels、行为、渲染和资源。
 - `Composition`：唯一允许注册具体 adapter 和调用 Prism `Resolve` 的位置。
 
-在依赖环被消除之前，先在当前项目内遵守上述命名空间方向；最终再抽取纯 `net9.0` 的 `FlowEditor.Runtime` 项目。
+P6 输出筛选保持在表现层：`FlowOutputPaneView` 从原始文本派生级别过滤和搜索结果，并独立控制自动滚动。过滤不修改 `FlowOutputBuffer`、执行编号或文件日志格式；当前 200,000 字符容量下不引入结构化日志集合和虚拟化列表。
+
+P5 已完成平台边界拆分。WPF 中保留的 `FlowInstance` 与 `ReflectionNodeFactory` 是具体 `NodeModel` 的兼容门面和物化 adapter；通用运行状态位于 Runtime，不要求无头宿主引用编辑器节点基类。
 
 ## 模块设计规则
 

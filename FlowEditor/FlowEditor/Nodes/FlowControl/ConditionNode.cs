@@ -25,6 +25,7 @@ public class ConditionNode : NodeModel
         set => SetProperty(ref _condition, value);
     }
 
+    /// <summary>创建具有 True、False 控制流端口的二选一条件节点。</summary>
     public ConditionNode()
     {
         Name = "条件分支";
@@ -38,11 +39,13 @@ public class ConditionNode : NodeModel
         AddCustomInputPort("条件", nameof(Condition));
     }
 
+    /// <inheritdoc />
     public override Task ExecuteAsync(CancellationToken ct)
     {
         ActivateOutput(Condition ? "True" : "False");
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc />
     public override IReadOnlyList<string>? ControlFlowPorts => new[] { "True", "False" };
 }

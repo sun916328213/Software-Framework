@@ -54,7 +54,7 @@ public class LoopFlowRunnerTests
     {
         var node = new CountingNode { Name = "无限循环体" };
         var body = new ParallelFlowLane<NodeModel>("body", "循环体", [node], []);
-        using var cts = new CancellationTokenSource(120);
+        using var cts = new CancellationTokenSource();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             LoopFlowRunner.ExecuteAsync(
@@ -62,8 +62,13 @@ public class LoopFlowRunnerTests
                 -1,
                 cts.Token,
                 _ => { },
+                onIterationStarted: (iteration, _) =>
+                {
+                    if (iteration == 3)
+                        cts.Cancel();
+                },
                 iterationDelayMs: 20));
 
-        Assert.True(node.Executions >= 2);
+        Assert.Equal(2, node.Executions);
     }
 }

@@ -16,10 +16,16 @@ public sealed record ParallelFlowLane<TNode>(
 /// </summary>
 public static class ParallelFlowRunner
 {
+    /// <summary>并发执行全部泳道，并隔离各泳道的引擎调度状态。</summary>
+    /// <param name="lanes">需要同时执行的泳道。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <param name="log">容器日志回调。</param>
+    /// <param name="engine">可选的宿主引擎模板，用于继承日志上下文。</param>
     public static async Task ExecuteAsync<TNode>(
         IReadOnlyList<ParallelFlowLane<TNode>> lanes,
         CancellationToken ct,
-        Action<string> log)
+        Action<string> log,
+        FlowChartExecutionEngine? engine = null)
         where TNode : INodeExecutable
     {
         ArgumentNullException.ThrowIfNull(lanes);
@@ -43,8 +49,8 @@ public static class ParallelFlowRunner
             log($"[并行容器] 分支 [{lane.Name}] 开始");
             try
             {
-                var engine = new FlowChartExecutionEngine();
-                await engine.ExecuteAsync(
+                var laneEngine = (engine ?? new FlowChartExecutionEngine()).CreateIsolated();
+                await laneEngine.ExecuteAsync(
                     lane.Nodes,
                     lane.Connections,
                     ct,

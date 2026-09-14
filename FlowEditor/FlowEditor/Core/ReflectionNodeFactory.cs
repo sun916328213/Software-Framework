@@ -116,6 +116,7 @@ public sealed class ReflectionNodeFactory : INodeFactory
         return node;
     }
 
+    /// <summary>按名称复用或创建自定义端口，并恢复持久化标识与类型。</summary>
     private static void RestorePorts(
         NodeModel node,
         bool input,
@@ -216,6 +217,7 @@ public sealed class ReflectionNodeFactory : INodeFactory
         return type;
     }
 
+    /// <summary>先按程序集限定名称解析，再扫描已加载程序集中的短类型名。</summary>
     private static Type? TryResolve(string typeName)
     {
         var type = Type.GetType(typeName);

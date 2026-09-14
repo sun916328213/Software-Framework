@@ -12,6 +12,37 @@ public class ExecutionEngineTests
 {
     private readonly TestFlowChartExecutionEngine _engine = new();
 
+    private sealed class TrackingLogContext : IExecutionLogContext
+    {
+        private sealed class Scope(Action onDispose) : IDisposable
+        {
+            /// <summary>记录节点日志作用域已经退出。</summary>
+            public void Dispose() => onDispose();
+        }
+
+        /// <inheritdoc />
+        public long RunId => 42;
+
+        /// <summary>记录引擎进入过的节点名称。</summary>
+        public List<string?> EnteredNodes { get; } = [];
+
+        /// <summary>记录已正常退出的节点作用域数量。</summary>
+        public int ExitedScopes { get; private set; }
+
+        /// <summary>记录控制流回边推进次数。</summary>
+        public int BumpCount { get; private set; }
+
+        /// <inheritdoc />
+        public IDisposable EnterNode(string? nodeName)
+        {
+            EnteredNodes.Add(nodeName);
+            return new Scope(() => ExitedScopes++);
+        }
+
+        /// <inheritdoc />
+        public void BumpRun() => BumpCount++;
+    }
+
     private sealed class ConcurrencyProbe
     {
         private int _active;
@@ -66,6 +97,25 @@ public class ExecutionEngineTests
     }
 
     // ── DAG 模式 ──
+
+    [Fact]
+    public async Task Dag_InjectedLogContext_IsUsedWithoutRuntimeDependingOnDesktopLogger()
+    {
+        var context = new TrackingLogContext();
+        var engine = new FlowChartExecutionEngine(context);
+        var node = new ValueNode { Name = "独立运行节点" };
+        var logs = new List<string>();
+
+        await engine.ExecuteAsync(
+            new List<NodeModel> { node },
+            new List<ConnectionModel>(),
+            CancellationToken.None,
+            logs.Add);
+
+        Assert.Equal([node.Name], context.EnteredNodes);
+        Assert.Equal(1, context.ExitedScopes);
+        Assert.Contains(logs, message => message.StartsWith("#42 [独立运行节点]", StringComparison.Ordinal));
+    }
 
     [Fact]
     public async Task Dag_Chain_ExecutesInTopologicalOrderAndPropagatesData()

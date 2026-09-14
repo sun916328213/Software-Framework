@@ -8,13 +8,16 @@ namespace FlowEditor.Nodes.FlowControl;
 // 兼容已经保存的早期流程；新流程从工具箱使用 ParallelForkNode + AND BranchMergeNode。
 public sealed class ParallelContainerNode : NodeModel, IExecutionScopeContainer, IFlowStructureValidationSource
 {
+    /// <summary>新容器的默认宽度。</summary>
     public const double DefaultWidth = 720;
+    /// <summary>新容器的默认高度。</summary>
     public const double DefaultHeight = 420;
 
     private double _containerWidth = DefaultWidth;
     private double _containerHeight = DefaultHeight;
     private List<ExecutionLaneDefinition> _lanes = CreateDefaultLanes();
 
+    /// <inheritdoc />
     [NodeProperty(DisplayName = "容器宽度", Group = "0.容器", Order = 0,
         IsDisplay = false, PortConfigurable = false)]
     public double ContainerWidth
@@ -23,6 +26,7 @@ public sealed class ParallelContainerNode : NodeModel, IExecutionScopeContainer,
         set => SetProperty(ref _containerWidth, Math.Clamp(value, 420, 3200));
     }
 
+    /// <inheritdoc />
     [NodeProperty(DisplayName = "容器高度", Group = "0.容器", Order = 1,
         IsDisplay = false, PortConfigurable = false)]
     public double ContainerHeight
@@ -31,6 +35,7 @@ public sealed class ParallelContainerNode : NodeModel, IExecutionScopeContainer,
         set => SetProperty(ref _containerHeight, Math.Clamp(value, 260, 2400));
     }
 
+    /// <summary>并行执行使用的持久化泳道定义。</summary>
     [NodeProperty(DisplayName = "泳道定义", Group = "0.容器", Order = 2,
         IsDisplay = false, PortConfigurable = false)]
     public List<ExecutionLaneDefinition> Lanes
@@ -45,6 +50,7 @@ public sealed class ParallelContainerNode : NodeModel, IExecutionScopeContainer,
         }
     }
 
+    /// <summary>并行容器当前的泳道数量。</summary>
     [JsonIgnore]
     [NodeProperty(DisplayName = "分支数量", Group = "1.基础信息", Order = 0,
         Min = 2, Max = 12, Step = 1, PortConfigurable = false,
@@ -55,10 +61,14 @@ public sealed class ParallelContainerNode : NodeModel, IExecutionScopeContainer,
         set => ResizeLanes(Math.Clamp(value, 2, 12));
     }
 
+    /// <inheritdoc />
     public ExecutionScopeKind ScopeKind => ExecutionScopeKind.Parallel;
+    /// <inheritdoc />
     public bool ShowBoundaryPorts => true;
+    /// <inheritdoc />
     public IReadOnlyList<ExecutionLaneDefinition> ExecutionLanes => Lanes;
 
+    /// <summary>创建带两个默认泳道的结构化并行容器。</summary>
     public ParallelContainerNode()
     {
         Name = "并行容器";
@@ -66,6 +76,7 @@ public sealed class ParallelContainerNode : NodeModel, IExecutionScopeContainer,
         IsOutEnabled = true;
     }
 
+    /// <inheritdoc />
     public IEnumerable<FlowDiagnostic> ValidateStructure()
     {
         if (Lanes.Count < 2)
@@ -79,31 +90,36 @@ public sealed class ParallelContainerNode : NodeModel, IExecutionScopeContainer,
                 $"并行容器 [{Name}] 存在重复泳道标识 [{duplicate.Key}]");
     }
 
+    /// <inheritdoc />
     public override async Task ExecuteAsync(CancellationToken ct)
     {
         var runtime = ExecutionScopeRuntime ?? (Service == null
             ? null
             : new ExecutionScopeRuntime(
                 Service.Nodes.Select(node => node.Model).ToList(),
-                Service.Connections.ToList()));
+                Service.Connections.ToList(),
+                new FlowChartExecutionEngine()));
         if (runtime == null)
             throw new InvalidOperationException($"并行容器 [{Name}] 缺少运行图上下文。");
 
         var members = runtime.Nodes
             .Where(node => node.ParentExecutionContainerId == Id)
             .ToList();
-        var lanes = new List<ParallelFlowLane<NodeModel>>(Lanes.Count);
+        var lanes = new List<ParallelFlowLane<INodeExecutable>>(Lanes.Count);
         foreach (var lane in Lanes)
         {
             var scope = ExecutionGraphScope.Create(members, runtime.Connections, Id, lane.Id);
             if (scope.Nodes.Count == 0)
                 throw new InvalidOperationException(
                     $"并行容器 [{Name}] 的泳道 [{lane.Name}] 没有节点。");
-            lanes.Add(new ParallelFlowLane<NodeModel>(lane.Id, lane.Name, scope.Nodes, scope.Connections));
+            lanes.Add(new ParallelFlowLane<INodeExecutable>(lane.Id, lane.Name, scope.Nodes, scope.Connections));
         }
 
         await ParallelFlowRunner.ExecuteAsync(
-            lanes, ct, message => Console.WriteLine($"[{Name}] {message}"));
+            lanes,
+            ct,
+            message => Console.WriteLine($"[{Name}] {message}"),
+            runtime.Engine);
     }
 
     /// <summary>从指定泳道成员开始重新执行该成员及其可达后继，不重复已完成的兄弟泳道。</summary>
@@ -120,10 +136,12 @@ public sealed class ParallelContainerNode : NodeModel, IExecutionScopeContainer,
         var recovery = ExecutionGraphScope.CreateReachable(scope.Nodes, scope.Connections, startNodeId);
 
         log($"[恢复] 并行分支 [{lane.Name}] 从节点 [{start.Name}] 继续");
-        await new FlowChartExecutionEngine().ExecuteAsync(
+        await (runtime.Engine?.CreateIsolated() ?? new FlowChartExecutionEngine()).ExecuteAsync(
             recovery.Nodes, recovery.Connections, ct, log);
     }
 
+    /// <summary>在不删除仍含节点的泳道前提下调整泳道数量。</summary>
+    /// <param name="count">目标泳道数量。</param>
     private void ResizeLanes(int count)
     {
         if (count == Lanes.Count) return;
@@ -145,6 +163,10 @@ public sealed class ParallelContainerNode : NodeModel, IExecutionScopeContainer,
         Lanes = resized;
     }
 
+    /// <summary>创建新并行容器的两个默认泳道。</summary>
     private static List<ExecutionLaneDefinition> CreateDefaultLanes() => [NewLane(1), NewLane(2)];
+
+    /// <summary>创建指定序号的泳道定义。</summary>
+    /// <param name="index">用于生成默认名称的一基序号。</param>
     private static ExecutionLaneDefinition NewLane(int index) => new() { Name = $"分支{index}" };
 }

@@ -13,10 +13,15 @@ public class NodePaletteItem
 {
     private readonly Func<NodeModel> _factory;
 
+    /// <summary>工具箱中显示的节点名称。</summary>
     public string DisplayName { get; }
+    /// <summary>一级工具分类。</summary>
     public string Category { get; }
+    /// <summary>二级工具分类。</summary>
     public string SubCategory { get; }
+    /// <summary>工具箱图标。</summary>
     public PackIconKind IconKind { get; }
+    /// <summary>节点用途说明。</summary>
     public string Description { get; }
     /// <summary>创建工具箱节点项。</summary>
     /// <param name="displayName">显示名称。</param>
@@ -52,7 +57,9 @@ public class NodePaletteItem
 /// <summary>工具箱 TreeView 分类节点。</summary>
 public class ToolboxCategory : ObservableObject
 {
+    /// <summary>分类显示名称。</summary>
     public string Name { get; set; } = string.Empty;
+    /// <summary>直接归属于此分类的工具。</summary>
     public ObservableCollection<NodePaletteItem> Items { get; set; } = new();
 
     /// <summary>二级子分组列表。</summary>

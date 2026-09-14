@@ -21,6 +21,7 @@ public class DialogService : IDialogService
         }
     }
 
+    /// <inheritdoc />
     public string? ShowOpenFileDialog(string filter, string? defaultFileName = null)
     {
         var dlg = new OpenFileDialog { Filter = filter };
@@ -29,6 +30,7 @@ public class DialogService : IDialogService
         return dlg.ShowDialog(OwnerWindow) == true ? dlg.FileName : null;
     }
 
+    /// <inheritdoc />
     public string? ShowSaveFileDialog(string filter, string defaultFileName, string defaultExt)
     {
         var dlg = new SaveFileDialog
@@ -40,11 +42,17 @@ public class DialogService : IDialogService
         return dlg.ShowDialog(OwnerWindow) == true ? dlg.FileName : null;
     }
 
-    public void ShowMessage(string message, string title, MessageBoxButton buttons, MessageBoxImage icon)
+    /// <summary>以当前主窗口为所有者显示指定样式的消息框。</summary>
+    private static void ShowMessage(
+        string message,
+        string title,
+        MessageBoxButton buttons,
+        MessageBoxImage icon)
     {
         MessageBox.Show(OwnerWindow, message, title, buttons, icon);
     }
 
+    /// <inheritdoc />
     public bool? ShowConfirm(string message, string title)
     {
         return MessageBox.Show(OwnerWindow, message, title,
@@ -56,22 +64,20 @@ public class DialogService : IDialogService
         };
     }
 
+    /// <inheritdoc />
     public bool ConfirmYesNo(string message, string title)
     {
         return MessageBox.Show(OwnerWindow, message, title,
             MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
     }
 
+    /// <inheritdoc />
     public void ShowInfo(string message, string title = "提示")
     {
         ShowMessage(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
-    public void ShowWarning(string message, string title = "警告")
-    {
-        ShowMessage(message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
-    }
-
+    /// <inheritdoc />
     public void ShowError(string message, string title = "错误")
     {
         ShowMessage(message, title, MessageBoxButton.OK, MessageBoxImage.Error);

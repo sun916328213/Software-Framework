@@ -1,7 +1,9 @@
 using FlowEditor.Core;
+using FlowEditor.Models;
 using FlowEditor.ViewModels;
 using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace FlowEditorTest;
@@ -39,6 +41,57 @@ public sealed class ArchitectureDependencyTests
             "FlowChartViewModel");
 
         Assert.Empty(actual);
+    }
+
+    /// <summary>确保 P5 Runtime 可独立运行，并已拥有执行契约、引擎和容器 runner。</summary>
+    [Fact]
+    public void RuntimeProject_IsPlatformNeutralAndOwnsExecutionContracts()
+    {
+        var solutionDirectory = Directory.GetParent(ProjectDirectory)?.FullName
+            ?? throw new DirectoryNotFoundException("无法定位 FlowEditor 解决方案目录。");
+        var runtimeDirectory = Path.Combine(solutionDirectory, "FlowEditor.Runtime");
+        var smokeDirectory = Path.Combine(solutionDirectory, "FlowEditor.Runtime.Smoke");
+        var project = File.ReadAllText(Path.Combine(runtimeDirectory, "FlowEditor.Runtime.csproj"));
+        var smokeProject = File.ReadAllText(Path.Combine(
+            smokeDirectory, "FlowEditor.Runtime.Smoke.csproj"));
+        var sourceFiles = Directory.EnumerateFiles(runtimeDirectory, "*.cs", SearchOption.AllDirectories)
+            .Where(path =>
+            {
+                var relative = Path.GetRelativePath(runtimeDirectory, path).Replace('\\', '/');
+                return !relative.StartsWith("bin/", StringComparison.OrdinalIgnoreCase) &&
+                       !relative.StartsWith("obj/", StringComparison.OrdinalIgnoreCase);
+            })
+            .ToArray();
+        var forbidden = new[]
+        {
+            "System.Windows",
+            "Prism.",
+            "FlowEditor.Views",
+            "FlowEditor.ViewModels",
+            "FlowEditor.Services",
+            "Extension."
+        };
+
+        Assert.Contains("<TargetFramework>net9.0</TargetFramework>", project, StringComparison.Ordinal);
+        Assert.DoesNotContain("<UseWPF>", project, StringComparison.Ordinal);
+        Assert.DoesNotContain("<ProjectReference", project, StringComparison.Ordinal);
+        Assert.Contains("<TargetFramework>net9.0</TargetFramework>", smokeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("<UseWPF>", smokeProject, StringComparison.Ordinal);
+        Assert.Contains("FlowEditor.Runtime.csproj", smokeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain(sourceFiles, path => forbidden.Any(pattern =>
+            File.ReadAllText(path).Contains(pattern, StringComparison.Ordinal)));
+        Assert.Equal("FlowEditor.Runtime", typeof(INodeExecutable).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Runtime", typeof(ConnectionModel).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Runtime", typeof(PortModel).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Runtime", typeof(FlowChartExecutionEngine).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Runtime", typeof(ParallelFlowRunner).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Runtime", typeof(LoopFlowRunner).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Runtime", typeof(ExecutionGraphScope).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Runtime", typeof(ExecutionScopeRuntime).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Runtime", typeof(FlowValidator).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Runtime", typeof(FlowProgram).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Runtime", typeof(FlowRuntimeInstance<>).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Runtime", typeof(FlowChartDocumentModel).Assembly.GetName().Name);
     }
 
     /// <summary>确保表现层节点不再充当运行时执行适配器。</summary>
@@ -103,15 +156,32 @@ public sealed class ArchitectureDependencyTests
             actual);
     }
 
-    /// <summary>确保 WPF Routed Command 只在 Presentation 命令目录中声明。</summary>
+    /// <summary>确保视口平移和缩放状态不会重新膨胀回画布宿主视图。</summary>
     [Fact]
-    public void RoutedCommandDeclarations_AreKeptInPresentationCommands()
+    public void FlowChartView_ViewportInteraction_IsDelegated()
+    {
+        var viewSource = File.ReadAllText(Path.Combine(ProjectDirectory, "Views", "FlowChartView.xaml.cs"));
+        var xamlSource = File.ReadAllText(Path.Combine(ProjectDirectory, "Views", "FlowChartView.xaml"));
+        var controllerSource = File.ReadAllText(Path.Combine(
+            ProjectDirectory, "Views", "Interaction", "FlowViewportController.cs"));
+
+        Assert.Contains("FlowViewportController", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("_isPanning", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("OnPanMouse", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("OnScrollViewerPreviewMouseWheel", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("OnPanMouse", xamlSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("OnScrollViewerPreviewMouseWheel", xamlSource, StringComparison.Ordinal);
+        Assert.Contains("PreviewMouseWheel +=", controllerSource, StringComparison.Ordinal);
+        Assert.Contains("PreviewMouseDown +=", controllerSource, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保没有为单次视图转发保留全局 WPF 路由命令。</summary>
+    [Fact]
+    public void RoutedCommandDeclarations_AreAbsent()
     {
         var actual = FindDebtFiles(".", "RoutedUICommand");
 
-        Assert.Equal(
-            ["Presentation/Commands/FlowChartRoutedCommands.cs"],
-            actual);
+        Assert.Empty(actual);
     }
 
     /// <summary>确保流程应用服务不再直接访问 WPF Application 或 Dispatcher。</summary>
@@ -150,8 +220,77 @@ public sealed class ArchitectureDependencyTests
         Assert.DoesNotContain("OnFlowSaved", source, StringComparison.Ordinal);
         Assert.DoesNotContain("GetVisualWidth", source, StringComparison.Ordinal);
         Assert.DoesNotContain("OnAttached(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("_documentMapper", source, StringComparison.Ordinal);
         Assert.Contains("FlowDocumentSession", source, StringComparison.Ordinal);
         Assert.Contains("FlowCanvasSession", source, StringComparison.Ordinal);
+        Assert.Contains("_documents.RebuildNodeFromDocument", source, StringComparison.Ordinal);
+        Assert.Contains("_documents.BuildNodeDocument", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保 Phase 4 应用模块保持平台无关，不直接引用 WPF 或 Prism。</summary>
+    [Fact]
+    public void Phase4ApplicationModules_WpfAndPrismDependencies_AreAbsent()
+    {
+        var moduleDirectories = new[]
+        {
+            "Services/Execution",
+            "Services/Documents",
+            "Services/Editing"
+        };
+
+        var offenders = moduleDirectories.SelectMany(directory => FindDebtFiles(
+                directory,
+                "System.Windows",
+                "Prism.",
+                "Application.Current",
+                "IContainerProvider"))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Empty(offenders);
+    }
+
+    /// <summary>确保对话框 seam 只暴露宿主无关意图，不泄漏 WPF 消息框类型或无调用入口。</summary>
+    [Fact]
+    public void DialogInterface_IsPlatformNeutralAndMinimal()
+    {
+        var source = File.ReadAllText(Path.Combine(ProjectDirectory, "Interfaces", "IDialogService.cs"));
+
+        Assert.DoesNotContain("System.Windows", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ShowMessage", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ShowWarning", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保导出 seam 只暴露表现层实际调用的两个对话框意图。</summary>
+    [Fact]
+    public void ExportInterface_ContainsOnlyUsedDialogOperations()
+    {
+        var source = File.ReadAllText(Path.Combine(ProjectDirectory, "Interfaces", "IExportService.cs"));
+
+        Assert.DoesNotContain("void Export", source, StringComparison.Ordinal);
+        Assert.Equal(2, Regex.Matches(source, @"\bbool\s+ExportTo\w+\s*\(").Count);
+    }
+
+    /// <summary>确保画布和 ToolBlock 统一使用节点受控生命周期，不绕过事件退订与引用清理。</summary>
+    [Fact]
+    public void NodeAttachmentLifecycle_IsCentralizedInNodeModel()
+    {
+        var nodeSource = File.ReadAllText(Path.Combine(ProjectDirectory, "Models", "NodeModel.cs"));
+        var canvasSource = File.ReadAllText(Path.Combine(
+            ProjectDirectory, "Services", "Editing", "FlowCanvasSession.cs"));
+        var toolBlockSource = File.ReadAllText(Path.Combine(
+            ProjectDirectory, "Nodes", "FlowControl", "ToolBlockNode.cs"));
+
+        Assert.Contains("internal void AttachTo", nodeSource, StringComparison.Ordinal);
+        Assert.Contains("internal void DetachFromFlow", nodeSource, StringComparison.Ordinal);
+        Assert.DoesNotContain(".Service =", canvasSource, StringComparison.Ordinal);
+        Assert.DoesNotContain(".OnAttached(", canvasSource, StringComparison.Ordinal);
+        Assert.DoesNotContain(".OnDetached(", canvasSource, StringComparison.Ordinal);
+        Assert.Contains(".AttachTo(", canvasSource, StringComparison.Ordinal);
+        Assert.Contains(".DetachFromFlow(", canvasSource, StringComparison.Ordinal);
+        Assert.DoesNotContain(".Service =", toolBlockSource, StringComparison.Ordinal);
+        Assert.Contains(".AttachTo(", toolBlockSource, StringComparison.Ordinal);
+        Assert.Contains(".DetachFromFlow(", toolBlockSource, StringComparison.Ordinal);
     }
 
     /// <summary>确保流程文档存储 seam 只暴露保存和加载，不再承担模型映射。</summary>
@@ -224,6 +363,62 @@ public sealed class ArchitectureDependencyTests
             Assert.DoesNotContain("IContainerProvider", source, StringComparison.Ordinal);
             Assert.DoesNotContain(".Resolve<", source, StringComparison.Ordinal);
         }
+    }
+
+    /// <summary>确保全部生产 C# 文件中的每个函数都有紧邻的 XML 摘要。</summary>
+    [Fact]
+    public void CorePresentationFiles_MethodDocumentation_IsComplete()
+    {
+        var relativePaths = Directory
+            .EnumerateFiles(ProjectDirectory, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !IsGeneratedPath(path))
+            .Select(path => Path.GetRelativePath(ProjectDirectory, path))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+        var methodPattern = new Regex(
+            @"^\s*(public|internal|protected|private)\s+" +
+            @"(?:(?:static|virtual|override|abstract|async|sealed|partial|new|readonly)\s+)*" +
+            @"(?:(?:[\w\.\?\[\]]+|[\w\.\?\[\]]+\s*<[^;={}]+>)\s+)?" +
+            @"\w+(?:<[^>]+>)?\s*\(",
+            RegexOptions.CultureInvariant);
+        var undocumented = new List<string>();
+        var misplaced = new List<string>();
+
+        foreach (var relativePath in relativePaths)
+        {
+            var lines = File.ReadAllLines(Path.Combine(ProjectDirectory, relativePath));
+            for (var index = 0; index < lines.Length; index++)
+            {
+                if (lines[index].TrimStart().StartsWith("///", StringComparison.Ordinal))
+                {
+                    var previous = index - 1;
+                    while (previous >= 0 && string.IsNullOrWhiteSpace(lines[previous]))
+                        previous--;
+                    if (previous >= 0 && lines[previous].TrimStart().StartsWith("[", StringComparison.Ordinal))
+                        misplaced.Add($"{relativePath.Replace('\\', '/')}:{index + 1}");
+                }
+
+                if (!methodPattern.IsMatch(lines[index]))
+                    continue;
+
+                var preceding = index - 1;
+                while (preceding >= 0 &&
+                       (string.IsNullOrWhiteSpace(lines[preceding]) ||
+                        lines[preceding].TrimStart().StartsWith("[", StringComparison.Ordinal)))
+                {
+                    preceding--;
+                }
+
+                if (preceding < 0 ||
+                    !lines[preceding].TrimStart().StartsWith("///", StringComparison.Ordinal))
+                {
+                    undocumented.Add($"{relativePath.Replace('\\', '/')}:{index + 1}");
+                }
+            }
+        }
+
+        Assert.Empty(undocumented);
+        Assert.Empty(misplaced);
     }
 
     /// <summary>查找指定目录中包含任一禁止文本的 C# 文件。</summary>

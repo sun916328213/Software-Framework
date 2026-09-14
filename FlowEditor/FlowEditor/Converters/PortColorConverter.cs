@@ -24,12 +24,14 @@ public class PortColorConverter : IValueConverter
             [PortType.Any] = ("Flow_Port_Any", Color.FromRgb(0x7B, 0x87, 0x94))
         };
 
+    /// <summary>从当前应用资源中读取指定画刷。</summary>
     private static Brush? GetResourceBrush(string key)
     {
         var resource = Application.Current?.TryFindResource(key);
         return resource is Brush brush ? brush : null;
     }
 
+    /// <inheritdoc />
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         var type = value is PortModel port
@@ -48,6 +50,7 @@ public class PortColorConverter : IValueConverter
         return brush;
     }
 
+    /// <inheritdoc />
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }

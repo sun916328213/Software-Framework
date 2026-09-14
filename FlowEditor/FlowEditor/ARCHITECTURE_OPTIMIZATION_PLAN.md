@@ -3,7 +3,7 @@
 > 状态：实施中  
 > 基线日期：2026-09-10  
 > 范围：`FlowEditor` 类库及 `FlowEditorTest` 测试项目  
-> 当前验证基线：276 个测试全部通过（新增执行、文档和画布模块架构护栏、结构化容器恢复及独立输出栏回归测试；旧版 `SubFlowNode` 删除后同步移除 5 个失效用例）
+> 当前验证基线：288 个测试全部通过（新增 Runtime 程序集、执行引擎日志 seam、执行/文档/画布/视口模块依赖护栏、函数文档、对话框及导出 seam 门禁、节点生命周期、结构化容器恢复及输出栏过滤回归测试；旧版 `SubFlowNode` 删除后同步移除 5 个失效用例）
 
 ## 1. 文档目的
 
@@ -204,9 +204,6 @@ Views/
 |- FlowToolboxView.xaml
 `- FlowToolboxView.xaml.cs
 
-Presentation/Commands/
-`- FlowChartRoutedCommands.cs
-
 ViewModels/Commands/
 |- FlowChartContainerViewModel.Commands.cs
 `- FlowChartViewModel.Commands.cs
@@ -237,7 +234,8 @@ ViewModels/Commands/
 
 ### 5.3 命令放置规则
 
-- 依赖 WPF 视觉树和命令路由的命令放入 `Presentation/Commands`，统一使用 `RoutedUICommand`。
+- 只由一个宿主处理的视觉树操作使用子视图显式事件 seam，由最近的宿主视图完成；不创建只承担一次转发的全局 `RoutedUICommand`。
+- 只有确实需要多处理器路由、WPF 命令手势或跨视觉层复用时，才在 `Presentation/Commands` 声明路由命令。
 - 多标签容器用例命令放入 `FlowChartContainerViewModel.Commands.cs`。
 - 单流程编辑、执行和文档命令放入 `FlowChartViewModel.Commands.cs`。
 - XAML 继续绑定原有公开命令名，不创建只做转发的命令分组对象。
@@ -497,8 +495,15 @@ IFlowDocumentStore       Save/Load 文档
 
 - [x] 更新 `ARCHITECTURE.md`，区分当前和目标架构。
 - [x] 修复无效 `cref`。
-- [ ] 启用 XML 文档生成。
-- [ ] 补齐公共成员注释并逐步加入全部函数门禁。
+- [x] 为 Runtime 与 WPF 项目启用 XML 文档生成，并将 CS1591/CS1570/CS1573/CS1574/CS1587 提升为构建错误。
+- [x] `FlowEditor.Runtime` 与 WPF 项目均已清零文档警告；WPF 项目本轮准确清理 84 个唯一公共成员缺口（WPF 临时项目会重复输出同一告警）。
+- [x] 补齐单画布 ViewModel、容器 ViewModel 和画布视图的全部函数摘要，并以源码架构测试禁止回退。
+- [x] 补齐节点基类、并行分叉与分支汇聚的函数摘要；删除动态端口增删后的重复缓存失效通知，并纳入同一门禁。
+- [x] 补齐对话框、连线规划和控制台路由模块的函数摘要；删除无调用的警告框入口，并把通用消息框收回 WPF adapter，使 `IDialogService` 不再依赖 WPF 类型。
+- [x] 补齐结构化容器、循环、分发和基础流程控制节点的全部函数摘要，并将 11 个流程控制节点文件加入自动门禁；保留仍承担旧 `.flow` 兼容的端口清理逻辑。
+- [x] 补齐节点、容器、连线和端口视图的函数摘要；修复门禁对泛型返回类型及泛型方法的漏检，并将 7 个视图交互文件纳入门禁。
+- [x] 清零全部生产 C# 文件的函数注释缺口，并将门禁从文件白名单升级为自动扫描整个项目；删除 4 个零引用转换器，`IExportService` 从 6 个入口收缩为 2 个实际对话框导出意图。
+- [x] 补齐函数以外的公共类型、属性、字段和事件注释。
 - [x] 增加架构依赖约束测试（以 allowlist 锁定现有债务）。
 - [x] 保存测试、构建和性能基线（模块项目可构建，260 个测试通过；旧 `Flow.sln` 含失效项目路径，不能作为当前入口）。
 
@@ -506,12 +511,16 @@ IFlowDocumentStore       Save/Load 文档
 
 ### Phase 1：表现层拆分（M）
 
-- [x] 提取 `FlowCommandBarView`；PNG 导出使用 Presentation 层 Routed Command，避免把视觉元素作为 ViewModel 命令参数。
+- [x] 提取 `FlowCommandBarView`；PNG 导出由命令栏通过显式事件交给最近的宿主视图，避免一次性 Routed Command 和把视觉元素作为 ViewModel 命令参数。
 - [x] 提取 `FlowToolboxView`，由该视图封装展开、双击添加和标准 WPF DragDrop 发起。
 - [x] 清理容器 ResourceDictionary，将命令栏和工具箱样式就近放入各自视图。
 - [x] 将输出自动滚动迁为 `TextBoxAutoScrollBehavior` Attached Behavior。
 - [x] 将画布和节点右键菜单迁至 XAML，代码仅提供当前节点的只读菜单上下文。
 - [x] 为工具栏、工具箱和菜单补充 WPF smoke test。
+- [x] 删除无调用方的单画布 `NewFlowCommand`、`ZoomResetCommand` 和一次性 `FlowChartRoutedCommands`；多标签新增流程命令保留在容器 ViewModel。
+- [x] 收缩 `IFlowChartService` 门面：删除无消费者的 `ZoomReset`、`FlushLog` 和公开 `ClearNodes` 转发；内部画布模块继续自行复用缩放复位与节点清理实现。
+- [x] 清理单画布 ViewModel 的旧入口：删除无调用方的 `AddNodeModel`、空 `UpdateConnectionEndPoint`，并移除 `StartConnection` 未使用的坐标参数。
+- [x] 提取 `Views/Interaction/FlowViewportController`，集中接管平移手势、鼠标定位缩放、自适应视图及其状态；`FlowChartView` 不再声明视口事件处理器或平移字段。
 
 验收：布局、命令、快捷键、拖放和视觉行为不变；容器 XAML 只保留布局组合。
 
@@ -540,8 +549,8 @@ IFlowDocumentStore       Save/Load 文档
 - [x] 提取 `FlowOutputBuffer`，封装输出缓冲、容量截断、节流和尾批刷新。
 - [x] 从 `FlowChartService` 提取编辑、执行和文档模块；保留兼容门面与依赖组装职责。
   - [x] 提取内部 `FlowExecutionCoordinator` 深模块，集中校验、运行、循环、取消、调试、恢复和日志收尾。
-  - [x] 提取 `FlowDocumentSession`，集中保存、加载、快照、重建事务和错误反馈。
-  - [x] 提取 `FlowCanvasSession`，集中节点生命周期、批量清理、缩放和自适应视口。
+  - [x] 提取 `FlowDocumentSession`，集中保存、加载、快照、节点 DTO 映射、重建事务和错误反馈。
+  - [x] 提取 `FlowCanvasSession`，集中节点生命周期、事件订阅释放、批量清理、缩放和自适应视口。
 - [x] 统一 `FlowDocumentMapper`，由单流程、多流程、快照、节点复制共同复用节点、端口和连线映射。
 - [x] 引入 `IUiDispatcher`，提供 WPF 与无头 adapter，并移除 `FlowChartService` 对 WPF Dispatcher 的直接访问。
 - [x] 引入 `IFlowDocumentStore`，由 JSON 文件和内存 adapter 统一 `.flow` / `.flows` 存储。
@@ -560,21 +569,26 @@ IFlowDocumentStore       Save/Load 文档
 
 ### Phase 5：拆出 `FlowEditor.Runtime`（L）
 
-- [ ] 创建纯 `net9.0` Runtime 项目。
-- [ ] 移动执行、图编译、校验、程序和运行节点契约。
-- [ ] WPF 项目引用 Runtime，Runtime 不反向引用 WPF 项目。
-- [ ] 创建最小控制台宿主运行 smoke test。
-- [ ] 更新 Prism 注册和节点发现逻辑。
+- [x] 创建纯 `net9.0` Runtime 项目。
+- [x] 移动执行、图编译、校验、程序和运行节点契约。
+  - [x] 第一批迁移运行节点契约、端口、连线、状态、图编译、循环归一化、调试控制和执行追踪。
+  - [x] 以 `IExecutionLogContext` 解耦桌面日志上下文，并迁移执行引擎、循环/并行 runner。
+  - [x] 以结构化节点契约替代具体节点判断，并迁移校验、顶层作用域、文档 DTO 和 `FlowProgram`。
+  - [x] 提取泛型 `FlowRuntimeInstance<TNode>`；WPF `FlowInstance` 仅保留节点物化、属性通知和桌面日志 adapter。
+- [x] WPF 项目引用 Runtime，Runtime 不反向引用 WPF 项目。
+- [x] 创建最小控制台宿主运行 smoke test。
+- [x] 更新 Prism 注册：日志上下文共享、带运行状态的执行引擎按流程服务实例化；节点发现逻辑保持原有 Runtime 类型兼容。
+- [x] 删除 Runtime 中从未抛出的旧循环/起点异常类型，并简化失败日志前缀分支；保留仍被执行路径使用的类型异常与超时异常。
 
 验收：Runtime 可独立构建和测试，不加载 WPF；现有桌面编辑器功能保持兼容。
 
-### Phase 6：输出面板增强（可选，M）
+### Phase 6：输出面板增强（M，已完成）
 
 - [x] 根据一键清空需求创建 `FlowOutputPaneView`，容器仅保留布局组合。
 - [x] 支持一键清空当前标签页输出，并同步清除节流缓冲，防止旧日志回写。
-- [ ] 支持级别过滤、搜索和暂停自动滚动。
-- [ ] 评估结构化 `LogEntry` 与虚拟化列表。
-- [ ] 保持日志文件格式和执行编号兼容。
+- [x] 支持错误/警告/信息级别过滤、不区分大小写搜索和暂停自动滚动。
+- [x] 评估结构化 `LogEntry` 与虚拟化列表：当前输出上限为 200,000 字符，采用表现层只读派生文本即可满足需求；待真实性能数据表明字符串绑定成为瓶颈后再升级，避免同时改变日志存储语义。
+- [x] 保持原始输出缓冲、日志文件格式和执行编号兼容；筛选只影响当前显示文本。
 
 只有出现上述功能需求或实际性能数据证明完整字符串绑定成为瓶颈时才实施。
 
@@ -612,17 +626,17 @@ IFlowDocumentStore       Save/Load 文档
 
 全部核心优化完成时，应同时满足：
 
-- [ ] 依赖方向由项目引用和自动测试共同约束。
-- [ ] Runtime 可脱离 WPF 独立构建和运行。
-- [ ] Core、Nodes 中没有 View、ViewModel、Prism 或 WPF 引用。
-- [ ] `FlowChartContainerView` 只承担布局组合。
+- [x] 依赖方向由项目引用和自动测试共同约束。
+- [x] Runtime 可脱离 WPF 独立构建和运行。
+- [x] Core、Nodes 中没有 View、ViewModel、Prism 或 WPF 引用。
+- [x] `FlowChartContainerView` 只承担布局组合。
 - [ ] `FlowChartView` 不再集中管理所有交互行为。
 - [ ] `FlowChartService` 不再是执行、编辑、持久化、输出和视口的共同入口。
-- [ ] 所有函数具有有效文档注释。
-- [ ] 构建不存在 CS1591、CS1570、CS1574。
-- [ ] 测试不再以 `null!` 绕过必需依赖。
-- [ ] `.flow`、`.flows` 和节点插件保持向后兼容。
-- [ ] 全部回归测试和性能测试通过。
+- [x] 所有函数具有有效文档注释。
+- [x] 构建不存在 CS1591、CS1570、CS1574。
+- [x] 测试不再以 `null!` 绕过必需依赖。
+- [x] `.flow`、`.flows` 和节点插件保持向后兼容。
+- [x] 全部回归测试和性能测试通过。
 
 ## 15. 参考资料
 

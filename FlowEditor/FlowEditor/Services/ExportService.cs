@@ -15,30 +15,7 @@ namespace FlowEditor.Services;
 /// </summary>
 public class ExportService : IExportService
 {
-    /// <summary>
-    /// 将 FrameworkElement 导出为 PNG 图片。
-    /// </summary>
-    public void ExportToPng(FrameworkElement element, string filePath)
-    {
-        // 确保元素已渲染
-        element.Measure(new Size(element.ActualWidth, element.ActualHeight));
-        element.Arrange(new Rect(new Size(element.ActualWidth, element.ActualHeight)));
-        element.UpdateLayout();
-
-        var renderBitmap = new RenderTargetBitmap(
-            (int)element.ActualWidth,
-            (int)element.ActualHeight,
-            96, 96,
-            PixelFormats.Pbgra32);
-        renderBitmap.Render(element);
-
-        var encoder = new PngBitmapEncoder();
-        encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
-
-        using var stream = File.Create(filePath);
-        encoder.Save(stream);
-    }
-
+    /// <summary>按画布内容区域裁剪并以指定倍率导出透明背景 PNG。</summary>
     public void ExportToPng(FrameworkElement element, string filePath, Rect contentBounds, double scale)
     {
         ArgumentNullException.ThrowIfNull(element);
@@ -108,25 +85,7 @@ public class ExportService : IExportService
         File.WriteAllText(filePath, svgContent, Encoding.UTF8);
     }
 
-    /// <summary>
-    /// 弹出保存对话框并导出 PNG。
-    /// </summary>
-    public bool ExportToPngWithDialog(FrameworkElement element)
-    {
-        var dlg = new SaveFileDialog
-        {
-            Filter = "PNG 图片 (*.png)|*.png",
-            FileName = "FlowChart.png",
-            DefaultExt = ".png"
-        };
-        if (dlg.ShowDialog() == true)
-        {
-            ExportToPng(element, dlg.FileName);
-            return true;
-        }
-        return false;
-    }
-
+    /// <inheritdoc />
     public bool ExportToPngWithDialog(
         FrameworkElement element, Rect contentBounds, double scale = 2.0)
     {

@@ -2,7 +2,6 @@
     x:Class="FlowEditor.Views.FlowCommandBarView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:commands="clr-namespace:FlowEditor.Presentation.Commands"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
     <UserControl.Resources>
@@ -215,8 +214,9 @@
                     <materialDesign:PackIcon Kind="StepForward" />
                 </Button>
                 <Button
-                    Command="{x:Static commands:FlowChartRoutedCommands.ExportPng}"
-                    CommandParameter="{Binding ActiveTab}"
+                    x:Name="ExportPngButton"
+                    Click="OnExportPngClick"
+                    IsEnabled="{Binding HasActiveTab}"
                     Style="{StaticResource ToolBarButtonStyle}"
                     ToolTip="导出PNG">
                     <materialDesign:PackIcon Kind="ImageOutline" />

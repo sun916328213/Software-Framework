@@ -8,6 +8,7 @@ using FlowEditor.Nodes.FlowControl;
 using FlowEditor.Services;
 using FlowEditor.ViewModels;
 using FlowEditor.Views;
+using FlowEditor.Views.Interaction;
 using Xunit;
 using static FlowEditorTest.TestGraph;
 
@@ -60,9 +61,9 @@ public class FlowChartInteractionPerformanceTests
     [Fact]
     public void CtrlLeftClick_IsReservedForMultiSelection_NotCanvasPan()
     {
-        Assert.False(FlowChartView.ShouldStartCanvasPan(MouseButton.Left, ModifierKeys.Control));
-        Assert.True(FlowChartView.ShouldStartCanvasPan(MouseButton.Left, ModifierKeys.Shift));
-        Assert.True(FlowChartView.ShouldStartCanvasPan(MouseButton.Middle, ModifierKeys.None));
+        Assert.False(FlowViewportController.ShouldStartCanvasPan(MouseButton.Left, ModifierKeys.Control));
+        Assert.True(FlowViewportController.ShouldStartCanvasPan(MouseButton.Left, ModifierKeys.Shift));
+        Assert.True(FlowViewportController.ShouldStartCanvasPan(MouseButton.Middle, ModifierKeys.None));
     }
 
     [Fact]

@@ -60,6 +60,8 @@ public class NodeActionAttribute : Attribute
     /// <summary>按钮图标。</summary>
     public string IconResource { get; set; } = "DotsHorizontal";
 
+    /// <summary>创建指定显示名称的节点动作标记。</summary>
+    /// <param name="buttonName">动作按钮显示名称。</param>
     public NodeActionAttribute(string buttonName)
     {
         ButtonName = buttonName;

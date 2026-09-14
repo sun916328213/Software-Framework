@@ -85,6 +85,7 @@ public sealed class ConnectionService
         return null;
     }
 
+    /// <summary>判断连线是否为循环容器允许的内外边界连接。</summary>
     private static bool IsLoopBoundaryConnection(
         NodeModel source,
         NodeModel target,
@@ -95,6 +96,7 @@ public sealed class ConnectionService
                IsInsideToOutside(target, source, nodeList);
     }
 
+    /// <summary>判断第一个节点是否位于循环体内，而第二个节点位于该循环同级作用域。</summary>
     private static bool IsInsideToOutside(
         NodeModel inside,
         NodeModel outside,
@@ -108,6 +110,7 @@ public sealed class ConnectionService
                outside.ExecutionLaneId == loop.ExecutionLaneId;
     }
 
+    /// <summary>从目标节点向后搜索，判断新增边是否能回到源节点形成环路。</summary>
     private static bool WouldCreateCycle(
         string sourceNodeId,
         string targetNodeId,
@@ -133,6 +136,7 @@ public sealed class ConnectionService
         return false;
     }
 
+    /// <summary>为同名且类型兼容的未占用属性端口规划伴随数据连线。</summary>
     private static IReadOnlyList<ConnectionModel> PlanDataBindings(
         string sourceNodeId,
         string targetNodeId,
@@ -182,9 +186,11 @@ public sealed record ConnectionPlan(
     bool CreatesCycle,
     int AutoBoundCount)
 {
+    /// <summary>创建不包含任何连线变更的拒绝结果。</summary>
     internal static ConnectionPlan Rejected(string error)
         => new(false, error, null, Array.Empty<ConnectionModel>(), false, 0);
 
+    /// <summary>创建包含主连线、自动数据连线和环路标记的接受结果。</summary>
     internal static ConnectionPlan Accepted(
         ConnectionModel connection,
         IReadOnlyList<ConnectionModel> connections,

@@ -30,6 +30,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
         "Ctrl+C / Ctrl+V：复制、粘贴节点\n" +
         "Delete：删除选中节点或连线";
 
+    /// <summary>容器中当前打开的流程标签页。</summary>
     public ObservableCollection<FlowChartViewModel> Tabs { get; } = new();
 
     private int _minimumTabCount;
@@ -42,6 +43,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
     private readonly ToolboxService _toolboxService;
 
     private FlowChartViewModel? _activeTab;
+    /// <summary>当前活动流程标签页。</summary>
     public FlowChartViewModel? ActiveTab
     {
         get => _activeTab;
@@ -56,14 +58,18 @@ public partial class FlowChartContainerViewModel : ObservableObject
         }
     }
 
+    /// <summary>是否存在可操作的活动标签页。</summary>
     public bool HasActiveTab => ActiveTab != null;
 
     // ── 属性面板 ViewModel（经 IoC 容器解析，生命周期由容器管理） ──
+    /// <summary>容器内共享的属性面板 ViewModel。</summary>
     public PropertyGridHostViewModel PropertyGridVM { get; }
 
     // ── 共享工具箱（委托给 ToolboxService） ──
+    /// <summary>经过搜索和排除规则处理的工具箱分类。</summary>
     public ObservableCollection<ToolboxCategory> ToolboxCategories => _toolboxService.Categories;
 
+    /// <summary>用于筛选共享工具箱的搜索文本。</summary>
     public string ToolboxSearchText
     {
         get => _toolboxService.SearchText;
@@ -103,6 +109,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
 
     // ═══════════════════ 当前流程执行 ═══════════════════
 
+    /// <summary>执行当前活动标签页中可运行的流程。</summary>
     private async Task RunCurrentAsync()
     {
         if (ActiveTab?.RunCommand.CanExecute(null) == true)
@@ -111,6 +118,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
 
     // ═══════════════════ 全部运行 / 全部停止 ═══════════════════
 
+    /// <summary>启动全部满足运行条件的标签页流程。</summary>
     private async Task RunAllAsync()
     {
         foreach (var tab in Tabs.ToList())
@@ -121,6 +129,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
         await Task.CompletedTask;
     }
 
+    /// <summary>请求停止全部正在运行的标签页流程。</summary>
     private void StopAll()
     {
         foreach (var tab in Tabs.ToList())
@@ -132,6 +141,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
 
     // ═══════════════════ 循环执行 / 停止 ═══════════════════
 
+    /// <summary>启动全部满足条件的标签页循环运行。</summary>
     private async Task LoopRunAllAsync()
     {
         foreach (var tab in Tabs.ToList())
@@ -142,6 +152,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
         await Task.CompletedTask;
     }
 
+    /// <summary>请求停止全部标签页的循环运行。</summary>
     private void LoopStopAll()
     {
         foreach (var tab in Tabs.ToList())
@@ -200,8 +211,10 @@ public partial class FlowChartContainerViewModel : ObservableObject
         CloseTabCommand.NotifyCanExecuteChanged();
     }
 
+    /// <summary>判断标签页数量是否低于当前上限。</summary>
     private bool CanAddNewTab() => Tabs.Count < _maximumTabCount;
 
+    /// <summary>判断指定标签页是否存在且关闭后不会低于数量下限。</summary>
     private bool CanCloseTab(FlowChartViewModel? tab)
         => tab != null && Tabs.Contains(tab) && Tabs.Count > _minimumTabCount;
 
@@ -224,6 +237,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
         };
     }
 
+    /// <summary>在处理未保存确认后关闭指定标签页。</summary>
     private void CloseTab(FlowChartViewModel? tab)
     {
         if (tab == null || !CanCloseTab(tab)) return;
@@ -298,6 +312,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
         }
     }
 
+    /// <summary>保存已关联文件的修改，并把全部标签页写入流程组文件。</summary>
     private void SaveAllInternal(string path)
     {
         try
@@ -370,9 +385,11 @@ public partial class FlowChartContainerViewModel : ObservableObject
 
     // ═══════════════════ 辅助 ═══════════════════
 
+    /// <summary>显示流程编辑器快捷键说明。</summary>
     private void ShowShortcutHelp() =>
         _dialogService.ShowInfo(ShortcutHelpText, "流程图快捷键");
 
+    /// <summary>通知容器及活动标签页重新计算全部命令状态。</summary>
     private void NotifyAllCanExecuteChanged()
     {
         if (ActiveTab != null)

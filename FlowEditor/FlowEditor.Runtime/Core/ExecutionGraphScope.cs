@@ -1,6 +1,4 @@
 using FlowEditor.Models;
-using FlowEditor.Nodes;
-using FlowEditor.Nodes.FlowControl;
 
 namespace FlowEditor.Core;
 
@@ -60,17 +58,15 @@ public static class ExecutionGraphScope
     /// </summary>
     public static ExecutionGraphScope<TNode> CreateTopLevel<TNode>(
         IEnumerable<TNode> nodes,
-        IEnumerable<ConnectionModel> connections,
-        Func<TNode, NodeModel> modelSelector)
+        IEnumerable<ConnectionModel> connections)
         where TNode : INodeExecutable
     {
         var activeNodes = nodes.Where(node => !node.IsExcludedFromExecution).ToList();
         var nodeMap = activeNodes.ToDictionary(node => node.Id);
-        var modelMap = activeNodes.ToDictionary(node => node.Id, modelSelector);
         var topNodes = activeNodes.Where(node => node.ParentExecutionContainerId == null).ToList();
         var topIds = topNodes.Select(node => node.Id).ToHashSet();
         var topLevelLoops = topNodes
-            .Where(node => modelSelector(node) is LoopContainerNode)
+            .Where(node => node is IExecutionScopeDescriptor { ScopeKind: ExecutionScopeKind.Loop })
             .ToDictionary(node => node.Id);
         var effective = new List<ConnectionModel>();
 
@@ -78,8 +74,8 @@ public static class ExecutionGraphScope
         {
             if (!nodeMap.ContainsKey(connection.SourceNodeId) ||
                 !nodeMap.ContainsKey(connection.TargetNodeId)) continue;
-            var sourceModel = modelMap[connection.SourceNodeId];
-            var targetModel = modelMap[connection.TargetNodeId];
+            var sourceNode = nodeMap[connection.SourceNodeId];
+            var targetNode = nodeMap[connection.TargetNodeId];
 
             if (topIds.Contains(connection.SourceNodeId) && topIds.Contains(connection.TargetNodeId))
             {
@@ -88,15 +84,15 @@ public static class ExecutionGraphScope
             }
 
             // 数据边暂不改变作用域；循环边界只消费控制流令牌。
-            if (sourceModel.FindPortById(connection.SourcePortId)?.DataType != PortType.Flow)
+            if (sourceNode.FindPortById(connection.SourcePortId)?.DataType != PortType.Flow)
                 continue;
 
             var sourceId = topIds.Contains(connection.SourceNodeId)
                 ? connection.SourceNodeId
-                : ResolveOwningTopLoop(sourceModel, topLevelLoops);
+                : ResolveOwningTopLoop(sourceNode, topLevelLoops);
             var targetId = topIds.Contains(connection.TargetNodeId)
                 ? connection.TargetNodeId
-                : ResolveOwningTopLoop(targetModel, topLevelLoops);
+                : ResolveOwningTopLoop(targetNode, topLevelLoops);
             if (sourceId == null || targetId == null || sourceId == targetId)
                 continue;
 
@@ -127,19 +123,22 @@ public static class ExecutionGraphScope
         return new ExecutionGraphScope<TNode>(topNodes, distinct);
     }
 
+    /// <summary>解析成员节点所属的顶层循环容器。</summary>
     private static string? ResolveOwningTopLoop<TNode>(
-        NodeModel model,
+        TNode node,
         IReadOnlyDictionary<string, TNode> topLevelLoops)
         where TNode : INodeExecutable =>
-        model.ParentExecutionContainerId != null &&
-        topLevelLoops.ContainsKey(model.ParentExecutionContainerId)
-            ? model.ParentExecutionContainerId
+        node.ParentExecutionContainerId != null &&
+        topLevelLoops.ContainsKey(node.ParentExecutionContainerId)
+            ? node.ParentExecutionContainerId
             : null;
 
     /// <summary>筛选可参与编译、校验和运行的节点与连线。</summary>
     /// <typeparam name="TNode">调用方使用的具体节点执行类型。</typeparam>
     /// <param name="nodes">编辑画布中的全部节点。</param>
     /// <param name="connections">编辑画布中的全部连线。</param>
+    /// <param name="parentContainerId">要筛选的父执行容器；null 表示顶层画布。</param>
+    /// <param name="laneId">可选的并行泳道标识。</param>
     /// <returns>保留原节点类型的可执行子图。</returns>
     public static ExecutionGraphScope<TNode> Create<TNode>(
         IEnumerable<TNode> nodes,

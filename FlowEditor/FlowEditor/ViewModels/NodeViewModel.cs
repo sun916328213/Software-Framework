@@ -17,6 +17,8 @@ public class NodeViewModel : ObservableObject
     /// <summary>底层节点模型。</summary>
     public NodeModel Model { get; }
 
+    /// <summary>创建节点模型的表现层适配器并转发其属性变化。</summary>
+    /// <param name="model">由当前 ViewModel 呈现的节点模型。</param>
     public NodeViewModel(NodeModel model)
     {
         Model = model ?? throw new ArgumentNullException(nameof(model));
@@ -75,6 +77,7 @@ public class NodeViewModel : ObservableObject
         set => Model.LastElapsedMs = value;
     }
 
+    /// <summary>节点历史累计执行次数。</summary>
     public int Count
     {
         get => Model.Count;
@@ -116,12 +119,14 @@ public class NodeViewModel : ObservableObject
         set => Model.IsExcludedFromExecution = value;
     }
 
+    /// <summary>节点所属结构化执行容器的标识。</summary>
     public string? ParentExecutionContainerId
     {
         get => Model.ParentExecutionContainerId;
         set => Model.ParentExecutionContainerId = value;
     }
 
+    /// <summary>节点在父执行容器中所属泳道的标识。</summary>
     public string? ExecutionLaneId
     {
         get => Model.ExecutionLaneId;
@@ -209,5 +214,6 @@ public class NodeViewModel : ObservableObject
 
     #endregion
 
+    /// <inheritdoc />
     public override string ToString() => $"[{Name}]";
 }

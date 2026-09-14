@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Input;
 using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
 using System.Windows.Media;
@@ -10,7 +9,6 @@ using System.IO;
 using System.Windows.Data;
 using System.Xml.Linq;
 using FlowEditor.Behaviors;
-using FlowEditor.Presentation.Commands;
 using FlowEditor.Views;
 using Xunit;
 
@@ -102,30 +100,28 @@ public class FlowCommandBarViewTests
             Assert.NotNull(pane.Content);
             Assert.IsType<Button>(pane.FindName("ClearOutputButton"));
             Assert.IsType<TextBox>(pane.FindName("OutputTextBox"));
+            Assert.IsType<TextBox>(pane.FindName("OutputSearchBox"));
+            Assert.IsType<ComboBox>(pane.FindName("OutputLevelFilter"));
+            Assert.IsType<CheckBox>(pane.FindName("AutoScrollToggle"));
         });
     }
 
-    /// <summary>验证点击真实导出按钮时，PNG 命令可以沿视觉树路由到宿主。</summary>
+    /// <summary>验证导出按钮通过明确事件通知拥有活动画布的宿主视图。</summary>
     [Fact]
-    public void ExportPngCommand_WhenExecuted_RoutesToHost()
+    public void ExportPngButton_WhenInvoked_NotifiesHost()
     {
         WpfTestHost.Run(() =>
         {
             var view = new FlowCommandBarView();
             var context = new ExportCommandContext();
             view.DataContext = context;
-            var host = new Grid { Children = { view } };
             var received = false;
-            host.CommandBindings.Add(new CommandBinding(
-                FlowChartRoutedCommands.ExportPng,
-                (_, _) => received = true,
-                (_, e) => e.CanExecute = e.Parameter != null));
+            view.ExportPngRequested += (_, _) => received = true;
 
-            host.Measure(new Size(1600, 100));
-            host.Arrange(new Rect(0, 0, 1600, 100));
-            host.UpdateLayout();
-            var button = FindVisualDescendants<Button>(view)
-                .Single(candidate => ReferenceEquals(candidate.Command, FlowChartRoutedCommands.ExportPng));
+            view.Measure(new Size(1600, 100));
+            view.Arrange(new Rect(0, 0, 1600, 100));
+            view.UpdateLayout();
+            var button = Assert.IsType<Button>(view.FindName("ExportPngButton"));
             Assert.False(button.IsEnabled);
 
             context.ActiveTab = new object();
@@ -171,8 +167,12 @@ public class FlowCommandBarViewTests
             {
                 _activeTab = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ActiveTab)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasActiveTab)));
             }
         }
+
+        /// <summary>指示测试命令栏是否具有活动标签页。</summary>
+        public bool HasActiveTab => ActiveTab != null;
 
         /// <summary>在测试数据属性变化时发生。</summary>
         public event PropertyChangedEventHandler? PropertyChanged;

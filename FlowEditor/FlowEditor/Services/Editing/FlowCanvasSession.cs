@@ -93,19 +93,17 @@ internal sealed class FlowCanvasSession
     public void AddNode(NodeViewModel node)
     {
         ArgumentNullException.ThrowIfNull(node);
-        node.Model.Service = _owner;
+        node.Model.AttachTo(_owner);
         _nodes.Add(node);
-        node.Model.OnAttached(_owner);
     }
 
     /// <summary>添加节点模型并返回其画布 ViewModel。</summary>
     public NodeViewModel AddNode(NodeModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        model.Service = _owner;
+        model.AttachTo(_owner);
         var viewModel = new NodeViewModel(model);
         _nodes.Add(viewModel);
-        model.OnAttached(_owner);
         return viewModel;
     }
 
@@ -113,7 +111,8 @@ internal sealed class FlowCanvasSession
     public void RemoveNode(NodeViewModel node)
     {
         ArgumentNullException.ThrowIfNull(node);
-        node.Model.OnDetached();
+        if (!_nodes.Contains(node)) return;
+        node.Model.DetachFromFlow();
         _nodes.Remove(node);
     }
 

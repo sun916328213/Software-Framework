@@ -13,26 +13,14 @@ using WPFCustomControls.PropertyGrid.Models;
 
 namespace FlowEditor.Nodes;
 
-/// <summary>节点执行状态。</summary>
-public enum NodeStatus
-{
-    /// <summary>空闲，未执行。</summary>
-    Idle,
-    /// <summary>正在执行（绿色闪烁高亮）。</summary>
-    Running,
-    /// <summary>执行成功（深绿色）。</summary>
-    Success,
-    /// <summary>执行异常（红色）。</summary>
-    Error
-}
-
 /// <summary>
 /// 统一流程节点基类。
 /// 每个节点强制内置 4 个固定属性：Name、Value、IN、Out。
 /// 支持自定义端口动态增删、底部按钮自动扫描、权限控制。
 /// </summary>
-public abstract partial class NodeModel : ObservableObject, IPortConfigurable, IPortManageable, IDataBindingProvider, INodeExecutable, INodeFaultPolicy
+public abstract partial class NodeModel : ObservableObject, IPortConfigurable, IPortManageable, IDataBindingProvider, IFlowValidationNode, INodeFaultPolicy, IExecutionScopeRuntimeAware
 {
+    /// <summary>初始化节点名称并发现声明式节点动作。</summary>
     protected NodeModel()
     {
         var attr = GetType().GetCustomAttribute<FlowToolAttribute>();
@@ -157,6 +145,9 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         set => SetProperty(ref _permission, value);
     }
 
+    /// <inheritdoc />
+    public bool RequiresFlowInput => IsInEnabled;
+
     private bool _isExcludedFromExecution;
     /// <summary>是否存放在“不执行节点容器”中；保留配置，但不参与校验、编译和运行。</summary>
     public bool IsExcludedFromExecution
@@ -260,6 +251,7 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         }
     }
 
+    /// <summary>组合可选标准输入端口和动态自定义输入端口。</summary>
     private List<PortModel> BuildInputPorts()
     {
         var ports = new List<PortModel>();
@@ -281,6 +273,7 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         return ports;
     }
 
+    /// <summary>组合可选标准输出端口和动态自定义输出端口。</summary>
     private List<PortModel> BuildOutputPorts()
     {
         var ports = new List<PortModel>();
@@ -321,6 +314,7 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
     public PortModel AddCustomOutputPort(string name, string? boundProperty = null)
         => AddCustomPort(name, boundProperty, PortDirection.Output);
 
+    /// <summary>创建指定方向的自定义端口并使聚合端口缓存失效。</summary>
     private PortModel AddCustomPort(string name, string? boundProperty, PortDirection direction)
     {
         var displayName = NormalizePortDisplayName(name, boundProperty);
@@ -536,6 +530,7 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
     /// <summary>各节点类型可绑定属性名缓存（类型不变则结果恒定）。</summary>
     private static readonly ConcurrentDictionary<Type, string[]> BindablePropertiesCache = new();
 
+    /// <summary>从类型继承链缓存查找公开实例属性。</summary>
     private static PropertyInfo? FindPropertyByName(Type type, string name)
         => PropertyLookupCache.GetOrAdd((type, name), static key =>
         {
@@ -547,6 +542,7 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
             return null;
         });
 
+    /// <summary>向节点属性写入端口值，并把反射失败转换为类型诊断异常。</summary>
     private void SetPropertyValue(string name, object? value)
     {
         var prop = FindPropertyByName(GetType(), name);
@@ -692,6 +688,7 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         ConfigChanged?.Invoke();
     }
 
+    /// <summary>按照属性端口配置创建、更新或删除对应方向的端口。</summary>
     private void UpdatePropertyPort(
         string propertyName,
         string displayName,
@@ -732,9 +729,11 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         existing.PropertyName = propertyName;
     }
 
+    /// <summary>获取指定方向的可变自定义端口集合。</summary>
     private ObservableCollection<PortModel> GetCustomPorts(PortDirection direction)
         => direction == PortDirection.Input ? CustomInputPorts : CustomOutputPorts;
 
+    /// <summary>读取节点属性的展示名，不存在元数据时返回 CLR 属性名。</summary>
     private string GetPropertyDisplayName(string propertyName)
     {
         var property = GetType().GetProperty(propertyName);
@@ -771,6 +770,44 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
     /// <summary>节点从画布移除时回调。由 FlowChartService 在移除节点时调用。</summary>
     public virtual void OnDetached() { }
 
+    /// <summary>将节点附加到流程，并恢复其对流程级数据变化的订阅。</summary>
+    internal void AttachTo(IFlowChartService service)
+    {
+        ArgumentNullException.ThrowIfNull(service);
+        if (ReferenceEquals(Service, service)) return;
+        if (Service != null)
+            DetachFromFlow();
+
+        Service = service;
+        try
+        {
+            OnAttached(service);
+            if (_dataBindingsChanged != null)
+                EnsureConnectionSubscription();
+        }
+        catch
+        {
+            DisconnectConnectionSubscription();
+            Service = null;
+            throw;
+        }
+    }
+
+    /// <summary>从当前流程卸载节点，保证退订流程事件并释放流程引用。</summary>
+    internal void DetachFromFlow()
+    {
+        if (Service == null) return;
+        try
+        {
+            OnDetached();
+        }
+        finally
+        {
+            DisconnectConnectionSubscription();
+            Service = null;
+        }
+    }
+
     /// <summary>数据绑定记录列表。</summary>
     private readonly List<DataBindingInfo> _dataBindings = new();
 
@@ -789,6 +826,7 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         remove => _dataBindingsChanged -= value;
     }
 
+    /// <summary>首次需要数据绑定通知时订阅所属流程的连线变化。</summary>
     private void EnsureConnectionSubscription()
     {
         if (_connectionSubscribed) return;
@@ -803,10 +841,20 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
         System.Diagnostics.Debug.WriteLine($"[NodeModel] EnsureConnectionSubscription: subscribed to Connections.CollectionChanged for {Name}");
     }
 
+    /// <summary>把流程连线集合变化转换为节点数据绑定变化通知。</summary>
     private void OnConnectionsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         System.Diagnostics.Debug.WriteLine($"[NodeModel] OnConnectionsChanged: {e.Action}, {e.NewItems?.Count ?? 0} new items, node={Name}");
         _dataBindingsChanged?.Invoke();
+    }
+
+    /// <summary>退订当前流程的连线变化事件，并允许后续重新附加。</summary>
+    private void DisconnectConnectionSubscription()
+    {
+        if (!_connectionSubscribed) return;
+        if (Service != null)
+            Service.Connections.CollectionChanged -= OnConnectionsChanged;
+        _connectionSubscribed = false;
     }
 
     /// <summary>获取通过流程连线可反向到达的直接或间接上游节点。</summary>

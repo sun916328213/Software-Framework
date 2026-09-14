@@ -1,5 +1,4 @@
 using FlowEditor.Models;
-using FlowEditor.Nodes;
 
 namespace FlowEditor.Core;
 
@@ -8,5 +7,6 @@ namespace FlowEditor.Core;
 /// 因而不依赖编辑器 ViewModel 或窗口服务，也可在 FlowInstance 中运行。
 /// </summary>
 public sealed record ExecutionScopeRuntime(
-    IReadOnlyList<NodeModel> Nodes,
-    IReadOnlyList<ConnectionModel> Connections);
+    IReadOnlyList<INodeExecutable> Nodes,
+    IReadOnlyList<ConnectionModel> Connections,
+    FlowChartExecutionEngine? Engine = null);

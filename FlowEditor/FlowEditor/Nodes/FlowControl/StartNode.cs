@@ -10,6 +10,7 @@ namespace FlowEditor.Nodes.FlowControl;
 [FlowTool("开始", "PlayCircleOutline", ToolGroup = "流程控制", SortIndex = 0, Description = "流程图的入口点，每个流程必须有一个开始节点")]
 public class StartNode : NodeModel
 {
+    /// <summary>创建只带流程输出端口的入口节点。</summary>
     public StartNode()
     {
         Name = "开始";
@@ -17,6 +18,7 @@ public class StartNode : NodeModel
         IsOutEnabled = true;
     }
 
+    /// <inheritdoc />
     public override Task ExecuteAsync(CancellationToken ct)
     {
         return Task.CompletedTask;

@@ -2,14 +2,19 @@
     x:Class="FlowEditor.Views.FlowOutputPaneView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:behaviors="clr-namespace:FlowEditor.Behaviors">
+    xmlns:behaviors="clr-namespace:FlowEditor.Behaviors"
+    xmlns:converters="clr-namespace:FlowEditor.Presentation.Converters">
+
+    <UserControl.Resources>
+        <converters:FlowOutputTextFilterConverter x:Key="OutputTextFilterConverter" />
+    </UserControl.Resources>
 
     <Border
         BorderBrush="{StaticResource Flow_Border_Divider}"
         BorderThickness="0,1,0,0">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="28" />
+                <RowDefinition Height="32" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <DockPanel
@@ -27,6 +32,38 @@
                     DockPanel.Dock="Right"
                     Style="{StaticResource MaterialDesignFlatButton}"
                     ToolTip="一键清空当前输出" />
+                <CheckBox
+                    x:Name="AutoScrollToggle"
+                    Margin="8,0"
+                    VerticalAlignment="Center"
+                    Content="自动滚动"
+                    DockPanel.Dock="Right"
+                    IsChecked="True"
+                    ToolTip="取消后保留当前位置，新日志仍会继续接收" />
+                <ComboBox
+                    x:Name="OutputLevelFilter"
+                    Width="72"
+                    Height="24"
+                    Margin="4,0"
+                    VerticalAlignment="Center"
+                    DockPanel.Dock="Right"
+                    SelectedIndex="0"
+                    SelectedValuePath="Tag"
+                    ToolTip="按日志级别过滤显示">
+                    <ComboBoxItem Content="全部" Tag="All" />
+                    <ComboBoxItem Content="错误" Tag="Error" />
+                    <ComboBoxItem Content="警告" Tag="Warning" />
+                    <ComboBoxItem Content="信息" Tag="Info" />
+                </ComboBox>
+                <TextBox
+                    x:Name="OutputSearchBox"
+                    Width="180"
+                    Height="24"
+                    Margin="8,0,4,0"
+                    Padding="6,1"
+                    VerticalContentAlignment="Center"
+                    DockPanel.Dock="Right"
+                    ToolTip="搜索当前输出" />
                 <TextBlock
                     VerticalAlignment="Center"
                     FontWeight="SemiBold"
@@ -37,15 +74,22 @@
                 x:Name="OutputTextBox"
                 Grid.Row="1"
                 Padding="10,2"
-                behaviors:TextBoxAutoScrollBehavior.IsEnabled="True"
+                behaviors:TextBoxAutoScrollBehavior.IsEnabled="{Binding IsChecked, ElementName=AutoScrollToggle}"
                 BorderThickness="0"
                 FontFamily="Consolas"
                 FontSize="12"
                 Foreground="{StaticResource Flow_Text_Primary}"
                 IsReadOnly="True"
-                Text="{Binding ActiveTab.Model.OutputText, Mode=OneWay}"
                 TextWrapping="Wrap"
-                VerticalScrollBarVisibility="Auto" />
+                VerticalScrollBarVisibility="Auto">
+                <TextBox.Text>
+                    <MultiBinding Converter="{StaticResource OutputTextFilterConverter}" Mode="OneWay">
+                        <Binding Path="ActiveTab.Model.OutputText" />
+                        <Binding ElementName="OutputLevelFilter" Path="SelectedValue" />
+                        <Binding ElementName="OutputSearchBox" Path="Text" />
+                    </MultiBinding>
+                </TextBox.Text>
+            </TextBox>
         </Grid>
     </Border>
 </UserControl>

@@ -48,11 +48,6 @@ internal static class TestFlowEditorFactory
         public string? ShowSaveFileDialog(string filter, string defaultFileName, string defaultExt) => null;
 
         /// <inheritdoc />
-        public void ShowMessage(string message, string title, MessageBoxButton buttons, MessageBoxImage icon)
-        {
-        }
-
-        /// <inheritdoc />
         public bool? ShowConfirm(string message, string title) => null;
 
         /// <inheritdoc />
@@ -60,11 +55,6 @@ internal static class TestFlowEditorFactory
 
         /// <inheritdoc />
         public void ShowInfo(string message, string title = "提示")
-        {
-        }
-
-        /// <inheritdoc />
-        public void ShowWarning(string message, string title = "警告")
         {
         }
 
@@ -77,24 +67,6 @@ internal static class TestFlowEditorFactory
     /// <summary>忽略所有导出请求并返回取消结果的测试 adapter。</summary>
     private sealed class NoOpExportService : IExportService
     {
-        /// <inheritdoc />
-        public void ExportToPng(FrameworkElement element, string filePath)
-        {
-        }
-
-        /// <inheritdoc />
-        public void ExportToPng(FrameworkElement element, string filePath, Rect contentBounds, double scale)
-        {
-        }
-
-        /// <inheritdoc />
-        public void ExportToSvg(FrameworkElement element, string filePath)
-        {
-        }
-
-        /// <inheritdoc />
-        public bool ExportToPngWithDialog(FrameworkElement element) => false;
-
         /// <inheritdoc />
         public bool ExportToPngWithDialog(FrameworkElement element, Rect contentBounds, double scale = 2)
             => false;

@@ -5,6 +5,15 @@ namespace FlowEditor.Core;
 /// </summary>
 public static class LoopFlowRunner
 {
+    /// <summary>按配置次数和轮间延时顺序执行循环体。</summary>
+    /// <param name="body">已编译的循环体。</param>
+    /// <param name="iterationCount">循环次数；-1 表示无限循环。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <param name="log">执行日志回调。</param>
+    /// <param name="onIterationStarted">每轮开始前的可选回调。</param>
+    /// <param name="iterationDelayMs">两轮之间的等待毫秒数。</param>
+    /// <param name="startingIteration">恢复执行时的起始轮次。</param>
+    /// <param name="engine">可选的宿主引擎，用于继承日志上下文。</param>
     public static async Task ExecuteAsync<TNode>(
         ParallelFlowLane<TNode> body,
         int iterationCount,
@@ -12,7 +21,8 @@ public static class LoopFlowRunner
         Action<string> log,
         Action<int, int>? onIterationStarted = null,
         int iterationDelayMs = 0,
-        int startingIteration = 1)
+        int startingIteration = 1,
+        FlowChartExecutionEngine? engine = null)
         where TNode : INodeExecutable
     {
         ArgumentNullException.ThrowIfNull(body);
@@ -26,7 +36,7 @@ public static class LoopFlowRunner
         if (body.Nodes.Count == 0)
             throw new InvalidOperationException("循环容器的循环体没有节点。");
 
-        var engine = new FlowChartExecutionEngine();
+        engine ??= new FlowChartExecutionEngine();
         for (var iteration = startingIteration;
              iterationCount == -1 || iteration <= iterationCount;
              iteration++)

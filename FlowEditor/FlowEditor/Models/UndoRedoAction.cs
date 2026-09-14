@@ -3,15 +3,25 @@ namespace FlowEditor.Models;
 /// <summary>撤销/重做操作类型。</summary>
 public enum UndoRedoActionType
 {
+    /// <summary>添加节点。</summary>
     NodeAdded,
+    /// <summary>删除节点。</summary>
     NodeDeleted,
+    /// <summary>移动节点。</summary>
     NodeMoved,
+    /// <summary>修改节点属性。</summary>
     NodePropertyChanged,
+    /// <summary>添加连线。</summary>
     ConnectionAdded,
+    /// <summary>删除连线。</summary>
     ConnectionDeleted,
+    /// <summary>清空全部节点。</summary>
     NodesCleared,
+    /// <summary>添加端口。</summary>
     PortAdded,
+    /// <summary>删除端口。</summary>
     PortDeleted,
+    /// <summary>重命名端口。</summary>
     PortRenamed
 }
 

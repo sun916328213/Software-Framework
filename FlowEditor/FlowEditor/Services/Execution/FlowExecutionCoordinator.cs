@@ -441,7 +441,7 @@ internal sealed class FlowExecutionCoordinator
     {
         var (activeNodes, activeConnections) = CreateActiveGraph();
         var models = activeNodes.Select(node => node.Model).ToList();
-        var runtime = new ExecutionScopeRuntime(models, activeConnections);
+        var runtime = new ExecutionScopeRuntime(models, activeConnections, _engine);
         foreach (var node in models)
             node.ExecutionScopeRuntime = runtime;
     }
@@ -460,8 +460,7 @@ internal sealed class FlowExecutionCoordinator
 
     /// <summary>创建调度器可见的顶层复合图。</summary>
     private ExecutionGraphScope<NodeModel> CreateTopLevelGraph() =>
-        ExecutionGraphScope.CreateTopLevel(
-            _nodes.Select(node => node.Model), _connections, node => node);
+        ExecutionGraphScope.CreateTopLevel(_nodes.Select(node => node.Model), _connections);
 
     /// <summary>统一发布面板和文件日志，并过滤低价值剪枝消息。</summary>
     private void PanelLog(string message, Action<string> logCallback, long runId = 0)

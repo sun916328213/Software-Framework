@@ -10,6 +10,7 @@ using FlowEditor.Models;
 using FlowEditor.Nodes;
 using FlowEditor.Nodes.FlowControl;
 using FlowEditor.ViewModels;
+using FlowEditor.Views.Interaction;
 
 namespace FlowEditor.Views;
 
@@ -24,13 +25,9 @@ public partial class FlowChartView : UserControl
 
     private readonly Dictionary<NodeViewModel, FrameworkElement> _nodeViewCache = new();
     private readonly Dictionary<NodeViewModel, PropertyChangedEventHandler> _nodeSubscriptions = new();
+    private readonly FlowViewportController _viewport;
     private Point _boxSelectStart;
     private bool _isBoxSelecting;
-    private bool _isPanning;
-    private MouseButton? _panButton;
-    private Point _panStart;
-    private double _panStartHorizontalOffset;
-    private double _panStartVerticalOffset;
     private PortConnectorView? _connectionCandidate;
     private Point _connectionCandidatePoint;
     private Path? _pendingConnectionPath;
@@ -42,9 +39,14 @@ public partial class FlowChartView : UserControl
     /// <summary>暴露画布容器供容器层导出 PNG 等操作使用。</summary>
     public Grid ZoomContainerElement => ZoomContainer;
 
+    /// <summary>初始化画布视图并注册数据上下文、键盘和连线完成事件。</summary>
     public FlowChartView()
     {
         InitializeComponent();
+        _viewport = new FlowViewportController(
+            ScrollViewerHost,
+            ZoomContainer,
+            () => _currentViewModel);
         DataContextChanged += OnDataContextChanged;
         PreviewKeyDown += OnFlowChartKeyDown;
         PreviewMouseDown += (s, e) => Focus(); // 确保键盘焦点在画布上，Delete 键才有效
@@ -56,6 +58,7 @@ public partial class FlowChartView : UserControl
 
     #region ViewModel 绑定与切换
 
+    /// <summary>切换流程上下文时释放旧订阅、绑定新会话并重建节点视觉树。</summary>
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         // 取消旧 ViewModel 及 Model 订阅
@@ -65,7 +68,7 @@ public partial class FlowChartView : UserControl
             _currentViewModel.Connections.CollectionChanged -= OnConnectionsCollectionChanged;
             _currentViewModel.PropertyChanged -= OnViewModelPropertyChanged;
             _currentViewModel.Model.PropertyChanged -= OnModelPropertyChanged;
-            _currentViewModel.ZoomToFitRequested -= OnZoomToFitRequested;
+            _currentViewModel.ZoomToFitRequested -= _viewport.OnZoomToFitRequested;
         }
         ClearNodeViews();
 
@@ -77,11 +80,12 @@ public partial class FlowChartView : UserControl
         _currentViewModel.Connections.CollectionChanged += OnConnectionsCollectionChanged;
         _currentViewModel.PropertyChanged += OnViewModelPropertyChanged;
         _currentViewModel.Model.PropertyChanged += OnModelPropertyChanged;
-        _currentViewModel.ZoomToFitRequested += OnZoomToFitRequested;
+        _currentViewModel.ZoomToFitRequested += _viewport.OnZoomToFitRequested;
 
         RenderAllNodes();
     }
 
+    /// <summary>连线集合变化后合并调度一次重绘。</summary>
     private void OnConnectionsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         => ScheduleConnectionRender();
 
@@ -89,6 +93,7 @@ public partial class FlowChartView : UserControl
 
     #region 节点渲染
 
+    /// <summary>把节点集合的增删和重置同步到画布视觉树。</summary>
     private void OnNodesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
@@ -106,6 +111,7 @@ public partial class FlowChartView : UserControl
         ScheduleConnectionRender();
     }
 
+    /// <summary>从当前流程重新构建全部节点视觉对象并调度连线重绘。</summary>
     private void RenderAllNodes()
     {
         ClearNodeViews();
@@ -114,6 +120,7 @@ public partial class FlowChartView : UserControl
         ScheduleConnectionRender();
     }
 
+    /// <summary>按节点类型创建视图、设置层级并建立坐标变化订阅。</summary>
     private void AddNodeViewToCanvas(NodeViewModel vm)
     {
         FrameworkElement nodeView = vm.Model switch
@@ -158,6 +165,7 @@ public partial class FlowChartView : UserControl
         _nodeSubscriptions[vm] = propertyChanged;
     }
 
+    /// <summary>移除节点视觉对象并解除其属性变化订阅。</summary>
     private void RemoveNodeViewFromCanvas(NodeViewModel vm)
     {
         if (_nodeViewCache.TryGetValue(vm, out var nodeView))
@@ -169,6 +177,7 @@ public partial class FlowChartView : UserControl
             vm.PropertyChanged -= propertyChanged;
     }
 
+    /// <summary>释放全部节点订阅并清空节点视觉与临时连线缓存。</summary>
     private void ClearNodeViews()
     {
         foreach (var (node, handler) in _nodeSubscriptions)
@@ -185,6 +194,7 @@ public partial class FlowChartView : UserControl
 
     private bool _connectionRenderScheduled;
 
+    /// <summary>在布局完成优先级合并连线重绘请求，避免连续变化重复渲染。</summary>
     private void ScheduleConnectionRender()
     {
         if (_connectionRenderScheduled) return;
@@ -222,6 +232,7 @@ public partial class FlowChartView : UserControl
 
     #region 临时连线
 
+    /// <summary>同步临时连线、拖拽缓存和选中连线等 ViewModel 状态。</summary>
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(FlowChartViewModel.PendingConnectionGeometry))
@@ -257,6 +268,7 @@ public partial class FlowChartView : UserControl
         }
     }
 
+    /// <summary>模型显示选项变化时刷新连线图层。</summary>
     private void OnModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(FlowChartModel.ShowDataConnections))
@@ -269,6 +281,7 @@ public partial class FlowChartView : UserControl
 
     #region 画布鼠标事件
 
+    /// <summary>仅允许工具箱节点以复制方式拖入画布。</summary>
     private void OnCanvasDragOver(object sender, DragEventArgs e)
     {
         e.Effects = e.Data.GetDataPresent(typeof(NodePaletteItem))
@@ -277,6 +290,7 @@ public partial class FlowChartView : UserControl
         e.Handled = true;
     }
 
+    /// <summary>在鼠标所在画布坐标创建拖入的工具箱节点。</summary>
     private void OnCanvasDrop(object sender, DragEventArgs e)
     {
         if (e.Data.GetData(typeof(NodePaletteItem)) is not NodePaletteItem item) return;
@@ -285,9 +299,10 @@ public partial class FlowChartView : UserControl
         e.Handled = true;
     }
 
+    /// <summary>处理连线选中、空白处取消及框选状态的开始。</summary>
     private void OnCanvasMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (_isPanning || e.ChangedButton != MouseButton.Left) return;
+        if (_viewport.IsPanning || e.ChangedButton != MouseButton.Left) return;
         Focus(); // 确保键盘焦点在 UserControl 上，否则 Delete 键无效
 
         ViewModel.SetSelectedNodes([]);
@@ -318,6 +333,7 @@ public partial class FlowChartView : UserControl
         }
     }
 
+    /// <summary>在候选端口提交临时连线，否则取消本次连线。</summary>
     private void OnCanvasConnectionMouseUp(object sender, MouseButtonEventArgs e)
     {
         if (!ViewModel.IsDrawingConnection) return;
@@ -338,6 +354,7 @@ public partial class FlowChartView : UserControl
         Mouse.Capture(null);
     }
 
+    /// <summary>更新框选区域或临时连线的吸附候选和几何图形。</summary>
     private void OnCanvasMouseMove(object sender, MouseEventArgs e)
     {
         if (_currentViewModel == null) return;
@@ -358,6 +375,7 @@ public partial class FlowChartView : UserControl
         }
     }
 
+    /// <summary>提交框选结果并释放画布鼠标捕获。</summary>
     private void OnCanvasMouseUp(object sender, MouseButtonEventArgs e)
     {
         if (!_isBoxSelecting) return;
@@ -368,6 +386,7 @@ public partial class FlowChartView : UserControl
         e.Handled = true;
     }
 
+    /// <summary>更新选择矩形并选中与其相交的节点。</summary>
     private void UpdateBoxSelection(Point current)
     {
         var rect = new Rect(_boxSelectStart, current);
@@ -390,6 +409,7 @@ public partial class FlowChartView : UserControl
         ViewModel.SetSelectedNodes(selected);
     }
 
+    /// <summary>根据命中节点打开节点菜单，否则打开画布菜单。</summary>
     private void OnCanvasRightClick(object sender, MouseButtonEventArgs e)
     {
         var pos = e.GetPosition(FlowChartCanvas);
@@ -409,6 +429,7 @@ public partial class FlowChartView : UserControl
         ClearConnectionCandidate();
     }
 
+    /// <summary>使用当前节点和画布命令上下文打开节点菜单。</summary>
     private void ShowNodeContextMenu(NodeViewModel nodeVm)
     {
         var menu = (ContextMenu)FindResource("NodeContextMenu");
@@ -416,6 +437,7 @@ public partial class FlowChartView : UserControl
         menu.IsOpen = true;
     }
 
+    /// <summary>使用当前流程上下文打开空白画布菜单。</summary>
     private void ShowCanvasContextMenu()
     {
         var menu = (ContextMenu)FindResource("CanvasContextMenu");
@@ -423,6 +445,7 @@ public partial class FlowChartView : UserControl
         menu.IsOpen = true;
     }
 
+    /// <summary>沿视觉树向上查找命中元素所属的节点视图。</summary>
     private static NodeView? FindAncestorNodeView(DependencyObject? element)
     {
         var current = element;
@@ -434,6 +457,7 @@ public partial class FlowChartView : UserControl
         return null;
     }
 
+    /// <summary>把复制、粘贴和删除快捷键转发到当前流程命令。</summary>
     private void OnFlowChartKeyDown(object sender, KeyEventArgs e)
     {
         if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key == Key.C)
@@ -465,100 +489,9 @@ public partial class FlowChartView : UserControl
 
     #endregion
 
-    #region 缩放控制
-
-    internal static bool ShouldStartCanvasPan(MouseButton button, ModifierKeys modifiers) =>
-        button == MouseButton.Middle ||
-        (button == MouseButton.Left && modifiers.HasFlag(ModifierKeys.Shift));
-
-    private void OnPanMouseDown(object sender, MouseButtonEventArgs e)
-    {
-        if (_currentViewModel == null ||
-            !ShouldStartCanvasPan(e.ChangedButton, Keyboard.Modifiers)) return;
-
-        _isPanning = true;
-        _panButton = e.ChangedButton;
-        _panStart = e.GetPosition(ScrollViewerHost);
-        _panStartHorizontalOffset = ScrollViewerHost.HorizontalOffset;
-        _panStartVerticalOffset = ScrollViewerHost.VerticalOffset;
-        ZoomContainer.Cursor = Cursors.Hand;
-        ZoomContainer.CaptureMouse();
-        e.Handled = true;
-    }
-
-    private void OnPanMouseMove(object sender, MouseEventArgs e)
-    {
-        if (!_isPanning) return;
-        var panButtonPressed = _panButton switch
-        {
-            MouseButton.Middle => e.MiddleButton == MouseButtonState.Pressed,
-            MouseButton.Left => e.LeftButton == MouseButtonState.Pressed,
-            _ => false
-        };
-        if (!panButtonPressed) return;
-        var current = e.GetPosition(ScrollViewerHost);
-        var delta = current - _panStart;
-        ScrollViewerHost.ScrollToHorizontalOffset(_panStartHorizontalOffset - delta.X);
-        ScrollViewerHost.ScrollToVerticalOffset(_panStartVerticalOffset - delta.Y);
-        e.Handled = true;
-    }
-
-    private void OnPanMouseUp(object sender, MouseButtonEventArgs e)
-    {
-        if (!_isPanning || e.ChangedButton != _panButton) return;
-        _isPanning = false;
-        _panButton = null;
-        ZoomContainer.ReleaseMouseCapture();
-        ZoomContainer.Cursor = Cursors.Arrow;
-        e.Handled = true;
-    }
-
-    private void OnScrollViewerPreviewMouseWheel(object sender, MouseWheelEventArgs e)
-    {
-        e.Handled = true;
-
-        var containerPos = e.GetPosition(ZoomContainer);
-        var mousePos = e.GetPosition(ScrollViewerHost);
-        double oldZoom = ViewModel.Model.ZoomLevel;
-
-        if (e.Delta > 0)
-            ViewModel.ZoomInCommand.Execute(null);
-        else
-            ViewModel.ZoomOutCommand.Execute(null);
-
-        double newZoom = ViewModel.Model.ZoomLevel;
-        if (Math.Abs(newZoom - oldZoom) < 0.001) return;
-
-        double newOffsetX = containerPos.X * newZoom - mousePos.X;
-        double newOffsetY = containerPos.Y * newZoom - mousePos.Y;
-        ScrollViewerHost.ScrollToHorizontalOffset(newOffsetX);
-        ScrollViewerHost.ScrollToVerticalOffset(newOffsetY);
-    }
-
-    private void OnZoomToFitRequested(object? sender,
-        (double contentWidth, double contentHeight, double offsetX, double offsetY) data)
-    {
-        double viewportWidth = ScrollViewerHost.ViewportWidth;
-        double viewportHeight = ScrollViewerHost.ViewportHeight;
-        if (viewportWidth <= 0 || viewportHeight <= 0) return;
-
-        double scaleX = viewportWidth / data.contentWidth;
-        double scaleY = viewportHeight / data.contentHeight;
-        double scale = Math.Min(scaleX, scaleY);
-        scale = Math.Clamp(scale, FlowChartModel.MinZoom, FlowChartModel.MaxZoom);
-        scale = Math.Round(scale, 2);
-
-        ViewModel.Model.ZoomLevel = scale;
-        double scrollX = data.offsetX * scale;
-        double scrollY = data.offsetY * scale;
-        ScrollViewerHost.ScrollToHorizontalOffset(scrollX);
-        ScrollViewerHost.ScrollToVerticalOffset(scrollY);
-    }
-
-    #endregion
-
     #region 辅助
 
+    /// <summary>创建使用统一资源样式的临时连线路径。</summary>
     private Path CreatePendingConnectionPath()
     {
         var path = new Path();
@@ -566,6 +499,7 @@ public partial class FlowChartView : UserControl
         return path;
     }
 
+    /// <summary>为当前源端口缓存坐标及可连接的目标端口。</summary>
     private void EnsureConnectionDragCache()
     {
         var source = ViewModel.ConnectionSourcePort;
@@ -589,12 +523,14 @@ public partial class FlowChartView : UserControl
         }
     }
 
+    /// <summary>使源端口和候选目标缓存失效。</summary>
     private void InvalidateConnectionDragCache()
     {
         _cachedConnectionSource = null;
         _cachedConnectionTargets.Clear();
     }
 
+    /// <summary>选择吸附半径内最近的可连接端口并更新高亮。</summary>
     private void UpdateConnectionCandidate(Point mousePosition)
     {
         PortConnectorView? nearest = null;
@@ -621,6 +557,7 @@ public partial class FlowChartView : UserControl
             _connectionCandidate.IsConnectionCandidate = true;
     }
 
+    /// <summary>清除当前连接候选及其高亮状态。</summary>
     private void ClearConnectionCandidate()
     {
         if (_connectionCandidate != null)
@@ -628,6 +565,7 @@ public partial class FlowChartView : UserControl
         _connectionCandidate = null;
     }
 
+    /// <summary>清除候选端口并重置全部连线拖动缓存。</summary>
     private void ResetConnectionDragCache()
     {
         ClearConnectionCandidate();

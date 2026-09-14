@@ -14,6 +14,7 @@ public class BranchMergeNode : NodeModel
 {
     private BranchMergeOperator _mergeOperator = BranchMergeOperator.OR;
 
+    /// <summary>决定任一有效分支或全部有效分支完成后继续。</summary>
     [NodeProperty(DisplayName = "汇聚方式", Group = "1.基础信息", Order = 0,
         PortConfigurable = false,
         Description = "OR：任一分支完成即继续；AND：全部已连接分支都完成才继续")]
@@ -23,6 +24,7 @@ public class BranchMergeNode : NodeModel
         set => SetProperty(ref _mergeOperator, value);
     }
 
+    /// <inheritdoc />
     public override FlowJoinMode FlowJoinMode
         => MergeOperator == BranchMergeOperator.AND
             ? FlowJoinMode.AllActive
@@ -30,6 +32,7 @@ public class BranchMergeNode : NodeModel
 
     private int _inputCount = 2;
 
+    /// <summary>画布中显示的汇聚输入端口数量。</summary>
     [NodeProperty(DisplayName = "汇聚输入数量", Group = "1.基础信息", Order = 1,
         Min = 2, Max = 12, Step = 1, PortConfigurable = false,
         Description = "需要显示的分支输入端口数量，支持二选一到十二选一")]
@@ -52,6 +55,7 @@ public class BranchMergeNode : NodeModel
         }
     }
 
+    /// <summary>初始化至少包含两个控制流输入的分支汇聚节点。</summary>
     public BranchMergeNode()
     {
         Name = "分支汇聚";
@@ -60,20 +64,24 @@ public class BranchMergeNode : NodeModel
         EnsureInputs(_inputCount);
     }
 
+    /// <summary>完成汇聚节点本身的空操作，实际汇聚条件由执行引擎处理。</summary>
     public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
 
+    /// <summary>在上限内增加一个汇聚输入。</summary>
     [NodeAction("添加汇聚输入", Order = 0, IconResource = "Plus")]
     public void AddInput()
     {
         if (InputCount < 12) InputCount++;
     }
 
+    /// <summary>删除最后一个未接线输入，但始终保留至少两个输入。</summary>
     [NodeAction("删除末输入", Order = 1, IconResource = "Minus")]
     public void RemoveLastInput()
     {
         if (InputCount > 2) InputCount--;
     }
 
+    /// <summary>确保从分支一到指定数量的控制流输入均存在。</summary>
     private void EnsureInputs(int count)
     {
         for (var index = 1; index <= count; index++)
@@ -83,9 +91,9 @@ public class BranchMergeNode : NodeModel
                        ?? AddCustomInputPort(name);
             port.DataType = PortType.Flow;
         }
-        InvalidatePorts();
     }
 
+    /// <summary>删除超过保留数量的尾部汇聚输入。</summary>
     private void PruneInputs(int keepCount)
     {
         for (var index = 12; index > keepCount; index--)
@@ -93,9 +101,9 @@ public class BranchMergeNode : NodeModel
             var port = CustomInputPorts.FirstOrDefault(candidate => candidate.Name == $"分支{index}");
             if (port != null) RemoveCustomPort(port.Id);
         }
-        InvalidatePorts();
     }
 
+    /// <summary>判断待裁剪的尾部输入中是否仍存在连线。</summary>
     private bool HasWiredInputAbove(int keepCount)
     {
         if (Service == null) return false;
@@ -104,6 +112,7 @@ public class BranchMergeNode : NodeModel
             Service.Connections.Any(connection => connection.TargetPortId == port.Id));
     }
 
+    /// <summary>从“分支N”端口名解析一基输入序号。</summary>
     private static bool TryGetInputIndex(string name, out int index)
     {
         index = 0;
@@ -115,6 +124,8 @@ public class BranchMergeNode : NodeModel
 /// <summary>分支汇聚逻辑运算符。</summary>
 public enum BranchMergeOperator
 {
+    /// <summary>任一活动分支完成即可继续。</summary>
     OR,
+    /// <summary>全部活动分支完成后继续。</summary>
     AND
 }

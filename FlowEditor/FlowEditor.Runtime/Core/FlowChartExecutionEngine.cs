@@ -8,19 +8,9 @@ namespace FlowEditor.Core;
 /// <summary>流程图类型不匹配异常。</summary>
 public class FlowChartTypeMismatchException : Exception
 {
+    /// <summary>使用描述不兼容端口或值的消息创建异常。</summary>
+    /// <param name="message">类型不匹配的诊断消息。</param>
     public FlowChartTypeMismatchException(string message) : base(message) { }
-}
-
-/// <summary>流程图存在环路异常。</summary>
-public class FlowChartCycleException : Exception
-{
-    public FlowChartCycleException(string message) : base(message) { }
-}
-
-/// <summary>流程图中未找到开始节点。</summary>
-public class FlowChartNoStartNodeException : Exception
-{
-    public FlowChartNoStartNodeException(string message) : base(message) { }
 }
 
 /// <summary>
@@ -36,6 +26,8 @@ public class FlowChartNoStartNodeException : Exception
 /// </summary>
 public class FlowChartExecutionEngine
 {
+    private readonly IExecutionLogContext _logContext;
+
     /// <summary>引用类型计数器，可在 async 方法间安全共享。</summary>
     private sealed class ExecutionCounter
     {
@@ -48,6 +40,19 @@ public class FlowChartExecutionEngine
     /// 循环回边 BumpRun 不重置，因此循环节点能看到自身在循环内的"被触发序号"，同时循环外的节点 RunSequence 紧接其后。
     /// </summary>
     private int _runSeqCounter;
+
+    /// <summary>创建执行引擎，并使用宿主日志上下文或无头默认上下文。</summary>
+    /// <param name="logContext">宿主日志上下文；省略时不产生上下文副作用。</param>
+    public FlowChartExecutionEngine(IExecutionLogContext? logContext = null)
+    {
+        _logContext = logContext ?? NullExecutionLogContext.Instance;
+    }
+
+    /// <summary>
+    /// 创建共享同一日志上下文、但拥有独立调度状态的引擎。
+    /// 并行泳道和嵌套容器必须使用独立实例，避免运行序号相互覆盖。
+    /// </summary>
+    public FlowChartExecutionEngine CreateIsolated() => new(_logContext);
 
     private static long Timestamp() => Stopwatch.GetTimestamp();
 
@@ -155,7 +160,7 @@ public class FlowChartExecutionEngine
         var startTimestamp = Timestamp();
         nodeVm.Status = NodeStatus.Running;
         orderBag?.Enqueue(nodeVm);
-        log($"#{FlowLogContext.RunId} [{nodeVm.Name}] [开始]");
+        log($"#{_logContext.RunId} [{nodeVm.Name}] [开始]");
         journal?.RecordNodeStart(nodeVm.Id, nodeVm.Name);
         nodeVm.Count++;
         nodeVm.CurrentRunCount++;
@@ -169,7 +174,15 @@ public class FlowChartExecutionEngine
     /// FailFast 策略或父级取消时抛出异常，由各调度器决定传播；
     /// ContinueOnError 与 RouteToErrorPort 不抛出，通过返回值表达失败。
     /// </summary>
+    /// <param name="nodeVm">要执行的节点。</param>
+    /// <param name="graph">节点所属的已编译执行图。</param>
+    /// <param name="ct">用于停止节点执行的取消令牌。</param>
+    /// <param name="log">接收格式化执行日志的回调。</param>
+    /// <param name="orderBag">可选的实际启动顺序收集器。</param>
+    /// <param name="onExecuted">可选的节点执行完成通知。</param>
     /// <param name="enforceFailFast">强制快速失败（调试串行模式使用），忽略节点的容错策略。</param>
+    /// <param name="journal">可选的执行追踪日志。</param>
+    /// <param name="prestartedTimestamp">节点已由调度器标记为开始时使用的时间戳。</param>
     private async Task<NodeRunResult> ExecuteSingleNodeAsync<TNode>(
         TNode nodeVm,
         CompiledFlowGraph<TNode> graph,
@@ -182,7 +195,7 @@ public class FlowChartExecutionEngine
         long? prestartedTimestamp = null) where TNode : INodeExecutable
     {
         // 节点级日志统一为「#运行序号 [节点名] 内容」，与 NodeLog 面板/文件格式一致
-        Action<string> nodeLog = msg => log($"#{FlowLogContext.RunId} [{nodeVm.Name}] {msg}");
+        Action<string> nodeLog = msg => log($"#{_logContext.RunId} [{nodeVm.Name}] {msg}");
         var startTimestamp = prestartedTimestamp ??
             BeginNodeExecution(nodeVm, log, orderBag, journal);
 
@@ -219,8 +232,8 @@ public class FlowChartExecutionEngine
                 {
                     FillInputPorts(nodeVm, graph, journal);
                     nodeVm.SyncInputValues();
-                    // 节点执行作用域：日志按当前节点路由（FlowLogContext.NodeName）
-                    using (FlowLogContext.EnterNode(nodeVm.Name))
+                    // 节点执行作用域：由宿主日志 adapter 按当前节点路由。
+                    using (_logContext.EnterNode(nodeVm.Name))
                     {
                         await nodeVm.ExecuteAsync(timeoutCts?.Token ?? ct);
                     }
@@ -260,8 +273,7 @@ public class FlowChartExecutionEngine
             nodeVm.LastElapsedMs = (long)ElapsedMs(startTimestamp);
             nodeVm.Status = NodeStatus.Error;
             journal?.RecordNodeFinish(nodeVm.Id, nodeVm.Name, NodeStatus.Error, nodeVm.LastElapsedMs);
-            var prefix = failure is FlowChartTypeMismatchException or NodeTimeoutException ? "[错误]" : "[错误]";
-            prefix = failure is FlowChartTypeMismatchException ? "[类型错误]" : prefix;
+            var prefix = failure is FlowChartTypeMismatchException ? "[类型错误]" : "[错误]";
 
             switch (errorPolicy)
             {
@@ -832,7 +844,7 @@ public class FlowChartExecutionEngine
                 {
                     if (!pendingBackEdgeTargets.Add(succId)) continue;
 
-                    FlowLogContext.BumpRun();
+                    _logContext.BumpRun();
                     log($"[环路] 重新调度 {nodeMap[succId].Name}");
 
                     if (nodeMap[succId].FlowJoinMode != FlowJoinMode.AllActive)

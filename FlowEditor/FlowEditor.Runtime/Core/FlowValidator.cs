@@ -1,38 +1,6 @@
 using FlowEditor.Models;
-using FlowEditor.Nodes;
-using FlowEditor.Nodes.FlowControl;
 
 namespace FlowEditor.Core;
-
-/// <summary>诊断严重级别。</summary>
-public enum FlowDiagnosticSeverity
-{
-    /// <summary>错误：阻止执行。</summary>
-    Error,
-    /// <summary>警告：不阻止执行。</summary>
-    Warning,
-    /// <summary>提示：仅供参考。</summary>
-    Info
-}
-
-/// <summary>单条诊断。</summary>
-/// <param name="Severity">级别。</param>
-/// <param name="Code">诊断代码（如 E-IN-REQ）。</param>
-/// <param name="Message">人类可读描述。</param>
-public sealed record FlowDiagnostic(FlowDiagnosticSeverity Severity, string Code, string Message)
-{
-    public override string ToString() => $"[{Code}] {Message}";
-}
-
-/// <summary>静态分析报告。</summary>
-public sealed class FlowValidationReport
-{
-    public List<FlowDiagnostic> Diagnostics { get; } = new();
-
-    public bool HasErrors => Diagnostics.Any(d => d.Severity == FlowDiagnosticSeverity.Error);
-
-    public int ErrorCount => Diagnostics.Count(d => d.Severity == FlowDiagnosticSeverity.Error);
-}
 
 /// <summary>
 /// 流程图静态分析器（P2）。
@@ -52,7 +20,7 @@ public static class FlowValidator
     /// <param name="connections">待校验的连线。</param>
     /// <returns>包含全部错误、警告和提示的报告。</returns>
     public static FlowValidationReport Analyze(
-        IReadOnlyList<NodeModel> nodes,
+        IReadOnlyList<INodeExecutable> nodes,
         IReadOnlyList<ConnectionModel> connections)
     {
         var report = new FlowValidationReport();
@@ -67,7 +35,7 @@ public static class FlowValidator
         ValidateParallelForks(nodes, connections, report);
         ValidateExecutionContainers(nodes, connections, report);
 
-        var topLevel = ExecutionGraphScope.CreateTopLevel(nodes, connections, node => node);
+        var topLevel = ExecutionGraphScope.CreateTopLevel(nodes, connections);
         AnalyzeScope(
             topLevel.Nodes,
             topLevel.Connections,
@@ -75,9 +43,9 @@ public static class FlowValidator
             allowImplicitEntry: false,
             scopeName: null);
 
-        foreach (var container in nodes.OfType<IExecutionScopeContainer>())
+        foreach (var container in nodes.OfType<IExecutionScopeDescriptor>())
         {
-            var containerNode = (NodeModel)container;
+            var containerNode = nodes.First(node => ReferenceEquals(node, container));
             foreach (var lane in container.ExecutionLanes)
             {
                 var laneNodes = nodes.Where(node =>
@@ -100,10 +68,11 @@ public static class FlowValidator
     /// 控制流不允许用同一个端口表达隐式分叉或隐式汇聚。
     /// 分叉节点通过多个输出端口表达，汇聚节点通过多个输入端口表达。
     /// </summary>
-    private static void ValidateFlowPortCardinality(
-        IReadOnlyList<NodeModel> nodes,
+    private static void ValidateFlowPortCardinality<TNode>(
+        IReadOnlyList<TNode> nodes,
         IReadOnlyList<ConnectionModel> connections,
         FlowValidationReport report)
+        where TNode : INodeExecutable
     {
         var nodeMap = nodes.ToDictionary(node => node.Id);
         foreach (var group in connections.GroupBy(connection => connection.SourcePortId))
@@ -130,10 +99,11 @@ public static class FlowValidator
     }
 
     /// <summary>并行分叉的全部输出必须有线，并在下游收束到同一个 AND 汇聚。</summary>
-    private static void ValidateParallelForks(
-        IReadOnlyList<NodeModel> nodes,
+    private static void ValidateParallelForks<TNode>(
+        IReadOnlyList<TNode> nodes,
         IReadOnlyList<ConnectionModel> connections,
         FlowValidationReport report)
+        where TNode : INodeExecutable
     {
         var nodeMap = nodes.ToDictionary(node => node.Id);
         var flowConnections = connections.Where(connection =>
@@ -143,7 +113,7 @@ public static class FlowValidator
         var outgoing = flowConnections.GroupBy(connection => connection.SourceNodeId)
             .ToDictionary(group => group.Key, group => group.ToList());
 
-        foreach (var fork in nodes.OfType<ParallelForkNode>())
+        foreach (var fork in nodes.OfType<IParallelForkNode>())
         {
             var branchPorts = fork.OutputPorts.Where(port => port.DataType == PortType.Flow).ToList();
             var branchStarts = new List<string>(branchPorts.Count);
@@ -183,10 +153,12 @@ public static class FlowValidator
         }
     }
 
-    private static HashSet<string> FindReachableAndMerges(
+    /// <summary>查找从分支入口可达的全部 AND 汇聚节点。</summary>
+    private static HashSet<string> FindReachableAndMerges<TNode>(
         string startId,
-        IReadOnlyDictionary<string, NodeModel> nodeMap,
+        IReadOnlyDictionary<string, TNode> nodeMap,
         IReadOnlyDictionary<string, List<ConnectionModel>> outgoing)
+        where TNode : INodeExecutable
     {
         var result = new HashSet<string>();
         var visited = new HashSet<string>();
@@ -196,7 +168,7 @@ public static class FlowValidator
         {
             if (!visited.Add(current)) continue;
             if (nodeMap.TryGetValue(current, out var node) &&
-                node is BranchMergeNode { MergeOperator: BranchMergeOperator.AND })
+                node.FlowJoinMode == FlowJoinMode.AllActive)
                 result.Add(current);
             if (!outgoing.TryGetValue(current, out var next)) continue;
             foreach (var connection in next)
@@ -205,19 +177,21 @@ public static class FlowValidator
         return result;
     }
 
-    private static void AnalyzeScope(
-        IReadOnlyList<NodeModel> nodes,
+    /// <summary>分析单个可执行作用域的入口、可达性、端口和类型规则。</summary>
+    private static void AnalyzeScope<TNode>(
+        IReadOnlyList<TNode> nodes,
         IReadOnlyList<ConnectionModel> allConnections,
         FlowValidationReport report,
         bool allowImplicitEntry,
         string? scopeName)
+        where TNode : INodeExecutable
     {
         if (nodes.Count == 0) return;
         var ids = nodes.Select(node => node.Id).ToHashSet();
         var connections = allConnections.Where(connection =>
                 ids.Contains(connection.SourceNodeId) && ids.Contains(connection.TargetNodeId))
             .ToList();
-        var graph = CompiledFlowGraph<NodeModel>.Compile(nodes, connections);
+        var graph = CompiledFlowGraph<TNode>.Compile(nodes, connections);
 
         // 可达性：从入口沿出边 BFS
         var reachable = new HashSet<string>();
@@ -234,7 +208,7 @@ public static class FlowValidator
         foreach (var node in nodes)
         {
             // IN 必连检查
-            if (node.IsInEnabled)
+            if (node is IFlowValidationNode { RequiresFlowInput: true })
             {
                 var inPort = node.InputPorts.FirstOrDefault(p => p.Name == "Next_IN");
                 if (inPort != null && graph.IncomingConnections[node.Id].Count == 0 &&
@@ -304,14 +278,17 @@ public static class FlowValidator
         }
     }
 
-    private static void ValidateExecutionContainers(
-        IReadOnlyList<NodeModel> nodes,
+    /// <summary>验证容器归属、泳道入口和跨作用域连线规则。</summary>
+    private static void ValidateExecutionContainers<TNode>(
+        IReadOnlyList<TNode> nodes,
         IReadOnlyList<ConnectionModel> connections,
         FlowValidationReport report)
+        where TNode : INodeExecutable
     {
         var nodeMap = nodes.ToDictionary(node => node.Id);
-        var containers = nodes.OfType<IExecutionScopeContainer>()
-            .ToDictionary(container => ((NodeModel)container).Id);
+        var containers = nodes
+            .Where(node => node is IExecutionScopeDescriptor)
+            .ToDictionary(node => node.Id, node => (Node: node, Scope: (IExecutionScopeDescriptor)node));
 
         foreach (var node in nodes.Where(node => node.ParentExecutionContainerId != null))
         {
@@ -324,15 +301,16 @@ public static class FlowValidator
             }
 
             if (node.ExecutionLaneId == null ||
-                parent.ExecutionLanes.All(lane => lane.Id != node.ExecutionLaneId))
+                parent.Scope.ExecutionLanes.All(lane => lane.Id != node.ExecutionLaneId))
                 report.Diagnostics.Add(new FlowDiagnostic(
                     FlowDiagnosticSeverity.Error, "E-SCOPE-LANE",
-                    $"节点 [{node.Name}] 未归属到 [{((NodeModel)parent).Name}] 的有效泳道"));
+                    $"节点 [{node.Name}] 未归属到 [{parent.Node.Name}] 的有效泳道"));
         }
 
-        foreach (var (containerId, container) in containers)
+        foreach (var (containerId, containerEntry) in containers)
         {
-            var containerNode = (NodeModel)container;
+            var containerNode = containerEntry.Node;
+            var container = containerEntry.Scope;
             foreach (var lane in container.ExecutionLanes)
             {
                 var members = nodes.Where(node =>
@@ -382,31 +360,37 @@ public static class FlowValidator
         }
     }
 
-    private static bool IsLoopBoundaryConnection(
-        NodeModel source,
-        NodeModel target,
-        IReadOnlyDictionary<string, NodeModel> nodes) =>
+    /// <summary>判断连线是否为循环容器允许保留的边界连线。</summary>
+    private static bool IsLoopBoundaryConnection<TNode>(
+        TNode source,
+        TNode target,
+        IReadOnlyDictionary<string, TNode> nodes)
+        where TNode : INodeExecutable =>
         IsInsideToOutsideLoop(source, target, nodes) ||
         IsInsideToOutsideLoop(target, source, nodes);
 
-    private static bool IsInsideToOutsideLoop(
-        NodeModel inside,
-        NodeModel outside,
-        IReadOnlyDictionary<string, NodeModel> nodes)
+    /// <summary>判断节点对是否由循环体内部指向其同级外部作用域。</summary>
+    private static bool IsInsideToOutsideLoop<TNode>(
+        TNode inside,
+        TNode outside,
+        IReadOnlyDictionary<string, TNode> nodes)
+        where TNode : INodeExecutable
     {
         if (inside.ParentExecutionContainerId == null ||
             !nodes.TryGetValue(inside.ParentExecutionContainerId, out var owner) ||
-            owner is not LoopContainerNode) return false;
+            owner is not IExecutionScopeDescriptor { ScopeKind: ExecutionScopeKind.Loop }) return false;
         return outside.ParentExecutionContainerId == owner.ParentExecutionContainerId &&
                outside.ExecutionLaneId == owner.ExecutionLaneId;
     }
 
+    /// <summary>优先返回节点名称，缺失时回退到稳定标识。</summary>
     private static string Short(string? name, string fallback) => name ?? fallback;
 
     // 绑定属性检查缓存：(类型, 属性名, 是否要求可写) → 结果
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<(Type, string, bool), bool> PropertyCheckCache = new();
 
-    private static bool HasReadableWritableProperty(NodeModel node, string propertyName, bool writable)
+    /// <summary>通过缓存反射结果验证端口绑定属性是否具有所需访问能力。</summary>
+    private static bool HasReadableWritableProperty(INodeExecutable node, string propertyName, bool writable)
         => PropertyCheckCache.GetOrAdd((node.GetType(), propertyName, writable), static key =>
         {
             for (var t = key.Item1; t != null && t != typeof(object); t = t.BaseType)

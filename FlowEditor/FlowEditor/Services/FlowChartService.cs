@@ -3,10 +3,9 @@ using FlowEditor.Core;
 using FlowEditor.Interfaces;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
-using FlowEditor.Nodes.FlowControl;
-using FlowEditor.Services.Execution;
 using FlowEditor.Services.Documents;
 using FlowEditor.Services.Editing;
+using FlowEditor.Services.Execution;
 using FlowEditor.ViewModels;
 
 namespace FlowEditor.Services;
@@ -36,7 +35,6 @@ public class FlowChartService : IFlowChartService
     /// <summary>宿主提供的节点信息提示通道。</summary>
     public INodeNotificationSink NodeNotifications { get; }
 
-    private readonly FlowDocumentMapper _documentMapper;
     private readonly FlowOutputBuffer _output;
     private readonly FlowExecutionCoordinator _execution;
     private readonly FlowDocumentSession _documents;
@@ -65,15 +63,15 @@ public class FlowChartService : IFlowChartService
         NodeEditorLauncher = nodeEditorLauncher ?? NullNodeInteraction.Instance;
         NodeNotifications = nodeNotifications ?? NullNodeInteraction.Instance;
         var dispatcher = uiDispatcher ?? ImmediateUiDispatcher.Instance;
-        _documentMapper = documentMapper ?? new FlowDocumentMapper();
+        var mapper = documentMapper ?? new FlowDocumentMapper();
         _output = new FlowOutputBuffer(text => Model.OutputText = text, dispatcher);
         UndoRedo = new UndoRedoService();
         _canvas = new FlowCanvasSession(this, Model, Nodes, Connections, UndoRedo, _output);
         _execution = new FlowExecutionCoordinator(
-            Model, Nodes, Connections, engine, _documentMapper, dispatcher, _output,
+            Model, Nodes, Connections, engine, mapper, dispatcher, _output,
             () => ProcessName);
         _documents = new FlowDocumentSession(
-            Model, Nodes, Connections, documentStore, _documentMapper, dialogService, UndoRedo,
+            Model, Nodes, Connections, documentStore, mapper, dialogService, UndoRedo,
             node => _canvas.AddNode(node), _canvas.ClearNodes);
     }
 
@@ -153,9 +151,6 @@ public class FlowChartService : IFlowChartService
     /// <summary>缩小画布。</summary>
     public void ZoomOut() => _canvas.ZoomOut();
 
-    /// <summary>重置画布缩放。</summary>
-    public void ZoomReset() => _canvas.ZoomReset();
-
     /// <summary>请求自适应全部画布内容。</summary>
     public void ZoomToFit() => _canvas.ZoomToFit();
 
@@ -171,9 +166,6 @@ public class FlowChartService : IFlowChartService
     /// <summary>追加日志到输出缓冲，并按节流策略刷新输出栏。</summary>
     public void AppendLog(string message) => _output.Append(message);
 
-    /// <summary>立即将日志缓冲冲刷到输出面板（节流期间的最后一批日志在执行结束时调用）。</summary>
-    public void FlushLog() => _output.Flush();
-
     /// <summary>清空日志缓冲与输出面板；已经排队的节流刷新只会发布清空后的内容。</summary>
     public void ClearOutput() => _output.Clear();
 
@@ -187,11 +179,11 @@ public class FlowChartService : IFlowChartService
 
     /// <summary>从节点文档重建节点模型（用于 ToolBlock 内部节点还原）。</summary>
     public NodeModel RebuildNodeFromDocument(NodeDocumentModel doc)
-        => _documentMapper.ToNode(doc);
+        => _documents.RebuildNodeFromDocument(doc);
 
     /// <summary>从节点模型构建节点文档（用于 ToolBlock 内部节点序列化）。</summary>
     public NodeDocumentModel BuildNodeDocument(NodeModel node)
-        => _documentMapper.ToNodeDocument(node);
+        => _documents.BuildNodeDocument(node);
 
     // ── 节点管理 ──
 
@@ -204,6 +196,4 @@ public class FlowChartService : IFlowChartService
     /// <summary>从画布移除节点，并通知节点生命周期回调。</summary>
     public void RemoveNode(NodeViewModel nodeVm) => _canvas.RemoveNode(nodeVm);
 
-    /// <summary>清空画布上的全部节点，并逐个触发卸载回调。作为批量操作期间禁止移除共享资源（如视觉工具）。</summary>
-    public void ClearNodes() => _canvas.ClearNodes();
 }

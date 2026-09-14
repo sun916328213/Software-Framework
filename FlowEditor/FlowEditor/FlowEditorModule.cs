@@ -53,8 +53,9 @@ using System.Windows;namespace FlowEditor
             // 文档 mapper：无状态，统一单流程、多流程、快照与节点复制的 DTO 转换
             containerRegistry.RegisterSingleton<INodeFactory, PrismNodeFactory>();
             containerRegistry.RegisterSingleton<FlowDocumentMapper>();
-            // 执行引擎：单例（无状态纯算法）
-            containerRegistry.RegisterSingleton<FlowChartExecutionEngine>();
+            // 日志上下文可共享；执行引擎含单次运行序号状态，每个流程服务使用独立实例
+            containerRegistry.RegisterSingleton<IExecutionLogContext, FlowLogExecutionContextAdapter>();
+            containerRegistry.Register<FlowChartExecutionEngine>();
             // 流程图服务：瞬态，每个标签页独立实例
             containerRegistry.Register<IFlowChartService, FlowChartService>();
             // 工具箱服务：瞬态，每个容器 ViewModel 独立实例

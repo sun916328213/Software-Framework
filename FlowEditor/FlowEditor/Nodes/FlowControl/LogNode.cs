@@ -13,6 +13,7 @@ namespace FlowEditor.Nodes.FlowControl;
 public class LogNode : NodeModel
 {
     private string _message = "Hello World";
+    /// <summary>写入输出面板和日志文件的消息正文。</summary>
     [NodeProperty(DisplayName = "信息", Group = "1.基础信息", Order = 1)]
     public string Message
     {
@@ -21,6 +22,7 @@ public class LogNode : NodeModel
     }
 
     private ELogLevel _level = ELogLevel.Information;
+    /// <summary>写入流程日志文件时使用的日志等级。</summary>
     [NodeProperty(DisplayName = "信息等级", Group = "1.基础信息", Order = 2)]
     public ELogLevel Level
     {
@@ -28,11 +30,13 @@ public class LogNode : NodeModel
         set => SetProperty(ref _level, value);
     }
 
+    /// <summary>创建默认输出信息级日志的节点。</summary>
     public LogNode()
     {
         Name = "日志输出";
     }
 
+    /// <inheritdoc />
     public override Task ExecuteAsync(CancellationToken ct)
     {
         // 信息级：Console 捕获路径自动完成「面板 + 文件（信息级）」，一句即可

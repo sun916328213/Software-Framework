@@ -67,7 +67,10 @@ public class SwitchNode : NodeModel
         {
             var clamped = Math.Clamp(value, 2, 12);
             if (SetProperty(ref _branchCount, clamped))
+            {
                 EnsureNumberedBranches(clamped);
+                PruneNumberedBranches(clamped);
+            }
         }
     }
 
@@ -123,6 +126,7 @@ public class SwitchNode : NodeModel
     /// </summary>
     public const string EmptyBranchName = "空分支";
 
+    /// <summary>创建具有输入端口和默认编号分支的条件分发节点。</summary>
     public SwitchNode()
     {
         Name = "条件分发";
@@ -140,6 +144,7 @@ public class SwitchNode : NodeModel
         RemoveLegacyEmptyBranchPort();
     }
 
+    /// <inheritdoc />
     public override Task ExecuteAsync(CancellationToken ct)
     {
         // 规则右侧写了新分支名时自动补端口，保证 ActivateOutput 的目标端口真实存在
@@ -254,6 +259,7 @@ public class SwitchNode : NodeModel
             EnsureFlowPort(branch);
     }
 
+    /// <summary>删除旧流程遗留且未接线的空分支端口。</summary>
     private void RemoveLegacyEmptyBranchPort()
     {
         var port = CustomOutputPorts.FirstOrDefault(candidate => candidate.Name == EmptyBranchName);
@@ -261,6 +267,8 @@ public class SwitchNode : NodeModel
             CustomOutputPorts.Remove(port);
     }
 
+    /// <summary>删除指定名称且未被连线引用的保留端口。</summary>
+    /// <param name="portName">待检查的端口名称。</param>
     private void RemoveUnwiredReservedPort(string portName)
     {
         var port = CustomOutputPorts.FirstOrDefault(candidate => candidate.Name == portName);
@@ -327,6 +335,7 @@ public class SwitchNode : NodeModel
 
     #region 画布操作按钮
 
+    /// <summary>请求宿主打开当前节点的分发规则编辑器。</summary>
     [NodeAction("编辑分发规则", Order = 0, IconResource = "TableEdit")]
     public void EditDispatchRules()
     {

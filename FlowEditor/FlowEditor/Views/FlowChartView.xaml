@@ -78,7 +78,6 @@
         x:Name="ScrollViewerHost"
         Background="{x:Null}"
         HorizontalScrollBarVisibility="Hidden"
-        PreviewMouseWheel="OnScrollViewerPreviewMouseWheel"
         VerticalScrollBarVisibility="Hidden">
         <ScrollViewer.Resources>
             <Style BasedOn="{StaticResource {x:Type ScrollViewer}}" TargetType="ScrollViewer">
@@ -92,9 +91,7 @@
             Width="{Binding Model.CanvasWidth}"
             Height="{Binding Model.CanvasHeight}"
             MouseRightButtonDown="OnCanvasRightClick"
-            PreviewMouseDown="OnPanMouseDown"
-            PreviewMouseUp="OnPanMouseUp"
-            PreviewMouseMove="OnPanMouseMove">
+            >
             <Grid.Background>
                 <DrawingBrush
                     Stretch="None"

@@ -10,7 +10,9 @@ namespace FlowEditor.Nodes.FlowControl;
     Description = "把节点拖入容器作为循环体，执行指定次数后继续")]
 public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFlowStructureValidationSource
 {
+    /// <summary>新容器的默认宽度。</summary>
     public const double DefaultWidth = 500;
+    /// <summary>新容器的默认高度。</summary>
     public const double DefaultHeight = 300;
 
     private double _containerWidth = DefaultWidth;
@@ -20,6 +22,7 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
     private int _currentIteration;
     private List<ExecutionLaneDefinition> _lanes = [new() { Name = "循环体" }];
 
+    /// <inheritdoc />
     [NodeProperty(DisplayName = "容器宽度", Group = "0.容器", Order = 0,
         IsDisplay = false, PortConfigurable = false)]
     public double ContainerWidth
@@ -28,6 +31,7 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
         set => SetProperty(ref _containerWidth, Math.Clamp(value, 420, 3200));
     }
 
+    /// <inheritdoc />
     [NodeProperty(DisplayName = "容器高度", Group = "0.容器", Order = 1,
         IsDisplay = false, PortConfigurable = false)]
     public double ContainerHeight
@@ -36,6 +40,7 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
         set => SetProperty(ref _containerHeight, Math.Clamp(value, 240, 2400));
     }
 
+    /// <summary>循环体使用的单一持久化泳道定义。</summary>
     [NodeProperty(DisplayName = "泳道定义", Group = "0.容器", Order = 2,
         IsDisplay = false, PortConfigurable = false)]
     public List<ExecutionLaneDefinition> Lanes
@@ -49,6 +54,7 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
         }
     }
 
+    /// <summary>循环体执行次数；-1 表示无限循环。</summary>
     [NodeProperty(DisplayName = "循环次数", Group = "1.基础信息", Order = 1,
         Min = -1, Max = 1000000, Step = 1, PortConfigurable = false,
         Description = "完整执行容器内循环体的次数；-1 表示无限循环")]
@@ -58,6 +64,7 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
         set => SetProperty(ref _iterationCount, value == -1 ? -1 : Math.Clamp(value, 1, 1_000_000));
     }
 
+    /// <summary>两轮循环之间的等待毫秒数。</summary>
     [NodeProperty(DisplayName = "循环延时(ms)", Group = "1.基础信息", Order = 2,
         Min = 0, Max = 86400000, Step = 100, PortConfigurable = false,
         Description = "每轮循环完成后、下一轮开始前等待的毫秒数；0 表示不等待")]
@@ -67,6 +74,7 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
         set => SetProperty(ref _iterationDelayMs, Math.Clamp(value, 0, 86_400_000));
     }
 
+    /// <summary>当前正在执行或最近失败的循环轮次。</summary>
     [JsonIgnore]
     public int CurrentIteration
     {
@@ -74,10 +82,14 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
         private set => SetProperty(ref _currentIteration, value);
     }
 
+    /// <inheritdoc />
     public ExecutionScopeKind ScopeKind => ExecutionScopeKind.Loop;
+    /// <inheritdoc />
     public bool ShowBoundaryPorts => false;
+    /// <inheritdoc />
     public IReadOnlyList<ExecutionLaneDefinition> ExecutionLanes => Lanes;
 
+    /// <summary>创建包含单个循环体泳道的结构化循环容器。</summary>
     public LoopContainerNode()
     {
         Name = "循环容器";
@@ -85,6 +97,7 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
         IsOutEnabled = true;
     }
 
+    /// <inheritdoc />
     public IEnumerable<FlowDiagnostic> ValidateStructure()
     {
         if (Lanes.Count != 1)
@@ -93,13 +106,15 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
                 $"循环容器 [{Name}] 必须且只能包含一个循环体");
     }
 
+    /// <inheritdoc />
     public override async Task ExecuteAsync(CancellationToken ct)
     {
         var runtime = ExecutionScopeRuntime ?? (Service == null
             ? null
             : new ExecutionScopeRuntime(
                 Service.Nodes.Select(node => node.Model).ToList(),
-                Service.Connections.ToList()));
+                Service.Connections.ToList(),
+                new FlowChartExecutionEngine()));
         if (runtime == null)
             throw new InvalidOperationException($"循环容器 [{Name}] 缺少运行图上下文。");
 
@@ -113,7 +128,7 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
 
         CurrentIteration = 0;
         await LoopFlowRunner.ExecuteAsync(
-            new ParallelFlowLane<NodeModel>(lane.Id, lane.Name, body.Nodes, body.Connections),
+            new ParallelFlowLane<INodeExecutable>(lane.Id, lane.Name, body.Nodes, body.Connections),
             IterationCount,
             ct,
             Console.WriteLine,
@@ -122,7 +137,8 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
                 CurrentIteration = iteration;
                 TransferBoundaryData(runtime, memberIds, importIntoBody: true);
             },
-            IterationDelayMs);
+            IterationDelayMs,
+            engine: runtime.Engine?.CreateIsolated());
         TransferBoundaryData(runtime, memberIds, importIntoBody: false);
     }
 
@@ -145,7 +161,7 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
         CurrentIteration = current;
         TransferBoundaryData(runtime, memberIds, importIntoBody: true);
         log($"[恢复] 循环第 {current} 轮从节点 [{start.Name}] 继续");
-        await new FlowChartExecutionEngine().ExecuteAsync(
+        await (runtime.Engine?.CreateIsolated() ?? new FlowChartExecutionEngine()).ExecuteAsync(
             recovery.Nodes, recovery.Connections, ct, log);
 
         var nextIteration = current + 1;
@@ -154,7 +170,7 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
             if (IterationDelayMs > 0)
                 await Task.Delay(IterationDelayMs, ct);
             await LoopFlowRunner.ExecuteAsync(
-                new ParallelFlowLane<NodeModel>(lane.Id, lane.Name, body.Nodes, body.Connections),
+                new ParallelFlowLane<INodeExecutable>(lane.Id, lane.Name, body.Nodes, body.Connections),
                 IterationCount,
                 ct,
                 log,
@@ -164,7 +180,8 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
                     TransferBoundaryData(runtime, memberIds, importIntoBody: true);
                 },
                 IterationDelayMs,
-                nextIteration);
+                nextIteration,
+                runtime.Engine?.CreateIsolated());
         }
 
         TransferBoundaryData(runtime, memberIds, importIntoBody: false);

@@ -9,6 +9,7 @@ namespace FlowEditor.Nodes.FlowControl;
 [FlowTool("结束", "StopCircleOutline", ToolGroup = "流程控制", SortIndex = 1, Description = "流程图的出口点")]
 public class EndNode : NodeModel
 {
+    /// <summary>创建只带流程输入端口的出口节点。</summary>
     public EndNode()
     {
         Name = "结束";
@@ -17,6 +18,7 @@ public class EndNode : NodeModel
         Status = NodeStatus.Success;
     }
 
+    /// <inheritdoc />
     public override Task ExecuteAsync(CancellationToken ct)
     {
         return Task.CompletedTask;

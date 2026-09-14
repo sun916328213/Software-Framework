@@ -10,6 +10,7 @@ namespace FlowEditor.Converters;
 /// </summary>
 public class PermissionToOpacityConverter : IValueConverter
 {
+    /// <inheritdoc />
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is NodePermission permission)
@@ -25,6 +26,7 @@ public class PermissionToOpacityConverter : IValueConverter
         return 1.0;
     }
 
+    /// <inheritdoc />
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }

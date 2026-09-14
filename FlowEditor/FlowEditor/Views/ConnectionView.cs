@@ -128,6 +128,7 @@ public static class ConnectionRenderer
             connectionCanvas.Children.Remove(stalePath);
     }
 
+    /// <summary>一次遍历收集当前画布中全部可见端口的中心坐标。</summary>
     private static Dictionary<string, Point> CollectPortPositions(Canvas nodeCanvas)
     {
         var positions = new Dictionary<string, Point>();
@@ -140,12 +141,14 @@ public static class ConnectionRenderer
         return positions;
     }
 
+    /// <summary>读取端口缓存坐标；端口尚未生成视觉对象时回退到节点中心附近。</summary>
     private static Point FindPortPositionOnCanvas(
         IReadOnlyDictionary<string, Point> portPositions, NodeViewModel nodeVm, string portId)
         => portPositions.TryGetValue(portId, out var point)
             ? point
             : new Point(nodeVm.X + 100, nodeVm.Y + 50);
 
+    /// <summary>切换命中连线的选中状态。</summary>
     private static void OnConnectionMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is not Path { Tag: ConnectionModel connection } path) return;
@@ -155,6 +158,7 @@ public static class ConnectionRenderer
         e.Handled = true;
     }
 
+    /// <summary>通过流程图命令删除右键命中的连线。</summary>
     private static void OnConnectionMouseRightButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is not Path { Tag: ConnectionModel connection } path) return;
@@ -164,6 +168,7 @@ public static class ConnectionRenderer
         e.Handled = true;
     }
 
+    /// <summary>沿视觉树查找连线所属的流程图 ViewModel。</summary>
     private static FlowChartViewModel? FindFlowChartViewModel(DependencyObject element)
     {
         var current = element;

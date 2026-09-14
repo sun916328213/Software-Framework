@@ -18,14 +18,18 @@ public static class ConsoleOutputRouter
         private readonly TextWriter _previous;
         private static readonly AsyncLocal<Action<string>?> Current = new();
 
+        /// <summary>创建保留原始输出目标的路由写入器。</summary>
         public RoutingConsoleWriter(TextWriter previous) => _previous = previous;
 
         public override Encoding Encoding => _previous.Encoding;
 
+        /// <summary>字符写入保持原控制台语义，不参与按行路由。</summary>
         public override void Write(char value) => _previous.Write(value);
 
+        /// <summary>无换行字符串保持原控制台语义，不提前发布不完整日志。</summary>
         public override void Write(string? value) => _previous.Write(value);
 
+        /// <summary>写入原控制台，并把完整行按当前异步流程上下文转发。</summary>
         public override void WriteLine(string? value)
         {
             _previous.WriteLine(value);
@@ -53,6 +57,7 @@ public static class ConsoleOutputRouter
             }
         }
 
+        /// <summary>为当前异步调用链设置输出接收器，并返回恢复旧接收器的作用域。</summary>
         public static IDisposable EnterScope(Action<string> onLine)
         {
             var old = Current.Value;
@@ -60,8 +65,10 @@ public static class ConsoleOutputRouter
             return new Scope(old);
         }
 
+        /// <summary>保存进入前的接收器，以便作用域结束时恢复嵌套路由。</summary>
         private sealed class Scope(Action<string>? old) : IDisposable
         {
+            /// <summary>恢复进入当前作用域前的控制台行接收器。</summary>
             public void Dispose() => Current.Value = old;
         }
     }

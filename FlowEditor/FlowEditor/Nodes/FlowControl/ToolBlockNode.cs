@@ -20,16 +20,22 @@ public class ToolBlockNode : NodeModel, IInternalFlowContainerNode
     [NodeProperty(DisplayName = "内部流程数据", Group = "0.容器", Order = 0, IsDisplay = false)]
     public List<FlowChartDocumentModel>? InternalData { get; set; }
 
+    /// <inheritdoc />
     public string InternalEditorTitle => $"[{Name}] 内部流程编辑";
 
+    /// <inheritdoc />
     public IReadOnlyCollection<string> ExcludedInternalTools => ["ToolBlock"];
 
+    /// <inheritdoc />
     public int MinimumInternalFlows => 0;
 
+    /// <inheritdoc />
     public int MaximumInternalFlows => int.MaxValue;
 
+    /// <inheritdoc />
     public string InternalFlowNamePrefix => "流程图";
 
+    /// <summary>创建可承载多个内部流程的工具块节点。</summary>
     public ToolBlockNode()
     {
         Name = "ToolBlock";
@@ -46,6 +52,7 @@ public class ToolBlockNode : NodeModel, IInternalFlowContainerNode
         Service?.NodeEditorLauncher.Open(this);
     }
 
+    /// <inheritdoc />
     public override async Task ExecuteAsync(CancellationToken ct)
     {
         if (InternalData == null || InternalData.Count == 0)
@@ -54,17 +61,17 @@ public class ToolBlockNode : NodeModel, IInternalFlowContainerNode
         var service = Service;
         if (service == null) return;
 
-        // 并行执行所有子流程
-        var engine = new FlowChartExecutionEngine();
+        // 并行执行所有子流程；每个子流程使用独立调度状态，但继承外层日志上下文。
         var tasks = InternalData.Select(async flowDoc =>
         {
+            var engine = ExecutionScopeRuntime?.Engine?.CreateIsolated()
+                         ?? new FlowChartExecutionEngine();
             // 重建节点
             var nodeModels = flowDoc.Nodes
                 .Select(n =>
                 {
                     var model = service.RebuildNodeFromDocument(n);
-                    model.Service = service;
-                    model.OnAttached(service);
+                    model.AttachTo(service);
                     return model;
                 })
                 .ToList();
@@ -81,16 +88,23 @@ public class ToolBlockNode : NodeModel, IInternalFlowContainerNode
                     TargetPortId = connection.TargetPortId
                 })
                 .ToList();
-            var runtime = new ExecutionScopeRuntime(nodeModels, connections);
+            var runtime = new ExecutionScopeRuntime(nodeModels, connections, engine);
             foreach (var node in nodeModels)
                 node.ExecutionScopeRuntime = runtime;
 
             // 与主画布使用同一顶层作用域规则，避免容器成员既由容器执行、
             // 又被内部引擎误判成独立入口额外执行一次。
-            var executionGraph = ExecutionGraphScope.CreateTopLevel(
-                nodeModels, connections, node => node);
-            await engine.ExecuteAsync(
-                executionGraph.Nodes, executionGraph.Connections, ct, _ => { });
+            var executionGraph = ExecutionGraphScope.CreateTopLevel(nodeModels, connections);
+            try
+            {
+                await engine.ExecuteAsync(
+                    executionGraph.Nodes, executionGraph.Connections, ct, _ => { });
+            }
+            finally
+            {
+                foreach (var node in nodeModels)
+                    node.DetachFromFlow();
+            }
         });
         await Task.WhenAll(tasks);
     }

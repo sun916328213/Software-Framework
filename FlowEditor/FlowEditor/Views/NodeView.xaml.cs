@@ -16,6 +16,7 @@ public partial class NodeView : UserControl
     private Canvas? _dragCanvas;
     private FlowChartViewModel? _dragFlowChartViewModel;
 
+    /// <summary>初始化节点标题拖拽和端口连线交互。</summary>
     public NodeView()
     {
         InitializeComponent();
@@ -29,6 +30,7 @@ public partial class NodeView : UserControl
 
     #region 标题栏拖拽
 
+    /// <summary>选择节点并开始单节点或多选节点拖拽。</summary>
     private void OnTitleBarMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (DataContext is not NodeViewModel vm) return;
@@ -67,6 +69,7 @@ public partial class NodeView : UserControl
         e.Handled = true;
     }
 
+    /// <summary>根据标题栏指针位置更新当前节点拖拽。</summary>
     private void OnTitleBarMouseMove(object sender, MouseEventArgs e)
     {
         if (DataContext is not NodeViewModel vm || !vm.IsDragging) return;
@@ -78,6 +81,7 @@ public partial class NodeView : UserControl
         else vm.UpdateDrag(mousePos);
     }
 
+    /// <summary>结束节点拖拽并释放标题栏鼠标捕获。</summary>
     private void OnTitleBarMouseUp(object sender, MouseButtonEventArgs e)
     {
         if (DataContext is not NodeViewModel vm) return;
@@ -94,6 +98,7 @@ public partial class NodeView : UserControl
 
     #region 端口连线事件
 
+    /// <summary>从被按下的输出端口开始创建临时连线。</summary>
     private void OnPortMouseDown(object sender, MouseButtonEventArgs e)
     {
         var connector = PortConnectorLocator.FindAncestor(e.OriginalSource as DependencyObject);
@@ -103,11 +108,7 @@ public partial class NodeView : UserControl
         var flowChartVm = FindFlowChartViewModel(this);
         if (flowChartVm == null) return;
 
-        var canvas = FindParentCanvas(this);
-        if (canvas == null) return;
-
-        var portCenter = PortConnectorLocator.GetCenter(connector, canvas);
-        flowChartVm.StartConnection(port, portCenter);
+        flowChartVm.StartConnection(port);
 
         connector.CaptureMouse();
         e.Handled = true;
@@ -117,6 +118,7 @@ public partial class NodeView : UserControl
 
     #region 辅助方法
 
+    /// <summary>查找节点所属的流程画布，并避开连线覆盖画布。</summary>
     private static Canvas? FindParentCanvas(DependencyObject element)
     {
         var current = VisualTreeHelper.GetParent(element);
@@ -136,6 +138,7 @@ public partial class NodeView : UserControl
         return null;
     }
 
+    /// <summary>沿视觉树查找节点所属的流程图 ViewModel。</summary>
     private static FlowChartViewModel? FindFlowChartViewModel(DependencyObject element)
     {
         var current = element;

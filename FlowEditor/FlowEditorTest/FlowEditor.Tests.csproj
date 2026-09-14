@@ -16,6 +16,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FlowEditor.Runtime\FlowEditor.Runtime.csproj" />
     <ProjectReference Include="..\FlowEditor\FlowEditor.csproj" />
   </ItemGroup>
 </Project>

@@ -33,17 +33,10 @@ public partial class FlowChartContainerView : UserControl
 
     #region 导出 PNG
 
-    /// <summary>根据是否存在活动标签页更新 PNG 导出命令状态。</summary>
-    private void OnExportPngCanExecute(object sender, System.Windows.Input.CanExecuteRoutedEventArgs e)
+    /// <summary>处理命令栏发出的导出请求，并把活动画布交给标签页导出模块。</summary>
+    private void OnExportPngRequested(object sender, EventArgs e)
     {
-        e.CanExecute = e.Parameter is FlowChartViewModel;
-        e.Handled = true;
-    }
-
-    /// <summary>执行活动标签页的 PNG 导出。</summary>
-    private void OnExportPngExecuted(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
-    {
-        if (e.Parameter is not FlowChartViewModel activeTab) return;
+        if (VM.ActiveTab is not { } activeTab) return;
 
         var flowChartView = FindActiveFlowChart(FlowTabControl, activeTab);
         if (flowChartView == null)
@@ -55,14 +48,12 @@ public partial class FlowChartContainerView : UserControl
         if (flowChartView == null)
         {
             activeTab.Model.StatusText = "导出失败：活动画布尚未加载";
-            e.Handled = true;
             return;
         }
 
         activeTab.ExportPng(
             flowChartView.ZoomContainerElement,
             activeTab.GetCanvasExportBounds());
-        e.Handled = true;
     }
 
     #endregion

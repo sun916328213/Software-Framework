@@ -11,12 +11,11 @@ namespace FlowEditor.Core;
 /// </summary>
 public sealed class FlowInstance
 {
-    private static readonly Lazy<FlowChartExecutionEngine> SharedEngine = new(() => new());
-
-    private readonly FlowChartExecutionEngine _engine;
     private readonly List<NodeModel> _nodes;
     private readonly List<ConnectionModel> _connections;
+    private readonly FlowRuntimeInstance<NodeModel> _runtime;
 
+    /// <summary>创建已经物化并具有独立运行状态的流程实例。</summary>
     private FlowInstance(
         string name,
         List<NodeModel> nodes,
@@ -26,7 +25,7 @@ public sealed class FlowInstance
         Name = name;
         _nodes = nodes;
         _connections = connections;
-        _engine = engine;
+        _runtime = new FlowRuntimeInstance<NodeModel>(name, nodes, connections, engine);
 
         // 节点状态变化事件桥（订阅方自行处理线程封送）
         foreach (var node in nodes)
@@ -49,10 +48,14 @@ public sealed class FlowInstance
     public IReadOnlyList<ConnectionModel> Connections => _connections;
 
     /// <summary>执行日志/数据追踪器（P4）：记录节点事件与每条连线的传值快照。</summary>
-    public ExecutionJournal Journal { get; } = new();
+    public ExecutionJournal Journal => _runtime.Journal;
 
     /// <summary>调试控制器（P4）：断点与单步门闩；非 null 时 RunAsync 自动启用。</summary>
-    public DebugController? Debug { get; set; }
+    public DebugController? Debug
+    {
+        get => _runtime.Debug;
+        set => _runtime.Debug = value;
+    }
 
     /// <summary>节点状态变化事件（参数：节点 ID、新状态）。后台线程触发。</summary>
     public event Action<string, NodeStatus>? NodeStatusChanged;
@@ -60,7 +63,7 @@ public sealed class FlowInstance
     /// <summary>从编译产物创建运行实例。</summary>
     /// <param name="program">流程程序。</param>
     /// <param name="factory">节点工厂；默认纯反射实现。</param>
-    /// <param name="engine">执行引擎；默认共享单例。</param>
+    /// <param name="engine">执行引擎；默认创建带桌面日志上下文的实例专用引擎。</param>
     public static FlowInstance Create(
         FlowProgram program,
         INodeFactory? factory = null,
@@ -68,7 +71,7 @@ public sealed class FlowInstance
     {
         ArgumentNullException.ThrowIfNull(program);
         factory ??= new ReflectionNodeFactory();
-        engine ??= SharedEngine.Value;
+        engine ??= new FlowChartExecutionEngine(new FlowLogExecutionContextAdapter());
 
         var nodeMap = new Dictionary<string, NodeModel>(program.Nodes.Count);
         var nodes = new List<NodeModel>(program.Nodes.Count);
@@ -106,29 +109,8 @@ public sealed class FlowInstance
     /// <summary>执行整个流程（每次调用前清空 Journal，多轮由调用方循环）。</summary>
     public async Task RunAsync(CancellationToken ct, Action<string>? log = null)
     {
-        Journal.Clear();
-        var activeNodes = _nodes.Where(node => !node.IsExcludedFromExecution).ToList();
-        var activeIds = activeNodes.Select(node => node.Id).ToHashSet();
-        var activeConnections = _connections.Where(connection =>
-                activeIds.Contains(connection.SourceNodeId) && activeIds.Contains(connection.TargetNodeId))
-            .ToList();
-        var runtime = new ExecutionScopeRuntime(activeNodes, activeConnections);
-        foreach (var node in activeNodes)
-            node.ExecutionScopeRuntime = runtime;
-        var topLevel = ExecutionGraphScope.CreateTopLevel(
-            activeNodes, activeConnections, node => node);
-
         // 进入流程作用域：节点日志按当前流程（+节点+运行序号）路由落盘
         using (FlowLogContext.EnterFlow(Name))
-        {
-            await _engine.ExecuteAsync(
-                topLevel.Nodes,
-                topLevel.Connections,
-                ct,
-                log ?? (_ => { }),
-                onBeforeNode: Debug == null ? null : nodeId => Debug.WaitIfPausedAsync(nodeId, ct),
-                executionOrder: null,
-                journal: Journal);
-        }
+            await _runtime.RunAsync(ct, log);
     }
 }

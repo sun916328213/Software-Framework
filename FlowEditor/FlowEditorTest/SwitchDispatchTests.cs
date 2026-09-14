@@ -259,6 +259,10 @@ public class SwitchDispatchTests
         Assert.Contains(sw.CustomOutputPorts, p => p.Name == "OUT4");
         Assert.Contains(sw.ControlFlowPorts!, n => n == "OUT4");
         Assert.DoesNotContain(sw.ControlFlowPorts!, n => n == SwitchNode.DefaultBranchName);
+
+        sw.BranchCount = 2;
+        Assert.DoesNotContain(sw.CustomOutputPorts, p => p.Name == "OUT3");
+        Assert.DoesNotContain(sw.CustomOutputPorts, p => p.Name == "OUT4");
     }
 
     [Fact]

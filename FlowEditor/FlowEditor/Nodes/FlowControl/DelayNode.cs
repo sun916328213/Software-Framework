@@ -20,6 +20,7 @@ public class DelayNode : NodeModel
         set => SetProperty(ref _delayMs, value);
     }
 
+    /// <summary>创建默认延时一秒的流程节点。</summary>
     public DelayNode()
     {
         Name = "延时";
@@ -27,6 +28,7 @@ public class DelayNode : NodeModel
         IsOutEnabled = true;
     }
 
+    /// <inheritdoc />
     public override async Task ExecuteAsync(CancellationToken ct)
     {
         await Task.Delay(DelayMs, ct);

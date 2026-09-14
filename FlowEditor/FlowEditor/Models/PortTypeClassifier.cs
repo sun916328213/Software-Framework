@@ -3,6 +3,7 @@ namespace FlowEditor.Models;
 /// <summary>将节点属性的 CLR 类型稳定映射为编辑器端口类型。</summary>
 public static class PortTypeClassifier
 {
+    /// <summary>把可空 CLR 类型归类为连线兼容性使用的端口类型。</summary>
     public static PortType FromClrType(Type? type)
     {
         if (type == null)

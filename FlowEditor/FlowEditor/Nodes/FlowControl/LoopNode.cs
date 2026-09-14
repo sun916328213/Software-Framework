@@ -45,6 +45,7 @@ public class LoopNode : NodeModel, ILoopControlNode
         set => SetProperty(ref _currentIndex, value);
     }
 
+    /// <summary>创建具有 Body、Completed 和循环参数端口的计数循环节点。</summary>
     public LoopNode()
     {
         Name = "循环";
@@ -85,6 +86,7 @@ public class LoopNode : NodeModel, ILoopControlNode
     /// <remarks>指向内置 Next_IN；每次取用动态拼装，避免反序列化后节点 Id 变化导致失效。</remarks>
     public string LoopBackPortId => $"{Id}_Next_IN";
 
+    /// <inheritdoc />
     public override Task ExecuteAsync(CancellationToken ct)
     {
         // 防复活保护（配合引擎队列级回边去重的双保险）：上一轮已走 Completed 后若仍被调度，
@@ -115,14 +117,17 @@ public class LoopNode : NodeModel, ILoopControlNode
     /// <summary>本轮循环已走 Completed 的标记：用于吞掉多末端回边产生的残留重复调度，防止循环复活。</summary>
     private bool _completedThisCycle;
 
+    /// <inheritdoc />
     public override IReadOnlyList<string>? ControlFlowPorts => new[] { "Body", "Completed" };
 
+    /// <summary>将当前循环索引复位为零。</summary>
     [NodeAction("重置计数", Order = 0, IconResource = "Restart")]
     public void ResetCounter()
     {
         CurrentIndex = 0;
     }
 
+    /// <summary>通过宿主通知 seam 显示当前循环参数。</summary>
     [NodeAction("预览参数", Order = 1, IconResource = "EyeOutline")]
     public void PreviewParams()
     {

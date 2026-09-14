@@ -27,15 +27,19 @@ public class BranchMergeNodeTests
         public void Complete() => _release.TrySetResult();
     }
 
-    private sealed class CancelFlowNode(CancellationTokenSource cancellation) : NodeModel
+    private sealed class CancelFlowNode(
+        CancellationTokenSource cancellation,
+        Task? beforeCancellation = null) : NodeModel
     {
         public int Executions;
 
-        public override Task ExecuteAsync(CancellationToken ct)
+        /// <summary>记录执行，并在可选同步点到达后取消测试流程。</summary>
+        public override async Task ExecuteAsync(CancellationToken ct)
         {
             Interlocked.Increment(ref Executions);
+            if (beforeCancellation != null)
+                await beforeCancellation.WaitAsync(ct);
             cancellation.Cancel();
-            return Task.CompletedTask;
         }
     }
 
@@ -228,7 +232,10 @@ public class BranchMergeNodeTests
         var delayModel = new ControlledNode { Name = "Delay" };
         var delay = new NodeViewModel(delayModel);
         using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
-        var downstreamModel = new CancelFlowNode(cts) { Name = "ShortBranchDownstream" };
+        var downstreamModel = new CancelFlowNode(cts, delayModel.Started.Task)
+        {
+            Name = "ShortBranchDownstream"
+        };
         var downstream = new NodeViewModel(downstreamModel);
         var engineTask = new TestFlowChartExecutionEngine().ExecuteAsync(
             [start, condition, delay, downstream],

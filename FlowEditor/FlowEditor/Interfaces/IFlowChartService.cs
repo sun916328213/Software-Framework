@@ -73,9 +73,6 @@ public interface IFlowChartService
     /// <summary>缩小。</summary>
     void ZoomOut();
 
-    /// <summary>重置缩放。</summary>
-    void ZoomReset();
-
     /// <summary>自适应画布。</summary>
     void ZoomToFit();
 
@@ -90,9 +87,6 @@ public interface IFlowChartService
 
     /// <summary>追加日志到输出面板。</summary>
     void AppendLog(string message);
-
-    /// <summary>立即将日志缓冲冲刷到输出面板（节流期间的最后一批日志在执行结束时调用）。</summary>
-    void FlushLog();
 
     /// <summary>清空日志缓冲和当前输出栏文本。</summary>
     void ClearOutput();

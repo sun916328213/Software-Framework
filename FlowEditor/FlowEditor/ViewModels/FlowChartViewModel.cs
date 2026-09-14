@@ -129,6 +129,7 @@ public partial class FlowChartViewModel : ObservableObject
     private Dictionary<NodeViewModel, Point>? _groupDragOrigins;
     private Point _groupDragStart;
 
+    /// <summary>记录节点拖动起点及参与批量拖动的节点初始坐标。</summary>
     public void BeginNodeDrag(NodeViewModel node, Point mousePosition)
     {
         if (!node.IsSelected) SetSelectedNodes([node]);
@@ -151,6 +152,7 @@ public partial class FlowChartViewModel : ObservableObject
         node.BeginDrag(mousePosition);
     }
 
+    /// <summary>根据鼠标位移更新当前拖动节点集合的位置。</summary>
     public void UpdateNodeDrag(NodeViewModel node, Point mousePosition)
     {
         if (_groupDragOrigins == null) return;
@@ -162,6 +164,7 @@ public partial class FlowChartViewModel : ObservableObject
         }
     }
 
+    /// <summary>结束节点拖动并把位置变化写入撤销历史。</summary>
     public void EndNodeDrag(NodeViewModel node)
     {
         node.EndDrag();
@@ -188,6 +191,7 @@ public partial class FlowChartViewModel : ObservableObject
     #region 临时连线状态
 
     private bool _isDrawingConnection;
+    /// <summary>当前是否正在从输出端口绘制临时连线。</summary>
     public bool IsDrawingConnection
     {
         get => _isDrawingConnection;
@@ -195,6 +199,7 @@ public partial class FlowChartViewModel : ObservableObject
     }
 
     private PortModel? _connectionSourcePort;
+    /// <summary>当前临时连线的源输出端口。</summary>
     public PortModel? ConnectionSourcePort
     {
         get => _connectionSourcePort;
@@ -202,6 +207,7 @@ public partial class FlowChartViewModel : ObservableObject
     }
 
     private Geometry? _pendingConnectionGeometry;
+    /// <summary>视图计算出的临时连线几何图形。</summary>
     public Geometry? PendingConnectionGeometry
     {
         get => _pendingConnectionGeometry;
@@ -295,6 +301,7 @@ public partial class FlowChartViewModel : ObservableObject
         RecalculateCanvasSize();
     }
 
+    /// <summary>复制节点文档并替换节点、端口与父容器标识。</summary>
     private static NodeDocumentModel CloneDocumentForPaste(NodeDocumentModel source)
     {
         var clone = new NodeDocumentModel
@@ -384,24 +391,6 @@ public partial class FlowChartViewModel : ObservableObject
     }
 
     /// <summary>
-    /// 从已创建的节点模型添加节点到画布（用于 ToolBlock 内部数据加载）。
-    /// </summary>
-    public NodeViewModel AddNodeModel(NodeModel node)
-    {
-        EnsureUniqueName(node);
-
-        var action = CreateAction(UndoRedoActionType.NodeAdded, $"添加节点: {node.Name}", nodeId: node.Id);
-        Service.AddNode(node);
-        action.AfterData = Service.CaptureSnapshot();
-        Service.UndoRedo.Push(action);
-
-        Model.IsModified = true;
-        Model.StatusText = $"已添加节点：{node.Name}";
-        RecalculateCanvasSize();
-        return Nodes.Last();
-    }
-
-    /// <summary>
     /// 从持久化文档加载节点，跳过名称唯一性检查（节点名称在保存时已唯一）。
     /// 属于还原操作，不写入撤销历史。
     /// </summary>
@@ -480,22 +469,6 @@ public partial class FlowChartViewModel : ObservableObject
         Model.IsModified = true;
     }
 
-    /// <summary>新建空白流程图。</summary>
-    private void NewFlow()
-    {
-        if (Model.IsModified)
-        {
-            var result = _dialogService.ShowConfirm("当前流程图有未保存的修改，要保存吗？", "新建流程");
-            if (result == null) return;
-            if (result == true) Save();
-        }
-
-        Service.ClearAll();
-        Model.ZoomLevel = 1.0;
-        RecalculateCanvasSize();
-        Model.StatusText = "已新建空白流程";
-    }
-
     // ── 节点右键菜单命令 ──
 
     /// <summary>为节点新增输入端口。</summary>
@@ -529,6 +502,7 @@ public partial class FlowChartViewModel : ObservableObject
         Model.IsModified = true;
     }
 
+    /// <summary>把节点移入不执行容器并清理不再合法的作用域连线。</summary>
     private void MoveToInactiveContainer(NodeViewModel? node)
     {
         if (node == null || node.IsExcludedFromExecution) return;
@@ -554,6 +528,7 @@ public partial class FlowChartViewModel : ObservableObject
         Model.StatusText = $"[{node.Name}] 已移入不执行节点容器";
     }
 
+    /// <summary>把节点从不执行容器恢复到活动画布。</summary>
     private void RestoreFromInactiveContainer(NodeViewModel? node)
     {
         if (node == null || !node.IsExcludedFromExecution) return;
@@ -623,6 +598,7 @@ public partial class FlowChartViewModel : ObservableObject
         }
     }
 
+    /// <summary>判断节点迁移时是否应保留循环容器边界连线。</summary>
     private bool ShouldPreserveLoopBoundaryConnections(string? oldParentId, string? newParentId)
     {
         if (oldParentId == newParentId) return true;
@@ -633,6 +609,7 @@ public partial class FlowChartViewModel : ObservableObject
         return (oldIsLoop && newParentId == null) || (newIsLoop && oldParentId == null);
     }
 
+    /// <summary>判断节点中心是否位于指定画布容器范围内。</summary>
     private static bool IsInsideContainer(NodeViewModel container, NodeViewModel node)
     {
         var center = new Point(
@@ -642,9 +619,11 @@ public partial class FlowChartViewModel : ObservableObject
             .Contains(center);
     }
 
+    /// <summary>判断节点是否为可在画布上承载子节点的容器。</summary>
     private static bool IsCanvasContainer(NodeViewModel node) =>
         node.Model is InactiveNodeContainerNode or IExecutionScopeContainer;
 
+    /// <summary>获取用于范围和容器归属计算的节点视觉宽度。</summary>
     private static double GetNodeWidth(NodeViewModel node) => node.Model switch
     {
         InactiveNodeContainerNode inactive => inactive.ContainerWidth,
@@ -652,6 +631,7 @@ public partial class FlowChartViewModel : ObservableObject
         _ => FlowChartModel.NodeWidth
     };
 
+    /// <summary>获取用于范围和容器归属计算的节点视觉高度。</summary>
     private static double GetNodeHeight(NodeViewModel node) => node.Model switch
     {
         InactiveNodeContainerNode inactive => inactive.ContainerHeight,
@@ -659,6 +639,7 @@ public partial class FlowChartViewModel : ObservableObject
         _ => FlowChartModel.NodeHeight
     };
 
+    /// <summary>判断节点是否属于指定执行容器的任意层级后代。</summary>
     private bool IsExecutionDescendantOf(NodeViewModel candidate, string containerId)
     {
         var parentId = candidate.Model.ParentExecutionContainerId;
@@ -671,6 +652,7 @@ public partial class FlowChartViewModel : ObservableObject
         return false;
     }
 
+    /// <summary>解析节点在指定并行容器中的泳道标识。</summary>
     private static string? ResolveLaneId(NodeViewModel container, NodeViewModel node)
     {
         if (container.Model is not IExecutionScopeContainer scope || scope.ExecutionLanes.Count == 0)
@@ -685,11 +667,13 @@ public partial class FlowChartViewModel : ObservableObject
         return scope.ExecutionLanes[index].Id;
     }
 
+    /// <summary>获取并行泳道的显示名称。</summary>
     private static string GetLaneName(NodeViewModel container, string? laneId) =>
         container.Model is IExecutionScopeContainer scope
             ? scope.ExecutionLanes.FirstOrDefault(lane => lane.Id == laneId)?.Name ?? "未指定泳道"
             : "未指定泳道";
 
+    /// <summary>移除节点迁移后跨越当前执行作用域的非法连线。</summary>
     private void RemoveConnectionsOutsideCurrentScope(NodeViewModel node)
     {
         foreach (var connection in Connections.Where(connection =>
@@ -720,15 +704,20 @@ public partial class FlowChartViewModel : ObservableObject
 
     #region 执行命令
 
+    /// <summary>运行当前流程并把执行日志写入输出栏。</summary>
     private async Task RunAsync()
     {
         await Service.RunAsync(msg => AppendLog(msg), debugMode: false);
     }
 
+    /// <summary>判断当前流程是否满足运行条件。</summary>
     private bool CanRun() => !Model.IsRunning && Nodes.Count > 0;
+    /// <summary>请求停止当前流程。</summary>
     private void Stop() => Service.Stop();
+    /// <summary>判断当前流程是否可以停止。</summary>
     private bool CanStop() => Model.IsRunning;
 
+    /// <summary>继续调试或从当前选中节点恢复执行。</summary>
     private async Task StepContinueSelectedAsync()
     {
         // 保留调试运行中的“继续”语义；普通状态下执行当前选中节点一次。
@@ -750,6 +739,7 @@ public partial class FlowChartViewModel : ObservableObject
             await Service.StepContinueAsync(selected, AppendLog);
     }
 
+    /// <summary>判断当前选择和运行状态是否允许继续执行。</summary>
     private bool CanStepContinue()
         => Model.IsPaused ||
            (!Model.IsRunning && SelectedNode is { IsExcludedFromExecution: false });
@@ -765,13 +755,17 @@ public partial class FlowChartViewModel : ObservableObject
             (node.Model.ParentExecutionContainerId is { } parentId &&
              Service.FindNode(parentId)?.Model is ParallelContainerNode));
 
+    /// <summary>循环运行当前流程并把执行日志写入输出栏。</summary>
     private async Task LoopRunAsync()
     {
         await Service.RunLoopAsync(msg => AppendLog(msg));
     }
 
+    /// <summary>判断当前流程是否可以进入循环运行。</summary>
     private bool CanLoopRun() => !Model.IsRunning && !Model.IsLoopRunning && Nodes.Count > 0;
+    /// <summary>请求停止当前流程的循环运行。</summary>
     private void LoopStop() => Service.StopLoop();
+    /// <summary>判断当前循环运行是否可以停止。</summary>
     private bool CanLoopStop() => Model.IsLoopRunning;
 
     #endregion
@@ -837,6 +831,7 @@ public partial class FlowChartViewModel : ObservableObject
             BeforeData = Service.CaptureSnapshot()
         };
 
+    /// <summary>撤销最近一次画布编辑并恢复快照。</summary>
     private void Undo()
     {
         var action = Service.UndoRedo.Undo();
@@ -850,6 +845,7 @@ public partial class FlowChartViewModel : ObservableObject
         NotifyCanExecuteChanged();
     }
 
+    /// <summary>重做最近一次撤销的画布编辑。</summary>
     private void Redo()
     {
         var action = Service.UndoRedo.Redo();
@@ -867,17 +863,14 @@ public partial class FlowChartViewModel : ObservableObject
 
     #region 连线绘制
 
-    public void StartConnection(PortModel sourcePort, Point startPos)
+    /// <summary>进入从指定端口开始的连线绘制状态。</summary>
+    public void StartConnection(PortModel sourcePort)
     {
         ConnectionSourcePort = sourcePort;
         IsDrawingConnection = true;
     }
 
-    public void UpdateConnectionEndPoint(Point endPos)
-    {
-        if (!IsDrawingConnection) return;
-    }
-
+    /// <summary>尝试把当前临时连线提交到目标端口。</summary>
     public bool CompleteConnection(PortModel targetPort)
     {
         if (!IsDrawingConnection || ConnectionSourcePort == null)
@@ -915,6 +908,7 @@ public partial class FlowChartViewModel : ObservableObject
         return true;
     }
 
+    /// <summary>取消当前连线并清理临时绘制状态。</summary>
     public void CancelConnection()
     {
         IsDrawingConnection = false;
@@ -932,6 +926,7 @@ public partial class FlowChartViewModel : ObservableObject
                Connections,
                Nodes.Select(node => node.Model)) == null;
 
+    /// <summary>更新视图计算出的临时连线几何图形。</summary>
     public void SetPendingGeometry(Geometry geometry)
     {
         PendingConnectionGeometry = geometry;
@@ -941,6 +936,7 @@ public partial class FlowChartViewModel : ObservableObject
 
     #region 缩放
 
+    /// <summary>请求视图按给定内容边界执行自适应缩放。</summary>
     public event EventHandler<(double contentWidth, double contentHeight, double offsetX, double offsetY)>? ZoomToFitRequested
     {
         add => Service.ZoomToFitRequested += value;
