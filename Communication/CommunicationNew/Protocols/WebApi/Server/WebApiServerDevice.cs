@@ -283,10 +283,10 @@ namespace CommunicationNew.Protocols.WebApi
         }
 
         public override Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default)
-            => Task.FromResult(Array.Empty<byte>());
+            => throw new NotSupportedException("WebApi 服务端不支持按地址读取。");
 
         public override Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default)
-            => Task.FromResult(true);
+            => throw new NotSupportedException("WebApi 服务端不支持按地址写入。");
 
         public override Task<bool> SendAsync(byte[] data, CancellationToken ct = default)
             => throw new NotSupportedException("WebApi服务器不支持原始字节发送");

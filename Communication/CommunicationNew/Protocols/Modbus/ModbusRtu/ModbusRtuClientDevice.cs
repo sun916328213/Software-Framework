@@ -11,7 +11,7 @@ namespace CommunicationNew.Protocols.Modbus.ModbusRtu;
 /// Modbus RTU 客户端兼容 adapter。
 /// 旧地址读写接口保留，内部使用 Serial transport、RTU codec 和 ConnectionSession。
 /// </summary>
-public class ModbusRtuClientDevice : CommunicationDeviceBase, IConnection, IDataPointBatchReader
+public class ModbusRtuClientDevice : CommunicationDeviceBase, IConnection, IAddressReader, IAddressWriter, IDataPointBatchReader
 {
     private new ModbusRtuParam Param => (ModbusRtuParam)base.Param;
     private readonly ConnectionSession<ModbusRtuRequest, ModbusRtuResponse> _session;

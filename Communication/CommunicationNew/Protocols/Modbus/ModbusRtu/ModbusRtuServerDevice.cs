@@ -8,7 +8,7 @@ namespace CommunicationNew.Protocols.Modbus.ModbusRtu
     /// Modbus RTU 服务器（从站）兼容 adapter。
     /// 对外保留旧设备接口，对内通过 server adapter 隔离 FluentModbus 和串口资源。
     /// </summary>
-    public class ModbusRtuServerDevice : CommunicationDeviceBase, IConnection
+    public class ModbusRtuServerDevice : CommunicationDeviceBase, IConnection, IAddressReader, IAddressWriter
     {
         private new ModbusRtuParam Param => (ModbusRtuParam)base.Param;
         private readonly IModbusRtuServerAdapter _adapter;

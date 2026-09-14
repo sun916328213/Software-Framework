@@ -39,6 +39,10 @@ public static class CommunicationDiagnostics
         Meter.CreateCounter<long>("communication.events.dropped", unit: "{event}");
     private static readonly Counter<long> CoalescedEvents =
         Meter.CreateCounter<long>("communication.events.coalesced", unit: "{event}");
+    private static readonly UpDownCounter<long> QueuedReceives =
+        Meter.CreateUpDownCounter<long>("communication.receive.queued", unit: "{packet}");
+    private static readonly Counter<long> DroppedReceives =
+        Meter.CreateCounter<long>("communication.receive.dropped", unit: "{packet}");
 
     internal static Activity? StartRequestActivity(CommunicationDiagnosticContext context)
     {
@@ -140,6 +144,16 @@ public static class CommunicationDiagnostics
         tags.Add("event.type", eventType);
         CoalescedEvents.Add(1, tags);
     }
+
+    /// <summary>记录等待被动消费者取出的报文数量增减。</summary>
+    internal static void RecordQueuedReceive(
+        long delta,
+        CommunicationDiagnosticContext context) =>
+        QueuedReceives.Add(delta, context.CreateTags());
+
+    /// <summary>记录因数据报满载或连接代际结束而丢弃的报文。</summary>
+    internal static void RecordDroppedReceive(CommunicationDiagnosticContext context) =>
+        DroppedReceives.Add(1, context.CreateTags());
 }
 
 /// <summary>一次连接使用的低基数协议和传输标签。</summary>

@@ -10,7 +10,7 @@ namespace CommunicationNew.Protocols.WebApi;
 /// 面向 JSON REST 接口的高层客户端 adapter。
 /// 使用 HttpClient handler seam，不经过字节流 transport。
 /// </summary>
-public class WebApiClientDevice : CommunicationDeviceBase, IConnection
+public class WebApiClientDevice : CommunicationDeviceBase, IConnection, IAddressReader, IAddressWriter
 {
     private new WebApiParam Param => (WebApiParam)base.Param;
     private readonly HttpMessageHandler? _injectedHandler;

@@ -6,9 +6,11 @@
     <!--
         ==================================================================
         别名画刷层（MaterialDesign 适配）
-        - Brush.* 由 ThemeService.EnsureAliasBrushes() 在启动最早期
+        - Brush.* 由 Extension.Core.ThemeEx.ThemeService.EnsureAliasBrushes() 在启动最早期
         用代码创建（BAML 编译的 Freezable 会被冻结，无法运行时改色），
         此处不定义任何画刷
+        - 配色基准：浅色以纯白 #FFFFFF 为基准，文字以纯黑为基准；
+        深色以纯黑 #000000 为基准，文字以纯白为基准
         - 初始值为深色主题，应用启动后由 ThemeService 同步为 MD 实际值
         ==================================================================
     -->

@@ -31,5 +31,16 @@
       "suggestion": 1
     },
     "scope": "Communication/CommunicationNew (132 C# files, approximately 12,980 LOC; bin/ and obj/ excluded)"
+  },
+  {
+    "date": "2026-09-12",
+    "mode": "Tech Debt Assessment",
+    "score": 60,
+    "findings": {
+      "critical": 2,
+      "warning": 2,
+      "suggestion": 0
+    },
+    "scope": "Communication/CommunicationNew (133 C# files, approximately 11,516 LOC; bin/ and obj/ excluded)"
   }
 ]

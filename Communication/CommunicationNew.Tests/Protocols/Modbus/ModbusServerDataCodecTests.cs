@@ -41,28 +41,34 @@ public sealed class ModbusServerDataCodecTests
     }
 
     [Fact]
-    public void Registers_are_encoded_as_big_endian_without_changing_the_bit_pattern()
+    public void Register_window_preserves_the_raw_big_endian_bytes()
     {
-        var registers = new short[] { 0x1234, unchecked((short)0xFEDC) };
+        var storage = new byte[] { 0xAA, 0xBB, 0x12, 0x34, 0xFE, 0xDC };
 
         Assert.Equal(
             new byte[] { 0x12, 0x34, 0xFE, 0xDC },
-            ModbusServerDataCodec.EncodeRegisters(registers));
+            ModbusServerDataCodec.ReadRegisters(storage, startRegister: 1, quantity: 2));
     }
 
     [Fact]
-    public void Complete_big_endian_registers_are_decoded()
+    public void Complete_big_endian_registers_are_written_without_host_endian_conversion()
     {
-        Assert.Equal(
-            new ushort[] { 0x1234, 0xFEDC },
-            ModbusServerDataCodec.DecodeRegisters(new byte[] { 0x12, 0x34, 0xFE, 0xDC }));
+        var storage = new byte[6];
+
+        ModbusServerDataCodec.WriteRegisters(
+            storage, startRegister: 1, new byte[] { 0x12, 0x34, 0xFE, 0xDC });
+
+        Assert.Equal(new byte[] { 0x00, 0x00, 0x12, 0x34, 0xFE, 0xDC }, storage);
     }
 
     [Fact]
-    public void Final_unpaired_byte_is_preserved_as_the_high_byte()
+    public void Final_unpaired_byte_is_written_as_the_high_byte()
     {
-        Assert.Equal(
-            new ushort[] { 0x1234, 0x5600 },
-            ModbusServerDataCodec.DecodeRegisters(new byte[] { 0x12, 0x34, 0x56 }));
+        var storage = new byte[4];
+
+        ModbusServerDataCodec.WriteRegisters(
+            storage, startRegister: 0, new byte[] { 0x12, 0x34, 0x56 });
+
+        Assert.Equal(new byte[] { 0x12, 0x34, 0x56, 0x00 }, storage);
     }
 }

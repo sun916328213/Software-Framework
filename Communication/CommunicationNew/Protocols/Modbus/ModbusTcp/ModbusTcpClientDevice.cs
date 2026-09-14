@@ -12,7 +12,7 @@ namespace CommunicationNew.Protocols.Modbus.ModbusTcp;
 /// 对外保留旧 <see cref="ICommunicationDevice"/> 接口，内部将请求交给新的
 /// <see cref="ConnectionSession{TRequest,TResponse}"/>。
 /// </summary>
-public class ModbusTcpClientDevice : CommunicationDeviceBase, IConnection, IDataPointBatchReader
+public class ModbusTcpClientDevice : CommunicationDeviceBase, IConnection, IAddressReader, IAddressWriter, IDataPointBatchReader
 {
     private new ModbusTcpParam Param => (ModbusTcpParam)base.Param;
     private ConnectionSession<ModbusTcpRequest, ModbusTcpResponse>? _session;

@@ -9,7 +9,7 @@ namespace CommunicationNew.Protocols.Http;
 /// HTTP 高层客户端 adapter。
 /// 地址表示相对 URI；读取使用 GET，写入使用 POST，不经过字节流 transport。
 /// </summary>
-public class HttpClientDevice : CommunicationDeviceBase, IConnection
+public class HttpClientDevice : CommunicationDeviceBase, IConnection, IAddressReader, IAddressWriter
 {
     private new HttpParam Param => (HttpParam)base.Param;
     private readonly HttpMessageHandler? _injectedHandler;

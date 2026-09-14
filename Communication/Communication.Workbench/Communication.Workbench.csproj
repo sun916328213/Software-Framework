@@ -16,11 +16,12 @@
     <PackageReference Include="Prism.DryIoc" Version="9.0.537" />
     <PackageReference Include="Prism.Wpf" Version="9.0.537" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CommunicationNew\CommunicationNew.csproj" />
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
   </ItemGroup>
 
 </Project>

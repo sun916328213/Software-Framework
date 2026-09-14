@@ -8,7 +8,7 @@ namespace CommunicationNew.Protocols.OpcUa
     /// OPC UA 服务器设备
     /// 对外保留 byte[] 节点接口，对内由高层 adapter 管理 StandardServer 与地址空间。
     /// </summary>
-    public class OpcUaServerDevice : CommunicationDeviceBase, IConnection
+    public class OpcUaServerDevice : CommunicationDeviceBase, IConnection, IAddressReader, IAddressWriter
     {
         private new OpcUaParam Param => (OpcUaParam)base.Param;
         private readonly IOpcUaServerAdapter _adapter;

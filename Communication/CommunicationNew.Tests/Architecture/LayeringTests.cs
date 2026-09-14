@@ -183,9 +183,89 @@ public sealed class LayeringTests
     }
 
     [Fact]
-    public void Legacy_device_base_exposes_the_address_read_capability_without_changing_old_interface()
+    public void Address_capabilities_are_exposed_only_by_devices_with_real_address_semantics()
     {
-        Assert.True(typeof(IAddressReader).IsAssignableFrom(typeof(CommunicationDeviceBase)));
+        string[] expectedCapabilities =
+        [
+            "CommunicationNew.Protocols.Http.HttpClientDevice",
+            "CommunicationNew.Protocols.Mitsubishi.McClientDevice",
+            "CommunicationNew.Protocols.Modbus.ModbusRtu.ModbusRtuClientDevice",
+            "CommunicationNew.Protocols.Modbus.ModbusRtu.ModbusRtuServerDevice",
+            "CommunicationNew.Protocols.Modbus.ModbusTcp.ModbusTcpClientDevice",
+            "CommunicationNew.Protocols.Modbus.ModbusTcp.ModbusTcpServerDevice",
+            "CommunicationNew.Protocols.OpcUa.OpcUaClientDevice",
+            "CommunicationNew.Protocols.OpcUa.OpcUaServerDevice",
+            "CommunicationNew.Protocols.WebApi.WebApiClientDevice",
+        ];
+
+        var protocolDevices = CommunicationAssembly.ExportedTypes
+            .Where(type => IsInNamespace(type, "CommunicationNew.Protocols"))
+            .Where(type => !type.IsAbstract)
+            .Where(type => typeof(CommunicationDeviceBase).IsAssignableFrom(type))
+            .ToArray();
+
+        var readers = protocolDevices
+            .Where(type => typeof(IAddressReader).IsAssignableFrom(type))
+            .Select(type => type.FullName!)
+            .OrderBy(name => name)
+            .ToArray();
+        var writers = protocolDevices
+            .Where(type => typeof(IAddressWriter).IsAssignableFrom(type))
+            .Select(type => type.FullName!)
+            .OrderBy(name => name)
+            .ToArray();
+
+        // 旧基类继续保留 ReadAsync/WriteAsync 成员，但不能再替所有协议宣称地址能力。
+        Assert.False(typeof(IAddressReader).IsAssignableFrom(typeof(CommunicationDeviceBase)));
+        Assert.False(typeof(IAddressWriter).IsAssignableFrom(typeof(CommunicationDeviceBase)));
+        Assert.Equal(expectedCapabilities, readers);
+        Assert.Equal(expectedCapabilities, writers);
+    }
+
+    [Fact]
+    public void Raw_transport_capabilities_are_exposed_only_by_matching_socket_and_serial_devices()
+    {
+        string[] expectedRawSenders =
+        [
+            "CommunicationNew.Protocols.Serial.SerialPortDevice",
+            "CommunicationNew.Protocols.Socket.TcpClientDevice",
+            "CommunicationNew.Protocols.Socket.TcpServerDevice",
+            "CommunicationNew.Protocols.Socket.UdpClientDevice",
+            "CommunicationNew.Protocols.Socket.UdpServerDevice",
+        ];
+        string[] expectedRequestReplyClients =
+        [
+            "CommunicationNew.Protocols.Serial.SerialPortDevice",
+            "CommunicationNew.Protocols.Socket.TcpClientDevice",
+            "CommunicationNew.Protocols.Socket.UdpClientDevice",
+        ];
+
+        var protocolDevices = CommunicationAssembly.ExportedTypes
+            .Where(type => IsInNamespace(type, "CommunicationNew.Protocols"))
+            .Where(type => !type.IsAbstract)
+            .Where(type => typeof(CommunicationDeviceBase).IsAssignableFrom(type))
+            .ToArray();
+
+        var rawSenders = protocolDevices
+            .Where(type => typeof(IRawSender).IsAssignableFrom(type))
+            .Select(type => type.FullName!)
+            .OrderBy(name => name)
+            .ToArray();
+        var requestReplyClients = protocolDevices
+            .Where(type => typeof(IRequestReplyClient).IsAssignableFrom(type))
+            .Select(type => type.FullName!)
+            .OrderBy(name => name)
+            .ToArray();
+        var receiveSources = protocolDevices
+            .Where(type => typeof(IReceiveSource<ReceivedPacket>).IsAssignableFrom(type))
+            .Select(type => type.FullName!)
+            .OrderBy(name => name)
+            .ToArray();
+
+        // HTTP 等高层协议即使保留旧字节入口，也不能被误识别为原始传输。
+        Assert.Equal(expectedRawSenders, rawSenders);
+        Assert.Equal(expectedRequestReplyClients, requestReplyClients);
+        Assert.Equal(expectedRawSenders, receiveSources);
     }
 
     private static bool IsInNamespace(Type type, string expectedNamespace) =>

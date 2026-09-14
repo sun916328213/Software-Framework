@@ -7,7 +7,7 @@ namespace CommunicationNew.Protocols.Modbus.ModbusTcp
     /// Modbus TCP 服务器（从站）兼容 adapter。
     /// 对外保留旧设备接口，对内通过 server adapter 隔离 FluentModbus 和监听资源。
     /// </summary>
-    public class ModbusTcpServerDevice : CommunicationDeviceBase, IConnection
+    public class ModbusTcpServerDevice : CommunicationDeviceBase, IConnection, IAddressReader, IAddressWriter
     {
         private new ModbusTcpParam Param => (ModbusTcpParam)base.Param;
         private readonly IModbusTcpServerAdapter _adapter;

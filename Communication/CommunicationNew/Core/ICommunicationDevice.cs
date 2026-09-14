@@ -51,6 +51,8 @@ namespace CommunicationNew.Core
 
         /// <summary>
         /// 按地址读取数据。
+        /// 新调用方应先通过 <see cref="Abstractions.IAddressReader"/> 发现该能力；
+        /// 此成员仅为旧统一设备接口保留，并非所有协议都支持地址语义。
         /// 地址格式因协议而异：
         ///   Modbus: "HR1" / "40001" / "D100"
         ///   OpcUa:  "ns=2;s=Temperature"
@@ -59,21 +61,30 @@ namespace CommunicationNew.Core
         /// </summary>
         /// <param name="address">协议相关地址</param>
         /// <param name="length">读取长度（字节数或寄存器数）</param>
+        /// <param name="ct">用于取消读取操作的令牌</param>
         Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default);
 
         /// <summary>
         /// 按地址写入数据。
+        /// 新调用方应先通过 <see cref="Abstractions.IAddressWriter"/> 发现该能力。
         /// </summary>
         /// <param name="address">协议相关地址</param>
         /// <param name="data">待写入的字节数据</param>
+        /// <param name="ct">用于取消写入操作的令牌</param>
         Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default);
 
         // ===== 流式收发（适用于 Socket / Serial / MC 等流协议）=====
 
-        /// <summary>仅发送原始数据，不等待回复</summary>
+        /// <summary>
+        /// 仅发送原始数据，不等待回复；新调用方应使用
+        /// <see cref="Abstractions.IRawSender"/> 判断设备是否具有该语义。
+        /// </summary>
         Task<bool> SendAsync(byte[] data, CancellationToken ct = default);
 
-        /// <summary>发送数据并等待回复</summary>
+        /// <summary>
+        /// 发送数据并等待回复；新调用方应使用
+        /// <see cref="Abstractions.IRequestReplyClient"/> 判断设备是否具有该语义。
+        /// </summary>
         Task<byte[]> SendAndReceiveAsync(byte[] data, CancellationToken ct = default);
     }
 }

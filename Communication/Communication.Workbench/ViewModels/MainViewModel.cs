@@ -22,7 +22,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly CommunicationSessionService _session;
     private readonly ILogService _log;
     private readonly IDialogService _dialogs;
-    private readonly Services.ThemeService _theme;
+    private readonly Extension.Core.ThemeEx.ThemeService _theme;
     private readonly Dispatcher _dispatcher = Application.Current.Dispatcher;
 
     private DeviceViewModel? _selectedDevice;
@@ -54,7 +54,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         CommunicationSessionService session,
         ILogService log,
         IDialogService dialogs,
-        Services.ThemeService theme)
+        Extension.Core.ThemeEx.ThemeService theme)
     {
         _session = session;
         _log = log;
@@ -68,7 +68,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         LogLevelOptions = ["全部", "INFO", "OK", "WARN", "FAIL", "RX", "TX"];
         var view = CollectionViewSource.GetDefaultView(Logs);
         view.Filter = FilterLog;
-        _log.Info("Session", $"主题引擎 {Services.ThemeService.EngineTag} 就绪，当前{(_theme.IsDarkTheme ? "深色" : "浅色")}");
+        _log.Info("Session", $"主题引擎 {Extension.Core.ThemeEx.ThemeService.EngineTag} 就绪，当前{(_theme.IsDarkTheme ? "深色" : "浅色")}");
     }
 
     public IReadOnlyList<string> LogLevelOptions { get; }

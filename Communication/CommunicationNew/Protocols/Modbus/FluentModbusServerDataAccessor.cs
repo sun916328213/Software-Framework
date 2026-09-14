@@ -25,10 +25,10 @@ internal static class FluentModbusServerDataAccessor
                     server.GetCoils(unitId), startAddress, quantity),
                 ModbusRegion.DiscreteInput => ModbusServerDataCodec.ReadBits(
                     server.GetDiscreteInputs(unitId), startAddress, quantity),
-                ModbusRegion.InputRegister => ModbusServerDataCodec.EncodeRegisters(
-                    server.GetInputRegisters(unitId).Slice(startAddress, quantity)),
-                _ => ModbusServerDataCodec.EncodeRegisters(
-                    server.GetHoldingRegisters(unitId).Slice(startAddress, quantity)),
+                ModbusRegion.InputRegister => ModbusServerDataCodec.ReadRegisters(
+                    server.GetInputRegisterBuffer(unitId), startAddress, quantity),
+                _ => ModbusServerDataCodec.ReadRegisters(
+                    server.GetHoldingRegisterBuffer(unitId), startAddress, quantity),
             };
         }
     }
@@ -68,11 +68,9 @@ internal static class FluentModbusServerDataAccessor
         ushort startAddress,
         ReadOnlySpan<byte> data)
     {
-        var values = ModbusServerDataCodec.DecodeRegisters(data);
-        var registers = server.GetHoldingRegisters(unitId);
-        for (var index = 0; index < values.Length; index++)
-        {
-            registers[startAddress + index] = (short)values[index];
-        }
+        // FluentModbus 的原始寄存器缓冲区就是网络报文使用的大端字节序。
+        // 直接访问该缓冲区可避免经 short 视图时受主机小端字节序影响。
+        ModbusServerDataCodec.WriteRegisters(
+            server.GetHoldingRegisterBuffer(unitId), startAddress, data);
     }
 }

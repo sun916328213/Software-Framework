@@ -11,7 +11,7 @@ namespace CommunicationNew.Protocols.Socket;
 /// TCP 客户端兼容 adapter。
 /// 旧事件和原始收发接口保留，连接与连续字节流由 <see cref="IByteStreamTransport"/> 管理。
 /// </summary>
-public class TcpClientDevice : CommunicationDeviceBase, IConnection
+public class TcpClientDevice : CommunicationDeviceBase, IConnection, IRawSender, IRequestReplyClient, IReceiveSource<ReceivedPacket>
 {
     private new SocketParam Param => (SocketParam)base.Param;
     private readonly IByteStreamTransport _transport;
@@ -22,6 +22,7 @@ public class TcpClientDevice : CommunicationDeviceBase, IConnection
     private ConnectionState _state = ConnectionState.Disconnected;
     private Encoding _encoding = Encoding.UTF8;
     private volatile bool _desiredConnected;
+    private long _receiveGeneration;
 
     /// <summary>使用 SocketParam 创建生产 TCP transport。</summary>
     public TcpClientDevice(SocketParam param)
@@ -46,6 +47,7 @@ public class TcpClientDevice : CommunicationDeviceBase, IConnection
                 new CommunicationDiagnosticContext("tcp", transport.GetType().Name));
         }
         ProtocolType = Core.ProtocolType.Tcp;
+        EnableReceiveSource(ReceiveOverflowPolicy.Reject);
     }
 
     /// <inheritdoc />
@@ -77,18 +79,21 @@ public class TcpClientDevice : CommunicationDeviceBase, IConnection
             await _transport.OpenAsync(ct).ConfigureAwait(false);
             _receiveLoopCts?.Dispose();
             _receiveLoopCts = new CancellationTokenSource();
-            _receiveLoopTask = ReceiveLoopAsync(_receiveLoopCts.Token);
+            _receiveGeneration = BeginReceiveGeneration();
+            _receiveLoopTask = ReceiveLoopAsync(_receiveLoopCts.Token, _receiveGeneration);
             _state = ConnectionState.Connected;
             OnConnectionStateChanged(true, $"已连接 {Param.ServerIP}:{Param.Port}");
             return true;
         }
         catch (OperationCanceledException)
         {
+            EndReceiveGeneration(_receiveGeneration);
             _state = ConnectionState.Disconnected;
             throw;
         }
         catch (Exception ex)
         {
+            EndReceiveGeneration(_receiveGeneration);
             _state = ConnectionState.Faulted;
             OnErrorOccurred(ex);
             OnConnectionStateChanged(false, ex.Message);
@@ -112,6 +117,7 @@ public class TcpClientDevice : CommunicationDeviceBase, IConnection
         await _lifecycleGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
+            EndReceiveGeneration(_receiveGeneration);
             if (_state == ConnectionState.Disconnected)
             {
                 return;
@@ -130,7 +136,7 @@ public class TcpClientDevice : CommunicationDeviceBase, IConnection
         }
     }
 
-    private async Task ReceiveLoopAsync(CancellationToken ct)
+    private async Task ReceiveLoopAsync(CancellationToken ct, long receiveGeneration)
     {
         try
         {
@@ -149,7 +155,7 @@ public class TcpClientDevice : CommunicationDeviceBase, IConnection
                     }
                     // 请求关联是可靠内部路径，必须先完成，不能等待用户事件处理器。
                     pendingResponse?.TrySetResult(data);
-                    OnDataReceived(data, $"{Param.ServerIP}:{Param.Port}");
+                    OnPacketReceived(data, $"{Param.ServerIP}:{Param.Port}");
                     PublishDelimitedFrames(data);
                 }
                 _transport.Input.AdvanceTo(buffer.End);
@@ -175,6 +181,7 @@ public class TcpClientDevice : CommunicationDeviceBase, IConnection
         {
             if (!ct.IsCancellationRequested && _state == ConnectionState.Connected)
             {
+                EndReceiveGeneration(receiveGeneration);
                 _state = ConnectionState.Faulted;
                 OnConnectionStateChanged(false, "远端连接已断开");
                 // Runtime supervisor 持有恢复循环；手工断开会把期望状态改为离线。
@@ -260,8 +267,12 @@ public class TcpClientDevice : CommunicationDeviceBase, IConnection
     }
 
     /// <inheritdoc />
+    public ValueTask<ReceivedPacket> ReceiveAsync(CancellationToken cancellationToken = default) =>
+        ReceivePacketAsync(cancellationToken);
+
+    /// <summary>原始 TCP 没有地址读取语义；该成员仅用于旧设备接口兼容。</summary>
     public override Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default) =>
-        Task.FromResult(Array.Empty<byte>());
+        throw new NotSupportedException("原始 TCP 不支持按地址读取，请使用被动接收或请求/回复能力。");
 
     /// <inheritdoc />
     public override Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default) =>

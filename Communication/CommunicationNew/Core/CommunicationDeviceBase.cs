@@ -8,7 +8,7 @@ namespace CommunicationNew.Core
     /// 通信设备抽象基类 —— 封装公共逻辑（事件触发、重试、超时、资源释放），
     /// 各协议设备继承此类只需关注协议特定的 Connect/Read/Write/Send 实现。
     /// </summary>
-    public abstract class CommunicationDeviceBase : ICommunicationDevice, IAddressReader
+    public abstract class CommunicationDeviceBase : ICommunicationDevice
     {
         // ===== 识别与状态 =====
 
@@ -33,6 +33,7 @@ namespace CommunicationNew.Core
         protected Task? _receiveLoopTask;
         private readonly BoundedEventDispatcher<DataReceivedEventArgs> _dataDispatcher;
         private readonly BoundedOperationTracker _backgroundOperations;
+        private BoundedReceiveInbox? _receiveInbox;
         private readonly object _disposeSync = new();
         private Task? _disposeTask;
         protected bool _disposed;
@@ -67,6 +68,44 @@ namespace CommunicationNew.Core
                 new DataReceivedEventArgs(data, remoteAddress),
                 CreateEventDiagnosticContext());
         }
+
+        /// <summary>
+        /// 将原始字节块或完整数据报写入可靠收件箱，同时保留旧 DataReceived 事件。
+        /// 分隔符产生的兼容帧只能调用 <see cref="OnDataReceived"/>，避免在收件箱中重复报文。
+        /// </summary>
+        protected void OnPacketReceived(byte[] data, string? remoteAddress = null)
+        {
+            ArgumentNullException.ThrowIfNull(data);
+            var context = CreateEventDiagnosticContext();
+            (_receiveInbox ?? throw new InvalidOperationException("该设备未启用被动接收能力。"))
+                .Publish(new ReceivedPacket(data, remoteAddress), context);
+            OnDataReceived(data, remoteAddress);
+        }
+
+        /// <summary>为具体原始传输 adapter 启用被动接收能力。</summary>
+        private protected void EnableReceiveSource(ReceiveOverflowPolicy overflowPolicy)
+        {
+            if (_receiveInbox is not null)
+            {
+                throw new InvalidOperationException("被动接收能力不能重复启用。");
+            }
+
+            _receiveInbox = new BoundedReceiveInbox(Param.ReceiveQueueCapacity, overflowPolicy);
+        }
+
+        /// <summary>开始新的连接接收代际，使连接建立后立即可以缓存报文。</summary>
+        protected long BeginReceiveGeneration() =>
+            (_receiveInbox ?? throw new InvalidOperationException("该设备未启用被动接收能力。"))
+                .BeginGeneration();
+
+        /// <summary>结束当前连接接收代际并解除挂起的被动读取。</summary>
+        protected void EndReceiveGeneration(long generation) =>
+            _receiveInbox?.EndGeneration(generation);
+
+        /// <summary>从当前连接代际的收件箱中取出一条报文。</summary>
+        protected ValueTask<ReceivedPacket> ReceivePacketAsync(CancellationToken cancellationToken) =>
+            (_receiveInbox ?? throw new InvalidOperationException("该设备未启用被动接收能力。"))
+                .ReceiveAsync(cancellationToken);
 
         protected virtual void OnErrorOccurred(Exception ex)
         {
@@ -173,7 +212,7 @@ namespace CommunicationNew.Core
         public abstract Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default);
         public abstract Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default);
 
-        // ===== 默认不支持流式收发的协议可重写 =====
+        // ===== 冻结接口的兼容成员；新调用方通过小型能力接口发现真实语义 =====
 
         public virtual Task<bool> SendAsync(byte[] data, CancellationToken ct = default)
         {
@@ -252,6 +291,7 @@ namespace CommunicationNew.Core
             {
                 _receiveLoopCts?.Cancel();
                 _receiveLoopCts?.Dispose();
+                _receiveInbox?.Dispose();
                 _dataDispatcher.DisposeAsync().AsTask().GetAwaiter().GetResult();
             }
             _disposed = true;

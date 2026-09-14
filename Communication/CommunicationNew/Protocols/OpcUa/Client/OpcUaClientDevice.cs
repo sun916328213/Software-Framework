@@ -9,7 +9,7 @@ namespace CommunicationNew.Protocols.OpcUa
     /// 提供 Read/Write 节点能力。地址格式: "ns=2;s=MyVariable"
     /// 旧 byte[] 读写接口仅表示 OPC UA Byte/ByteString；Session 生命周期由高层 adapter 管理。
     /// </summary>
-    public class OpcUaClientDevice : CommunicationDeviceBase, IConnection
+    public class OpcUaClientDevice : CommunicationDeviceBase, IConnection, IAddressReader, IAddressWriter
     {
         private new OpcUaParam Param => (OpcUaParam)base.Param;
         private readonly IOpcUaClientAdapter _adapter;

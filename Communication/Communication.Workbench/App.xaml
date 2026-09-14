@@ -7,7 +7,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!--  MaterialDesign 主题（BaseTheme 初始为深色，运行时由 ThemeService 切换）  -->
+                <!--  MaterialDesign 主题（BaseTheme 初始为深色，运行时由 Extension 统一 ThemeService 切换）  -->
                 <md:BundledTheme
                     BaseTheme="Dark"
                     PrimaryColor="Indigo"

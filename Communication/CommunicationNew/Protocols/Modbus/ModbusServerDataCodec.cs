@@ -1,8 +1,6 @@
-using System.Buffers.Binary;
-
 namespace CommunicationNew.Protocols.Modbus;
 
-/// <summary>在 FluentModbus 从站寄存器存储与旧设备接口的大端字节之间转换。</summary>
+/// <summary>在 FluentModbus 从站原始数据区与设备接口之间提取或写入数据窗口。</summary>
 internal static class ModbusServerDataCodec
 {
     /// <summary>从从站位存储中提取任意起始位置的压缩位窗口。</summary>
@@ -44,36 +42,59 @@ internal static class ModbusServerDataCodec
         }
     }
 
-    /// <summary>把有符号寄存器的原始 16 位模式编码为 Modbus 大端字节。</summary>
-    public static byte[] EncodeRegisters(ReadOnlySpan<short> registers)
+    /// <summary>从 Modbus 大端原始寄存器缓冲区读取连续寄存器。</summary>
+    public static byte[] ReadRegisters(
+        ReadOnlySpan<byte> storage,
+        int startRegister,
+        int quantity)
     {
-        var bytes = new byte[registers.Length * 2];
-        for (var index = 0; index < registers.Length; index++)
-        {
-            BinaryPrimitives.WriteInt16BigEndian(
-                bytes.AsSpan(index * 2, sizeof(short)),
-                registers[index]);
-        }
-        return bytes;
+        var (byteOffset, byteLength) = GetRegisterRange(
+            storage.Length, startRegister, quantity);
+        return storage.Slice(byteOffset, byteLength).ToArray();
     }
 
     /// <summary>
-    /// 把旧接口的大端字节解码为寄存器；奇数长度沿用旧行为，将末字节作为高字节并以零补低字节。
+    /// 把大端字节写入原始寄存器缓冲区；奇数长度时将末字节作为高字节并以零补低字节。
     /// </summary>
-    public static ushort[] DecodeRegisters(ReadOnlySpan<byte> bytes)
+    public static void WriteRegisters(
+        Span<byte> storage,
+        int startRegister,
+        ReadOnlySpan<byte> data)
     {
-        var registers = new ushort[(bytes.Length + 1) / 2];
-        var completeRegisterCount = bytes.Length / 2;
-        for (var index = 0; index < completeRegisterCount; index++)
+        var quantity = (data.Length + 1) / 2;
+        var (byteOffset, byteLength) = GetRegisterRange(
+            storage.Length, startRegister, quantity);
+        var target = storage.Slice(byteOffset, byteLength);
+        data.CopyTo(target);
+        if ((data.Length & 1) != 0)
         {
-            registers[index] = BinaryPrimitives.ReadUInt16BigEndian(
-                bytes.Slice(index * 2, sizeof(ushort)));
+            target[^1] = 0;
         }
-        if ((bytes.Length & 1) != 0)
+    }
+
+    private static (int ByteOffset, int ByteLength) GetRegisterRange(
+        int storageByteLength,
+        int startRegister,
+        int quantity)
+    {
+        if (startRegister < 0)
         {
-            registers[^1] = (ushort)(bytes[^1] << 8);
+            throw new ArgumentOutOfRangeException(nameof(startRegister));
         }
-        return registers;
+        if (quantity <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(quantity), "寄存器数量必须大于零。");
+        }
+
+        var byteOffset = checked(startRegister * sizeof(ushort));
+        var byteLength = checked(quantity * sizeof(ushort));
+        if ((long)byteOffset + byteLength > storageByteLength)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(quantity),
+                "请求的寄存器范围超出从站数据区。");
+        }
+        return (byteOffset, byteLength);
     }
 
     private static void ValidateBitRange(int storageByteLength, int startBit, int quantity)

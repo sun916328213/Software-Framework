@@ -32,6 +32,9 @@ public sealed class TcpClientDeviceCompatibilityTests
 
             var acceptTask = listener.AcceptTcpClientAsync();
             Assert.IsAssignableFrom<IConnection>(device);
+            Assert.IsAssignableFrom<IRawSender>(device);
+            var requestReply = Assert.IsAssignableFrom<IRequestReplyClient>(device);
+            var receiveSource = Assert.IsAssignableFrom<IReceiveSource<ReceivedPacket>>(device);
             Assert.True(await device.ConnectAsync());
             using var peer = await acceptTask;
             await using var stream = peer.GetStream();
@@ -40,8 +43,11 @@ public sealed class TcpClientDeviceCompatibilityTests
             Assert.Equal(
                 new byte[] { 0x41, 0x42 },
                 await received.Task.WaitAsync(TimeSpan.FromSeconds(1)));
+            Assert.Equal(
+                new byte[] { 0x41, 0x42 },
+                (await receiveSource.ReceiveAsync()).Data.ToArray());
 
-            var responseTask = device.SendAndReceiveAsync(new byte[] { 0x10 });
+            var responseTask = requestReply.SendAndReceiveAsync(new byte[] { 0x10 });
             var request = new byte[1];
             await stream.ReadExactlyAsync(request);
             Assert.Equal(new byte[] { 0x10 }, request);

@@ -3,13 +3,14 @@ using System.Net.Sockets;
 using System.Text;
 using CommunicationNew.Abstractions;
 using CommunicationNew.Core;
+using CommunicationNew.Runtime;
 
 namespace CommunicationNew.Protocols.Socket
 {
     /// <summary>
     /// TCP 服务器设备
     /// </summary>
-    public class TcpServerDevice : CommunicationDeviceBase, IConnection
+    public class TcpServerDevice : CommunicationDeviceBase, IConnection, IRawSender, IReceiveSource<ReceivedPacket>
     {
         private new SocketParam Param => (SocketParam)base.Param;
         private readonly ITcpServerListener _listener;
@@ -18,6 +19,7 @@ namespace CommunicationNew.Protocols.Socket
         private readonly Dictionary<TcpClient, Task> _clientTasks = new();
         private readonly object _clientLock = new();
         private ConnectionState _state = ConnectionState.Disconnected;
+        private long _receiveGeneration;
 
         /// <summary>使用系统 TCP 监听器创建服务器。</summary>
         public TcpServerDevice(SocketParam param)
@@ -31,6 +33,7 @@ namespace CommunicationNew.Protocols.Socket
             ArgumentNullException.ThrowIfNull(listener);
             _listener = listener;
             ProtocolType = Core.ProtocolType.Tcp;
+            EnableReceiveSource(ReceiveOverflowPolicy.Reject);
         }
 
         /// <inheritdoc />
@@ -60,6 +63,7 @@ namespace CommunicationNew.Protocols.Socket
                 _listener.Start(Param.MaxConnections);
                 _receiveLoopCts?.Dispose();
                 _receiveLoopCts = new CancellationTokenSource();
+                _receiveGeneration = BeginReceiveGeneration();
                 _receiveLoopTask = AcceptLoopAsync(_receiveLoopCts.Token);
                 _state = ConnectionState.Connected;
                 OnConnectionStateChanged(true, $"TCP服务器已启动: {Param.LocalIP}:{Param.Port}");
@@ -67,11 +71,13 @@ namespace CommunicationNew.Protocols.Socket
             }
             catch (OperationCanceledException)
             {
+                EndReceiveGeneration(_receiveGeneration);
                 _state = ConnectionState.Disconnected;
                 throw;
             }
             catch (Exception ex)
             {
+                EndReceiveGeneration(_receiveGeneration);
                 _state = ConnectionState.Faulted;
                 OnErrorOccurred(ex);
                 OnConnectionStateChanged(false, ex.Message);
@@ -88,6 +94,7 @@ namespace CommunicationNew.Protocols.Socket
             await _lifecycleGate.WaitAsync(ct).ConfigureAwait(false);
             try
             {
+                EndReceiveGeneration(_receiveGeneration);
                 if (_state == ConnectionState.Disconnected)
                 {
                     return;
@@ -166,7 +173,7 @@ namespace CommunicationNew.Protocols.Socket
 
                     var data = buffer.AsSpan(0, read).ToArray();
                     var remoteAddr = client.Client.RemoteEndPoint?.ToString();
-                    OnDataReceived(data, remoteAddr);
+                    OnPacketReceived(data, remoteAddr);
                 }
             }
             catch (OperationCanceledException)
@@ -230,7 +237,8 @@ namespace CommunicationNew.Protocols.Socket
 
         public override Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default)
         {
-            return Task.FromResult(Array.Empty<byte>());
+            // 原始 TCP 服务端没有地址空间；保留该成员仅为兼容旧设备接口。
+            throw new NotSupportedException("TCP 服务端不支持按地址读取，请使用被动接收能力。");
         }
 
         public override Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default)
@@ -242,6 +250,10 @@ namespace CommunicationNew.Protocols.Socket
         {
             throw new NotSupportedException("TCP服务器模式不支持SendAndReceive，请使用SendAsync广播");
         }
+
+        /// <inheritdoc />
+        public ValueTask<ReceivedPacket> ReceiveAsync(CancellationToken cancellationToken = default) =>
+            ReceivePacketAsync(cancellationToken);
 
         async ValueTask IConnection.ConnectAsync(CancellationToken cancellationToken)
         {

@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Text;
 using CommunicationNew.Abstractions;
 using CommunicationNew.Core;
+using CommunicationNew.Runtime;
 using CommunicationNew.Transports;
 
 namespace CommunicationNew.Protocols.Serial;
@@ -10,7 +11,7 @@ namespace CommunicationNew.Protocols.Serial;
 /// 串口设备兼容 adapter。
 /// 旧事件和原始收发接口保留，端口生命周期与连续字节流由 transport 管理。
 /// </summary>
-public class SerialPortDevice : CommunicationDeviceBase, IConnection
+public class SerialPortDevice : CommunicationDeviceBase, IConnection, IRawSender, IRequestReplyClient, IReceiveSource<ReceivedPacket>
 {
     private new SerialParam Param => (SerialParam)base.Param;
     private readonly IByteStreamTransport _transport;
@@ -18,6 +19,7 @@ public class SerialPortDevice : CommunicationDeviceBase, IConnection
     private readonly StringBuilder _receiveText = new();
     private TaskCompletionSource<byte[]>? _pendingResponse;
     private ConnectionState _state = ConnectionState.Disconnected;
+    private long _receiveGeneration;
 
     /// <summary>使用 SerialParam 创建生产串口 transport。</summary>
     public SerialPortDevice(SerialParam param)
@@ -33,6 +35,7 @@ public class SerialPortDevice : CommunicationDeviceBase, IConnection
         ArgumentNullException.ThrowIfNull(transport);
         _transport = transport;
         ProtocolType = Core.ProtocolType.Serial;
+        EnableReceiveSource(ReceiveOverflowPolicy.Reject);
     }
 
     /// <inheritdoc />
@@ -56,7 +59,8 @@ public class SerialPortDevice : CommunicationDeviceBase, IConnection
             await _transport.OpenAsync(ct).ConfigureAwait(false);
             _receiveLoopCts?.Dispose();
             _receiveLoopCts = new CancellationTokenSource();
-            _receiveLoopTask = ReceiveLoopAsync(_receiveLoopCts.Token);
+            _receiveGeneration = BeginReceiveGeneration();
+            _receiveLoopTask = ReceiveLoopAsync(_receiveLoopCts.Token, _receiveGeneration);
             _state = ConnectionState.Connected;
             OnConnectionStateChanged(
                 true,
@@ -65,11 +69,13 @@ public class SerialPortDevice : CommunicationDeviceBase, IConnection
         }
         catch (OperationCanceledException)
         {
+            EndReceiveGeneration(_receiveGeneration);
             _state = ConnectionState.Disconnected;
             throw;
         }
         catch (Exception ex)
         {
+            EndReceiveGeneration(_receiveGeneration);
             _state = ConnectionState.Faulted;
             OnErrorOccurred(ex);
             OnConnectionStateChanged(false, ex.Message);
@@ -87,6 +93,7 @@ public class SerialPortDevice : CommunicationDeviceBase, IConnection
         await _lifecycleGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
+            EndReceiveGeneration(_receiveGeneration);
             if (_state == ConnectionState.Disconnected)
             {
                 return;
@@ -105,7 +112,7 @@ public class SerialPortDevice : CommunicationDeviceBase, IConnection
         }
     }
 
-    private async Task ReceiveLoopAsync(CancellationToken ct)
+    private async Task ReceiveLoopAsync(CancellationToken ct, long receiveGeneration)
     {
         try
         {
@@ -122,7 +129,7 @@ public class SerialPortDevice : CommunicationDeviceBase, IConnection
                         // 在发布事件前固定关联对象，事件处理器新建的请求不能认领当前旧数据。
                         pendingResponse = _pendingResponse;
                     }
-                    OnDataReceived(data, Param.PortName);
+                    OnPacketReceived(data, Param.PortName);
                     PublishDelimitedFrames(data);
                     pendingResponse?.TrySetResult(data);
                 }
@@ -143,6 +150,7 @@ public class SerialPortDevice : CommunicationDeviceBase, IConnection
         }
         catch (Exception ex)
         {
+            EndReceiveGeneration(receiveGeneration);
             _state = ConnectionState.Faulted;
             OnErrorOccurred(ex);
             OnConnectionStateChanged(false, ex.Message);
@@ -226,8 +234,12 @@ public class SerialPortDevice : CommunicationDeviceBase, IConnection
     }
 
     /// <inheritdoc />
+    public ValueTask<ReceivedPacket> ReceiveAsync(CancellationToken cancellationToken = default) =>
+        ReceivePacketAsync(cancellationToken);
+
+    /// <summary>串口没有地址读取语义；该成员仅用于旧设备接口兼容。</summary>
     public override Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default) =>
-        Task.FromResult(Array.Empty<byte>());
+        throw new NotSupportedException("串口不支持按地址读取，请使用被动接收或请求/回复能力。");
 
     /// <inheritdoc />
     public override Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default) =>

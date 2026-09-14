@@ -7,6 +7,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>13.0</LangVersion>
     <RootNamespace>CommunicationNew</RootNamespace>
+    <Description>面向工业设备的 .NET 通信库，提供 Modbus、三菱 MC/MX、OPC UA、Socket、Serial、HTTP 与 WebApi adapter。</Description>
+    <PackageTags>industrial;communication;modbus;mitsubishi;opcua;tcp;udp;serial</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!-- 将公共 API 注释随 NuGet 包发布，供调用方 IntelliSense 使用。 -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- 旧兼容 API 仍在分批补注释；不让 CS1591 淹没真实编译和打包警告。 -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
     <!-- Pack 后执行 SDK 自带的包结构、目标框架与公开兼容性检查。 -->
     <EnablePackageValidation>true</EnablePackageValidation>
     <!-- 厂商 DLL 的再分发需由发布方确认授权；内部包可显式设为 true。 -->
@@ -32,6 +39,11 @@
       <HintPath>..\..\Dll\Mitsubishi\Interop.ActUtlType64Lib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- NuGet 页面使用根目录 README，帮助使用方识别协议能力和平台限制。 -->
+    <None Update="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(IncludeMxComponentInteropInPackage)' == 'true'">

@@ -203,14 +203,14 @@ namespace CommunicationNew.Protocols.Http
 
         public override Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default)
         {
-            // 服务器模式下不支持主动读
-            return Task.FromResult(Array.Empty<byte>());
+            // HTTP 服务端没有主动地址读写语义；该成员仅用于兼容旧设备接口。
+            throw new NotSupportedException("HTTP 服务端不支持按地址读取。");
         }
 
         public override Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default)
         {
-            // 可以用于推送数据到所有连接的客户端
-            return Task.FromResult(true);
+            // 不能用 true 表示未发生的写入，否则调用方会把空操作误判为成功。
+            throw new NotSupportedException("HTTP 服务端不支持按地址写入。");
         }
 
         public override Task<bool> SendAsync(byte[] data, CancellationToken ct = default)

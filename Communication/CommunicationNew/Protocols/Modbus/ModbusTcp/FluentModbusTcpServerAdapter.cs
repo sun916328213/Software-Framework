@@ -30,6 +30,9 @@ internal sealed class FluentModbusTcpServerAdapter : IModbusTcpServerAdapter
         var server = new ModbusTcpServer();
         try
         {
+            // TCP 从站默认不创建任何 Unit；必须先注册配置的 SlaveId，
+            // 否则本地数据区访问和收到的网络请求都会以 UnitIdentifierNotFound 失败。
+            server.AddUnit(_param.SlaveId);
             server.Start(new IPEndPoint(IPAddress.Any, _param.Port));
             _server = server;
         }

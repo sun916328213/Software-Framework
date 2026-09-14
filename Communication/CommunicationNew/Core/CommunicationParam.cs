@@ -37,6 +37,11 @@ namespace CommunicationNew.Core
         public int EventQueueCapacity { get; set; } = 256;
 
         /// <summary>
+        /// 被动接收收件箱容量。TCP/Serial 满载时停止连接，UDP 满载时丢弃最旧数据报。
+        /// </summary>
+        public int ReceiveQueueCapacity { get; set; } = 256;
+
+        /// <summary>
         /// 等待单请求执行权的队列容量；队列满时明确拒绝新请求。
         /// </summary>
         public int RequestQueueCapacity { get; set; } = 256;

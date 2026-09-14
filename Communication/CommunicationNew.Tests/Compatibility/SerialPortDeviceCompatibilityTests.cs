@@ -1,3 +1,5 @@
+using System.Buffers;
+using System.Threading.Channels;
 using System.IO.Pipelines;
 using CommunicationNew.Abstractions;
 using CommunicationNew.Protocols.Serial;
@@ -22,15 +24,34 @@ public sealed class SerialPortDeviceCompatibilityTests
         device.DataReceived += (_, args) => received.TrySetResult(args.Data);
 
         Assert.IsAssignableFrom<IConnection>(device);
+        var rawSender = Assert.IsAssignableFrom<IRawSender>(device);
+        var requestReply = Assert.IsAssignableFrom<IRequestReplyClient>(device);
+        var receiveSource = Assert.IsAssignableFrom<IReceiveSource<ReceivedPacket>>(device);
         Assert.True(await device.ConnectAsync());
         await transport.WriteIncomingAsync(new byte[] { 0x41, 0x42 });
 
         Assert.Equal(
             new byte[] { 0x41, 0x42 },
             await received.Task.WaitAsync(TimeSpan.FromSeconds(1)));
+        Assert.Equal(
+            new byte[] { 0x41, 0x42 },
+            (await receiveSource.ReceiveAsync()).Data.ToArray());
         Assert.Equal(ConnectionState.Connected, ((IConnection)device).State);
 
+        Assert.True(await rawSender.SendAsync(new byte[] { 0x10 }));
+        Assert.Equal(new byte[] { 0x10 }, await transport.ReadOutgoingAsync());
+
+        var responseTask = requestReply.SendAndReceiveAsync(new byte[] { 0x11 });
+        Assert.Equal(new byte[] { 0x11 }, await transport.ReadOutgoingAsync());
+        await transport.WriteIncomingAsync(new byte[] { 0x22 });
+        Assert.Equal(new byte[] { 0x22 }, await responseTask);
+        Assert.Equal(
+            new byte[] { 0x22 },
+            (await receiveSource.ReceiveAsync()).Data.ToArray());
+
+        var pendingReceive = receiveSource.ReceiveAsync().AsTask();
         await device.DisconnectAsync();
+        await Assert.ThrowsAsync<ChannelClosedException>(() => pendingReceive);
         Assert.Equal(ConnectionState.Disconnected, ((IConnection)device).State);
     }
 
@@ -64,6 +85,14 @@ public sealed class SerialPortDeviceCompatibilityTests
 
         public ValueTask<FlushResult> WriteIncomingAsync(ReadOnlyMemory<byte> data) =>
             _incoming.Writer.WriteAsync(data);
+
+        public async Task<byte[]> ReadOutgoingAsync()
+        {
+            var result = await _outgoing.Reader.ReadAsync();
+            var bytes = result.Buffer.ToArray();
+            _outgoing.Reader.AdvanceTo(result.Buffer.End);
+            return bytes;
+        }
 
         public async ValueTask DisposeAsync()
         {

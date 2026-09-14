@@ -8,7 +8,7 @@ namespace CommunicationNew.Protocols.Mitsubishi;
 /// 三菱 MC 客户端兼容 adapter。
 /// 旧地址读写接口保留，后端可由 SLMP Socket 或其他 <see cref="IMcClientAdapter"/> 提供。
 /// </summary>
-public class McClientDevice : CommunicationDeviceBase, IConnection
+public class McClientDevice : CommunicationDeviceBase, IConnection, IAddressReader, IAddressWriter
 {
     private new McParam Param => (McParam)base.Param;
     private readonly IMcClientAdapter _adapter;

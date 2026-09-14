@@ -31,13 +31,19 @@ public sealed class UdpDeviceCompatibilityTests
 
         Assert.IsAssignableFrom<IConnection>(server);
         Assert.IsAssignableFrom<IConnection>(client);
+        var rawServer = Assert.IsAssignableFrom<IRawSender>(server);
+        var rawClient = Assert.IsAssignableFrom<IRawSender>(client);
+        var receiveSource = Assert.IsAssignableFrom<IReceiveSource<ReceivedPacket>>(server);
         Assert.True(await server.ConnectAsync());
         Assert.True(await client.ConnectAsync());
 
-        Assert.True(await client.SendAsync(new byte[] { 0x01, 0x02, 0x03 }));
+        Assert.True(await rawClient.SendAsync(new byte[] { 0x01, 0x02, 0x03 }));
         var result = await received.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
         Assert.Equal(new byte[] { 0x01, 0x02, 0x03 }, result.Data);
+        var packet = await receiveSource.ReceiveAsync();
+        Assert.Equal(new byte[] { 0x01, 0x02, 0x03 }, packet.Data.ToArray());
+        Assert.Equal(result.RemoteAddress, packet.RemoteAddress);
         Assert.Equal(ConnectionState.Connected, ((IConnection)server).State);
         Assert.Equal(ConnectionState.Connected, ((IConnection)client).State);
 
@@ -66,10 +72,11 @@ public sealed class UdpDeviceCompatibilityTests
         var requestReceived = new TaskCompletionSource<DataReceivedEventArgs>(
             TaskCreationOptions.RunContinuationsAsynchronously);
         server.DataReceived += (_, args) => requestReceived.TrySetResult(args);
+        var requestReply = Assert.IsAssignableFrom<IRequestReplyClient>(client);
         Assert.True(await server.ConnectAsync());
         Assert.True(await client.ConnectAsync());
 
-        var responseTask = client.SendAndReceiveAsync(new byte[] { 0x11 });
+        var responseTask = requestReply.SendAndReceiveAsync(new byte[] { 0x11 });
         var request = await requestReceived.Task.WaitAsync(TimeSpan.FromSeconds(2));
         var remote = IPEndPoint.Parse(request.RemoteAddress!);
         Assert.True(await server.SendAsync(new byte[] { 0x22 }, remote.Address.ToString(), remote.Port));

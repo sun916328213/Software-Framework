@@ -1,6 +1,7 @@
 using System.Net;
 using CommunicationNew.Abstractions;
 using CommunicationNew.Core;
+using CommunicationNew.Runtime;
 using CommunicationNew.Transports;
 
 namespace CommunicationNew.Protocols.Socket;
@@ -9,7 +10,7 @@ namespace CommunicationNew.Protocols.Socket;
 /// UDP 客户端兼容 adapter。
 /// 旧设备接口、事件与参数模型保留，数据报生命周期由 <see cref="IDatagramTransport"/> 管理。
 /// </summary>
-public class UdpClientDevice : CommunicationDeviceBase, IConnection
+public class UdpClientDevice : CommunicationDeviceBase, IConnection, IRawSender, IRequestReplyClient, IReceiveSource<ReceivedPacket>
 {
     private new SocketParam Param => (SocketParam)base.Param;
     private readonly SemaphoreSlim _lifecycleGate = new(1, 1);
@@ -17,11 +18,13 @@ public class UdpClientDevice : CommunicationDeviceBase, IConnection
     private IPEndPoint? _remoteEndpoint;
     private TaskCompletionSource<byte[]>? _pendingResponse;
     private ConnectionState _state = ConnectionState.Disconnected;
+    private long _receiveGeneration;
 
     /// <summary>使用 Socket 参数创建 UDP 客户端。</summary>
     public UdpClientDevice(SocketParam param) : base(param)
     {
         ProtocolType = Core.ProtocolType.Udp;
+        EnableReceiveSource(ReceiveOverflowPolicy.DropOldest);
     }
 
     /// <inheritdoc />
@@ -58,18 +61,21 @@ public class UdpClientDevice : CommunicationDeviceBase, IConnection
             _transport = transport;
             _receiveLoopCts?.Dispose();
             _receiveLoopCts = new CancellationTokenSource();
-            _receiveLoopTask = ReceiveLoopAsync(transport, _receiveLoopCts.Token);
+            _receiveGeneration = BeginReceiveGeneration();
+            _receiveLoopTask = ReceiveLoopAsync(transport, _receiveLoopCts.Token, _receiveGeneration);
             _state = ConnectionState.Connected;
             OnConnectionStateChanged(true, $"UDP已绑定到 {Param.ServerIP}:{Param.Port}");
             return true;
         }
         catch (OperationCanceledException)
         {
+            EndReceiveGeneration(_receiveGeneration);
             _state = ConnectionState.Disconnected;
             throw;
         }
         catch (Exception ex)
         {
+            EndReceiveGeneration(_receiveGeneration);
             _state = ConnectionState.Faulted;
             OnErrorOccurred(ex);
             OnConnectionStateChanged(false, ex.Message);
@@ -87,6 +93,7 @@ public class UdpClientDevice : CommunicationDeviceBase, IConnection
         await _lifecycleGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
+            EndReceiveGeneration(_receiveGeneration);
             if (_state == ConnectionState.Disconnected)
             {
                 return;
@@ -114,7 +121,10 @@ public class UdpClientDevice : CommunicationDeviceBase, IConnection
         }
     }
 
-    private async Task ReceiveLoopAsync(IDatagramTransport transport, CancellationToken ct)
+    private async Task ReceiveLoopAsync(
+        IDatagramTransport transport,
+        CancellationToken ct,
+        long receiveGeneration)
     {
         try
         {
@@ -128,7 +138,7 @@ public class UdpClientDevice : CommunicationDeviceBase, IConnection
                     // 在发布事件前固定关联对象，事件处理器新建的请求不能认领当前数据报。
                     pendingResponse = _pendingResponse;
                 }
-                OnDataReceived(data, datagram.RemoteEndpoint.ToString());
+                OnPacketReceived(data, datagram.RemoteEndpoint.ToString());
                 pendingResponse?.TrySetResult(data);
             }
         }
@@ -142,6 +152,7 @@ public class UdpClientDevice : CommunicationDeviceBase, IConnection
         }
         catch (Exception ex)
         {
+            EndReceiveGeneration(receiveGeneration);
             _state = ConnectionState.Faulted;
             OnErrorOccurred(ex);
             OnConnectionStateChanged(false, ex.Message);
@@ -201,8 +212,12 @@ public class UdpClientDevice : CommunicationDeviceBase, IConnection
     }
 
     /// <inheritdoc />
+    public ValueTask<ReceivedPacket> ReceiveAsync(CancellationToken cancellationToken = default) =>
+        ReceivePacketAsync(cancellationToken);
+
+    /// <summary>UDP 数据报没有地址读取语义；该成员仅用于旧设备接口兼容。</summary>
     public override Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default) =>
-        Task.FromResult(Array.Empty<byte>());
+        throw new NotSupportedException("UDP 不支持按地址读取，请使用被动接收或请求/回复能力。");
 
     /// <inheritdoc />
     public override Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default) =>
