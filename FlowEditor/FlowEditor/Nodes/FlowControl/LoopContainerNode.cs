@@ -112,7 +112,7 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
         var runtime = ExecutionScopeRuntime ?? (Service == null
             ? null
             : new ExecutionScopeRuntime(
-                Service.Nodes.Select(node => node.Model).ToList(),
+                Service.Nodes.ToList(),
                 Service.Connections.ToList(),
                 new FlowChartExecutionEngine()));
         if (runtime == null)
@@ -210,23 +210,13 @@ public sealed class LoopContainerNode : NodeModel, IExecutionScopeContainer, IFl
                 continue;
 
             var sourcePort = sourceNode.FindPortById(connection.SourcePortId);
-            var targetPort = targetNode.FindPortById(connection.TargetPortId);
-            if (sourcePort == null || targetPort == null || sourcePort.DataType == PortType.Flow)
+            if (sourcePort == null || sourcePort.DataType == PortType.Flow)
                 continue;
-            if (!targetPort.IsTypeCompatibleWith(sourcePort.DataType))
-                throw new FlowChartTypeMismatchException(
-                    $"源端口 [{sourceNode.Name}].{sourcePort.Name}({sourcePort.DataType}) " +
-                    $"与目标端口 [{targetNode.Name}].{targetPort.Name}({targetPort.DataType}) 声明类型不兼容");
-            if (!targetPort.IsCompatible(sourcePort.Value))
-            {
-                var valueType = sourcePort.Value?.GetType().Name ?? "null";
-                throw new FlowChartTypeMismatchException(
-                    $"源端口 [{sourceNode.Name}].{sourcePort.Name} 的值 " +
-                    $"'{sourcePort.Value}'（运行时类型: {valueType}）" +
-                    $"无法传入目标端口 [{targetNode.Name}].{targetPort.Name}({targetPort.DataType})");
-            }
 
-            targetPort.Value = sourcePort.Value;
+            PortValueTransfer.TryTransfer(
+                sourceNode, connection.SourcePortId,
+                targetNode, connection.TargetPortId,
+                out _);
         }
     }
 }

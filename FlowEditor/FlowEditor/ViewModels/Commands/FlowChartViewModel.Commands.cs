@@ -79,13 +79,13 @@ public partial class FlowChartViewModel
         SaveAsCommand = new RelayCommand(SaveAs);
         LoadCommand = new RelayCommand(Load);
         ClearAllCommand = new RelayCommand(ClearAll);
-        ClearOutputCommand = new RelayCommand(Service.ClearOutput);
-        ZoomInCommand = new RelayCommand(Service.ZoomIn);
-        ZoomOutCommand = new RelayCommand(Service.ZoomOut);
-        ZoomToFitCommand = new RelayCommand(Service.ZoomToFit);
+        ClearOutputCommand = new RelayCommand(_output.Clear);
+        ZoomInCommand = new RelayCommand(_canvas.ZoomIn);
+        ZoomOutCommand = new RelayCommand(_canvas.ZoomOut);
+        ZoomToFitCommand = new RelayCommand(_canvas.ZoomToFit);
         DeleteSelectedCommand = new RelayCommand(DeleteSelected);
-        UndoCommand = new RelayCommand(Undo, () => Service.UndoRedo.CanUndo);
-        RedoCommand = new RelayCommand(Redo, () => Service.UndoRedo.CanRedo);
+        UndoCommand = new RelayCommand(Undo, () => UndoRedo.CanUndo);
+        RedoCommand = new RelayCommand(Redo, () => UndoRedo.CanRedo);
         StepContinueCommand = new AsyncRelayCommand(StepContinueSelectedAsync, CanStepContinue);
         ContinueFromNodeCommand = new AsyncRelayCommand<NodeViewModel>(
             ContinueFromNodeAsync,

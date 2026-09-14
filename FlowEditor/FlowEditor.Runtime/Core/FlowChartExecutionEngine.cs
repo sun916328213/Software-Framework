@@ -1013,31 +1013,14 @@ public class FlowChartExecutionEngine
         {
             if (!graph.NodeMap.TryGetValue(conn.SourceNodeId, out var sourceNode))
                 continue;
-            var sourcePort = sourceNode.FindPortById(conn.SourcePortId);
-            var targetPort = targetNode.FindPortById(conn.TargetPortId);
-            if (sourcePort == null || targetPort == null)
-                continue;
-
-            // 1. 检查端口声明类型是否兼容
-            if (!targetPort.IsTypeCompatibleWith(sourcePort.DataType))
+            if (PortValueTransfer.TryTransfer(
+                    sourceNode, conn.SourcePortId,
+                    targetNode, conn.TargetPortId,
+                    out var transferredValue))
             {
-                throw new FlowChartTypeMismatchException(
-                    $"源端口 [{sourceNode.Name}].{sourcePort.Name}({sourcePort.DataType}) " +
-                    $"与目标端口 [{targetNode.Name}].{targetPort.Name}({targetPort.DataType}) 声明类型不兼容");
+                // Journal 属于执行引擎编排职责，不进入端口值传递模块。
+                journal?.RecordEdgeTransfer(conn.Id, transferredValue);
             }
-
-            // 2. 检查端口运行时值类型是否兼容
-            if (!targetPort.IsCompatible(sourcePort.Value))
-            {
-                var sourceValType = sourcePort.Value?.GetType().Name ?? "null";
-                throw new FlowChartTypeMismatchException(
-                    $"源端口 [{sourceNode.Name}].{sourcePort.Name} 的值 " +
-                    $"'{sourcePort.Value}'（运行时类型: {sourceValType}）" +
-                    $"无法传入目标端口 [{targetNode.Name}].{targetPort.Name}({targetPort.DataType})");
-            }
-
-            targetPort.Value = sourcePort.Value;
-            journal?.RecordEdgeTransfer(conn.Id, sourcePort.Value); // P4 数据追踪：记录每条连线的实际传值
         }
     }
 

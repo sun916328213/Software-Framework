@@ -4,7 +4,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using FlowEditor.Core;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
@@ -26,15 +25,8 @@ public partial class FlowChartView : UserControl
     private readonly Dictionary<NodeViewModel, FrameworkElement> _nodeViewCache = new();
     private readonly Dictionary<NodeViewModel, PropertyChangedEventHandler> _nodeSubscriptions = new();
     private readonly FlowViewportController _viewport;
-    private Point _boxSelectStart;
-    private bool _isBoxSelecting;
-    private PortConnectorView? _connectionCandidate;
-    private Point _connectionCandidatePoint;
-    private Path? _pendingConnectionPath;
-    private PortModel? _cachedConnectionSource;
-    private Point _cachedConnectionSourcePoint;
-    private readonly List<(PortConnectorView Connector, Point Center)> _cachedConnectionTargets = [];
-    private const double PortSnapRadius = 28;
+    private readonly FlowConnectionDragController _connectionDrag;
+    private readonly FlowSelectionController _selection;
 
     /// <summary>暴露画布容器供容器层导出 PNG 等操作使用。</summary>
     public Grid ZoomContainerElement => ZoomContainer;
@@ -47,13 +39,18 @@ public partial class FlowChartView : UserControl
             ScrollViewerHost,
             ZoomContainer,
             () => _currentViewModel);
+        _connectionDrag = new FlowConnectionDragController(FlowChartCanvas, PendingCanvas);
+        _selection = new FlowSelectionController(
+            FlowChartCanvas,
+            ConnectionCanvas,
+            SelectionRectangle,
+            () => _currentViewModel,
+            () => _viewport.IsPanning,
+            _connectionDrag.Cancel,
+            () => Focus());
         DataContextChanged += OnDataContextChanged;
         PreviewKeyDown += OnFlowChartKeyDown;
         PreviewMouseDown += (s, e) => Focus(); // 确保键盘焦点在画布上，Delete 键才有效
-        FlowChartCanvas.AddHandler(
-            Mouse.MouseUpEvent,
-            new MouseButtonEventHandler(OnCanvasConnectionMouseUp),
-            handledEventsToo: true);
     }
 
     #region ViewModel 绑定与切换
@@ -61,6 +58,7 @@ public partial class FlowChartView : UserControl
     /// <summary>切换流程上下文时释放旧订阅、绑定新会话并重建节点视觉树。</summary>
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
+        _connectionDrag.Attach(null);
         // 取消旧 ViewModel 及 Model 订阅
         if (_currentViewModel != null)
         {
@@ -81,6 +79,7 @@ public partial class FlowChartView : UserControl
         _currentViewModel.PropertyChanged += OnViewModelPropertyChanged;
         _currentViewModel.Model.PropertyChanged += OnModelPropertyChanged;
         _currentViewModel.ZoomToFitRequested += _viewport.OnZoomToFitRequested;
+        _connectionDrag.Attach(_currentViewModel);
 
         RenderAllNodes();
     }
@@ -149,25 +148,16 @@ public partial class FlowChartView : UserControl
         };
         vm.PropertyChanged += propertyChanged;
 
-        nodeView.MouseLeftButtonDown += (_, e) =>
-        {
-            if (PortConnectorLocator.FindAncestor(e.OriginalSource as DependencyObject) != null)
-                return;
-            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-                ViewModel.ToggleNodeSelection(vm);
-            else if (!vm.IsSelected)
-                ViewModel.SetSelectedNodes([vm]);
-            e.Handled = true; // 阻止冒泡到画布，否则 OnCanvasMouseDown 会清空选中
-        };
-
         FlowChartCanvas.Children.Add(nodeView);
         _nodeViewCache[vm] = nodeView;
         _nodeSubscriptions[vm] = propertyChanged;
+        _selection.RegisterNode(vm, nodeView);
     }
 
     /// <summary>移除节点视觉对象并解除其属性变化订阅。</summary>
     private void RemoveNodeViewFromCanvas(NodeViewModel vm)
     {
+        _selection.UnregisterNode(vm);
         if (_nodeViewCache.TryGetValue(vm, out var nodeView))
         {
             FlowChartCanvas.Children.Remove(nodeView);
@@ -184,8 +174,9 @@ public partial class FlowChartView : UserControl
             node.PropertyChanged -= handler;
         _nodeSubscriptions.Clear();
         _nodeViewCache.Clear();
+        _selection.ClearNodes();
         FlowChartCanvas.Children.Clear();
-        ResetConnectionDragCache();
+        _connectionDrag.InvalidateLayout();
     }
 
     #endregion
@@ -232,33 +223,10 @@ public partial class FlowChartView : UserControl
 
     #region 临时连线
 
-    /// <summary>同步临时连线、拖拽缓存和选中连线等 ViewModel 状态。</summary>
+    /// <summary>同步选中连线等需要重绘的 ViewModel 状态。</summary>
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(FlowChartViewModel.PendingConnectionGeometry))
-        {
-            var geometry = ViewModel.PendingConnectionGeometry;
-            if (geometry == null)
-            {
-                if (_pendingConnectionPath != null)
-                    PendingCanvas.Children.Remove(_pendingConnectionPath);
-                return;
-            }
-
-            _pendingConnectionPath ??= CreatePendingConnectionPath();
-            _pendingConnectionPath.Data = geometry;
-            if (!PendingCanvas.Children.Contains(_pendingConnectionPath))
-                PendingCanvas.Children.Add(_pendingConnectionPath);
-        }
-        else if (e.PropertyName is nameof(FlowChartViewModel.IsDrawingConnection)
-                 or nameof(FlowChartViewModel.ConnectionSourcePort))
-        {
-            if (!ViewModel.IsDrawingConnection || ViewModel.ConnectionSourcePort == null)
-                ResetConnectionDragCache();
-            else
-                InvalidateConnectionDragCache();
-        }
-        else if (e.PropertyName == nameof(FlowChartViewModel.SelectedConnection))
+        if (e.PropertyName == nameof(FlowChartViewModel.SelectedConnection))
         {
             ScheduleConnectionRender();
         }
@@ -299,116 +267,6 @@ public partial class FlowChartView : UserControl
         e.Handled = true;
     }
 
-    /// <summary>处理连线选中、空白处取消及框选状态的开始。</summary>
-    private void OnCanvasMouseDown(object sender, MouseButtonEventArgs e)
-    {
-        if (_viewport.IsPanning || e.ChangedButton != MouseButton.Left) return;
-        Focus(); // 确保键盘焦点在 UserControl 上，否则 Delete 键无效
-
-        ViewModel.SetSelectedNodes([]);
-        ViewModel.SelectedConnection = null;
-
-        var point = e.GetPosition(ConnectionCanvas);
-        var hit = ConnectionCanvas.InputHitTest(point) as FrameworkElement;
-        if (hit?.Tag is ConnectionModel conn)
-        {
-            ViewModel.SelectedConnection = ViewModel.SelectedConnection?.Id == conn.Id ? null : conn;
-            e.Handled = true;
-            return;
-        }
-
-        if (e.Source == FlowChartCanvas || e.Source is Canvas)
-        {
-            ViewModel.CancelConnection();
-            ClearConnectionCandidate();
-            _boxSelectStart = e.GetPosition(FlowChartCanvas);
-            _isBoxSelecting = true;
-            Canvas.SetLeft(SelectionRectangle, _boxSelectStart.X);
-            Canvas.SetTop(SelectionRectangle, _boxSelectStart.Y);
-            SelectionRectangle.Width = 0;
-            SelectionRectangle.Height = 0;
-            SelectionRectangle.Visibility = Visibility.Visible;
-            FlowChartCanvas.CaptureMouse();
-            e.Handled = true;
-        }
-    }
-
-    /// <summary>在候选端口提交临时连线，否则取消本次连线。</summary>
-    private void OnCanvasConnectionMouseUp(object sender, MouseButtonEventArgs e)
-    {
-        if (!ViewModel.IsDrawingConnection) return;
-
-        var target = _connectionCandidate ??
-            PortConnectorLocator.FindAncestor(e.OriginalSource as DependencyObject);
-        if (target?.Port is PortModel targetPort)
-        {
-            ViewModel.CompleteConnection(targetPort);
-            ClearConnectionCandidate();
-            Mouse.Capture(null);
-            e.Handled = true;
-            return;
-        }
-
-        ViewModel.CancelConnection();
-        ClearConnectionCandidate();
-        Mouse.Capture(null);
-    }
-
-    /// <summary>更新框选区域或临时连线的吸附候选和几何图形。</summary>
-    private void OnCanvasMouseMove(object sender, MouseEventArgs e)
-    {
-        if (_currentViewModel == null) return;
-        if (_isBoxSelecting && e.LeftButton == MouseButtonState.Pressed)
-        {
-            UpdateBoxSelection(e.GetPosition(FlowChartCanvas));
-            return;
-        }
-        if (ViewModel.IsDrawingConnection)
-        {
-            var pos = e.GetPosition(FlowChartCanvas);
-            EnsureConnectionDragCache();
-            UpdateConnectionCandidate(pos);
-
-            var endPoint = _connectionCandidate == null ? pos : _connectionCandidatePoint;
-            var geometry = ConnectionRenderer.BuildBezierGeometry(_cachedConnectionSourcePoint, endPoint);
-            ViewModel.SetPendingGeometry(geometry);
-        }
-    }
-
-    /// <summary>提交框选结果并释放画布鼠标捕获。</summary>
-    private void OnCanvasMouseUp(object sender, MouseButtonEventArgs e)
-    {
-        if (!_isBoxSelecting) return;
-        UpdateBoxSelection(e.GetPosition(FlowChartCanvas));
-        _isBoxSelecting = false;
-        SelectionRectangle.Visibility = Visibility.Collapsed;
-        FlowChartCanvas.ReleaseMouseCapture();
-        e.Handled = true;
-    }
-
-    /// <summary>更新选择矩形并选中与其相交的节点。</summary>
-    private void UpdateBoxSelection(Point current)
-    {
-        var rect = new Rect(_boxSelectStart, current);
-        Canvas.SetLeft(SelectionRectangle, rect.Left);
-        Canvas.SetTop(SelectionRectangle, rect.Top);
-        SelectionRectangle.Width = rect.Width;
-        SelectionRectangle.Height = rect.Height;
-
-        var selected = _nodeViewCache
-            .Where(pair =>
-            {
-                var nodeRect = new Rect(
-                    pair.Key.X,
-                    pair.Key.Y,
-                    pair.Value.ActualWidth > 0 ? pair.Value.ActualWidth : FlowChartModel.NodeWidth,
-                    pair.Value.ActualHeight > 0 ? pair.Value.ActualHeight : FlowChartModel.NodeHeight);
-                return rect.IntersectsWith(nodeRect);
-            })
-            .Select(pair => pair.Key);
-        ViewModel.SetSelectedNodes(selected);
-    }
-
     /// <summary>根据命中节点打开节点菜单，否则打开画布菜单。</summary>
     private void OnCanvasRightClick(object sender, MouseButtonEventArgs e)
     {
@@ -425,8 +283,7 @@ public partial class FlowChartView : UserControl
         }
 
         ShowCanvasContextMenu();
-        ViewModel.CancelConnection();
-        ClearConnectionCandidate();
+        _connectionDrag.Cancel();
     }
 
     /// <summary>使用当前节点和画布命令上下文打开节点菜单。</summary>
@@ -489,88 +346,4 @@ public partial class FlowChartView : UserControl
 
     #endregion
 
-    #region 辅助
-
-    /// <summary>创建使用统一资源样式的临时连线路径。</summary>
-    private Path CreatePendingConnectionPath()
-    {
-        var path = new Path();
-        path.SetResourceReference(Path.StyleProperty, "ConnectionPathStyle_Pending");
-        return path;
-    }
-
-    /// <summary>为当前源端口缓存坐标及可连接的目标端口。</summary>
-    private void EnsureConnectionDragCache()
-    {
-        var source = ViewModel.ConnectionSourcePort;
-        if (source == null || ReferenceEquals(source, _cachedConnectionSource)) return;
-
-        _cachedConnectionTargets.Clear();
-        _cachedConnectionSource = source;
-        _cachedConnectionSourcePoint = new Point(0, 0);
-
-        foreach (var connector in PortConnectorLocator.Enumerate(FlowChartCanvas))
-        {
-            if (connector.Port is not { } port) continue;
-            Point center;
-            try { center = PortConnectorLocator.GetCenter(connector, FlowChartCanvas); }
-            catch (InvalidOperationException) { continue; }
-
-            if (port.Id == source.Id)
-                _cachedConnectionSourcePoint = center;
-            else if (ViewModel.CanCompleteConnection(port))
-                _cachedConnectionTargets.Add((connector, center));
-        }
-    }
-
-    /// <summary>使源端口和候选目标缓存失效。</summary>
-    private void InvalidateConnectionDragCache()
-    {
-        _cachedConnectionSource = null;
-        _cachedConnectionTargets.Clear();
-    }
-
-    /// <summary>选择吸附半径内最近的可连接端口并更新高亮。</summary>
-    private void UpdateConnectionCandidate(Point mousePosition)
-    {
-        PortConnectorView? nearest = null;
-        var nearestPoint = default(Point);
-        var nearestDistance = PortSnapRadius;
-
-        foreach (var (connector, center) in _cachedConnectionTargets)
-        {
-            var distance = (center - mousePosition).Length;
-            if (distance <= nearestDistance)
-            {
-                nearest = connector;
-                nearestPoint = center;
-                nearestDistance = distance;
-            }
-        }
-
-        if (ReferenceEquals(nearest, _connectionCandidate))
-            return;
-        ClearConnectionCandidate();
-        _connectionCandidate = nearest;
-        _connectionCandidatePoint = nearestPoint;
-        if (_connectionCandidate != null)
-            _connectionCandidate.IsConnectionCandidate = true;
-    }
-
-    /// <summary>清除当前连接候选及其高亮状态。</summary>
-    private void ClearConnectionCandidate()
-    {
-        if (_connectionCandidate != null)
-            _connectionCandidate.IsConnectionCandidate = false;
-        _connectionCandidate = null;
-    }
-
-    /// <summary>清除候选端口并重置全部连线拖动缓存。</summary>
-    private void ResetConnectionDragCache()
-    {
-        ClearConnectionCandidate();
-        InvalidateConnectionDragCache();
-    }
-
-    #endregion
 }

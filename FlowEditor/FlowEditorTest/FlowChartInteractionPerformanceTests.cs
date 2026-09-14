@@ -20,7 +20,7 @@ public class FlowChartInteractionPerformanceTests
     public void SelectingNode_SetsVisualStateBeforeSelectedNodeObserversRun()
     {
         var service = TestFlowEditorFactory.CreateService();
-        var node = service.AddNode(new CountingNode { Name = "node" });
+        var node = service.Canvas.AddNode(new CountingNode { Name = "node" });
         var vm = TestFlowEditorFactory.CreateViewModel(service);
         bool? selectedWhenPropertyPanelObserverStarts = null;
         vm.PropertyChanged += (_, args) =>
@@ -39,7 +39,7 @@ public class FlowChartInteractionPerformanceTests
     {
         var service = TestFlowEditorFactory.CreateService();
         var nodes = Enumerable.Range(0, 64)
-            .Select(index => service.AddNode(new CountingNode { Name = $"node-{index}" }))
+            .Select(index => service.Canvas.AddNode(new CountingNode { Name = $"node-{index}" }))
             .ToArray();
         var vm = TestFlowEditorFactory.CreateViewModel(service);
         var observerAlwaysSawSelectedNode = true;
@@ -70,8 +70,8 @@ public class FlowChartInteractionPerformanceTests
     public void ToggleNodeSelection_AccumulatesAndRemovesCtrlSelections()
     {
         var service = TestFlowEditorFactory.CreateService();
-        var first = service.AddNode(new CountingNode { Name = "first" });
-        var second = service.AddNode(new CountingNode { Name = "second" });
+        var first = service.Canvas.AddNode(new CountingNode { Name = "first" });
+        var second = service.Canvas.AddNode(new CountingNode { Name = "second" });
         var vm = TestFlowEditorFactory.CreateViewModel(service);
 
         vm.ToggleNodeSelection(first);
@@ -94,7 +94,7 @@ public class FlowChartInteractionPerformanceTests
         WpfTestHost.Run(() =>
         {
             var service = TestFlowEditorFactory.CreateService();
-            var node = service.AddNode(new CountingNode { Name = "node" });
+            var node = service.Canvas.AddNode(new CountingNode { Name = "node" });
             var vm = TestFlowEditorFactory.CreateViewModel(service);
             var view = new FlowChartView { DataContext = vm, Width = 800, Height = 600 };
             view.Measure(new Size(800, 600));
@@ -171,7 +171,7 @@ public class FlowChartInteractionPerformanceTests
         WpfTestHost.Run(() =>
         {
             var service = TestFlowEditorFactory.CreateService();
-            service.AddNode(new LoopContainerNode { X = 100, Y = 100 });
+            service.Canvas.AddNode(new LoopContainerNode { X = 100, Y = 100 });
             var vm = TestFlowEditorFactory.CreateViewModel(service);
             var view = new FlowChartView { DataContext = vm, Width = 1000, Height = 700 };
             view.Measure(new Size(1000, 700));

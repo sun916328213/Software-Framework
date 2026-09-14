@@ -60,9 +60,9 @@ public class StructuredExecutionContainerTests
     public async Task ParallelContainer_OnMainCanvas_StartsAllLanesAndWaitsForAll()
     {
         var service = TestFlowEditorFactory.CreateService(new InMemoryFlowDocumentStore());
-        var start = service.AddNode(new StartNode());
+        var start = service.Canvas.AddNode(new StartNode());
         var containerModel = new ParallelContainerNode { Name = "并行容器1" };
-        var container = service.AddNode(containerModel);
+        var container = service.Canvas.AddNode(containerModel);
         var firstModel = new ControlledNode
         {
             Name = "分支1任务",
@@ -75,12 +75,12 @@ public class StructuredExecutionContainerTests
             ParentExecutionContainerId = container.Id,
             ExecutionLaneId = containerModel.Lanes[1].Id
         };
-        service.AddNode(firstModel);
-        service.AddNode(secondModel);
+        service.Canvas.AddNode(firstModel);
+        service.Canvas.AddNode(secondModel);
         service.Connections.Add(Flow(start, container));
 
         var logs = new ConcurrentQueue<string>();
-        var run = service.RunAsync(logs.Enqueue);
+        var run = service.Execution.RunAsync(logs.Enqueue);
         await Task.WhenAll(firstModel.Started.Task, secondModel.Started.Task)
             .WaitAsync(TimeSpan.FromSeconds(2));
 
@@ -120,19 +120,19 @@ public class StructuredExecutionContainerTests
     public async Task LoopContainer_OnMainCanvas_RepeatsItsBodyExactly()
     {
         var service = CreateService();
-        var start = service.AddNode(new StartNode());
+        var start = service.Canvas.AddNode(new StartNode());
         var containerModel = new LoopContainerNode { Name = "循环容器1", IterationCount = 3 };
-        var container = service.AddNode(containerModel);
+        var container = service.Canvas.AddNode(containerModel);
         var bodyModel = new CountingNode
         {
             Name = "循环任务",
             ParentExecutionContainerId = container.Id,
             ExecutionLaneId = containerModel.Lanes[0].Id
         };
-        service.AddNode(bodyModel);
+        service.Canvas.AddNode(bodyModel);
         service.Connections.Add(Flow(start, container));
 
-        await service.RunAsync(_ => { });
+        await service.Execution.RunAsync(_ => { });
 
         Assert.Equal(3, bodyModel.Executions);
         Assert.Equal(3, containerModel.CurrentIteration);
@@ -178,10 +178,10 @@ public class StructuredExecutionContainerTests
     {
         PersistentCountingNode.Executions = 0;
         var service = CreateService();
-        var start = service.AddNode(new StartNode());
+        var start = service.Canvas.AddNode(new StartNode());
         var toolBlock = new ToolBlockNode { Name = "ToolBlock" };
-        var toolBlockVm = service.AddNode(toolBlock);
-        var end = service.AddNode(new EndNode());
+        var toolBlockVm = service.Canvas.AddNode(toolBlock);
+        var end = service.Canvas.AddNode(new EndNode());
 
         var innerLoop = new LoopContainerNode { Name = "循环容器_1", IterationCount = 2 };
         var innerBody = new PersistentCountingNode
@@ -197,15 +197,15 @@ public class StructuredExecutionContainerTests
                 Name = "内部流程",
                 Nodes =
                 [
-                    service.BuildNodeDocument(innerLoop),
-                    service.BuildNodeDocument(innerBody)
+                    service.Documents.BuildNodeDocument(innerLoop),
+                    service.Documents.BuildNodeDocument(innerBody)
                 ]
             }
         ];
         service.Connections.Add(Flow(start, toolBlockVm));
         service.Connections.Add(Flow(toolBlockVm, end));
 
-        await service.RunAsync(_ => { });
+        await service.Execution.RunAsync(_ => { });
 
         Assert.Equal("执行完成", service.Model.StatusText);
         Assert.Equal(2, PersistentCountingNode.Executions);
@@ -215,9 +215,9 @@ public class StructuredExecutionContainerTests
     public async Task ContinueFromNode_ResumesFailedParallelLaneThenContinuesOuterFlow()
     {
         var service = CreateService();
-        var start = service.AddNode(new StartNode());
+        var start = service.Canvas.AddNode(new StartNode());
         var containerModel = new ParallelContainerNode { Name = "并行容器1" };
-        var container = service.AddNode(containerModel);
+        var container = service.Canvas.AddNode(containerModel);
         var branchA = new CountingNode
         {
             Name = "A",
@@ -236,21 +236,21 @@ public class StructuredExecutionContainerTests
             ParentExecutionContainerId = container.Id,
             ExecutionLaneId = containerModel.Lanes[1].Id
         };
-        service.AddNode(branchA);
-        var failureVm = service.AddNode(branchBFailure);
-        var continueVm = service.AddNode(branchBNext);
+        service.Canvas.AddNode(branchA);
+        var failureVm = service.Canvas.AddNode(branchBFailure);
+        var continueVm = service.Canvas.AddNode(branchBNext);
         var afterModel = new CountingNode { Name = "After" };
-        var after = service.AddNode(afterModel);
+        var after = service.Canvas.AddNode(afterModel);
         service.Connections.Add(Flow(start, container));
         service.Connections.Add(Flow(failureVm, continueVm));
         service.Connections.Add(Flow(container, after));
 
-        await service.RunAsync(_ => { });
+        await service.Execution.RunAsync(_ => { });
         Assert.Equal(1, branchA.Executions);
         Assert.Equal(0, branchBNext.Executions);
         Assert.Equal(1, afterModel.Executions);
 
-        await service.ContinueFromNodeAsync(continueVm, _ => { });
+        await service.Execution.ContinueFromNodeAsync(continueVm, _ => { });
 
         Assert.Equal(1, branchA.Executions);
         Assert.Equal(1, branchBNext.Executions);
@@ -262,17 +262,17 @@ public class StructuredExecutionContainerTests
     public async Task ContinueFromNode_RecoversParallelLaneWhileSiblingIsStillRunning()
     {
         var service = CreateService();
-        var start = service.AddNode(new StartNode());
+        var start = service.Canvas.AddNode(new StartNode());
         var containerModel = new ParallelContainerNode();
-        var container = service.AddNode(containerModel);
+        var container = service.Canvas.AddNode(containerModel);
         var runningModel = new ControlledNode
         {
             Name = "A-长任务",
             ParentExecutionContainerId = container.Id,
             ExecutionLaneId = containerModel.Lanes[0].Id
         };
-        service.AddNode(runningModel);
-        var failure = service.AddNode(new FailNode
+        service.Canvas.AddNode(runningModel);
+        var failure = service.Canvas.AddNode(new FailNode
         {
             Name = "B-故障",
             ParentExecutionContainerId = container.Id,
@@ -284,14 +284,14 @@ public class StructuredExecutionContainerTests
             ParentExecutionContainerId = container.Id,
             ExecutionLaneId = containerModel.Lanes[1].Id
         };
-        var resume = service.AddNode(resumeModel);
+        var resume = service.Canvas.AddNode(resumeModel);
         var afterModel = new CountingNode { Name = "After" };
-        var after = service.AddNode(afterModel);
+        var after = service.Canvas.AddNode(afterModel);
         service.Connections.Add(Flow(start, container));
         service.Connections.Add(Flow(failure, resume));
         service.Connections.Add(Flow(container, after));
 
-        var run = service.RunAsync(_ => { });
+        var run = service.Execution.RunAsync(_ => { });
         await runningModel.Started.Task.WaitAsync(TimeSpan.FromSeconds(2));
         var timeout = System.Diagnostics.Stopwatch.StartNew();
         while (failure.Status != NodeStatus.Error && timeout.Elapsed < TimeSpan.FromSeconds(2))
@@ -299,7 +299,7 @@ public class StructuredExecutionContainerTests
         Assert.Equal(NodeStatus.Error, failure.Status);
         Assert.True(service.Model.IsRunning);
 
-        await service.ContinueFromNodeAsync(resume, _ => { });
+        await service.Execution.ContinueFromNodeAsync(resume, _ => { });
 
         Assert.Equal(1, resumeModel.Executions);
         Assert.False(run.IsCompleted);
@@ -313,34 +313,34 @@ public class StructuredExecutionContainerTests
     public async Task ContinueFromFailedLoopNode_CompletesCurrentAndRemainingIterations()
     {
         var service = CreateService();
-        var start = service.AddNode(new StartNode());
+        var start = service.Canvas.AddNode(new StartNode());
         var loopModel = new LoopContainerNode { Name = "循环容器1", IterationCount = 2 };
-        var loop = service.AddNode(loopModel);
+        var loop = service.Canvas.AddNode(loopModel);
         var failureModel = new FailOnceNode
         {
             Name = "循环故障",
             ParentExecutionContainerId = loop.Id,
             ExecutionLaneId = loopModel.Lanes[0].Id
         };
-        var failure = service.AddNode(failureModel);
+        var failure = service.Canvas.AddNode(failureModel);
         var bodyNextModel = new CountingNode
         {
             Name = "循环后继",
             ParentExecutionContainerId = loop.Id,
             ExecutionLaneId = loopModel.Lanes[0].Id
         };
-        var bodyNext = service.AddNode(bodyNextModel);
+        var bodyNext = service.Canvas.AddNode(bodyNextModel);
         var afterModel = new CountingNode { Name = "After" };
-        var after = service.AddNode(afterModel);
+        var after = service.Canvas.AddNode(afterModel);
         service.Connections.Add(Flow(start, loop));
         service.Connections.Add(Flow(failure, bodyNext));
         service.Connections.Add(Flow(loop, after));
 
-        await service.RunAsync(_ => { });
+        await service.Execution.RunAsync(_ => { });
         Assert.Equal("执行出错", service.Model.StatusText);
         Assert.Equal(1, loopModel.CurrentIteration);
 
-        await service.ContinueFromNodeAsync(failure, _ => { });
+        await service.Execution.ContinueFromNodeAsync(failure, _ => { });
 
         Assert.Equal(3, failureModel.Attempts);
         Assert.Equal(2, bodyNextModel.Executions);
@@ -355,38 +355,38 @@ public class StructuredExecutionContainerTests
     {
         var service = CreateService();
         var viewModel = TestFlowEditorFactory.CreateViewModel(service);
-        var start = service.AddNode(new StartNode());
+        var start = service.Canvas.AddNode(new StartNode());
         var loopModel = new LoopContainerNode { Name = "循环容器1", IterationCount = 1 };
-        var loop = service.AddNode(loopModel);
+        var loop = service.Canvas.AddNode(loopModel);
         var previousModel = new CountingNode
         {
             Name = "上一个节点",
             ParentExecutionContainerId = loop.Id,
             ExecutionLaneId = loopModel.Lanes[0].Id
         };
-        var previous = service.AddNode(previousModel);
+        var previous = service.Canvas.AddNode(previousModel);
         var failureModel = new FailOnceNode
         {
             Name = "失败节点",
             ParentExecutionContainerId = loop.Id,
             ExecutionLaneId = loopModel.Lanes[0].Id
         };
-        var failure = service.AddNode(failureModel);
+        var failure = service.Canvas.AddNode(failureModel);
         var nextModel = new CountingNode
         {
             Name = "后续节点",
             ParentExecutionContainerId = loop.Id,
             ExecutionLaneId = loopModel.Lanes[0].Id
         };
-        var next = service.AddNode(nextModel);
+        var next = service.Canvas.AddNode(nextModel);
         var afterModel = new CountingNode { Name = "外层后续" };
-        var after = service.AddNode(afterModel);
+        var after = service.Canvas.AddNode(afterModel);
         service.Connections.Add(Flow(start, loop));
         service.Connections.Add(Flow(previous, failure));
         service.Connections.Add(Flow(failure, next));
         service.Connections.Add(Flow(loop, after));
 
-        await service.RunAsync(_ => { });
+        await service.Execution.RunAsync(_ => { });
         Assert.Equal("执行出错", service.Model.StatusText);
         Assert.Equal(NodeStatus.Error, loop.Status);
         viewModel.SelectedNode = previous;
@@ -404,7 +404,7 @@ public class StructuredExecutionContainerTests
     public async Task LoopRegion_UsesExistingBoundaryConnectionsWithoutContainerWiring()
     {
         var service = CreateService();
-        var start = service.AddNode(new StartNode { X = 20, Y = 220 });
+        var start = service.Canvas.AddNode(new StartNode { X = 20, Y = 220 });
         var containerModel = new LoopContainerNode
         {
             Name = "循环容器1",
@@ -412,7 +412,7 @@ public class StructuredExecutionContainerTests
             Y = 100,
             IterationCount = 3
         };
-        var container = service.AddNode(containerModel);
+        var container = service.Canvas.AddNode(containerModel);
         var bodyModel = new CountingNode
         {
             Name = "循环任务",
@@ -421,13 +421,13 @@ public class StructuredExecutionContainerTests
             ParentExecutionContainerId = container.Id,
             ExecutionLaneId = containerModel.Lanes[0].Id
         };
-        var body = service.AddNode(bodyModel);
+        var body = service.Canvas.AddNode(bodyModel);
         var afterModel = new CountingNode { Name = "After", X = 980, Y = 220 };
-        var after = service.AddNode(afterModel);
+        var after = service.Canvas.AddNode(afterModel);
         service.Connections.Add(Flow(start, body));
         service.Connections.Add(Flow(body, after));
 
-        await service.RunAsync(_ => { });
+        await service.Execution.RunAsync(_ => { });
 
         Assert.Equal(2, service.Connections.Count);
         Assert.False(containerModel.ShowBoundaryPorts);
@@ -440,26 +440,26 @@ public class StructuredExecutionContainerTests
     public async Task LoopRegion_PreservesDataTransferAcrossItsVisualBoundary()
     {
         var service = CreateService();
-        var start = service.AddNode(new StartNode());
-        var source = service.AddNode(new SourceNode { Name = "Source" });
+        var start = service.Canvas.AddNode(new StartNode());
+        var source = service.Canvas.AddNode(new SourceNode { Name = "Source" });
         var containerModel = new LoopContainerNode { IterationCount = 2 };
-        var container = service.AddNode(containerModel);
+        var container = service.Canvas.AddNode(containerModel);
         var bodyModel = new ValueNode
         {
             Name = "Body",
             ParentExecutionContainerId = container.Id,
             ExecutionLaneId = containerModel.Lanes[0].Id
         };
-        var body = service.AddNode(bodyModel);
+        var body = service.Canvas.AddNode(bodyModel);
         var afterModel = new ValueNode { Name = "After" };
-        var after = service.AddNode(afterModel);
+        var after = service.Canvas.AddNode(afterModel);
         service.Connections.Add(Flow(start, source));
         service.Connections.Add(Flow(source, body));
         service.Connections.Add(Data(source, body));
         service.Connections.Add(Flow(body, after));
         service.Connections.Add(Data(body, after));
 
-        await service.RunAsync(_ => { });
+        await service.Execution.RunAsync(_ => { });
 
         Assert.Equal(5, service.Connections.Count);
         Assert.Equal(101, bodyModel.Value);
@@ -471,10 +471,10 @@ public class StructuredExecutionContainerTests
     public async Task CompiledFlowInstance_PreservesAndExecutesContainerMembers()
     {
         var service = CreateService();
-        var start = service.AddNode(new StartNode());
+        var start = service.Canvas.AddNode(new StartNode());
         var containerModel = new LoopContainerNode { Name = "循环容器1", IterationCount = 2 };
-        var container = service.AddNode(containerModel);
-        var body = service.AddNode(new CountingNode
+        var container = service.Canvas.AddNode(containerModel);
+        var body = service.Canvas.AddNode(new CountingNode
         {
             Name = "循环任务",
             ParentExecutionContainerId = container.Id,
@@ -482,7 +482,7 @@ public class StructuredExecutionContainerTests
         });
         service.Connections.Add(Flow(start, container));
 
-        var program = service.CompileProgram();
+        var program = service.Execution.CompileProgram();
         var instance = FlowInstance.Create(program);
         await instance.RunAsync(CancellationToken.None);
 
@@ -543,8 +543,8 @@ public class StructuredExecutionContainerTests
         var service = CreateService();
         var vm = TestFlowEditorFactory.CreateViewModel(service);
         var containerModel = new ParallelContainerNode { X = 100, Y = 100 };
-        var container = service.AddNode(containerModel);
-        var child = service.AddNode(new CountingNode
+        var container = service.Canvas.AddNode(containerModel);
+        var child = service.Canvas.AddNode(new CountingNode
         {
             Name = "Child",
             X = 160,
@@ -570,10 +570,10 @@ public class StructuredExecutionContainerTests
     {
         var service = CreateService();
         var vm = TestFlowEditorFactory.CreateViewModel(service);
-        var before = service.AddNode(new CountingNode { Name = "Before", X = 20, Y = 220 });
-        var loop = service.AddNode(new LoopContainerNode { X = 200, Y = 100 });
-        var inside = service.AddNode(new CountingNode { Name = "Inside", X = 280, Y = 220 });
-        var after = service.AddNode(new CountingNode { Name = "After", X = 980, Y = 220 });
+        var before = service.Canvas.AddNode(new CountingNode { Name = "Before", X = 20, Y = 220 });
+        var loop = service.Canvas.AddNode(new LoopContainerNode { X = 200, Y = 100 });
+        var inside = service.Canvas.AddNode(new CountingNode { Name = "Inside", X = 280, Y = 220 });
+        var after = service.Canvas.AddNode(new CountingNode { Name = "After", X = 980, Y = 220 });
         service.Connections.Add(Flow(before, inside));
         service.Connections.Add(Flow(inside, after));
 

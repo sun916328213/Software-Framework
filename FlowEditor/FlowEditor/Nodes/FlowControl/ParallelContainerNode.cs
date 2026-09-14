@@ -96,7 +96,7 @@ public sealed class ParallelContainerNode : NodeModel, IExecutionScopeContainer,
         var runtime = ExecutionScopeRuntime ?? (Service == null
             ? null
             : new ExecutionScopeRuntime(
-                Service.Nodes.Select(node => node.Model).ToList(),
+                Service.Nodes.ToList(),
                 Service.Connections.ToList(),
                 new FlowChartExecutionEngine()));
         if (runtime == null)
@@ -148,9 +148,9 @@ public sealed class ParallelContainerNode : NodeModel, IExecutionScopeContainer,
         if (count < Lanes.Count && Service != null)
         {
             var removedIds = Lanes.Skip(count).Select(lane => lane.Id).ToHashSet();
-            if (Service.Nodes.Any(node => node.Model.ParentExecutionContainerId == Id &&
-                                          node.Model.ExecutionLaneId != null &&
-                                          removedIds.Contains(node.Model.ExecutionLaneId)))
+            if (Service.Nodes.Any(node => node.ParentExecutionContainerId == Id &&
+                                          node.ExecutionLaneId != null &&
+                                          removedIds.Contains(node.ExecutionLaneId)))
             {
                 Service.Model.StatusText = "请先移出要删除泳道中的节点";
                 return;

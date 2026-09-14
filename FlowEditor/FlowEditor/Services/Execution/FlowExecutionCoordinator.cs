@@ -59,7 +59,7 @@ internal sealed class FlowExecutionCoordinator
     private string FlowLogName => _model.TabTitle;
 
     /// <summary>执行当前画布一次。</summary>
-    public async Task RunAsync(Action<string> logCallback, bool debugMode)
+    public async Task RunAsync(Action<string> logCallback, bool debugMode = false)
     {
         if (_model.IsRunning || !RunPreValidation(logCallback)) return;
 

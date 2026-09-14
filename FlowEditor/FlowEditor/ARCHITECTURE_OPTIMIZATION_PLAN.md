@@ -1,9 +1,9 @@
 # FlowEditor 架构优化计划
 
-> 状态：实施中  
+> 状态：核心优化已完成，进入维护阶段
 > 基线日期：2026-09-10  
 > 范围：`FlowEditor` 类库及 `FlowEditorTest` 测试项目  
-> 当前验证基线：288 个测试全部通过（新增 Runtime 程序集、执行引擎日志 seam、执行/文档/画布/视口模块依赖护栏、函数文档、对话框及导出 seam 门禁、节点生命周期、结构化容器恢复及输出栏过滤回归测试；旧版 `SubFlowNode` 删除后同步移除 5 个失效用例）
+> 当前验证基线：301 个测试全部通过（新增 Runtime 程序集、执行引擎日志 seam、执行/文档/画布/输出门面收缩及视口/连线/选择交互模块依赖护栏、函数文档、对话框及导出 seam 门禁、节点生命周期、结构化容器恢复、输出栏过滤、节点上下文领域模型契约、统一端口值传递规则、ViewModel 职责分级、容器成员归属及 NodeModel 数据绑定职责回归测试；旧版 `SubFlowNode` 删除后同步移除 5 个失效用例）
 
 ## 1. 文档目的
 
@@ -52,7 +52,7 @@ FlowEditor/
 | --- | --- | --- | --- |
 | A-01 | `Core` 依赖 `ViewModels` | `FlowChartExecutionEngine`、`ExecutionGraphScope`、`FlowChartPersistenceService` | P0 |
 | A-02 | `Nodes` 依赖 WPF `Views` | `ToolBlockNode`、`SwitchNode` 直接创建窗口；`LoopNode` 直接弹 MessageBox | P0 |
-| A-03 | `Services` 与 `ViewModels` 双向耦合 | `FlowChartService` 和 `IFlowChartService` 暴露 `NodeViewModel` | P0 |
+| A-03 | `Services` 与 `ViewModels` 双向耦合 | 已解决：`IFlowChartService` 改为 `NodeModel` 视角，`FlowChartService` 以显式接口实现适配画布 ViewModel | P0（已完成） |
 | A-04 | `NodeModel` 职责过多 | 约 997 行，同时处理执行、端口、反射、属性面板绑定、画布服务和命令 | P1 |
 | A-05 | `FlowChartService` 职责过多 | 约 797 行，同时处理执行、文件、撤销、缩放、日志、Dispatcher 和节点集合 | P1 |
 | A-06 | `FlowChartView.xaml.cs` 职责过多 | 约 697 行，包含渲染、选择、连线、右键菜单、平移、缩放和拖放 | P1 |
@@ -521,6 +521,8 @@ IFlowDocumentStore       Save/Load 文档
 - [x] 收缩 `IFlowChartService` 门面：删除无消费者的 `ZoomReset`、`FlushLog` 和公开 `ClearNodes` 转发；内部画布模块继续自行复用缩放复位与节点清理实现。
 - [x] 清理单画布 ViewModel 的旧入口：删除无调用方的 `AddNodeModel`、空 `UpdateConnectionEndPoint`，并移除 `StartConnection` 未使用的坐标参数。
 - [x] 提取 `Views/Interaction/FlowViewportController`，集中接管平移手势、鼠标定位缩放、自适应视图及其状态；`FlowChartView` 不再声明视口事件处理器或平移字段。
+- [x] 提取 `Views/Interaction/FlowConnectionDragController`，集中接管临时连线绘制、候选端口吸附、坐标缓存、鼠标完成事件及 ViewModel 状态订阅；`FlowChartView` 只负责装配，不再维护连线手势状态。
+- [x] 提取 `Views/Interaction/FlowSelectionController`，集中接管节点点击、连线点击、框选手势、选择矩形和节点视觉索引；宿主视图继续保留右键菜单资源编排。
 
 验收：布局、命令、快捷键、拖放和视觉行为不变；容器 XAML 只保留布局组合。
 
@@ -547,10 +549,16 @@ IFlowDocumentStore       Save/Load 文档
 ### Phase 4：深化应用模块（L）
 
 - [x] 提取 `FlowOutputBuffer`，封装输出缓冲、容量截断、节流和尾批刷新。
-- [x] 从 `FlowChartService` 提取编辑、执行和文档模块；保留兼容门面与依赖组装职责。
+- [x] 从 `FlowChartService` 提取编辑、执行和文档模块；最终收缩为组合根与节点上下文，不再保留跨模块操作转发。
   - [x] 提取内部 `FlowExecutionCoordinator` 深模块，集中校验、运行、循环、取消、调试、恢复和日志收尾。
   - [x] 提取 `FlowDocumentSession`，集中保存、加载、快照、节点 DTO 映射、重建事务和错误反馈。
   - [x] 提取 `FlowCanvasSession`，集中节点生命周期、事件订阅释放、批量清理、缩放和自适应视口。
+  - [x] `FlowChartViewModel` 与测试分别直接使用 `Execution`、`Documents`、`Canvas`、`Output` 模块；`IFlowChartService` 收缩为节点生命周期所需的最小上下文。
+- [x] 维护复审消除节点上下文的表现层泄漏：`IFlowChartService.Nodes` / `FindNode` 只返回 `NodeModel`，由组合根适配内部 `NodeViewModel` 集合，并增加防回退测试。
+- [x] 维护复审统一端口值传递规则：Runtime 的 `PortValueTransfer` 集中端口查找、声明/运行时类型验证、诊断和赋值；执行引擎只记录 Journal，循环容器只筛选跨边界数据线。
+- [x] 维护复审第一阶段拆分 `FlowChartViewModel`：执行恢复、文档撤销、连线提交和表现层入口分别迁入命名 partial 文件，主文件由 1,026 行降至 716 行，并增加职责布局门禁。
+- [x] 维护复审第二阶段拆分 `FlowChartViewModel`：选择/拖动和剪贴板事务迁入命名 partial 文件；容器几何、拖动成员展开、执行容器/泳道归属及越界连线清理下沉到平台无关的 `FlowCanvasSession`，主文件降至 301 行。
+- [x] 维护复审第一阶段拆分 `NodeModel`：将画布附加/卸载、连线事件订阅、上游查询和数据绑定增删迁入 `NodeModel.DataBindings.cs`，主文件由 1,063 行降至 754 行，并增加职责位置门禁。
 - [x] 统一 `FlowDocumentMapper`，由单流程、多流程、快照、节点复制共同复用节点、端口和连线映射。
 - [x] 引入 `IUiDispatcher`，提供 WPF 与无头 adapter，并移除 `FlowChartService` 对 WPF Dispatcher 的直接访问。
 - [x] 引入 `IFlowDocumentStore`，由 JSON 文件和内存 adapter 统一 `.flow` / `.flows` 存储。
@@ -630,8 +638,8 @@ IFlowDocumentStore       Save/Load 文档
 - [x] Runtime 可脱离 WPF 独立构建和运行。
 - [x] Core、Nodes 中没有 View、ViewModel、Prism 或 WPF 引用。
 - [x] `FlowChartContainerView` 只承担布局组合。
-- [ ] `FlowChartView` 不再集中管理所有交互行为。
-- [ ] `FlowChartService` 不再是执行、编辑、持久化、输出和视口的共同入口。
+- [x] `FlowChartView` 不再集中管理所有交互行为（视口与临时连线已分别下沉至独立交互控制器）。
+- [x] `FlowChartService` 不再是执行、编辑、持久化、输出和视口的共同入口，仅负责会话组装与节点上下文。
 - [x] 所有函数具有有效文档注释。
 - [x] 构建不存在 CS1591、CS1570、CS1574。
 - [x] 测试不再以 `null!` 绕过必需依赖。

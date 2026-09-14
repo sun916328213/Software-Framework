@@ -86,7 +86,7 @@ public sealed class FlowOutputBufferTests
     {
         var service = TestFlowEditorFactory.CreateService();
         var viewModel = TestFlowEditorFactory.CreateViewModel(service);
-        service.AppendLog("visible-output");
+        service.Output.Append("visible-output");
         Assert.Contains("visible-output", service.Model.OutputText);
 
         viewModel.ClearOutputCommand.Execute(null);

@@ -9,5 +9,16 @@
       "suggestion": 0
     },
     "scope": "FlowEditor P5 Runtime extraction"
+  },
+  {
+    "date": "2026-09-14",
+    "mode": "Architecture Audit",
+    "score": 70,
+    "findings": {
+      "critical": 1,
+      "warning": 3,
+      "suggestion": 0
+    },
+    "scope": "FlowEditor full maintenance-stage audit"
   }
 ]

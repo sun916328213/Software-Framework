@@ -11,9 +11,8 @@ using FlowEditor.ViewModels;
 namespace FlowEditor.Services;
 
 /// <summary>
-/// 流程图服务。
-/// 声明并持有 FlowChartModel，提供节点/连线集合访问及核心业务方法。
-/// 依赖通过构造器注入（IoC），不直接创建依赖对象，便于测试与解耦。
+/// 单个流程标签页的组合根和节点上下文。
+/// 负责创建并连接执行、文档、画布和输出模块，但不转发这些模块的操作接口。
 /// </summary>
 public class FlowChartService : IFlowChartService
 {
@@ -35,10 +34,17 @@ public class FlowChartService : IFlowChartService
     /// <summary>宿主提供的节点信息提示通道。</summary>
     public INodeNotificationSink NodeNotifications { get; }
 
-    private readonly FlowOutputBuffer _output;
-    private readonly FlowExecutionCoordinator _execution;
-    private readonly FlowDocumentSession _documents;
-    private readonly FlowCanvasSession _canvas;
+    /// <summary>当前会话的输出缓冲模块。</summary>
+    internal FlowOutputBuffer Output { get; }
+
+    /// <summary>当前会话的执行协调模块。</summary>
+    internal FlowExecutionCoordinator Execution { get; }
+
+    /// <summary>当前会话的文档事务模块。</summary>
+    internal FlowDocumentSession Documents { get; }
+
+    /// <summary>当前会话的画布编辑模块。</summary>
+    internal FlowCanvasSession Canvas { get; }
 
     /// <summary>创建流程图应用模块。</summary>
     /// <param name="documentStore">流程文档存储 adapter。</param>
@@ -64,136 +70,28 @@ public class FlowChartService : IFlowChartService
         NodeNotifications = nodeNotifications ?? NullNodeInteraction.Instance;
         var dispatcher = uiDispatcher ?? ImmediateUiDispatcher.Instance;
         var mapper = documentMapper ?? new FlowDocumentMapper();
-        _output = new FlowOutputBuffer(text => Model.OutputText = text, dispatcher);
+        Output = new FlowOutputBuffer(text => Model.OutputText = text, dispatcher);
         UndoRedo = new UndoRedoService();
-        _canvas = new FlowCanvasSession(this, Model, Nodes, Connections, UndoRedo, _output);
-        _execution = new FlowExecutionCoordinator(
-            Model, Nodes, Connections, engine, mapper, dispatcher, _output,
+        Canvas = new FlowCanvasSession(this, Model, Nodes, Connections, UndoRedo, Output);
+        Execution = new FlowExecutionCoordinator(
+            Model, Nodes, Connections, engine, mapper, dispatcher, Output,
             () => ProcessName);
-        _documents = new FlowDocumentSession(
+        Documents = new FlowDocumentSession(
             Model, Nodes, Connections, documentStore, mapper, dialogService, UndoRedo,
-            node => _canvas.AddNode(node), _canvas.ClearNodes);
+            node => Canvas.AddNode(node), Canvas.ClearNodes);
     }
-
-    /// <summary>当前执行节点索引（用于单步调试）。</summary>
-    public int CurrentExecutionIndex => _execution.CurrentExecutionIndex;
 
     /// <summary>流程名（宿主设置，如 AutoFlow / InitializeFlow）；为节点日志的上级目录。</summary>
     public string? ProcessName { get; set; }
 
-    /// <summary>调试控制器（P4）：断点与单步的 TCS 门闩。</summary>
-    public DebugController Debug => _execution.Debug;
-
-    /// <summary>画布执行的日志/数据追踪器（P4）：记录节点事件与连线传值。</summary>
-    public ExecutionJournal Journal => _execution.Journal;
-
-    // ── 执行模块委托 ──
-
-    /// <summary>执行当前流程。</summary>
-    public Task RunAsync(Action<string> logCallback, bool debugMode = false) =>
-        _execution.RunAsync(logCallback, debugMode);
-
-    /// <summary>释放调试暂停。</summary>
-    public void StepContinue() => _execution.StepContinue();
-
-    /// <summary>仅执行选中节点一次。</summary>
-    public Task StepContinueAsync(NodeViewModel node, Action<string> logCallback) =>
-        _execution.StepContinueAsync(node, logCallback);
-
-    /// <summary>从选中节点恢复或跳转执行。</summary>
-    public Task ContinueFromNodeAsync(NodeViewModel node, Action<string> logCallback) =>
-        _execution.ContinueFromNodeAsync(node, logCallback);
-
-    /// <summary>停止当前执行。</summary>
-    public void Stop() => _execution.Stop();
-
-    /// <summary>循环执行当前流程。</summary>
-    public Task RunLoopAsync(Action<string> logCallback) =>
-        _execution.RunLoopAsync(logCallback);
-
-    /// <summary>停止循环执行。</summary>
-    public void StopLoop() => _execution.StopLoop();
-
-    /// <summary>编译当前流程为不可变程序。</summary>
-    public FlowProgram CompileProgram() => _execution.CompileProgram();
-    // ── 文档模块委托 ──
-
-    /// <summary>当前文件路径。</summary>
-    public string? CurrentFilePath
-    {
-        get => Model.CurrentFilePath;
-        set => Model.CurrentFilePath = value;
-    }
+    /// <inheritdoc />
+    IEnumerable<NodeModel> IFlowChartService.Nodes => Nodes.Select(node => node.Model);
 
     /// <inheritdoc />
-    public bool IsBatchOperation
-    {
-        get => _canvas.IsBatchOperation;
-        set => _canvas.IsBatchOperation = value;
-    }
-
-    /// <summary>保存当前流程文档。</summary>
-    public bool Save(string? filePath = null) => _documents.Save(filePath);
-
-    /// <summary>从文件加载流程文档。</summary>
-    public bool Load(string filePath) => _documents.Load(filePath);
-
-    /// <summary>捕获撤销/重做快照。</summary>
-    public string CaptureSnapshot() => _documents.CaptureSnapshot();
-
-    /// <summary>应用撤销/重做快照。</summary>
-    public void ApplySnapshot(string json) => _documents.ApplySnapshot(json);
-    // ── 画布模块委托 ──
-
-    /// <summary>放大画布。</summary>
-    public void ZoomIn() => _canvas.ZoomIn();
-
-    /// <summary>缩小画布。</summary>
-    public void ZoomOut() => _canvas.ZoomOut();
-
-    /// <summary>请求自适应全部画布内容。</summary>
-    public void ZoomToFit() => _canvas.ZoomToFit();
-
-    /// <summary>转发画布自适应请求。</summary>
-    public event EventHandler<(double contentWidth, double contentHeight, double offsetX, double offsetY)>? ZoomToFitRequested
-    {
-        add => _canvas.ZoomToFitRequested += value;
-        remove => _canvas.ZoomToFitRequested -= value;
-    }
-
-    // ── 辅助 ──
-
-    /// <summary>追加日志到输出缓冲，并按节流策略刷新输出栏。</summary>
-    public void AppendLog(string message) => _output.Append(message);
-
-    /// <summary>清空日志缓冲与输出面板；已经排队的节流刷新只会发布清空后的内容。</summary>
-    public void ClearOutput() => _output.Clear();
-
-    /// <summary>查找节点。</summary>
-    public NodeViewModel? FindNode(string nodeId) => _canvas.FindNode(nodeId);
-
-    /// <summary>清空画布。</summary>
-    public void ClearAll() => _canvas.ClearAll();
-
-    // ── ToolBlock 辅助方法 ──
+    NodeModel? IFlowChartService.FindNode(string nodeId) => Canvas.FindNode(nodeId)?.Model;
 
     /// <summary>从节点文档重建节点模型（用于 ToolBlock 内部节点还原）。</summary>
     public NodeModel RebuildNodeFromDocument(NodeDocumentModel doc)
-        => _documents.RebuildNodeFromDocument(doc);
-
-    /// <summary>从节点模型构建节点文档（用于 ToolBlock 内部节点序列化）。</summary>
-    public NodeDocumentModel BuildNodeDocument(NodeModel node)
-        => _documents.BuildNodeDocument(node);
-
-    // ── 节点管理 ──
-
-    /// <summary>添加节点并设置其 Service 属性。</summary>
-    public void AddNode(NodeViewModel nodeVm) => _canvas.AddNode(nodeVm);
-
-    /// <summary>添加节点模型并返回 NodeViewModel。</summary>
-    public NodeViewModel AddNode(NodeModel model) => _canvas.AddNode(model);
-
-    /// <summary>从画布移除节点，并通知节点生命周期回调。</summary>
-    public void RemoveNode(NodeViewModel nodeVm) => _canvas.RemoveNode(nodeVm);
+        => Documents.RebuildNodeFromDocument(doc);
 
 }

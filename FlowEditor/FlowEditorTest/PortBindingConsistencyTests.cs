@@ -37,8 +37,8 @@ public class PortBindingConsistencyTests
         var service = TestFlowEditorFactory.CreateService();
         var sourceModel = new PropertyNode { Name = "工具1" };
         var targetModel = new PropertyNode { Name = "工具2" };
-        var source = service.AddNode(sourceModel);
-        var target = service.AddNode(targetModel);
+        var source = service.Canvas.AddNode(sourceModel);
+        var target = service.Canvas.AddNode(targetModel);
         sourceModel.SetPortConfig(nameof(PropertyNode.A), false, true);
         targetModel.SetPortConfig(nameof(PropertyNode.A), true, false);
         var sourceA = source.OutputPorts.Single(port => port.PropertyName == nameof(PropertyNode.A));
@@ -65,10 +65,10 @@ public class PortBindingConsistencyTests
     public void BindingUpstreamNodes_ContainsOnlyTransitivePredecessors()
     {
         var service = TestFlowEditorFactory.CreateService();
-        var before = service.AddNode(new CountingNode { Name = "前置工具" });
-        var current = service.AddNode(new PropertyNode { Name = "当前工具" });
-        var after = service.AddNode(new CountingNode { Name = "后续工具" });
-        var unrelated = service.AddNode(new CountingNode { Name = "无关工具" });
+        var before = service.Canvas.AddNode(new CountingNode { Name = "前置工具" });
+        var current = service.Canvas.AddNode(new PropertyNode { Name = "当前工具" });
+        var after = service.Canvas.AddNode(new CountingNode { Name = "后续工具" });
+        var unrelated = service.Canvas.AddNode(new CountingNode { Name = "无关工具" });
         service.Connections.Add(Flow(before, current));
         service.Connections.Add(Flow(current, after));
 

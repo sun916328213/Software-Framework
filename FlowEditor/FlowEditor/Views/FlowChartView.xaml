@@ -90,8 +90,7 @@
             x:Name="ZoomContainer"
             Width="{Binding Model.CanvasWidth}"
             Height="{Binding Model.CanvasHeight}"
-            MouseRightButtonDown="OnCanvasRightClick"
-            >
+            MouseRightButtonDown="OnCanvasRightClick">
             <Grid.Background>
                 <DrawingBrush
                     Stretch="None"
@@ -123,10 +122,7 @@
             <!--  节点层  -->
             <Canvas
                 x:Name="FlowChartCanvas"
-                Background="Transparent"
-                MouseLeftButtonDown="OnCanvasMouseDown"
-                MouseLeftButtonUp="OnCanvasMouseUp"
-                MouseMove="OnCanvasMouseMove" />
+                Background="Transparent" />
 
             <!--  临时连线层  -->
             <Canvas x:Name="PendingCanvas" IsHitTestVisible="False" />

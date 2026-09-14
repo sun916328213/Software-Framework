@@ -29,19 +29,19 @@ public class FlowChartServiceExecutionTests
     public async Task RunAsync_ExecutesActiveGraphAndSkipsExcludedNodes()
     {
         var service = CreateService();
-        var start = service.AddNode(new StartNode());
+        var start = service.Canvas.AddNode(new StartNode());
         var activeModel = new CountingNode { Name = "Active" };
-        var active = service.AddNode(activeModel);
+        var active = service.Canvas.AddNode(activeModel);
         var parkedModel = new CountingNode
         {
             Name = "Parked",
             IsExcludedFromExecution = true
         };
-        service.AddNode(parkedModel);
+        service.Canvas.AddNode(parkedModel);
         service.Connections.Add(Flow(start, active));
         var logs = new ConcurrentQueue<string>();
 
-        await service.RunAsync(logs.Enqueue);
+        await service.Execution.RunAsync(logs.Enqueue);
 
         Assert.Equal(1, activeModel.Executions);
         Assert.Equal(0, parkedModel.Executions);
@@ -55,11 +55,11 @@ public class FlowChartServiceExecutionTests
     public async Task RunAsync_NodeFailure_AlwaysRestoresRuntimeState()
     {
         var service = CreateService();
-        var start = service.AddNode(new StartNode());
-        var failing = service.AddNode(new FailNode { Name = "Failing" });
+        var start = service.Canvas.AddNode(new StartNode());
+        var failing = service.Canvas.AddNode(new FailNode { Name = "Failing" });
         service.Connections.Add(Flow(start, failing));
 
-        await service.RunAsync(_ => { });
+        await service.Execution.RunAsync(_ => { });
 
         Assert.Equal(NodeStatus.Error, failing.Status);
         Assert.Equal("执行出错", service.Model.StatusText);
@@ -72,16 +72,16 @@ public class FlowChartServiceExecutionTests
     public async Task Stop_CancelsRunningNodeAndCompletesRunTask()
     {
         var service = CreateService();
-        var start = service.AddNode(new StartNode());
+        var start = service.Canvas.AddNode(new StartNode());
         var model = new CancellableNode { Name = "Waiting" };
-        var waiting = service.AddNode(model);
+        var waiting = service.Canvas.AddNode(model);
         service.Connections.Add(Flow(start, waiting));
 
-        var runTask = service.RunAsync(_ => { });
+        var runTask = service.Execution.RunAsync(_ => { });
         await model.Started.Task.WaitAsync(TimeSpan.FromSeconds(2));
         Assert.True(service.Model.IsRunning);
 
-        service.Stop();
+        service.Execution.Stop();
         await runTask.WaitAsync(TimeSpan.FromSeconds(2));
 
         Assert.Equal("已取消", service.Model.StatusText);
@@ -94,14 +94,14 @@ public class FlowChartServiceExecutionTests
     {
         var service = CreateService();
         service.Model.LoopInterval = 10;
-        var start = service.AddNode(new StartNode());
+        var start = service.Canvas.AddNode(new StartNode());
         var model = new CountingNode { Name = "Worker" };
-        var worker = service.AddNode(model);
+        var worker = service.Canvas.AddNode(model);
         service.Connections.Add(Flow(start, worker));
 
-        var loopTask = service.RunLoopAsync(_ => { });
+        var loopTask = service.Execution.RunLoopAsync(_ => { });
         await WaitUntilAsync(() => Volatile.Read(ref model.Executions) >= 2);
-        service.StopLoop();
+        service.Execution.StopLoop();
         await loopTask.WaitAsync(TimeSpan.FromSeconds(2));
 
         Assert.True(model.Executions >= 2);
@@ -115,8 +115,8 @@ public class FlowChartServiceExecutionTests
     {
         var service = CreateService();
 
-        service.AppendLog("first");
-        service.AppendLog("last-before-silence");
+        service.Output.Append("first");
+        service.Output.Append("last-before-silence");
 
         Assert.DoesNotContain("last-before-silence", service.Model.OutputText);
 
@@ -130,18 +130,18 @@ public class FlowChartServiceExecutionTests
     public async Task RunAsync_PublishesNodeStartBeforeLongRunningNodeCompletes()
     {
         var service = CreateService();
-        var start = service.AddNode(new StartNode());
+        var start = service.Canvas.AddNode(new StartNode());
         var model = new CancellableNode { Name = "Waiting" };
-        var waiting = service.AddNode(model);
+        var waiting = service.Canvas.AddNode(model);
         service.Connections.Add(Flow(start, waiting));
 
-        var runTask = service.RunAsync(service.AppendLog);
+        var runTask = service.Execution.RunAsync(service.Output.Append);
         await model.Started.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
         await WaitUntilAsync(() =>
             service.Model.OutputText.Contains("[Waiting] [开始]"));
 
-        service.Stop();
+        service.Execution.Stop();
         await runTask.WaitAsync(TimeSpan.FromSeconds(2));
     }
 
@@ -149,7 +149,7 @@ public class FlowChartServiceExecutionTests
     public async Task RunAsync_LogSinkFailureAfterSuccessfulNodes_DoesNotChangeSuccessStatus()
     {
         var service = CreateService();
-        service.AddNode(new StartNode());
+        service.Canvas.AddNode(new StartNode());
         var previousSink = FlowLogContext.FileSink;
         try
         {
@@ -159,7 +159,7 @@ public class FlowChartServiceExecutionTests
                     throw new System.IO.IOException("日志磁盘不可用");
             };
 
-            await service.RunAsync(service.AppendLog);
+            await service.Execution.RunAsync(service.Output.Append);
 
             Assert.Equal("执行完成", service.Model.StatusText);
             Assert.All(service.Nodes, node => Assert.Equal(NodeStatus.Success, node.Status));
@@ -174,18 +174,18 @@ public class FlowChartServiceExecutionTests
     public async Task RunAsync_ImmediatelyReplacesPreviousErrorWithRunningStatus()
     {
         var service = CreateService();
-        var start = service.AddNode(new StartNode());
+        var start = service.Canvas.AddNode(new StartNode());
         var model = new CancellableNode { Name = "Waiting" };
-        var waiting = service.AddNode(model);
+        var waiting = service.Canvas.AddNode(model);
         service.Connections.Add(Flow(start, waiting));
         service.Model.StatusText = "执行出错";
 
-        var runTask = service.RunAsync(service.AppendLog);
+        var runTask = service.Execution.RunAsync(service.Output.Append);
         await model.Started.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
         Assert.Equal("正在执行...", service.Model.StatusText);
 
-        service.Stop();
+        service.Execution.Stop();
         await runTask.WaitAsync(TimeSpan.FromSeconds(2));
     }
 

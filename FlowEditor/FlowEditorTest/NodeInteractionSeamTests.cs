@@ -19,8 +19,8 @@ public sealed class NodeInteractionSeamTests
         var service = CreateService(nodeEditorLauncher: launcher);
         var toolBlock = new ToolBlockNode();
         var dispatch = new SwitchNode();
-        service.AddNode(toolBlock);
-        service.AddNode(dispatch);
+        service.Canvas.AddNode(toolBlock);
+        service.Canvas.AddNode(dispatch);
 
         toolBlock.OpenInternalFlow();
         dispatch.EditDispatchRules();
@@ -35,7 +35,7 @@ public sealed class NodeInteractionSeamTests
         var notifications = new RecordingNodeNotificationSink();
         var service = CreateService(nodeNotifications: notifications);
         var loop = new LoopNode { Iterations = 7, CurrentIndex = 3 };
-        service.AddNode(loop);
+        service.Canvas.AddNode(loop);
 
         loop.PreviewParams();
 

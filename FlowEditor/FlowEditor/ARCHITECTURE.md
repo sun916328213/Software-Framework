@@ -8,42 +8,49 @@
 FlowEditor 当前由 `FlowEditor.Runtime`（纯 `net9.0`）、`FlowEditor.Runtime.Smoke`（无界面控制台验收）和 `FlowEditor`（`net9.0-windows` WPF）组成。P5 已把运行节点与结构化作用域契约、端口、连线、文档 DTO、程序定义、图编译、校验、调试控制、执行追踪、运行实例、执行引擎及循环/并行 runner 迁入 Runtime；WPF 项目单向引用 Runtime。
 
 ```text
-Views -> ViewModels -> IFlowChartService（兼容门面）
+Views -> ViewModels -> Canvas / Documents / Execution / Output
+                           ^
                            |
-             +-------------+-------------+
-             v             v             v
-     FlowCanvasSession  FlowDocumentSession  FlowExecutionCoordinator
-             |             |             |
-             +-------------+-------------+
+             FlowChartService（组合根）
+                           |
                            v
-             FlowEditor.Runtime + Editor Models / Nodes
+        IFlowChartService（节点最小上下文） -> Editor Models / Nodes
+                           |
+                           v
+                    FlowEditor.Runtime
 
 Infrastructure adapters -> Application seams
 ```
 
-当前已知的历史依赖包括：
+当前依赖状态包括：
 
 - `Core` 已禁止引用 `ViewModels` 和 Prism；节点 factory 使用实例注册表，不再持有宿主级静态 resolver。
-- `IFlowChartService` 仍暴露 `NodeViewModel`，但已不再暴露 Prism 容器；文档存储 seam 也不暴露 ViewModel。
-- `NodeModel` 持有 `IFlowChartService`，用于查询和修改画布连接。
+- `IFlowChartService` 只暴露 `NodeModel` 视角的节点集合与查询，不再把 `NodeViewModel` 泄漏给领域节点；`FlowChartService` 通过显式接口实现完成画布适配。
+- `NodeModel` 持有 `IFlowChartService`，用于查询所属画布的节点和连线。
 - 节点编辑、信息提示和动作命令已通过 Presentation adapter 与 WPF 隔离。
-- `FlowChartService` 保留兼容门面和依赖组装；执行、文档、画布生命周期分别由内部深模块拥有实现。
+- `FlowChartService` 仅负责依赖组装和节点上下文；执行、文档、画布和输出操作不再经过兼容转发门面。
 - `FlowOutputBuffer` 拥有输出缓冲、容量截断、节流、尾批刷新和清空一致性。
 
-这些依赖是待消除的迁移基线，不是允许新增依赖的架构规则。架构约束测试使用显式 allowlist 锁定现有债务；新增同类依赖必须失败。
+仍存在的历史依赖是待消除的迁移基线，不是允许新增依赖的架构规则。架构约束测试使用显式 allowlist 锁定现有债务，并禁止节点上下文重新引入 ViewModel。
 
 当前迁移进展：执行引擎只依赖 `INodeExecutable` 和 `IExecutionLogContext`；静态校验和顶层图只依赖 `IFlowValidationNode`、`IParallelForkNode`、`IExecutionScopeDescriptor` 等语义契约，不识别任何编辑器具体节点类。桌面端以 `FlowLogExecutionContextAdapter` 保留流程、节点及运行序号日志，无头宿主使用无副作用默认实现。`FlowRuntimeInstance<TNode>` 拥有活动图筛选、作用域注入、调试、追踪和执行，WPF `FlowInstance` 仅保留具体节点物化、属性通知和流程日志作用域适配。并行泳道、嵌套容器和运行实例使用独立引擎状态，避免共享运行序号竞争。输出栏由 `FlowOutputBuffer` 隐藏并发缓冲、容量截断和节流细节，通过 `IUiDispatcher` 连接 WPF 或无头宿主。`FlowDocumentMapper` 统一单流程、多流程、快照和节点复制的 DTO 转换，`IFlowDocumentStore` 通过 JSON 与内存 adapter 隔离存储介质。标签页和工具箱节点创建分别使用 `IFlowTabFactory` 与 `INodeFactory`；Prism 解析仅保留在组合入口和 WPF adapter。应用模块、ViewModel、工具箱模型和 ToolBlock 窗口已不再使用 Service Locator，测试通过硬约束防止依赖回流。
+
+端口值传递由 Runtime 的 `PortValueTransfer` 统一完成端口查找、声明类型与运行时值验证、稳定诊断及赋值。执行引擎仅在成功传递后追加 Journal，循环容器仅筛选跨边界数据连接，避免两条执行路径产生不同的数据语义。
 
 ## Phase 4 应用模块
 
 | 模块 | 拥有的实现 | 对外使用方式 |
 | --- | --- | --- |
-| `FlowExecutionCoordinator` | 校验、单次/循环运行、取消、调试、失败恢复、运行日志和状态收尾 | 由 `FlowChartService` 兼容门面委托 |
-| `FlowDocumentSession` | 保存、加载、快照、节点 DTO 映射、重建事务和错误反馈 | 由 `FlowChartService` 兼容门面委托 |
-| `FlowCanvasSession` | 节点附加/卸载、事件订阅释放、批量清理、缩放和自适应视口 | 由 `FlowChartService` 兼容门面委托 |
-| `FlowOutputBuffer` | 并发缓冲、容量限制、节流发布、尾批刷新和清空 | 由执行及画布模块复用 |
+| `FlowExecutionCoordinator` | 校验、单次/循环运行、取消、调试、失败恢复、运行日志和状态收尾 | ViewModel 与执行测试直接使用 |
+| `FlowDocumentSession` | 保存、加载、快照、节点 DTO 映射、重建事务和错误反馈 | ViewModel 与文档测试直接使用 |
+| `FlowCanvasSession` | 节点附加/卸载、事件订阅释放、批量清理、缩放和自适应视口 | ViewModel 与画布测试直接使用 |
+| `FlowOutputBuffer` | 并发缓冲、容量限制、节流发布、尾批刷新和清空 | ViewModel、执行及画布模块复用 |
 
-这些模块属于 Application，实现保持 `internal`。它们只有一个实际实现，因此不额外创建浅接口；测试继续从现有 `IFlowChartService` seam 验证可观察行为，并用架构测试防止职责回流。节点复制和 ToolBlock 恢复所需的节点 DTO 转换也由文档模块完成，门面不直接持有 mapper。
+这些模块属于 Application，实现保持 `internal`。它们只有一个实际实现，因此不额外创建浅接口；ViewModel 与测试直接使用实际模块，架构测试禁止操作转发重新膨胀回 `FlowChartService`。`IFlowChartService` 只作为节点模型的生命周期 seam；节点复制使用文档模块，ToolBlock 仅通过节点上下文重建内部节点。
+
+`FlowChartViewModel` 按变化原因组织为 partial 文件：主文件只保留依赖组装和节点编辑入口；`Interaction`、`Clipboard`、`Execution`、`Documents`、`Connections`、`Presentation` 和 `Commands` 分别承载交互状态、剪贴板事务、运行恢复、文档事务、连线提交、表现层入口和命令初始化。partial 只改善代码局部性，不形成新的公共 seam；实际业务仍委托给上述 Application 模块。容器几何、拖动成员展开、执行容器/泳道归属及越界连线清理由平台无关的 `FlowCanvasSession` 统一拥有。
+
+`NodeModel` 的画布生命周期与数据绑定职责集中在 `NodeModel.DataBindings.cs`：节点附加/卸载、连线集合订阅、上游节点解析及绑定创建/删除保持在同一实现位置，避免订阅生命周期与绑定状态分离。partial 不改变节点插件的继承入口和 `OnAttached(IFlowChartService)` 契约。
 
 ## 目标依赖方向
 
@@ -78,7 +85,7 @@ P5 已完成平台边界拆分。WPF 中保留的 `FlowInstance` 与 `Reflection
 
 ```text
 PortConnectorView（开始拖动）
-  -> FlowChartView（邻近查找、吸附、坐标换算）
+  -> FlowConnectionDragController（邻近查找、吸附、坐标换算）
   -> FlowChartViewModel（交互编排、撤销快照）
   -> ConnectionService（校验并规划连接）
   -> Models（持久状态）

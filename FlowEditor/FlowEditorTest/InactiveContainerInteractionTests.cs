@@ -15,8 +15,8 @@ public class InactiveContainerInteractionTests
     {
         var service = TestFlowEditorFactory.CreateService();
         var vm = TestFlowEditorFactory.CreateViewModel(service);
-        var container = service.AddNode(new InactiveNodeContainerNode { X = 100, Y = 100 });
-        var child = service.AddNode(new CountingNode
+        var container = service.Canvas.AddNode(new InactiveNodeContainerNode { X = 100, Y = 100 });
+        var child = service.Canvas.AddNode(new CountingNode
         {
             Name = "Child", X = 150, Y = 200, IsExcludedFromExecution = true
         });

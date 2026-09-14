@@ -57,7 +57,7 @@ using System.Windows;namespace FlowEditor
             containerRegistry.RegisterSingleton<IExecutionLogContext, FlowLogExecutionContextAdapter>();
             containerRegistry.Register<FlowChartExecutionEngine>();
             // 流程图服务：瞬态，每个标签页独立实例
-            containerRegistry.Register<IFlowChartService, FlowChartService>();
+            containerRegistry.Register<FlowChartService>();
             // 工具箱服务：瞬态，每个容器 ViewModel 独立实例
             containerRegistry.Register<ToolboxService>();
             // 多流程容器文档服务：瞬态

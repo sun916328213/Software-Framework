@@ -15,6 +15,7 @@ namespace FlowEditorTest;
 public sealed class ArchitectureDependencyTests
 {
     private static readonly string ProjectDirectory = FindProjectDirectory();
+    private static readonly string SolutionDirectory = Directory.GetParent(ProjectDirectory)!.FullName;
 
     /// <summary>确保 Core 不会新增对表现层、WPF 或 Prism 的依赖。</summary>
     [Fact]
@@ -175,6 +176,43 @@ public sealed class ArchitectureDependencyTests
         Assert.Contains("PreviewMouseDown +=", controllerSource, StringComparison.Ordinal);
     }
 
+    /// <summary>确保临时连线、端口吸附和坐标缓存不会重新膨胀回画布宿主视图。</summary>
+    [Fact]
+    public void FlowChartView_ConnectionDragInteraction_IsDelegated()
+    {
+        var viewSource = File.ReadAllText(Path.Combine(ProjectDirectory, "Views", "FlowChartView.xaml.cs"));
+        var controllerSource = File.ReadAllText(Path.Combine(
+            ProjectDirectory, "Views", "Interaction", "FlowConnectionDragController.cs"));
+
+        Assert.Contains("FlowConnectionDragController", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("_connectionCandidate", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("_cachedConnection", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("OnCanvasConnectionMouseUp", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreatePendingConnectionPath", viewSource, StringComparison.Ordinal);
+        Assert.Contains("Mouse.MouseMoveEvent", controllerSource, StringComparison.Ordinal);
+        Assert.Contains("Mouse.MouseUpEvent", controllerSource, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保节点点击与框选状态不会重新膨胀回画布宿主视图或 XAML 事件入口。</summary>
+    [Fact]
+    public void FlowChartView_SelectionInteraction_IsDelegated()
+    {
+        var viewSource = File.ReadAllText(Path.Combine(ProjectDirectory, "Views", "FlowChartView.xaml.cs"));
+        var xamlSource = File.ReadAllText(Path.Combine(ProjectDirectory, "Views", "FlowChartView.xaml"));
+        var controllerSource = File.ReadAllText(Path.Combine(
+            ProjectDirectory, "Views", "Interaction", "FlowSelectionController.cs"));
+
+        Assert.Contains("FlowSelectionController", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("_isBoxSelecting", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("_boxSelectStart", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("UpdateBoxSelection", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("OnCanvasMouseDown", xamlSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("OnCanvasMouseMove", xamlSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("OnCanvasMouseUp", xamlSource, StringComparison.Ordinal);
+        Assert.Contains("RegisterNode", controllerSource, StringComparison.Ordinal);
+        Assert.Contains("UpdateBoxSelection", controllerSource, StringComparison.Ordinal);
+    }
+
     /// <summary>确保没有为单次视图转发保留全局 WPF 路由命令。</summary>
     [Fact]
     public void RoutedCommandDeclarations_AreAbsent()
@@ -223,8 +261,129 @@ public sealed class ArchitectureDependencyTests
         Assert.DoesNotContain("_documentMapper", source, StringComparison.Ordinal);
         Assert.Contains("FlowDocumentSession", source, StringComparison.Ordinal);
         Assert.Contains("FlowCanvasSession", source, StringComparison.Ordinal);
-        Assert.Contains("_documents.RebuildNodeFromDocument", source, StringComparison.Ordinal);
-        Assert.Contains("_documents.BuildNodeDocument", source, StringComparison.Ordinal);
+        Assert.Contains("Documents.RebuildNodeFromDocument", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("BuildNodeDocument", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保流程组合根不再转发执行、编辑、持久化、输出和视口操作。</summary>
+    [Fact]
+    public void FlowChartService_OperationalForwarders_AreAbsent()
+    {
+        var serviceSource = File.ReadAllText(Path.Combine(ProjectDirectory, "Services", "FlowChartService.cs"));
+        var contextSource = File.ReadAllText(Path.Combine(ProjectDirectory, "Interfaces", "IFlowChartService.cs"));
+        var viewModelSource = string.Join(
+            Environment.NewLine,
+            Directory.EnumerateFiles(
+                    Path.Combine(ProjectDirectory, "ViewModels"),
+                    "FlowChartViewModel*.cs",
+                    SearchOption.TopDirectoryOnly)
+                .Select(File.ReadAllText));
+
+        foreach (var forbidden in new[]
+                 {
+                     "public Task RunAsync", "public bool Save(", "public void AddNode(",
+                     "public void AppendLog", "public void ZoomIn", "public void ClearAll"
+                 })
+        {
+            Assert.DoesNotContain(forbidden, serviceSource, StringComparison.Ordinal);
+            Assert.DoesNotContain(forbidden, contextSource, StringComparison.Ordinal);
+        }
+
+        Assert.Contains("_execution.RunAsync", viewModelSource, StringComparison.Ordinal);
+        Assert.Contains("_documents.Save", viewModelSource, StringComparison.Ordinal);
+        Assert.Contains("_canvas.ClearAll", viewModelSource, StringComparison.Ordinal);
+        Assert.Contains("_output.Append", viewModelSource, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保流程 ViewModel 的高变化职责保留在命名明确的 partial 文件中。</summary>
+    [Fact]
+    public void FlowChartViewModel_Responsibilities_AreSplitIntoPartialFiles()
+    {
+        var viewModelDirectory = Path.Combine(ProjectDirectory, "ViewModels");
+        var mainSource = File.ReadAllText(Path.Combine(viewModelDirectory, "FlowChartViewModel.cs"));
+        var responsibilityFiles = new[]
+        {
+            "FlowChartViewModel.Execution.cs",
+            "FlowChartViewModel.Documents.cs",
+            "FlowChartViewModel.Connections.cs",
+            "FlowChartViewModel.Presentation.cs",
+            "FlowChartViewModel.Interaction.cs",
+            "FlowChartViewModel.Clipboard.cs"
+        };
+
+        Assert.True(File.ReadAllLines(Path.Combine(viewModelDirectory, "FlowChartViewModel.cs")).Length <= 350);
+        Assert.DoesNotContain("_execution.RunAsync", mainSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("_documents.Save", mainSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("CompleteConnection(", mainSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ExportPng(", mainSource, StringComparison.Ordinal);
+
+        foreach (var fileName in responsibilityFiles)
+        {
+            var source = File.ReadAllText(Path.Combine(viewModelDirectory, fileName));
+            Assert.Contains("partial class FlowChartViewModel", source, StringComparison.Ordinal);
+        }
+    }
+
+    /// <summary>确保容器几何、成员归属与作用域连线清理由画布编辑模块统一拥有。</summary>
+    [Fact]
+    public void ContainerMembershipRules_AreOwnedByCanvasModule()
+    {
+        var viewModelDirectory = Path.Combine(ProjectDirectory, "ViewModels");
+        var viewModelSource = string.Join(
+            Environment.NewLine,
+            Directory.EnumerateFiles(
+                    viewModelDirectory,
+                    "FlowChartViewModel*.cs",
+                    SearchOption.TopDirectoryOnly)
+                .Select(File.ReadAllText));
+        var canvasSource = File.ReadAllText(Path.Combine(
+            ProjectDirectory, "Services", "Editing", "FlowCanvasSession.cs"));
+
+        Assert.Contains("ResolveDragParticipants", canvasSource, StringComparison.Ordinal);
+        Assert.Contains("RefreshExecutionMembership", canvasSource, StringComparison.Ordinal);
+        Assert.Contains("RemoveConnectionsOutsideCurrentScope", canvasSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ShouldPreserveLoopBoundaryConnections", viewModelSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("IsExecutionDescendantOf", viewModelSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("RemoveConnectionsOutsideCurrentScope", viewModelSource, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保节点生命周期上下文不再向领域节点泄漏表现层 ViewModel。</summary>
+    [Fact]
+    public void FlowChartNodeContext_ViewModelDependencies_AreAbsent()
+    {
+        var contextSource = File.ReadAllText(Path.Combine(ProjectDirectory, "Interfaces", "IFlowChartService.cs"));
+        var serviceSource = File.ReadAllText(Path.Combine(ProjectDirectory, "Services", "FlowChartService.cs"));
+
+        Assert.DoesNotContain("FlowEditor.ViewModels", contextSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("NodeViewModel", contextSource, StringComparison.Ordinal);
+        Assert.Contains("IEnumerable<NodeModel>", contextSource, StringComparison.Ordinal);
+        Assert.Contains("IFlowChartService.Nodes", serviceSource, StringComparison.Ordinal);
+        Assert.Contains("node.Model", serviceSource, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保普通执行与循环边界复用 Runtime 中唯一的端口值传递规则。</summary>
+    [Fact]
+    public void PortValueTransferRules_HaveSingleRuntimeImplementation()
+    {
+        var transferSource = File.ReadAllText(Path.Combine(
+            SolutionDirectory, "FlowEditor.Runtime", "Core", "PortValueTransfer.cs"));
+        var engineSource = File.ReadAllText(Path.Combine(
+            SolutionDirectory, "FlowEditor.Runtime", "Core", "FlowChartExecutionEngine.cs"));
+        var loopSource = File.ReadAllText(Path.Combine(
+            ProjectDirectory, "Nodes", "FlowControl", "LoopContainerNode.cs"));
+
+        Assert.Contains("IsTypeCompatibleWith", transferSource, StringComparison.Ordinal);
+        Assert.Contains("IsCompatible", transferSource, StringComparison.Ordinal);
+        Assert.Contains("PortValueTransfer.TryTransfer", engineSource, StringComparison.Ordinal);
+        Assert.Contains("PortValueTransfer.TryTransfer", loopSource, StringComparison.Ordinal);
+
+        foreach (var callerSource in new[] { engineSource, loopSource })
+        {
+            Assert.DoesNotContain("IsTypeCompatibleWith", callerSource, StringComparison.Ordinal);
+            Assert.DoesNotContain(".IsCompatible(", callerSource, StringComparison.Ordinal);
+            Assert.DoesNotContain("声明类型不兼容", callerSource, StringComparison.Ordinal);
+            Assert.DoesNotContain("运行时类型:", callerSource, StringComparison.Ordinal);
+        }
     }
 
     /// <summary>确保 Phase 4 应用模块保持平台无关，不直接引用 WPF 或 Prism。</summary>
@@ -275,7 +434,13 @@ public sealed class ArchitectureDependencyTests
     [Fact]
     public void NodeAttachmentLifecycle_IsCentralizedInNodeModel()
     {
-        var nodeSource = File.ReadAllText(Path.Combine(ProjectDirectory, "Models", "NodeModel.cs"));
+        var nodeSource = string.Join(
+            Environment.NewLine,
+            Directory.EnumerateFiles(
+                    Path.Combine(ProjectDirectory, "Models"),
+                    "NodeModel*.cs",
+                    SearchOption.TopDirectoryOnly)
+                .Select(File.ReadAllText));
         var canvasSource = File.ReadAllText(Path.Combine(
             ProjectDirectory, "Services", "Editing", "FlowCanvasSession.cs"));
         var toolBlockSource = File.ReadAllText(Path.Combine(
@@ -291,6 +456,41 @@ public sealed class ArchitectureDependencyTests
         Assert.DoesNotContain(".Service =", toolBlockSource, StringComparison.Ordinal);
         Assert.Contains(".AttachTo(", toolBlockSource, StringComparison.Ordinal);
         Assert.Contains(".DetachFromFlow(", toolBlockSource, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保节点数据绑定与连线订阅职责保留在命名 partial 文件中。</summary>
+    [Fact]
+    public void NodeModel_DataBindingResponsibilities_AreSplitFromCoreFile()
+    {
+        var modelDirectory = Path.Combine(ProjectDirectory, "Models");
+        var coreSource = File.ReadAllText(Path.Combine(modelDirectory, "NodeModel.cs"));
+        var bindingSource = File.ReadAllText(Path.Combine(modelDirectory, "NodeModel.DataBindings.cs"));
+
+        Assert.True(File.ReadAllLines(Path.Combine(modelDirectory, "NodeModel.cs")).Length <= 800);
+        Assert.Contains("partial class NodeModel", bindingSource, StringComparison.Ordinal);
+        Assert.Contains("IDataBindingProvider.CreateDataBinding", bindingSource, StringComparison.Ordinal);
+        Assert.Contains("EnsureConnectionSubscription", bindingSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("IDataBindingProvider.CreateDataBinding", coreSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("EnsureConnectionSubscription", coreSource, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保动态端口集合、缓存、编辑和属性端口配置集中在命名 partial 文件中。</summary>
+    [Fact]
+    public void NodeModel_PortResponsibilities_AreSplitFromCoreFile()
+    {
+        var modelDirectory = Path.Combine(ProjectDirectory, "Models");
+        var corePath = Path.Combine(modelDirectory, "NodeModel.cs");
+        var coreSource = File.ReadAllText(corePath);
+        var portSource = File.ReadAllText(Path.Combine(modelDirectory, "NodeModel.Ports.cs"));
+
+        Assert.True(File.ReadAllLines(corePath).Length <= 500);
+        Assert.Contains("partial class NodeModel", portSource, StringComparison.Ordinal);
+        Assert.Contains("BuildInputPorts", portSource, StringComparison.Ordinal);
+        Assert.Contains("RemovePortConnections", portSource, StringComparison.Ordinal);
+        Assert.Contains("SetPortConfig", portSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("BuildInputPorts", coreSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("RemovePortConnections", coreSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetPortConfig", coreSource, StringComparison.Ordinal);
     }
 
     /// <summary>确保流程文档存储 seam 只暴露保存和加载，不再承担模型映射。</summary>
