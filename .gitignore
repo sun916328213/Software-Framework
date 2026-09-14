@@ -49,3 +49,5 @@ Dll/
 .config/
 Dll/
 *.dll
+/.workbuddy-ai/memory
+/.workbuddy-ai
