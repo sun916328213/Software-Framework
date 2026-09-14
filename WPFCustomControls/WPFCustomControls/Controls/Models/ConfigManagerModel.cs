@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.ObjectModel;
+using System.IO;
 
 namespace WPFCustomControls.Controls;
 
@@ -38,7 +39,7 @@ public class ConfigManagerModel<T> : ObservableObject
         set => SetProperty(ref devicename, value);
     }
 
-    private ObservableCollection<T> dataCollection = new ObservableCollection<T>();
+    private ObservableCollection<T> dataCollection = [];
 
     /// <summary>
     /// 数据集合
@@ -48,5 +49,13 @@ public class ConfigManagerModel<T> : ObservableObject
         get => dataCollection;
         set => SetProperty(ref dataCollection, value);
     }
+
+    /// <summary>
+    /// 完整路径（FilePath + FileName 组合；任一缺失回 null，调用方判空）。
+    /// </summary>
+    public string? FullPath =>
+        string.IsNullOrEmpty(FilePath) || string.IsNullOrEmpty(FileName)
+            ? null
+            : Path.Combine(FilePath, FileName);
 }
  

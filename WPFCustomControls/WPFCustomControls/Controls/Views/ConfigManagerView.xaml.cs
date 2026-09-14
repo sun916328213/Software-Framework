@@ -17,7 +17,7 @@ namespace WPFCustomControls.Controls
     public partial class ConfigManagerView : UserControl
     {
         public static readonly DependencyProperty IsReadOnlyProperty =
-            DependencyProperty.Register("IsReadOnly", typeof(bool), typeof(ConfigManagerView), new PropertyMetadata(false));
+            DependencyProperty.Register("IsReadOnly", typeof(bool), typeof(ConfigManagerView), new PropertyMetadata(true));
 
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register("ItemsSource", typeof(System.Collections.IEnumerable), typeof(ConfigManagerView), new PropertyMetadata(null));

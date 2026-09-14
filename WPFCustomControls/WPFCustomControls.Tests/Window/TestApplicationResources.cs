@@ -25,36 +25,56 @@ namespace WPFCustomControls.Tests.Window;
 /// </summary>
 internal static class TestApplicationResources
 {
-    private static int _initialized;
+    /// <summary>
+    /// 保护「创建 Application + 合并资源」这一整段的锁。
+    ///
+    /// <para>
+    /// xUnit 默认让不同测试类**并行**跑，而 <see cref="StaFact.Run"/> 是每个测试各起一条 STA 线程。
+    /// 不加锁的话两条线程会同时看到 <c>Application.Current == null</c>，各自 new 一个 Application，
+    /// 第二个就抛 <c>InvalidOperationException: 不能在同一 AppDomain 中创建多个 System.Windows.Application 实例</c>。
+    /// 这个失败是时序相关的 —— 新增测试类改变了并行时序就会突然冒出来，很容易被误判成新代码的问题。
+    /// </para>
+    /// </summary>
+    private static readonly object InitGate = new();
+
+    private static volatile bool _initialized;
 
     /// <summary>
     /// 在当前 STA 线程上确保 <see cref="Application.Current"/> 存在且
-    /// 合并资源就绪(幂等)。
+    /// 合并资源就绪(幂等、线程安全)。
     /// </summary>
     public static void EnsureInitialized()
     {
-        // 1) Application 单例 — WPF 要求 STA 线程上必须有 Current。
-        if (Application.Current == null)
-        {
-            new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
-        }
-
-        // 2) 同一进程内只合并一次。
-        if (System.Threading.Interlocked.Exchange(ref _initialized, 1) == 1)
+        if (_initialized)
             return;
 
-        var app = Application.Current;
-        var resources = app!.Resources;
+        lock (InitGate)
+        {
+            // 双重检查：可能在等锁期间已被别的线程初始化完。
+            if (_initialized)
+                return;
 
-        // 3) 主项目 ThemeColors.xaml(Color_* 系列)
-        TryAdd(resources,
-            new Uri("/WPFCustomControls;component/Resources/ThemeColors.xaml", UriKind.Relative),
-            "ThemeColors");
+            // 1) Application 单例 — WPF 要求 STA 线程上必须有 Current。
+            if (Application.Current == null)
+            {
+                new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+            }
 
-        // 4) 测试本地 MD stubs(Brush.Primary / Headline TextBlock / Button / Separator / ProgressBar 占位)
-        TryAdd(resources,
-            new Uri("/WPFCustomControls.Tests;component/Resources/MaterialDesign.Stubs.xaml", UriKind.Relative),
-            "MaterialDesign.Stubs");
+            var app = Application.Current;
+            var resources = app!.Resources;
+
+            // 2) 主项目 ThemeColors.xaml(Color_* 系列)
+            TryAdd(resources,
+                new Uri("/WPFCustomControls;component/Resources/ThemeColors.xaml", UriKind.Relative),
+                "ThemeColors");
+
+            // 3) 测试本地 MD stubs(Brush.Primary / Headline TextBlock / Button / Separator / ProgressBar 占位)
+            TryAdd(resources,
+                new Uri("/WPFCustomControls.Tests;component/Resources/MaterialDesign.Stubs.xaml", UriKind.Relative),
+                "MaterialDesign.Stubs");
+
+            _initialized = true;
+        }
     }
 
     private static void TryAdd(ResourceDictionary target, Uri uri, string label)

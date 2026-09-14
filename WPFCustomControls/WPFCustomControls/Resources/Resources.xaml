@@ -43,13 +43,14 @@
         </Setter>
     </Style>
 
+    <!--  卡片容器：底色/描边用 MD 原生动态键，自动跟随主题（别钉写死的 Color_Main）  -->
     <Style x:Key="Border_Style" TargetType="Border">
         <Setter Property="Margin" Value="2" />
         <Setter Property="Padding" Value="2" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="8" />
-        <Setter Property="Background" Value="{StaticResource Color_Main}" />
-        <Setter Property="BorderBrush" Value="{StaticResource Color_Main}" />
+        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Card.Border}" />
         <Setter Property="assist:RoundedCornerClipAssist.IsEnabled" Value="True" />
     </Style>
 
@@ -78,17 +79,312 @@
         </Setter>
     </Style>
 
+    <!--
+        滚动条两端三角按钮。必须提成顶层具名样式：Style.Resources 在同一 Style 内 StaticResource 查不到。
+        底色透明，悬停/按下由高亮块显形（颜色、圆角走 ScrollBarArrowAssist）。
+        ⚠️ 高亮块 Opacity=0 只能写在 Style Setter 里，写成局部属性会盖掉模板触发器。
+    -->
+    <Style x:Key="ScrollBarArrowButton_Style" TargetType="{x:Type RepeatButton}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type RepeatButton}">
+                    <!--  ⚠️ 高亮块与三角必须是兄弟节点：Opacity 会传染给子元素，塞进 Bg 里会把三角一起隐掉  -->
+                    <Grid>
+                        <Border x:Name="Bg">
+                            <Border.Style>
+                                <Style TargetType="{x:Type Border}">
+                                    <Setter Property="Opacity" Value="0" />
+                                    <Setter Property="Background" Value="{Binding Path=(assist:ScrollBarArrowAssist.HighlightBrush), RelativeSource={RelativeSource AncestorType={x:Type ScrollBar}}}" />
+                                    <Setter Property="CornerRadius" Value="{Binding Path=(assist:ScrollBarArrowAssist.HighlightCornerRadius), RelativeSource={RelativeSource AncestorType={x:Type ScrollBar}}}" />
+                                    <Style.Triggers>
+                                        <!--  没显式给高亮色 → 跟随主题  -->
+                                        <DataTrigger Binding="{Binding Path=(assist:ScrollBarArrowAssist.HighlightBrush), RelativeSource={RelativeSource AncestorType={x:Type ScrollBar}}}" Value="{x:Null}">
+                                            <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.ScrollBar.ActiveBackground}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                        <ContentPresenter
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bg" Property="Opacity" Value="1" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        三角本体：四个方向只有 Data 不同，尺寸/边距/颜色统一走这里，各 <Path> 只写 Data + Style。
+        Fill 两段式：Setter 绑用户画刷（可为 null），DataTrigger 在未设置时回落主题前景色。
+        ⚠️ 只有「Style Setter + 同一 Style 的 Trigger」能让默认值可被覆盖（局部值 / 模板触发器都不行）。
+    -->
+    <Style x:Key="ScrollBarArrowTriangle_Style" TargetType="{x:Type Path}">
+        <Setter Property="Width" Value="{Binding Path=(assist:ScrollBarArrowAssist.Size), RelativeSource={RelativeSource AncestorType={x:Type ScrollBar}}}" />
+        <Setter Property="Height" Value="{Binding Path=(assist:ScrollBarArrowAssist.Size), RelativeSource={RelativeSource AncestorType={x:Type ScrollBar}}}" />
+        <Setter Property="Margin" Value="{Binding Path=(assist:ScrollBarArrowAssist.Margin), RelativeSource={RelativeSource AncestorType={x:Type ScrollBar}}}" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Stretch" Value="Uniform" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Fill" Value="{Binding Path=(assist:ScrollBarArrowAssist.Brush), RelativeSource={RelativeSource AncestorType={x:Type ScrollBar}}}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Path=(assist:ScrollBarArrowAssist.Brush), RelativeSource={RelativeSource AncestorType={x:Type ScrollBar}}}" Value="{x:Null}">
+                <Setter Property="Fill" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!--
+        ScrollBar_Style 与 ScrollViewer_Style 互不冲突，可（也应）同时套用：TargetType 分别是
+        ScrollBar / ScrollViewer，属性不重叠。
+        ⚠️ ScrollBar_Style 带 x:Key 不会自动生效 —— ScrollViewer 模板里的裸 <ScrollBar> 只认隐式样式，
+        必须在资源作用域另写 <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />，
+        否则滚动条回落 MD 默认外观（只写 ScrollViewer_Style 不会有任何滑块尺寸变化）。
+
+        重写整套 ControlTemplate 的原因：MD 模板两端按钮的 Path 是带竖杆的箭头（↑），
+        我们要纯实心三角（▲/▼），而 Path 数据写死在模板里改不了。
+
+        三角参数走附加属性 ScrollBarArrowAssist（Size / Margin / Brush / HighlightBrush /
+        HighlightCornerRadius，均可继承），例如：
+            <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar">
+                <Setter Property="assist:ScrollBarArrowAssist.Size" Value="14" />
+            </Style>
+        隐藏三角：materialDesign:ScrollBarAssist.ButtonsVisibility="Collapsed"。
+        滑块仍复用 MD 的 MaterialDesignScrollBarThumb（ThumbWidth/Height/CornerRadius 照常生效）。
+    -->
     <Style
         x:Key="ScrollBar_Style"
         BasedOn="{StaticResource MaterialDesignScrollBar}"
         TargetType="{x:Type ScrollBar}">
-        <Setter Property="materialDesign:ScrollBarAssist.ButtonsVisibility" Value="Collapsed" />
+        <Setter Property="materialDesign:ScrollBarAssist.ButtonsVisibility" Value="Visible" />
         <Setter Property="materialDesign:ScrollBarAssist.ThumbCornerRadius" Value="4" />
         <Setter Property="materialDesign:ScrollBarAssist.ThumbHeight" Value="8" />
         <Setter Property="materialDesign:ScrollBarAssist.ThumbWidth" Value="8" />
+        <Setter Property="assist:ScrollBarArrowAssist.Size" Value="8" />
+        <!--  静默半透明，鼠标移入淡到不透明（含拖动滑块）。与模板内几层 Opacity 相乘，实际观感更淡  -->
+        <Setter Property="Opacity" Value="0.55" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ScrollBar}">
+                    <Grid
+                        x:Name="Bg"
+                        Opacity="0.5"
+                        SnapsToDevicePixels="True">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" MaxHeight="{DynamicResource {x:Static SystemParameters.VerticalScrollBarButtonHeightKey}}" />
+                            <RowDefinition Height="0.00001*" />
+                            <RowDefinition Height="Auto" MaxHeight="{DynamicResource {x:Static SystemParameters.VerticalScrollBarButtonHeightKey}}" />
+                        </Grid.RowDefinitions>
+
+                        <Border
+                            Grid.Row="1"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" />
+
+                        <!--  上三角  -->
+                        <RepeatButton
+                            x:Name="PART_LineUpButton"
+                            Grid.Row="0"
+                            Command="{x:Static ScrollBar.LineUpCommand}"
+                            IsEnabled="{TemplateBinding IsMouseOver}"
+                            Style="{StaticResource ScrollBarArrowButton_Style}"
+                            Visibility="{Binding Path=(materialDesign:ScrollBarAssist.ButtonsVisibility), RelativeSource={RelativeSource TemplatedParent}}">
+                            <Path Data="M12,5 L20,17 L4,17 Z" Style="{StaticResource ScrollBarArrowTriangle_Style}" />
+                        </RepeatButton>
+
+                        <Track
+                            x:Name="PART_Track"
+                            Grid.Row="1"
+                            Margin="0,4"
+                            IsDirectionReversed="True"
+                            IsEnabled="{TemplateBinding IsMouseOver}">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Command="{x:Static ScrollBar.PageUpCommand}" Style="{StaticResource MaterialDesignRepeatButtonTransparent}" />
+                            </Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="{x:Static ScrollBar.PageDownCommand}" Style="{StaticResource MaterialDesignRepeatButtonTransparent}" />
+                            </Track.IncreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Style="{StaticResource MaterialDesignScrollBarThumb}" />
+                            </Track.Thumb>
+                        </Track>
+
+                        <!--  下三角  -->
+                        <RepeatButton
+                            x:Name="PART_LineDownButton"
+                            Grid.Row="2"
+                            Command="{x:Static ScrollBar.LineDownCommand}"
+                            IsEnabled="{TemplateBinding IsMouseOver}"
+                            Style="{StaticResource ScrollBarArrowButton_Style}"
+                            Visibility="{Binding Path=(materialDesign:ScrollBarAssist.ButtonsVisibility), RelativeSource={RelativeSource TemplatedParent}}">
+                            <Path Data="M12,19 L4,7 L20,7 Z" Style="{StaticResource ScrollBarArrowTriangle_Style}" />
+                        </RepeatButton>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="MouseOver">
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="Bg"
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="0.8"
+                                            Duration="0:0:0.2" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="Bg"
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="0.35"
+                                            Duration="0:0:0.2" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Trigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation
+                                Storyboard.TargetProperty="Opacity"
+                                To="1"
+                                Duration="0:0:0.15" />
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation
+                                Storyboard.TargetProperty="Opacity"
+                                To="0.55"
+                                Duration="0:0:0.25" />
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.ExitActions>
+            </Trigger>
+            <!--  水平方向：必须在本样式重写 Orientation 触发器，否则左右滚动条会回落 MD 模板  -->
+            <Trigger Property="Orientation" Value="Horizontal">
+                <Setter Property="BorderThickness" Value="0,1" />
+                <Setter Property="Width" Value="Auto" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="Height" Value="{DynamicResource {x:Static SystemParameters.HorizontalScrollBarHeightKey}}" />
+                <Setter Property="MinHeight" Value="{DynamicResource {x:Static SystemParameters.HorizontalScrollBarHeightKey}}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ScrollBar}">
+                            <Grid
+                                x:Name="Bg"
+                                Opacity="0.5"
+                                SnapsToDevicePixels="True">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MaxWidth="{DynamicResource {x:Static SystemParameters.HorizontalScrollBarButtonWidthKey}}" />
+                                    <ColumnDefinition Width="0.00001*" />
+                                    <ColumnDefinition Width="Auto" MaxWidth="{DynamicResource {x:Static SystemParameters.HorizontalScrollBarButtonWidthKey}}" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border
+                                    Grid.Column="1"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}" />
+
+                                <!--  左三角  -->
+                                <RepeatButton
+                                    x:Name="PART_LineLeftButton"
+                                    Grid.Column="0"
+                                    Command="{x:Static ScrollBar.LineLeftCommand}"
+                                    IsEnabled="{TemplateBinding IsMouseOver}"
+                                    Style="{StaticResource ScrollBarArrowButton_Style}"
+                                    Visibility="{Binding Path=(materialDesign:ScrollBarAssist.ButtonsVisibility), RelativeSource={RelativeSource TemplatedParent}}">
+                                    <Path Data="M5,12 L17,4 L17,20 Z" Style="{StaticResource ScrollBarArrowTriangle_Style}" />
+                                </RepeatButton>
+
+                                <Track
+                                    x:Name="PART_Track"
+                                    Grid.Column="1"
+                                    Margin="4,0"
+                                    IsEnabled="{TemplateBinding IsMouseOver}">
+                                    <Track.DecreaseRepeatButton>
+                                        <RepeatButton Command="{x:Static ScrollBar.PageLeftCommand}" Style="{StaticResource MaterialDesignRepeatButtonTransparent}" />
+                                    </Track.DecreaseRepeatButton>
+                                    <Track.IncreaseRepeatButton>
+                                        <RepeatButton Command="{x:Static ScrollBar.PageRightCommand}" Style="{StaticResource MaterialDesignRepeatButtonTransparent}" />
+                                    </Track.IncreaseRepeatButton>
+                                    <Track.Thumb>
+                                        <Thumb Style="{StaticResource MaterialDesignScrollBarThumb}" />
+                                    </Track.Thumb>
+                                </Track>
+
+                                <!--  右三角  -->
+                                <RepeatButton
+                                    x:Name="PART_LineRightButton"
+                                    Grid.Column="2"
+                                    Command="{x:Static ScrollBar.LineRightCommand}"
+                                    IsEnabled="{TemplateBinding IsMouseOver}"
+                                    Style="{StaticResource ScrollBarArrowButton_Style}"
+                                    Visibility="{Binding Path=(materialDesign:ScrollBarAssist.ButtonsVisibility), RelativeSource={RelativeSource TemplatedParent}}">
+                                    <Path Data="M19,12 L7,4 L7,20 Z" Style="{StaticResource ScrollBarArrowTriangle_Style}" />
+                                </RepeatButton>
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="MouseOver">
+                                            <Storyboard>
+                                                <DoubleAnimation
+                                                    Storyboard.TargetName="Bg"
+                                                    Storyboard.TargetProperty="Opacity"
+                                                    To="0.8"
+                                                    Duration="0:0:0.2" />
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="Disabled">
+                                            <Storyboard>
+                                                <DoubleAnimation
+                                                    Storyboard.TargetName="Bg"
+                                                    Storyboard.TargetProperty="Opacity"
+                                                    To="0.35"
+                                                    Duration="0:0:0.2" />
+                                            </Storyboard>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
-    <!--  ScrollViewer 样式：继承 MaterialDesign，隐藏右下角正方形（ScrollBar 隐式样式在外部定义）  -->
+    <!--
+        ScrollViewer 样式：继承 MD，隐藏右下角正方形（滚动条外观见上面的 ScrollBar_Style）。
+        可选 IsAutoHideEnabled 由 MD 模板内部实现，只对套本样式的 ScrollViewer 生效，
+        DataGrid/ListView 的内联模板吃不到 —— 故本仓统一靠 ScrollBar 自己的 Opacity 做淡入淡出。
+    -->
     <Style
         x:Key="ScrollViewer_Style"
         BasedOn="{StaticResource MaterialDesignScrollViewer}"
