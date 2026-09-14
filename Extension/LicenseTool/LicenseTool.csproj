@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>13.0</LangVersion>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>LicenseTool</RootNamespace>
+    <AssemblyName>LicenseTool</AssemblyName>
+    <Description>软件授权签发与验证工具（配套 Extension.Core.SecurityEx）</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Extension\Extension.csproj" />
+  </ItemGroup>
+
+</Project>
