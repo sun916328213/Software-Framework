@@ -1,5 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using Extension.Struct;
+using DataManager.Log.Definition;
 using System.Collections.ObjectModel;
 using WPFControl.ProgramControl.Services;
 

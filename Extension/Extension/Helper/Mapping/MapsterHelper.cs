@@ -18,16 +18,21 @@ namespace Extension.Helper.Mapping
         private static bool _isInitialized = false;
 
         /// <summary>
-        /// 初始化所有Struct的映射配置
+        /// 初始化 Extension 内 Struct 的映射配置
         /// </summary>
+        /// <remarks>
+        /// 2026-09-16：日志相关的 <c>LogInfoMapping</c> 已随 LogInfo 迁入 DataManager
+        /// （日志属 DataManager 的领域概念，通用工具库不应定义它）。
+        /// 日志映射改由 <c>DataManager.Log.Definition.LogMappingBootstrap.Initialize()</c> 注册，
+        /// 应用启动时需要同时调用两者。
+        /// </remarks>
         public static void InitializeAllMappings()
         {
             if (_isInitialized) return;
 
             // 初始化SImageInfo相关映射
             ImageInfoMapping.Configure(TypeAdapterConfig.GlobalSettings);
-            LogInfoMapping.Configure(TypeAdapterConfig.GlobalSettings);
- 
+
             _isInitialized = true;
         }
 

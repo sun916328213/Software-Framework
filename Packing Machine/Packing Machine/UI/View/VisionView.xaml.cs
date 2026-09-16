@@ -5,7 +5,6 @@ using DPLibrary_Base_F48.Vision;
 using DPLibrary_Halcon_F48;
 using DPLibrary_Halcon_F48.Tools;
 using DPLibrary_Halcon_F48.Tools.FindLine;
-using Extension.Struct;
 using HalconDotNet;
 using Packing_Machine.UI.ViewModel;
 using Prism.Ioc;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -122,8 +123,12 @@ namespace Extension.Core.ConvertEx
             {
                 return Read<T>(filePath);
             }
-            catch
+            catch (Exception ex) when (IsRecoverableReadFailure(ex))
             {
+                // TryRead 的契约就是"任何读取/解析失败都回退默认值"，这里保持该行为。
+                // 但异常范围必须收紧：原来连空引用、参数错误这类代码缺陷都会被吞成"读不到配置"，
+                // 排查时会误以为是文件问题。同时留痕，便于确认配置到底是被回退了还是根本没读到。
+                Debug.WriteLine($"[JsonEx] TryRead<{typeof(T).Name}>('{filePath}') 失败，回退默认值：{ex.Message}");
                 return default(T);
             }
         }
@@ -214,14 +219,31 @@ namespace Extension.Core.ConvertEx
                         var value = DeserializeJsonElement(element, prop.PropertyType);
                         prop.SetValue(null, value);
                     }
-                    catch
+                    catch (Exception ex) when (IsRecoverableReadFailure(ex))
                     {
-                        // 转换失败时保持当前值
+                        // 单个属性转换失败时保持当前值，其余属性继续加载（局部失败不拖垮整体）。
+                        // 必须留痕：否则配置项被静默跳过，表现为"改了配置不生效"，极难定位。
+                        Debug.WriteLine(
+                            $"[JsonEx] 静态属性 '{staticType.Name}.{prop.Name}' 反序列化失败，保持当前值：{ex.Message}");
                     }
                 }
             }
         }
         
+        /// <summary>
+        /// 判断异常是否属于"读取/解析类可恢复失败"（文件、IO、JSON 格式、类型不匹配）。
+        /// 这类失败可以回退默认值或跳过该属性；其余异常（空引用、参数错误等代码缺陷）一律继续抛出。
+        /// </summary>
+        private static bool IsRecoverableReadFailure(Exception ex) =>
+            ex is IOException
+                or JsonException
+                or UnauthorizedAccessException
+                or NotSupportedException
+                or ArgumentException
+                or FormatException
+                or InvalidCastException
+                or System.Security.SecurityException;
+
         /// <summary>
         /// 从 JsonElement 反序列化数据，支持复杂类型和集合
         /// </summary>

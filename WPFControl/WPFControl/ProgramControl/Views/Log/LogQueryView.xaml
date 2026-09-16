@@ -57,7 +57,6 @@
             Grid.ColumnSpan="2"
             Style="{StaticResource Border_Style}">
             <view:QueryView
-                EndTime="{Binding Datas.DateTime_End, Mode=TwoWay}"
                 FilterCommand="{Binding FilterCommand}"
                 FilterItem="{Binding Datas.FilterItem, Mode=TwoWay}"
                 FilterItemSource="{Binding ElementName=UserControl, Path=FilterColumnSource}"
@@ -71,6 +70,7 @@
                 SelectItem="{Binding Datas.SelectItem, Mode=TwoWay}"
                 SelectItemSource="{Binding Datas.SelectItemSource}"
                 SelectResetCommand="{Binding SelectResetCommand}"
+                EndTime="{Binding Datas.DateTime_End, Mode=TwoWay}"
                 StartTime="{Binding Datas.DateTime_Start, Mode=TwoWay}" />
         </Border>
         <Border
@@ -84,7 +84,7 @@
                 EnableRowVirtualization="False"
                 FontSize="{Binding ElementName=UserControl, Path=FontSize}"
                 IsReadOnly="True"
-                ItemsSource="{Binding Datas.LogInfoDTO}"
+                ItemsSource="{Binding Datas.LogDatas}"
                 ScrollViewer.CanContentScroll="False"
                 VirtualizingPanel.IsVirtualizing="False" />
         </Border>

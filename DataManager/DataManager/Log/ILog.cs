@@ -1,5 +1,4 @@
 ﻿using DataManager.Log.Definition;
-using Extension.Struct;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

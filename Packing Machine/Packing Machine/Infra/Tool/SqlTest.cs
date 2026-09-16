@@ -1,7 +1,6 @@
 ﻿using DataManager.SQL;
 using DataManager.SQL.EFCore;
 using Extension.Core.SystemEx;
-using Extension.Struct;
 using Microsoft.EntityFrameworkCore;
 using Packing_Machine.Data;
 using Packing_Machine.Business.Station;

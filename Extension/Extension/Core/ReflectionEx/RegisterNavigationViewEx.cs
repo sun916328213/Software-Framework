@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Extension.Core.ReflectionEx
+namespace Extension.Core.Reflection
 {
     /// <summary>
     /// Prism 导航视图注册扩展。

@@ -1,6 +1,5 @@
 using DataManager.Log.Definition;
 using DataManager.Log.Log4Net;
-using Extension.Struct;
 
 namespace DataManager.Tests.Log
 {

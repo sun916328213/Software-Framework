@@ -2,7 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using Prism.Ioc;
-using Extension.Struct; 
+using DataManager.Log.Definition; 
 
 namespace WPFControl.Helper
 {

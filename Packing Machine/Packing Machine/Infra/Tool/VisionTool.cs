@@ -13,7 +13,7 @@ using Extension.Core.DataEx;
 using Extension.Core.FileEx;
 using Extension.Core.ImageEx;
 using Extension.Core.SystemEx;
-using Extension.Struct;
+using DataManager.Log.Definition;
 using HalconDotNet;
 using Packing_Machine.Data;
 using Packing_Machine.Business.Station;
@@ -498,7 +498,7 @@ namespace Packing_Machine.Infra.Tool
             // 计算叉积
             double cross = dx1 * dy2 - dy1 * dx2;
 
-            // 如果叉积�?，则两直线平�?
+            // 如果叉积为0，则两直线平行
             if (Math.Abs(cross) < 1e-8)
             {
                 return null; // 平行线无交点
@@ -515,4 +515,3 @@ namespace Packing_Machine.Infra.Tool
         }
     }
 }
-

@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -31,12 +32,19 @@ namespace Extension.Core.ProtectionEx
             if (Debugger.IsAttached || Debugger.IsLogging())
                 return true;
 
+            // 以下三个 Win32/NT 探测都为"尽力而为"：探测 API 不可用时（沙箱、裁剪运行时、
+            // ntdll 未导出该函数、权限不足）不应让检测逻辑本身崩溃，否则会误杀正常环境。
+            // 因此这里只吞"环境不支持"这一类异常，且必须留下诊断痕迹，避免检测悄悄失效却无人知晓。
+
             try
             {
                 if (IsDebuggerPresent())
                     return true;
             }
-            catch { }
+            catch (Exception ex) when (IsProbeUnsupported(ex))
+            {
+                Debug.WriteLine($"[AntiDebugEx] IsDebuggerPresent 探测不可用：{ex.Message}");
+            }
 
             try
             {
@@ -44,7 +52,10 @@ namespace Extension.Core.ProtectionEx
                 CheckRemoteDebuggerPresent(Process.GetCurrentProcess().Handle, ref remote);
                 if (remote) return true;
             }
-            catch { }
+            catch (Exception ex) when (IsProbeUnsupported(ex))
+            {
+                Debug.WriteLine($"[AntiDebugEx] CheckRemoteDebuggerPresent 探测不可用：{ex.Message}");
+            }
 
             try
             {
@@ -53,7 +64,10 @@ namespace Extension.Core.ProtectionEx
                     ProcessDebugPort, ref debugPort, sizeof(int), out _);
                 if (debugPort != 0 && debugPort != -1) return true;
             }
-            catch { }
+            catch (Exception ex) when (IsProbeUnsupported(ex))
+            {
+                Debug.WriteLine($"[AntiDebugEx] NtQueryInformationProcess 探测不可用：{ex.Message}");
+            }
 
             return false;
         }
@@ -78,5 +92,16 @@ namespace Extension.Core.ProtectionEx
             if (IsDebuggerAttached())
                 throw new InvalidOperationException("检测到调试器，程序拒绝运行。");
         }
+
+        /// <summary>
+        /// 判断异常是否属于"当前环境不支持该探测 API"，是则可以安全跳过该探测；
+        /// 其他异常（如空引用、参数错误）一律继续抛出，避免掩盖真实缺陷。
+        /// </summary>
+        private static bool IsProbeUnsupported(Exception ex) =>
+            ex is DllNotFoundException
+                or EntryPointNotFoundException
+                or Win32Exception
+                or PlatformNotSupportedException
+                or NotSupportedException;
     }
 }

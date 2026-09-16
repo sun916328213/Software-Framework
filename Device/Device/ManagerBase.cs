@@ -1,5 +1,4 @@
-﻿using Extension.Struct;
-using Extension.Tool;
+﻿using Extension.Tool;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

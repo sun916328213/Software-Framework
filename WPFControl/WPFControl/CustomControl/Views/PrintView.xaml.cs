@@ -5,7 +5,6 @@ using System.Windows.Media;
 using Prism.Ioc;
 using WPFControl.CustomControl.ViewModels;
 using System.Collections.Generic;
-using Extension.Struct;
 using WPFControl.CustomControl.Models;
 
 namespace WPFControl.CustomControl.Views

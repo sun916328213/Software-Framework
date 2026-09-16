@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using Extension.Struct;
+using DataManager.Log.Definition;
 using Extension.Core.EnumEx;
-using Mapster;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,10 +10,10 @@ namespace WPFControl.ProgramControl.Models
 {
     /// <summary>
     /// 日志查询数据模型
-    /// 注意：LogQueryModel不应该继承SLogInfo，因为它们是不同层次的概念：
-    /// 1. SLogInfo是结构体，代表单条日志信息
+    /// 注意：LogQueryModel不应该继承LogInfo，因为它们是不同层次的概念：
+    /// 1. LogInfo是结构体，代表单条日志信息
     /// 2. LogQueryModel是类，代表日志集合的容器
-    /// 3. 它们之间是组合关系has-a)而非继承关系(is-a)
+    /// 3. 它们之间是组合关系(has-a)而非继承关系(is-a)
     /// </summary>
     internal class LogQueryModel:ObservableObject
     {
@@ -27,24 +26,15 @@ namespace WPFControl.ProgramControl.Models
         /// <summary>
         /// Log显示数据集合
         /// </summary>
+        /// <remarks>
+        /// 2026-09-16：DataGrid 直接绑定本集合，不再经 LogInfoDTO 转换。
+        /// 原 DTO 仅用于展示，而筛选/统计/导出全都基于 LogInfo，
+        /// 且自动生成列对 ELogLevel 走 ToString()，显示结果与原 DTO 一致。
+        /// </remarks>
         public ObservableCollection<LogInfo> LogDatas
         {
             get => logDatas;
-            set
-            {
-                SetProperty(ref logDatas, value);
-                LogInfoDTO = logDatas.Adapt<ObservableCollection<LogInfoDTO>>();
-            }
-        }
- 
-         ObservableCollection<LogInfoDTO> iLogInfoDTO= new ObservableCollection<LogInfoDTO>();
-        /// <summary>
-        /// Log显示数据集合 已转换格式
-        /// </summary>
-        public ObservableCollection<LogInfoDTO> LogInfoDTO
-        {
-            get => iLogInfoDTO;
-            set => SetProperty(ref iLogInfoDTO, value);
+            set => SetProperty(ref logDatas, value);
         }
 
         DateTime dateTime_Start= DateTime.Now, dateTime_End= DateTime.Now;
@@ -128,4 +118,3 @@ namespace WPFControl.ProgramControl.Models
         }
     }
 }
-

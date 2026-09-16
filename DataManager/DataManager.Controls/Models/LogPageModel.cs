@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using DataManager.Log.Definition;
-using Extension.Struct;
 using System.Collections.ObjectModel;
 using System.IO;
 using WPFCustomControls.Controls;

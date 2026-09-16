@@ -3,7 +3,6 @@ using System.Security.Cryptography;
 using System.Text;
 using DataManager.Log;
 using DataManager.Log.Definition;
-using Extension.Struct;
 using FlowEditor.Core;
 
 namespace FlowEditor.DataManagerLogging;

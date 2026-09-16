@@ -2,7 +2,6 @@ using DataManager.Log;
 using DataManager.Log.Definition;
 using DataManager.Controls.Services;
 using DataManager.Controls.ViewModels;
-using Extension.Struct;
 
 namespace DataManager.Tests.Workbench
 {

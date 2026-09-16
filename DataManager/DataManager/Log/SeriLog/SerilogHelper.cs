@@ -1,6 +1,5 @@
 using Serilog;
 using System;
-using Extension.Struct;
 using DataManager.Log.Definition;
 
 

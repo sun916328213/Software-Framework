@@ -1,5 +1,6 @@
 ﻿using Extension.Core.SystemEx;
 using Extension.Struct;
+using DataManager.Log.Definition;
 using Packing_Machine.Data;
 using Packing_Machine.Business.Station;
 using Packing_Machine.Infra.Tool;

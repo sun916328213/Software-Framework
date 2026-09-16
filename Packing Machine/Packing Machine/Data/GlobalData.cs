@@ -2,7 +2,6 @@ using DataManager.Log.Definition;
 using Device.Light.Definition;
 using Device.Scan.Definition;
 using Extension.Core.ConvertEx;
-using Extension.Struct;
 using System.Collections.ObjectModel;
 using WPFControl.ProgramControl.Models;
 using WPFControl.ProgramControl.Services;
@@ -27,14 +26,17 @@ namespace Packing_Machine.Data
         /// </summary>
         public static string PLCPath { get; set; } = "Config//PLCIO.csv";
         /// <summary>
+        /// 湿度卡数量
         /// </summary>
         public static int Num_HumidityIndicator { get; set; } = 1;
         /// <summary>
+        /// 干燥剂数量
         /// </summary>
         public static int Num_Desiccant { get; set; } = 4;
 
         /// <summary>
-        /// FOSB贴后标签检�?        /// </summary>
+        /// FOSB贴后标签检测
+        /// </summary>
         public static VisionInspectionItem VisionItem_Label_FOSBID { get; set; } = new VisionInspectionItem()
         {
             Name = "",
@@ -43,7 +45,8 @@ namespace Packing_Machine.Data
         };
 
         /// <summary>
-        /// FOSB贴后标签检�?        /// </summary>
+        /// FOSB贴后标签检测
+        /// </summary>
         public static VisionInspectionItem VisionItem_Label_FOSB { get; set; } = new VisionInspectionItem()
         {
             Name = "",
@@ -53,7 +56,8 @@ namespace Packing_Machine.Data
         };
 
         /// <summary>
-        /// AL贴后标签检�?        /// </summary>
+        /// AL贴后标签检测
+        /// </summary>
         public static VisionInspectionItem VisionItem_Label_AL { get; set; } = new VisionInspectionItem()
         {
             Name = "0",
@@ -62,9 +66,10 @@ namespace Packing_Machine.Data
             LightItems = new ObservableCollection<LightItem>()
         };
 
-        ///光源ID 进料1 机械�? 打印�? 配件4 热封5 6  AL1=8 AL2=7
+        ///光源ID 进料1 机械手2 打印机3 配件4 热封5 6  AL1=8 AL2=7
 
         /// <summary>
+        /// 贴前标签检测
         /// </summary>
         public static VisionInspectionItem VisionItem_LabelPrint { get; set; } = new VisionInspectionItem()
         {
@@ -74,6 +79,7 @@ namespace Packing_Machine.Data
         };
 
         /// <summary>
+        /// 适度卡检测
         /// </summary>
         public static VisionInspectionItem VisionItem_HI { get; set; } = new VisionInspectionItem()
         {
@@ -93,6 +99,7 @@ namespace Packing_Machine.Data
         };
 
         /// <summary>
+        /// 铝塑左侧检测
         /// </summary>
         public static VisionInspectionItem VisionItem_ALLeft { get; set; } = new VisionInspectionItem()
         {
@@ -102,6 +109,7 @@ namespace Packing_Machine.Data
         };
 
         /// <summary>
+        /// 铝塑袋右侧检测
         /// </summary>
         public static VisionInspectionItem VisionItem_ALRight { get; set; } = new VisionInspectionItem()
         {
@@ -111,6 +119,7 @@ namespace Packing_Machine.Data
         };
         
         /// <summary>
+        /// 配件检测
         /// </summary>
         public static VisionInspectionItem VisionItem_Accessory { get; set; } = new VisionInspectionItem()
         {
@@ -120,6 +129,7 @@ namespace Packing_Machine.Data
         };
 
         /// <summary>
+        /// 袋口检测
         /// </summary>
         public static VisionInspectionItem VisionItem_AI { get; set; } = new VisionInspectionItem()
         {

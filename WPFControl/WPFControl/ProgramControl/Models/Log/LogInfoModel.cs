@@ -1,4 +1,4 @@
-﻿using Extension.Struct;
+﻿using DataManager.Log.Definition;
 using WPFCustomControls.Controls;
 
 namespace WPFControl.ProgramControl.Models

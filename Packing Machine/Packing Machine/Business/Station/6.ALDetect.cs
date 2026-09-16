@@ -6,7 +6,7 @@ using Prism.Ioc;
 using System;
 using System.Windows;
 using Extension.Core.ConvertEx;
-using Extension.Struct;
+using DataManager.Log.Definition;
 using Extension.Core.DataEx;
 using Extension.Core.SystemEx;
 using WPFCustomControls.Window.Views;

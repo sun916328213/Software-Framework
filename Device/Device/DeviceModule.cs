@@ -4,7 +4,7 @@ using Device.Printer;
 using Device.PrintSoftware;
 using Device.RFID;
 using Device.Scan;
-using Extension.Core.ReflectionEx;
+using Extension.Core.Reflection;
 using Prism.Ioc;
 using Prism.Modularity;
 using System.Reflection;

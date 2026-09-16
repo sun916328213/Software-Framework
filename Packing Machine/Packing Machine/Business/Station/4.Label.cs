@@ -1,6 +1,7 @@
 using Extension.Core.CollectionEx;
 using Extension.Core.SystemEx;
 using Extension.Struct;
+using DataManager.Log.Definition;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Packing_Machine.Data;
 using Packing_Machine.Business.Flow;

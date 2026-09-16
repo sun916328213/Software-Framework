@@ -11,7 +11,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Communication\Socket\**" />
     <EmbeddedResource Remove="Communication\Socket\**" />
     <None Remove="Communication\Socket\**" />
     <Page Remove="Communication\Socket\**" />
@@ -32,6 +31,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="halcondotnet">
+      <HintPath>..\..\Dll\Vision\Halcon\halcondotnet.dll</HintPath>
+    </Reference>
     <Reference Include="Interop.ActProgType64Lib">
       <HintPath>..\..\Dll\Mitsubishi\Interop.ActProgType64Lib.dll</HintPath>
     </Reference>

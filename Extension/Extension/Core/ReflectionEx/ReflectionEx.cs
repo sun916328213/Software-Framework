@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -257,9 +258,14 @@ namespace Extension.Core.Reflection
             {
                 return Convert.ChangeType(value, targetType);
             }
-            catch
+            catch (Exception ex) when (ex is InvalidCastException
+                                          or FormatException
+                                          or OverflowException
+                                          or ArgumentNullException)
             {
-                // 如果转换失败，返回原始值
+                // 无法转换时返回原始值，由调用方决定如何处理，这个回退语义保留。
+                // 但只吞"类型不匹配/格式/溢出"这一类，其余异常（如空引用）说明调用有缺陷，必须暴露。
+                Debug.WriteLine($"[ReflectionEx] 无法将值转换为 {targetType?.Name}，返回原始值：{ex.Message}");
                 return value;
             }
         }

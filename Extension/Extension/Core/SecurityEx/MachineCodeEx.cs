@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -62,7 +64,15 @@ namespace Extension.Core.SecurityEx
                     .ToArray();
                 sb.Append(string.Join(",", macs)).Append('|');
             }
-            catch { sb.Append("NOMAC|"); }
+            catch (Exception ex) when (ex is NetworkInformationException
+                                          or Win32Exception
+                                          or PlatformNotSupportedException)
+            {
+                // 采集不到 MAC 时用占位符降级，保证机器码仍然可生成（只是区分度下降）。
+                // 必须留痕：若大量机器都落到 NOMAC，机器码会重复，授权会误判为"换机"。
+                Debug.WriteLine($"[MachineCodeEx] 采集 MAC 失败，使用占位符：{ex.Message}");
+                sb.Append("NOMAC|");
+            }
 
             sb.Append(GetSystemDriveSerial()).Append('|');
             sb.Append(Environment.ProcessorCount).Append('|');
@@ -80,7 +90,15 @@ namespace Extension.Core.SecurityEx
                         out _, out _, null, 0))
                     return serial.ToString("X8");
             }
-            catch { }
+            catch (Exception ex) when (ex is Win32Exception
+                                          or ExternalException
+                                          or ArgumentException
+                                          or PlatformNotSupportedException)
+            {
+                // 拿不到卷序列号（无盘/容器/权限受限）时用占位符降级，保证机器码仍可生成。
+                // 留痕：若大量机器都落到 NOSERIAL，机器码会重复，授权会误判为"换机"。
+                Debug.WriteLine($"[MachineCodeEx] 获取系统盘序列号失败，使用占位符：{ex.Message}");
+            }
             return "NOSERIAL";
         }
     }

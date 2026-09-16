@@ -9,7 +9,6 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Tools\æ–°æ–‡ä»¶å¤¹\**" />
     <EmbeddedResource Remove="Tools\æ–°æ–‡ä»¶å¤¹\**" />
     <None Remove="Tools\æ–°æ–‡ä»¶å¤¹\**" />
     <Page Remove="Tools\æ–°æ–‡ä»¶å¤¹\**" />
@@ -21,5 +20,10 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="halcondotnet">
+      <HintPath>..\..\Dll\Vision\Halcon\halcondotnet.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

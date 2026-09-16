@@ -55,9 +55,15 @@
     <PackageReference Include="System.Management" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <!-- 2026-09-16：日志模型（ELogLevel/LogInfo）迁入 DataManager 后显式引用，
+         不再依赖 FlowNodes 的传递引用来访问 DataManager -->
+    <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
     <ProjectReference Include="..\..\FlowNodes\FlowNodes\FlowNodes.csproj" />
-    <ProjectReference Include="..\..\FlowEditor\FlowEditor.DataManagerLogging\FlowEditor.DataManagerLogging.csproj" />
-    <ProjectReference Include="..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="halcondotnet">
+      <HintPath>..\..\Dll\Vision\Halcon\halcondotnet.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\图标.ico" />
