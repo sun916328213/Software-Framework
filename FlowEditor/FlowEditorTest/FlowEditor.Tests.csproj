@@ -18,5 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FlowEditor.Runtime\FlowEditor.Runtime.csproj" />
     <ProjectReference Include="..\FlowEditor\FlowEditor.csproj" />
+    <ProjectReference Include="..\FlowEditor.PluginContractFixture\FlowEditor.PluginContractFixture.csproj"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>

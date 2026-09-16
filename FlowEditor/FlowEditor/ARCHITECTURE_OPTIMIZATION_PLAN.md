@@ -3,7 +3,7 @@
 > 状态：核心优化已完成，进入维护阶段
 > 基线日期：2026-09-10  
 > 范围：`FlowEditor` 类库及 `FlowEditorTest` 测试项目  
-> 当前验证基线：301 个测试全部通过（新增 Runtime 程序集、执行引擎日志 seam、执行/文档/画布/输出门面收缩及视口/连线/选择交互模块依赖护栏、函数文档、对话框及导出 seam 门禁、节点生命周期、结构化容器恢复、输出栏过滤、节点上下文领域模型契约、统一端口值传递规则、ViewModel 职责分级、容器成员归属及 NodeModel 数据绑定职责回归测试；旧版 `SubFlowNode` 删除后同步移除 5 个失效用例）
+> 当前验证基线：FlowEditor 341 个测试全部通过，另有 3 个宿主日志集成测试（覆盖实际落盘/等级/配置重载、结构化路由身份、运行序号生命周期、目录清理/碰撞/长度边界、基础键冲突及备用诊断；新增 Runtime 程序集、执行引擎日志 seam、可注入结构化流程日志及等级回归、节点批量卸载上下文、执行/文档/画布/输出门面收缩及视口/连线/选择交互模块依赖护栏、函数文档、对话框及导出 seam 门禁、节点生命周期、结构化容器恢复、输出栏过滤、节点上下文领域模型契约、统一端口值传递规则、ViewModel/NodeModel 职责分级、容器成员归属、独立节点插件契约、PropertyGrid 兼容桥隔离、独立解决方案入口，以及通用接口层和应用模块依赖回归测试；旧版 `SubFlowNode` 删除后同步移除 5 个失效用例）
 
 ## 1. 文档目的
 
@@ -147,7 +147,7 @@ FlowEditor/                         net9.0-windows
 |  |  `- FlowContainerDocumentCoordinator.cs
 |  `- Contracts/
 |     |- IFlowDocumentStore.cs
-|     |- IFlowTabFactory.cs
+|     |- ViewModels/IFlowTabFactory.cs
 |     |- INodeEditorLauncher.cs
 |     |- IUiDispatcher.cs
 |     `- IFlowLogSink.cs
@@ -559,6 +559,29 @@ IFlowDocumentStore       Save/Load 文档
 - [x] 维护复审第一阶段拆分 `FlowChartViewModel`：执行恢复、文档撤销、连线提交和表现层入口分别迁入命名 partial 文件，主文件由 1,026 行降至 716 行，并增加职责布局门禁。
 - [x] 维护复审第二阶段拆分 `FlowChartViewModel`：选择/拖动和剪贴板事务迁入命名 partial 文件；容器几何、拖动成员展开、执行容器/泳道归属及越界连线清理下沉到平台无关的 `FlowCanvasSession`，主文件降至 301 行。
 - [x] 维护复审第一阶段拆分 `NodeModel`：将画布附加/卸载、连线事件订阅、上游查询和数据绑定增删迁入 `NodeModel.DataBindings.cs`，主文件由 1,063 行降至 754 行，并增加职责位置门禁。
+- [x] 维护复审第二阶段拆分 `NodeModel`：将端口集合、缓存、编辑与配置迁入 `NodeModel.Ports.cs`，将端口查询、执行前后属性同步与反射缓存迁入 `NodeModel.PortValues.cs`；主文件最终降至 330 行，并增加文件职责和行数门禁。
+- [x] 新增独立 `FlowEditor.PluginContractFixture` 节点插件夹具；测试端不引用插件类型，只加载构建后的 DLL，覆盖工具发现、反射创建、附加/卸载、历史文档还原和无界面执行，并以架构门禁锁定独立产物验收方式。
+- [x] 新增独立 `FlowEditor.sln` 验收入口，包含 Runtime、编辑器、DataManager 日志 adapter、插件契约夹具、核心测试、Runtime Smoke 和独立宿主日志适配测试；保留旧 `Flow.sln` 作为上层聚合历史入口，并增加项目路径存在性门禁。
+- [x] 将日志等级收敛为 Runtime 自有 `FlowLogLevel`，移除 FlowEditor 源码和项目文件对 `Extension` 的直接依赖；以相同枚举名称/序号兼容历史节点文档，并增加依赖与往返门禁。Prism 导航视图注册改由组合根本地完成。
+- [x] 引入 Runtime `IFlowLogSink` / `FlowLogRecord` 深契约，由 `FlowChartService` 构造注入并覆盖完整执行、校验、单步、恢复和循环入口；流程级事件、警告、取消和失败保留声明等级，DataManager 配置获取仅留在宿主 adapter。
+- [x] WPFControl 迁移收尾：独立 `FlowEditor.DataManagerLogging` 项目以 `DataManagerFlowLogSink` 实现 `IFlowLogSink`，使用 IoC 注入的 `LogManager` 和 `IFlowLogConfiguration` 解析 `FlowLog` 模板；已同步删除宿主静态赋值和 `FlowLogContext.FileSink` 过渡属性。
+- [x] 日志配置热重载收尾：`LogConfigService.Load()` 支持幂等替换并释放旧基础实例，替换前拒绝重名配置和外部实例冲突；动态流程日志在配置变更后失效重建。宿主 adapter 对五种日志等级使用显式映射；独立集成测试已验证无损预检、路径替换和全等级实际落盘。
+- [x] 流程 Console 路由并发收尾：`ConsoleOutputRouter` 的进程级安装改为双重检查加锁，避免多流程首次并发执行时重复包装 `Console.Out` 导致输出栏重复行。
+- [x] 动态日志重载竞态收尾：`DataManagerFlowLogSink` 将「解析/创建实例 + Add 写入」与「配置变更后移除/释放」纳入同一互斥边界，避免重载瞬间继续向已移除的旧路径实例写入。
+- [x] 宿主测试依赖收口：宿主日志集成测试改为只引用 `FlowEditor.DataManagerLogging`、Runtime 和 DataManager，不再通过完整 WPFControl 连带构建通信、视觉、Secs 和 ScriptEditor 模块。
+- [x] 多流程加载命令改为 `AsyncRelayCommand` + `Task LoadAllAsync()`，由命令暴露执行状态并避免 `async void` 异常边界。
+- [x] 日志路由目录边界收尾：动态日志不再拆分扁平 `LogKey` 生成路径，流程与任务名称各自映射为一个目录段；对非法字符、保留名、空白和超长名称使用稳定摘要消除清理碰撞，并用宿主测试锁定两级目录与 96 字符上限。
+- [x] 日志逻辑身份收尾：Runtime 引入 `FlowLogRoute` 值对象统一字段相等性、显示键和稳定摘要，运行序号不再使用可歧义的扁平字符串分桶；宿主动态键与 `FlowLog` 等基础实例重名时自动隔离。
+- [x] 运行序号生命周期收尾：标签页关闭、文档替换、容器名变更和标签改名统一释放旧路由缓存；活动执行使用可脱离全局字典的计数桶安全收尾，同名任务重新打开从 `#1` 开始；容器名 setter 向构造期已创建的首个标签页传播。
+- [x] 标签标题兼容边界收尾：保留 `FlowChartModel.TabTitle` 公共 setter，但 Model 拒绝运行中及空白标题，ViewModel 监听实际标题变化并释放旧日志路由，避免外部宿主绕过 `RenameTab` 时破坏身份生命周期。
+- [x] 日志故障可观测性收尾：DataManager 写入失败通过 30 秒限频的 `Trace` 备用通道报告，同时保持日志与备用监听器异常均不改变流程执行结果。
+- [x] 日志配置事务化：`ManagerBase` 以单一管理器锁统一读取、增删与所有权替换，`LogManager.ReplaceConfigured()` 先构造全部新实例，再原子验证并提交；重名、后端类型或外部所有权冲突均保留完整旧快照，旧实例只在成功提交后释放。
+- [x] 隔离 `NodeModel` 的 PropertyGrid 兼容入口：接口声明和 `ICommand` 扩展迁入 `NodeModel.PropertyGrid.cs`，主文件与生命周期文件移除表现层接口/命令声明；显式引用纯 `net9.0` 的 `WPFCustomControls.PropertyGrid.Core` 契约项目，并增加防回流门禁。
+- [x] 消除 `Interfaces → ViewModels` 标签页 factory 逻辑环：将 `IFlowTabFactory` 移入 ViewModel 层作为同层 seam，Presentation 的 Prism adapter 保持单向实现，并增加通用接口层禁止引用具体 ViewModel 的门禁。
+- [x] 消除 `Services → ViewModels` 应用模块反向依赖：执行、文档与模型级画布会话只接收 `NodeModel`；组合根中唯一的节点投影转换由 ViewModel adapter 承担。
+  - [x] 执行模块：`FlowExecutionCoordinator` 改为节点模型快照和只读连线接口，单步/恢复直接接收 `NodeModel`，删除全部 `NodeViewModel` 引用并增加架构门禁。
+  - [x] 文档模块：改用节点模型快照生成保存文档和撤销快照，节点恢复继续通过 `Action<NodeModel>` 进入画布生命周期 seam，删除全部 `NodeViewModel` 引用并增加架构门禁。
+  - [x] 画布模块：`FlowCanvasSession` 改用节点模型快照，容器归属、几何、拖动成员和生命周期规则不再引用 `NodeViewModel`；新增 `FlowCanvasViewModelAdapter` 专门维护投影集合并保留既有编排接口，同时增加架构门禁。
 - [x] 统一 `FlowDocumentMapper`，由单流程、多流程、快照、节点复制共同复用节点、端口和连线映射。
 - [x] 引入 `IUiDispatcher`，提供 WPF 与无头 adapter，并移除 `FlowChartService` 对 WPF Dispatcher 的直接访问。
 - [x] 引入 `IFlowDocumentStore`，由 JSON 文件和内存 adapter 统一 `.flow` / `.flows` 存储。
@@ -599,6 +622,35 @@ IFlowDocumentStore       Save/Load 文档
 - [x] 保持原始输出缓冲、日志文件格式和执行编号兼容；筛选只影响当前显示文本。
 
 只有出现上述功能需求或实际性能数据证明完整字符串绑定成为瓶颈时才实施。
+
+### Phase 7：真实运行验收（M，进行中）
+
+自动化验收：
+
+- [x] 独立运行 `FlowEditor.Runtime.Smoke`，确认纯 `net9.0` 进程可完成三节点执行且不加载 WPF。
+- [x] 在 STA 测试宿主中组合完整 `FlowChartContainerView`、真实容器 ViewModel、默认标签页、活动画布及命令栏/工具箱/输出栏/属性栏资源。
+- [x] 完整解决方案回归保持 FlowEditor 核心测试和宿主日志集成测试分离运行。
+- [x] 完整构建 `FlowNodes.Workbench` 桌面宿主，确认 FlowEditor、FlowNodes 及其通信/设备/视觉依赖可共同生成且无编译错误；既有原生库位数和可空性告警单独治理。
+- [x] PNG 端到端自动验收覆盖“命令栏按钮 → 容器活动画布定位 → 标签页导出服务”，并验证完整逻辑画布边界、2 倍像素尺寸、远端内容裁剪和透明通道。
+- [x] 并行故障自动验收覆盖兄弟支路不中断，以及从失败支路的前置、失败、后续节点恢复；重跑失败节点后状态由红色转为成功，已完成兄弟支路不重复执行。
+- [x] ToolBlock 自动验收覆盖外层运行内部循环、首次失败的内外 Error 状态，以及再次执行时重建内部实例并将内部节点、ToolBlock 和外层后继恢复为 Success。
+- [x] 修复循环停止状态竞态：先发布停止请求态再取消令牌，避免同步 cancellation continuation 已写入的“循环执行已停止”被覆盖；原始专项测试及两轮完整回归通过。
+- [x] 无限循环容器自动验收覆盖 `-1` 语义、10 秒轮间长延时和外层停止命令；取消令牌可立即打断等待，停止后不进入下一轮且会话收敛为“已取消”。
+- [x] 输出栏完整视图自动验收覆盖活动标签页日志绑定、等级与搜索组合过滤、自动滚动开关，以及真实清除按钮同时清空缓冲源和派生显示文本。
+- [x] 基础工作台自动验收覆盖默认标签页、节点工具项创建与定位、控制流连线，以及真实工具栏“保存/打开”按钮完成画布文档往返恢复。
+- [x] 宿主日志 IoC 门禁要求 `LogConfigService` 通过 `IFlowLogConfiguration` 暴露，`DataManagerFlowLogSink` 仅解析配置接口；完整桌面宿主构建通过且保持零错误。
+
+`FlowNodes.Workbench` 人工交互验收：
+
+- [ ] 启动工作台，确认工具箱加载、默认标签页、节点拖放、连线、保存和重新打开均正常。
+- [x] 在工作台实际操作 PNG 保存对话框，并使用图片查看器确认生成文件可打开；裁剪、透明通道和 2 倍分辨率已由自动测试覆盖（2026-09-15 人工确认通过）。
+- [ ] 构造并行双支路：A 正常循环、B 失败；确认 A 不被取消，B 可从失败节点、上一个节点或指定后续节点恢复。
+- [ ] 在 ToolBlock 内放置循环容器，从外层执行并验证不会再出现“循环体没有节点”；失败重试成功后父容器和内部节点红色状态均清除。
+- [ ] 验证循环次数 `-1`、轮次延时和停止命令：无限循环持续运行，延时可见，停止后取消令牌能立即中断等待。
+- [x] 验证输出栏清除、等级过滤、搜索和暂停自动滚动，清除后不得由节流缓冲回写旧内容（2026-09-16 人工确认通过）。
+- [ ] 在 Packing Machine 宿主加载实际 Log 配置，验证执行记录按等级写入“流程名/任务名”目录，配置重载后切换到新路径。
+
+验收原则：人工项必须记录实际结果、复现流程和截图或输出文件；发现问题后新增自动回归测试，再修改实现。
 
 ## 12. 提交策略
 

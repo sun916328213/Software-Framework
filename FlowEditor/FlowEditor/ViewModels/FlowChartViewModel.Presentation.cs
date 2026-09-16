@@ -24,8 +24,28 @@ public partial class FlowChartViewModel
     public void RenameTab(string newTitle)
     {
         if (string.IsNullOrWhiteSpace(newTitle)) return;
+        if (string.Equals(Model.TabTitle, newTitle, StringComparison.Ordinal)) return;
+        if (Model.IsRunning || Model.IsLoopRunning)
+        {
+            Model.StatusText = "流程执行期间不能重命名";
+            return;
+        }
+
+        SetTabTitle(newTitle, markModified: true);
+    }
+
+    /// <summary>统一变更标签标题；日志路由生命周期由模型属性变更观察器维护。</summary>
+    /// <param name="newTitle">新的标签页标题。</param>
+    /// <param name="markModified">是否将该变更记为用户编辑。</param>
+    internal void SetTabTitle(string newTitle, bool markModified)
+    {
+        if (string.IsNullOrWhiteSpace(newTitle) ||
+            string.Equals(Model.TabTitle, newTitle, StringComparison.Ordinal))
+            return;
+
         Model.TabTitle = newTitle;
-        Model.IsModified = true;
+        if (markModified)
+            Model.IsModified = true;
     }
 
     /// <summary>更新命令可执行状态。</summary>

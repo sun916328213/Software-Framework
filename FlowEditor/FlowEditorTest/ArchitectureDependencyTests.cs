@@ -17,6 +17,134 @@ public sealed class ArchitectureDependencyTests
     private static readonly string ProjectDirectory = FindProjectDirectory();
     private static readonly string SolutionDirectory = Directory.GetParent(ProjectDirectory)!.FullName;
 
+    /// <summary>确保 FlowEditor 的独立解决方案只引用当前工作区内真实存在的项目。</summary>
+    [Fact]
+    public void FlowEditorSolution_ReferencesExistingProjects()
+    {
+        var solutionPath = Path.Combine(SolutionDirectory, "FlowEditor.sln");
+        var source = File.ReadAllText(solutionPath);
+        var projectMatches = Regex.Matches(
+            source,
+            "Project\\([^\\r\\n]+?= [^\\r\\n]+?, \\\"(?<path>[^\\\"]+\\.csproj)\\\"");
+        var projectPaths = projectMatches
+            .Select(match => match.Groups["path"].Value)
+            .ToList();
+
+        Assert.Equal(7, projectPaths.Count);
+        Assert.Contains("FlowEditor\\FlowEditor.csproj", projectPaths);
+        Assert.Contains("FlowEditor.Runtime\\FlowEditor.Runtime.csproj", projectPaths);
+        Assert.Contains("FlowEditor.Runtime.Smoke\\FlowEditor.Runtime.Smoke.csproj", projectPaths);
+        Assert.Contains("FlowEditor.PluginContractFixture\\FlowEditor.PluginContractFixture.csproj", projectPaths);
+        Assert.Contains("FlowEditorTest\\FlowEditor.Tests.csproj", projectPaths);
+        Assert.Contains("WPFControl.Host.Tests\\WPFControl.Host.Tests.csproj", projectPaths);
+        Assert.Contains("FlowEditor.DataManagerLogging\\FlowEditor.DataManagerLogging.csproj", projectPaths);
+        Assert.All(projectPaths, relativePath =>
+            Assert.True(
+                File.Exists(Path.GetFullPath(relativePath, SolutionDirectory)),
+                $"解决方案项目路径不存在: {relativePath}"));
+    }
+
+    /// <summary>确保宿主日志测试只依赖轻量适配器，不会重新带入完整 WPFControl 项目。</summary>
+    [Fact]
+    public void HostLoggingTests_DoNotReferenceFullWpfControl()
+    {
+        var hostTestProject = File.ReadAllText(Path.Combine(
+            SolutionDirectory,
+            "WPFControl.Host.Tests",
+            "WPFControl.Host.Tests.csproj"));
+        var adapterProject = File.ReadAllText(Path.Combine(
+            SolutionDirectory,
+            "FlowEditor.DataManagerLogging",
+            "FlowEditor.DataManagerLogging.csproj"));
+
+        Assert.Contains("FlowEditor.DataManagerLogging.csproj", hostTestProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("WPFControl.csproj", hostTestProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("WPFControl.csproj", adapterProject, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保宿主通过配置接口向流程日志 adapter 注入 Log 配置，而不是耦合具体服务。</summary>
+    [Fact]
+    public void WpfHostLogging_ResolvesConfigurationThroughIocAbstraction()
+    {
+        var workspaceDirectory = Directory.GetParent(SolutionDirectory)?.FullName
+                                 ?? throw new DirectoryNotFoundException("无法定位工作区目录。");
+        var moduleSource = File.ReadAllText(Path.Combine(
+            workspaceDirectory,
+            "WPFControl",
+            "WPFControl",
+            "WPFControlModule.cs"));
+
+        Assert.Contains(
+            "RegisterSingleton<IFlowLogConfiguration>",
+            moduleSource,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "provider.Resolve<IFlowLogConfiguration>()",
+            moduleSource,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "provider.Resolve<LogConfigService>()));",
+            moduleSource,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>确保编辑器日志契约不再把 Extension 及其设备依赖带入核心模块。</summary>
+    [Fact]
+    public void EditorLogging_DoesNotDependDirectlyOnExtension()
+    {
+        var projectSource = File.ReadAllText(Path.Combine(ProjectDirectory, "FlowEditor.csproj"));
+        var extensionReferences = Directory.EnumerateFiles(
+                ProjectDirectory,
+                "*.cs",
+                SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .Where(path => File.ReadAllText(path).Contains("Extension.", StringComparison.Ordinal))
+            .Select(path => Path.GetRelativePath(ProjectDirectory, path))
+            .ToList();
+        var logLevelSource = File.ReadAllText(Path.Combine(
+            SolutionDirectory,
+            "FlowEditor.Runtime",
+            "Core",
+            "FlowLogLevel.cs"));
+
+        Assert.DoesNotContain("Extension.csproj", projectSource, StringComparison.Ordinal);
+        Assert.Empty(extensionReferences);
+        Assert.Contains("public enum FlowLogLevel", logLevelSource, StringComparison.Ordinal);
+        Assert.Contains("SysError", logLevelSource, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保流程执行日志通过宿主 sink 注入，不在应用服务中直接获取 DataManager。</summary>
+    [Fact]
+    public void ExecutionLogging_UsesInjectedHostSink()
+    {
+        var coordinatorSource = File.ReadAllText(Path.Combine(
+            ProjectDirectory,
+            "Services",
+            "Execution",
+            "FlowExecutionCoordinator.cs"));
+        var serviceSource = File.ReadAllText(Path.Combine(
+            ProjectDirectory,
+            "Services",
+            "FlowChartService.cs"));
+        var sinkSource = File.ReadAllText(Path.Combine(
+            SolutionDirectory,
+            "FlowEditor.Runtime",
+            "Core",
+            "IFlowLogSink.cs"));
+        var contextSource = File.ReadAllText(Path.Combine(
+            ProjectDirectory,
+            "Core",
+            "FlowLogContext.cs"));
+
+        Assert.Contains("IFlowLogSink flowLogSink", coordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("FlowLogContext.EnterSink(_flowLogSink)", coordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("IFlowLogSink? flowLogSink", serviceSource, StringComparison.Ordinal);
+        Assert.Contains("FlowLogRecord", sinkSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("FileSink", contextSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("DataManager", coordinatorSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("LogManager", coordinatorSource, StringComparison.Ordinal);
+    }
+
     /// <summary>确保 Core 不会新增对表现层、WPF 或 Prism 的依赖。</summary>
     [Fact]
     public void CorePresentationDependencies_AreLimitedToKnownMigrationDebt()
@@ -42,6 +170,26 @@ public sealed class ArchitectureDependencyTests
             "FlowChartViewModel");
 
         Assert.Empty(actual);
+    }
+
+    /// <summary>确保通用接口层不再反向引用具体 ViewModel，保持依赖方向无环。</summary>
+    [Fact]
+    public void GeneralInterfaces_DoNotDependOnViewModels()
+    {
+        var actual = FindDebtFiles(
+            "Interfaces",
+            "FlowEditor.ViewModels",
+            "FlowChartViewModel",
+            "NodeViewModel");
+        var tabFactorySource = File.ReadAllText(Path.Combine(
+            ProjectDirectory,
+            "ViewModels",
+            "IFlowTabFactory.cs"));
+
+        Assert.Empty(actual);
+        Assert.Contains("namespace FlowEditor.ViewModels", tabFactorySource, StringComparison.Ordinal);
+        Assert.Contains("interface IFlowTabFactory", tabFactorySource, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(ProjectDirectory, "Interfaces", "IFlowTabFactory.cs")));
     }
 
     /// <summary>确保 P5 Runtime 可独立运行，并已拥有执行契约、引擎和容器 runner。</summary>
@@ -246,6 +394,63 @@ public sealed class ArchitectureDependencyTests
         Assert.DoesNotContain("ExecutionGraphScope", source, StringComparison.Ordinal);
         Assert.DoesNotContain("FlowLogContext", source, StringComparison.Ordinal);
         Assert.Contains("FlowExecutionCoordinator", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保执行协调模块只处理节点模型，不再反向依赖画布 ViewModel。</summary>
+    [Fact]
+    public void ExecutionCoordinator_DoesNotDependOnViewModels()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            ProjectDirectory,
+            "Services",
+            "Execution",
+            "FlowExecutionCoordinator.cs"));
+
+        Assert.DoesNotContain("FlowEditor.ViewModels", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("NodeViewModel", source, StringComparison.Ordinal);
+        Assert.Contains("Func<IReadOnlyList<NodeModel>>", source, StringComparison.Ordinal);
+        Assert.Contains("StepContinueAsync(NodeModel node", source, StringComparison.Ordinal);
+        Assert.Contains("ContinueFromNodeAsync(NodeModel node", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保文档会话只映射节点模型，不再反向依赖画布 ViewModel。</summary>
+    [Fact]
+    public void DocumentSession_DoesNotDependOnViewModels()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            ProjectDirectory,
+            "Services",
+            "Documents",
+            "FlowDocumentSession.cs"));
+
+        Assert.DoesNotContain("FlowEditor.ViewModels", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("NodeViewModel", source, StringComparison.Ordinal);
+        Assert.Contains("Func<IReadOnlyList<NodeModel>>", source, StringComparison.Ordinal);
+        Assert.Contains("Action<NodeModel> addNode", source, StringComparison.Ordinal);
+        Assert.Contains("node.OnFlowSaved()", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保画布领域规则只处理节点模型，表现层包装停留在专用适配器。</summary>
+    [Fact]
+    public void CanvasSession_DoesNotDependOnViewModels()
+    {
+        var sessionSource = File.ReadAllText(Path.Combine(
+            ProjectDirectory,
+            "Services",
+            "Editing",
+            "FlowCanvasSession.cs"));
+        var adapterSource = File.ReadAllText(Path.Combine(
+            ProjectDirectory,
+            "ViewModels",
+            "FlowCanvasViewModelAdapter.cs"));
+
+        Assert.DoesNotContain("FlowEditor.ViewModels", sessionSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("NodeViewModel", sessionSource, StringComparison.Ordinal);
+        Assert.Contains("Func<IReadOnlyList<NodeModel>>", sessionSource, StringComparison.Ordinal);
+        Assert.Contains("IReadOnlyList<NodeModel> ResolveDragParticipants", sessionSource, StringComparison.Ordinal);
+        Assert.Contains("RefreshExecutionMembership(NodeModel node", sessionSource, StringComparison.Ordinal);
+        Assert.Contains("FlowCanvasSession _session", adapterSource, StringComparison.Ordinal);
+        Assert.Contains("ObservableCollection<NodeViewModel>", adapterSource, StringComparison.Ordinal);
     }
 
     /// <summary>确保文档事务和画布生命周期不会重新膨胀回流程门面。</summary>
@@ -493,6 +698,49 @@ public sealed class ArchitectureDependencyTests
         Assert.DoesNotContain("SetPortConfig", coreSource, StringComparison.Ordinal);
     }
 
+    /// <summary>确保端口查询、运行时属性同步与反射缓存集中在命名 partial 文件中。</summary>
+    [Fact]
+    public void NodeModel_PortValueResponsibilities_AreSplitFromCoreFile()
+    {
+        var modelDirectory = Path.Combine(ProjectDirectory, "Models");
+        var corePath = Path.Combine(modelDirectory, "NodeModel.cs");
+        var coreSource = File.ReadAllText(corePath);
+        var valueSource = File.ReadAllText(Path.Combine(modelDirectory, "NodeModel.PortValues.cs"));
+
+        Assert.True(File.ReadAllLines(corePath).Length <= 350);
+        Assert.Contains("partial class NodeModel", valueSource, StringComparison.Ordinal);
+        Assert.Contains("public void SyncInputValues()", valueSource, StringComparison.Ordinal);
+        Assert.Contains("PropertyLookupCache", valueSource, StringComparison.Ordinal);
+        Assert.Contains("public List<string> GetBindableProperties()", valueSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("public void SyncInputValues()", coreSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("PropertyLookupCache", coreSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("public List<string> GetBindableProperties()", coreSource, StringComparison.Ordinal);
+    }
+
+    /// <summary>确保 PropertyGrid 接口声明和 ICommand 扩展入口不再散落到节点核心与生命周期文件。</summary>
+    [Fact]
+    public void NodeModel_PropertyGridCompatibility_IsIsolatedInNamedPartial()
+    {
+        var modelDirectory = Path.Combine(ProjectDirectory, "Models");
+        var coreSource = File.ReadAllText(Path.Combine(modelDirectory, "NodeModel.cs"));
+        var lifecycleSource = File.ReadAllText(Path.Combine(modelDirectory, "NodeModel.DataBindings.cs"));
+        var propertyGridSource = File.ReadAllText(Path.Combine(modelDirectory, "NodeModel.PropertyGrid.cs"));
+        var projectSource = File.ReadAllText(Path.Combine(ProjectDirectory, "FlowEditor.csproj"));
+
+        Assert.Contains(
+            "partial class NodeModel : IPortConfigurable, IPortManageable, IDataBindingProvider",
+            propertyGridSource,
+            StringComparison.Ordinal);
+        Assert.Contains("PropertyGridAction", propertyGridSource, StringComparison.Ordinal);
+        Assert.Contains("ICommand? OpenScriptEditorCommand", propertyGridSource, StringComparison.Ordinal);
+        Assert.Contains("WPFCustomControls.PropertyGrid.Core.csproj", projectSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("IPortConfigurable", coreSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("IDataBindingProvider", coreSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("System.Windows.Input", lifecycleSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("PropertyGridAction", lifecycleSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("using WPFCustomControls.PropertyGrid;", propertyGridSource, StringComparison.Ordinal);
+    }
+
     /// <summary>确保流程文档存储 seam 只暴露保存和加载，不再承担模型映射。</summary>
     [Fact]
     public void FlowDocumentStoreInterface_ContainsOnlyFileOperations()
@@ -520,6 +768,27 @@ public sealed class ArchitectureDependencyTests
 
         Assert.Empty(mutableFields);
         Assert.Empty(mutableProperties);
+    }
+
+    /// <summary>确保插件契约测试通过独立 DLL seam 验收，而不直接编译引用夹具节点类型。</summary>
+    [Fact]
+    public void PluginContractTests_LoadIndependentArtifactWithoutTypeReference()
+    {
+        var solutionDirectory = Directory.GetParent(ProjectDirectory)?.FullName
+                                ?? throw new InvalidOperationException("无法定位解决方案目录。");
+        var testProject = File.ReadAllText(Path.Combine(
+            solutionDirectory,
+            "FlowEditorTest",
+            "FlowEditor.Tests.csproj"));
+        var contractTests = File.ReadAllText(Path.Combine(
+            solutionDirectory,
+            "FlowEditorTest",
+            "PluginContractTests.cs"));
+
+        Assert.Contains("FlowEditor.PluginContractFixture.csproj", testProject, StringComparison.Ordinal);
+        Assert.Contains("ReferenceOutputAssembly=\"false\"", testProject, StringComparison.Ordinal);
+        Assert.Contains("Assembly.LoadFrom", contractTests, StringComparison.Ordinal);
+        Assert.DoesNotContain("using FlowEditor.PluginContractFixture", contractTests, StringComparison.Ordinal);
     }
 
     /// <summary>确保测试通过真实 adapter 构造对象，不再使用 null-forgiving 掩盖缺失依赖。</summary>

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FlowEditor.Interfaces;
+using FlowEditor.Models;
 using FlowEditor.Services;
 using WPFCustomControls.PropertyGrid.ViewModels;
 
@@ -78,8 +79,20 @@ public partial class FlowChartContainerViewModel : ObservableObject
 
     private string? _containerFilePath;
 
+    private string? _processName;
+
     /// <summary>容器所属流程名（AutoFlow / InitializeFlow ...，宿主设置）；向下传播到各标签页，用于节点日志按「流程名\任务名」路由。</summary>
-    public string? ProcessName { get; set; }
+    public string? ProcessName
+    {
+        get => _processName;
+        set
+        {
+            if (string.Equals(_processName, value, StringComparison.Ordinal)) return;
+            _processName = value;
+            foreach (var tab in Tabs)
+                tab.SetProcessName(value);
+        }
+    }
 
     /// <summary>创建流程图容器 ViewModel。</summary>
     /// <param name="dialogService">宿主对话框模块。</param>
@@ -191,7 +204,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
         if (Tabs.Count >= _maximumTabCount) return;
         var vm = _tabFactory.Create();
         vm.SetProcessName(ProcessName);
-        vm.Model.TabTitle = $"{_newTabNamePrefix}{GetNextFlowNumber()}";
+        vm.SetTabTitle($"{_newTabNamePrefix}{GetNextFlowNumber()}", markModified: false);
         vm.Model.StatusText = "就绪";
         // 监听选中变化，更新属性面板 ViewModel
         AttachPropertyGridHook(vm);
@@ -216,7 +229,8 @@ public partial class FlowChartContainerViewModel : ObservableObject
 
     /// <summary>判断指定标签页是否存在且关闭后不会低于数量下限。</summary>
     private bool CanCloseTab(FlowChartViewModel? tab)
-        => tab != null && Tabs.Contains(tab) && Tabs.Count > _minimumTabCount;
+        => tab != null && Tabs.Contains(tab) && Tabs.Count > _minimumTabCount &&
+           !tab.Model.IsRunning && !tab.Model.IsLoopRunning;
 
     /// <summary>为标签页绑定属性面板联动逻辑。</summary>
     private void AttachPropertyGridHook(FlowChartViewModel vm)
@@ -234,6 +248,11 @@ public partial class FlowChartContainerViewModel : ObservableObject
                         PropertyGridVM.TargetObject = expectedTarget;
                 }));
             }
+        };
+        vm.Model.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(FlowChartModel.IsRunning) or nameof(FlowChartModel.IsLoopRunning))
+                CloseTabCommand.NotifyCanExecuteChanged();
         };
     }
 
@@ -264,6 +283,11 @@ public partial class FlowChartContainerViewModel : ObservableObject
     private void RemoveTab(FlowChartViewModel? tab)
     {
         if (tab == null) return;
+        if (tab.LoopStopCommand.CanExecute(null))
+            tab.LoopStopCommand.Execute(null);
+        else if (tab.StopCommand.CanExecute(null))
+            tab.StopCommand.Execute(null);
+        tab.ReleaseLogRoute();
         var index = Tabs.IndexOf(tab);
         Tabs.Remove(tab);
         if (Tabs.Count > 0)
@@ -334,7 +358,7 @@ public partial class FlowChartContainerViewModel : ObservableObject
     }
 
     /// <summary>从文件加载多个流程。</summary>
-    private async void LoadAll()
+    private async Task LoadAllAsync()
     {
         var path = _dialogService.ShowOpenFileDialog("多流程文件 (*.flows)|*.flows|所有文件 (*.*)|*.*");
         if (path == null) return;

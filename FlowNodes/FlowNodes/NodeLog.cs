@@ -1,5 +1,3 @@
-using DataManager.Log;
-using Extension.Struct;
 using FlowEditor.Core;
 using System;
 using System.Threading.Tasks;
@@ -7,21 +5,25 @@ using System.Threading.Tasks;
 namespace FlowNodes
 {
     /// <summary>
-    /// 节点日志助手：按当前流程解析 DataManager 的 ILog（LogManager）写入对应流程日志文件，
-    /// 同时输出控制台（ConsoleOutputRouter 捕获进输出面板）。Resolver 由宿主在启动时注册。
+    /// 节点日志助手：通过 FlowEditor 的结构化日志上下文写入宿主 sink，
+    /// 同时输出控制台（ConsoleOutputRouter 捕获进输出面板）。
     /// </summary>
     public static class NodeLog
     {
-        /// <summary>按流程名解析 ILog（宿主注册：container.Resolve&lt;LogManager&gt;()[name]）。</summary>
-        public static Func<string, ILog?>? Resolver { get; set; }
+        /// <summary>写入信息级节点日志。</summary>
+        public static Task InfoAsync(string message) => WriteAsync(FlowLogLevel.Information, message);
 
-        public static Task InfoAsync(string message) => WriteAsync(ELogLevel.Information, message);
-        public static Task WarnAsync(string message) => WriteAsync(ELogLevel.Warning, message);
-        public static Task ErrorAsync(string message) => WriteAsync(ELogLevel.Error, message);
-        public static Task SysErrorAsync(string message) => WriteAsync(ELogLevel.SysError, message);
- 
+        /// <summary>写入警告级节点日志。</summary>
+        public static Task WarnAsync(string message) => WriteAsync(FlowLogLevel.Warning, message);
 
-        private static async Task WriteAsync(ELogLevel level, string message)
+        /// <summary>写入错误级节点日志。</summary>
+        public static Task ErrorAsync(string message) => WriteAsync(FlowLogLevel.Error, message);
+
+        /// <summary>写入系统错误级节点日志。</summary>
+        public static Task SysErrorAsync(string message) => WriteAsync(FlowLogLevel.SysError, message);
+
+        /// <summary>统一发布面板输出与结构化节点日志。</summary>
+        private static Task WriteAsync(FlowLogLevel level, string message)
         {
             var node = FlowLogContext.NodeName;
             var prefix = string.IsNullOrEmpty(node) ? "" : $"[{node}] ";
@@ -29,25 +31,14 @@ namespace FlowNodes
             var run = FlowLogContext.RunId > 0 ? $"#{FlowLogContext.RunId} " : "";
             var text = $"{run}{prefix}{message}";
 
-            // 输出面板（ConsoleOutputRouter 捕获）；抑制 FileSink，避免与下方落盘重复
-            using (FlowLogContext.SuppressFileSink())
+            // 输出面板（ConsoleOutputRouter 捕获）；抑制 sink，避免与下方结构化写入重复。
+            using (FlowLogContext.SuppressSink())
             {
                 Console.WriteLine(text);
             }
 
-            try
-            {
-                // 按当前「流程名\任务名」写入 DataManager 的 ILog（LogManager），保留分级
-                var key = FlowLogContext.LogKey;
-                if (string.IsNullOrEmpty(key)) return;
-                var log = Resolver?.Invoke(key);
-                if (log != null)
-                    await log.AddAsync(text, level);
-            }
-            catch
-            {
-                // 日志失败不影响节点执行
-            }
+            FlowLogContext.Write(text, level);
+            return Task.CompletedTask;
         }
     }
 }

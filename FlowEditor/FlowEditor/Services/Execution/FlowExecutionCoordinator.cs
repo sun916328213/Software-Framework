@@ -1,11 +1,8 @@
-using System.Collections.ObjectModel;
-using Extension.Struct;
 using FlowEditor.Core;
 using FlowEditor.Interfaces;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
 using FlowEditor.Nodes.FlowControl;
-using FlowEditor.ViewModels;
 
 namespace FlowEditor.Services.Execution;
 
@@ -16,35 +13,38 @@ namespace FlowEditor.Services.Execution;
 internal sealed class FlowExecutionCoordinator
 {
     private readonly FlowChartModel _model;
-    private readonly ObservableCollection<NodeViewModel> _nodes;
-    private readonly ObservableCollection<ConnectionModel> _connections;
+    private readonly Func<IReadOnlyList<NodeModel>> _nodeSnapshot;
+    private readonly IReadOnlyList<ConnectionModel> _connections;
     private readonly FlowChartExecutionEngine _engine;
     private readonly FlowDocumentMapper _documentMapper;
     private readonly IUiDispatcher _uiDispatcher;
     private readonly FlowOutputBuffer _output;
     private readonly Func<string?> _processName;
-    private readonly List<NodeViewModel> _executionOrder = [];
+    private readonly IFlowLogSink _flowLogSink;
+    private readonly List<NodeModel> _executionOrder = [];
     private CancellationTokenSource? _executionCts;
 
     /// <summary>创建绑定到一个画布会话的执行协调模块。</summary>
     public FlowExecutionCoordinator(
         FlowChartModel model,
-        ObservableCollection<NodeViewModel> nodes,
-        ObservableCollection<ConnectionModel> connections,
+        Func<IReadOnlyList<NodeModel>> nodeSnapshot,
+        IReadOnlyList<ConnectionModel> connections,
         FlowChartExecutionEngine engine,
         FlowDocumentMapper documentMapper,
         IUiDispatcher uiDispatcher,
         FlowOutputBuffer output,
-        Func<string?> processName)
+        Func<string?> processName,
+        IFlowLogSink flowLogSink)
     {
         _model = model ?? throw new ArgumentNullException(nameof(model));
-        _nodes = nodes ?? throw new ArgumentNullException(nameof(nodes));
+        _nodeSnapshot = nodeSnapshot ?? throw new ArgumentNullException(nameof(nodeSnapshot));
         _connections = connections ?? throw new ArgumentNullException(nameof(connections));
         _engine = engine ?? throw new ArgumentNullException(nameof(engine));
         _documentMapper = documentMapper ?? throw new ArgumentNullException(nameof(documentMapper));
         _uiDispatcher = uiDispatcher ?? throw new ArgumentNullException(nameof(uiDispatcher));
         _output = output ?? throw new ArgumentNullException(nameof(output));
         _processName = processName ?? throw new ArgumentNullException(nameof(processName));
+        _flowLogSink = flowLogSink ?? throw new ArgumentNullException(nameof(flowLogSink));
     }
 
     /// <summary>当前执行节点索引。</summary>
@@ -61,7 +61,12 @@ internal sealed class FlowExecutionCoordinator
     /// <summary>执行当前画布一次。</summary>
     public async Task RunAsync(Action<string> logCallback, bool debugMode = false)
     {
-        if (_model.IsRunning || !RunPreValidation(logCallback)) return;
+        if (_model.IsRunning) return;
+
+        using var sinkScope = FlowLogContext.EnterSink(_flowLogSink);
+        using var processScope = FlowLogContext.EnterProcess(_processName());
+        using var flowScope = FlowLogContext.EnterFlow(FlowLogName);
+        if (!RunPreValidation(logCallback)) return;
 
         _model.IsRunning = true;
         _model.IsDebugMode = debugMode;
@@ -71,16 +76,13 @@ internal sealed class FlowExecutionCoordinator
         _executionOrder.Clear();
         CurrentExecutionIndex = 0;
         long flowRunId = 0;
-
         try
         {
-            foreach (var node in _nodes)
-                node.ResetStatus();
+            foreach (var node in GetNodes())
+                node.Status = NodeStatus.Idle;
             PrepareExecutionScopeRuntime();
             _output.Clear();
 
-            using (FlowLogContext.EnterProcess(_processName() ?? FlowLogName))
-            using (FlowLogContext.EnterFlow(FlowLogName))
             using (ConsoleOutputRouter.EnterScope(message => DispatchLog(logCallback, message)))
             {
                 void Panel(string message, long runId) => PanelLog(message, logCallback, runId);
@@ -103,13 +105,15 @@ internal sealed class FlowExecutionCoordinator
         }
         catch (OperationCanceledException)
         {
-            PanelLog("=== 已取消执行 ===", logCallback, flowRunId);
+            PanelLog("=== 已取消执行 ===", logCallback, flowRunId, FlowLogLevel.Warning);
             _model.StatusText = "已取消";
         }
         catch (Exception ex)
         {
-            PanelLog($"[错误] {ex.GetType().Name}: {ex.Message}", logCallback, flowRunId);
-            FlowLogContext.Write($"流程执行异常 {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+            PanelLog($"[错误] {ex.GetType().Name}: {ex.Message}", logCallback, flowRunId, FlowLogLevel.Error);
+            FlowLogContext.Write(
+                $"流程执行异常 {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}",
+                FlowLogLevel.Error);
             _model.StatusText = "执行出错";
         }
         finally
@@ -126,10 +130,11 @@ internal sealed class FlowExecutionCoordinator
     }
 
     /// <summary>只执行指定节点一次，不调度其后继。</summary>
-    public async Task StepContinueAsync(NodeViewModel node, Action<string> logCallback)
+    public async Task StepContinueAsync(NodeModel node, Action<string> logCallback)
     {
         ArgumentNullException.ThrowIfNull(node);
-        if (!_nodes.Contains(node))
+        var nodes = GetNodes();
+        if (!nodes.Contains(node))
             throw new ArgumentException("选中节点不属于当前画布。", nameof(node));
         if (node.IsExcludedFromExecution)
         {
@@ -146,27 +151,34 @@ internal sealed class FlowExecutionCoordinator
         _model.IsRunning = true;
         _model.StatusText = $"正在单步执行节点 [{node.Name}]...";
         _executionCts = new CancellationTokenSource();
-        node.ResetStatus();
+        node.Status = NodeStatus.Idle;
+        using var sinkScope = FlowLogContext.EnterSink(_flowLogSink);
+        using var processScope = FlowLogContext.EnterProcess(_processName());
+        using var flowScope = FlowLogContext.EnterFlow(FlowLogName);
+        var runId = FlowLogContext.RunId;
         try
         {
             PrepareExecutionScopeRuntime();
             var graph = ExecutionGraphScope.Create(
-                _nodes.Select(item => item.Model),
+                nodes,
                 _connections,
-                node.Model.ParentExecutionContainerId,
-                node.Model.ExecutionLaneId);
+                node.ParentExecutionContainerId,
+                node.ExecutionLaneId);
             await _engine.ExecuteNodeAsync(
-                node.Model, graph.Nodes, graph.Connections,
-                _executionCts.Token, logCallback, Journal);
+                node, graph.Nodes, graph.Connections,
+                _executionCts.Token,
+                message => PanelLog(message, logCallback, runId),
+                Journal);
             _model.StatusText = $"节点 [{node.Name}] 单步执行完成";
         }
         catch (OperationCanceledException)
         {
+            PanelLog($"[单步][取消] [{node.Name}] 执行已取消", logCallback, runId, FlowLogLevel.Warning);
             _model.StatusText = $"节点 [{node.Name}] 单步执行已取消";
         }
         catch (Exception ex)
         {
-            logCallback($"[单步][错误] [{node.Name}] {ex.Message}");
+            PanelLog($"[单步][错误] [{node.Name}] {ex.Message}", logCallback, runId, FlowLogLevel.Error);
             _model.StatusText = $"节点 [{node.Name}] 单步执行失败";
         }
         finally
@@ -176,17 +188,24 @@ internal sealed class FlowExecutionCoordinator
     }
 
     /// <summary>从指定节点恢复或跳转，并继续当前作用域的可达路径。</summary>
-    public async Task ContinueFromNodeAsync(NodeViewModel node, Action<string> logCallback)
+    public async Task ContinueFromNodeAsync(NodeModel node, Action<string> logCallback)
     {
         ArgumentNullException.ThrowIfNull(node);
         ArgumentNullException.ThrowIfNull(logCallback);
-        if (!_nodes.Contains(node))
+        if (!GetNodes().Contains(node))
             throw new ArgumentException("选中节点不属于当前画布。", nameof(node));
         if (node.IsExcludedFromExecution) return;
 
+        using var sinkScope = FlowLogContext.EnterSink(_flowLogSink);
+        using var processScope = FlowLogContext.EnterProcess(_processName());
+        using var flowScope = FlowLogContext.EnterFlow(FlowLogName);
+        var runId = FlowLogContext.RunId;
+
         if (_model.IsRunning)
         {
-            await ResumeRunningParallelLaneAsync(node, logCallback);
+            await ResumeRunningParallelLaneAsync(
+                node,
+                message => PanelLog(message, logCallback, runId));
             return;
         }
 
@@ -197,34 +216,46 @@ internal sealed class FlowExecutionCoordinator
         {
             PrepareExecutionScopeRuntime();
             var token = _executionCts.Token;
-            var parentId = node.Model.ParentExecutionContainerId;
+            var parentId = node.ParentExecutionContainerId;
             if (parentId == null)
             {
                 var top = CreateTopLevelGraph();
                 var recovery = ExecutionGraphScope.CreateReachable(top.Nodes, top.Connections, node.Id);
                 await _engine.ExecuteAsync(
-                    recovery.Nodes, recovery.Connections, token, logCallback, journal: Journal);
+                    recovery.Nodes,
+                    recovery.Connections,
+                    token,
+                    message => PanelLog(message, logCallback, runId),
+                    journal: Journal);
             }
             else
             {
-                var parent = FindNode(parentId)?.Model
+                var parent = FindNode(parentId)
                     ?? throw new InvalidOperationException($"找不到节点 [{node.Name}] 的执行容器。");
                 var parentWasFailed = parent.Status == NodeStatus.Error;
-                await ResumeContainerAsync(parent, node.Id, token, logCallback);
+                await ResumeContainerAsync(
+                    parent,
+                    node.Id,
+                    token,
+                    message => PanelLog(message, logCallback, runId));
                 parent.Status = NodeStatus.Success;
                 if (parentWasFailed)
-                    await ExecuteTopLevelAfterAsync(parent.Id, token, logCallback);
+                    await ExecuteTopLevelAfterAsync(
+                        parent.Id,
+                        token,
+                        message => PanelLog(message, logCallback, runId));
             }
 
             _model.StatusText = $"从节点 [{node.Name}] 恢复执行完成";
         }
         catch (OperationCanceledException)
         {
+            PanelLog("[恢复][取消] 恢复执行已取消", logCallback, runId, FlowLogLevel.Warning);
             _model.StatusText = "恢复执行已取消";
         }
         catch (Exception ex)
         {
-            logCallback($"[恢复][错误] 从节点 [{node.Name}] 执行失败：{ex.Message}");
+            PanelLog($"[恢复][错误] 从节点 [{node.Name}] 执行失败：{ex.Message}", logCallback, runId, FlowLogLevel.Error);
             _model.StatusText = "恢复执行出错";
         }
         finally
@@ -248,7 +279,12 @@ internal sealed class FlowExecutionCoordinator
     /// <summary>无限循环执行画布，直到收到停止请求。</summary>
     public async Task RunLoopAsync(Action<string> logCallback)
     {
-        if (_model.IsRunning || _model.IsLoopRunning || !RunPreValidation(logCallback)) return;
+        if (_model.IsRunning || _model.IsLoopRunning) return;
+
+        using var sinkScope = FlowLogContext.EnterSink(_flowLogSink);
+        using var processScope = FlowLogContext.EnterProcess(_processName());
+        using var flowScope = FlowLogContext.EnterFlow(FlowLogName);
+        if (!RunPreValidation(logCallback)) return;
 
         _model.IsLoopRunning = true;
         _model.IsRunning = true;
@@ -256,12 +292,12 @@ internal sealed class FlowExecutionCoordinator
         _model.CurrentLoopIndex = 0;
         _executionCts = new CancellationTokenSource();
         long loopRunId = 0;
-
         try
         {
             _output.Clear();
-            logCallback("=== 开始循环执行 ===");
-            logCallback($"循环模式：间隔 {_model.LoopInterval}ms");
+            loopRunId = FlowLogContext.RunId;
+            PanelLog("=== 开始循环执行 ===", logCallback, loopRunId);
+            PanelLog($"循环模式：间隔 {_model.LoopInterval}ms", logCallback, loopRunId);
             var iteration = 0;
             using (ConsoleOutputRouter.EnterScope(message => DispatchLog(logCallback, message)))
             {
@@ -269,32 +305,30 @@ internal sealed class FlowExecutionCoordinator
                 {
                     _executionCts.Token.ThrowIfCancellationRequested();
                     iteration++;
+                    if (iteration > 1)
+                        FlowLogContext.BumpRun();
+                    loopRunId = FlowLogContext.RunId;
                     _model.CurrentLoopIndex = iteration;
-                    logCallback($"--- 第 {iteration} 次循环开始 ---");
+                    PanelLog($"--- 第 {iteration} 次循环开始 ---", logCallback, loopRunId);
                     _model.StatusText = $"循环执行中... 第 {iteration} 次";
-                    foreach (var node in _nodes)
-                        node.ResetStatus();
+                    foreach (var node in GetNodes())
+                        node.Status = NodeStatus.Idle;
                     PrepareExecutionScopeRuntime();
                     _executionOrder.Clear();
                     CurrentExecutionIndex = 0;
 
-                    using (FlowLogContext.EnterProcess(_processName() ?? FlowLogName))
-                    using (FlowLogContext.EnterFlow(FlowLogName))
-                    {
-                        void Panel(string message) => PanelLog(message, logCallback);
-                        loopRunId = FlowLogContext.RunId;
-                        var graph = CreateTopLevelGraph();
-                        await _engine.ExecuteAsync(
-                            graph.Nodes, graph.Connections, _executionCts.Token, Panel,
-                            _model.IsDebugMode ? OnBeforeNodeExecute : null,
-                            executionOrder: null,
-                            journal: Journal);
-                    }
+                    void Panel(string message) => PanelLog(message, logCallback, loopRunId);
+                    var graph = CreateTopLevelGraph();
+                    await _engine.ExecuteAsync(
+                        graph.Nodes, graph.Connections, _executionCts.Token, Panel,
+                        _model.IsDebugMode ? OnBeforeNodeExecute : null,
+                        executionOrder: null,
+                        journal: Journal);
 
-                    logCallback($"--- 第 {iteration} 次循环完成 ---");
+                    PanelLog($"--- 第 {iteration} 次循环完成 ---", logCallback, loopRunId);
                     if (_model.LoopInterval > 0)
                     {
-                        logCallback($"[等待 {_model.LoopInterval}ms 后开始下一次循环...]");
+                        PanelLog($"[等待 {_model.LoopInterval}ms 后开始下一次循环...]", logCallback, loopRunId);
                         await Task.Delay(_model.LoopInterval, _executionCts.Token);
                     }
                 }
@@ -302,12 +336,12 @@ internal sealed class FlowExecutionCoordinator
         }
         catch (OperationCanceledException)
         {
-            PanelLog("=== 已停止循环执行 ===", logCallback, loopRunId);
+            PanelLog("=== 已停止循环执行 ===", logCallback, loopRunId, FlowLogLevel.Warning);
             _model.StatusText = "循环执行已停止";
         }
         catch (Exception ex)
         {
-            PanelLog($"[错误] {ex.Message}", logCallback, loopRunId);
+            PanelLog($"[错误] {ex.Message}", logCallback, loopRunId, FlowLogLevel.Error);
             _model.StatusText = "循环执行出错";
         }
         finally
@@ -321,12 +355,14 @@ internal sealed class FlowExecutionCoordinator
     public void StopLoop()
     {
         if (!_model.IsLoopRunning) return;
-        _executionCts?.Cancel();
         _model.IsLoopRunning = false;
         _model.IsRunning = false;
         _model.IsPaused = false;
         _model.StatusText = "正在停止循环执行...";
         _output.Flush();
+        // Cancel 可能同步执行等待方 continuation；请求态必须先发布，
+        // 避免 RunLoopAsync 已写入的最终“已停止”状态被本方法随后覆盖。
+        _executionCts?.Cancel();
     }
 
     /// <summary>将当前编辑图编译为可创建隔离运行实例的不可变程序。</summary>
@@ -335,7 +371,7 @@ internal sealed class FlowExecutionCoordinator
         var (activeNodes, activeConnections) = CreateActiveGraph();
         return FlowProgram.FromDocument(_documentMapper.ToDocument(
             _model.TabTitle,
-            activeNodes.Select(node => node.Model),
+            activeNodes,
             activeConnections,
             _model));
     }
@@ -359,11 +395,11 @@ internal sealed class FlowExecutionCoordinator
     }
 
     /// <summary>恢复仍在运行的并行容器中的独立泳道。</summary>
-    private async Task ResumeRunningParallelLaneAsync(NodeViewModel node, Action<string> logCallback)
+    private async Task ResumeRunningParallelLaneAsync(NodeModel node, Action<string> logCallback)
     {
-        var parent = node.Model.ParentExecutionContainerId == null
+        var parent = node.ParentExecutionContainerId == null
             ? null
-            : FindNode(node.Model.ParentExecutionContainerId)?.Model as ParallelContainerNode;
+            : FindNode(node.ParentExecutionContainerId) as ParallelContainerNode;
         if (parent == null || _executionCts == null) return;
 
         try
@@ -372,11 +408,11 @@ internal sealed class FlowExecutionCoordinator
         }
         catch (OperationCanceledException) when (_executionCts.IsCancellationRequested)
         {
-            logCallback($"[恢复] 并行分支 [{node.Name}] 已取消");
+            PanelLog($"[恢复] 并行分支 [{node.Name}] 已取消", logCallback, level: FlowLogLevel.Warning);
         }
         catch (Exception ex)
         {
-            logCallback($"[恢复][错误] 并行分支 [{node.Name}] 恢复失败：{ex.Message}");
+            PanelLog($"[恢复][错误] 并行分支 [{node.Name}] 恢复失败：{ex.Message}", logCallback, level: FlowLogLevel.Error);
         }
     }
 
@@ -417,7 +453,7 @@ internal sealed class FlowExecutionCoordinator
     {
         var (activeNodes, activeConnections) = CreateActiveGraph();
         var report = FlowValidator.Analyze(
-            activeNodes.Select(node => node.Model).ToList(), activeConnections);
+            activeNodes, activeConnections);
         foreach (var diagnostic in report.Diagnostics)
         {
             var tag = diagnostic.Severity switch
@@ -426,12 +462,18 @@ internal sealed class FlowExecutionCoordinator
                 FlowDiagnosticSeverity.Warning => "警告",
                 _ => "提示"
             };
-            logCallback($"[校验][{tag}] {diagnostic.Message}");
+            var level = diagnostic.Severity switch
+            {
+                FlowDiagnosticSeverity.Error => FlowLogLevel.Error,
+                FlowDiagnosticSeverity.Warning => FlowLogLevel.Warning,
+                _ => FlowLogLevel.Information
+            };
+            PanelLog($"[校验][{tag}] {diagnostic.Message}", logCallback, level: level);
         }
 
         if (!report.HasErrors) return true;
         _model.StatusText = $"校验失败：{report.ErrorCount} 个错误";
-        logCallback($"=== 校验失败，共 {report.ErrorCount} 个错误 ===");
+        PanelLog($"=== 校验失败，共 {report.ErrorCount} 个错误 ===", logCallback, level: FlowLogLevel.Error);
         _output.Flush();
         return false;
     }
@@ -440,16 +482,15 @@ internal sealed class FlowExecutionCoordinator
     private void PrepareExecutionScopeRuntime()
     {
         var (activeNodes, activeConnections) = CreateActiveGraph();
-        var models = activeNodes.Select(node => node.Model).ToList();
-        var runtime = new ExecutionScopeRuntime(models, activeConnections, _engine);
-        foreach (var node in models)
+        var runtime = new ExecutionScopeRuntime(activeNodes, activeConnections, _engine);
+        foreach (var node in activeNodes)
             node.ExecutionScopeRuntime = runtime;
     }
 
     /// <summary>筛选当前画布的活动节点与有效连线。</summary>
-    private (List<NodeViewModel> Nodes, List<ConnectionModel> Connections) CreateActiveGraph()
+    private (List<NodeModel> Nodes, List<ConnectionModel> Connections) CreateActiveGraph()
     {
-        var activeNodes = _nodes.Where(node => !node.IsExcludedFromExecution).ToList();
+        var activeNodes = GetNodes().Where(node => !node.IsExcludedFromExecution).ToList();
         var activeIds = activeNodes.Select(node => node.Id).ToHashSet();
         var activeConnections = _connections.Where(connection =>
                 activeIds.Contains(connection.SourceNodeId) &&
@@ -460,10 +501,14 @@ internal sealed class FlowExecutionCoordinator
 
     /// <summary>创建调度器可见的顶层复合图。</summary>
     private ExecutionGraphScope<NodeModel> CreateTopLevelGraph() =>
-        ExecutionGraphScope.CreateTopLevel(_nodes.Select(node => node.Model), _connections);
+        ExecutionGraphScope.CreateTopLevel(GetNodes(), _connections);
 
     /// <summary>统一发布面板和文件日志，并过滤低价值剪枝消息。</summary>
-    private void PanelLog(string message, Action<string> logCallback, long runId = 0)
+    private void PanelLog(
+        string message,
+        Action<string> logCallback,
+        long runId = 0,
+        FlowLogLevel? level = null)
     {
         if (message.StartsWith("[跳过]") || message.StartsWith("[分支]")) return;
         var id = runId > 0 ? runId : FlowLogContext.RunId;
@@ -471,12 +516,12 @@ internal sealed class FlowExecutionCoordinator
             message = $"#{id} {message}";
         DispatchLog(logCallback, message);
 
-        var level = message.Contains("[错误]") || message.Contains("[类型错误]") || message.Contains("[堆栈]")
-            ? ELogLevel.Error
-            : message.Contains("[容错]") || message.Contains("[重试]")
-                ? ELogLevel.Warning
-                : ELogLevel.Information;
-        FlowLogContext.Write(message, level);
+        var resolvedLevel = level ?? (message.Contains("[错误]") || message.Contains("[类型错误]") || message.Contains("[堆栈]")
+            ? FlowLogLevel.Error
+            : message.Contains("[警告]") || message.Contains("[容错]") || message.Contains("[重试]") || message.Contains("[取消]")
+                ? FlowLogLevel.Warning
+                : FlowLogLevel.Information);
+        FlowLogContext.Write(message, resolvedLevel);
     }
 
     /// <summary>通过宿主线程 adapter 发布执行日志。</summary>
@@ -484,8 +529,11 @@ internal sealed class FlowExecutionCoordinator
         => _uiDispatcher.Invoke(() => logCallback(message));
 
     /// <summary>查找当前画布节点。</summary>
-    private NodeViewModel? FindNode(string nodeId) =>
-        _nodes.FirstOrDefault(node => node.Id == nodeId);
+    private NodeModel? FindNode(string nodeId) =>
+        GetNodes().FirstOrDefault(node => node.Id == nodeId);
+
+    /// <summary>获取调用时刻的节点模型快照，避免执行模块依赖画布 ViewModel 集合。</summary>
+    private IReadOnlyList<NodeModel> GetNodes() => _nodeSnapshot();
 
     /// <summary>释放执行资源并恢复公共运行状态。</summary>
     private void FinishExecutionSession(bool resetDebug)

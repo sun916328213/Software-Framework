@@ -4,7 +4,6 @@ using FlowEditor.Core;
 using FlowEditor.Interfaces;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
-using FlowEditor.ViewModels;
 
 namespace FlowEditor.Services.Documents;
 
@@ -15,7 +14,7 @@ namespace FlowEditor.Services.Documents;
 internal sealed class FlowDocumentSession
 {
     private readonly FlowChartModel _model;
-    private readonly ObservableCollection<NodeViewModel> _nodes;
+    private readonly Func<IReadOnlyList<NodeModel>> _nodeSnapshot;
     private readonly ObservableCollection<ConnectionModel> _connections;
     private readonly IFlowDocumentStore _store;
     private readonly FlowDocumentMapper _mapper;
@@ -27,7 +26,7 @@ internal sealed class FlowDocumentSession
     /// <summary>创建绑定到一个画布的文档会话。</summary>
     public FlowDocumentSession(
         FlowChartModel model,
-        ObservableCollection<NodeViewModel> nodes,
+        Func<IReadOnlyList<NodeModel>> nodeSnapshot,
         ObservableCollection<ConnectionModel> connections,
         IFlowDocumentStore store,
         FlowDocumentMapper mapper,
@@ -37,7 +36,7 @@ internal sealed class FlowDocumentSession
         Action clearNodes)
     {
         _model = model ?? throw new ArgumentNullException(nameof(model));
-        _nodes = nodes ?? throw new ArgumentNullException(nameof(nodes));
+        _nodeSnapshot = nodeSnapshot ?? throw new ArgumentNullException(nameof(nodeSnapshot));
         _connections = connections ?? throw new ArgumentNullException(nameof(connections));
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
@@ -59,8 +58,8 @@ internal sealed class FlowDocumentSession
             _model.CurrentFilePath = path;
             _model.IsModified = false;
             _model.StatusText = $"已保存：{path}";
-            foreach (var node in _nodes)
-                node.Model.OnFlowSaved();
+            foreach (var node in GetNodes())
+                node.OnFlowSaved();
             return true;
         }
         catch (Exception ex)
@@ -129,9 +128,12 @@ internal sealed class FlowDocumentSession
     private FlowChartDocumentModel BuildDocument() =>
         _mapper.ToDocument(
             _model.TabTitle,
-            _nodes.Select(node => node.Model),
+            GetNodes(),
             _connections,
             _model);
+
+    /// <summary>获取调用时刻的节点模型快照，避免文档模块依赖画布 ViewModel 集合。</summary>
+    private IReadOnlyList<NodeModel> GetNodes() => _nodeSnapshot();
 
     /// <summary>从文档重建节点、连线和画布配置。</summary>
     private void RestoreDocument(FlowChartDocumentModel document)

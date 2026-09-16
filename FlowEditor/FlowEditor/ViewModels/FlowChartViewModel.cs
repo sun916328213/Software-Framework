@@ -25,17 +25,27 @@ public partial class FlowChartViewModel : ObservableObject
     private readonly FlowChartService _session;
     private readonly FlowExecutionCoordinator _execution;
     private readonly FlowDocumentSession _documents;
-    private readonly FlowCanvasSession _canvas;
+    private readonly FlowCanvasViewModelAdapter _canvas;
     private readonly FlowOutputBuffer _output;
     private readonly IExportService _exportService;
     private readonly IDialogService _dialogService;
     private readonly ConnectionService _connectionService;
+    private string _trackedLogRouteTitle;
 
     /// <summary>流程图运行时模型。View 直接绑定到此模型属性。</summary>
     public FlowChartModel Model => _session.Model;
 
     /// <summary>设置流程名（容器向下传播，供节点日志按「流程名\任务名」路由）。</summary>
-    public void SetProcessName(string? name) => _session.ProcessName = name;
+    public void SetProcessName(string? name)
+    {
+        if (string.Equals(_session.ProcessName, name, StringComparison.Ordinal)) return;
+        ReleaseLogRoute();
+        _session.ProcessName = name;
+    }
+
+    /// <summary>释放当前标签页对应的进程级日志运行序号缓存。</summary>
+    public void ReleaseLogRoute()
+        => FlowLogContext.ReleaseRoute(_session.ProcessName, Model.TabTitle);
 
     /// <summary>画布上所有节点。</summary>
     public ObservableCollection<NodeViewModel> Nodes => _session.Nodes;
@@ -67,6 +77,7 @@ public partial class FlowChartViewModel : ObservableObject
         _exportService = exportService ?? throw new ArgumentNullException(nameof(exportService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _connectionService = connectionService ?? throw new ArgumentNullException(nameof(connectionService));
+        _trackedLogRouteTitle = Model.TabTitle;
         InitializeCommands();
 
         // 节点集合变化时刷新命令状态
@@ -77,6 +88,11 @@ public partial class FlowChartViewModel : ObservableObject
         {
             if (e.PropertyName == nameof(FlowChartModel.IsRunning))
                 NotifyCanExecuteChanged();
+            else if (e.PropertyName == nameof(FlowChartModel.TabTitle))
+            {
+                FlowLogContext.ReleaseRoute(_session.ProcessName, _trackedLogRouteTitle);
+                _trackedLogRouteTitle = Model.TabTitle;
+            }
         };
     }
 

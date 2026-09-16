@@ -1,10 +1,8 @@
-using System.Collections.ObjectModel;
 using FlowEditor.Core;
 using FlowEditor.Interfaces;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
 using FlowEditor.Nodes.FlowControl;
-using FlowEditor.ViewModels;
 
 namespace FlowEditor.Services.Editing;
 
@@ -16,8 +14,8 @@ internal sealed class FlowCanvasSession
 {
     private readonly IFlowChartService _owner;
     private readonly FlowChartModel _model;
-    private readonly ObservableCollection<NodeViewModel> _nodes;
-    private readonly ObservableCollection<ConnectionModel> _connections;
+    private readonly Func<IReadOnlyList<NodeModel>> _nodeSnapshot;
+    private readonly ICollection<ConnectionModel> _connections;
     private readonly IUndoRedoService _undoRedo;
     private readonly FlowOutputBuffer _output;
 
@@ -25,21 +23,18 @@ internal sealed class FlowCanvasSession
     public FlowCanvasSession(
         IFlowChartService owner,
         FlowChartModel model,
-        ObservableCollection<NodeViewModel> nodes,
-        ObservableCollection<ConnectionModel> connections,
+        Func<IReadOnlyList<NodeModel>> nodeSnapshot,
+        ICollection<ConnectionModel> connections,
         IUndoRedoService undoRedo,
         FlowOutputBuffer output)
     {
         _owner = owner ?? throw new ArgumentNullException(nameof(owner));
         _model = model ?? throw new ArgumentNullException(nameof(model));
-        _nodes = nodes ?? throw new ArgumentNullException(nameof(nodes));
+        _nodeSnapshot = nodeSnapshot ?? throw new ArgumentNullException(nameof(nodeSnapshot));
         _connections = connections ?? throw new ArgumentNullException(nameof(connections));
         _undoRedo = undoRedo ?? throw new ArgumentNullException(nameof(undoRedo));
         _output = output ?? throw new ArgumentNullException(nameof(output));
     }
-
-    /// <summary>批量节点操作是否正在进行。</summary>
-    public bool IsBatchOperation { get; set; }
 
     /// <summary>请求宿主将给定内容范围缩放到视口。</summary>
     public event EventHandler<(double contentWidth, double contentHeight, double offsetX, double offsetY)>?
@@ -59,23 +54,24 @@ internal sealed class FlowCanvasSession
     /// <summary>计算全部节点视觉范围并请求宿主自适应显示。</summary>
     public void ZoomToFit()
     {
-        if (_nodes.Count == 0)
+        var nodes = GetNodes();
+        if (nodes.Count == 0)
         {
             ZoomReset();
             return;
         }
 
-        var minX = _nodes.Min(node => node.X);
-        var minY = _nodes.Min(node => node.Y);
-        var maxX = _nodes.Max(node => node.X + GetVisualWidth(node.Model));
-        var maxY = _nodes.Max(node => node.Y + GetVisualHeight(node.Model));
+        var minX = nodes.Min(node => node.X);
+        var minY = nodes.Min(node => node.Y);
+        var maxX = nodes.Max(node => node.X + GetVisualWidth(node));
+        var maxY = nodes.Max(node => node.Y + GetVisualHeight(node));
         ZoomToFitRequested?.Invoke(this,
             (maxX - minX + 200, maxY - minY + 200, minX - 100, minY - 100));
     }
 
     /// <summary>查找当前画布中的节点。</summary>
-    public NodeViewModel? FindNode(string nodeId) =>
-        _nodes.FirstOrDefault(node => node.Id == nodeId);
+    public NodeModel? FindNode(string nodeId) =>
+        GetNodes().FirstOrDefault(node => node.Id == nodeId);
 
     /// <summary>清空节点、连线、撤销栈和输出，并恢复空画布状态。</summary>
     public void ClearAll()
@@ -89,63 +85,45 @@ internal sealed class FlowCanvasSession
         _model.IsModified = false;
     }
 
-    /// <summary>添加已创建的节点 ViewModel 并完成模型附加。</summary>
-    public void AddNode(NodeViewModel node)
-    {
-        ArgumentNullException.ThrowIfNull(node);
-        node.Model.AttachTo(_owner);
-        _nodes.Add(node);
-    }
-
-    /// <summary>添加节点模型并返回其画布 ViewModel。</summary>
-    public NodeViewModel AddNode(NodeModel model)
+    /// <summary>把节点模型附加到当前流程，并返回该模型。</summary>
+    public NodeModel AddNode(NodeModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
         model.AttachTo(_owner);
-        var viewModel = new NodeViewModel(model);
-        _nodes.Add(viewModel);
-        return viewModel;
+        return model;
     }
 
     /// <summary>移除节点并触发卸载生命周期。</summary>
-    public void RemoveNode(NodeViewModel node)
+    public void RemoveNode(NodeModel node)
     {
         ArgumentNullException.ThrowIfNull(node);
-        if (!_nodes.Contains(node)) return;
-        node.Model.DetachFromFlow();
-        _nodes.Remove(node);
+        if (!GetNodes().Contains(node)) return;
+        node.DetachFromFlow();
     }
 
     /// <summary>批量卸载并清空全部节点。</summary>
     public void ClearNodes()
     {
-        IsBatchOperation = true;
-        try
-        {
-            foreach (var node in _nodes.ToList())
-                RemoveNode(node);
-        }
-        finally
-        {
-            IsBatchOperation = false;
-        }
+        foreach (var node in GetNodes())
+            node.DetachFromFlow(isBatchOperation: true);
     }
 
     /// <summary>解析一次拖动需要共同移动的选中节点、容器及其后代节点。</summary>
-    internal IReadOnlyList<NodeViewModel> ResolveDragParticipants(
-        NodeViewModel anchor,
-        IEnumerable<NodeViewModel> selection)
+    internal IReadOnlyList<NodeModel> ResolveDragParticipants(
+        NodeModel anchor,
+        IEnumerable<NodeModel> selection)
     {
+        var nodes = GetNodes();
         var participants = selection;
         var movingContainer = IsCanvasContainer(anchor);
-        if (anchor.Model is InactiveNodeContainerNode)
+        if (anchor is InactiveNodeContainerNode)
         {
-            participants = participants.Concat(_nodes.Where(candidate =>
+            participants = participants.Concat(nodes.Where(candidate =>
                 candidate != anchor && IsInsideContainer(anchor, candidate)));
         }
-        else if (anchor.Model is IExecutionScopeContainer)
+        else if (anchor is IExecutionScopeContainer)
         {
-            participants = participants.Concat(_nodes.Where(candidate =>
+            participants = participants.Concat(nodes.Where(candidate =>
                 candidate != anchor && IsExecutionDescendantOf(candidate, anchor.Id)));
         }
 
@@ -156,28 +134,29 @@ internal sealed class FlowCanvasSession
     }
 
     /// <summary>根据节点中心位置刷新“不执行”状态以及执行容器和泳道归属。</summary>
-    internal void RefreshExecutionMembership(NodeViewModel node)
+    internal void RefreshExecutionMembership(NodeModel node)
     {
-        if (node.Model is InactiveNodeContainerNode)
+        var nodes = GetNodes();
+        if (node is InactiveNodeContainerNode)
         {
             node.IsExcludedFromExecution = true;
-            foreach (var candidate in _nodes.Where(item =>
-                         item != node && item.Model is not InactiveNodeContainerNode).ToList())
+            foreach (var candidate in nodes.Where(item =>
+                         item != node && item is not InactiveNodeContainerNode).ToList())
             {
                 RefreshExecutionMembership(candidate);
             }
             return;
         }
 
-        var inactiveContainer = _nodes.FirstOrDefault(container =>
-            container.Model is InactiveNodeContainerNode &&
+        var inactiveContainer = nodes.FirstOrDefault(container =>
+            container is InactiveNodeContainerNode &&
             IsInsideContainer(container, node));
         if (inactiveContainer != null)
         {
-            var changed = !node.IsExcludedFromExecution || node.Model.ParentExecutionContainerId != null;
+            var changed = !node.IsExcludedFromExecution || node.ParentExecutionContainerId != null;
             node.IsExcludedFromExecution = true;
-            node.Model.ParentExecutionContainerId = null;
-            node.Model.ExecutionLaneId = null;
+            node.ParentExecutionContainerId = null;
+            node.ExecutionLaneId = null;
             if (changed)
             {
                 RemoveConnectionsOutsideCurrentScope(node);
@@ -187,21 +166,21 @@ internal sealed class FlowCanvasSession
         }
 
         node.IsExcludedFromExecution = false;
-        var executionContainer = _nodes
+        var executionContainer = nodes
             .Where(container =>
                 container != node &&
-                container.Model is IExecutionScopeContainer &&
+                container is IExecutionScopeContainer &&
                 !IsExecutionDescendantOf(container, node.Id) &&
                 IsInsideContainer(container, node))
-            .OrderBy(container => GetVisualWidth(container.Model) * GetVisualHeight(container.Model))
+            .OrderBy(container => GetVisualWidth(container) * GetVisualHeight(container))
             .FirstOrDefault();
 
-        var oldParentId = node.Model.ParentExecutionContainerId;
+        var oldParentId = node.ParentExecutionContainerId;
         var newParentId = executionContainer?.Id;
         var newLaneId = executionContainer == null ? null : ResolveLaneId(executionContainer, node);
-        var membershipChanged = oldParentId != newParentId || node.Model.ExecutionLaneId != newLaneId;
-        node.Model.ParentExecutionContainerId = newParentId;
-        node.Model.ExecutionLaneId = newLaneId;
+        var membershipChanged = oldParentId != newParentId || node.ExecutionLaneId != newLaneId;
+        node.ParentExecutionContainerId = newParentId;
+        node.ExecutionLaneId = newLaneId;
 
         if (!membershipChanged)
             return;
@@ -216,8 +195,8 @@ internal sealed class FlowCanvasSession
     /// <summary>重新计算全部非停用容器节点的执行容器和泳道归属。</summary>
     internal void RefreshAllExecutionMembership()
     {
-        foreach (var candidate in _nodes.Where(node =>
-                     node.Model is not InactiveNodeContainerNode).ToList())
+        foreach (var candidate in GetNodes().Where(node =>
+                     node is not InactiveNodeContainerNode).ToList())
         {
             RefreshExecutionMembership(candidate);
         }
@@ -227,51 +206,52 @@ internal sealed class FlowCanvasSession
     private bool ShouldPreserveLoopBoundaryConnections(string? oldParentId, string? newParentId)
     {
         if (oldParentId == newParentId) return true;
-        var oldIsLoop = oldParentId != null && _nodes.Any(candidate =>
-            candidate.Id == oldParentId && candidate.Model is LoopContainerNode);
-        var newIsLoop = newParentId != null && _nodes.Any(candidate =>
-            candidate.Id == newParentId && candidate.Model is LoopContainerNode);
+        var nodes = GetNodes();
+        var oldIsLoop = oldParentId != null && nodes.Any(candidate =>
+            candidate.Id == oldParentId && candidate is LoopContainerNode);
+        var newIsLoop = newParentId != null && nodes.Any(candidate =>
+            candidate.Id == newParentId && candidate is LoopContainerNode);
         return (oldIsLoop && newParentId == null) || (newIsLoop && oldParentId == null);
     }
 
     /// <summary>判断节点中心是否位于指定画布容器范围内。</summary>
-    private static bool IsInsideContainer(NodeViewModel container, NodeViewModel node)
+    private static bool IsInsideContainer(NodeModel container, NodeModel node)
     {
-        var centerX = node.X + GetVisualWidth(node.Model) / 2;
-        var centerY = node.Y + GetVisualHeight(node.Model) / 2;
-        var right = container.X + GetVisualWidth(container.Model);
-        var bottom = container.Y + GetVisualHeight(container.Model);
+        var centerX = node.X + GetVisualWidth(node) / 2;
+        var centerY = node.Y + GetVisualHeight(node) / 2;
+        var right = container.X + GetVisualWidth(container);
+        var bottom = container.Y + GetVisualHeight(container);
         return centerX >= container.X && centerX <= right &&
                centerY >= container.Y && centerY <= bottom;
     }
 
     /// <summary>判断节点是否为可在画布上承载子节点的容器。</summary>
-    private static bool IsCanvasContainer(NodeViewModel node) =>
-        node.Model is InactiveNodeContainerNode or IExecutionScopeContainer;
+    private static bool IsCanvasContainer(NodeModel node) =>
+        node is InactiveNodeContainerNode or IExecutionScopeContainer;
 
     /// <summary>判断节点是否属于指定执行容器的任意层级后代。</summary>
-    private bool IsExecutionDescendantOf(NodeViewModel candidate, string containerId)
+    private bool IsExecutionDescendantOf(NodeModel candidate, string containerId)
     {
-        var parentId = candidate.Model.ParentExecutionContainerId;
+        var parentId = candidate.ParentExecutionContainerId;
         var visited = new HashSet<string>();
         while (parentId != null && visited.Add(parentId))
         {
             if (parentId == containerId) return true;
-            parentId = _nodes.FirstOrDefault(node => node.Id == parentId)
-                ?.Model.ParentExecutionContainerId;
+            parentId = GetNodes().FirstOrDefault(node => node.Id == parentId)
+                ?.ParentExecutionContainerId;
         }
         return false;
     }
 
     /// <summary>解析节点在指定执行容器中的泳道标识。</summary>
-    private static string? ResolveLaneId(NodeViewModel container, NodeViewModel node)
+    private static string? ResolveLaneId(NodeModel container, NodeModel node)
     {
-        if (container.Model is not IExecutionScopeContainer scope || scope.ExecutionLanes.Count == 0)
+        if (container is not IExecutionScopeContainer scope || scope.ExecutionLanes.Count == 0)
             return null;
         const double headerHeight = 64;
         const double bottomMargin = 16;
         var contentHeight = Math.Max(1, scope.ContainerHeight - headerHeight - bottomMargin);
-        var centerY = node.Y + GetVisualHeight(node.Model) / 2;
+        var centerY = node.Y + GetVisualHeight(node) / 2;
         var relativeY = Math.Clamp(centerY - container.Y - headerHeight, 0, contentHeight - 0.001);
         var index = Math.Clamp(
             (int)(relativeY / contentHeight * scope.ExecutionLanes.Count),
@@ -281,13 +261,13 @@ internal sealed class FlowCanvasSession
     }
 
     /// <summary>获取执行泳道的显示名称。</summary>
-    private static string GetLaneName(NodeViewModel container, string? laneId) =>
-        container.Model is IExecutionScopeContainer scope
+    private static string GetLaneName(NodeModel container, string? laneId) =>
+        container is IExecutionScopeContainer scope
             ? scope.ExecutionLanes.FirstOrDefault(lane => lane.Id == laneId)?.Name ?? "未指定泳道"
             : "未指定泳道";
 
     /// <summary>移除节点迁移后跨越当前执行作用域的非法连线。</summary>
-    private void RemoveConnectionsOutsideCurrentScope(NodeViewModel node)
+    private void RemoveConnectionsOutsideCurrentScope(NodeModel node)
     {
         foreach (var connection in _connections.Where(connection =>
                      connection.SourceNodeId == node.Id || connection.TargetNodeId == node.Id).ToList())
@@ -295,11 +275,11 @@ internal sealed class FlowCanvasSession
             var otherId = connection.SourceNodeId == node.Id
                 ? connection.TargetNodeId
                 : connection.SourceNodeId;
-            var other = _nodes.FirstOrDefault(candidate => candidate.Id == otherId);
+            var other = GetNodes().FirstOrDefault(candidate => candidate.Id == otherId);
             if (other == null ||
                 node.IsExcludedFromExecution ||
-                other.Model.ParentExecutionContainerId != node.Model.ParentExecutionContainerId ||
-                other.Model.ExecutionLaneId != node.Model.ExecutionLaneId)
+                other.ParentExecutionContainerId != node.ParentExecutionContainerId ||
+                other.ExecutionLaneId != node.ExecutionLaneId)
             {
                 _connections.Remove(connection);
             }
@@ -321,4 +301,7 @@ internal sealed class FlowCanvasSession
         IExecutionScopeContainer execution => execution.ContainerHeight,
         _ => FlowChartModel.NodeHeight
     };
+
+    /// <summary>获取稳定的当前节点快照，供一次画布规则计算使用。</summary>
+    private IReadOnlyList<NodeModel> GetNodes() => _nodeSnapshot();
 }

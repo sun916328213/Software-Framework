@@ -44,7 +44,7 @@ public class FlowChartService : IFlowChartService
     internal FlowDocumentSession Documents { get; }
 
     /// <summary>当前会话的画布编辑模块。</summary>
-    internal FlowCanvasSession Canvas { get; }
+    internal FlowCanvasViewModelAdapter Canvas { get; }
 
     /// <summary>创建流程图应用模块。</summary>
     /// <param name="documentStore">流程文档存储 adapter。</param>
@@ -54,6 +54,7 @@ public class FlowChartService : IFlowChartService
     /// <param name="nodeNotifications">节点信息提示 adapter；空值时使用无头 adapter。</param>
     /// <param name="uiDispatcher">宿主 UI 线程调度 adapter；空值时在当前线程执行。</param>
     /// <param name="documentMapper">运行时模型与流程文档之间的 mapper。</param>
+    /// <param name="flowLogSink">由宿主 IoC 注入的结构化流程日志 adapter；空值时不落盘。</param>
     public FlowChartService(
         IFlowDocumentStore documentStore,
         FlowChartExecutionEngine engine,
@@ -61,7 +62,8 @@ public class FlowChartService : IFlowChartService
         INodeEditorLauncher? nodeEditorLauncher = null,
         INodeNotificationSink? nodeNotifications = null,
         IUiDispatcher? uiDispatcher = null,
-        FlowDocumentMapper? documentMapper = null)
+        FlowDocumentMapper? documentMapper = null,
+        IFlowLogSink? flowLogSink = null)
     {
         ArgumentNullException.ThrowIfNull(documentStore);
         ArgumentNullException.ThrowIfNull(engine);
@@ -72,12 +74,18 @@ public class FlowChartService : IFlowChartService
         var mapper = documentMapper ?? new FlowDocumentMapper();
         Output = new FlowOutputBuffer(text => Model.OutputText = text, dispatcher);
         UndoRedo = new UndoRedoService();
-        Canvas = new FlowCanvasSession(this, Model, Nodes, Connections, UndoRedo, Output);
+        var canvasSession = new FlowCanvasSession(
+            this, Model, () => Nodes.Select(node => node.Model).ToList(),
+            Connections, UndoRedo, Output);
+        Canvas = new FlowCanvasViewModelAdapter(canvasSession, Nodes);
         Execution = new FlowExecutionCoordinator(
-            Model, Nodes, Connections, engine, mapper, dispatcher, Output,
-            () => ProcessName);
+            Model, () => Nodes.Select(node => node.Model).ToList(), Connections,
+            engine, mapper, dispatcher, Output,
+            () => ProcessName,
+            flowLogSink ?? NullFlowLogSink.Instance);
         Documents = new FlowDocumentSession(
-            Model, Nodes, Connections, documentStore, mapper, dialogService, UndoRedo,
+            Model, () => Nodes.Select(node => node.Model).ToList(), Connections,
+            documentStore, mapper, dialogService, UndoRedo,
             node => Canvas.AddNode(node), Canvas.ClearNodes);
     }
 

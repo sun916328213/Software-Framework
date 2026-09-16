@@ -69,6 +69,23 @@ public sealed class FlowDocumentMapperTests
         Assert.DoesNotContain("\"ZoomLevel\"", json);
     }
 
+    /// <summary>验证自有日志等级沿用旧名称，历史日志节点文档可无损还原。</summary>
+    [Fact]
+    public void LogNodeLevel_RoundTripsLegacyEnumNames()
+    {
+        var mapper = new FlowDocumentMapper();
+        var original = new LogNode { Level = FlowLogLevel.SysError };
+        var document = mapper.ToDocument("log-level", [original], [], new FlowChartModel());
+        var json = JsonSerializer.Serialize(document, FlowDocumentJson.Options);
+        var restoredDocument = JsonSerializer.Deserialize<FlowChartDocumentModel>(
+            json,
+            FlowDocumentJson.Options);
+
+        Assert.Contains("SysError", json, StringComparison.Ordinal);
+        var restored = Assert.IsType<LogNode>(mapper.ToNode(Assert.Single(restoredDocument!.Nodes)));
+        Assert.Equal(FlowLogLevel.SysError, restored.Level);
+    }
+
     /// <summary>记录节点描述符并返回预设节点的测试 factory。</summary>
     private sealed class RecordingNodeFactory : INodeFactory
     {

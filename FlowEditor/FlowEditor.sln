@@ -1,0 +1,57 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Runtime", "FlowEditor.Runtime\FlowEditor.Runtime.csproj", "{10A0D7CB-69F6-4DAB-9BD6-27696D472237}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor", "FlowEditor\FlowEditor.csproj", "{53A2F41B-CF03-49AA-B675-E83CF1203F88}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.PluginContractFixture", "FlowEditor.PluginContractFixture\FlowEditor.PluginContractFixture.csproj", "{E6FC10C2-4713-4D97-A9D5-2A047FC9E2FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Tests", "FlowEditorTest\FlowEditor.Tests.csproj", "{FCB1C333-FE57-48B3-A705-AD1E068E32EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Runtime.Smoke", "FlowEditor.Runtime.Smoke\FlowEditor.Runtime.Smoke.csproj", "{7D87F19C-D8CF-4D0B-AE61-4661A1D7F94F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFControl.Host.Tests", "WPFControl.Host.Tests\WPFControl.Host.Tests.csproj", "{80D35D4A-120C-4ED2-817D-A4256CFEB19A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.DataManagerLogging", "FlowEditor.DataManagerLogging\FlowEditor.DataManagerLogging.csproj", "{9C6FBB96-BA34-4E49-91B4-1C27DDC4DE9F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{10A0D7CB-69F6-4DAB-9BD6-27696D472237}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10A0D7CB-69F6-4DAB-9BD6-27696D472237}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10A0D7CB-69F6-4DAB-9BD6-27696D472237}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10A0D7CB-69F6-4DAB-9BD6-27696D472237}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53A2F41B-CF03-49AA-B675-E83CF1203F88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53A2F41B-CF03-49AA-B675-E83CF1203F88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53A2F41B-CF03-49AA-B675-E83CF1203F88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53A2F41B-CF03-49AA-B675-E83CF1203F88}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6FC10C2-4713-4D97-A9D5-2A047FC9E2FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6FC10C2-4713-4D97-A9D5-2A047FC9E2FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6FC10C2-4713-4D97-A9D5-2A047FC9E2FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6FC10C2-4713-4D97-A9D5-2A047FC9E2FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCB1C333-FE57-48B3-A705-AD1E068E32EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCB1C333-FE57-48B3-A705-AD1E068E32EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCB1C333-FE57-48B3-A705-AD1E068E32EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCB1C333-FE57-48B3-A705-AD1E068E32EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D87F19C-D8CF-4D0B-AE61-4661A1D7F94F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D87F19C-D8CF-4D0B-AE61-4661A1D7F94F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D87F19C-D8CF-4D0B-AE61-4661A1D7F94F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D87F19C-D8CF-4D0B-AE61-4661A1D7F94F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80D35D4A-120C-4ED2-817D-A4256CFEB19A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80D35D4A-120C-4ED2-817D-A4256CFEB19A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80D35D4A-120C-4ED2-817D-A4256CFEB19A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80D35D4A-120C-4ED2-817D-A4256CFEB19A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C6FBB96-BA34-4E49-91B4-1C27DDC4DE9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C6FBB96-BA34-4E49-91B4-1C27DDC4DE9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C6FBB96-BA34-4E49-91B4-1C27DDC4DE9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C6FBB96-BA34-4E49-91B4-1C27DDC4DE9F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

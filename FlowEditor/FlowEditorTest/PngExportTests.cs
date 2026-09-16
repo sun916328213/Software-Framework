@@ -10,8 +10,10 @@ using Xunit;
 
 namespace FlowEditorTest;
 
+/// <summary>验证逻辑画布范围和 PNG 位图编码的裁剪、缩放及透明通道。</summary>
 public class PngExportTests
 {
+    /// <summary>确保导出范围始终使用完整逻辑画布而不是当前滚动视口。</summary>
     [Fact]
     public void CanvasExportBounds_AlwaysUseWholeLogicalCanvas()
     {
@@ -23,6 +25,7 @@ public class PngExportTests
         Assert.Equal(new Rect(0, 0, 4200, 3100), vm.GetCanvasExportBounds());
     }
 
+    /// <summary>确保远端内容按指定边界裁剪，并生成具有透明通道的 2 倍分辨率 PNG。</summary>
     [Fact]
     public void ExportToPng_ContentBoundsAndScale_ProduceCroppedHighResolutionImage()
     {

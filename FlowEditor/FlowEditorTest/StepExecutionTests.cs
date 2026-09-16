@@ -17,7 +17,7 @@ public class StepExecutionTests
         var selected = service.Canvas.AddNode(selectedModel);
         service.Canvas.AddNode(otherModel);
 
-        await service.Execution.StepContinueAsync(selected, _ => { });
+        await service.Execution.StepContinueAsync(selected.Model, _ => { });
 
         Assert.Equal(1, selectedModel.Executions);
         Assert.Equal(0, otherModel.Executions);
@@ -34,7 +34,7 @@ public class StepExecutionTests
         service.Connections.Add(Data(source, selected));
         sourceModel.SyncOutputValues();
 
-        await service.Execution.StepContinueAsync(selected, _ => { });
+        await service.Execution.StepContinueAsync(selected.Model, _ => { });
 
         Assert.Equal(101, selectedModel.Value);
         Assert.Equal(0, sourceModel.Count);
@@ -48,7 +48,7 @@ public class StepExecutionTests
         var selected = service.Canvas.AddNode(model);
         var logs = new List<string>();
 
-        await service.Execution.StepContinueAsync(selected, logs.Add);
+        await service.Execution.StepContinueAsync(selected.Model, logs.Add);
 
         Assert.Equal(0, model.Executions);
         Assert.Contains(logs, message => message.Contains("不执行节点容器"));

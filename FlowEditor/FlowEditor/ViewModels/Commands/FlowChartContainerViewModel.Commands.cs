@@ -24,7 +24,7 @@ public partial class FlowChartContainerViewModel
     /// <summary>获取全部流程另存为的命令。</summary>
     public RelayCommand SaveAllAsCommand { get; private set; } = null!;
     /// <summary>获取加载多流程文档的命令。</summary>
-    public RelayCommand LoadAllCommand { get; private set; } = null!;
+    public AsyncRelayCommand LoadAllCommand { get; private set; } = null!;
     /// <summary>获取显示流程图快捷键说明的命令。</summary>
     public RelayCommand ShowShortcutHelpCommand { get; private set; } = null!;
 
@@ -40,7 +40,7 @@ public partial class FlowChartContainerViewModel
         CloseTabCommand = new RelayCommand<FlowChartViewModel>(CloseTab, CanCloseTab);
         SaveAllCommand = new RelayCommand(SaveAll);
         SaveAllAsCommand = new RelayCommand(SaveAllAs);
-        LoadAllCommand = new RelayCommand(LoadAll);
+        LoadAllCommand = new AsyncRelayCommand(LoadAllAsync);
         ShowShortcutHelpCommand = new RelayCommand(ShowShortcutHelp);
     }
 }

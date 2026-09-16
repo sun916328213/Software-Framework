@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading;
-using Extension.Struct;
 using FlowEditor.Core;
 
 namespace FlowEditor.Services;
@@ -48,8 +47,8 @@ public static class ConsoleOutputRouter
             if (line != null)
             {
                 Current.Value?.Invoke(line);
-                if (!FlowLogContext.IsFileSinkSuppressed)
-                    FlowLogContext.FileSink?.Invoke(line, ELogLevel.Information);
+                if (!FlowLogContext.IsSinkSuppressed)
+                    FlowLogContext.Write(line, FlowLogLevel.Information);
             }
             else
             {
@@ -73,6 +72,7 @@ public static class ConsoleOutputRouter
         }
     }
 
+    private static readonly object InstallSync = new();
     private static bool _installed;
 
     /// <summary>进入路由作用域：作用域内 Console.WriteLine 的每一行都会转发给 onLine。</summary>
@@ -80,8 +80,14 @@ public static class ConsoleOutputRouter
     {
         if (!_installed)
         {
-            _installed = true;
-            Console.SetOut(new RoutingConsoleWriter(Console.Out));
+            lock (InstallSync)
+            {
+                if (!_installed)
+                {
+                    Console.SetOut(new RoutingConsoleWriter(Console.Out));
+                    _installed = true;
+                }
+            }
         }
         return RoutingConsoleWriter.EnterScope(onLine);
     }

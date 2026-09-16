@@ -23,17 +23,24 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
         <converters:ThemeColorToBrushConverter x:Key="ThemeColorBrush" />
 
-        <!--  色块描边：深色品牌底上给条半透明白边，免得深色色板（如深紫、棕）糊进背景  -->
+        <!--
+            色块描边：给色块一条中性细边，免得深色色板（深紫、棕）糊进深色背景、
+            或浅色色板糊进浅色背景。走 MD 原生键（浅色 #33000000 / 深色 #33FFFFFF），两种主题都有边。
+        -->
         <Style x:Key="SwatchBorder" TargetType="Border">
-            <Setter Property="BorderBrush" Value="#40FFFFFF" />
+            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.ComboBox.OutlineInactiveBorder}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
         <!--
             左侧字段小标签（主色 / 辅色）。
-            LineHeight 必须显式给足：WPF 的行高按「主字体」（Segoe UI，约 1.27em）算，
-            而中文会回退到雅黑（行高约 1.32em 且字形下缘更低），
-            行盒不够高时中文底部会被切掉 —— 表现为「浅色」看着像被裁了一刀。
+            显式行高只是为了几个小字块的垂直节奏一致（17px 行盒 = 11px 字号 + 上下留白）。
+            
+            注意：曾在这里写过「中文回退雅黑 → 字形下缘更低 → 行盒不够就被切掉」的注释，
+            那是错的，已实测否掉。四组对照（参考行高 40 / 现状 17 / 自动行高 / 行高压到 9），
+            中文墨迹高度恒为 10.50px，与行高无关；行高压到 9 时墨迹甚至整体上移而不是被裁。
+            WPF 不会把字形裁进行盒 —— 真出现「字被切一半」只可能是祖先容器
+            （ClipToBounds、ScrollViewer 视口）干的，调 LineHeight 修不了。
         -->
         <Style x:Key="FieldLabel" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
@@ -43,7 +50,7 @@
             <Setter Property="Opacity" Value="0.8" />
         </Style>
 
-        <!--  小字说明（分段按钮里的「浅色 / 深色」），同样需要显式行高  -->
+        <!--  小字说明（分段按钮里的「浅色 / 深色」），行高与 FieldLabel 对齐，理由同上  -->
         <Style x:Key="CaptionText" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="FontSize" Value="11" />
@@ -51,12 +58,12 @@
             <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
         </Style>
 
-        <!--  面板容器：半透明白底 + 细描边，深色品牌侧栏上的分组块  -->
+        <!--  面板容器：比侧栏低一层的分组块，跟随主题（浅色 #F1F1F1 底 / 深色 #323232 底）  -->
         <Style x:Key="PanelBorder" TargetType="Border">
             <Setter Property="Margin" Value="0,0,0,10" />
             <Setter Property="Padding" Value="8,7" />
-            <Setter Property="Background" Value="#14FFFFFF" />
-            <Setter Property="BorderBrush" Value="#26FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Background}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Card.Border}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
         </Style>
@@ -89,6 +96,7 @@
             必须 BasedOn MD 的轮廓样式：显式 Style 不写 BasedOn 会把隐式 MD 样式整个顶掉，
             退化成 WPF 自带模板（浅灰底 + 浅色文字，在深色侧栏上直接看不见）。
             轮廓样式内部 Background 默认 Transparent、边框走 MD 键，所以底色/描边/前景都就地覆盖。
+            描边也改用 MD 原生键（原先写死 #40FFFFFF，压浅底侧栏上等于没有边）。
         -->
         <Style
             x:Key="PickerCombo"
@@ -97,7 +105,7 @@
             <Setter Property="Margin" Value="0" />
             <Setter Property="Padding" Value="8" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="BorderBrush" Value="#40FFFFFF" />
+            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.ComboBox.OutlineInactiveBorder}" />
             <Setter Property="ItemTemplate" Value="{StaticResource ColorItemTemplate}" />
             <Setter Property="materialDesign:TextFieldAssist.TextFieldCornerRadius" Value="6" />
             <Setter Property="ItemContainerStyle">
@@ -115,9 +123,11 @@
             自定义模板的 Button 必须显式 Height=Auto / MinHeight=0 / MinWidth=0 / Padding=0：
             MD 的隐式 Button 样式带 MinHeight，会把内容裁掉一截。
             默认 Opacity 0.6 表示「未选中」，选中态由各按钮自己的 DataTrigger 抬到 1 并铺一层底。
-
-            容器底色 / 描边 / 选中态底色 / 选中态前景全部走本控件的依赖属性（默认值 = 深色品牌侧栏配套），
-            所以控件放到跟随主题的浅底上时，宿主必须覆盖这几个属性，否则白色半透明在浅底上等于看不见。
+            
+            外皮已从「写死的白色半透明」改成 MD 原生键：本控件原先只服务固定深色侧栏，
+            后来侧栏改成跟随主题，白色半透明压浅底上等于看不见（见下面容器与选中态的三处改动）。
+            FieldBackground / FieldForeground 两个 DP 的**默认值**仍是深色宿主配套，
+            跟随主题的宿主必须自己传（本仓 MainWindow 已显式传 MD 原生键）。
         -->
         <Style x:Key="SegmentButton" TargetType="Button">
             <Setter Property="Height" Value="Auto" />
@@ -128,8 +138,8 @@
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Background" Value="Transparent" />
             <!--
-                未选中态前景 = 字段前景。必须写在 Style 里、不能写在按钮上：
-                局部值会盖掉 DataTrigger，选中态就换不了色。
+                前景 = 字段前景。写在 Style 的 Setter 里而不是按钮的局部属性上：
+                局部值会盖掉 Trigger/DataTrigger 的 Setter，将来给选中态加前景触发器就改不动了。
                 也不能用 ElementName —— Style 有独立命名域，ElementName 在这里解析不到，
                 只有 RelativeSource FindAncestor 可靠。
             -->
@@ -158,7 +168,16 @@
         </Style>
     </UserControl.Resources>
 
-    <StackPanel>
+    <!--
+        根节点自己接上控件的 VM 作为 DataContext（下面所有内部绑定都依赖它）。
+        之所以不写在 code-behind 的 `DataContext = ViewModel`：那会顶掉控件自身的 DataContext，
+        导致宿主写的 `Theme="{Binding Theme}"` 静默绑到本控件 VM 的 Theme 上，宿主的 DI 单例进不来。
+        挂在这里则控件自身的 DataContext 保持继承，宿主可以正常绑自己的 VM。
+        注意：赋值在 code-behind 里做（`RootPanel.DataContext = ViewModel`），
+        不要写成 `RelativeSource FindAncestor` 绑定 —— 控件没进可视树时它解析不到，
+        会让 Command 之类的内部绑定静默变 null。
+    -->
+    <StackPanel x:Name="RootPanel">
         <!--  可选标题：留空则不占位  -->
         <TextBlock
             Margin="0,0,0,6"
@@ -184,59 +203,59 @@
         </TextBlock>
 
         <!--  ═══ 主色 / 辅色（ShowColorPickers=false 时整块收起）  ═══  -->
-        <StackPanel x:Name="ColorPickerPanel" Visibility="{Binding ElementName=Root, Path=ShowColorPickers, Converter={StaticResource BoolToVisibility}}">
-            <Border Style="{StaticResource PanelBorder}">
-                <StackPanel>
-                    <Grid Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock
-                            Grid.Column="0"
-                            Margin="0,0,8,0"
-                            Foreground="{Binding ElementName=Root, Path=FieldForeground}"
-                            Style="{StaticResource FieldLabel}"
-                            Text="主色" />
-                        <ComboBox
-                            Grid.Column="1"
-                            Background="{Binding ElementName=Root, Path=FieldBackground}"
-                            Foreground="{Binding ElementName=Root, Path=FieldForeground}"
-                            ItemsSource="{Binding PrimaryColors}"
-                            SelectedItem="{Binding SelectedPrimary, Mode=TwoWay}"
-                            Style="{StaticResource PickerCombo}"
-                            ToolTip="主色（MaterialDesign PrimaryColor）" />
-                    </Grid>
+        <Border Style="{StaticResource PanelBorder}">
+            <StackPanel>
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="0,0,8,0"
+                        Foreground="{Binding ElementName=Root, Path=FieldForeground}"
+                        Style="{StaticResource FieldLabel}"
+                        Text="主色" />
+                    <ComboBox
+                        Grid.Column="1"
+                        Background="{Binding ElementName=Root, Path=FieldBackground}"
+                        Foreground="{Binding ElementName=Root, Path=FieldForeground}"
+                        ItemsSource="{Binding PrimaryColors}"
+                        SelectedItem="{Binding SelectedPrimary, Mode=TwoWay}"
+                        Style="{StaticResource PickerCombo}"
+                        ToolTip="主色（MaterialDesign PrimaryColor）" />
+                </Grid>
 
-                    <Grid Margin="0,0,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock
-                            Grid.Column="0"
-                            Margin="0,0,8,0"
-                            Foreground="{Binding ElementName=Root, Path=FieldForeground}"
-                            Style="{StaticResource FieldLabel}"
-                            Text="辅色" />
-                        <ComboBox
-                            Grid.Column="1"
-                            Background="{Binding ElementName=Root, Path=FieldBackground}"
-                            Foreground="{Binding ElementName=Root, Path=FieldForeground}"
-                            ItemsSource="{Binding SecondaryColors}"
-                            SelectedItem="{Binding SelectedSecondary, Mode=TwoWay}"
-                            Style="{StaticResource PickerCombo}"
-                            ToolTip="辅色（MaterialDesign SecondaryColor）" />
-                    </Grid>
-                </StackPanel>
-            </Border>
-        </StackPanel>
+                <Grid Margin="0,0,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="0,0,8,0"
+                        Foreground="{Binding ElementName=Root, Path=FieldForeground}"
+                        Style="{StaticResource FieldLabel}"
+                        Text="辅色" />
+                    <ComboBox
+                        Grid.Column="1"
+                        Background="{Binding ElementName=Root, Path=FieldBackground}"
+                        Foreground="{Binding ElementName=Root, Path=FieldForeground}"
+                        ItemsSource="{Binding SecondaryColors}"
+                        SelectedItem="{Binding SelectedSecondary, Mode=TwoWay}"
+                        Style="{StaticResource PickerCombo}"
+                        ToolTip="辅色（MaterialDesign SecondaryColor）" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
 
         <!--  ═══ 浅色 / 深色：分段按钮，当前态高亮；不受 ShowColorPickers 影响  ═══  -->
+        <!--  容器：比侧栏低一层的凹槽，跟随主题；选中态铺 Card.Background 从凹槽里「抬」起来  -->
         <Border
             Padding="4"
-            Background="{Binding ElementName=Root, Path=SegmentBackground}"
-            BorderBrush="{Binding ElementName=Root, Path=SegmentBorder}"
+            Background="{DynamicResource MaterialDesign.Brush.Background}"
+            BorderBrush="{DynamicResource MaterialDesign.Brush.Card.Border}"
             BorderThickness="1"
             CornerRadius="8">
             <Grid>
@@ -253,18 +272,10 @@
                     <Button.Style>
                         <Style BasedOn="{StaticResource SegmentButton}" TargetType="Button">
                             <Style.Triggers>
-                                <!--  未选中时保持 0.6 的默认透明度，选中时抬满并铺选中底  -->
+                                <!--  未选中时保持 0.6 的默认透明度，选中时抬满并从凹槽里铺一层亮底  -->
                                 <DataTrigger Binding="{Binding IsDark}" Value="False">
                                     <Setter Property="Opacity" Value="1" />
-                                    <Setter Property="Background" Value="{Binding SegmentSelectedBackground, RelativeSource={RelativeSource AncestorType={x:Type local:ThemePickerView}}}" />
-                                    <Setter Property="Foreground" Value="{Binding SegmentSelectedForeground, RelativeSource={RelativeSource AncestorType={x:Type local:ThemePickerView}}}" />
-                                </DataTrigger>
-                                <!--
-                                    选中态前景留空（null）时回落字段前景。
-                                    必须声明在选中触发器之后：两个触发器同时命中时后者胜。
-                                -->
-                                <DataTrigger Binding="{Binding SegmentSelectedForeground, RelativeSource={RelativeSource AncestorType={x:Type local:ThemePickerView}}}" Value="{x:Null}">
-                                    <Setter Property="Foreground" Value="{Binding FieldForeground, RelativeSource={RelativeSource AncestorType={x:Type local:ThemePickerView}}}" />
+                                    <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -292,12 +303,7 @@
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsDark}" Value="True">
                                     <Setter Property="Opacity" Value="1" />
-                                    <Setter Property="Background" Value="{Binding SegmentSelectedBackground, RelativeSource={RelativeSource AncestorType={x:Type local:ThemePickerView}}}" />
-                                    <Setter Property="Foreground" Value="{Binding SegmentSelectedForeground, RelativeSource={RelativeSource AncestorType={x:Type local:ThemePickerView}}}" />
-                                </DataTrigger>
-                                <!--  同左：选中态前景留空时回落字段前景，须排在选中触发器之后  -->
-                                <DataTrigger Binding="{Binding SegmentSelectedForeground, RelativeSource={RelativeSource AncestorType={x:Type local:ThemePickerView}}}" Value="{x:Null}">
-                                    <Setter Property="Foreground" Value="{Binding FieldForeground, RelativeSource={RelativeSource AncestorType={x:Type local:ThemePickerView}}}" />
+                                    <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>

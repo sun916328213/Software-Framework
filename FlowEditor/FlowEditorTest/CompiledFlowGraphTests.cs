@@ -7,7 +7,15 @@ using static FlowEditorTest.TestGraph;
 
 namespace FlowEditorTest;
 
+/// <summary>需要独占进程负载以保持阈值可比性的性能测试集合。</summary>
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class FlowGraphPerformanceCollection
+{
+    public const string Name = "FlowGraphPerformance";
+}
+
 /// <summary>CompiledFlowGraph 编译正确性与性能（P0-4 验收）。</summary>
+[Collection(FlowGraphPerformanceCollection.Name)]
 public class CompiledFlowGraphTests
 {
     [Fact]

@@ -13,6 +13,25 @@ namespace FlowEditorTest;
 [Collection(FlowLogContextCollection.Name)]
 public class FlowChartServiceExecutionTests
 {
+    private sealed class RecordingFlowLogSink : IFlowLogSink
+    {
+        /// <summary>线程安全记录收到的结构化日志。</summary>
+        public ConcurrentQueue<FlowLogRecord> Records { get; } = new();
+
+        /// <inheritdoc />
+        public void Write(FlowLogRecord record) => Records.Enqueue(record);
+    }
+
+    private sealed class ThrowingFlowLogSink : IFlowLogSink
+    {
+        /// <inheritdoc />
+        public void Write(FlowLogRecord record)
+        {
+            if (record.Message.Contains("执行完成"))
+                throw new System.IO.IOException("日志磁盘不可用");
+        }
+    }
+
     private sealed class CancellableNode : NodeModel
     {
         public TaskCompletionSource Started { get; } =
@@ -66,6 +85,87 @@ public class FlowChartServiceExecutionTests
         Assert.False(service.Model.IsRunning);
         Assert.False(service.Model.IsDebugMode);
         Assert.False(service.Model.IsPaused);
+    }
+
+    /// <summary>验证 IoC 日志 sink 收到完整流程上下文和节点声明的日志等级。</summary>
+    [Fact]
+    public async Task RunAsync_InjectedLogSinkReceivesContextAndDeclaredLevel()
+    {
+        var sink = new RecordingFlowLogSink();
+        var service = TestFlowEditorFactory.CreateService(flowLogSink: sink);
+        service.ProcessName = "AutoFlow";
+        var start = service.Canvas.AddNode(new StartNode());
+        var logNode = service.Canvas.AddNode(new LogNode
+        {
+            Name = "WarnLog",
+            Message = "需要关注",
+            Level = FlowLogLevel.Warning
+        });
+        service.Connections.Add(Flow(start, logNode));
+
+        await service.Execution.RunAsync(_ => { });
+
+        Assert.True(sink.Records.Any(record =>
+            record.ProcessName == "AutoFlow" &&
+            record.FlowName == service.Model.TabTitle &&
+            record.LogKey == $"AutoFlow\\{service.Model.TabTitle}" &&
+            record.NodeName == "WarnLog" &&
+            record.Level == FlowLogLevel.Warning &&
+            record.Message.Contains("需要关注")),
+            string.Join(Environment.NewLine, sink.Records.Select(record =>
+                $"{record.Level}|{record.NodeName ?? "<null>"}|{record.Message}")));
+        Assert.Contains(sink.Records, record =>
+            record.Level == FlowLogLevel.Information &&
+            record.Message.Contains("开始执行流程"));
+    }
+
+    /// <summary>验证执行失败通过结构化 sink 记录为错误等级。</summary>
+    [Fact]
+    public async Task RunAsync_FailureIsWrittenAtErrorLevel()
+    {
+        var sink = new RecordingFlowLogSink();
+        var service = TestFlowEditorFactory.CreateService(flowLogSink: sink);
+        var start = service.Canvas.AddNode(new StartNode());
+        var failure = service.Canvas.AddNode(new FailNode { Name = "Failure" });
+        service.Connections.Add(Flow(start, failure));
+
+        await service.Execution.RunAsync(_ => { });
+
+        Assert.Contains(sink.Records, record =>
+            record.Level == FlowLogLevel.Error &&
+            record.Message.Contains("错误"));
+    }
+
+    /// <summary>验证流程执行前的校验警告也会进入结构化日志，不仅显示在输出栏。</summary>
+    [Fact]
+    public async Task RunAsync_ValidationWarningIsWrittenAtWarningLevel()
+    {
+        var sink = new RecordingFlowLogSink();
+        var service = TestFlowEditorFactory.CreateService(flowLogSink: sink);
+        service.Canvas.AddNode(new StartNode());
+        service.Canvas.AddNode(new CountingNode { Name = "Orphan" });
+
+        await service.Execution.RunAsync(_ => { });
+
+        Assert.Contains(sink.Records, record =>
+            record.Level == FlowLogLevel.Warning &&
+            record.Message.Contains("[校验][警告]"));
+    }
+
+    /// <summary>验证单步执行失败与完整流程使用同一错误等级。</summary>
+    [Fact]
+    public async Task StepContinueAsync_FailureIsWrittenAtErrorLevel()
+    {
+        var sink = new RecordingFlowLogSink();
+        var service = TestFlowEditorFactory.CreateService(flowLogSink: sink);
+        var failure = service.Canvas.AddNode(new FailNode { Name = "StepFailure" });
+
+        await service.Execution.StepContinueAsync(failure.Model, _ => { });
+
+        Assert.Contains(sink.Records, record =>
+            record.NodeName == null &&
+            record.Level == FlowLogLevel.Error &&
+            record.Message.Contains("[单步][错误]"));
     }
 
     [Fact]
@@ -148,26 +248,13 @@ public class FlowChartServiceExecutionTests
     [Fact]
     public async Task RunAsync_LogSinkFailureAfterSuccessfulNodes_DoesNotChangeSuccessStatus()
     {
-        var service = CreateService();
+        var service = TestFlowEditorFactory.CreateService(flowLogSink: new ThrowingFlowLogSink());
         service.Canvas.AddNode(new StartNode());
-        var previousSink = FlowLogContext.FileSink;
-        try
-        {
-            FlowLogContext.FileSink = (message, _) =>
-            {
-                if (message.Contains("执行完成"))
-                    throw new System.IO.IOException("日志磁盘不可用");
-            };
 
-            await service.Execution.RunAsync(service.Output.Append);
+        await service.Execution.RunAsync(service.Output.Append);
 
-            Assert.Equal("执行完成", service.Model.StatusText);
-            Assert.All(service.Nodes, node => Assert.Equal(NodeStatus.Success, node.Status));
-        }
-        finally
-        {
-            FlowLogContext.FileSink = previousSink;
-        }
+        Assert.Equal("执行完成", service.Model.StatusText);
+        Assert.All(service.Nodes, node => Assert.Equal(NodeStatus.Success, node.Status));
     }
 
     [Fact]

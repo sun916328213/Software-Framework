@@ -40,7 +40,7 @@ namespace FlowNodes.Vision.CompositeTool.WaferInspection
     internal class WaferInspectionNode : HVisionToolNodeBase<HTool_Blob>
     {
         /// <summary>
-        /// 宿主可注册的机器人 Z 坐标读取委托（注入方式与 <see cref="NodeLog.Resolver"/> 相同）。
+        /// 宿主可注册的机器人 Z 坐标读取委托。
         /// 仅在 <see cref="AutoReadRobotZ"/> 为 true 时调用；未注册或调用失败时回退到 <see cref="RobotZ"/>。
         /// </summary>
         public static Func<double>? RobotZResolver { get; set; }

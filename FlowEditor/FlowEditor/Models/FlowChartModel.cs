@@ -207,6 +207,7 @@ public partial class FlowChartModel : ObservableObject
         get => _tabTitle;
         set
         {
+            if (IsRunning || IsLoopRunning || string.IsNullOrWhiteSpace(value)) return;
             if (SetProperty(ref _tabTitle, value))
                 OnPropertyChanged(nameof(DisplayTitle));
         }

@@ -60,7 +60,7 @@ public class FlowChartContainerDocumentService
         var vm = _tabFactory.Create();
 
         // 还原标题与全局配置
-        vm.Model.TabTitle = flowDoc.Name;
+        vm.SetTabTitle(flowDoc.Name, markModified: false);
         vm.Model.ZoomLevel = flowDoc.ZoomLevel;
         vm.Model.IsModified = false;
         vm.Model.StatusText = "已加载";
@@ -92,7 +92,7 @@ public class FlowChartContainerDocumentService
     /// <summary>将一个流程文档加载到指定标签页（用于 ToolBlock 内部数据加载）。</summary>
     public void LoadFlowToTab(FlowChartViewModel tab, FlowChartDocumentModel flowDoc)
     {
-        tab.Model.TabTitle = flowDoc.Name;
+        tab.SetTabTitle(flowDoc.Name, markModified: false);
 
         foreach (var nodeDoc in flowDoc.Nodes)
         {

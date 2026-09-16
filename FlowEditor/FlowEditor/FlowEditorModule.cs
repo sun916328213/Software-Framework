@@ -1,4 +1,3 @@
-using Extension.Core.ReflectionEx;
 using FlowEditor.Core;
 using FlowEditor.Interfaces;
 using FlowEditor.Nodes;
@@ -12,7 +11,10 @@ using FlowEditor.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
 using System.Reflection;
-using System.Windows;namespace FlowEditor
+using System.Windows;
+using System.Windows.Controls;
+
+namespace FlowEditor
 {
     /// <summary>
     /// FlowEditor 的 Prism 模块类。
@@ -73,7 +75,7 @@ using System.Windows;namespace FlowEditor
             RegisterNodeTypes(containerRegistry);
 
             // 注册 FlowEditor 的所有视图（按命名空间扫描，单例 + (object, 导航名) 单例）
-            containerRegistry.RegisterNavigationViewsFromNamespace(Assembly.GetExecutingAssembly(), "FlowEditor.Views");
+            RegisterNavigationViews(containerRegistry, Assembly.GetExecutingAssembly(), "FlowEditor.Views");
         }
 
         /// <summary>
@@ -118,6 +120,23 @@ using System.Windows;namespace FlowEditor
         {
             try { return Assembly.Load("FlowNodes"); }
             catch { return null; }
+        }
+
+        /// <summary>把指定命名空间中的 WPF 视图注册为类型单例和具名导航单例。</summary>
+        private static void RegisterNavigationViews(
+            IContainerRegistry registry,
+            Assembly assembly,
+            string namespacePrefix)
+        {
+            foreach (var viewType in assembly.GetTypes().Where(type =>
+                         type.Namespace?.StartsWith(namespacePrefix, StringComparison.Ordinal) == true &&
+                         type.IsSubclassOf(typeof(UserControl)) &&
+                         type.IsClass &&
+                         !type.IsAbstract))
+            {
+                registry.RegisterSingleton(viewType);
+                registry.RegisterSingleton(typeof(object), viewType, viewType.Name);
+            }
         }
 
         /// <summary>

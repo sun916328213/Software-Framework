@@ -138,7 +138,7 @@ namespace FlowNodes.Vision.SingleTool.Definition
             ReleaseToolRef();
             // 加载/清空/撤销重做等批量操作期间不移除工具（它们会先 detach 再按名 re-attach），
             // 仅"真正删除节点"后且无任何节点再引用时清理孤儿工具，防止目录无限膨胀。
-            if (Service?.IsBatchOperation != true)
+            if (!IsBatchDetaching)
                 RemoveToolIfUnreferenced();
         }
 

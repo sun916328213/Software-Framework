@@ -53,7 +53,7 @@ public partial class App : PrismApplication
         try { Assembly.Load("FlowNodes"); } catch { }
         Container.Resolve<IFlowToolDiscoveryService>().Discover();
 
-        // NodeLog.Resolver 保持未注册：节点日志仅走 ConsoleOutputRouter 进底部输出面板，
+        // 未注册 IFlowLogSink：节点日志仅走 ConsoleOutputRouter 进底部输出面板，
         // 不落盘。如需按流程落盘，可在此接入 DataManager 的 LogManager。
 
         var regionManager = Container.Resolve<Prism.Regions.IRegionManager>();

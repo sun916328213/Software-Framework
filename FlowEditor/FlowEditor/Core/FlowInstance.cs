@@ -14,18 +14,21 @@ public sealed class FlowInstance
     private readonly List<NodeModel> _nodes;
     private readonly List<ConnectionModel> _connections;
     private readonly FlowRuntimeInstance<NodeModel> _runtime;
+    private readonly IFlowLogSink _flowLogSink;
 
     /// <summary>创建已经物化并具有独立运行状态的流程实例。</summary>
     private FlowInstance(
         string name,
         List<NodeModel> nodes,
         List<ConnectionModel> connections,
-        FlowChartExecutionEngine engine)
+        FlowChartExecutionEngine engine,
+        IFlowLogSink flowLogSink)
     {
         Name = name;
         _nodes = nodes;
         _connections = connections;
         _runtime = new FlowRuntimeInstance<NodeModel>(name, nodes, connections, engine);
+        _flowLogSink = flowLogSink;
 
         // 节点状态变化事件桥（订阅方自行处理线程封送）
         foreach (var node in nodes)
@@ -64,10 +67,12 @@ public sealed class FlowInstance
     /// <param name="program">流程程序。</param>
     /// <param name="factory">节点工厂；默认纯反射实现。</param>
     /// <param name="engine">执行引擎；默认创建带桌面日志上下文的实例专用引擎。</param>
+    /// <param name="flowLogSink">结构化流程日志 sink；空值时不产生外部日志副作用。</param>
     public static FlowInstance Create(
         FlowProgram program,
         INodeFactory? factory = null,
-        FlowChartExecutionEngine? engine = null)
+        FlowChartExecutionEngine? engine = null,
+        IFlowLogSink? flowLogSink = null)
     {
         ArgumentNullException.ThrowIfNull(program);
         factory ??= new ReflectionNodeFactory();
@@ -99,7 +104,12 @@ public sealed class FlowInstance
             });
         }
 
-        return new FlowInstance(program.Name, nodes, connections, engine);
+        return new FlowInstance(
+            program.Name,
+            nodes,
+            connections,
+            engine,
+            flowLogSink ?? NullFlowLogSink.Instance);
     }
 
     /// <summary>按 ID 查找节点。</summary>
@@ -110,6 +120,7 @@ public sealed class FlowInstance
     public async Task RunAsync(CancellationToken ct, Action<string>? log = null)
     {
         // 进入流程作用域：节点日志按当前流程（+节点+运行序号）路由落盘
+        using (FlowLogContext.EnterSink(_flowLogSink))
         using (FlowLogContext.EnterFlow(Name))
             await _runtime.RunAsync(ct, log);
     }

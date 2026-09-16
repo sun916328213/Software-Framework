@@ -3,15 +3,14 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:behaviors="clr-namespace:FlowEditor.Behaviors"
-    xmlns:converters="clr-namespace:FlowEditor.Presentation.Converters">
+    xmlns:converters="clr-namespace:FlowEditor.Presentation.Converters"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
     <UserControl.Resources>
         <converters:FlowOutputTextFilterConverter x:Key="OutputTextFilterConverter" />
     </UserControl.Resources>
 
-    <Border
-        BorderBrush="{StaticResource Flow_Border_Divider}"
-        BorderThickness="0,1,0,0">
+    <Border BorderBrush="{StaticResource Flow_Border_Divider}" BorderThickness="0,1,0,0">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="32" />
@@ -23,9 +22,7 @@
                 LastChildFill="True">
                 <Button
                     x:Name="ClearOutputButton"
-                    Height="24"
-                    MinWidth="52"
-                    Padding="8,1"
+                    Height="28"
                     HorizontalAlignment="Right"
                     Command="{Binding ActiveTab.ClearOutputCommand}"
                     Content="清除"
@@ -35,6 +32,8 @@
                 <CheckBox
                     x:Name="AutoScrollToggle"
                     Margin="8,0"
+                    Padding="0"
+                    HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Content="自动滚动"
                     DockPanel.Dock="Right"
@@ -63,7 +62,14 @@
                     Padding="6,1"
                     VerticalContentAlignment="Center"
                     DockPanel.Dock="Right"
-                    ToolTip="搜索当前输出" />
+                    ToolTip="搜索当前输出">
+                    <materialDesign:HintAssist.Hint>
+                        <StackPanel Margin="-2,0,0,0" Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Search" />
+                            <TextBlock Text="搜索当前输出" />
+                        </StackPanel>
+                    </materialDesign:HintAssist.Hint>
+                </TextBox>
                 <TextBlock
                     VerticalAlignment="Center"
                     FontWeight="SemiBold"

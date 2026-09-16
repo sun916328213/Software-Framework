@@ -78,6 +78,23 @@ public sealed class FlowChartServiceModuleTests
         Assert.Same(second, context.FindNode(second.Id));
     }
 
+    /// <summary>验证单节点删除与批量清理会向派生节点提供不同的卸载上下文。</summary>
+    [Fact]
+    public void NodeDetachContext_DistinguishesRemovalFromBatchClear()
+    {
+        var service = TestFlowEditorFactory.CreateService();
+        var removed = new TrackingNode { Name = "Removed" };
+        var cleared = new TrackingNode { Name = "Cleared" };
+        var removedViewModel = service.Canvas.AddNode(removed);
+        service.Canvas.AddNode(cleared);
+
+        service.Canvas.RemoveNode(removedViewModel);
+        service.Canvas.ClearNodes();
+
+        Assert.False(removed.WasBatchDetaching);
+        Assert.True(cleared.WasBatchDetaching);
+    }
+
     /// <summary>记录画布附加和卸载回调次数的测试节点。</summary>
     private sealed class TrackingNode : NodeModel
     {
@@ -87,11 +104,18 @@ public sealed class FlowChartServiceModuleTests
         /// <summary>卸载次数。</summary>
         public int DetachedCount { get; private set; }
 
+        /// <summary>最近一次卸载是否属于批量事务。</summary>
+        public bool WasBatchDetaching { get; private set; }
+
         /// <inheritdoc />
         public override void OnAttached(IFlowChartService service) => AttachedCount++;
 
         /// <inheritdoc />
-        public override void OnDetached() => DetachedCount++;
+        public override void OnDetached()
+        {
+            DetachedCount++;
+            WasBatchDetaching = IsBatchDetaching;
+        }
 
         /// <inheritdoc />
         public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;

@@ -20,17 +20,20 @@ internal static class TestFlowEditorFactory
     /// <param name="documentStore">可选的文档存储覆盖。</param>
     /// <param name="nodeEditorLauncher">可选的节点编辑器覆盖。</param>
     /// <param name="nodeNotifications">可选的节点提示覆盖。</param>
+    /// <param name="flowLogSink">可选的结构化流程日志接收器。</param>
     /// <returns>可直接运行和持久化的流程服务。</returns>
     public static FlowChartService CreateService(
         IFlowDocumentStore? documentStore = null,
         INodeEditorLauncher? nodeEditorLauncher = null,
-        INodeNotificationSink? nodeNotifications = null)
+        INodeNotificationSink? nodeNotifications = null,
+        IFlowLogSink? flowLogSink = null)
         => new(
             documentStore ?? new InMemoryFlowDocumentStore(),
             new TestFlowChartExecutionEngine(),
             Dialogs,
             nodeEditorLauncher,
-            nodeNotifications);
+            nodeNotifications,
+            flowLogSink: flowLogSink);
 
     /// <summary>创建绑定到指定流程会话的 ViewModel。</summary>
     /// <param name="service">流程会话；空值时自动创建无头会话。</param>

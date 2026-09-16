@@ -1,7 +1,5 @@
-using System.Windows.Input;
 using FlowEditor.Interfaces;
 using FlowEditor.Models;
-using WPFCustomControls.PropertyGrid;
 using WPFCustomControls.PropertyGrid.Models;
 
 namespace FlowEditor.Nodes;
@@ -15,6 +13,12 @@ public abstract partial class NodeModel
     /// </summary>
     public IFlowChartService? Service { get; set; }
 
+    /// <summary>
+    /// 当前卸载是否属于加载、清空或流程迁移等批量事务。
+    /// 派生节点可在 <see cref="OnDetached"/> 中据此保留可被随后重新挂载的外部资源。
+    /// </summary>
+    protected bool IsBatchDetaching { get; private set; }
+
     /// <summary>节点被挂载到画布时回调。由 FlowChartService 在 AddNode 时调用。</summary>
     public virtual void OnAttached(IFlowChartService service) { }
 
@@ -27,7 +31,7 @@ public abstract partial class NodeModel
         ArgumentNullException.ThrowIfNull(service);
         if (ReferenceEquals(Service, service)) return;
         if (Service != null)
-            DetachFromFlow();
+            DetachFromFlow(isBatchOperation: true);
 
         Service = service;
         try
@@ -45,9 +49,11 @@ public abstract partial class NodeModel
     }
 
     /// <summary>从当前流程卸载节点，保证退订流程事件并释放流程引用。</summary>
-    internal void DetachFromFlow()
+    /// <param name="isBatchOperation">是否为可能随后重新挂载节点的批量事务。</param>
+    internal void DetachFromFlow(bool isBatchOperation = false)
     {
         if (Service == null) return;
+        IsBatchDetaching = isBatchOperation;
         try
         {
             OnDetached();
@@ -56,6 +62,7 @@ public abstract partial class NodeModel
         {
             DisconnectConnectionSubscription();
             Service = null;
+            IsBatchDetaching = false;
         }
     }
 
@@ -272,7 +279,4 @@ public abstract partial class NodeModel
         service.Model.IsModified = true;
     }
 
-    /// <summary>打开脚本编辑器命令。子类重写后可被 PropertyGridHost 自动检测为扩展按钮。</summary>
-    [PropertyGridAction("打开脚本编辑器")]
-    public virtual ICommand? OpenScriptEditorCommand => null;
 }

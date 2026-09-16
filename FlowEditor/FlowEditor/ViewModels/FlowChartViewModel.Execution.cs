@@ -39,9 +39,9 @@ public partial class FlowChartViewModel
         // 流程中存在失败状态时，“继续”应采用恢复/跳转语义：所选节点成为新入口，
         // 可选择失败节点重试，也可选择它之前或之后的节点继续整条可达路径。
         if (Nodes.Any(node => node.Status == NodeStatus.Error))
-            await _execution.ContinueFromNodeAsync(selected, AppendLog);
+            await _execution.ContinueFromNodeAsync(selected.Model, AppendLog);
         else
-            await _execution.StepContinueAsync(selected, AppendLog);
+            await _execution.StepContinueAsync(selected.Model, AppendLog);
     }
 
     /// <summary>判断当前选择和运行状态是否允许继续执行。</summary>
@@ -51,7 +51,7 @@ public partial class FlowChartViewModel
 
     /// <summary>从右键选中的节点恢复或跳转，并继续执行其后继路径。</summary>
     private Task ContinueFromNodeAsync(NodeViewModel? node)
-        => node == null ? Task.CompletedTask : _execution.ContinueFromNodeAsync(node, AppendLog);
+        => node == null ? Task.CompletedTask : _execution.ContinueFromNodeAsync(node.Model, AppendLog);
 
     /// <summary>空闲时允许任意执行节点跳转；运行中只允许恢复并行容器内的独立支路。</summary>
     private bool CanContinueFromNode(NodeViewModel? node)

@@ -43,6 +43,38 @@ public class StructuredExecutionContainerTests
         }
     }
 
+    /// <summary>跨 ToolBlock 文档重建记录尝试次数及最后实例的首次失败节点。</summary>
+    public sealed class PersistentFailOnceNode : NodeModel
+    {
+        /// <summary>全部重建实例累计执行次数。</summary>
+        public static int Attempts { get; set; }
+
+        /// <summary>最近一次由文档重建的节点实例。</summary>
+        public static PersistentFailOnceNode? LastInstance { get; private set; }
+
+        /// <summary>创建节点并记录当前重建实例。</summary>
+        public PersistentFailOnceNode()
+        {
+            LastInstance = this;
+        }
+
+        /// <inheritdoc />
+        public override Task ExecuteAsync(CancellationToken ct)
+        {
+            Attempts++;
+            if (Attempts == 1)
+                throw new InvalidOperationException("first tool block attempt failed");
+            return Task.CompletedTask;
+        }
+
+        /// <summary>清空跨实例测试状态。</summary>
+        public static void Reset()
+        {
+            Attempts = 0;
+            LastInstance = null;
+        }
+    }
+
     private sealed class FailOnceNode : NodeModel
     {
         public int Attempts { get; private set; }
@@ -173,6 +205,45 @@ public class StructuredExecutionContainerTests
         Assert.True(sw.ElapsedMilliseconds >= 70, $"实际耗时 {sw.ElapsedMilliseconds}ms");
     }
 
+    /// <summary>验证停止命令能立即打断无限循环容器的轮间长延时。</summary>
+    [Fact]
+    public async Task LoopContainer_InfiniteDelay_StopInterruptsWaitingPromptly()
+    {
+        var service = CreateService();
+        var start = service.Canvas.AddNode(new StartNode());
+        var loopModel = new LoopContainerNode
+        {
+            Name = "无限循环容器",
+            IterationCount = -1,
+            IterationDelayMs = 10_000
+        };
+        var loop = service.Canvas.AddNode(loopModel);
+        var bodyModel = new CountingNode
+        {
+            Name = "循环任务",
+            ParentExecutionContainerId = loop.Id,
+            ExecutionLaneId = loopModel.Lanes[0].Id
+        };
+        service.Canvas.AddNode(bodyModel);
+        service.Connections.Add(Flow(start, loop));
+
+        var run = service.Execution.RunAsync(_ => { });
+        await WaitUntilAsync(() => bodyModel.Executions == 1, TimeSpan.FromSeconds(2));
+        await Task.Delay(30);
+
+        var stopWatch = System.Diagnostics.Stopwatch.StartNew();
+        service.Execution.Stop();
+        await run.WaitAsync(TimeSpan.FromSeconds(2));
+        stopWatch.Stop();
+
+        Assert.Equal(1, bodyModel.Executions);
+        Assert.Equal(1, loopModel.CurrentIteration);
+        Assert.True(stopWatch.Elapsed < TimeSpan.FromSeconds(1),
+            $"停止耗时 {stopWatch.Elapsed.TotalMilliseconds:F0}ms，轮间延时未被及时取消。");
+        Assert.False(service.Model.IsRunning);
+        Assert.Equal("已取消", service.Model.StatusText);
+    }
+
     [Fact]
     public async Task ToolBlock_ExecutesNestedLoopWithItsOwnRuntimeScope()
     {
@@ -209,6 +280,58 @@ public class StructuredExecutionContainerTests
 
         Assert.Equal("执行完成", service.Model.StatusText);
         Assert.Equal(2, PersistentCountingNode.Executions);
+    }
+
+    /// <summary>验证 ToolBlock 内部循环首次失败后，重新执行会重建内部实例并清除内外红色状态。</summary>
+    [Fact]
+    public async Task ToolBlock_NestedLoopFailure_RerunClearsContainerAndInternalErrorStatus()
+    {
+        PersistentFailOnceNode.Reset();
+        var service = CreateService();
+        var start = service.Canvas.AddNode(new StartNode());
+        var toolBlock = new ToolBlockNode { Name = "ToolBlock" };
+        var toolBlockVm = service.Canvas.AddNode(toolBlock);
+        var end = service.Canvas.AddNode(new EndNode());
+        var innerLoop = new LoopContainerNode { Name = "循环容器_1", IterationCount = 1 };
+        var innerFailure = new PersistentFailOnceNode
+        {
+            Name = "内部失败节点",
+            ParentExecutionContainerId = innerLoop.Id,
+            ExecutionLaneId = innerLoop.Lanes[0].Id
+        };
+        toolBlock.InternalData =
+        [
+            new FlowChartDocumentModel
+            {
+                Name = "内部失败流程",
+                Nodes =
+                [
+                    service.Documents.BuildNodeDocument(innerLoop),
+                    service.Documents.BuildNodeDocument(innerFailure)
+                ]
+            }
+        ];
+        service.Connections.Add(Flow(start, toolBlockVm));
+        service.Connections.Add(Flow(toolBlockVm, end));
+
+        await service.Execution.RunAsync(_ => { });
+
+        var failedInternalInstance = Assert.IsType<PersistentFailOnceNode>(
+            PersistentFailOnceNode.LastInstance);
+        Assert.Equal(NodeStatus.Error, toolBlockVm.Status);
+        Assert.Equal(NodeStatus.Error, failedInternalInstance.Status);
+        Assert.Equal("执行出错", service.Model.StatusText);
+
+        await service.Execution.RunAsync(_ => { });
+
+        var successfulInternalInstance = Assert.IsType<PersistentFailOnceNode>(
+            PersistentFailOnceNode.LastInstance);
+        Assert.NotSame(failedInternalInstance, successfulInternalInstance);
+        Assert.Equal(2, PersistentFailOnceNode.Attempts);
+        Assert.Equal(NodeStatus.Success, successfulInternalInstance.Status);
+        Assert.Equal(NodeStatus.Success, toolBlockVm.Status);
+        Assert.Equal(NodeStatus.Success, end.Status);
+        Assert.Equal("执行完成", service.Model.StatusText);
     }
 
     [Fact]
@@ -250,7 +373,7 @@ public class StructuredExecutionContainerTests
         Assert.Equal(0, branchBNext.Executions);
         Assert.Equal(1, afterModel.Executions);
 
-        await service.Execution.ContinueFromNodeAsync(continueVm, _ => { });
+        await service.Execution.ContinueFromNodeAsync(continueVm.Model, _ => { });
 
         Assert.Equal(1, branchA.Executions);
         Assert.Equal(1, branchBNext.Executions);
@@ -299,7 +422,7 @@ public class StructuredExecutionContainerTests
         Assert.Equal(NodeStatus.Error, failure.Status);
         Assert.True(service.Model.IsRunning);
 
-        await service.Execution.ContinueFromNodeAsync(resume, _ => { });
+        await service.Execution.ContinueFromNodeAsync(resume.Model, _ => { });
 
         Assert.Equal(1, resumeModel.Executions);
         Assert.False(run.IsCompleted);
@@ -307,6 +430,86 @@ public class StructuredExecutionContainerTests
         await run.WaitAsync(TimeSpan.FromSeconds(2));
         Assert.Equal(1, afterModel.Executions);
         Assert.Equal("执行完成", service.Model.StatusText);
+    }
+
+    /// <summary>
+    /// 验证并行支路失败后可从前置、失败或后续节点恢复；已重新执行的失败节点必须清除红色状态，
+    /// 已成功的兄弟支路不得重复执行。
+    /// </summary>
+    /// <param name="resumePoint">恢复入口：previous、failure 或 next。</param>
+    /// <param name="expectedPreviousExecutions">前置节点预期执行次数。</param>
+    /// <param name="expectedFailureAttempts">失败节点预期尝试次数。</param>
+    /// <param name="expectedFailureStatus">恢复后的失败节点状态。</param>
+    [Theory]
+    [InlineData("previous", 2, 2, NodeStatus.Success)]
+    [InlineData("failure", 1, 2, NodeStatus.Success)]
+    [InlineData("next", 1, 1, NodeStatus.Error)]
+    public async Task ContinueFromNode_FailedParallelLane_SupportsPreviousFailureAndNext(
+        string resumePoint,
+        int expectedPreviousExecutions,
+        int expectedFailureAttempts,
+        NodeStatus expectedFailureStatus)
+    {
+        var service = CreateService();
+        var start = service.Canvas.AddNode(new StartNode());
+        var containerModel = new ParallelContainerNode { Name = "并行容器1" };
+        var container = service.Canvas.AddNode(containerModel);
+        var siblingModel = new CountingNode
+        {
+            Name = "A-正常支路",
+            ParentExecutionContainerId = container.Id,
+            ExecutionLaneId = containerModel.Lanes[0].Id
+        };
+        service.Canvas.AddNode(siblingModel);
+        var previousModel = new CountingNode
+        {
+            Name = "B-前置节点",
+            ParentExecutionContainerId = container.Id,
+            ExecutionLaneId = containerModel.Lanes[1].Id
+        };
+        var previous = service.Canvas.AddNode(previousModel);
+        var failureModel = new FailOnceNode
+        {
+            Name = "B-失败节点",
+            ParentExecutionContainerId = container.Id,
+            ExecutionLaneId = containerModel.Lanes[1].Id
+        };
+        var failure = service.Canvas.AddNode(failureModel);
+        var nextModel = new CountingNode
+        {
+            Name = "B-后续节点",
+            ParentExecutionContainerId = container.Id,
+            ExecutionLaneId = containerModel.Lanes[1].Id
+        };
+        var next = service.Canvas.AddNode(nextModel);
+        service.Connections.Add(Flow(start, container));
+        service.Connections.Add(Flow(previous, failure));
+        service.Connections.Add(Flow(failure, next));
+
+        await service.Execution.RunAsync(_ => { });
+
+        Assert.Equal(1, siblingModel.Executions);
+        Assert.Equal(1, previousModel.Executions);
+        Assert.Equal(1, failureModel.Attempts);
+        Assert.Equal(NodeStatus.Error, failure.Status);
+        Assert.Equal(0, nextModel.Executions);
+
+        var resumeNode = resumePoint switch
+        {
+            "previous" => previous.Model,
+            "failure" => failure.Model,
+            "next" => next.Model,
+            _ => throw new ArgumentOutOfRangeException(nameof(resumePoint))
+        };
+        await service.Execution.ContinueFromNodeAsync(resumeNode, _ => { });
+
+        Assert.Equal(1, siblingModel.Executions);
+        Assert.Equal(expectedPreviousExecutions, previousModel.Executions);
+        Assert.Equal(expectedFailureAttempts, failureModel.Attempts);
+        Assert.Equal(1, nextModel.Executions);
+        Assert.Equal(expectedFailureStatus, failure.Status);
+        Assert.Equal(NodeStatus.Success, container.Status);
+        Assert.Contains("恢复执行完成", service.Model.StatusText);
     }
 
     [Fact]
@@ -340,7 +543,7 @@ public class StructuredExecutionContainerTests
         Assert.Equal("执行出错", service.Model.StatusText);
         Assert.Equal(1, loopModel.CurrentIteration);
 
-        await service.Execution.ContinueFromNodeAsync(failure, _ => { });
+        await service.Execution.ContinueFromNodeAsync(failure.Model, _ => { });
 
         Assert.Equal(3, failureModel.Attempts);
         Assert.Equal(2, bodyNextModel.Executions);
@@ -589,4 +792,16 @@ public class StructuredExecutionContainerTests
 
     private static FlowChartService CreateService() =>
         TestFlowEditorFactory.CreateService(new InMemoryFlowDocumentStore());
+
+    /// <summary>等待指定异步测试条件成立，超时则让测试明确失败。</summary>
+    private static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (!condition())
+        {
+            if (DateTime.UtcNow >= deadline)
+                throw new TimeoutException("等待测试条件成立超时。");
+            await Task.Delay(10);
+        }
+    }
 }

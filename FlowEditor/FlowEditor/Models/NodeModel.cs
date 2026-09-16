@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FlowEditor.Core;
@@ -9,10 +8,10 @@ namespace FlowEditor.Nodes;
 
 /// <summary>
 /// 统一流程节点基类。
-/// 每个节点强制内置 4 个固定属性：Name、Value、IN、Out。
+/// 每个节点提供名称、执行状态、标准流端口和可扩展属性/端口能力。
 /// 支持自定义端口动态增删、底部按钮自动扫描、权限控制。
 /// </summary>
-public abstract partial class NodeModel : ObservableObject, IPortConfigurable, IPortManageable, IDataBindingProvider, IFlowValidationNode, INodeFaultPolicy, IExecutionScopeRuntimeAware
+public abstract partial class NodeModel : ObservableObject, IFlowValidationNode, INodeFaultPolicy, IExecutionScopeRuntimeAware
 {
     /// <summary>初始化节点名称并发现声明式节点动作。</summary>
     protected NodeModel()
@@ -260,119 +259,6 @@ public abstract partial class NodeModel : ObservableObject, IPortConfigurable, I
             throw new ArgumentException($"节点 [{Name}] 不存在动作: {actionId}", nameof(actionId));
 
         method.Invoke(this, null);
-    }
-
-    // ── 端口查找 ──
-
-    /// <summary>根据 ID 查找端口（输入或输出）。</summary>
-    public PortModel? FindPortById(string portId)
-        => InputPorts.FirstOrDefault(p => p.Id == portId)
-           ?? OutputPorts.FirstOrDefault(p => p.Id == portId);
-
-    /// <summary>根据名称查找输入端口。</summary>
-    public PortModel? FindInputPort(string name)
-        => InputPorts.FirstOrDefault(p => p.Name == name);
-
-    /// <summary>根据名称查找输出端口。</summary>
-    public PortModel? FindOutputPort(string name)
-        => OutputPorts.FirstOrDefault(p => p.Name == name);
-
-    // ── 输入输出同步 ──
-
-    /// <summary>
-    /// 执行前调用：把连线值同步到输入端口。
-    /// 由执行引擎在 ExecuteAsync 之前调用。
-    /// </summary>
-    public void SyncInputValues()
-    {
-        foreach (var port in InputPorts)
-        {
-            if (port.Value == null) continue;
-            var propName = port.PropertyName ?? port.Name;
-            SetPropertyValue(propName, port.Value);
-        }
-    }
-
-    /// <summary>
-    /// 执行后调用：把输出端口绑定属性的值同步到端口。
-    /// 由执行引擎在 ExecuteAsync 之后调用。
-    /// </summary>
-    public void SyncOutputValues()
-    {
-        var type = GetType();
-        foreach (var port in OutputPorts)
-        {
-            var propName = port.PropertyName ?? port.Name;
-            var prop = FindPropertyByName(type, propName);
-            if (prop == null) continue;
-            port.Value = prop.GetValue(this);
-        }
-    }
-
-    // ── 反射缓存 ──
-    // 端口值同步在每个节点的每次执行都会触发属性查找，
-    // 缓存 (类型, 属性名) → PropertyInfo，避免逐层反射扫描。
-
-    private static readonly ConcurrentDictionary<(Type Type, string Name), PropertyInfo?> PropertyLookupCache = new();
-
-    /// <summary>各节点类型可绑定属性名缓存（类型不变则结果恒定）。</summary>
-    private static readonly ConcurrentDictionary<Type, string[]> BindablePropertiesCache = new();
-
-    /// <summary>从类型继承链缓存查找公开实例属性。</summary>
-    private static PropertyInfo? FindPropertyByName(Type type, string name)
-        => PropertyLookupCache.GetOrAdd((type, name), static key =>
-        {
-            for (var t = key.Type; t != null && t != typeof(object); t = t.BaseType)
-            {
-                var prop = t.GetProperty(key.Name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-                if (prop != null) return prop;
-            }
-            return null;
-        });
-
-    /// <summary>向节点属性写入端口值，并把反射失败转换为类型诊断异常。</summary>
-    private void SetPropertyValue(string name, object? value)
-    {
-        var prop = FindPropertyByName(GetType(), name);
-        if (prop == null || !prop.CanWrite) return;
-        try
-        {
-            prop.SetValue(this, value);
-        }
-        catch (Exception ex)
-        {
-            throw new FlowChartTypeMismatchException(
-                $"无法将值 '{value}'（类型: {value?.GetType().Name ?? "null"}）" +
-                $"写入节点 [{Name}] 的属性 {name}（类型: {prop.PropertyType.Name}）: {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    /// 获取所有可绑定属性名列表（用于输出端口属性绑定下拉框）。
-    /// 结果按节点类型缓存，返回副本防止调用方修改缓存。
-    /// </summary>
-    public List<string> GetBindableProperties()
-    {
-        var cached = BindablePropertiesCache.GetOrAdd(GetType(), static type =>
-        {
-            var props = new List<string> { "Name" };
-            var seen = new HashSet<string>(StringComparer.Ordinal) { "Name" };
-            // 节点工具常通过多层基类复用领域属性（例如 TCP 连接节点的 DeviceName
-            // 定义在 NetConnectNodeBase）。逐层扫描到 NodeModel 为止，既包含工具基类
-            // 属性，又不会把端口集合、状态等编辑器基础设施暴露成输出属性。
-            for (var current = type; current != null && current != typeof(NodeModel); current = current.BaseType)
-            {
-                foreach (var prop in current.GetProperties(
-                             BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-                {
-                    if (!prop.CanRead || !seen.Add(prop.Name))
-                        continue;
-                    props.Add(prop.Name);
-                }
-            }
-            return props.ToArray();
-        });
-        return new List<string>(cached);
     }
 
     /// <summary>

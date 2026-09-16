@@ -11,6 +11,12 @@ namespace FlowEditorTest;
 /// </summary>
 internal sealed class TestFlowChartExecutionEngine : FlowChartExecutionEngine
 {
+    /// <summary>创建使用桌面日志上下文的测试执行引擎。</summary>
+    public TestFlowChartExecutionEngine()
+        : base(new FlowLogExecutionContextAdapter())
+    {
+    }
+
     /// <summary>将 ViewModel 图映射为模型图后执行。</summary>
     public async Task ExecuteAsync(
         IReadOnlyList<NodeViewModel> nodes,

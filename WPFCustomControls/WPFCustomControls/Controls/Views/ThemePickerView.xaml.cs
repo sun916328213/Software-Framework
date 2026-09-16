@@ -40,7 +40,11 @@ namespace WPFCustomControls.Controls
                 typeof(ThemePickerView),
                 new PropertyMetadata(true));
 
-        /// <summary>下拉框底色。默认 #1E293B（深色品牌侧栏配套，侧栏刻意不随主题变）。</summary>
+        /// <summary>
+        /// 下拉框底色。默认 #1E293B —— 这是给「固定深色侧栏」配的兜底值。
+        /// 宿主侧栏若跟随主题（现在 Workbench 就是这样），必须显式传入浅色画刷，
+        /// 否则会变成深色输入框压在浅底上。
+        /// </summary>
         public static readonly DependencyProperty FieldBackgroundProperty =
             DependencyProperty.Register(
                 nameof(FieldBackground),
@@ -63,46 +67,6 @@ namespace WPFCustomControls.Controls
                 typeof(string),
                 typeof(ThemePickerView),
                 new PropertyMetadata(string.Empty));
-
-        /// <summary>
-        /// 浅深分段控件的容器底色。默认 #1AFFFFFF（深色品牌侧栏配套）。
-        /// 放到跟随主题的浅底上时，宿主需覆盖成主题相关画刷，否则白色半透明在浅底上看不见。
-        /// </summary>
-        public static readonly DependencyProperty SegmentBackgroundProperty =
-            DependencyProperty.Register(
-                nameof(SegmentBackground),
-                typeof(Brush),
-                typeof(ThemePickerView),
-                new PropertyMetadata(new SolidColorBrush(Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF))));
-
-        /// <summary>浅深分段控件的容器描边。默认 #26FFFFFF（同上，深色侧栏配套）。</summary>
-        public static readonly DependencyProperty SegmentBorderProperty =
-            DependencyProperty.Register(
-                nameof(SegmentBorder),
-                typeof(Brush),
-                typeof(ThemePickerView),
-                new PropertyMetadata(new SolidColorBrush(Color.FromArgb(0x26, 0xFF, 0xFF, 0xFF))));
-
-        /// <summary>浅深分段控件「选中那一侧」的底色。默认 #33FFFFFF（深色侧栏配套）。</summary>
-        public static readonly DependencyProperty SegmentSelectedBackgroundProperty =
-            DependencyProperty.Register(
-                nameof(SegmentSelectedBackground),
-                typeof(Brush),
-                typeof(ThemePickerView),
-                new PropertyMetadata(new SolidColorBrush(Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF))));
-
-        /// <summary>
-        /// 浅深分段控件「选中那一侧」的前景（图标 + 文字）。
-        /// 默认 null = 跟随 <see cref="FieldForeground"/>（深色侧栏就是这种情况）；
-        /// 宿主把选中态底色换成实色（如 MD 的 Primary）时，应同时给出对比色前景
-        /// （如 <c>MaterialDesign.Brush.Primary.Foreground</c>），否则文字会看不清。
-        /// </summary>
-        public static readonly DependencyProperty SegmentSelectedForegroundProperty =
-            DependencyProperty.Register(
-                nameof(SegmentSelectedForeground),
-                typeof(Brush),
-                typeof(ThemePickerView),
-                new PropertyMetadata(null));
 
         [Bindable(true)]
         [Category("自定义属性"), Description("主题服务（ThemeService 单例）"), DisplayName("主题服务")]
@@ -144,50 +108,26 @@ namespace WPFCustomControls.Controls
             set => SetValue(CaptionProperty, value);
         }
 
-        [Bindable(true)]
-        [Category("自定义属性"), Description("浅深分段控件容器底色"), DisplayName("分段底色")]
-        public Brush SegmentBackground
-        {
-            get => (Brush)GetValue(SegmentBackgroundProperty);
-            set => SetValue(SegmentBackgroundProperty, value);
-        }
-
-        [Bindable(true)]
-        [Category("自定义属性"), Description("浅深分段控件容器描边"), DisplayName("分段描边")]
-        public Brush SegmentBorder
-        {
-            get => (Brush)GetValue(SegmentBorderProperty);
-            set => SetValue(SegmentBorderProperty, value);
-        }
-
-        [Bindable(true)]
-        [Category("自定义属性"), Description("浅深分段控件选中态底色"), DisplayName("分段选中底色")]
-        public Brush SegmentSelectedBackground
-        {
-            get => (Brush)GetValue(SegmentSelectedBackgroundProperty);
-            set => SetValue(SegmentSelectedBackgroundProperty, value);
-        }
-
-        [Bindable(true)]
-        [Category("自定义属性"), Description("浅深分段控件选中态前景，null 跟随字段前景"), DisplayName("分段选中前景")]
-        public Brush? SegmentSelectedForeground
-        {
-            get => (Brush?)GetValue(SegmentSelectedForegroundProperty);
-            set => SetValue(SegmentSelectedForegroundProperty, value);
-        }
-
         /// <summary>控件自己的视图模型（内部绑定用，宿主无需关心）。</summary>
         public ThemePickerViewModel ViewModel { get; }
 
         public ThemePickerView()
         {
             ViewModel = new ThemePickerViewModel();
-            // 内部绑定全部走 DataContext，宿主在控件实例上设的属性（如 Theme）不受影响。
-            DataContext = ViewModel;
             InitializeComponent();
 
-            // 宿主没注入 Theme 时自建兜底实例（读同一份 Config/Theme.json），
-            // 保证控件单独放进任意窗口也能工作。
+            // 内部绑定所需的 DataContext 挂在 XAML 根节点上，而**不是**控件自身。
+            //
+            // ⚠️ 曾经写的是 `DataContext = ViewModel`，那是个静默 bug：
+            // 控件自身一旦顶掉 DataContext，宿主按文档写的
+            //     <wpfcc:ThemePickerView Theme="{Binding Theme}" />
+            // 就会绑到本控件 VM 的 Theme 属性上（构造时刚赋进去的兜底实例），
+            // 宿主 DI 里的单例永远进不来。症状极具迷惑性：换肤照样能换
+            //（两个 ThemeService 改的是同一个 BundledTheme），只是两份实例的状态各说各话，
+            // 表现为「辅色下拉显示的还是旧值」「别的消费方读到的是过期状态」。
+            // 现在控件自身的 DataContext 保持继承，宿主可以正常绑自己的 VM。
+            RootPanel.DataContext = ViewModel;
+
             ViewModel.Theme = Theme;
         }
 
