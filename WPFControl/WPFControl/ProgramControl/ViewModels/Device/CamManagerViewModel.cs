@@ -62,7 +62,7 @@ namespace WPFControl.ProgramControl.ViewModels
 
             SaveCallbackCommand = (() =>
             {
-                Service.Load();
+                Service.LoadAsync();
             });
 
             SelectCallbackCommand = (() =>

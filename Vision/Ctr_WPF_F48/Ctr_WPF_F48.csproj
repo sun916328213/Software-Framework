@@ -41,9 +41,4 @@
     <PackageReference Include="Extended.Wpf.Toolkit" Version="5.1.2" />
     <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="halcondotnet">
-      <HintPath>..\..\Dll\Vision\Halcon\halcondotnet.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 </Project>

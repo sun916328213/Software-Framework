@@ -55,8 +55,8 @@ namespace Packing_Machine.Infra.Tool
           {
               _CommunicationManager.SetWriteTask(PLCSystem.Online, 1);//设置心跳
 
-              _CommunicationManager.SetReadTask("Trigger", "D8000", 1000, Extension.Core.CompareEx.EComparePolarity.BothEdges);//设置读取数据区间
-              _CommunicationManager.SetReadTask("Alarm", "D6000", 1000, Extension.Core.CompareEx.EComparePolarity.None);//设置读取数据区间
+              _CommunicationManager.SetReadTask("Trigger", "D8000", 1000, Extension.Core.CompareEx.EComparePolarity.BothEdges);//????????????????????????????????????
+              _CommunicationManager.SetReadTask("Alarm", "D6000", 1000, Extension.Core.CompareEx.EComparePolarity.None);//????????????????????????????????????
 
               _CommunicationManager.StartLoop();//开启循环
           });
@@ -301,3 +301,4 @@ namespace Packing_Machine.Infra.Tool
         }
     }
 }
+

@@ -1,7 +1,6 @@
 ﻿using Device.Camera.Gige.Definition;
 using Device.Light.Definition;
 using Extension.Core.ConvertEx;
-using Extension.DesignPattern.ObserverPattern.Examples;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
@@ -63,3 +62,4 @@ namespace WPFControl.ProgramControl.Services
     
     }
 }
+

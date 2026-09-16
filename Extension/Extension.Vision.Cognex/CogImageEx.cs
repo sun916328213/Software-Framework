@@ -1,7 +1,7 @@
-﻿using Cognex.VisionPro;
+using Cognex.VisionPro;
 using System;
 
-namespace Extension.Core.ImageEx
+namespace Extension.Vision.Cognex
 {
     public static  class CogImageEx
     {

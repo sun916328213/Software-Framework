@@ -15,36 +15,43 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
-        <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
+        <ResourceDictionary>
+            <!--  页面样式归 DataManager.Controls 自己所有，由本页自行合并（宿主不替页面合并）  -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/DataManager.Controls;component/Themes/PageStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
 
-        <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-        </Style>
+            <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
+
+            <Style TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+            </Style>
 
 
-        <!--  连接表头：必须基于 MD 原生表头样式，裸样式会丢模板变成 WPF 默认灰表头  -->
-        <Style
-            x:Key="ConnHeader"
-            BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}"
-            TargetType="DataGridColumnHeader">
-            <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-        </Style>
-        <ObjectDataProvider
-            x:Key="DbTypes"
-            MethodName="GetValues"
-            ObjectType="{x:Type sys:Enum}">
-            <ObjectDataProvider.MethodParameters>
-                <x:Type TypeName="sql:ESQLType" />
-            </ObjectDataProvider.MethodParameters>
-        </ObjectDataProvider>
-        <ObjectDataProvider
-            x:Key="ToolTypes"
-            MethodName="GetValues"
-            ObjectType="{x:Type sys:Enum}">
-            <ObjectDataProvider.MethodParameters>
-                <x:Type TypeName="sql:ESQLToolType" />
-            </ObjectDataProvider.MethodParameters>
-        </ObjectDataProvider>
+            <!--  连接表头：必须基于 MD 原生表头样式，裸样式会丢模板变成 WPF 默认灰表头  -->
+            <Style
+                x:Key="ConnHeader"
+                BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}"
+                TargetType="DataGridColumnHeader">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+            </Style>
+            <ObjectDataProvider
+                x:Key="DbTypes"
+                MethodName="GetValues"
+                ObjectType="{x:Type sys:Enum}">
+                <ObjectDataProvider.MethodParameters>
+                    <x:Type TypeName="sql:ESQLType" />
+                </ObjectDataProvider.MethodParameters>
+            </ObjectDataProvider>
+            <ObjectDataProvider
+                x:Key="ToolTypes"
+                MethodName="GetValues"
+                ObjectType="{x:Type sys:Enum}">
+                <ObjectDataProvider.MethodParameters>
+                    <x:Type TypeName="sql:ESQLToolType" />
+                </ObjectDataProvider.MethodParameters>
+            </ObjectDataProvider>
+        </ResourceDictionary>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">

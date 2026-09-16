@@ -50,8 +50,19 @@
             </MenuItem>
         </Menu>
 
-        <Border Margin="-2,0"   Style="{StaticResource Border_Style}">
+        <!--
+            卡片容器：改用 MD 原生 Card，不再依赖自定义键 Border_Style。
+            原因：Border_Style 只在 WPFCustomControls 的 Resources.xaml 里定义，
+            本程序集不引用它，宿主没合并那份字典就会抛 XamlParseException（VisionDemo 就是）。
+            为了一个样式去引用 WPFCustomControls + Prism，会平白多带 6 个 dll（约 1 MB）。
+            UniformCornerRadius=8 与原 Border_Style 的圆角一致。
+            ⚠️ 两处与原样式的差异：Card 无 BorderBrush（原样式有 1px 描边）；
+            Card 的 ClipContent 默认 False（原样式有 RoundedCornerClipAssist 做圆角裁剪）。
+            若圆角处露出直角，加 Padding="2" ClipContent="True"；
+            要去掉 Card 默认阴影，加 materialDesign:ElevationAssist.Elevation="Dp0"。
+        -->
+        <materialDesign:Card UniformCornerRadius="8">
             <local:HSmartWindowView x:Name="HSWindowView" />
-        </Border>
+        </materialDesign:Card>
     </DockPanel>
 </UserControl>

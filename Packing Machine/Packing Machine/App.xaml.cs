@@ -1,5 +1,8 @@
 using Communication;
 using DataManager;
+using DataManager.Controls.Services;
+using DataManager.Controls.ViewModels;
+using DataManager.Controls.Views;
 using Device;
 using Extension.Core.ReflectionEx;
 using Extension.Helper.Mapping;
@@ -58,7 +61,11 @@ namespace Packing_Machine
             "UserInfoManagerView",
             "SEMIManagerView",
             "AlarmInfoManagerView",
-            "LogConfigView"
+            "LogConfigView",
+            // DataManager.Controls 提供的三个配置页（见 RegisterTypes 里的宿主侧注册）
+            "SqlView",
+            "LogView",
+            "ExcelView"
         };
 
         protected override Window CreateShell()
@@ -140,6 +147,26 @@ namespace Packing_Machine
             containerRegistry.RegisterSingleton<Business.Flow.Recipe>();
 
             containerRegistry.RegisterNavigationView<Test>();
+
+            // ---- DataManager.Controls 的三个配置页：SqlView / LogView / ExcelView ----
+            // 本项目**不新建任何页面**：View + VM + 样式整体归 DataManager.Controls，
+            // 直接用 Prism 导航把现成的页面显示到 MainContentRegion（菜单项见 01_初始化控件.cs）。
+            // 本项目只补两样东西：
+            //   ① 行实体 —— SqlViewModel<T> / ExcelViewModel<T> 是泛型，T 由宿主提供
+            //      （Controls 里只约束 ISqlEntity / IExcelTestEntity），实体见 UI\Model\Model_DataManagerConfig.cs；
+            //   ② 把实体注入 IOC + 注册导航（下面几行）。
+            // 为什么写在 App.xaml.cs 而不是 WPFControlModule：WPFControl 是被本项目引用的库，
+            // 模块里看不到 UI.Model 下的实体类型（反向引用会循环），Prism 命名约定也推不出类型实参。
+            // Workspace 是页面的流程宿主，与页面同生命周期 ⇒ 单例；其依赖的
+            // SQLManager / LogManager / ExcelManager 由 DataManagerModule 注册，此处无需重复。
+            containerRegistry.Register<SqlConfigEntity>();
+            containerRegistry.Register<ExcelConfigEntity>();
+            containerRegistry.RegisterSingleton<SqlWorkspace<SqlConfigEntity>>();
+            containerRegistry.RegisterSingleton<LogWorkspace>();
+            containerRegistry.RegisterSingleton<ExcelWorkspace<ExcelConfigEntity>>();
+            containerRegistry.RegisterNavigationView<SqlView, SqlViewModel<SqlConfigEntity>>();
+            containerRegistry.RegisterNavigationView<LogView, LogViewModel>();
+            containerRegistry.RegisterNavigationView<ExcelView, ExcelViewModel<ExcelConfigEntity>>();
         }
 
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)

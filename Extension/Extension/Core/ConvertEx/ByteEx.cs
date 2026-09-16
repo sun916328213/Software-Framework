@@ -13,12 +13,12 @@ namespace Extension.Core.ConvertEx
     }
     public static class ByteEx
     {
-        #region byte×ªÆäËûÀàĞÍ
+        #region byteè½¬å…¶ä»–ç±»å‹
         /// <summary>
-        /// ½«×Ö½ÚÊı×é×ª»»ÎªshortÀàĞÍ
+        /// å°†å­—èŠ‚æ•°ç»„è½¬æ¢ä¸ºshortç±»å‹
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
         public static short ToShort(this byte[] data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -30,10 +30,10 @@ namespace Extension.Core.ConvertEx
         }
 
         /// <summary>
-        /// ½«×Ö½ÚÊı×é×ª»»ÎªushortÀàĞÍ
+        /// å°†å­—èŠ‚æ•°ç»„è½¬æ¢ä¸ºushortç±»å‹
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
         public static ushort ToUShort(this byte[] data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -45,10 +45,10 @@ namespace Extension.Core.ConvertEx
         }
 
         /// <summary>
-        /// ½«×Ö½ÚÊı×é×ª»»ÎªintÀàĞÍ
+        /// å°†å­—èŠ‚æ•°ç»„è½¬æ¢ä¸ºintç±»å‹
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
         public static int ToInt(this byte[] data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -60,10 +60,10 @@ namespace Extension.Core.ConvertEx
         }
 
         /// <summary>
-        /// ½«×Ö½ÚÊı×é×ª»»ÎªintÀàĞÍ
+        /// å°†å­—èŠ‚æ•°ç»„è½¬æ¢ä¸ºintç±»å‹
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
         public static uint ToUInt(this byte[] data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -75,10 +75,10 @@ namespace Extension.Core.ConvertEx
         }
 
         /// <summary>
-        /// ½«×Ö½ÚÊı×é×ª»»ÎªfloatÀàĞÍ
+        /// å°†å­—èŠ‚æ•°ç»„è½¬æ¢ä¸ºfloatç±»å‹
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
         public static float ToFloat(this byte[] data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -88,7 +88,7 @@ namespace Extension.Core.ConvertEx
             else
                 raw = BinaryPrimitives.ReadUInt32LittleEndian(data);
 
-            // Ö±½Ó½«uintµÄÄÚ´æ²¼¾Ö½â¶ÁÎªfloat£¨Áã·ÖÅä¡¢Áã¿½±´¡¢ÎŞÕ»²Ù×÷£©
+            // ç›´æ¥å°†uintçš„å†…å­˜å¸ƒå±€è§£è¯»ä¸ºfloatï¼ˆé›¶åˆ†é…ã€é›¶æ‹·è´ã€æ— æ ˆæ“ä½œï¼‰
             //return Unsafe.As<uint, float>(ref raw);
 
             byte[] bytes = BitConverter.GetBytes(raw);
@@ -96,10 +96,10 @@ namespace Extension.Core.ConvertEx
         }
 
         /// <summary>
-        /// ½«×Ö½ÚÊı×é×ª»»ÎªdoubleÀàĞÍ
+        /// å°†å­—èŠ‚æ•°ç»„è½¬æ¢ä¸ºdoubleç±»å‹
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
         public static double ToDouble(this byte[] data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -114,10 +114,10 @@ namespace Extension.Core.ConvertEx
         }
 
         /// <summary>
-        /// ½«×Ö½ÚÊı×é×ª»»ÎªASCII×Ö·û´®
+        /// å°†å­—èŠ‚æ•°ç»„è½¬æ¢ä¸ºASCIIå­—ç¬¦ä¸²
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
         public static string ToASCII(this byte[] data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -130,60 +130,60 @@ namespace Extension.Core.ConvertEx
 
         public static ushort ToUInt16(this byte[] value, int startIndex, bool isLE = true)
         {
-            // 1. ±ß½ç¼ì²é
+            // 1. è¾¹ç•Œæ£€æŸ¥
             if (value == null) throw new ArgumentNullException(nameof(value));
             if (startIndex < 0 || startIndex + 2 > value.Length)
-                throw new ArgumentOutOfRangeException(nameof(startIndex), "Êı×é³¤¶È²»×ã»òË÷ÒıÔ½½ç");
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "æ•°ç»„é•¿åº¦ä¸è¶³æˆ–ç´¢å¼•è¶Šç•Œ");
 
-            // 2. ×ª»»Âß¼­
+            // 2. è½¬æ¢é€»è¾‘
             if (isLE)
             {
-                // Ğ¡¶Ë Little Endian: µÍ×Ö½ÚÔÚÇ° (Low Byte First)
+                // å°ç«¯ Little Endian: ä½å­—èŠ‚åœ¨å‰ (Low Byte First)
                 return (ushort)(value[startIndex] | (value[startIndex + 1] << 8));
             }
             else
             {
-                // ´ó¶Ë Big Endian: ¸ß×Ö½ÚÔÚÇ° (High Byte First)
+                // å¤§ç«¯ Big Endian: é«˜å­—èŠ‚åœ¨å‰ (High Byte First)
                 return (ushort)((value[startIndex] << 8) | value[startIndex + 1]);
             }
         }
 
         /// <summary>
-        /// ½«ByteÊı×é×ªÎªBoolÊı×é
-        /// Âß¼­£ºHexÏÔÊ¾µÄ 1ÎªTrue£¬0ÎªFalse
-        /// ÀıÈç£º0x10 -> [true, false], 0x01 -> [false, true]
+        /// å°†Byteæ•°ç»„è½¬ä¸ºBoolæ•°ç»„
+        /// é€»è¾‘ï¼šHexæ˜¾ç¤ºçš„ 1ä¸ºTrueï¼Œ0ä¸ºFalse
+        /// ä¾‹å¦‚ï¼š0x10 -> [true, false], 0x01 -> [false, true]
         /// </summary>
         public static bool[] ToHexBools(this byte[] data)
         {
             if (data == null || data.Length == 0) return Array.Empty<bool>();
 
             int count = data.Length;
-            // 1. Ô¤·ÖÅäÄÚ´æ£¬±ÜÃâ¶¯Ì¬À©Èİ
+            // 1. é¢„åˆ†é…å†…å­˜ï¼Œé¿å…åŠ¨æ€æ‰©å®¹
             bool[] result = new bool[count * 2];
 
             unsafe
             {
-                // 2. ·ÀÖ¹GCÒÆ¶¯ÄÚ´æ£¬»ñÈ¡Ô­Ê¼Ö¸Õë
+                // 2. é˜²æ­¢GCç§»åŠ¨å†…å­˜ï¼Œè·å–åŸå§‹æŒ‡é’ˆ
                 fixed (byte* pSource = data)
                 fixed (bool* pDest = result)
                 {
                     byte* ptrSrc = pSource;
                     bool* ptrDest = pDest;
 
-                    // 3. Ö¸Õë±éÀú
+                    // 3. æŒ‡é’ˆéå†
                     for (int i = 0; i < count; i++)
                     {
-                        // Âß¼­£º¼ì²é¸ß4Î»ÊÇ·ñÎª1 (¶ÔÓ¦Hex×ó±ßÄÇÎ»)
-                        // 0x10 ÊÇ¶ş½øÖÆ 0001 0000
+                        // é€»è¾‘ï¼šæ£€æŸ¥é«˜4ä½æ˜¯å¦ä¸º1 (å¯¹åº”Hexå·¦è¾¹é‚£ä½)
+                        // 0x10 æ˜¯äºŒè¿›åˆ¶ 0001 0000
                         *ptrDest = (*ptrSrc & 0x10) != 0;
 
-                        // Âß¼­£º¼ì²éµÍ4Î»ÊÇ·ñÎª1 (¶ÔÓ¦HexÓÒ±ßÄÇÎ»)
-                        // 0x01 ÊÇ¶ş½øÖÆ 0000 0001
+                        // é€»è¾‘ï¼šæ£€æŸ¥ä½4ä½æ˜¯å¦ä¸º1 (å¯¹åº”Hexå³è¾¹é‚£ä½)
+                        // 0x01 æ˜¯äºŒè¿›åˆ¶ 0000 0001
                         *(ptrDest + 1) = (*ptrSrc & 0x01) != 0;
 
-                        // Ö¸ÕëÒÆ¶¯
-                        ptrSrc++;      // Ô´Ö¸ÕëÒÆ¶¯ 1 byte
-                        ptrDest += 2;  // Ä¿±êÖ¸ÕëÒÆ¶¯ 2 bools (2 bytes)
+                        // æŒ‡é’ˆç§»åŠ¨
+                        ptrSrc++;      // æºæŒ‡é’ˆç§»åŠ¨ 1 byte
+                        ptrDest += 2;  // ç›®æ ‡æŒ‡é’ˆç§»åŠ¨ 2 bools (2 bytes)
                     }
                 }
             }
@@ -192,13 +192,13 @@ namespace Extension.Core.ConvertEx
         }
         #endregion
 
-        #region ÆäËûÀàĞÍ×ªbyte
+        #region å…¶ä»–ç±»å‹è½¬byte
 
         /// <summary>
-        /// ½«shortÀàĞÍ×ª»»Îª×Ö½ÚÊı×é
+        /// å°†shortç±»å‹è½¬æ¢ä¸ºå­—èŠ‚æ•°ç»„
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
         public static byte[] ToBytes(this short data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -212,10 +212,10 @@ namespace Extension.Core.ConvertEx
         }
 
         /// <summary>
-        /// ½«ushortÀàĞÍ×ª»»Îª×Ö½ÚÊı×é
+        /// å°†ushortç±»å‹è½¬æ¢ä¸ºå­—èŠ‚æ•°ç»„
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
         public static byte[] ToBytes(this ushort data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -229,10 +229,10 @@ namespace Extension.Core.ConvertEx
         }
 
         /// <summary>
-        /// ½«intÀàĞÍ×ª»»Îª×Ö½ÚÊı×é
+        /// å°†intç±»å‹è½¬æ¢ä¸ºå­—èŠ‚æ•°ç»„
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
          public static byte[] ToBytes(this int data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -246,10 +246,10 @@ namespace Extension.Core.ConvertEx
         }
 
         /// <summary>
-        /// ½«uintÀàĞÍ×ª»»Îª×Ö½ÚÊı×é
+        /// å°†uintç±»å‹è½¬æ¢ä¸ºå­—èŠ‚æ•°ç»„
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
           public static byte[] ToBytes(this uint data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -263,10 +263,10 @@ namespace Extension.Core.ConvertEx
         }
 
         /// <summary>
-        /// ½«longÀàĞÍ×ª»»Îª×Ö½ÚÊı×é
+        /// å°†longç±»å‹è½¬æ¢ä¸ºå­—èŠ‚æ•°ç»„
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
           public static byte[] ToBytes(this long data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -280,10 +280,10 @@ namespace Extension.Core.ConvertEx
         }
 
         /// <summary>
-        /// ½«ulongÀàĞÍ×ª»»Îª×Ö½ÚÊı×é
+        /// å°†ulongç±»å‹è½¬æ¢ä¸ºå­—èŠ‚æ•°ç»„
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
         public static byte[] ToBytes(this ulong data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -297,10 +297,10 @@ namespace Extension.Core.ConvertEx
         }
 
         /// <summary>
-        /// ½«floatÀàĞÍ×ª»»Îª×Ö½ÚÊı×é
+        /// å°†floatç±»å‹è½¬æ¢ä¸ºå­—èŠ‚æ•°ç»„
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
         public static byte[] ToBytes(this float data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -318,10 +318,10 @@ namespace Extension.Core.ConvertEx
         }
 
         /// <summary>
-        /// ½«doubleÀàĞÍ×ª»»Îª×Ö½ÚÊı×é
+        /// å°†doubleç±»å‹è½¬æ¢ä¸ºå­—èŠ‚æ•°ç»„
         /// </summary>
-        /// <param name="data">Êı¾İ</param>
-        /// <param name="endianType">´óĞ¡¶Ë</param>
+        /// <param name="data">æ•°æ®</param>
+        /// <param name="endianType">å¤§å°ç«¯</param>
         /// <returns></returns>
         public static byte[] ToBytes(this double data, EEndianType endianType = EEndianType.Big_Endian)
         {
@@ -339,42 +339,44 @@ namespace Extension.Core.ConvertEx
 
         public static byte[] ToBytes(this string data, Encoding encoding , EEndianType endianType = EEndianType.Big_Endian)
         {
-            // 2. ±àÂë×ª×Ö½ÚÊı×é£¨ºËĞÄÂß¼­£©
+            // 2. ç¼–ç è½¬å­—èŠ‚æ•°ç»„ï¼ˆæ ¸å¿ƒé€»è¾‘ï¼‰
             byte[] buffer = encoding.GetBytes(data);
 
-            // 3. 2×Ö½Ú¶ÔÆë£º¼ò»¯¼ÆËã£¨Modbus 16Î»¼Ä´æÆ÷±ØĞëÅ¼Êı³¤¶È£©
-            int totalLength = buffer.Length + (buffer.Length % 2); // µÈ¼ÛÓÚÔ­Âß¼­£¬¸ü¼ò½à
+            // 3. 2å­—èŠ‚å¯¹é½ï¼šç®€åŒ–è®¡ç®—ï¼ˆModbus 16ä½å¯„å­˜å™¨å¿…é¡»å¶æ•°é•¿åº¦ï¼‰
+            int totalLength = buffer.Length + (buffer.Length % 2); // ç­‰ä»·äºåŸé€»è¾‘ï¼Œæ›´ç®€æ´
             Span<byte> resultSpan = totalLength <= 1024
-                ? stackalloc byte[totalLength] // Ğ¡³¤¶È£ºÕ»·ÖÅä£¨ÁãGC£©
-                : new byte[totalLength];       // ´ó³¤¶È£º¶Ñ·ÖÅä
+                ? stackalloc byte[totalLength] // å°é•¿åº¦ï¼šæ ˆåˆ†é…ï¼ˆé›¶GCï¼‰
+                : new byte[totalLength];       // å¤§é•¿åº¦ï¼šå †åˆ†é…
 
-            // 4. ¿½±´Ô­Êı¾İµ½Span£¨×Ô¶¯²¹0£¬ÎŞĞèÊÖ¶¯¸³Öµ£©
+            // 4. æ‹·è´åŸæ•°æ®åˆ°Spanï¼ˆè‡ªåŠ¨è¡¥0ï¼Œæ— éœ€æ‰‹åŠ¨èµ‹å€¼ï¼‰
             buffer.AsSpan().CopyTo(resultSpan);
 
-            // 5. ÓÃBinaryPrimitives´¦Àí×Ö½ÚĞò£¨Ìæ´úÊÖ¶¯½»»»×Ö½Ú£©
+            // 5. ç”¨BinaryPrimitiveså¤„ç†å­—èŠ‚åºï¼ˆæ›¿ä»£æ‰‹åŠ¨äº¤æ¢å­—èŠ‚ï¼‰
             if (endianType == EEndianType.Little_Endian)
             {
-                // °´Modbus¼Ä´æÆ÷Á£¶È£¨2×Ö½Ú£©±éÀú£¬´¦Àí×Ö½ÚĞò
+                // æŒ‰Modbuså¯„å­˜å™¨ç²’åº¦ï¼ˆ2å­—èŠ‚ï¼‰éå†ï¼Œå¤„ç†å­—èŠ‚åº
                 for (int i = 0; i < resultSpan.Length; i += 2)
                 {
-                    // ½ö´¦ÀíÍêÕûµÄ16Î»¼Ä´æÆ÷£¨±ÜÃâÔ½½ç£©
+                    // ä»…å¤„ç†å®Œæ•´çš„16ä½å¯„å­˜å™¨ï¼ˆé¿å…è¶Šç•Œï¼‰
                     if (i + 1 >= resultSpan.Length) break;
 
-                    // ²½Öè1£º°´ModbusÄ¬ÈÏ´ó¶Ë¶ÁÈ¡16Î»Öµ£¨ÏÈ¶ÁÎªUInt16£©
+                    // æ­¥éª¤1ï¼šæŒ‰Modbusé»˜è®¤å¤§ç«¯è¯»å–16ä½å€¼ï¼ˆå…ˆè¯»ä¸ºUInt16ï¼‰
                     ushort registerValue = BinaryPrimitives.ReadUInt16BigEndian(resultSpan.Slice(i, 2));
-                    // ²½Öè2£º°´Ä¿±êĞ¡¶ËĞ´»Ø£¨¸²¸ÇÔ­Î»ÖÃ£©
+                    // æ­¥éª¤2ï¼šæŒ‰ç›®æ ‡å°ç«¯å†™å›ï¼ˆè¦†ç›–åŸä½ç½®ï¼‰
                     BinaryPrimitives.WriteUInt16LittleEndian(resultSpan.Slice(i, 2), registerValue);
                 }
             }
-            // ´ó¶ËÎŞĞè´¦Àí£¨BinaryPrimitives.ReadUInt16BigEndianÊÇModbusÄ¬ÈÏ£©
+            // å¤§ç«¯æ— éœ€å¤„ç†ï¼ˆBinaryPrimitives.ReadUInt16BigEndianæ˜¯Modbusé»˜è®¤ï¼‰
 
-            // 6. Span×ªÊı×é·µ»Ø£¨Õ»Span»á×Ô¶¯¿½±´£¬¶ÑSpanÖ±½Ó×ª£©
+            // 6. Spanè½¬æ•°ç»„è¿”å›ï¼ˆæ ˆSpanä¼šè‡ªåŠ¨æ‹·è´ï¼Œå †Spanç›´æ¥è½¬ï¼‰
             return resultSpan.ToArray();
         }
         #endregion
 
-        #region ByteµÄBit²Ù×÷
+        #region Byteçš„Bitæ“ä½œ
 
         #endregion
     }
 }
+
+

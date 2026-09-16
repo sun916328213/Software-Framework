@@ -14,6 +14,11 @@
 
     <UserControl.Resources>
         <ResourceDictionary>
+            <!--  页面样式归 DataManager.Controls 自己所有，由本页自行合并（宿主不替页面合并）  -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/DataManager.Controls;component/Themes/PageStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
             <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
 
             <Style BasedOn="{StaticResource MaterialDesignComboBox}" TargetType="ComboBox">
@@ -366,28 +371,28 @@
                         Grid.Row="0"
                         Style="{StaticResource SectionTitle}"
                         Text="查询结果" />
-                    <DataGrid
+                    <wpfcc:DataGridLogView
                         Grid.Row="1"
                         MinHeight="110"
                         Margin="0,10,0,0"
                         AutoGenerateColumns="False"
                         ItemsSource="{Binding Model.Results}"
                         Style="{StaticResource DmGrid}">
-                        <DataGrid.Columns>
+                        <wpfcc:DataGridLogView.Columns>
                             <DataGridTextColumn
                                 Width="170"
                                 Binding="{Binding Time}"
                                 Header="时间" />
                             <DataGridTextColumn
-                                Width="90"
-                                Binding="{Binding Level}"
-                                Header="等级" />
-                            <DataGridTextColumn
                                 Width="*"
                                 Binding="{Binding Info}"
                                 Header="内容" />
-                        </DataGrid.Columns>
-                    </DataGrid>
+                            <DataGridTextColumn
+                                Width="90"
+                                Binding="{Binding Level}"
+                                Header="等级" />
+                        </wpfcc:DataGridLogView.Columns>
+                    </wpfcc:DataGridLogView>
 
                     <materialDesign:Card Grid.Row="2" UniformCornerRadius="8">
                         <Expander

@@ -7,7 +7,6 @@ using Device.Light;
 using Extension.Core.ConvertEx;
 using Extension.Core.ImageEx;
 using Extension.Core.SystemEx;
-using Extension.DesignPattern.ObserverPattern.Examples;
 using HalconDotNet;
 using Prism.Ioc;
 using System;
@@ -181,7 +180,7 @@ namespace WPFControl.ProgramControl.Services
         /// <summary>
         /// 加载相机列表
         /// </summary>
-        public async void Load()
+        public async Task LoadAsync()
         {
             await TryCatchHelper.TryExecuteAsync(async () =>
              {
@@ -189,7 +188,9 @@ namespace WPFControl.ProgramControl.Services
                  Manager.Disconnect();
                  Manager.Config(Model.DataCollection.ToList());
                  await Manager.ConnectAsync();
+                 Model.CurCam = Manager[Model.SelectedItem.Name];
              });
         }
     }
 }
+

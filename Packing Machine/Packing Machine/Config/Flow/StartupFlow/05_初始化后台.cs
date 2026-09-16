@@ -38,8 +38,7 @@ public class Script
     {
         var now = DateTime.Now;
 
-        if (now.Minute % 2 == 0 && now.Second == 0)//5分钟读一次
-        {
+        if (now.Minute % 2 == 0 && now.Second == 0)//5分钟读一次        {
             //读取OK NG
             //ReadCount();
             //更新每天统计信息
@@ -104,7 +103,7 @@ public class Script
         // 在后台线程执行耗时操作
         Task.Run(() =>
         {
-            // 每小时检查一次（当分钟为0且秒为0时）
+            // 每小时检查一次（当分钟为0且秒丼时）
             if (now.Minute / 10 == 0 && now.Second == 0)
             {
                 ScheduledDeletion.DeleteExpiredFiles(GlobalData.Path_Image, GlobalData.SaveImageDay);

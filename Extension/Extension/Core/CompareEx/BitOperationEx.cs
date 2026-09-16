@@ -353,3 +353,4 @@ namespace Extension.Core.CompareEx
         }
     }
 }
+

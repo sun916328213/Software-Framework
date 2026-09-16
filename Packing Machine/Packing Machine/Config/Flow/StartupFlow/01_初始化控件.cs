@@ -324,6 +324,28 @@ public class Script
              Icon = PackIconKind.BellCogOutline,
              Action = (() => { _IRegionManager.RequestNavigate("MainContentRegion", "AlarmInfoManagerView"); })
          },
+
+         // ---- DataManager.Controls 提供的三个配置页 ----
+         // 页面归 DataManager.Controls；行实体与导航注册在 Packing Machine 的 App.RegisterTypes
+         // （WPFControl 只是引用它们，模块里注册不了 —— 泛型 VM 的实参是宿主自己的实体）。
+         new CNavigationItem
+         {
+             Title = "SQL 配置",
+             Icon = PackIconKind.Database,
+             Action = (() => { _IRegionManager.RequestNavigate("MainContentRegion", "SqlView"); })
+         },
+         new CNavigationItem
+         {
+             Title = "日志测试",
+             Icon = PackIconKind.FileDocumentOutline,
+             Action = (() => { _IRegionManager.RequestNavigate("MainContentRegion", "LogView"); })
+         },
+         new CNavigationItem
+         {
+             Title = "Excel 配置",
+             Icon = PackIconKind.Table,
+             Action = (() => { _IRegionManager.RequestNavigate("MainContentRegion", "ExcelView"); })
+         },
      });
     }
     #endregion

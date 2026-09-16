@@ -5,6 +5,15 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root">
 
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <!--  页面样式归 DataManager.Controls 自己所有，由本页自行合并（宿主不替页面合并）  -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/DataManager.Controls;component/Themes/PageStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
     <!--  运行输出卡：输出框 + 耗时 + 导出/清空。三页共用（绑定走继承来的 DataContext，无 VM 类型耦合）。  -->
     <!--
         Padding 20 → 16：三页（Log/Sql/Excel）里所有同级卡都已统一到 16，

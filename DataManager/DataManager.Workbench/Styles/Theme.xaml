@@ -3,105 +3,19 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
-    <!--  页面标题（Material 风格字阶；前景钉 MD 原生键，深浅切换自动跟随，不自定义画刷）  -->
-    <Style x:Key="PageTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="22" />
-        <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-    </Style>
-    <Style x:Key="PageSubTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="12" />
-        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-        <Setter Property="Opacity" Value="0.6" />
-        <Setter Property="Margin" Value="0,4,0,0" />
-    </Style>
-    <Style x:Key="SectionTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="15" />
-        <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-    </Style>
+    <ResourceDictionary.MergedDictionaries>
+        <!--
+            页面样式（PageTitle / PageSubTitle / SectionTitle / DmInput / DmCombo / DmGrid / OutputBox）
+            不在本文件定义，只**引用** DataManager.Controls 自己那份 —— 样式归页面所有，宿主只做引用。
+            各页面也在自己的 UserControl.Resources 里合并同一字典，故页面换宿主也能独立工作。
+        -->
+        <ResourceDictionary Source="pack://application:,,,/DataManager.Controls;component/Themes/PageStyles.xaml" />
+    </ResourceDictionary.MergedDictionaries>
 
     <!--  品牌色（侧栏固定深色区专用，不随主题变；功能色仍走 MD 原生键）  -->
     <SolidColorBrush x:Key="SuccessBrush" Color="#16A34A" />
     <SolidColorBrush x:Key="DangerBrush" Color="#DC2626" />
     <SolidColorBrush x:Key="SidebarBrush" Color="#0F172A" />
-
-    <!--
-        输入框（官方体系：基于 MD 默认样式，只把前景显式钉到 MD 原生键；
-        Outlined 默认不把主题前景赋到 Foreground 属性，深色下会回落黑色，故须显式钉）
-    -->
-    <Style
-        x:Key="DmInput"
-        BasedOn="{StaticResource MaterialDesignTextBox}"
-        TargetType="TextBox">
-        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-        <Setter Property="CaretBrush" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-    </Style>
-
-    <!--  下拉框（默认弹出项前景不跟随主题，显式钉原生键；控件与弹层各钉一次）  -->
-    <Style
-        x:Key="DmCombo"
-        BasedOn="{StaticResource MaterialDesignComboBox}"
-        TargetType="ComboBox">
-        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-        <Style.Resources>
-            <Style TargetType="ComboBoxItem">
-                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-            </Style>
-        </Style.Resources>
-    </Style>
-
-    <!--  结果表格（MD 默认 DataGrid；单元格文字随原生前景键跟随主题）  -->
-    <Style
-        x:Key="DmGrid"
-        BasedOn="{StaticResource MaterialDesignDataGrid}"
-        TargetType="DataGrid">
-        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-    </Style>
-
-    <!--
-        运行输出框 / 多行原文框（等宽字体，但**跟随主题**）。
-        
-        ⚠️ 这里曾经写死深色终端风（`Background="#0F172A"` / `Foreground="#E2E8F0"`），
-        并且被当成「刻意不随主题」的定制保留下来。用户 2026-09-15 晚指出：
-        **浅色主题下「多行原文」和「运行输出」两块黑底不合适** —— 浅色界面里嵌两个黑盒子，
-        既不像输入框也不像卡片，视觉上很突兀。
-        
-        改法：改用 MD 原生键，靠**填充层级**而不是描边来区分（本仓一贯做法）：
-        · 浅色：底 `#F1F1F1`（比卡片白 `#FFFFFF` 暗一档 ⇒ 像内嵌的凹槽）+ 近黑字；
-        · 深色：底 `#323232`（比卡片 `#454545` 暗一档 ⇒ 同样读作凹槽）+ 近白字。
-        两个主题下都是「比卡片底色暗一档的凹槽」，语义一致，等宽字体保留。
-        对比度：浅色 ≈ 17.9:1，深色 ≈ 12.6:1，都远超 AA。
-        
-        `ScrollViewer_Style` 那一段**必须保留**：WPF 默认 ScrollViewer 模板在右下角放了一个
-        填充系统色的 Rectangle，横竖滚动条同时出现时会露出来（深色主题下就是那个扎眼的浅色小方块）。
-        它属于 **ScrollViewer**，只套 ScrollBar_Style 治不到。
-    -->
-    <Style x:Key="OutputBox" TargetType="TextBox">
-        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Background}" />
-        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-        <Setter Property="FontFamily" Value="Consolas" />
-        <Setter Property="FontSize" Value="12" />
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="IsReadOnly" Value="True" />
-        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
-        <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
-        <Setter Property="TextWrapping" Value="NoWrap" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="TextBox">
-                    <Border Background="{TemplateBinding Background}" CornerRadius="8">
-                        <ScrollViewer
-                            x:Name="PART_ContentHost"
-                            Margin="12,10"
-                            HorizontalScrollBarVisibility="{TemplateBinding HorizontalScrollBarVisibility}"
-                            Style="{StaticResource ScrollViewer_Style}"
-                            VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}" />
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
 
     <!--
         导航项标题：默认跟随浅深；选中行压在 Primary 上时换成 Primary.Foreground。

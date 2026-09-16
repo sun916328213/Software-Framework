@@ -22,9 +22,4 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="halcondotnet">
-      <HintPath>..\..\Dll\Vision\Halcon\halcondotnet.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 </Project>

@@ -71,7 +71,11 @@ namespace DataManager.Tests.Workbench
                     Application.Current.Dispatcher.Invoke(() => { }, DispatcherPriority.Background);
                     window.UpdateLayout();
                 }
-                var dmInput = Application.Current.TryFindResource("DmInput") as Style;
+                // ⚠️ 必须从**视图自己**的资源链取 DmInput，不能用 Application.Current：
+                // 页面样式已归 DataManager.Controls 所有（Themes/PageStyles.xaml），
+                // 由各页面在自己的 UserControl.Resources 里合并；宿主那份只是引用。
+                // Application.Current 拿到的是宿主链上的另一个实例，ReferenceEquals 必然为 false。
+                var dmInput = view.TryFindResource("DmInput") as Style;
                 Assert.NotNull(dmInput);
                 var boxes = CollectAll(view).OfType<TextBox>().ToList();
                 var expanders = CollectAll(view).OfType<Expander>().ToList();

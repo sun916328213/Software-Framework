@@ -56,11 +56,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\FlowNodes\FlowNodes\FlowNodes.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="halcondotnet">
-      <HintPath>..\..\Dll\Vision\Halcon\halcondotnet.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\..\FlowEditor\FlowEditor.DataManagerLogging\FlowEditor.DataManagerLogging.csproj" />
+    <ProjectReference Include="..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\图标.ico" />

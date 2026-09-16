@@ -1,0 +1,72 @@
+﻿=== Ctr_WPF_F48 ===
+-- Only in reference --
+  Properties\AssemblyInfo.cs
+-- Only in current --
+  Ctr_Base\PropertyEditorBindingHelper.cs
+  Ctr_Halcon\Helper\HSmartWindowHelper.cs
+  Ctr_Halcon\View\HSmartWindowView.xaml.cs
+-- Content differences --
+  DIFF: Converter\PropertiesConverter .cs (ref=37 cur=50)
+  DIFF: Ctr_Base\Ctr_MultiSelectComboBox.cs (ref=138 cur=140)
+  DIFF: Ctr_Base\Ctr_PropertyClassList.cs (ref=409 cur=447)
+  DIFF: Ctr_Base\Ctr_PropertyPanel.cs (ref=561 cur=581)
+  DIFF: Ctr_Halcon\View\Ctr_HDispWindowTool_DP.xaml.cs (ref=98 cur=103)
+  DIFF: Ctr_Halcon\View\Ctr_HVisionTool_DP.xaml.cs (ref=207 cur=249)
+  DIFF: Ctr_Halcon\View\Ctr_HWindow_DP.xaml.cs (ref=1107 cur=1377)
+  DIFF: Ctr_Halcon\View\Ctr_ROI.xaml.cs (ref=251 cur=346)
+  DIFF: Ctr_Halcon\View\Ctr_ToolData.xaml.cs (ref=231 cur=232)
+
+=== DPLibrary_Base_F48 ===
+-- Only in reference --
+  Properties\AssemblyInfo.cs
+-- Content differences --
+  DIFF: ObservableCollectionEx\PairedCollections.cs (ref=240 cur=232)
+  DIFF: PropertyToUI\ToolPropertyAttribute.cs (ref=99 cur=93)
+  DIFF: StreamEx\JsonHelper.cs (ref=303 cur=214)
+  DIFF: Tools\ITool.cs (ref=367 cur=357)
+  DIFF: Tools\ToolMge.cs (ref=323 cur=357)
+  DIFF: Vision\E_Color.cs (ref=51 cur=44)
+  DIFF: Vision\I_ROIs.cs (ref=86 cur=85)
+  DIFF: Vision\I_XLDs.cs (ref=74 cur=73)
+
+=== DPLibrary_Halcon_F48 ===
+-- Only in reference --
+  Properties\AssemblyInfo.cs
+-- Only in current --
+  Tool\Sort.cs
+  Tools\Blob\BlobClasslb.cs
+  Tools\Geometry\HGeometryResult.cs
+  Tools\Geometry\HTool_Geometry.cs
+  Tools\ImageFile\HTool_ImageFile.cs
+-- Content differences --
+  DIFF: Base\HConverter.cs (ref=61 cur=61)
+  DIFF: Base\HHelper.cs (ref=54 cur=63)
+  DIFF: Base\HLib.cs (ref=32 cur=26)
+  DIFF: Base\DispMessage\HDispMessage.cs (ref=99 cur=101)
+  DIFF: Base\ROI\ROIs.cs (ref=658 cur=880)
+  DIFF: Base\XLD\HXLDs.cs (ref=466 cur=477)
+  DIFF: Tools\HToolConverter.cs (ref=13 cur=4)
+  DIFF: Tools\IHVisionTool.cs (ref=190 cur=197)
+  DIFF: Tools\AI\AIBase.cs (ref=85 cur=87)
+  DIFF: Tools\AI\AITool.cs (ref=281 cur=291)
+  DIFF: Tools\AI\Aiditron\TeTree.cs (ref=550 cur=549)
+  DIFF: Tools\AI\Definition\AIType.cs (ref=27 cur=21)
+  DIFF: Tools\AI\Invi\InvIClassTool.cs (ref=223 cur=223)
+  DIFF: Tools\AI\Invi\InviHelper.cs (ref=186 cur=184)
+  DIFF: Tools\AI\Invi\InvIHelpr1.cs (ref=142 cur=141)
+  DIFF: Tools\AI\Invi\InviType.cs (ref=44 cur=44)
+  DIFF: Tools\Blob\HBlobResult.cs (ref=34 cur=40)
+  DIFF: Tools\Blob\HTool_Blob.cs (ref=239 cur=325)
+  DIFF: Tools\Calib\HTool_TransforPoint.cs (ref=201 cur=192)
+  DIFF: Tools\CodeReader\CodeReaderClassLb.cs (ref=134 cur=126)
+  DIFF: Tools\CodeReader\HTool_2DCode.cs (ref=273 cur=262)
+  DIFF: Tools\CodeReader\HTool_BarCode.cs (ref=610 cur=631)
+  DIFF: Tools\CodeReader\HTool_BarCode_AutoRegionZoomFind.cs (ref=303 cur=302)
+  DIFF: Tools\CodeReader\ICodeReader.cs (ref=24 cur=9)
+  DIFF: Tools\Find\HTool_FindLine.cs (ref=525 cur=517)
+  DIFF: Tools\Find\HTool_FindLineCanny.cs (ref=202 cur=199)
+  DIFF: Tools\TemplateMatch\HBase_TemplateControl.cs (ref=354 cur=354)
+  DIFF: Tools\TemplateMatch\HBase_TemplateMatch.cs (ref=186 cur=185)
+  DIFF: Tools\TemplateMatch\HTool_TemplateControl.cs (ref=363 cur=352)
+  DIFF: Tools\TemplateMatch\HTool_TemplateMatch.cs (ref=328 cur=325)
+

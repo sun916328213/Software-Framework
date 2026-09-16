@@ -13,11 +13,18 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
-        <!--  追加/更新仅 EPPlus 支持，下拉只给这两项  -->
-        <x:Array x:Key="ExcelTools" Type="{x:Type excel:ExcelType}">
-            <excel:ExcelType>EPPlus</excel:ExcelType>
-            <excel:ExcelType>MiniExcel</excel:ExcelType>
-        </x:Array>
+        <ResourceDictionary>
+            <!--  页面样式归 DataManager.Controls 自己所有，由本页自行合并（宿主不替页面合并）  -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/DataManager.Controls;component/Themes/PageStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!--  追加/更新仅 EPPlus 支持，下拉只给这两项  -->
+            <x:Array x:Key="ExcelTools" Type="{x:Type excel:ExcelType}">
+                <excel:ExcelType>EPPlus</excel:ExcelType>
+                <excel:ExcelType>MiniExcel</excel:ExcelType>
+            </x:Array>
+        </ResourceDictionary>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">

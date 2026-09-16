@@ -2,7 +2,6 @@ using Communication;
 using Communication.MC;
 using Device.Scan;
 using Extension.Core.ControlEx;
-using Extension.Core.ConvertEx;
 using Extension.Core.EnumEx;
 using Extension.Core.SystemEx;
 using Extension.Struct;
@@ -16,6 +15,7 @@ using WPFControl.Helper;
 using WPFControl.ProgramControl.Models;
 using WPFControl.ProgramControl.Services;
 using WPFControl.Resources;
+using Extension.Core.ConvertEx;
 
 namespace Packing_Machine.Business.Flow
 {
@@ -186,7 +186,7 @@ namespace Packing_Machine.Business.Flow
                     // 在后台线程执行耗时操作
                     Task.Run(() =>
                     {
-                        // 每小时检查一次（当分钟为0且秒为0时）
+                        // 每小时检查一次（当分钟为0且秒丼时）
                         if (now.Minute / 10 == 0 && now.Second == 0)
                         {
                             ScheduledDeletion.DeleteExpiredFiles(GlobalData.Path_Image, GlobalData.SaveImageDay);
@@ -210,7 +210,7 @@ namespace Packing_Machine.Business.Flow
         private List<string> ReadCount()
         {
             List<string> strings = new List<string>();
-            //读取计数 PLC 地址从20:00开始
+            //读取计数 PLC 地址从0:00开始
             for (int i = 0; i < 10; i++)
             {
                 string Time20 = _PLCMethod.ReadData("读取计数", PLCSystem.Count, 0, false);

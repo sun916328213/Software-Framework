@@ -14,7 +14,7 @@ namespace WPFControl.ProgramControl.Models
     /// 注意：LogQueryModel不应该继承SLogInfo，因为它们是不同层次的概念：
     /// 1. SLogInfo是结构体，代表单条日志信息
     /// 2. LogQueryModel是类，代表日志集合的容器
-    /// 3. 它们之间是组合关系(has-a)而非继承关系(is-a)
+    /// 3. 它们之间是组合关系has-a)而非继承关系(is-a)
     /// </summary>
     internal class LogQueryModel:ObservableObject
     {
@@ -128,3 +128,4 @@ namespace WPFControl.ProgramControl.Models
         }
     }
 }
+

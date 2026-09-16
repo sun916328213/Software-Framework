@@ -803,12 +803,12 @@ namespace Ctr_WPF_F48.Ctr_Halcon.View
         I_IsHit mCurrentDrawing = null;
         void CurrentSelectChanged(I_IsHit isHit, bool val)
         {
-            if (isHit is HROI roi && !ReferenceEquals(roi, SelectedEditableRoi))
-            {
-                isHit.IsHit = false;
-                mPending = true;
-                return;
-            }
+            //if (isHit is HROI roi && !ReferenceEquals(roi, SelectedEditableRoi))
+            //{
+            //    isHit.IsHit = false;
+            //    mPending = true;
+            //    return;
+            //}
 
             if (val)
             {

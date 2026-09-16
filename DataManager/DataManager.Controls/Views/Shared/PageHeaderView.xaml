@@ -5,6 +5,14 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root">
 
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <!--  页面样式归 DataManager.Controls 自己所有，由本页自行合并（宿主不替页面合并）  -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/DataManager.Controls;component/Themes/PageStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
 
     <!--
         测试页页头：图标 + 标题 + 副标题。三页共用，后续可给 WPFControl 复用

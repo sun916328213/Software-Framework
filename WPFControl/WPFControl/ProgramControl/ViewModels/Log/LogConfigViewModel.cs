@@ -20,7 +20,7 @@ namespace WPFControl.ProgramControl.ViewModels
         {
             Service = service;
 
-            // DeviceManagerView 保存后重新加载（路径修改需重启程序后生效）
+            // DeviceManagerView 保存后重新加载，基础日志与动态流程日志都会换用新配置。
             SaveCallbackCommand = () => Service.Load();
         }
     }

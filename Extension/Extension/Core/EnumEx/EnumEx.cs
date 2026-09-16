@@ -87,3 +87,4 @@ namespace Extension.Core.EnumEx
         }
     }
 }
+

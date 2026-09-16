@@ -10,14 +10,14 @@ namespace WPFControl.CustomControl.Models
     public enum EUserLevel
     {
         [Description("游客")] Guest = 0,
-        [Description("作业员")] Operator,
+        [Description("操作员")] Operator,
         [Description("工程师")] Engineer,
         [Description("管理员")] Admin,
         [Description("超级管理员")][Browsable(false)] SuperAdmin,
     }
 
     /// <summary>
-    /// 用户信息类
+    /// 通用基础本信息结
     /// </summary>
     public class UserInfo: ObservableObject
     {

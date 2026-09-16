@@ -80,7 +80,9 @@ namespace DPLibrary_Halcon_F48.Tools
                         DispModels.Add(DisplayModel.Image_ROI);
                     }
                 }
-                DispLayer = DisplayLayers.ROI | DisplayLayers.Image;
+                // ⚠️ MeasurePath 必须带上：否则每次换图/执行后卡尺（MeasurePaths）都被隐藏。
+                // 与 DisplayModel.Image_ROI 的枚举值、DisplayModelToLayersConverter.ConvertBack 保持一致。
+                DispLayer = DisplayLayers.Image | DisplayLayers.ROI | DisplayLayers.MeasurePath;
                 OnPropertyChanged(nameof(Image));
             }
         }

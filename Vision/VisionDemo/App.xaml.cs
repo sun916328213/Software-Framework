@@ -13,5 +13,6 @@ namespace H_Test
     /// </summary>
     public partial class App : Application
     {
+
     }
 }

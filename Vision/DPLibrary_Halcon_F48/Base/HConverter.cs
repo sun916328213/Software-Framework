@@ -47,7 +47,11 @@ namespace DPLibrary_Halcon_F48.Base
                     case DisplayModel.Image:
                         return DisplayLayers.Image;
                     case DisplayModel.Image_ROI:
-                        return DisplayLayers.Image | DisplayLayers.ROI;
+                        // ⚠️ MeasurePath 不能丢：Ctr_HWindow_DP.ResetDisp 用
+                        // HasFlag(MeasurePath) 决定 DispMeasure()/DeDispMeasure()，
+                        // 少了这一位，切到本档后卡尺（MeasurePaths）在图上直接消失。
+                        // 与 DisplayModel.Image_ROI 的枚举值（1<<1|1<<0|1<<5）保持一致。
+                        return DisplayLayers.Image | DisplayLayers.ROI | DisplayLayers.MeasurePath;
                     case DisplayModel.Result:
                         return DisplayLayers.Image | DisplayLayers.Region | DisplayLayers.XLD | DisplayLayers.Message | DisplayLayers.MeasurePath;
                     default:

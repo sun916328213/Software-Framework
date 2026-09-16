@@ -17,7 +17,7 @@ namespace Communication.Core.Abstracts
             mCommunicationBuffer = container.Resolve<ICommunicationBuffer>();
         }
         /// <summary>
-        /// Í¨Ñ¶»º´æÇø
+        /// é€šè®¯ç¼“å­˜åŒº
         /// </summary>
         protected ICommunicationBuffer mCommunicationBuffer;
 

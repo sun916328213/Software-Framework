@@ -71,7 +71,7 @@ namespace WPFControl.ProgramControl.Services
 
         /// <summary>
         /// 按小时单点更新产能统计(适用于PLC 10s循环读取累计值,每小时只更新该小时列)
-        /// 每条数据按其 Time 字段定位"当天 + 对应小时列",只更新该列的 OK/NG 值,不影响其它23列
+        /// 每条数据按其 Time 字段定位"当天 + 对应小时�?,只更新该列的 OK/NG �?不影响其�?3�?
         /// </summary>
         /// <param name="datas">产能统计数据列表(每条 Time 决定归属小时,OK/NG 取该小时列的值)</param>
         /// <param name="seconds">归属时间偏移量(秒),避免整点时刻数据归属错误</param>    
@@ -96,7 +96,7 @@ namespace WPFControl.ProgramControl.Services
                 }
                 else
                 {
-                    // 当天首条:新建行,只填该小时列,其它列默认0
+                    // 当天首条:新建�?只填该小时列,其它列默�?
                     var row = new CapacityStatisticsInfo { ID = id, Time = day };
                     SetOK(row, hour, OKAt(data, hour));
                     SetNG(row, hour, NGAt(data, hour));
@@ -303,3 +303,4 @@ namespace WPFControl.ProgramControl.Services
         #endregion
     }
 }
+

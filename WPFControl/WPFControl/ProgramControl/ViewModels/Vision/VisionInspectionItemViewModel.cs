@@ -60,7 +60,7 @@ namespace WPFControl.ProgramControl.ViewModels
 
         public bool IsNavigationTarget(NavigationContext navigationContext)
         {
-            return true; // ÆôÓÃÊÓÍ¼»º´æ£¬±ÜÃâÃ¿´Îµ¼º½¶¼´´½¨ĞÂÊµÀı
+            return true; // å¯ç”¨è§†å›¾ç¼“å­˜ï¼Œé¿å…æ¯æ¬¡å¯¼èˆªéƒ½åˆ›å»ºæ–°å®ä¾‹
         }
 
         public void OnNavigatedFrom(NavigationContext navigationContext)
@@ -69,3 +69,4 @@ namespace WPFControl.ProgramControl.ViewModels
         }
     }
 }
+

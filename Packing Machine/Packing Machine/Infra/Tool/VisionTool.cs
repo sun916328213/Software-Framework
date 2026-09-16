@@ -498,7 +498,7 @@ namespace Packing_Machine.Infra.Tool
             // 计算叉积
             double cross = dx1 * dy2 - dy1 * dx2;
 
-            // 如果叉积为0，则两直线平行
+            // 如果叉积�?，则两直线平�?
             if (Math.Abs(cross) < 1e-8)
             {
                 return null; // 平行线无交点
@@ -515,3 +515,4 @@ namespace Packing_Machine.Infra.Tool
         }
     }
 }
+

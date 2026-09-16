@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using WPFControl.CustomControl.Models;
-using Extension.Core.EnumEx;
+using Extension.Core.ConvertEx;
 
 namespace WPFControl.ProgramControl.Models
 {

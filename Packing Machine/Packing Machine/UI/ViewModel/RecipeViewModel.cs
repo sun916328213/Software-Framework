@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Extension.Core.ConvertEx;
-using Extension.Core.EnumEx;
 using Packing_Machine.UI.Model;
 using Packing_Machine.UI.WindowUI;
 using Prism.Ioc;
@@ -210,3 +209,4 @@ namespace Packing_Machine.UI.ViewModel
         }
     }
 }
+

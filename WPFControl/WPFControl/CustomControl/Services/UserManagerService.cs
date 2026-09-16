@@ -1,7 +1,6 @@
 using Extension.Core.ConvertEx;
 using Extension.Core.EnumEx;
 using Extension.Core.SystemEx;
-using Extension.DesignPattern.ObserverPattern.Examples;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -301,3 +300,4 @@ namespace WPFControl.CustomControl.Services
  
     }
 }
+
