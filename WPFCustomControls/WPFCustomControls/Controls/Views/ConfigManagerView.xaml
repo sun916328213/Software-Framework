@@ -25,6 +25,12 @@
             <Style BasedOn="{StaticResource MaterialDesignComboBox}" TargetType="ComboBox">
                 <Setter Property="materialDesign:ColorZoneAssist.Mode" Value="PrimaryLight" />
             </Style>
+
+            <Style BasedOn="{StaticResource MaterialDesignRaisedButton}" TargetType="Button">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                <Setter Property="Margin" Value="8" />
+                <Setter Property="VerticalAlignment" Value="Bottom" />
+            </Style>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -37,7 +43,29 @@
             </Grid.ColumnDefinitions>
 
 
-            <GroupBox Margin="8" Header="{Binding ElementName=UserControl, Path=Title}">
+            <!--
+                表头配色。MD 的 GroupBox 模板把 Header 塞进模板里的 ColorZone（PART_ColorZone），
+                表头底色 = ColorZone.Background，表头文字色 = ColorZone.Foreground：
+                · 表头底色 ← MaterialDesign.Brush.Primary      —— 跟随「主色」选择切换；
+                · 表头文字 ← MaterialDesign.Brush.Foreground   —— 跟随「浅色/深色」切换。
+                
+                ⚠️ Mode="Custom" 时 **Background 和 Foreground 两个附加属性都要给**：
+                ColorZone 在 Custom 下是把这两个附加属性直接绑过去用的，少给一个就是 null ——
+                表头会没有底色；更隐蔽的是模板里外层 Border 的 BorderBrush 也绑在
+                ColorZone.Background 上，于是连 GroupBox 的边框都会整条消失。
+                （原来只写了 Mode="Custom" 而没给任何一个，症状就是「表头没颜色 + 没有边框」。）
+                
+                注意 GroupBox 自己的 Foreground 管不到表头：表头文字用的是 ColorZone.Foreground。
+                下面那行 Foreground 是给 GroupBox **内容区**用的（MD 的样式把它绑到祖先的
+                TextElement.Foreground，取不到就 FallbackValue=Black，所以必须显式给一个跟随主题的值）。
+            -->
+            <GroupBox
+                Margin="8"
+                materialDesign:ColorZoneAssist.Background="{DynamicResource MaterialDesign.Brush.Primary}"
+                materialDesign:ColorZoneAssist.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                materialDesign:ColorZoneAssist.Mode="Custom"
+                Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                Header="{Binding ElementName=UserControl, Path=Title}">
                 <local:DataGridView
                     x:Name="DataGridView"
                     Grid.Column="0"
@@ -52,8 +80,6 @@
                 <DockPanel>
 
                     <Button
-                        Margin="8"
-                        VerticalAlignment="Bottom"
                         Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=SaveCommand}"
                         Content="保存"
                         DockPanel.Dock="Bottom"
@@ -62,8 +88,6 @@
 
                     <Button
                         x:Name="btn_Delete"
-                        Margin="8"
-                        VerticalAlignment="Bottom"
                         Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DeleteCommand}"
                         Content="删除"
                         DockPanel.Dock="Bottom"
@@ -74,8 +98,6 @@
 
                     <Button
                         x:Name="btn_Add"
-                        Margin="8"
-                        VerticalAlignment="Bottom"
                         Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=AddCommand}"
                         Content="增加"
                         DockPanel.Dock="Bottom"
@@ -85,16 +107,12 @@
 
                     <Button
                         x:Name="btn_Set"
-                        Margin="8"
-                        VerticalAlignment="Bottom"
                         Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=LockCommand}"
                         Content="解锁"
                         DockPanel.Dock="Bottom"
                         FontSize="{Binding ElementName=UserControl, Path=FontSize}" />
 
                     <Button
-                        Margin="8"
-                        VerticalAlignment="Bottom"
                         Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=SelectCommand}"
                         Content="选择"
                         DockPanel.Dock="Bottom"

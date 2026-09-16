@@ -1,5 +1,10 @@
 using DataManager;
+using DataManager.Controls.Services;
+using DataManager.Controls.ViewModels;
+using DataManager.Controls.Views;
+using DataManager.Workbench.Models;
 using DataManager.Workbench.Views;
+using Extension.Core.ThemeEx;
 using Prism.DryIoc;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -21,24 +26,19 @@ namespace DataManager.Workbench
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
            
-            containerRegistry.RegisterSingleton<Services.ThemeService>();
-            containerRegistry.RegisterSingleton<Services.SqlWorkspace>();
-            containerRegistry.RegisterSingleton<Services.LogWorkspace>();
-            containerRegistry.RegisterSingleton<Services.ExcelWorkspace>();
-            containerRegistry.RegisterForNavigation<SqlView, ViewModels.SqlViewModel>();
-            containerRegistry.RegisterForNavigation<LogView, ViewModels.LogViewModel>();
-            containerRegistry.RegisterForNavigation<ExcelView, ViewModels.ExcelViewModel>();
-        }
-
-        protected override void OnStartup(StartupEventArgs e)
-        {
-            base.OnStartup(e);
+            containerRegistry.RegisterSingleton<ThemeService>();
+            containerRegistry.RegisterSingleton<SqlWorkspace<TestEntity>>();
+            containerRegistry.RegisterSingleton<LogWorkspace>();
+            containerRegistry.RegisterSingleton<ExcelWorkspace<ExcelPerson>>();
+            containerRegistry.RegisterForNavigation<SqlView, SqlViewModel<TestEntity>>();
+            containerRegistry.RegisterForNavigation<LogView, LogViewModel>();
+            containerRegistry.RegisterForNavigation<ExcelView, ExcelViewModel<ExcelPerson>>();
         }
 
         protected override void OnInitialized()
         {
             // 官方做法：启动时把持久化的主题应用到 App.xaml 里的 BundledTheme 实例
-            Container.Resolve<Services.ThemeService>().Initialize();
+            Container.Resolve<ThemeService>().Initialize();
             base.OnInitialized();
         }
 

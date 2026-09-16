@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace DataManager.Workbench.Views
+namespace DataManager.Controls.Views
 {
     /// <summary>
     /// SQL 测试页视图：纯 XAML（列定义、增删回调、选中同步全在 SqlView.xaml 声明），无 code-behind 逻辑。

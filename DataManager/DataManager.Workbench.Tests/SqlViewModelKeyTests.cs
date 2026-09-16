@@ -1,5 +1,6 @@
+using DataManager.Workbench.Models;
 using DataManager.SQL.Definition;
-using DataManager.Workbench.Services;
+using DataManager.Controls.Services;
 
 namespace DataManager.Tests.Workbench
 {
@@ -29,13 +30,13 @@ namespace DataManager.Tests.Workbench
             var after = BaseParam();
             after.Password = "123";
 
-            Assert.NotEqual(SqlWorkspace.BuildDbKey(before), SqlWorkspace.BuildDbKey(after));
+            Assert.NotEqual(SqlWorkspace<TestEntity>.BuildDbKey(before), SqlWorkspace<TestEntity>.BuildDbKey(after));
         }
 
         [Fact]
         public void BuildDbKey_SameParams_ProducesSameKey()
         {
-            Assert.Equal(SqlWorkspace.BuildDbKey(BaseParam()), SqlWorkspace.BuildDbKey(BaseParam()));
+            Assert.Equal(SqlWorkspace<TestEntity>.BuildDbKey(BaseParam()), SqlWorkspace<TestEntity>.BuildDbKey(BaseParam()));
         }
 
         [Theory]
@@ -51,7 +52,7 @@ namespace DataManager.Tests.Workbench
             var after = BaseParam();
             typeof(SQLParam).GetProperty(field)!.SetValue(after, value);
 
-            Assert.NotEqual(SqlWorkspace.BuildDbKey(before), SqlWorkspace.BuildDbKey(after));
+            Assert.NotEqual(SqlWorkspace<TestEntity>.BuildDbKey(before), SqlWorkspace<TestEntity>.BuildDbKey(after));
         }
 
         [Fact]
@@ -61,7 +62,7 @@ namespace DataManager.Tests.Workbench
             var after = BaseParam();
             after.TrustServerCertificate = !before.TrustServerCertificate;
 
-            Assert.NotEqual(SqlWorkspace.BuildDbKey(before), SqlWorkspace.BuildDbKey(after));
+            Assert.NotEqual(SqlWorkspace<TestEntity>.BuildDbKey(before), SqlWorkspace<TestEntity>.BuildDbKey(after));
         }
     }
 }

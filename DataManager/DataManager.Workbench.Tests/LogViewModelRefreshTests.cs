@@ -1,7 +1,7 @@
 using DataManager.Log;
 using DataManager.Log.Definition;
-using DataManager.Workbench.Services;
-using DataManager.Workbench.ViewModels;
+using DataManager.Controls.Services;
+using DataManager.Controls.ViewModels;
 using Extension.Struct;
 
 namespace DataManager.Tests.Workbench
@@ -28,9 +28,9 @@ namespace DataManager.Tests.Workbench
         {
             var manager = new LogManager();
             var vm = new LogViewModel(new LogWorkspace(manager));
-            vm.LogProfiles[0].FilePath = _dir;
-            vm.LogProfiles[0].Name = "workbench";
-            vm.LogProfiles[0].LogType = logType;
+            vm.Model.DataCollection[0].FilePath = _dir;
+            vm.Model.DataCollection[0].Name = "workbench";
+            vm.Model.DataCollection[0].LogType = logType;
             vm.InitLogCommand.Execute(null);
 
             var log = manager["workbench"] ?? throw new InvalidOperationException("日志实例未创建");
@@ -38,9 +38,9 @@ namespace DataManager.Tests.Workbench
 
             vm.RefreshFilesCommand.Execute(null);
 
-            Assert.NotEmpty(vm.Files);
-            Assert.NotNull(vm.SelectedFile);
-            Assert.Contains(DateTime.Today.ToString("yyyyMMdd"), vm.SelectedFile);
+            Assert.NotEmpty(vm.Model.Files);
+            Assert.NotNull(vm.Model.SelectedFile);
+            Assert.Contains(DateTime.Today.ToString("yyyyMMdd"), vm.Model.SelectedFile);
         }
 
         public void Dispose()

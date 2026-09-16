@@ -1,6 +1,7 @@
+using DataManager.Workbench.Models;
 using DataManager.Excel.Definition;
 using DataManager.Log.Definition;
-using DataManager.Workbench.Services;
+using DataManager.Controls.Services;
 
 namespace DataManager.Tests.Workbench
 {
@@ -59,7 +60,7 @@ namespace DataManager.Tests.Workbench
         [Fact]
         public void BuildExcelKey_SameParams_SameKey()
         {
-            Assert.Equal(ExcelWorkspace.BuildExcelKey(BaseExcelParam()), ExcelWorkspace.BuildExcelKey(BaseExcelParam()));
+            Assert.Equal(ExcelWorkspace<ExcelPerson>.BuildExcelKey(BaseExcelParam()), ExcelWorkspace<ExcelPerson>.BuildExcelKey(BaseExcelParam()));
         }
 
         [Theory]
@@ -71,7 +72,7 @@ namespace DataManager.Tests.Workbench
             var after = BaseExcelParam();
             typeof(ExcelParam).GetProperty(field)!.SetValue(after, value);
 
-            Assert.NotEqual(ExcelWorkspace.BuildExcelKey(before), ExcelWorkspace.BuildExcelKey(after));
+            Assert.NotEqual(ExcelWorkspace<ExcelPerson>.BuildExcelKey(before), ExcelWorkspace<ExcelPerson>.BuildExcelKey(after));
         }
 
         [Fact]
@@ -81,7 +82,7 @@ namespace DataManager.Tests.Workbench
             var after = BaseExcelParam();
             after.ToolType = ExcelType.EPPlus;
 
-            Assert.NotEqual(ExcelWorkspace.BuildExcelKey(before), ExcelWorkspace.BuildExcelKey(after));
+            Assert.NotEqual(ExcelWorkspace<ExcelPerson>.BuildExcelKey(before), ExcelWorkspace<ExcelPerson>.BuildExcelKey(after));
         }
     }
 }

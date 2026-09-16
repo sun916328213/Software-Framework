@@ -8,7 +8,7 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     x:Name="Root"
-    d:DesignHeight="180"
+    d:DesignHeight="140"
     d:DesignWidth="240"
     mc:Ignorable="d">
 
@@ -16,7 +16,8 @@
         主题选择复用控件：主色 / 辅色下拉框，下面跟一排「浅色 / 深色」分段按钮。
         宿主只需传 Theme（Extension.Core.ThemeEx.ThemeService 单例）：
             <wpfcc:ThemePickerView Theme="{Binding Theme}" />
-        只要黑白切换就把 ShowColorPickers 置 false，那时只剩分段按钮（分段按钮不受它影响）。
+        只要黑白切换就把 ShowColorPickers 置 false，那时只剩分段按钮（分段按钮不受它影响）——
+        收起动作由下面配色块的 x:Name="ColorPickerPanel" + Visibility 绑定实现，别把那名字弄丢。
         换肤逻辑全在 ThemeService 里，本控件不持有任何配色常量。
     -->
     <UserControl.Resources>
@@ -58,13 +59,26 @@
             <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
         </Style>
 
-        <!--  面板容器：比侧栏低一层的分组块，跟随主题（浅色 #F1F1F1 底 / 深色 #323232 底）  -->
+        <!--
+            面板容器：比侧栏低一层的分组块，跟随主题（浅色 #F1F1F1 底 / 深色 #323232 底）。
+            **不画描边**（2026-09-15 用户实测后拍板，原话「把边框去除效果更好」）——
+            层级全靠**填充**表达：面板 Background(#F1F1F1/#323232) 压在侧栏 Card.Background
+            (#FFFFFF/#454545) 上，靠明度差把这一块分出来。
+            演进史（别照抄中间某一版）：Card.Border（软档 1.96/2.63:1）→ ForegroundLight
+            （3.8:1，被否「线框感」）→ 回退 Card.Border → **整条去掉**。
+            下面那条 BorderBrush 保留但**当前是死代码**（BorderThickness 默认 0，画不出来）；
+            留着是为了将来若真要恢复描边，档位别又挑错。档位实测见 picker-brushes.txt。
+            另注：BorderBrush 压在**父容器**上取色，不是压在自己的 Background 上。
+            
+            内边距 12,10：原来 8,7 与「两个下拉框之间的 8px」相等 —— 容器内边距 ≤ 内元素间距，
+            分组感出不来（标签几乎贴着边框）。渲 8/12/14 三档对比后取 12（14 会把下拉框压窄）。
+        -->
         <Style x:Key="PanelBorder" TargetType="Border">
             <Setter Property="Margin" Value="0,0,0,10" />
-            <Setter Property="Padding" Value="8,7" />
+            <!--<Setter Property="Padding" Value="12,8" />-->
             <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Background}" />
             <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Card.Border}" />
-            <Setter Property="BorderThickness" Value="1" />
+
             <Setter Property="CornerRadius" Value="8" />
         </Style>
 
@@ -76,7 +90,7 @@
         <DataTemplate x:Key="ColorItemTemplate">
             <StackPanel Orientation="Horizontal">
                 <Border
-                    Width="34"
+                    Width="44"
                     Height="14"
                     VerticalAlignment="Center"
                     Background="{Binding Converter={StaticResource ThemeColorBrush}}"
@@ -95,14 +109,19 @@
             下拉框统一外观。
             必须 BasedOn MD 的轮廓样式：显式 Style 不写 BasedOn 会把隐式 MD 样式整个顶掉，
             退化成 WPF 自带模板（浅灰底 + 浅色文字，在深色侧栏上直接看不见）。
-            轮廓样式内部 Background 默认 Transparent、边框走 MD 键，所以底色/描边/前景都就地覆盖。
-            描边也改用 MD 原生键（原先写死 #40FFFFFF，压浅底侧栏上等于没有边）。
+            **轮廓样式的「轮廓」已按用户决定去掉**（2026-09-15，BorderThickness=0）——
+            于是这个 Outlined 模板实际渲染成「**填充块**」：白底圆角 pill 压在面板 #F1F1F1 上
+            （深色下是比面板浅一档的块）。观感更干净，也更接近 MD3 的 filled field。
+            下面那条 BorderBrush 保留但**当前是死代码**（厚度 0 画不出来），别当成漏项删。
+            注：轮廓样式内部 Background 默认 Transparent，所以这里没显式设底色也能出白块 ——
+            那是模板自带的白，不是我们铺的。
         -->
         <Style
             x:Key="PickerCombo"
             BasedOn="{StaticResource MaterialDesignOutlinedComboBox}"
             TargetType="ComboBox">
             <Setter Property="Margin" Value="0" />
+            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="8" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.ComboBox.OutlineInactiveBorder}" />
@@ -122,7 +141,12 @@
             分段按钮（浅色 / 深色）。
             自定义模板的 Button 必须显式 Height=Auto / MinHeight=0 / MinWidth=0 / Padding=0：
             MD 的隐式 Button 样式带 MinHeight，会把内容裁掉一截。
-            默认 Opacity 0.6 表示「未选中」，选中态由各按钮自己的 DataTrigger 抬到 1 并铺一层底。
+            默认 Opacity 0.65 表示「未选中」，选中态由各按钮自己的 DataTrigger 抬到 1 并铺一层底。
+            ⚠️ 0.65 不是随手取的：原来是 0.6，实测**浅色主题下未选中标签只有 4.38:1**
+            （字形实心像素 #707070 压容器底 #F1F1F1），低于 WCAG AA 正文下限 4.5:1。
+            抬到 0.65 后实测浅色 5.24:1 / 深色 5.52:1，两态都过线；观感上与 0.6 几乎无差。
+            （深色主题 0.6 时是 4.90:1，本来就过线 —— 只有浅色这一侧不达标。）
+            回归用例 DataManager.Workbench.Tests / SegmentLabels_MeetContrastInBothThemes。
             
             外皮已从「写死的白色半透明」改成 MD 原生键：本控件原先只服务固定深色侧栏，
             后来侧栏改成跟随主题，白色半透明压浅底上等于看不见（见下面容器与选中态的三处改动）。
@@ -134,9 +158,21 @@
             <Setter Property="MinWidth" Value="0" />
             <Setter Property="MinHeight" Value="0" />
             <Setter Property="Padding" Value="0" />
-            <Setter Property="Opacity" Value="0.6" />
+            <Setter Property="Opacity" Value="0.65" />
             <Setter Property="Cursor" Value="Hand" />
+            <!--
+                药丸圆角 = 4。凹槽是 r=8 + Padding=4，同心圆角要求内弧 = 8 − 4 = 4；
+                原来写 5 与外弧不同心，而且模板里是**硬编码**的 5 —— 这条 assist 压根没生效。
+                现在模板改成绑它，设置才真正起作用。
+            -->
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="4" />
             <Setter Property="Background" Value="Transparent" />
+            <!--
+                药丸描边：默认空 —— 未选中时药丸是透明底，不该有边。
+                选中态由各自的 DataTrigger 填 Card.Border：白色药丸压在 #F1F1F1 凹槽上只差
+                14 级灰，不给边的话药丸自己的圆角完全看不见（本控件最明显的一处「圆角发虚」）。
+            -->
+            <Setter Property="BorderBrush" Value="{x:Null}" />
             <!--
                 前景 = 字段前景。写在 Style 的 Setter 里而不是按钮的局部属性上：
                 局部值会盖掉 Trigger/DataTrigger 的 Setter，将来给选中态加前景触发器就改不动了。
@@ -147,10 +183,18 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
+                        <!--
+                            圆角绑 ButtonAssist.CornerRadius（不再硬编码）。
+                            用 RelativeSource TemplatedParent 而不是 TemplateBinding：附着属性上后者不稳。
+                            药丸**不画描边**（2026-09-15 用户拍板去掉，与容器/下拉框一致）——
+                            下面的 BorderBrush 是死代码（厚度默认 0），留着备用；
+                            选中态靠 Background 填充与凹槽分层，不再靠边。
+                        -->
                         <Border
                             x:Name="Bg"
                             Background="{TemplateBinding Background}"
-                            CornerRadius="5">
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            CornerRadius="{Binding Path=(materialDesign:ButtonAssist.CornerRadius), RelativeSource={RelativeSource TemplatedParent}}">
                             <ContentPresenter
                                 x:Name="Content"
                                 Margin="0,5"
@@ -202,9 +246,18 @@
             </TextBlock.Style>
         </TextBlock>
 
-        <!--  ═══ 主色 / 辅色（ShowColorPickers=false 时整块收起）  ═══  -->
-        <Border Style="{StaticResource PanelBorder}">
-            <StackPanel>
+        <!--
+            ═══ 主色 / 辅色（ShowColorPickers=false 时整块收起）  ═══
+            ⚠️ x:Name 不能省：ShowColorPickers 就是靠下面这个 Visibility 绑定生效的。
+            曾把名字弄丢过一次 → DP 变成空转（设 false 什么也不发生），
+            用例 ShowColorPickersFalse_HidesPickersButKeepsSegmentButtons 会因此 NRE 变红。
+            用 BooleanToVisibility（false → Collapsed，真正从布局里让位，不留空白）。
+        -->
+        <Border
+            x:Name="ColorPickerPanel"
+            Style="{StaticResource PanelBorder}"
+            Visibility="{Binding ElementName=Root, Path=ShowColorPickers, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel Margin="8,8">
                 <Grid Margin="0,0,0,8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -212,7 +265,7 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock
                         Grid.Column="0"
-                        Margin="0,0,8,0"
+                        Margin="0,0,6,0"
                         Foreground="{Binding ElementName=Root, Path=FieldForeground}"
                         Style="{StaticResource FieldLabel}"
                         Text="主色" />
@@ -233,7 +286,7 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock
                         Grid.Column="0"
-                        Margin="0,0,8,0"
+                        Margin="0,0,6,0"
                         Foreground="{Binding ElementName=Root, Path=FieldForeground}"
                         Style="{StaticResource FieldLabel}"
                         Text="辅色" />
@@ -251,12 +304,18 @@
 
 
         <!--  ═══ 浅色 / 深色：分段按钮，当前态高亮；不受 ShowColorPickers 影响  ═══  -->
-        <!--  容器：比侧栏低一层的凹槽，跟随主题；选中态铺 Card.Background 从凹槽里「抬」起来  -->
+        <!--
+            容器：比侧栏低一层的凹槽，跟随主题；选中态铺 Card.Background 从凹槽里「抬」起来。
+            **不画描边**（2026-09-15 用户拍板，与面板一致）。
+            ⚠️ 已知且刻意保留：凹槽填充也是 Background，与**面板填充同色** ——
+            去掉描边后凹槽本身 1.00:1、完全看不见。渲染实测观感没问题（分段控件读起来就是
+            「两个标签 + 选中那个有药丸」），选中态由药丸独立承载，故不额外补填充。
+            对照图 .workbuddy-ai/preview/bd-grid.png。
+        -->
         <Border
             Padding="4"
             Background="{DynamicResource MaterialDesign.Brush.Background}"
             BorderBrush="{DynamicResource MaterialDesign.Brush.Card.Border}"
-            BorderThickness="1"
             CornerRadius="8">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -276,6 +335,8 @@
                                 <DataTrigger Binding="{Binding IsDark}" Value="False">
                                     <Setter Property="Opacity" Value="1" />
                                     <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+                                    <!--  选中态：抬 Opacity + 铺 Card.Background 填充（下面这条 BorderBrush 是死代码，厚度 0）  -->
+                                    <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Card.Border}" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -304,6 +365,8 @@
                                 <DataTrigger Binding="{Binding IsDark}" Value="True">
                                     <Setter Property="Opacity" Value="1" />
                                     <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+                                    <!--  选中态：同浅色侧（BorderBrush 同样是死代码）  -->
+                                    <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Card.Border}" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>

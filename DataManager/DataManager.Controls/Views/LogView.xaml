@@ -1,0 +1,429 @@
+<UserControl
+    x:Class="DataManager.Controls.Views.LogView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:log="clr-namespace:DataManager.Log.Definition;assembly=DataManager"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:shared="clr-namespace:DataManager.Controls.Views.Shared"
+    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+    xmlns:wpfcc="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    d:DesignWidth="1360"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
+
+            <Style BasedOn="{StaticResource MaterialDesignComboBox}" TargetType="ComboBox">
+                <Setter Property="materialDesign:ColorZoneAssist.Mode" Value="PrimaryLight" />
+            </Style>
+
+            <ObjectDataProvider
+                x:Key="LogLibs"
+                MethodName="GetValues"
+                ObjectType="{x:Type sys:Enum}">
+                <ObjectDataProvider.MethodParameters>
+                    <x:Type TypeName="log:ELogType" />
+                </ObjectDataProvider.MethodParameters>
+            </ObjectDataProvider>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!--
+        整页纵向滚动。
+        
+        ⚠️ 这里有一条**容易踩反**的约束：Grid 自身**不能有纵向 Margin**。
+        下面 Grid 的 MinHeight 绑的是 ScrollViewer 的 ViewportHeight —— 窗口够高时
+        整页正好铺满视口，第 3 行（结果区）用 `*` 吃掉剩余高度，结果表格与运行输出框
+        会跟着窗口一起长高；窗口不够高时 MinHeight 不生效，外层正常滚动。
+        如果给 Grid 加个 `Margin="24,20,24,8"`，总高就恒比视口多 28px，
+        于是**无论窗口多大都挂着一条多余的滚动条**。
+        ⇒ 纵向间距改由页头（上 12）与各行自己的下边距（12）承担，横向 24 留在 Grid 上。
+        
+        行高策略：
+        Row0 页头     Auto
+        Row1 日志配置 Auto（表格固定高度，见下）
+        Row2 写入/查询 Auto（并排，与 Row3 同用 3:2 ⇒ 两行分界线都在 ≈666）
+        Row3 结果/输出 `*`（吃满剩余高度；窗口很矮才由 MinHeight 兜底并滚动）
+        
+        ⚠️ 写入 / 查询**必须与结果区用同一个列比例**：
+        Grid 的列定义是**全表共享**的 —— 结果区要 3:2（结果表得宽），
+        写入/查询若想「自己等分」就得套一层内层 Grid，那样中缝会落在 ≈556，
+        与结果区的 ≈666 **错开 110px**，看着就是「布局乱」。
+        ⇒ 两者直接吃外层 3:2，全页分界线唯一。
+        代价：查询卡只剩 440，「标题 60 + 4 按钮 436」= 496 装不下
+        ⇒ 「刷新文件列表」挪到「日志配置」卡标题行（那里余量 477.9）。
+    -->
+    <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto">
+        <Grid
+            MinHeight="{Binding ViewportHeight, ElementName=PageScroll}"
+            MaxWidth="1360"
+            Margin="24,0,24,0">
+            <!--
+                列比例 3 : 12 : 2（与 SqlView / ExcelView 一致）：
+                · **只影响 Row3**（结果表 | 运行输出）—— Row0/Row1/Row2 全部 span 3 或自带内层等分，
+                改这里的比例碰不到它们。
+                · 原因：结果表的「内容」列是日志正文，等分时只有 258px（实测），读不了；
+                而运行输出是等宽文本框，440px ≈ 61 字符/行，足够。
+                ⇒ 改后结果表 DataGrid 518 → 628，「内容」列 258 → 368（+110）。
+                · ⚠️ Row2（写入/查询）**必须直接吃这同一个 3:2**，不能套内层 Grid 自己等分
+                —— 否则两行中缝错开 110px（详见上方「行高策略」）。
+                查询卡被压到 2/5（卡内宽 408）后放不下 4 个按钮，已把
+                「刷新文件列表」挪到日志配置卡标题行。
+            -->
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <!--
+                    MinHeight=300：结果卡的「多行原文」已改按需展开，最低需求从 286 降到 ~210。
+                    写入 / 查询合并回一行后整页不再超高，这一行能吃满剩余空间
+                    （861 − 页头/配置/写入查询 ≈ 355），`*` 行会把它吃满，结果表 ≈236。
+                    只有在窗口很矮、剩余不足 300 时才靠 MinHeight 兜底并开始滚动。
+                -->
+                <RowDefinition Height="*" MinHeight="300" />
+            </Grid.RowDefinitions>
+
+            <!--  页头  -->
+            <shared:PageHeaderView
+                Title="日志测试"
+                Grid.Row="0"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Margin="0,12,0,12"
+                IconKind="FileDocumentOutline"
+                SubTitle="通过 DataManager 的 LogManager / ILog 测试 Serilog、NLog、log4net 日志写入与查询" />
+
+            <!--  日志配置：多档案表（对标 SQL），持久化走壳自带的保存按钮（Config/LogConfig.json）  -->
+            <materialDesign:Card
+                Grid.Row="1"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Margin="0,0,0,12"
+                Padding="16"
+                UniformCornerRadius="12">
+                <StackPanel>
+                    <!--
+                        卡片标题行 = 标题（左）+ 动作按钮（右）。
+                        「初始化日志 / 打开日志目录」原先单独占卡片底部的**一整行**（14 上边距 + 40 按钮行），
+                        而它们本来就是「这个配置区的动作」，放在标题行右侧既省掉一整行高度、
+                        也让「动作跟着它作用的对象」——卡片底部不再吊着一排孤立按钮。
+                    -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource SectionTitle}"
+                            Text="日志配置（可多档案，选中后分别写入/查询）"
+                            TextTrimming="CharacterEllipsis" />
+                        <WrapPanel
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                            <Button
+                                Margin="8,0,0,0"
+                                Command="{Binding InitLogCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon VerticalAlignment="Center" Kind="Play" />
+                                    <TextBlock Margin="6,0,0,0" Text="初始化日志" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                Margin="8,0,0,0"
+                                Command="{Binding OpenFolderCommand}"
+                                Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon VerticalAlignment="Center" Kind="FolderOpen" />
+                                    <TextBlock Margin="6,0,0,0" Text="打开日志目录" />
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+                    </Grid>
+                    <!--
+                        Height=250 不是随手定的：ConfigManagerView 右侧按钮列是个
+                        ScrollViewer(VerticalScrollBarVisibility="Hidden") + DockPanel，5 个按钮
+                        （选择/解锁/增加/删除/保存）各 32 高 + Margin 8 ⇒ 内容 240。
+                        控件自身 10px 外框 ⇒ **要给到 250 才让第 5 个按钮「保存」完整可见**。
+                        实测（探针 config-buttons.txt）：
+                        Height=220 → 视口 210 / 内容 240 / 可滚动 30，但 VBar=Collapsed（Hidden 无提示）
+                        ⇒ 「保存」底边 237 越界，被裁掉 17px，肉眼看是条色块。
+                        Height=250 → 视口 240，5 个按钮全部完整。
+                    -->
+                    <wpfcc:ConfigManagerView
+                        Title="日志配置档案"
+                        Height="250"
+                        Margin="0,12,0,0"
+                        AddCallback="{Binding LogAddedAction}"
+                        DeletedCallback="{Binding LogDeletedAction}"
+                        FileName="{Binding Model.FileName}"
+                        FilePath="{Binding Model.FilePath}"
+                        ItemsSource="{Binding Model.DataCollection}"
+                        SaveCallback="{Binding ProfilesSavedAction}"
+                        SelectItem="{Binding Model.SelectedLogParam, Mode=TwoWay}">
+                        <wpfcc:ConfigManagerView.DataGridColumns>
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                Header="名称" />
+                            <DataGridTextColumn
+                                Width="2*"
+                                Binding="{Binding FilePath, UpdateSourceTrigger=PropertyChanged}"
+                                Header="日志目录" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding Separator, UpdateSourceTrigger=PropertyChanged}"
+                                Header="分隔符" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding SaveDays, UpdateSourceTrigger=PropertyChanged}"
+                                Header="保存天数" />
+                            <DataGridComboBoxColumn
+                                Width="110"
+                                Header="日志库"
+                                ItemsSource="{Binding Source={StaticResource LogLibs}}"
+                                SelectedItemBinding="{Binding LogType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </wpfcc:ConfigManagerView.DataGridColumns>
+                    </wpfcc:ConfigManagerView>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!--
+                写入 / 查询：**合并成一张卡、内部一列**，占页面 Row2 一整行。
+                为什么不是两张并排的卡：Grid 的列定义全表共享，结果区要 3:2（结果表得宽），
+                并排时中缝会与结果区错开 110px（看着就是「布局乱」）；
+                拆成两张各占一整行又显得散，还多一条卡片边框。
+                ⇒ 合成一张卡：写入一行、查询一行，中间一条 Separator。
+                全页竖向分界线只剩结果区一处；卡片边框也少一条。
+                
+                两区各自**压成一行**（输入控件 + 操作按钮同一行，不再单独占标题行）：
+                每区从「标题 32 + 8 + 输入 57」= 97px 降到 57px，两区共省 80px
+                ⇒ 整页从 912 降到 832 < 视口 861，**不再滚动**，
+                省下的高度全被 Row3（`*` 行）吃掉，结果表反而更高。
+            -->
+            <materialDesign:Card
+                Grid.Row="2"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Margin="0,0,0,12"
+                Padding="16"
+                UniformCornerRadius="12">
+                <StackPanel>
+                    <!--
+                        写入一行：`日志内容` + `等级` + 写入按钮**同一行**。
+                        原先「标题行 32 + 8 + 输入行 57」= 97px，压成一行只剩 57px。
+                        标题「写入日志」去掉 —— Hint「日志内容 / 等级」已能表明这是写入区。
+                    -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="140" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox
+                            Grid.Column="0"
+                            materialDesign:HintAssist.Hint="日志内容"
+                            Style="{StaticResource DmInput}"
+                            Text="{Binding Model.Message}" />
+                        <ComboBox
+                            Grid.Column="2"
+                            materialDesign:HintAssist.Hint="等级"
+                            ItemsSource="{Binding Levels}"
+                            SelectedItem="{Binding Model.SelectedLevel}"
+                            Style="{StaticResource DmCombo}" />
+                        <StackPanel Grid.Column="4" Orientation="Horizontal">
+                            <Button
+                                Padding="12,0"
+                                Command="{Binding WriteCommand}"
+                                Content="写入一条"
+                                Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" />
+                            <Button
+                                Margin="8,0,0,0"
+                                Padding="12,0"
+                                Command="{Binding WriteManyCommand}"
+                                Content="批量写 100 条"
+                                Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" />
+                        </StackPanel>
+                    </Grid>
+                    <Separator Margin="0,12,0,12" />
+
+                    <!--
+                        查询一行：`日志文件` + `开始日期` + `结束日期` + 4 个按钮**同一行**，
+                        与写入区同法（省掉标题行 40px）。日期框固定 140 —— 不写死的话
+                        `*` 列会把日期撑得和下拉一样宽，没必要。
+                        
+                        按钮前景：**描边按钮**要钉 `MaterialDesign.Brush.Foreground`
+                        （MD 默认 Primary #009688，压白卡 3.67:1 / 压深卡 2.61:1，都不过 AA）；
+                        **填充按钮**不要钉（MD 默认 Primary.Foreground 在 Teal 上两主题都是黑，5.72:1）。
+                        规则全文与实测数据见 SqlView.xaml「数据操作」卡上方的注释。
+                    -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="140" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="140" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <ComboBox
+                            Grid.Column="0"
+                            materialDesign:HintAssist.Hint="日志文件"
+                            ItemsSource="{Binding Model.Files}"
+                            SelectedItem="{Binding Model.SelectedFile}"
+                            Style="{StaticResource DmCombo}" />
+                        <DatePicker
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            materialDesign:HintAssist.Hint="开始日期"
+                            Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                            SelectedDate="{Binding Model.StartDate}" />
+                        <DatePicker
+                            Grid.Column="4"
+                            VerticalAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            materialDesign:HintAssist.Hint="结束日期"
+                            Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                            SelectedDate="{Binding Model.EndDate}" />
+                        <StackPanel Grid.Column="6" Orientation="Horizontal">
+                            <Button
+                                Padding="12,0"
+                                Command="{Binding RefreshFilesCommand}"
+                                Content="刷新文件列表"
+                                Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" />
+                            <Button
+                                Margin="8,0,0,0"
+                                Padding="12,0"
+                                Command="{Binding QueryByFileCommand}"
+                                Content="按文件查询"
+                                Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" />
+                            <Button
+                                Margin="8,0,0,0"
+                                Padding="12,0"
+                                Command="{Binding QueryByRangeCommand}"
+                                Content="按时间范围查询"
+                                Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" />
+                            <Button
+                                Margin="8,0,0,0"
+                                Padding="12,0"
+                                Command="{Binding QueryMultiCommand}"
+                                Content="多行读取"
+                                Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!--
+                结果区：吃掉剩余高度（Row3 = `*`）。
+                两张卡内部都用 Grid + `*` 行，让表格 / 输出框真的长高，
+                而不是「卡片变高、内容还是原来那么大、底部一片空白」。
+                整行的**下限**由两张卡各自的卡内内容决定（实测）：
+                · 查询结果卡 ≈ 表格 110 + 「多行原文」80 + 标题/标签/间距 + Padding 32 ≈ 287
+                · 运行输出卡 = 标题行 32 + 12 + OutputHeight + Padding 40
+                ⇒ OutputHeight=200 时 284，**不再像 320 那样把整行顶到 404**
+                （原先整页 1023 > 视口 861，1440x900 下必然出现滚动条）。
+                窗口不够高时靠外层 ScrollViewer 滚动，不会把表格压没。
+            -->
+            <materialDesign:Card
+                Grid.Row="3"
+                Grid.Column="0"
+                Margin="0,0,0,12"
+                Padding="16"
+                UniformCornerRadius="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" MinHeight="110" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock
+                        Grid.Row="0"
+                        Style="{StaticResource SectionTitle}"
+                        Text="查询结果" />
+                    <DataGrid
+                        Grid.Row="1"
+                        MinHeight="110"
+                        Margin="0,10,0,0"
+                        AutoGenerateColumns="False"
+                        ItemsSource="{Binding Model.Results}"
+                        Style="{StaticResource DmGrid}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn
+                                Width="170"
+                                Binding="{Binding Time}"
+                                Header="时间" />
+                            <DataGridTextColumn
+                                Width="90"
+                                Binding="{Binding Level}"
+                                Header="等级" />
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Info}"
+                                Header="内容" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <materialDesign:Card Grid.Row="2" UniformCornerRadius="8">
+                        <Expander
+                            Margin="0,8,0,0"
+                            Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                            Header="多行原文">
+                            <Expander.Style>
+                                <Style BasedOn="{StaticResource MaterialDesignExpander}" TargetType="Expander">
+                                    <Setter Property="IsExpanded" Value="True" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Model.MultiText}" Value="{x:Null}">
+                                            <Setter Property="IsExpanded" Value="False" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Model.MultiText}" Value="">
+                                            <Setter Property="IsExpanded" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Expander.Style>
+                            <TextBox
+                                Height="80"
+                                Margin="0,4,0,0"
+                                Style="{StaticResource OutputBox}"
+                                Text="{Binding Model.MultiText, Mode=OneWay}" />
+                        </Expander>
+                    </materialDesign:Card>
+                </Grid>
+            </materialDesign:Card>
+
+            <!--  运行输出（卡片内部的输出框也会跟着这一行一起长高）  -->
+            <shared:RunOutputView
+                Grid.Row="3"
+                Grid.Column="2"
+                Margin="0,0,0,12"
+                OutputHeight="200" />
+
+        </Grid>
+    </ScrollViewer>
+</UserControl>

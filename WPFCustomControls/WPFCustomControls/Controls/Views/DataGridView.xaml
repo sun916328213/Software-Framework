@@ -24,19 +24,4 @@
     VerticalScrollBarVisibility="Auto"
     VirtualizingPanel.IsVirtualizing="True"
     VirtualizingPanel.VirtualizationMode="Standard"
-    mc:Ignorable="d">
-
-    <!--  列头前景钉 MD 原生动态键：原先写死 Color_Black，深色主题下黑字压黑底不可读  -->
-    <DataGrid.ColumnHeaderStyle>
-        <Style BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}" TargetType="DataGridColumnHeader">
-            <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.DataGrid.ColumnHeaderForeground}" />
-        </Style>
-    </DataGrid.ColumnHeaderStyle>
-
-    <DataGrid.Resources>
-        <ResourceDictionary>
-            <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="{x:Type ScrollBar}" />
-        </ResourceDictionary>
-    </DataGrid.Resources>
-
-</DataGrid>
+    mc:Ignorable="d" />

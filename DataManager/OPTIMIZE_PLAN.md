@@ -315,3 +315,10 @@ DataManager.Workbench/              # WPF + Prism.DryIoc + .NET9 测试台
 
 - 事务同步/异步三路全覆盖（既有单测只覆盖半侧）；helper 杂散 using 清理。
 - 仍未动：SQL Server 真库、CancellationToken（上游）、回退全扫、EPPlus 废弃 API（兼容保留）。
+
+## 16. P16 续记（LogManager 原子配置替换）
+
+- `ManagerBase` 新增单一管理器互斥边界，`Items`、索引器、增删、查询和批量替换共享同一锁，读取方只能观察替换前或替换后的完整快照。
+- `LogManager.ReplaceConfigured()` 先构造全部新实例，再按调用方拥有的名称集合验证外部冲突并原子提交；构造/校验失败释放候选实例且保留旧集合，提交成功后才释放旧日志。
+- `LogConfigService.Load()` 改用该深模块 interface，删除宿主侧“先移除、再逐项注册”的重复事务逻辑。
+- `LogManagerTests` 专项 11/11 通过（含并发读取只能观察完整替换前/后快照）；DataManager 全套本机结果 169/179，剩余 10 项均为既有 PostgreSQL 密码认证失败。

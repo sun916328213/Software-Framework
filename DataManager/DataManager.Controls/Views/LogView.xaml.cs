@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace DataManager.Workbench.Views
+namespace DataManager.Controls.Views
 {
     public partial class LogView : UserControl
     {

@@ -1,7 +1,8 @@
 using DataManager.SQL;
+using DataManager.Workbench.Models;
 using DataManager.SQL.Definition;
-using DataManager.Workbench.Services;
-using DataManager.Workbench.ViewModels;
+using DataManager.Controls.Services;
+using DataManager.Controls.ViewModels;
 using System.Diagnostics;
 
 namespace DataManager.Tests.Workbench
@@ -15,10 +16,10 @@ namespace DataManager.Tests.Workbench
         private readonly string _file = Path.Combine(
             Path.GetTempPath(), $"dm_wb_sqlite_{Guid.NewGuid():N}.db");
 
-        private SqlViewModel CreateVm()
+        private SqlViewModel<TestEntity> CreateVm()
         {
-            var vm = new SqlViewModel(new SqlWorkspace(new SQLManager()));
-            vm.Connections.Clear();
+            var vm = new SqlViewModel<TestEntity>(new SqlWorkspace<TestEntity>(new SQLManager()));
+            vm.Model.DataCollection.Clear();
             var profile = new SQLParam
             {
                 Name = "lite-it",
@@ -26,12 +27,12 @@ namespace DataManager.Tests.Workbench
                 ToolType = ESQLToolType.EFCore,
                 ConnectionString = $"Data Source={_file};",
             };
-            vm.Connections.Add(profile);
-            vm.SelectedConnection = profile;
+            vm.Model.DataCollection.Add(profile);
+            vm.Model.SelectedConnection = profile;
             return vm;
         }
 
-        private static void WaitUntil(Func<bool> cond, SqlViewModel vm, string what, int timeoutMs = 30000)
+        private static void WaitUntil(Func<bool> cond, SqlViewModel<TestEntity> vm, string what, int timeoutMs = 30000)
         {
             var sw = Stopwatch.StartNew();
             while (!cond())
@@ -42,7 +43,7 @@ namespace DataManager.Tests.Workbench
             }
         }
 
-        private static void WaitMarker(SqlViewModel vm, string marker) =>
+        private static void WaitMarker(SqlViewModel<TestEntity> vm, string marker) =>
             WaitUntil(() => vm.OutputText.Contains(marker), vm, marker);
 
         [Fact]
@@ -50,7 +51,7 @@ namespace DataManager.Tests.Workbench
         {
             var vm = CreateVm();
             vm.ConnectCommand.Execute(null);
-            WaitUntil(() => vm.IsConnected, vm, "连接");
+            WaitUntil(() => vm.Model.IsConnected, vm, "连接");
             try
             {
                 vm.AddRangeCommand.Execute(null);
@@ -58,19 +59,19 @@ namespace DataManager.Tests.Workbench
 
                 vm.QueryAllCommand.Execute(null);
                 WaitMarker(vm, "✓ 查询全部");
-                WaitUntil(() => vm.Results.Count == 10, vm, "查询10条");
+                WaitUntil(() => vm.Model.Results.Count == 10, vm, "查询10条");
 
                 vm.DeleteAllCommand.Execute(null);
                 WaitMarker(vm, "✓ 清空表");
 
                 vm.QueryAllCommand.Execute(null);
                 WaitMarker(vm, "✓ 查询全部");
-                WaitUntil(() => vm.Results.Count == 0, vm, "清空后0条");
+                WaitUntil(() => vm.Model.Results.Count == 0, vm, "清空后0条");
             }
             finally
             {
                 vm.DisconnectCommand.Execute(null);
-                Assert.False(vm.IsConnected);
+                Assert.False(vm.Model.IsConnected);
             }
         }
 

@@ -1,7 +1,9 @@
 using DataManager.SQL;
-using DataManager.Workbench.Services;
-using DataManager.Workbench.ViewModels;
-using DataManager.Workbench.Views;
+using DataManager.Workbench.Models;
+using DataManager.Controls.Services;
+using Extension.Core.ThemeEx;
+using DataManager.Controls.ViewModels;
+using DataManager.Controls.Views;
 using MaterialDesignColors;
 using Prism.Ioc;
 using System.Windows;
@@ -45,7 +47,7 @@ namespace DataManager.Tests.Workbench
             // 走生产路径：视图进窗口、配真 VM，否则绑定不求值。
             var view = new SqlView
             {
-                DataContext = new SqlViewModel(new SqlWorkspace(ContainerLocator.Container.Resolve<SQLManager>()))
+                DataContext = new SqlViewModel<TestEntity>(new SqlWorkspace<TestEntity>(ContainerLocator.Container.Resolve<SQLManager>()))
             };
             var window = new Window
             {

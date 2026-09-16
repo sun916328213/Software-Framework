@@ -1,3 +1,4 @@
+using DataManager.Controls.Models;
 using DataManager.SQL.Dapper;
 using SqlSugar;
 using System.ComponentModel.DataAnnotations;
@@ -6,12 +7,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace DataManager.Workbench.Models
 {
     /// <summary>
-    /// SQL 测试实体（同时兼容 EFCore / SqlSugar / Dapper 三种工具的 Day 分表）
+    /// SQL 演示实体（宿主定义，实现 Controls 的行契约；分表映射随实体走）。
     /// </summary>
     [SugarTable("workbench_entity_{year}{month}{day}")]
     [SplitTable(SqlSugar.SplitType.Day)]
     [DapperSplitTable(DataManager.SQL.Dapper.SplitType.Day)]
-    public class TestEntity
+    public class TestEntity : ISqlEntity
     {
         [SugarColumn(IsPrimaryKey = true, IsIdentity = true)]
         [Key]
@@ -20,17 +21,15 @@ namespace DataManager.Workbench.Models
         [SugarColumn(IsNullable = true)]
         public string Name { get; set; } = string.Empty;
 
-        public int Age { get; set; }
-
         [SugarColumn(ColumnDataType = "timestamp without time zone", IsNullable = true)]
         public DateTime? CreateTime { get; set; }
     }
 
     /// <summary>
-    /// Excel 测试实体
+    /// Excel 演示实体（宿主定义，实现 Controls 的行契约）。
     /// </summary>
     [Table("ExcelPerson")]
-    public class ExcelPerson
+    public class ExcelPerson : IExcelTestEntity
     {
         public string Name { get; set; } = string.Empty;
         public int Age { get; set; }

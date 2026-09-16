@@ -6,6 +6,7 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
+    xmlns:wpfcc="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
     Title="DataManager 测试工作台"
     Width="1440"
     Height="900"
@@ -16,14 +17,14 @@
 
     <Grid Background="{DynamicResource MaterialDesign.Brush.Background}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="264" />
+            <ColumnDefinition Width="200" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- 侧栏（固定深色品牌区，不随主题变） -->
-        <Border Grid.Column="0" Background="{StaticResource SidebarBrush}">
+        <!--  侧栏（跟随主题：浅色主题下浅底深字，深色主题下深底浅字）  -->
+        <Border Grid.Column="0" Background="{DynamicResource MaterialDesign.Brush.Card.Background}">
             <DockPanel>
-                <StackPanel DockPanel.Dock="Top" Margin="16,24,16,12">
+                <StackPanel Margin="10,24,16,12" DockPanel.Dock="Top">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon
                             Width="40"
@@ -31,59 +32,49 @@
                             Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
                             Kind="Database" />
                         <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-                            <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="White" Text="DataManager" />
-                            <TextBlock FontSize="11" Foreground="#94A3B8" Text="测试工作台 · Material" />
+                            <TextBlock
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                Text="DataManager" />
+                            <!--
+                                次要文字：走「主前景 + Opacity」，不要用 ForegroundLight。
+                                ForegroundLight = #000000/7F（深色 #FFFFFF/7F），压在侧栏上实测
+                                浅色 3.95:1 / 深色 3.76:1 —— 低于 WCAG AA 正文下限 4.5:1，
+                                11px 小字尤其吃亏。MD 那个 50% alpha 本来是「禁用」档，不是「次要」档。
+                                换成 Foreground(#000000/E5) + Opacity 0.7 后 6.39:1 / 4.94:1，
+                                观感仍是「比主标题淡一档」，与 ThemePickerView 的 Caption 同一配方。
+                            -->
+                            <TextBlock
+                                FontSize="11"
+                                Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                Opacity="0.7"
+                                Text="测试工作台 · Material" />
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
 
-                <!-- 主题自由切换：侧栏固定深色品牌区，控件前景固定浅色保证可读；
-                     选中/页面强调色走 MD 原生 Primary 跟随主色 -->
-                <StackPanel DockPanel.Dock="Bottom" Margin="16,0,16,16">
-                    <ComboBox
-                        Margin="0,0,0,8"
-                        Background="#1E293B"
-                        Foreground="#E2E8F0"
-                        ItemsSource="{Binding PrimaryColors}"
-                        SelectedItem="{Binding SelectedPrimary, Mode=TwoWay}"
-                        ToolTip="主色（MaterialDesign PrimaryColor）">
-                        <ComboBox.ItemContainerStyle>
-                            <Style TargetType="ComboBoxItem">
-                                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-                            </Style>
-                        </ComboBox.ItemContainerStyle>
-                    </ComboBox>
-                    <ComboBox
-                        Margin="0,0,0,8"
-                        Background="#1E293B"
-                        Foreground="#E2E8F0"
-                        ItemsSource="{Binding SecondaryColors}"
-                        SelectedItem="{Binding SelectedSecondary, Mode=TwoWay}"
-                        ToolTip="辅色（MaterialDesign SecondaryColor）">
-                        <ComboBox.ItemContainerStyle>
-                            <Style TargetType="ComboBoxItem">
-                                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-                            </Style>
-                        </ComboBox.ItemContainerStyle>
-                    </ComboBox>
-                    <StackPanel Orientation="Horizontal">
-                        <Button
-                            Command="{Binding ToggleThemeCommand}"
-                            Style="{StaticResource MaterialDesignFlatButton}"
-                            ToolTip="{Binding ThemeTip}">
-                            <materialDesign:PackIcon
-                                Width="20"
-                                Height="20"
-                                Foreground="#E2E8F0"
-                                Kind="{Binding ThemeIconKind}" />
-                        </Button>
-                        <TextBlock
-                            Margin="8,0,0,0"
-                            VerticalAlignment="Center"
-                            FontSize="11"
-                            Foreground="#94A3B8"
-                            Text="Material · Prism · WPF · .NET 9" />
-                    </StackPanel>
+                <!--
+                    主题自由切换：改用 WPFCustomControls 的复用控件 ThemePickerView。
+                    Theme 传宿主 DI 里的 ThemeService 单例 —— 控件改的就是全应用在用的那一份，
+                    因此其它窗口/控件会一起换肤；配色常量全在控件内部，本页不再散落主题 UI。
+                    
+                    侧栏现在跟随主题，所以必须显式传 FieldBackground / FieldForeground：
+                    控件那两个 DP 的默认值（#1E293B / #E2E8F0）是给「固定深色侧栏」配的，
+                    压在浅底侧栏上会变成深色输入框 + 浅色文字，直接看不清。
+                -->
+                <StackPanel Margin="16,0,16,16" DockPanel.Dock="Bottom">
+                    <wpfcc:ThemePickerView
+                        FieldBackground="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                        FieldForeground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        Theme="{Binding Theme}" />
+                    <!--  次要文字：同上，别退回 ForegroundLight（3.95:1 / 3.76:1 不过 AA）。  -->
+                    <TextBlock
+                        Margin="8,4,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        Opacity="0.7"
+                        Text="Material · Toolkit · Prism · WPF · .NET 9" />
                 </StackPanel>
 
                 <ListBox
@@ -93,7 +84,7 @@
             </DockPanel>
         </Border>
 
-        <!-- 内容区域（Prism 区域导航，不动） -->
+        <!--  内容区域（Prism 区域导航，不动）  -->
         <ContentControl Grid.Column="1" prism:RegionManager.RegionName="MainRegion" />
     </Grid>
 </Window>

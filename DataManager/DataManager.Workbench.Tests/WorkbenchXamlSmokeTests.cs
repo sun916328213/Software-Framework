@@ -1,7 +1,10 @@
 using DataManager.Workbench.Infrastructure;
+using DataManager.Controls.Views;
+using DataManager.Workbench.ViewModels;
 using DataManager.Workbench.Views;
 using Prism.Ioc;
 using Prism.Regions;
+using System.Windows;
 
 namespace DataManager.Tests.Workbench
 {
@@ -31,6 +34,26 @@ namespace DataManager.Tests.Workbench
                 _ = new SqlView();
                 _ = new LogView();
                 _ = new ExcelView();
+            });
+        }
+
+        /// <summary>
+        /// 壳加载后（MainWindow.Loaded → SelectFirst）既要导航到默认页，**也要把导航项选上**。
+        /// 曾经只导航不设 SelectedNav，于是「内容区显示着 SQL 页、侧栏里却没有任何一项高亮」，
+        /// 看着像什么都没选中。这条同时守住侧栏选中态（Primary 底 + Primary.Foreground 前景）能被走到。
+        /// </summary>
+        [Fact]
+        public void ShellStartup_SelectsTheDefaultNavItem()
+        {
+            _host.Invoke(() =>
+            {
+                var window = Application.Current.MainWindow;
+                Assert.NotNull(window);
+
+                var vm = window!.DataContext as MainWindowViewModel;
+                Assert.NotNull(vm);
+                Assert.NotNull(vm!.SelectedNav);
+                Assert.Same(vm.NavItems[0], vm.SelectedNav);
             });
         }
     }

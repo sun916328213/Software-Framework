@@ -1,4 +1,4 @@
-using DataManager.Workbench.Services;
+using Extension.Core.ThemeEx;
 using MaterialDesignColors;
 using MaterialDesignThemes.Wpf;
 using Prism.Ioc;
@@ -23,7 +23,7 @@ namespace DataManager.Tests.Workbench
             _host.Invoke(() =>
             {
                 var theme = ContainerLocator.Container.Resolve<ThemeService>();
-                var bundled = WPFCustomControls.Services.AppThemeService.FindBundledTheme();
+                var bundled = ThemeService.FindBundledTheme();
                 Assert.NotNull(bundled);
 
                 theme.SetTheme(true, PrimaryColor.Red, SecondaryColor.Amber);

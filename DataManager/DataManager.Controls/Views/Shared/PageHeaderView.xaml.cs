@@ -2,10 +2,11 @@ using MaterialDesignThemes.Wpf;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace DataManager.Workbench.Views.Shared
+namespace DataManager.Controls.Views.Shared
 {
     /// <summary>
     /// 测试页页头：图标 + 标题 + 副标题（纯展示，无 VM 耦合，DataContext 穿透）。
+    /// 刻意不含主题切换 —— 侧栏在导航时始终可见，主题入口一处即可。
     /// </summary>
     public partial class PageHeaderView : UserControl
     {

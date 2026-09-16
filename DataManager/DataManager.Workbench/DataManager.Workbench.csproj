@@ -14,5 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
     <ProjectReference Include="..\DataManager\DataManager.csproj" />
+    <ProjectReference Include="..\DataManager.Controls\DataManager.Controls.csproj" />
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
   </ItemGroup>
 </Project>

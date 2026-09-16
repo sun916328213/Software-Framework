@@ -258,6 +258,13 @@ namespace WPFCustomControls.Controls
             {
                 if (DataGridColumns != null && DataGridColumns.Count > 0)
                 {
+                    // ⚠️ DataGridView（= 裸 DataGrid）的 AutoGenerateColumns 默认是 **true**。
+                    // 不关掉的话：我们传的中文列加进去之后，DataGrid 还会照 ItemsSource 的元素类型
+                    // **再自动生成一套**英文列（Name / FilePath / Separator / SaveDays / LogType）挂在后面。
+                    // 症状（LogView 实测）：总列数 5 → **10**；星号列被挤成 ActualWidth=**20px**
+                    // （名称/日志目录/分隔符/保存天数 全废），表头出现英文属性名，横向滚动条长得离谱。
+                    // ⇒ 有自定义列时必须关掉自动生成。**没传列的宿主（全仓 9 处）保持 true**，行为不变。
+                    DataGridView.AutoGenerateColumns = false;
                     DataGridView.Columns.Clear();
                     foreach (var col in DataGridColumns)
                     {

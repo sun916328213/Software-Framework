@@ -13,8 +13,16 @@ namespace DataManager
     public abstract class ManagerBase<T, TParam> : IManager<T, TParam>
     {
         private readonly ConcurrentList<T> DataManagers = new ConcurrentList<T>();
+        private readonly object _syncRoot = new();
 
-        public IReadOnlyList<T> Items => DataManagers.ToList().AsReadOnly();
+        public IReadOnlyList<T> Items
+        {
+            get
+            {
+                lock (_syncRoot)
+                    return DataManagers.ToList().AsReadOnly();
+            }
+        }
 
         public abstract void Config (List<TParam> param);
 
@@ -33,10 +41,13 @@ namespace DataManager
         /// <param name="device"></param>
         public void Add(T device)
         {
-            var name = GetName(device);
-            if (DataManagers.Any(x => GetName(x) == name))
-                throw new InvalidOperationException($"已存在同名实例: {name}");
-            DataManagers.Add(device);
+            lock (_syncRoot)
+            {
+                var name = GetName(device);
+                if (DataManagers.Any(x => GetName(x) == name))
+                    throw new InvalidOperationException($"已存在同名实例: {name}");
+                DataManagers.Add(device);
+            }
         }
 
         /// <summary>
@@ -44,7 +55,49 @@ namespace DataManager
         /// </summary>
         protected void AddInternal(T device)
         {
-            DataManagers.Add(device);
+            lock (_syncRoot)
+                DataManagers.Add(device);
+        }
+
+        /// <summary>
+        /// 在单一管理器锁内验证并替换指定名称集合，外部读取只能看到替换前或替换后的完整快照。
+        /// </summary>
+        /// <param name="ownedNames">允许本次替换移除的现有实例名称。</param>
+        /// <param name="replacements">已经完成构造、尚未注册的新实例。</param>
+        /// <returns>被替换移除的旧实例，由调用方在提交后释放。</returns>
+        protected IReadOnlyList<T> ReplaceOwnedItems(
+            IReadOnlyCollection<string> ownedNames,
+            IReadOnlyList<T> replacements)
+        {
+            ArgumentNullException.ThrowIfNull(ownedNames);
+            ArgumentNullException.ThrowIfNull(replacements);
+
+            lock (_syncRoot)
+            {
+                var owned = new HashSet<string>(ownedNames, StringComparer.Ordinal);
+                var current = DataManagers.ToList();
+                var removed = current.Where(item => owned.Contains(GetName(item))).ToList();
+                var retainedNames = new HashSet<string>(
+                    current.Where(item => !owned.Contains(GetName(item))).Select(GetName),
+                    StringComparer.Ordinal);
+                var replacementNames = new HashSet<string>(StringComparer.Ordinal);
+
+                foreach (var replacement in replacements)
+                {
+                    var name = GetName(replacement);
+                    if (!replacementNames.Add(name))
+                        throw new InvalidOperationException($"替换集合包含同名实例: {name}");
+                    if (retainedNames.Contains(name))
+                        throw new InvalidOperationException($"实例已由其他模块注册: {name}");
+                }
+
+                foreach (var item in removed)
+                    DataManagers.Remove(item);
+                foreach (var replacement in replacements)
+                    DataManagers.Add(replacement);
+
+                return removed.AsReadOnly();
+            }
         }
 
         /// <summary>
@@ -53,7 +106,8 @@ namespace DataManager
         /// <param name="device"></param>
         public bool Remove(T device)
         {
-            return DataManagers.Remove(device);
+            lock (_syncRoot)
+                return DataManagers.Remove(device);
         }
 
         /// <summary>
@@ -61,7 +115,8 @@ namespace DataManager
         /// </summary>
         public void Clear()
         {
-            DataManagers.Clear();
+            lock (_syncRoot)
+                DataManagers.Clear();
         }
 
         /// <summary>
@@ -69,7 +124,14 @@ namespace DataManager
         /// </summary>
         /// <param name="deviceName">设备名称</param>
         /// <returns></returns>
-        public T? this[string deviceName] => TryGet(deviceName, out var item) ? item : default;
+        public T? this[string deviceName]
+        {
+            get
+            {
+                lock (_syncRoot)
+                    return DataManagers.FirstOrDefault(x => GetName(x) == deviceName);
+            }
+        }
 
 
         /// <summary>
@@ -77,19 +139,40 @@ namespace DataManager
         /// </summary>
         /// <param name="index">设备索引</param>
         /// <returns></returns>
-        public T this[int index] => DataManagers[index];
+        public T this[int index]
+        {
+            get
+            {
+                lock (_syncRoot)
+                    return DataManagers[index];
+            }
+        }
 
         /// <summary>
         /// 设备数量
         /// </summary>
-        public int Count => DataManagers.Count;
+        public int Count
+        {
+            get
+            {
+                lock (_syncRoot)
+                    return DataManagers.Count;
+            }
+        }
 
         public bool TryGet(string name, out T? item)
         {
-            item = DataManagers.FirstOrDefault(x => GetName(x) == name);
-            return item != null;
+            lock (_syncRoot)
+            {
+                item = DataManagers.FirstOrDefault(x => GetName(x) == name);
+                return item != null;
+            }
         }
 
-        public bool Contains(string name) => DataManagers.Any(x => GetName(x) == name);
+        public bool Contains(string name)
+        {
+            lock (_syncRoot)
+                return DataManagers.Any(x => GetName(x) == name);
+        }
     }
 }

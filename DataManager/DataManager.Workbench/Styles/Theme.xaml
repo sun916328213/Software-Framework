@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
-    <!-- 页面标题（Material 风格字阶；前景钉 MD 原生键，深浅切换自动跟随，不自定义画刷） -->
+    <!--  页面标题（Material 风格字阶；前景钉 MD 原生键，深浅切换自动跟随，不自定义画刷）  -->
     <Style x:Key="PageTitle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="22" />
         <Setter Property="FontWeight" Value="SemiBold" />
@@ -21,20 +21,28 @@
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
     </Style>
 
-    <!-- 品牌色（侧栏固定深色区专用，不随主题变；功能色仍走 MD 原生键） -->
+    <!--  品牌色（侧栏固定深色区专用，不随主题变；功能色仍走 MD 原生键）  -->
     <SolidColorBrush x:Key="SuccessBrush" Color="#16A34A" />
     <SolidColorBrush x:Key="DangerBrush" Color="#DC2626" />
     <SolidColorBrush x:Key="SidebarBrush" Color="#0F172A" />
 
-    <!-- 输入框（官方体系：基于 MD 默认样式，只把前景显式钉到 MD 原生键；
-         Outlined 默认不把主题前景赋到 Foreground 属性，深色下会回落黑色，故须显式钉） -->
-    <Style x:Key="DmInput" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}" TargetType="TextBox">
+    <!--
+        输入框（官方体系：基于 MD 默认样式，只把前景显式钉到 MD 原生键；
+        Outlined 默认不把主题前景赋到 Foreground 属性，深色下会回落黑色，故须显式钉）
+    -->
+    <Style
+        x:Key="DmInput"
+        BasedOn="{StaticResource MaterialDesignTextBox}"
+        TargetType="TextBox">
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
         <Setter Property="CaretBrush" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
     </Style>
 
-    <!-- 下拉框（默认弹出项前景不跟随主题，显式钉原生键；控件与弹层各钉一次） -->
-    <Style x:Key="DmCombo" BasedOn="{StaticResource MaterialDesignComboBox}" TargetType="ComboBox">
+    <!--  下拉框（默认弹出项前景不跟随主题，显式钉原生键；控件与弹层各钉一次）  -->
+    <Style
+        x:Key="DmCombo"
+        BasedOn="{StaticResource MaterialDesignComboBox}"
+        TargetType="ComboBox">
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
         <Style.Resources>
             <Style TargetType="ComboBoxItem">
@@ -43,15 +51,35 @@
         </Style.Resources>
     </Style>
 
-    <!-- 结果表格（MD 默认 DataGrid；单元格文字随原生前景键跟随主题） -->
-    <Style x:Key="DmGrid" BasedOn="{StaticResource MaterialDesignDataGrid}" TargetType="DataGrid">
+    <!--  结果表格（MD 默认 DataGrid；单元格文字随原生前景键跟随主题）  -->
+    <Style
+        x:Key="DmGrid"
+        BasedOn="{StaticResource MaterialDesignDataGrid}"
+        TargetType="DataGrid">
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
     </Style>
 
-    <!-- 运行输出框（深色终端风，刻意不随主题，保留定制） -->
+    <!--
+        运行输出框 / 多行原文框（等宽字体，但**跟随主题**）。
+        
+        ⚠️ 这里曾经写死深色终端风（`Background="#0F172A"` / `Foreground="#E2E8F0"`），
+        并且被当成「刻意不随主题」的定制保留下来。用户 2026-09-15 晚指出：
+        **浅色主题下「多行原文」和「运行输出」两块黑底不合适** —— 浅色界面里嵌两个黑盒子，
+        既不像输入框也不像卡片，视觉上很突兀。
+        
+        改法：改用 MD 原生键，靠**填充层级**而不是描边来区分（本仓一贯做法）：
+        · 浅色：底 `#F1F1F1`（比卡片白 `#FFFFFF` 暗一档 ⇒ 像内嵌的凹槽）+ 近黑字；
+        · 深色：底 `#323232`（比卡片 `#454545` 暗一档 ⇒ 同样读作凹槽）+ 近白字。
+        两个主题下都是「比卡片底色暗一档的凹槽」，语义一致，等宽字体保留。
+        对比度：浅色 ≈ 17.9:1，深色 ≈ 12.6:1，都远超 AA。
+        
+        `ScrollViewer_Style` 那一段**必须保留**：WPF 默认 ScrollViewer 模板在右下角放了一个
+        填充系统色的 Rectangle，横竖滚动条同时出现时会露出来（深色主题下就是那个扎眼的浅色小方块）。
+        它属于 **ScrollViewer**，只套 ScrollBar_Style 治不到。
+    -->
     <Style x:Key="OutputBox" TargetType="TextBox">
-        <Setter Property="Background" Value="#0F172A" />
-        <Setter Property="Foreground" Value="#E2E8F0" />
+        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Background}" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
         <Setter Property="FontFamily" Value="Consolas" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="BorderThickness" Value="0" />
@@ -67,6 +95,7 @@
                             x:Name="PART_ContentHost"
                             Margin="12,10"
                             HorizontalScrollBarVisibility="{TemplateBinding HorizontalScrollBarVisibility}"
+                            Style="{StaticResource ScrollViewer_Style}"
                             VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}" />
                     </Border>
                 </ControlTemplate>
@@ -74,12 +103,37 @@
         </Setter>
     </Style>
 
-    <!-- 侧栏导航（侧栏是固定深色品牌区：文字前景固定浅色保证两种主题下都可读；
-         选中强调色走 MD 原生 Primary，跟随主色切换） -->
+    <!--
+        导航项标题：默认跟随浅深；选中行压在 Primary 上时换成 Primary.Foreground。
+        
+        ⚠️ 前景必须写在 Style 的 Setter 里。之前在 DataTemplate 里直接写
+        `Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"` —— 那是**局部值**，
+        会盖过 DataTrigger 的 Setter，触发器等于白挂（本仓踩过两次）。
+        ⚠️ Style 里 `ElementName` 解析不到（独立命名域），只能用 RelativeSource 找 ListBoxItem。
+        ⚠️ 不能写死白色：主色可能是浅色（Amber / Lime），要交给 MD 的 `Primary.Foreground`
+        （按主色明暗自动翻黑/白）。19 主色 × 浅深 38 组合实测 ≥4.5:1。
+    -->
+    <Style x:Key="NavItemText" TargetType="TextBlock">
+        <Setter Property="Margin" Value="12,0,0,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary.Foreground}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!--
+        侧栏导航。侧栏底色由 MainWindow.xaml 给（Card.Background，跟随主题）；
+        悬停底色与选中强调色都走 MD 原生键，分别跟随主题 / 主色。
+        chip 保持自己的深色小底 + 浅色字（与主色解耦，两种主题下都 ≥4.5:1）。
+    -->
     <Style x:Key="NavListBox" TargetType="ListBox">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Margin" Value="12,0" />
+        <Setter Property="Margin" Value="4,0" />
         <Setter Property="ItemTemplate">
             <Setter.Value>
                 <DataTemplate>
@@ -88,12 +142,8 @@
                             Background="#334155"
                             Content="{Binding Badge}"
                             Foreground="#E2E8F0" />
-                        <TextBlock
-                            Margin="12,0,0,0"
-                            VerticalAlignment="Center"
-                            FontSize="13"
-                            Foreground="#E2E8F0"
-                            Text="{Binding Title}" />
+                        <!--  前景交给 NavItemText（选中态要换成 Primary.Foreground，见上）。  -->
+                        <TextBlock Style="{StaticResource NavItemText}" Text="{Binding Title}" />
                     </StackPanel>
                 </DataTemplate>
             </Setter.Value>
@@ -107,14 +157,21 @@
                                 <Border
                                     x:Name="bd"
                                     Margin="0,2"
-                                    Padding="12,6"
+                                    Padding="8,6"
                                     Background="Transparent"
                                     CornerRadius="8">
                                     <ContentPresenter />
                                 </Border>
                                 <ControlTemplate.Triggers>
+                                    <!--
+                                        悬停底色必须**跟随主题**，不能写死深色。
+                                        原来写死 #1E293B，而标题前景是跟随浅深的 Foreground ——
+                                        浅色主题下就成了「近黑的字压在深 navy 上」，实测只有 1.40:1，几乎看不见。
+                                        ListView.Hover 是 MD 的半透明叠层（浅 #19000000 / 深 #19FFFFFF），
+                                        叠在 Card.Background 上实测 浅 14.30:1 / 深 6.20:1。
+                                    -->
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="bd" Property="Background" Value="#1E293B" />
+                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource MaterialDesign.Brush.ListView.Hover}" />
                                     </Trigger>
                                     <Trigger Property="IsSelected" Value="True">
                                         <Setter TargetName="bd" Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
