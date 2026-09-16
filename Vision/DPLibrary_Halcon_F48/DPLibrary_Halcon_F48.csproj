@@ -9,7 +9,6 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Tools\æ–°æ–‡ä»¶å¤¹\**" />
     <EmbeddedResource Remove="Tools\æ–°æ–‡ä»¶å¤¹\**" />
     <None Remove="Tools\æ–°æ–‡ä»¶å¤¹\**" />
     <Page Remove="Tools\æ–°æ–‡ä»¶å¤¹\**" />

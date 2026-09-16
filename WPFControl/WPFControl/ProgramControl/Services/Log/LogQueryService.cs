@@ -1,7 +1,7 @@
 ﻿using DataManager.Log;
 using Extension.Core.ControlEx;
 using Extension.Core.FileEx;
-using Extension.Struct;
+using DataManager.Log.Definition;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;

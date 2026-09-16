@@ -43,17 +43,23 @@ namespace Extension.Core.SystemEx
                     systemCpuCounter = new PerformanceCounter("Processor Information", "% Processor Utility", "_Total");
                     systemCpuCounter.NextValue(); // 初始化
                 }
-                catch
+                catch (Exception ex) when (IsCounterUnavailable(ex))
                 {
-                    // 如果"% Processor Utility"不可用，回退到"% Processor Time"
+                    // 如果"% Processor Utility"不可用，回退到"% Processor Time"。
+                    // 性能计数器在不同 Windows 版本/语言/权限下可用类别不同，回退本身是预期行为；
+                    // 但要留痕，否则"一直在用回退计数器、数值与任务管理器对不上"会无从查起。
+                    Debug.WriteLine(
+                        $"[CpuMonitorEx] 'Processor Information\\% Processor Utility' 不可用，回退到 '% Processor Time'：{ex.Message}");
                     try
                     {
                         systemCpuCounter = new PerformanceCounter("Processor Information", "% Processor Time", "_Total");
                         systemCpuCounter.NextValue(); // 初始化
                     }
-                    catch
+                    catch (Exception ex2) when (IsCounterUnavailable(ex2))
                     {
                         // 如果"Processor Information"不可用，回退到"Processor"
+                        Debug.WriteLine(
+                            $"[CpuMonitorEx] 'Processor Information' 不可用，回退到 'Processor'：{ex2.Message}");
                         systemCpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
                         systemCpuCounter.NextValue(); // 初始化
                     }
@@ -74,8 +80,11 @@ namespace Extension.Core.SystemEx
                 // 短暂延迟以确保计数器正确初始化
                 Thread.Sleep(100);
             }
-            catch (Exception)
+            catch (Exception ex) when (IsCounterUnavailable(ex))
             {
+                // 初始化失败后所有读取都返回 0f，属于"监控降级"而非崩溃，这个行为保留。
+                // 但必须留痕：否则 CPU 数据恒为 0 时，无法区分"真的空闲"和"计数器根本没起来"。
+                Debug.WriteLine($"[CpuMonitorEx] 性能计数器初始化失败，CPU 监控不可用：{ex.Message}");
                 isInitialized = false;
             }
         }
@@ -106,9 +115,10 @@ namespace Extension.Core.SystemEx
                             }
                         }
                     }
-                    catch
+                    catch (Exception ex) when (IsCounterUnavailable(ex))
                     {
-                        // 跳过无法访问的实例
+                        // 跳过无法访问的实例（进程可能刚好退出，或权限不足），继续匹配下一个。
+                        Debug.WriteLine($"[CpuMonitorEx] 无法访问 Process 计数器实例 '{instanceName}'，跳过：{ex.Message}");
                         continue;
                     }
                 }
@@ -132,9 +142,10 @@ namespace Extension.Core.SystemEx
                     return matchingInstances[0];
                 }
             }
-            catch
+            catch (Exception ex) when (IsCounterUnavailable(ex))
             {
-                // 忽略异常
+                // 拿不到实例名时返回空串，由调用方回退到 ProcessName，这层降级保留。
+                Debug.WriteLine($"[CpuMonitorEx] 获取进程实例名称失败，返回空串：{ex.Message}");
             }
 
             return string.Empty;
@@ -157,8 +168,10 @@ namespace Extension.Core.SystemEx
                 // 确保值在有效范围内
                 return Math.Max(0f, Math.Min(100f, currentUsage));
             }
-            catch
+            catch (Exception ex) when (IsCounterUnavailable(ex))
             {
+                // 读取失败返回 0f（监控降级），但留痕以区分"真的空闲"和"计数器读不到"。
+                Debug.WriteLine($"[CpuMonitorEx] 读取系统 CPU 使用率失败，返回 0：{ex.Message}");
                 return 0f;
             }
         }
@@ -185,8 +198,9 @@ namespace Extension.Core.SystemEx
                 // 确保值在有效范围内
                 return Math.Max(0f, Math.Min(100f, normalizedUsage));
             }
-            catch
+            catch (Exception ex) when (IsCounterUnavailable(ex))
             {
+                Debug.WriteLine($"[CpuMonitorEx] 读取进程 CPU 使用率失败，返回 0：{ex.Message}");
                 return 0f;
             }
         }
@@ -199,5 +213,19 @@ namespace Extension.Core.SystemEx
             systemCpuCounter?.Dispose();
             processCpuCounter?.Dispose();
         }
+
+        /// <summary>
+        /// 判断异常是否属于"性能计数器不可用"这一类环境问题
+        /// （类别不存在、权限不足、计数器已损坏、平台不支持等）。
+        /// 这类异常可以按降级策略处理；其余异常说明代码有缺陷，继续抛出。
+        /// </summary>
+        private static bool IsCounterUnavailable(Exception ex) =>
+            ex is InvalidOperationException
+                or UnauthorizedAccessException
+                or System.ComponentModel.Win32Exception
+                or PlatformNotSupportedException
+                or NotSupportedException
+                or ArgumentException
+                or System.Security.SecurityException;
     }
 }

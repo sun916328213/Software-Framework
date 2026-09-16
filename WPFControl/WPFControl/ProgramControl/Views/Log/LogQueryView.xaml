@@ -84,7 +84,7 @@
                 EnableRowVirtualization="False"
                 FontSize="{Binding ElementName=UserControl, Path=FontSize}"
                 IsReadOnly="True"
-                ItemsSource="{Binding Datas.LogInfoDTO}"
+                ItemsSource="{Binding Datas.LogDatas}"
                 ScrollViewer.CanContentScroll="False"
                 VirtualizingPanel.IsVirtualizing="False" />
         </Border>

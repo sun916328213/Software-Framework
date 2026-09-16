@@ -6,6 +6,7 @@ using Extension.Core.ConvertEx;
 using Extension.Core.EnumEx;
 using Extension.Core.SystemEx;
 using Extension.Struct;
+using DataManager.Log.Definition;
 using Packing_Machine.Data;
 using Packing_Machine.Business.Order;
 using Packing_Machine.Business.Station;

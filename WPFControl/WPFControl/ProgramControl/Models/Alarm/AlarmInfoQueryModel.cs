@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Extension.Struct;
 using Mapster;
 using System;
 using System.Collections.Generic;

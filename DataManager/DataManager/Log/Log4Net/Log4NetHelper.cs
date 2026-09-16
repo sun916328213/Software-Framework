@@ -1,5 +1,4 @@
 using DataManager.Log.Definition;
-using Extension.Struct;
 using log4net.Appender;
 using log4net.Core;
 using log4net.Layout;

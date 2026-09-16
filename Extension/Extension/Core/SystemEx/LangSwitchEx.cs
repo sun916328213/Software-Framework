@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
 using System.Windows;
@@ -87,11 +88,15 @@ namespace Extension.Core.SystemEx
                         return resource.ToString();
                 }
             }
-            catch
+            catch (Exception ex) when (ex is InvalidOperationException
+                                          or System.Windows.ResourceReferenceKeyNotFoundException
+                                          or ArgumentNullException)
             {
-                // 忽略异常，返回默认值
+                // 找不到资源时返回 key 本身（"缺翻译"比"崩溃"好），这个降级保留。
+                // 留痕便于批量发现漏翻译的 key，而不是等用户在界面上看到英文键名。
+                Debug.WriteLine($"[LangSwitchEx] 查找资源 '{key}' 失败，回退显示键名：{ex.Message}");
             }
-            
+
             return key; // 如果找不到资源，返回键本身
         }
 

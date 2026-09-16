@@ -3,7 +3,6 @@ using Extension.Core.ControlEx;
 using Extension.Core.ConvertEx;
 using DataManager.Log;
 using DataManager.Log.Definition;
-using Extension.Struct;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 
 namespace Extension.Core.ProtectionEx
@@ -66,7 +67,16 @@ namespace Extension.Core.ProtectionEx
                 _timer?.Dispose();
                 _timer = new Timer(_ =>
                 {
-                    try { CheckOnce(options); } catch { /* 轮询中异常只上报不抛 */ }
+                    // Timer 回调运行在线程池线程上，异常会直接终止进程，所以这里不能向外抛。
+                    // 但也不能完全静默：否则"轮询防护一直在跑"会是假象，本轮失败无人知晓。
+                    try
+                    {
+                        CheckOnce(options);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"[AppProtectionEx] 本轮防护检查异常，已跳过：{ex}");
+                    }
                 }, null, options.PollInterval, options.PollInterval);
             }
         }

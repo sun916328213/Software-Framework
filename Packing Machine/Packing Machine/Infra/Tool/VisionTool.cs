@@ -13,7 +13,7 @@ using Extension.Core.DataEx;
 using Extension.Core.FileEx;
 using Extension.Core.ImageEx;
 using Extension.Core.SystemEx;
-using Extension.Struct;
+using DataManager.Log.Definition;
 using HalconDotNet;
 using Packing_Machine.Data;
 using Packing_Machine.Business.Station;

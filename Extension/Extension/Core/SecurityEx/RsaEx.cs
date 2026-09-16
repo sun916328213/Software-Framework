@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -84,8 +85,15 @@ namespace Extension.Core.SecurityEx
                     Convert.FromBase64String(signatureBase64),
                     HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             }
-            catch
+            catch (Exception ex) when (ex is CryptographicException
+                                          or FormatException
+                                          or ArgumentException
+                                          or ArgumentNullException)
             {
+                // 验签失败一律按"无效"处理（fail-closed，安全上正确），这个语义保留。
+                // 但只吞"密钥/格式/参数"这一类异常，且必须留痕：
+                // 否则公钥配错时会表现为"所有签名都无效"，完全查不出是配置问题。
+                Debug.WriteLine($"[RsaEx] 验签失败（按无效处理）：{ex.Message}");
                 return false;
             }
         }
@@ -100,8 +108,11 @@ namespace Extension.Core.SecurityEx
                 using var rsa = FromPublicKey(publicKeyBase64);
                 return rsa.VerifyData(data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             }
-            catch
+            catch (Exception ex) when (ex is CryptographicException
+                                          or ArgumentException
+                                          or ArgumentNullException)
             {
+                Debug.WriteLine($"[RsaEx] 验签失败（字节数组版本，按无效处理）：{ex.Message}");
                 return false;
             }
         }

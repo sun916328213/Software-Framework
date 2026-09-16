@@ -2,7 +2,7 @@
 using Extension.Core.ControlEx;
 using Extension.Core.ConvertEx;
 using Extension.Core.SystemEx;
-using Extension.Struct;
+using DataManager.Log.Definition;
 using Packing_Machine.Data;
 using Packing_Machine.Business.Flow;
 using Packing_Machine.Infra.Tool;

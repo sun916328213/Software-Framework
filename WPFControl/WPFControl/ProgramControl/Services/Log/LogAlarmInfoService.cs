@@ -1,5 +1,5 @@
 ﻿using DataManager.Log;
-using Extension.Struct;
+using DataManager.Log.Definition;
 using Prism.Ioc;
 using System.Linq;
 using WPFCustomControls.Controls;

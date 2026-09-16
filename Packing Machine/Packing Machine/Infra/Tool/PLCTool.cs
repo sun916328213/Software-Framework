@@ -1,7 +1,7 @@
 using Communication;
 using Communication.MC;
 using Extension.Core.SystemEx;
-using Extension.Struct;
+using DataManager.Log.Definition;
 using Packing_Machine.Data;
 using Packing_Machine.Business.Order;
 using Prism.Ioc;

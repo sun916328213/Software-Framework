@@ -3,7 +3,7 @@ using Extension.Core.ControlEx;
 using CommunityToolkit.Mvvm.Input;
 using DataManager.Controls.Models;
 using DataManager.Controls.Services;
-using Extension.Struct;
+using DataManager.Log.Definition;
 using System.IO;
 
 namespace DataManager.Controls.ViewModels

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -92,8 +93,14 @@ namespace Extension.Core.SecurityEx
                 payload = FromBase64Url(parts[0]);
                 sig = FromBase64Url(parts[1]);
             }
-            catch
+            catch (Exception ex) when (ex is FormatException
+                                          or ArgumentException
+                                          or InvalidOperationException
+                                          or EncoderFallbackException)
             {
+                // License 文本不是合法 Base64Url：按"格式错误"拒绝，这是预期内的输入错误，不向外抛。
+                // 只吞这一类异常，其他（如空引用）说明代码有缺陷，必须暴露。
+                Debug.WriteLine($"[LicenseManagerEx] License Base64 解码失败：{ex.Message}");
                 return Fail(LicenseStatus.Malformed, "License Base64 解码失败。");
             }
 
@@ -105,8 +112,11 @@ namespace Extension.Core.SecurityEx
             {
                 info = JsonSerializer.Deserialize<LicenseInfo>(Encoding.UTF8.GetString(payload), JsonOptions);
             }
-            catch
+            catch (Exception ex) when (ex is JsonException
+                                          or NotSupportedException
+                                          or ArgumentException)
             {
+                Debug.WriteLine($"[LicenseManagerEx] License 内容反序列化失败：{ex.Message}");
                 return Fail(LicenseStatus.Malformed, "License 内容反序列化失败。");
             }
             if (info == null)

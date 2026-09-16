@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Extension.Core.ReflectionEx
+namespace Extension.Core.Reflection
 {
     public static class RegisterServicesEx
     {

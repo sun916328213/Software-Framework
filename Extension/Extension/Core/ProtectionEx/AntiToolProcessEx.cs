@@ -34,8 +34,14 @@ namespace Extension.Core.ProtectionEx
         {
             var hits = GetSuspiciousProcesses().Select(p =>
             {
+                // 进程可能在枚举之后刚好退出，此时读取 ProcessName 会抛 InvalidOperationException。
+                // 这是正常的竞争，跳过即可；但只吞这一种异常，其他异常说明代码有问题，必须暴露。
                 try { return p.ProcessName; }
-                catch { return string.Empty; }
+                catch (InvalidOperationException ex)
+                {
+                    Debug.WriteLine($"[AntiToolProcessEx] 读取进程名时进程已退出，跳过：{ex.Message}");
+                    return string.Empty;
+                }
             })
             .Where(n => !string.IsNullOrEmpty(n))
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -56,7 +62,14 @@ namespace Extension.Core.ProtectionEx
                 {
                     all.AddRange(Process.GetProcessesByName(name));
                 }
-                catch { /* 权限不足或进程退出，跳过 */ }
+                catch (Exception ex) when (ex is InvalidOperationException
+                                              or System.ComponentModel.Win32Exception
+                                              or ArgumentException)
+                {
+                    // 权限不足 / 性能计数器不可用 / 进程名非法：跳过该进程名，
+                    // 其余进程名继续检查（fail-open），但留痕便于排查检测为何不全。
+                    Debug.WriteLine($"[AntiToolProcessEx] 检查进程 '{name}' 失败，跳过：{ex.Message}");
+                }
             }
             return all;
         }

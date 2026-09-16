@@ -2,7 +2,6 @@ using DataManager.Log.Definition;
 using Device.Light.Definition;
 using Device.Scan.Definition;
 using Extension.Core.ConvertEx;
-using Extension.Struct;
 using System.Collections.ObjectModel;
 using WPFControl.ProgramControl.Models;
 using WPFControl.ProgramControl.Services;

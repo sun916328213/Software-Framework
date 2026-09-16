@@ -1,6 +1,5 @@
 using DataManager.Log;
 using DataManager.Log.Definition;
-using Extension.Struct;
 using FlowEditor.Core;
 using FlowNodes;
 using System;

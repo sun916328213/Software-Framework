@@ -1,7 +1,6 @@
 using DataManager.Log;
 using DataManager.Log.Definition;
 using DataManager.Log.SeriLog;
-using Extension.Struct;
 
 namespace DataManager.Tests.Log
 {

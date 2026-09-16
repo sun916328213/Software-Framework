@@ -2,7 +2,7 @@
 using System;
 using WPFCustomControls.Controls;
 using WPFControl.Helper;
-using Extension.Struct;
+using DataManager.Log.Definition;
 using DataManager.Log;
 using System.Threading.Tasks;
 

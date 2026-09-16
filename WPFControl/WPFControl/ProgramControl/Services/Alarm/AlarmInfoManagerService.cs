@@ -1,6 +1,7 @@
 using DataManager.Excel;
 using DataManager.Excel.Definition;
 using DataManager.Excel.EPPlus;
+using DataManager.Log.Definition;
 using Extension.Core.CompareEx;
 using Extension.Core.ConvertEx;
 using Extension.Core.DataEx;
@@ -156,7 +157,7 @@ namespace WPFControl.ProgramControl.Services
 
                 if (islog)
                     //添加运行日志
-                    _LogInfoService.AddRunInfo(alarmInfo.Info_CH, Extension.Struct.ELogLevel.Warning);
+                    _LogInfoService.AddRunInfo(alarmInfo.Info_CH, ELogLevel.Warning);
 
                 //写入Excel报警信息
                 _ExcelManager.Add(alarm.Adapt<AlarmInfoDTO>());
@@ -194,7 +195,7 @@ namespace WPFControl.ProgramControl.Services
                 if (islog)
                 {
                     //添加运行日志
-                    _LogInfoService.AddRunInfo($"{alarmInfo.Info_CH} 复位  持续时间:{alarm.Stopwatch.ElapsedMilliseconds} ms", Extension.Struct.ELogLevel.Reset);
+                    _LogInfoService.AddRunInfo($"{alarmInfo.Info_CH} 复位  持续时间:{alarm.Stopwatch.ElapsedMilliseconds} ms", ELogLevel.Reset);
                 }
 
 

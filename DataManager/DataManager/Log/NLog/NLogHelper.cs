@@ -1,5 +1,4 @@
 using DataManager.Log.Definition;
-using Extension.Struct;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
