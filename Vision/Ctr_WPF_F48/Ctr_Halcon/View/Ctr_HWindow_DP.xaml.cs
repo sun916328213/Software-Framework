@@ -1174,7 +1174,13 @@ namespace Ctr_WPF_F48.Ctr_Halcon.View
         private void DispROI()
         {
             var win = HWindow1?.HalconWindow;
-            if (win != null && DispROIDatas != null && ShowRoiLayer)
+            // ⚠️ 原来这里只认 ShowRoiLayer：它默认 false，且没有任何 UI 入口，
+            // 只有「新建 ROI / BeginDrawROI」才会被置 true。于是只要重进工具（控件是新实例），
+            // 即便显示项选了 Image_ROI（含 DisplayLayers.ROI），ROI 也永远画不出来。
+            // 改成并集：显示项说了算，ShowRoiLayer 仍保留「编辑态强制显示」的原语义。
+            // 调用点（ResetDisp / 绘制模式）本身就是要画 ROI 的语境，不会多画。
+            if (win != null && DispROIDatas != null
+                && (ShowRoiLayer || DisplayLayers.HasFlag(DisplayLayers.ROI)))
             {
                 foreach (var item in DispROIDatas)
                 {

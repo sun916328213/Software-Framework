@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
     <OutputType>Library</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -18,6 +20,7 @@
     <EnablePackageValidation>true</EnablePackageValidation>
     <!-- 厂商 DLL 的再分发需由发布方确认授权；内部包可显式设为 true。 -->
     <IncludeMxComponentInteropInPackage>false</IncludeMxComponentInteropInPackage>
+    <Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
