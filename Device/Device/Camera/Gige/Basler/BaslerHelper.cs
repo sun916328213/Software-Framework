@@ -1,10 +1,7 @@
-using Basler.Pylon ;
+using Basler.Pylon;
 using Device.Camera.Definition;
 using Device.Camera.Gige.Definition;
-using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 using BaslerPylon = Basler.Pylon;
 
@@ -75,7 +72,7 @@ namespace Device.Camera.Gige.Basler
                     break;
                 case ETriggerMode.Frame_Line2:
                     _cam.Parameters[PLCamera.TriggerMode].TrySetValue(PLCamera.TriggerMode.On);
-                    _cam.Parameters[PLCamera.TriggerSource].TrySetValue(PLCamera.TriggerSource.Line1);
+                    _cam.Parameters[PLCamera.TriggerSource].TrySetValue(PLCamera.TriggerSource.Line2);
                     break;
                 default:
                     throw new Exception("TriggerMode is not support!");
@@ -84,40 +81,87 @@ namespace Device.Camera.Gige.Basler
 
         protected override void SetExposure(int exposure)
         {
-            IFloatParameter p;
-            if (_cam.Parameters.Contains(PLCamera.ExposureTimeAbs))
-                p = _cam.Parameters[PLCamera.ExposureTimeAbs];
-            else
-                p = _cam.Parameters[PLCamera.ExposureTime];
+            if (_cam == null)
+                return;
 
-            CamParam.Exposure = exposure;
-            exposure *= 1000;
+            double exposureUs = exposure * 1000.0;
 
-            if (p.GetValue() != exposure)
-                p.SetValue(exposure);
+            if (_cam.Parameters.Contains(PLCamera.ExposureTime))
+            {
+                IFloatParameter p =
+                    _cam.Parameters[PLCamera.ExposureTime];
+
+                if (p.IsReadable && p.IsWritable && p.GetValue() != exposureUs)
+                {
+                    p.SetValue(exposureUs);
+                    CamParam.Exposure = exposure;
+                    return;
+                }
+            }
+            else if (_cam.Parameters.Contains(PLCamera.ExposureTimeAbs))
+            {
+                IFloatParameter p =
+                    _cam.Parameters[PLCamera.ExposureTimeAbs];
+                if (p.IsReadable && p.IsWritable && p.GetValue() != exposureUs)
+                {
+                    p.SetValue(exposureUs);
+                    CamParam.Exposure = exposure;
+                    return;
+                }
+            }
         }
 
 
         protected override void SetGain(double gain)
         {
-            IFloatParameter p;
-            p = _cam.Parameters[PLCamera.GainAbs];
-            CamParam.Gain = gain;
 
-            if (p.GetValue() != gain)
-                p.SetValue(gain);
+            if (_cam.Parameters.Contains(PLCamera.Gain))
+            {
+                IFloatParameter p = _cam.Parameters[PLCamera.ExposureTime];
+
+                if (p.IsReadable && p.IsWritable && p.GetValue() != gain)
+                {
+                    p.SetValue(gain);
+                    CamParam.Gain = gain;
+                    return;
+                }
+            }
+            else if (_cam.Parameters.Contains(PLCamera.GainAbs))
+            {
+                IFloatParameter p = _cam.Parameters[PLCamera.GainAbs];
+                if (p.IsReadable && p.IsWritable && p.GetValue() != gain)
+                {
+                    p.SetValue(gain);
+                    CamParam.Gain = gain;
+                    return;
+                }
+            }
+            else if (_cam.Parameters.Contains(PLCamera.GainRaw))
+            {
+                IIntegerParameter p = _cam.Parameters[PLCamera.GainRaw];
+                int gainInt = Convert.ToInt32(gain);
+                if (p.IsReadable && p.IsWritable && p.GetValue() != gainInt)
+                {
+                    p.SetValue(gainInt);
+                    CamParam.Gain = gain;
+                    return;
+                }
+            }
         }
 
         protected void OnConnectionLost(object sender, EventArgs e)
         {
             DisConnect();
-            while (true)
-            {
-               if( ReConnect())
-                    break;
-                Thread.Sleep(1000);
-            }
 
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    if (ReConnect())
+                        break;
+                    Thread.Sleep(1000);
+                }
+            });
         }
 
         private   void OnImageGrabbed(Object sender, ImageGrabbedEventArgs e)
