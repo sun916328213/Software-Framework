@@ -19,11 +19,11 @@ public sealed class HostFlowLogIntegrationTests
         var logDirectory = Path.Combine(root, "logs");
 
         var manager = new LogManager();
-        var configuration = Configure(manager, logDirectory);
+        RegisterBaseFlowLog(manager, logDirectory);
 
         try
         {
-            var sink = new DataManagerFlowLogSink(manager, configuration);
+            var sink = new DataManagerFlowLogSink(manager);
 
             sink.Write(CreateRecord("colon", FlowLogLevel.Information, "ProcessA", "A:B"));
             sink.Write(CreateRecord("question", FlowLogLevel.Information, "ProcessA", "A?B"));
@@ -71,13 +71,13 @@ public sealed class HostFlowLogIntegrationTests
     {
         var root = Path.Combine(Path.GetTempPath(), $"flow-log-diagnostic-{Guid.NewGuid():N}");
         var manager = new LogManager();
-        var configuration = Configure(manager, Path.Combine(root, "logs"));
+        RegisterBaseFlowLog(manager, Path.Combine(root, "logs"));
         var output = new StringWriter();
         using var listener = new TextWriterTraceListener(output);
 
         try
         {
-            var sink = new DataManagerFlowLogSink(manager, configuration);
+            var sink = new DataManagerFlowLogSink(manager);
             Trace.Listeners.Add(listener);
 
             var exception = Record.Exception(() => sink.Write(
@@ -108,11 +108,11 @@ public sealed class HostFlowLogIntegrationTests
         var secondLogDirectory = Path.Combine(root, "second");
 
         var manager = new LogManager();
-        var configuration = Configure(manager, firstLogDirectory);
+        RegisterBaseFlowLog(manager, firstLogDirectory);
 
         try
         {
-            var sink = new DataManagerFlowLogSink(manager, configuration);
+            var sink = new DataManagerFlowLogSink(manager);
 
             foreach (var level in Enum.GetValues<FlowLogLevel>())
                 sink.Write(CreateRecord($"first {level}", level));
@@ -123,16 +123,16 @@ public sealed class HostFlowLogIntegrationTests
             Assert.NotNull(firstDynamicLog);
             Assert.Equal(2, manager.Count);
 
-            var secondTemplate = CreateTemplate(secondLogDirectory);
-            manager.ReplaceConfigured(["FlowLog"], [secondTemplate]);
-            configuration.Update(secondTemplate);
-            Assert.Null(manager["ProcessA\\FlowA"]);
-            Assert.Equal(1, manager.Count);
+            // 宿主重载配置（等价于 LogConfigService.Load）：基础实例被整体替换。
+            // 动态实例改为惰性失效 —— 下次写入时才重建，adapter 不必反向订阅宿主事件。
+            manager.ReplaceConfigured(["FlowLog"], [CreateTemplate(secondLogDirectory)]);
+            Assert.NotSame(firstBaseLog, manager["FlowLog"]);
 
             sink.Write(CreateRecord("second error", FlowLogLevel.Error));
             var secondDynamicLog = manager["ProcessA\\FlowA"];
             Assert.NotNull(secondDynamicLog);
             Assert.NotSame(firstDynamicLog, secondDynamicLog);
+            Assert.StartsWith(secondLogDirectory, secondDynamicLog.Param.FilePath, StringComparison.Ordinal);
             Assert.Equal(2, manager.Count);
 
             (secondDynamicLog as IDisposable)?.Dispose();
@@ -166,13 +166,9 @@ public sealed class HostFlowLogIntegrationTests
         => Path.GetRelativePath(root, path)
             .Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
 
-    /// <summary>注册基础日志并创建可触发配置变更的测试 provider。</summary>
-    private static TestFlowLogConfiguration Configure(LogManager manager, string logDirectory)
-    {
-        var template = CreateTemplate(logDirectory);
-        manager.ReplaceConfigured([], [template]);
-        return new TestFlowLogConfiguration(template);
-    }
+    /// <summary>按名注册基础 FlowLog，等价于宿主 LogConfigService 装载配置后的状态。</summary>
+    private static void RegisterBaseFlowLog(LogManager manager, string logDirectory)
+        => manager.ReplaceConfigured([], [CreateTemplate(logDirectory)]);
 
     /// <summary>创建只包含 FlowLog 基础实例的日志模板。</summary>
     private static LogParam CreateTemplate(string logDirectory)
@@ -192,22 +188,5 @@ public sealed class HostFlowLogIntegrationTests
         var contents = File.ReadAllText(file);
         Assert.Contains(level, contents, StringComparison.Ordinal);
         Assert.Contains(message, contents, StringComparison.Ordinal);
-    }
-
-    /// <summary>宿主配置服务的最小测试替身。</summary>
-    private sealed class TestFlowLogConfiguration(LogParam template) : IFlowLogConfiguration
-    {
-        /// <inheritdoc />
-        public LogParam? FlowLogTemplate { get; private set; } = template;
-
-        /// <inheritdoc />
-        public event EventHandler? ConfigurationChanged;
-
-        /// <summary>提交新模板并通知 adapter 释放动态实例。</summary>
-        public void Update(LogParam template)
-        {
-            FlowLogTemplate = template;
-            ConfigurationChanged?.Invoke(this, EventArgs.Empty);
-        }
     }
 }

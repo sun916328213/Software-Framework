@@ -62,9 +62,13 @@ public sealed class ArchitectureDependencyTests
         Assert.DoesNotContain("WPFControl.csproj", adapterProject, StringComparison.Ordinal);
     }
 
-    /// <summary>确保宿主通过配置接口向流程日志 adapter 注入 Log 配置，而不是耦合具体服务。</summary>
+    /// <summary>
+    /// 确保宿主只把流程日志 adapter 装到共享 LogManager 上，不解析具体日志配置服务。
+    /// FlowLog 与 RunLog / SEMILog 同构：消费方按名从 LogManager 取实例与模板，
+    /// 不再有「专属配置接口 + 整机服务实现它」这条链路。
+    /// </summary>
     [Fact]
-    public void WpfHostLogging_ResolvesConfigurationThroughIocAbstraction()
+    public void WpfHostLogging_WiresSinkThroughSharedLogManagerWithoutHostServiceCoupling()
     {
         var workspaceDirectory = Directory.GetParent(SolutionDirectory)?.FullName
                                  ?? throw new DirectoryNotFoundException("无法定位工作区目录。");
@@ -74,18 +78,18 @@ public sealed class ArchitectureDependencyTests
             "WPFControl",
             "WPFControlModule.cs"));
 
-        Assert.Contains(
-            "RegisterSingleton<IFlowLogConfiguration>",
-            moduleSource,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "provider.Resolve<IFlowLogConfiguration>()",
-            moduleSource,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "provider.Resolve<LogConfigService>()));",
-            moduleSource,
-            StringComparison.Ordinal);
+        Assert.Contains("RegisterSingleton<IFlowLogSink>", moduleSource, StringComparison.Ordinal);
+        Assert.Contains("new DataManagerFlowLogSink(", moduleSource, StringComparison.Ordinal);
+        Assert.Contains("provider.Resolve<LogManager>()", moduleSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("Resolve<LogConfigService>", moduleSource, StringComparison.Ordinal);
+
+        var adapterSource = File.ReadAllText(Path.Combine(
+            SolutionDirectory,
+            "FlowEditor.DataManagerLogging",
+            "DataManagerFlowLogSink.cs"));
+
+        Assert.Contains("\"FlowLog\"", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("WPFControl", adapterSource, StringComparison.Ordinal);
     }
 
     /// <summary>确保编辑器日志契约不再把 Extension 及其设备依赖带入核心模块。</summary>

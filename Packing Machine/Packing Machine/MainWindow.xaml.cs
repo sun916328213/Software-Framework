@@ -29,6 +29,7 @@ namespace Packing_Machine
 
         private void DockPanel_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
+            if (e.ChangedButton != System.Windows.Input.MouseButton.Right) return;
             var d = Container.Resolve<Init>();
             d.InitControl();
         }

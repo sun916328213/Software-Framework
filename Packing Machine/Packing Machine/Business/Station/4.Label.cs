@@ -69,13 +69,19 @@ namespace Packing_Machine.Business.Station
                 _PLCMethod.TriggerReply(StationName, pLCOrder);
                 ID = _PLCMethod.ReadData(StationName, pLCOrder, PLCAddressOffest.ID );
                 Step = _PLCMethod.ReadData(StationName, pLCOrder, PLCAddressOffest.Function);
-                Step = "标签"+(int.Parse(Step) % 10 + 1).ToString()+"_";
+                // 先把标签序号取出来：下面 Step 会被拼成 "标签N_" 供视觉/日志使用，
+                // 原写法之后又对 Step 做 Convert.ToInt32，必然 FormatException，被外层 catch
+                // 吞成 SysError，表现为「打印标签」流程永远走不到上报那一步。
+                int labelIndex = int.Parse(Step) % 10 + 1;
+                Step = "标签" + labelIndex + "_";
                 switch (order)
                 {
                     case ELabel.打印标签:
                         //根据配方获取标签名称
                         string labeltype = "";
-                        await Print(ID, Convert.ToInt32(Step), labeltype);
+                        // 这里上报的是「第几个标签」的序号，不是标签位置的 ID。
+                        // 若要按 LabelPosition 配的 ID 上报，得先打通配方（CRecipe）到本流程的桥。
+                        await Print(ID, labelIndex, labeltype);
                         curInfo.CheckResult = EPLCResult.OK;
                         break;
                     case ELabel.FOSB贴前检测:

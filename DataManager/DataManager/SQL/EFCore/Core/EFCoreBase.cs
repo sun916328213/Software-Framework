@@ -29,11 +29,23 @@ namespace DataManager.SQL.EFCore
                 switch (SQLParam.DBType)
                 {
                     case ESQLType.MySQL:
+                        // 直通串优先（SQLParam 全局契约：非空时覆盖分字段，同 SqlDialectHelper/MySqlDialect）。
+                        if (!string.IsNullOrWhiteSpace(SQLParam.ConnectionString))
+                        {
+                            optionsBuilder.UseMySQL(SQLParam.ConnectionString);
+                            break;
+                        }
                         con = $"server={SQLParam.ServerIP};port={SQLParam.Port};user={SQLParam.UserName};password={SQLParam.Password};database={SQLParam.DBName}";
                         optionsBuilder.UseMySQL(con);
                         break;
 
                     case ESQLType.PostgreSQL:
+                        // 直通串优先（SQLParam 全局契约：非空时覆盖分字段，同 SqlDialectHelper/PostgresDialect）。
+                        if (!string.IsNullOrWhiteSpace(SQLParam.ConnectionString))
+                        {
+                            optionsBuilder.UseNpgsql(SQLParam.ConnectionString);
+                            break;
+                        }
                         con = $"server={SQLParam.ServerIP} ;port= {SQLParam.Port} ;username= {SQLParam.UserName};password={SQLParam.Password};database={SQLParam.DBName}";
                         optionsBuilder.UseNpgsql(con);
                         break;
@@ -53,6 +65,12 @@ namespace DataManager.SQL.EFCore
                         break;
 
                     case ESQLType.SQL_Server:
+                        // 直通串优先（SQLParam 全局契约：非空时覆盖分字段，同 SqlDialectHelper/SqlServerDialect）。
+                        if (!string.IsNullOrWhiteSpace(SQLParam.ConnectionString))
+                        {
+                            optionsBuilder.UseSqlServer(SQLParam.ConnectionString);
+                            break;
+                        }
                         var server = string.IsNullOrWhiteSpace(SQLParam.Port)
                             ? SQLParam.ServerIP
                             : $"{SQLParam.ServerIP},{SQLParam.Port}";

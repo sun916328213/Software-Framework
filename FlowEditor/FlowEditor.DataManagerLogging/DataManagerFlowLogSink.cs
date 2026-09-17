@@ -20,21 +20,24 @@ public sealed class DataManagerFlowLogSink : IFlowLogSink
         "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
     };
 
+    /// <summary>基础日志名称；模板与实例都按此名从宿主共享的 LogManager 中读取。</summary>
+    private const string BaseLogName = "FlowLog";
+
     private readonly LogManager _logManager;
-    private readonly IFlowLogConfiguration _configuration;
     private readonly object _sync = new();
     private readonly HashSet<string> _dynamicLogKeys = new(StringComparer.Ordinal);
+    private ILog? _baseLog;
     private long _nextDiagnosticUtcTicks;
     private int _suppressedDiagnosticCount;
 
     /// <summary>创建 DataManager 流程日志 adapter。</summary>
-    /// <param name="logManager">宿主共享的日志管理器。</param>
-    /// <param name="configuration">当前 FlowLog 模板及配置变更通知提供者。</param>
-    public DataManagerFlowLogSink(LogManager logManager, IFlowLogConfiguration configuration)
+    /// <param name="logManager">
+    /// 宿主共享的日志管理器。FlowLog 与 RunLog / SEMILog 同构：基础实例与其模板参数
+    /// （<see cref="ILog.Param"/>）都按名从其中读取，无需宿主另建配置接口。
+    /// </param>
+    public DataManagerFlowLogSink(LogManager logManager)
     {
         _logManager = logManager ?? throw new ArgumentNullException(nameof(logManager));
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        _configuration.ConfigurationChanged += OnConfigurationChanged;
     }
 
     /// <inheritdoc />
@@ -47,6 +50,7 @@ public sealed class DataManagerFlowLogSink : IFlowLogSink
             if (route == null) return;
             lock (_sync)
             {
+                RefreshBaseLog();
                 var key = BuildManagerKey(route.Value);
                 Resolve(key, route.Value.ProcessName, route.Value.FlowName)
                     ?.Add(record.Message, MapLevel(record.Level));
@@ -71,7 +75,7 @@ public sealed class DataManagerFlowLogSink : IFlowLogSink
         var existing = _logManager[logKey];
         if (existing != null) return existing;
 
-        var template = _configuration.FlowLogTemplate;
+        var template = _baseLog?.Param;
         if (template == null) return null;
 
         var directory = template.FilePath;
@@ -84,19 +88,24 @@ public sealed class DataManagerFlowLogSink : IFlowLogSink
         return _logManager[logKey];
     }
 
-    /// <summary>配置成功变更后释放动态实例，使后续写入按新模板重建。</summary>
-    private void OnConfigurationChanged(object? sender, EventArgs e)
+    /// <summary>
+    /// 惰性检测基础 FlowLog 是否被整体替换：宿主重载配置时 LogManager 会新建实例，
+    /// 引用一旦变化即释放全部动态实例，使本次写入按新模板重建。
+    /// 由调用方在 <c>_sync</c> 内调用。
+    /// </summary>
+    private void RefreshBaseLog()
     {
-        lock (_sync)
+        var baseLog = _logManager[BaseLogName];
+        if (ReferenceEquals(baseLog, _baseLog)) return;
+
+        foreach (var key in _dynamicLogKeys)
         {
-            foreach (var key in _dynamicLogKeys)
-            {
-                var log = _logManager[key];
-                if (log == null || !_logManager.Remove(log)) continue;
-                (log as IDisposable)?.Dispose();
-            }
-            _dynamicLogKeys.Clear();
+            var log = _logManager[key];
+            if (log == null || !_logManager.Remove(log)) continue;
+            (log as IDisposable)?.Dispose();
         }
+        _dynamicLogKeys.Clear();
+        _baseLog = baseLog;
     }
 
     /// <summary>基于基础模板创建动态日志参数。</summary>

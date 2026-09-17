@@ -524,6 +524,34 @@ public sealed class ScriptEngine : ObservableObject
         IsRunning = false;
     }
 
+    /// <summary>耗时文本格式化（编译/执行统一 "xx.xx ms"）。</summary>
+    private static string FormatElapsed(TimeSpan elapsed) => $"{elapsed.TotalMilliseconds:F2} ms";
+
+    /// <summary>
+    /// 写入输出文本并**强制**广播变更（无论新旧文本是否相同）。
+    /// </summary>
+    /// <remarks>
+    /// 多个标签页共享同一个 <see cref="ScriptEngine"/>（ScriptEditorService 为单例，
+    /// 其引擎随服务唯一，切页只换 ScriptItem）。若上一次编译留下的结果文本与本次完全相同，
+    /// 普通 setter 会因"值未变化"而不广播 PropertyChanged，
+    /// 当前标签页的输出面板就停留在切换前的旧内容——表现为"点了编译，输出栏没被覆盖"。
+    /// </remarks>
+    private void SetOutputTextForced(string text)
+    {
+        lock (_sync)
+        {
+            _outputText = OutputTruncator.Truncate(text);
+        }
+        OnPropertyChanged(nameof(OutputText));
+    }
+
+    /// <summary>写入耗时文本并**强制**广播变更（原因同 <see cref="SetOutputTextForced"/>）。</summary>
+    private void SetExecutionTimeForced(string text)
+    {
+        _executionTime = text;
+        OnPropertyChanged(nameof(ExecutionTime));
+    }
+
     /// <summary>仅编译当前脚本，不执行。无输入输出回调。</summary>
     public async Task CompileAsync()
     {
@@ -533,6 +561,13 @@ public sealed class ScriptEngine : ObservableObject
         if (IsLooping) StopLoop();
 
         StatusText = "编译中...";
+
+        // 与 RunAsync 对齐：编译开始前先清空输出与耗时，
+        // 保证本次编译结果一定会覆盖输出面板中的旧内容（含上一次编译/执行的残留）。
+        SetOutputTextForced(string.Empty);
+        SetExecutionTimeForced(string.Empty);
+
+        var startTime = DateTime.Now;
 
         try
         {
@@ -555,11 +590,9 @@ public sealed class ScriptEngine : ObservableObject
                 _lastSubmittedCode = captureCode;
                 _lastCompiledScript = script;
                 _lastHasResult = hasResult;
-                lock (_sync)
-                {
-                    OutputText = "✓ 编译成功";
-                }
+                SetOutputTextForced("✓ 编译成功");
                 StatusText = "编译完成";
+                SetExecutionTimeForced(FormatElapsed(DateTime.Now - startTime));
                 return;
             }
 
@@ -567,23 +600,19 @@ public sealed class ScriptEngine : ObservableObject
             _lastCompiledScript = null;
             _lastHasResult = false;
 
-            lock (_sync)
-            {
-                OutputText = string.Join(Environment.NewLine,
-                    diagnostics.Select(d => $"{(d.Severity == DiagnosticSeverity.Error ? "✗" : "⚠")} 第{d.Location.GetLineSpan().StartLinePosition.Line + 1}行: {d.GetMessage()}"));
-            }
+            SetOutputTextForced(string.Join(Environment.NewLine,
+                diagnostics.Select(d => $"{(d.Severity == DiagnosticSeverity.Error ? "✗" : "⚠")} 第{d.Location.GetLineSpan().StartLinePosition.Line + 1}行: {d.GetMessage()}")));
             StatusText = "编译失败";
+            SetExecutionTimeForced(FormatElapsed(DateTime.Now - startTime));
         }
         catch (Exception ex)
         {
             _lastSubmittedCode = null;
             _lastCompiledScript = null;
             _lastHasResult = false;
-            lock (_sync)
-            {
-                OutputText = $"编译异常: {ex.Message}";
-            }
+            SetOutputTextForced($"编译异常: {ex.Message}");
             StatusText = "编译异常";
+            SetExecutionTimeForced(FormatElapsed(DateTime.Now - startTime));
         }
     }
 

@@ -31,7 +31,7 @@
                 <ContentControl
                     Margin="-5,0,0,-5"
                     prism:RegionManager.RegionName="MenuRegion"
-                    DockPanel.Dock="Left"
+                    DockPanel.Dock="Left"  
                     PreviewMouseDoubleClick="DockPanel_PreviewMouseLeftButtonDown" />
 
                 <!--  右侧内容  -->

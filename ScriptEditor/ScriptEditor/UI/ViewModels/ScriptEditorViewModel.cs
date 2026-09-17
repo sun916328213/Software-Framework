@@ -357,8 +357,14 @@ public class ScriptEditorViewModel : ObservableObject, IDisposable
         set => _editorService.LoopInterval = value;
     }
 
-    /// <summary>最近一次执行耗时。</summary>
-    public string ExecutionTime => _editorService.Model.ExecutionTime;
+    /// <summary>最近一次执行/编译耗时。</summary>
+    /// <remarks>与 <see cref="OutputText"/> / <see cref="StatusText"/> 同为 Model 代理，
+    /// 保留 setter 以便切页时把共享 Model 播种成当前脚本项自己的状态。</remarks>
+    public string ExecutionTime
+    {
+        get => _editorService.Model.ExecutionTime;
+        set => _editorService.Model.ExecutionTime = value;
+    }
 
     /// <summary>引用管理面板是否展开。</summary>
     public bool IsReferencePanelOpen => _editorService.Model.IsReferencePanelOpen;

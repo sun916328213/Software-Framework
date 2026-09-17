@@ -4,6 +4,7 @@ using Extension.Core.ConvertEx;
 using Packing_Machine.UI.Model;
 using Packing_Machine.UI.WindowUI;
 using Prism.Ioc;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -26,7 +27,9 @@ namespace Packing_Machine.UI.ViewModel
 
         public string[] BagType => File.ReadAllText("Config//ProcessInfo//BagType.json").FromJson<string[]>();
 
-        public string[] LabelDir => File.ReadAllText("Config//ProcessInfo//LabelPosition.json").FromJson<string[]>();
+        // 位置名称 + PLC 编号都在 LabelPosition.json，读取统一走 CLabelInfo_Single：
+        // 带缓存（不像上面两个每次读盘），配置坏了回退空表而不是直接抛。
+        public string[] LabelDir => CLabelInfo_Single.LabelDirs;
 
 
         private CLabelInfo_Single labelInfo_AddLabel = new CLabelInfo_Single();

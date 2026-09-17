@@ -59,11 +59,15 @@
          不再依赖 FlowNodes 的传递引用来访问 DataManager -->
     <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
     <ProjectReference Include="..\..\FlowNodes\FlowNodes\FlowNodes.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="halcondotnet">
-      <HintPath>..\..\Dll\Vision\Halcon\halcondotnet.dll</HintPath>
-    </Reference>
+    <!-- 2026-09-17：以下两个引用在 74228b2 合并时被误吞（合并取了对方分支的 csproj 版本），
+         此处补回。二者都是架构必需：
+         · DataManagerLogging —— WPFControlModule 注册 IFlowLogSink 并装配 DataManagerFlowLogSink
+           （架构测试 WpfHostLogging_WiresSinkThroughSharedLogManagerWithoutHostServiceCoupling
+           强制要求：宿主只把 adapter 装到共享 LogManager 上，不得解析 LogConfigService）。
+         · DataManager.Controls —— 让 SqlView / LogView / ExcelView 三个配置页随 WPFControl
+           一起被引用（见 WPFControlModule.RegisterTypes 中的说明），宿主只引用 WPFControl。 -->
+    <ProjectReference Include="..\..\FlowEditor\FlowEditor.DataManagerLogging\FlowEditor.DataManagerLogging.csproj" />
+    <ProjectReference Include="..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\图标.ico" />

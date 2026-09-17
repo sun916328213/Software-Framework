@@ -527,6 +527,8 @@ public partial class ScriptEditorView : UserControl
             _viewModel.OutputText = _attachedItem.OutputText;
             _suppressAutoScroll = false;
 
+            SeedSharedStateFromItem(_attachedItem);
+
             // 播种断点：首次创建 ViewModel 时从 ScriptItem 恢复断点
             _suppressBreakpointSync = true;
             foreach (var bp in _attachedItem.Breakpoints)
@@ -1077,6 +1079,8 @@ public partial class ScriptEditorView : UserControl
             _viewModel.OutputText = item.OutputText;
             _suppressAutoScroll = false;
 
+            SeedSharedStateFromItem(item);
+
             // 恢复新脚本项的断点（抑制同步回调，避免回环写入）
             _suppressBreakpointSync = true;
             _viewModel.Breakpoints.Clear();
@@ -1084,6 +1088,26 @@ public partial class ScriptEditorView : UserControl
                 _viewModel.Breakpoints.Add(bp);
             _suppressBreakpointSync = false;
         }
+    }
+
+    /// <summary>
+    /// 把共享 Model 的运行状态播种成指定脚本项自己的状态（StatusText / ExecutionTime）。
+    /// </summary>
+    /// <remarks>
+    /// <para>ScriptEditorService 是单例，其 Model 与 ScriptEngine 被**所有标签页共享**，
+    /// 切页只换 ScriptItem。不播种的话 Model 里留的是上一个脚本的「编译完成 / 12.34 ms」，
+    /// 而引擎侧 SetProperty「值未变化不广播」，下一次同值结果可能推不动当前页。</para>
+    /// <para>方向固定为 **item → 共享 Model**（把共享侧拉回当前页），
+    /// 反过来（Model → item）会把上一个脚本的状态写进新脚本项，正是 XAML 里注释掉的
+    /// TwoWay 串扰问题，绝不能做。</para>
+    /// <para>状态栏读的是 <c>AttachedItem.StatusText/ExecutionTime</c>（每脚本独立），
+    /// 本方法只是让共享侧与当前页对齐，不影响状态栏的正确性。</para>
+    /// </remarks>
+    private void SeedSharedStateFromItem(ScriptItem item)
+    {
+        if (_viewModel == null) return;
+        _viewModel.StatusText = item.StatusText;
+        _viewModel.ExecutionTime = item.ExecutionTime;
     }
 
     /// <summary>

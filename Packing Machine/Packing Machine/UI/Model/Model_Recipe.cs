@@ -1,25 +1,45 @@
-﻿using Extension.Core.ConvertEx;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Extension.Core.ConvertEx;
 using Extension.Core.DataEx;
-using System;
-using System.Collections.Generic;
+using ImTools;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
-using WPFControl.ProgramControl.Models;
-using CommunityToolkit.Mvvm;
-using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows;
-using ImTools;
 
 namespace Packing_Machine.UI.Model
 {
     public class CLabelInfo_Single
     {
+        public static List<CLabelInfo_Single> LabelDirConfig = JsonEx.Read<List<CLabelInfo_Single>>("Config//ProcessInfo//LabelPosition.json");
+
+        public static  string[] LabelDirs = LabelDirConfig.Select(x => x.LabelDir).ToArray();   
+
+
+
+        private string labelDir;
+
         /// <summary>
-        /// 标签具体位置
+        /// 标签具体位置（LabelPosition.json 里的名称）
         /// </summary>
-        public string LabelDir { get; set; } 
- 
+        public string LabelDir
+        {
+            get => labelDir;
+            set
+            {
+                labelDir = value;
+                // 位置一变，发给 PLC 的编号同步跟着变，不需要手工维护
+                ID = LabelDirConfig.First(x => x.LabelDir == labelDir).ID;
+            }
+        }
+
+        /// <summary>
+        /// 标签位置ID 主要用于发送给PLC
+        /// 由 <see cref="LabelDir"/> 自动带出，不要手工赋值。
+        /// 注意：若配方存档里也写了 ID，反序列化时会按存档值覆盖（System.Text.Json 按
+        /// json 里的先后顺序赋值）。想让它永远以配置表为准，给这个属性加 [JsonIgnore]。
+        /// </summary>
+        public int ID { get; set; }
+
     }
 
     public class CLabelInfoCollection
@@ -71,12 +91,17 @@ namespace Packing_Machine.UI.Model
         {
             Load();
         }
+        /// <summary>
+        /// 标签位置和ID映射
+        /// </summary>
+        public  List<CLabelInfo_Single> LabelPositionConfig =JsonEx.Read<List<CLabelInfo_Single>>("Config//ProcessInfo//LabelPosition.json");
 
         private string Path = "Config//ProcessInfo//Recipe";
         /// <summary>
         /// 配方集合
         /// </summary>
        internal  ObservableCollection<CRecipe> Recipes { get; set; }=new ObservableCollection<CRecipe>();
+
  
         private CRecipe curRecipe = new CRecipe();
         /// <summary>
@@ -85,11 +110,7 @@ namespace Packing_Machine.UI.Model
         internal CRecipe CurRecipe
         {
             get => curRecipe;
-            set
-            {
-                curRecipe = value;
-                OnPropertyChanged("CurRecipe");
-            }
+            set => SetProperty(ref curRecipe, value);
         }
 
         /// <summary>
@@ -192,8 +213,8 @@ namespace Packing_Machine.UI.Model
 
         public void Load()
         {
-               //string json= File.ReadAllText(Path  );
-                //Recipes = json.FromJson<ObservableCollection<CRecipe>>();
+            string json = File.ReadAllText(Path);
+            Recipes = json.FromJson<ObservableCollection<CRecipe>>();
 
         }
     }
