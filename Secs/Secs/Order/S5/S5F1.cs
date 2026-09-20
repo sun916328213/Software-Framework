@@ -1,5 +1,7 @@
 ﻿
-using Extension.Core.DataEx;
+using Extension.Core.Buffers;
+using Extension.IO.Compression;
+using Extension.Integration.Cloning;
 using Prism.Ioc;
 using Secs.Variable;
 using Secs4Net;

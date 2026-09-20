@@ -23,7 +23,7 @@ namespace DataManager.Log.Definition
     /// Log日志信息
     /// </summary>
     /// <remarks>
-    /// 2026-09-16 从 <c>Extension.Struct</c> 迁入：日志是 DataManager 的领域概念，
+    /// 2026-09-16 从 <c>Extension.Contracts</c> 迁入：日志是 DataManager 的领域概念，
     /// 通用工具库 Extension 不应定义日志模型（原设计导致 <c>DataManager.Log.ILog</c> 的
     /// 公开 API 反过来依赖 Extension 的类型，属依赖方向倒置）。
     ///

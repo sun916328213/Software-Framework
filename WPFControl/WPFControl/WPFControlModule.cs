@@ -1,4 +1,4 @@
-using Extension.Core.Reflection;
+﻿using Extension.Integration.Prism;
 using DataManager.Log;
 using FlowEditor.Core;
 using FlowEditor.DataManagerLogging;
@@ -36,7 +36,7 @@ namespace WPFControl
             InitializeLanguage();
 
             // 配置LiveCharts中文字体
-            if (Extension.Core.SystemEx.LangSwitchEx.Language == Extension.Core.SystemEx.ELang.ZH)
+            if (Extension.UI.Controls.LangSwitchEx.Language == Extension.UI.Controls.ELang.ZH)
             {
                 LiveCharts.Configure(config => config.HasGlobalSKTypeface(SKFontManager.Default.MatchCharacter('汉')));
             }

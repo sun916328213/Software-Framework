@@ -1,12 +1,15 @@
-using DPLibrary_Halcon_F48.Tools;
-using Extension.Core.SystemEx;
+﻿using DPLibrary_Halcon_F48.Tools;
+using Extension.UI.Controls;
 using HalconDotNet;
 using System.Windows;
 using WPFControl.CustomControl.Views.Display;
 using WPFControl.Helper;
 using WPFControl.ProgramControl.Models;
-using Extension.Core.ImageEx;
-using Extension.Core.DataEx;
+using Extension.Imaging.Halcon;
+using Extension.Imaging.OpenCv;
+using Extension.Core.Buffers;
+using Extension.IO.Compression;
+using Extension.Integration.Cloning;
 using FastDeepCloner;
 
 namespace WPFControl.ProgramControl.Services

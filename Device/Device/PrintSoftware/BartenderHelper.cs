@@ -1,5 +1,10 @@
-﻿using Extension.Core.SystemEx;
-using Extension.Struct;
+﻿using Extension.Platform.Diagnostics;
+using Extension.Platform.Native;
+using Extension.Platform.Memory;
+using Extension.Platform.Processes;
+using Extension.Core.Models;
+using Extension.Imaging.Models;
+using Extension.Automation.Device;
 using Seagull.BarTender.Print;
 using System;
 using System.Collections.Generic;

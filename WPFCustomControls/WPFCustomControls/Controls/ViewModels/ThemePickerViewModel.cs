@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Extension.Core.ThemeEx;
+using Extension.UI.Theme;
 using MaterialDesignColors;
 using WPFCustomControls.ValueConvert;
 

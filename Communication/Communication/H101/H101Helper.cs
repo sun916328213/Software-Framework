@@ -1,4 +1,6 @@
-﻿using Extension.Struct;
+﻿using Extension.Core.Models;
+using Extension.Imaging.Models;
+using Extension.Automation.Device;
 using Miracom.CliFrx;
 using Miracom.MESCore;
 using Miracom.MsgHandler;

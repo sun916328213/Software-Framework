@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using WPFControl.Helper;
 using WPFControl.ProgramControl.Models;
 using WPFCustomControls.Window.Views;
-using Extension.Core.ControlEx;
+using Extension.UI.Controls;
 using System;
 using WPFControl.Method;
 

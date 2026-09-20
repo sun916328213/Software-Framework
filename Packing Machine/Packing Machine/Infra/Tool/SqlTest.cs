@@ -1,6 +1,9 @@
 ﻿using DataManager.SQL;
 using DataManager.SQL.EFCore;
-using Extension.Core.SystemEx;
+using Extension.Platform.Diagnostics;
+using Extension.Platform.Native;
+using Extension.Platform.Memory;
+using Extension.Platform.Processes;
 using Microsoft.EntityFrameworkCore;
 using Packing_Machine.Data;
 using Packing_Machine.Business.Station;

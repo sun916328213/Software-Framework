@@ -8,6 +8,9 @@ internal interface ITcpServerListener : IDisposable
     /// <summary>监听器是否处于启动状态。</summary>
     bool IsListening { get; }
 
+    /// <summary>实际监听的端口号（Port=0 时由系统分配，Start 后可读回）。</summary>
+    int LocalPort { get; }
+
     /// <summary>按指定连接积压上限启动监听。</summary>
     void Start(int backlog);
 

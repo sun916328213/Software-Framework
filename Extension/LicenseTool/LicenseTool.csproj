@@ -11,7 +11,7 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>LicenseTool</RootNamespace>
     <AssemblyName>LicenseTool</AssemblyName>
-    <Description>软件授权签发与验证工具（配套 Extension.Core.SecurityEx）</Description>
+    <Description>软件授权签发与验证工具（配套 Extension.Distribution.Security）</Description>
   </PropertyGroup>
 
   <ItemGroup>

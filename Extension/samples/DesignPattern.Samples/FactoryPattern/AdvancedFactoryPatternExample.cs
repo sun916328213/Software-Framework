@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
-using Extension.DesignPattern.FactoryPattern;
+using Extension.Patterns.Creation.Factory;
+using Extension.Patterns.Creation.Factory.Advanced;
 
 namespace Extension.DesignPattern.FactoryPattern.Examples
 {

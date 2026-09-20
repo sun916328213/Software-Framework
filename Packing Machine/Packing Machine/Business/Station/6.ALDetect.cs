@@ -5,10 +5,12 @@ using Packing_Machine.Business.Order;
 using Prism.Ioc;
 using System;
 using System.Windows;
-using Extension.Core.ConvertEx;
+using Extension.Core.Conversion;
 using DataManager.Log.Definition;
-using Extension.Core.DataEx;
-using Extension.Core.SystemEx;
+using Extension.Core.Buffers;
+using Extension.IO.Compression;
+using Extension.Integration.Cloning;
+using Extension.UI.Controls;
 using WPFCustomControls.Window.Views;
 
 namespace Packing_Machine.Business.Station

@@ -1,6 +1,6 @@
 ﻿using Device.Camera.Gige.Definition;
 using Device.Light.Definition;
-using Extension.Core.ConvertEx;
+using Extension.Core.Conversion;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;

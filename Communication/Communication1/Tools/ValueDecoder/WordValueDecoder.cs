@@ -1,5 +1,5 @@
 ﻿using Communication.Core.Definition;
-using Extension.Core.ConvertEx;
+using Extension.Core.Conversion;
 using System;
 using System.Buffers.Binary;
 using System.Text;

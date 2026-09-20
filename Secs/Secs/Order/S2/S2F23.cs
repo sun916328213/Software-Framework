@@ -1,4 +1,4 @@
-﻿using Extension.Helper.TaskHelper;
+﻿using Extension.Core.Concurrency;
 using Prism.Ioc;
 using Secs4Net;
 using System;

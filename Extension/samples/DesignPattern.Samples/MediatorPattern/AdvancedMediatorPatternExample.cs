@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Extension.DesignPattern.MediatorPattern.Advanced;
+using Extension.Patterns.Coordination.Mediator;
+using Extension.Patterns.Coordination.Mediator.Advanced;
 
 namespace Extension.DesignPattern.MediatorPattern.Examples
 {

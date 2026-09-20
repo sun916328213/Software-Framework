@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Extension.Core.ConvertEx;
+using Extension.Core.Conversion;
 using Prism.Ioc;
 using Secs;
 using Secs.Variable;

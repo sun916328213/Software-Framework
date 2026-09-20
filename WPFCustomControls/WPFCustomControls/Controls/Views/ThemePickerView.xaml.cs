@@ -1,8 +1,8 @@
+using Extension.UI.Theme;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Extension.Core.ThemeEx;
 using WPFCustomControls.Controls.ViewModels;
 
 namespace WPFCustomControls.Controls

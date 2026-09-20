@@ -1,6 +1,6 @@
 ﻿
 using Communication.Protocols.Modbus.RTU.Definition;
-using Extension.Helper.Channel;
+using Extension.Core.Concurrency;
 using FluentModbus;
 using System;
 using System.IO.Ports;

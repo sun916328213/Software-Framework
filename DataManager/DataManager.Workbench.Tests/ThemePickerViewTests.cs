@@ -1,4 +1,4 @@
-using Extension.Core.ThemeEx;
+﻿using Extension.UI.Theme;
 using MaterialDesignColors;
 using MaterialDesignThemes.Wpf;
 using Prism.Ioc;

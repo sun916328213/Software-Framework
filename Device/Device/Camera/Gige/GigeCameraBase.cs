@@ -1,9 +1,11 @@
 ﻿using Device.Camera.Definition;
 using Device.Camera.Gige.Definition;
-using Extension.Core.ControlEx;
-using Extension.Core.SystemEx;
-using Extension.Core.TaskEx;
-using Extension.Helper.Channel;
+using Extension.UI.Controls;
+using Extension.Platform.Diagnostics;
+using Extension.Platform.Native;
+using Extension.Platform.Memory;
+using Extension.Platform.Processes;
+using Extension.Core.Concurrency;
 using System;
 using System.Collections.Generic;
 using System.Threading;

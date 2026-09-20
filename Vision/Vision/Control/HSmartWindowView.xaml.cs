@@ -1,5 +1,6 @@
-﻿using Extension.Core.ControlEx;
- using Extension.Core.ImageEx;
+﻿using Extension.UI.Controls;
+ using Extension.Imaging.Halcon;
+using Extension.Imaging.OpenCv;
 using HalconDotNet;
 using System.Windows;
 using System.Windows.Controls;

@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Device.Camera.Gige.Definition;
 using Device.Light.Definition;
-using Extension.Core.SystemEx;
+using Extension.UI.Controls;
 using Mapster;
 using System;
 using System.Collections.Generic;

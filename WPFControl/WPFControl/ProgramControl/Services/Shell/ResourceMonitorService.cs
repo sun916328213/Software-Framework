@@ -1,5 +1,8 @@
-using Extension.Core.ControlEx;
-using Extension.Core.SystemEx;
+﻿using Extension.UI.Controls;
+using Extension.Platform.Diagnostics;
+using Extension.Platform.Native;
+using Extension.Platform.Memory;
+using Extension.Platform.Processes;
 using Prism.Ioc;
 using System;
 using System.Diagnostics;

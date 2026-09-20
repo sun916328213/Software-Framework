@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
-using Extension.DesignPattern.MediatorPattern;
+using Extension.Patterns.Coordination.Mediator;
 
 namespace Extension.DesignPattern.MediatorPattern.Examples
 {

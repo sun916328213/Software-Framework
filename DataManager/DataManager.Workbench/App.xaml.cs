@@ -1,10 +1,10 @@
-using DataManager;
+﻿using DataManager;
 using DataManager.Controls.Services;
 using DataManager.Controls.ViewModels;
 using DataManager.Controls.Views;
 using DataManager.Workbench.Models;
 using DataManager.Workbench.Views;
-using Extension.Core.ThemeEx;
+using Extension.UI.Theme;
 using Prism.DryIoc;
 using Prism.Ioc;
 using Prism.Modularity;

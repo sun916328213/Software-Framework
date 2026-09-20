@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Device.Camera.Gige.Definition;
 using Device.Light.Definition;
-using Extension.Core.EnumEx;
+using Extension.Core.Enums;
 using Prism.Ioc;
 using Prism.Regions;
 using System;

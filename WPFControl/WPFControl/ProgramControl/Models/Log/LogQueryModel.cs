@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using DataManager.Log.Definition;
-using Extension.Core.EnumEx;
+using Extension.Core.Enums;
 using System;
 using System.Collections;
 using System.Collections.Generic;

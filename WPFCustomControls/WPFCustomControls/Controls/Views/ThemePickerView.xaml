@@ -14,7 +14,7 @@
 
     <!--
         主题选择复用控件：主色 / 辅色下拉框，下面跟一排「浅色 / 深色」分段按钮。
-        宿主只需传 Theme（Extension.Core.ThemeEx.ThemeService 单例）：
+        宿主只需传 Theme（Extension.UI.Theme.ThemeService 单例）：
             <wpfcc:ThemePickerView Theme="{Binding Theme}" />
         只要黑白切换就把 ShowColorPickers 置 false，那时只剩分段按钮（分段按钮不受它影响）——
         收起动作由下面配色块的 x:Name="ColorPickerPanel" + Visibility 绑定实现，别把那名字弄丢。

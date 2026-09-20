@@ -1,5 +1,7 @@
-﻿using Extension.Core.DataEx;
-using Extension.Tool;
+﻿using Extension.Core.Buffers;
+using Extension.IO.Compression;
+using Extension.Integration.Cloning;
+using Extension.Core.Collections;
 using Prism.Ioc;
 using Secs.Variable.Data;
 using System;

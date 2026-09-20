@@ -2,10 +2,10 @@ using DataManager.Excel;
 using DataManager.Excel.Definition;
 using DataManager.Excel.EPPlus;
 using DataManager.Log.Definition;
-using Extension.Core.ConvertEx;
-using Extension.Core.CompareEx;
-using Extension.Core.DataEx;
-using Extension.Core.FileEx;
+using Extension.Core.Conversion;
+using Extension.Core.Comparison;
+using Extension.Integration.Cloning;
+using Extension.IO.Csv;
 using Mapster;
 using Prism.Ioc;
 using Secs;
@@ -32,7 +32,7 @@ namespace WPFControl.ProgramControl.Services
         internal IExcel _ExcelManager;
 
         private string TotalAlarmTimeName = "总报警时间";
-       
+
         /// <summary>
         /// 总报警时间计时器
         /// </summary>
@@ -108,7 +108,7 @@ namespace WPFControl.ProgramControl.Services
             last = data.DeepClone();
             if (d1 == null || d1.Count == 0) return;
 
-            //遍历数据 
+            //遍历数据
             foreach (var item in d1)
             {
                 //将short[]转成bit[]
@@ -204,7 +204,7 @@ namespace WPFControl.ProgramControl.Services
                 alarm.Duration =  (alarm.Stopwatch.ElapsedMilliseconds/1000.0);
                 var update = alarm.Adapt<AlarmInfoDTO>();
 
-                AlarmInfo alarmInfo2=new AlarmInfo(); 
+                AlarmInfo alarmInfo2=new AlarmInfo();
                  update.Adapt (alarmInfo2);
                 _ExcelManager.Update(x =>x.ID==alarmInfo.ID&& x.Adapt<AlarmInfo>().Duration==0, update);
 
@@ -221,8 +221,8 @@ namespace WPFControl.ProgramControl.Services
                 }
             }
         }
- 
-       
+
+
     }
 }
 

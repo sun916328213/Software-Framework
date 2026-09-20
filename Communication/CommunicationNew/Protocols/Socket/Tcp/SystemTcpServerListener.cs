@@ -19,6 +19,9 @@ internal sealed class SystemTcpServerListener : ITcpServerListener
     public bool IsListening { get; private set; }
 
     /// <inheritdoc />
+    public int LocalPort => _listener.LocalEndpoint is IPEndPoint ep ? ep.Port : 0;
+
+    /// <inheritdoc />
     public void Start(int backlog)
     {
         _listener.Start(backlog);

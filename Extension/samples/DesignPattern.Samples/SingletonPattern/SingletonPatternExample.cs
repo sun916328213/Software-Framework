@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
-using Extension.DesignPattern;
+using Extension.Patterns.Creation.Singleton;
 
 namespace Extension.DesignPattern.SingletonPattern.Examples
 {

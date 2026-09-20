@@ -1,4 +1,4 @@
-using Extension.Core.SystemEx;
+﻿using Extension.UI.Controls;
 using System;
 using System.Globalization;
 using System.Windows.Data;

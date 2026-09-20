@@ -1,39 +1,51 @@
+﻿using Communication.Controls.Services;
+using Communication.Controls.ViewModels;
+using Communication.Controls.Views;
+using Communication.Workbench.Views;
+using CommunicationNew;
+using Extension.Integration.Prism;
+using Extension.UI.Theme;
 using Prism.DryIoc;
+using Prism.Ioc;
+using Prism.Modularity;
 using System.Windows;
+using WPFCustomControls;
 
 namespace Communication.Workbench;
 
+/// <summary>通讯测试工作台入口：只负责壳（侧栏 + 区域导航）与模块组合，页面在 Communication.Controls。</summary>
 public partial class App : PrismApplication
 {
-    protected override Window CreateShell()
-    {
-        return Container.Resolve<Views.MainWindow>();
-    }
+    protected override Window CreateShell() => Container.Resolve<MainWindow>();
 
     protected override void RegisterTypes(IContainerRegistry containerRegistry)
     {
-        // 服务注册
-        containerRegistry.RegisterSingleton<Services.CommunicationSessionService>();
-        containerRegistry.RegisterSingleton<Services.ILogService, Services.LogService>();
-        containerRegistry.RegisterSingleton<Extension.Core.ThemeEx.ThemeService>();
+        containerRegistry.RegisterSingleton<ThemeService>();
+        containerRegistry.RegisterSingleton<ILogService, LogService>();
+        containerRegistry.RegisterSingleton<CommunicationSessionService>();
 
-        // 对话框
-        containerRegistry.RegisterDialog<Views.DeviceConfigDialog, ViewModels.DeviceConfigDialogViewModel>();
+        // 对外只有 CommunicationNew 一套接口，因此整个工作台就一个页面（不拆多 View）。
+        containerRegistry.RegisterNavigationView<CommunicationView, CommunicationViewModel>();
+        containerRegistry.RegisterDialog<DeviceConfigDialog, DeviceConfigDialogViewModel>();
     }
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        // 必须在 shell（及任何视图）创建前注入别名画刷：
-        // BAML 编译的资源字典会冻结 Freezable，改由代码创建可变实例
-        Extension.Core.ThemeEx.ThemeService.EnsureAliasBrushes();
-
+        // 语义状态画刷（Brush.Success / Warning / Danger / Info）必须是未冻结实例，
+        // BAML 编译的 Freezable 无法运行时换色，故在 shell 创建前由代码注入。
+        ThemeService.EnsureAliasBrushes();
         base.OnStartup(e);
     }
 
     protected override void OnInitialized()
     {
-        // 同步别名画刷与 MaterialDesign 深色基础主题
-        Container.Resolve<Extension.Core.ThemeEx.ThemeService>().Initialize();
+        Container.Resolve<ThemeService>().Initialize();
         base.OnInitialized();
+    }
+
+    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
+    {
+        moduleCatalog.AddModule<CommunicationNewModule>();
+        moduleCatalog.AddModule<WPFCustomControlsModule>();
     }
 }

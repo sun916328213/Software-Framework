@@ -1,7 +1,7 @@
 ﻿
 using Communication.Serial;
 using Device.RFID.Abstract;
-using Extension.Core.ConvertEx;
+using Extension.Core.Conversion;
 
 namespace Device.RFID
 {

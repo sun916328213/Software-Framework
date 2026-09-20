@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
-using Extension.DesignPattern.PublishSubscribePattern;
+using Extension.Patterns.Messaging.PublishSubscribe;
 
 namespace Extension.DesignPattern.PublishSubscribePattern.Examples
 {

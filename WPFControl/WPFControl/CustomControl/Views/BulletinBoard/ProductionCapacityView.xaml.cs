@@ -1,4 +1,4 @@
-﻿using Extension.Core.SystemEx;
+﻿using Extension.UI.Controls;
 using LiveChartsCore;
 using System;
 using System.Collections.Generic;

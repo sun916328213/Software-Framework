@@ -1,5 +1,5 @@
 ﻿using Communication.Struct;
-using Extension.Helper.Channel;
+using Extension.Core.Concurrency;
 using System;
 using System.Linq;
 

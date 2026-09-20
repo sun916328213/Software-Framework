@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Media;
-using Extension.Core.SecurityEx;
+using Extension.Security.Cryptography;
+using Extension.Security.Licensing;
 using Microsoft.Win32;
 
 namespace LicenseTool

@@ -1,4 +1,4 @@
-# 复盘：阶段 1 + 2A 为什么被否（2026-09-15）
+﻿# 复盘：阶段 1 + 2A 为什么被否（2026-09-15）
 
 > **本文件不是改动清单。** 它记录一次**已被用户整体还原**的尝试，以及从中得到的两条硬结论。
 > 当时那份 737 行 diff 已作废（`git diff -- Extension/` 现在是空的，
@@ -6,6 +6,7 @@
 
 ---
 
+> **状态更新（2026-09-20）**：本文是阶段性复盘。当前决策不再保留兼容接口；ScheduledDeletionEx 与 DeleteExpiredFiles1 已移除，Retention 的唯一公开清理入口为 ScheduledDeletion.DeleteExpiredFiles。
 ## 1. 发生了什么
 
 2026-09-14 按 `MIGRATION-CHECKLIST.md` v1 执行了「阶段 1（零风险清理）+ 阶段 2A（删死代码摘依赖）」，

@@ -107,6 +107,9 @@ public sealed class HttpServerLifecycleTests
         public bool IsListening { get; private set; }
         public int StopCount { get; private set; }
 
+        // ITcpServerListener 后来加了 LocalPort（真实实现回填系统分配的端口），脚本桩用不到端口。
+        public int LocalPort { get; private set; }
+
         public void Start(int backlog)
         {
             IsListening = true;

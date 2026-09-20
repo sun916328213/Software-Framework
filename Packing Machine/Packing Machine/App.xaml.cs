@@ -1,8 +1,8 @@
-using Communication;
+﻿using Communication;
 using DataManager;
 using Device;
-using Extension.Core.Reflection;
-using Extension.Helper.Mapping;
+using Extension.Integration.Prism;
+using Extension.Integration.Mapster;
 using FlowEditor;
 using Packing_Machine.Business.Flow;
 using Packing_Machine.Business.Station;

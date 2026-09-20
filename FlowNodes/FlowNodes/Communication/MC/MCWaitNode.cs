@@ -1,6 +1,6 @@
-using FlowEditor.Nodes;
+﻿using FlowEditor.Nodes;
 using Communication;
-using Extension.Core.CompareEx;
+using Extension.Core.Comparison;
 using FlowEditor.Core;
 using System;
 using System.Threading;

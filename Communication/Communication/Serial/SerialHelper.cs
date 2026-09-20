@@ -1,7 +1,6 @@
 ﻿using Communication.Struct;
-using Extension.Core.ConvertEx;
-using Extension.Helper.Channel;
-using Extension.Helper.TaskHelper;
+using Extension.Core.Conversion;
+using Extension.Core.Concurrency;
 using System;
 using System.IO.Ports;
 using System.Threading.Tasks;

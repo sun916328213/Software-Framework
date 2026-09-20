@@ -1,4 +1,4 @@
-using Extension.Core.Reflection;
+﻿using Extension.Integration.Prism;
 using Prism.Ioc;
 using Prism.Modularity;
 using ScriptEditor.Services;

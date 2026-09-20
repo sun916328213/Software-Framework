@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Extension.DesignPattern.ObserverPattern;
+using Extension.Patterns.Messaging.Observer;
 using Prism.Ioc;
 using System;
 using System.Collections.ObjectModel;

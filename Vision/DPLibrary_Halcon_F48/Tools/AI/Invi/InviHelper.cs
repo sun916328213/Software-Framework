@@ -1,8 +1,12 @@
 ﻿using DPLibrary_Halcon_F48.Tools.AI.Definition;
-using Extension.Core.ConvertEx;
-using Extension.Core.EnumEx;
-using Extension.Core.ImageEx;
-using Extension.Core.IntPtrEx;
+using Extension.Core.Conversion;
+using Extension.Core.Enums;
+using Extension.Imaging.Halcon;
+using Extension.Imaging.OpenCv;
+using Extension.Platform.Diagnostics;
+using Extension.Platform.Native;
+using Extension.Platform.Memory;
+using Extension.Platform.Processes;
 using HalconDotNet;
 using System;
 using System.Collections.Concurrent;

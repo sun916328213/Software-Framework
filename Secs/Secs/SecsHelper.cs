@@ -1,4 +1,4 @@
-﻿using Extension.Tool;
+﻿using Extension.Core.Collections;
 using DataManager.Log;
 using Microsoft.Extensions.Options;
 using Prism.Ioc;

@@ -2,7 +2,9 @@
 using System.Globalization;
 using System.Windows.Data;
 using WPFControl.Resources;
-using Extension.Struct;
+using Extension.Core.Models;
+using Extension.Imaging.Models;
+using Extension.Automation.Device;
 
 
 namespace WPFControl.ValueConvert

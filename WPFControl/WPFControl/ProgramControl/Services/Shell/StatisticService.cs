@@ -1,5 +1,8 @@
-﻿using Extension.Core.ConvertEx;
-using Extension.Struct;
+﻿using Extension.Core.Conversion;
+using Extension.Core.Models;
+using Extension.Imaging.Models;
+using Extension.Automation.Device;
+using Extension.Automation.Secs;
 using System;
 using WPFControl.Helper;
 using WPFControl.ProgramControl.Models;

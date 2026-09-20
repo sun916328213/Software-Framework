@@ -2,6 +2,7 @@ using DataManager.Log;
 using DataManager.Log.Definition;
 using FlowEditor.Core;
 using System.Diagnostics;
+using System.Text.Json;
 using FlowEditor.DataManagerLogging;
 using Xunit;
 
@@ -149,6 +150,56 @@ public sealed class HostFlowLogIntegrationTests
         }
     }
 
+    /// <summary>验证 Packing Machine 实际 Log 配置可驱动流程路由和等级落盘。</summary>
+    [Fact]
+    public void PackingMachineConfig_FlowLogTemplate_DrivesRoutedLevelledOutput()
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"flow-log-packing-{Guid.NewGuid():N}");
+        var logDirectory = Path.Combine(root, "logs");
+        var manager = new LogManager();
+        var configPath = FindPackingMachineLogConfig();
+        var configured = JsonSerializer.Deserialize<List<LogParam>>(
+                             File.ReadAllText(configPath),
+                             new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                         ?? throw new InvalidDataException("Packing Machine 日志配置为空。");
+        var actualTemplate = Assert.Single(configured, parameter => parameter.Name == "FlowLog");
+        Assert.Equal(@"D:\DeviceData\Log\FlowLog", actualTemplate.FilePath);
+        Assert.Equal("||", actualTemplate.Separator);
+        Assert.Equal(180, actualTemplate.SaveDays);
+        Assert.Equal(ELogType.SeriLog, actualTemplate.LogType);
+
+        var redirectedTemplate = new LogParam
+        {
+            Name = actualTemplate.Name,
+            FilePath = logDirectory,
+            Separator = actualTemplate.Separator,
+            SaveDays = actualTemplate.SaveDays,
+            LogType = actualTemplate.LogType
+        };
+        manager.ReplaceConfigured([], [redirectedTemplate]);
+
+        try
+        {
+            var sink = new DataManagerFlowLogSink(manager);
+            sink.Write(CreateRecord("packing warning", FlowLogLevel.Warning));
+
+            var routedLog = manager["ProcessA\\FlowA"];
+            Assert.NotNull(routedLog);
+            Assert.Equal(
+                Path.Combine(logDirectory, "ProcessA", "FlowA"),
+                routedLog!.Param.FilePath);
+            (routedLog as IDisposable)?.Dispose();
+            AssertLogContains(logDirectory, "Warning", "packing warning");
+        }
+        finally
+        {
+            foreach (var log in manager.Items.OfType<IDisposable>())
+                log.Dispose();
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
+        }
+    }
+
     /// <summary>创建一条带完整宿主路由上下文的流程日志。</summary>
     private static FlowLogRecord CreateRecord(string message, FlowLogLevel level)
         => new("ProcessA", "FlowA", "NodeA", 1, message, level);
@@ -188,5 +239,24 @@ public sealed class HostFlowLogIntegrationTests
         var contents = File.ReadAllText(file);
         Assert.Contains(level, contents, StringComparison.Ordinal);
         Assert.Contains(message, contents, StringComparison.Ordinal);
+    }
+
+    /// <summary>从测试输出目录向上定位 Packing Machine 的实际日志配置。</summary>
+    private static string FindPackingMachineLogConfig()
+    {
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory);
+             directory != null;
+             directory = directory.Parent)
+        {
+            var candidate = Path.Combine(
+                directory.FullName,
+                "Packing Machine",
+                "Packing Machine",
+                "Config",
+                "LogConfig.json");
+            if (File.Exists(candidate)) return candidate;
+        }
+
+        throw new FileNotFoundException("无法定位 Packing Machine/Config/LogConfig.json。");
     }
 }

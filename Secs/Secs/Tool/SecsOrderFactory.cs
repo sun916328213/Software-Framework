@@ -1,5 +1,6 @@
-using Secs.Order;
-using Extension.DesignPattern.FactoryPattern;
+﻿using Secs.Order;
+using Extension.Patterns.Creation.Factory;
+using Extension.Patterns.Creation.Factory.Advanced;
 using System;
 using System.Collections.Generic;
 using System.Linq;

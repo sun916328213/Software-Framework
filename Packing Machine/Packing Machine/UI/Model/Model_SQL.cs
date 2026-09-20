@@ -3,7 +3,7 @@ using Packing_Machine.Business.Station;
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using WPFControl.ProgramControl.Models;
-using Extension.Core.ConvertEx;
+using Extension.Core.Conversion;
 using System.ComponentModel.DataAnnotations;
 
 namespace Packing_Machine.UI.Model

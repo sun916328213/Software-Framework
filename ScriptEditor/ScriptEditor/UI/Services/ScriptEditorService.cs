@@ -16,7 +16,7 @@ using Microsoft.CodeAnalysis.Scripting;
 using RoslynPad.Editor;
 using RoslynPad.Roslyn;
 using ScriptEditor.Models;
-using Extension.Core.ConvertEx;
+using Extension.Core.Conversion;
 
 namespace ScriptEditor.Services;
 

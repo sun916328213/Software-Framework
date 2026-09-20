@@ -1,4 +1,7 @@
-﻿using Extension.Struct;
+﻿using Extension.Core.Models;
+using Extension.Imaging.Models;
+using Extension.Automation.Device;
+using Extension.Automation.Secs;
 using Prism.Ioc;
 using Secs.Manager;
 using Secs4Net;

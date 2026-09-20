@@ -1,8 +1,10 @@
 ﻿using Communication.MC;
-using Extension.Core.CompareEx;
-using Extension.Core.ConvertEx;
-using Extension.Core.DataEx;
-using Extension.Core.EnumEx;
+using Extension.Core.Comparison;
+using Extension.Core.Conversion;
+using Extension.Core.Buffers;
+using Extension.IO.Compression;
+using Extension.Integration.Cloning;
+using Extension.Core.Enums;
 using Prism.Ioc;
 using System;
 using System.Collections.Concurrent;

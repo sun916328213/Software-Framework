@@ -1,4 +1,4 @@
-﻿using Extension.Core.ConvertEx;
+﻿using Extension.Core.Conversion;
 using Prism.Ioc;
 using Secs.Manager;
 using Secs4Net;

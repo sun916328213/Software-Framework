@@ -1,5 +1,5 @@
 ﻿using Communication.Communication.SerialPort.Definition;
-using Extension.Helper.Channel;
+using Extension.Core.Concurrency;
 using System;
 using System.Linq;
 

@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Extension.Core.ConvertEx;
-using Extension.Core.DataEx;
+using Extension.Core.Conversion;
+using Extension.Core.Buffers;
+using Extension.IO.Compression;
+using Extension.Integration.Cloning;
 using ImTools;
 using System.Collections.ObjectModel;
 using System.IO;

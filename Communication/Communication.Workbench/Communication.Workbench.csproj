@@ -1,29 +1,27 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Platform>AnyCPU</Platform>
     <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows7.0</TargetFramework>
-    <UseWPF>true</UseWPF>
-    <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>13.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <RootNamespace>Communication.Workbench</RootNamespace>
     <AssemblyName>Communication.Workbench</AssemblyName>
     <InvariantGlobalization>false</InvariantGlobalization>
+    <LangVersion>13.0</LangVersion>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="Prism.DryIoc" Version="9.0.537" />
-    <PackageReference Include="Prism.Wpf" Version="9.0.537" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+    <PackageReference Include="Prism.DryIoc" Version="8.1.97" />
   </ItemGroup>
-
   <ItemGroup>
+    <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
+    <ProjectReference Include="..\Communication.Controls\Communication.Controls.csproj" />
     <ProjectReference Include="..\CommunicationNew\CommunicationNew.csproj" />
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
   </ItemGroup>
-
 </Project>

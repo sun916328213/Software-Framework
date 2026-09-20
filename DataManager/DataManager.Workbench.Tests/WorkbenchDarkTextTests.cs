@@ -1,7 +1,7 @@
-using DataManager.SQL;
+﻿using DataManager.SQL;
 using DataManager.Workbench.Models;
 using DataManager.Controls.Services;
-using Extension.Core.ThemeEx;
+using Extension.UI.Theme;
 using DataManager.Controls.ViewModels;
 using DataManager.Controls.Views;
 using MaterialDesignColors;

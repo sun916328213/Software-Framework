@@ -1,6 +1,6 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using DataManager.Workbench.Infrastructure;
-using Extension.Core.ThemeEx;
+using Extension.UI.Theme;
 using Prism.Regions;
 using System.Collections.ObjectModel;
 

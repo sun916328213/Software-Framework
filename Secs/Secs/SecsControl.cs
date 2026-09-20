@@ -1,6 +1,9 @@
-﻿using Extension.Core.ConvertEx;
-using Extension.Helper.TaskHelper;
-using Extension.Struct;
+﻿using Extension.Core.Conversion;
+using Extension.Core.Concurrency;
+using Extension.Core.Models;
+using Extension.Imaging.Models;
+using Extension.Automation.Device;
+using Extension.Automation.Secs;
 using Prism.Ioc;
 using Secs.Manager;
 using Secs.Order.S6;

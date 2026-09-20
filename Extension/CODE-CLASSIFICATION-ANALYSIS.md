@@ -1,4 +1,4 @@
-# Extension 代码分类分析报告
+﻿# Extension 代码分类分析报告
 
 > 范围：`Extension/Extension/`（单 csproj，92 个 `.cs`，16,613 行）
 > 方法：目录/命名空间清单比对 + 全仓引用矩阵 + 依赖清单审计
@@ -47,6 +47,7 @@
 
 ---
 
+> **状态更新（2026-09-20）**：本文记录的是重构前的分类与阶段性决策。当前架构决定已取代其中“保留兼容接口”的结论：ScheduledDeletionEx 与 DeleteExpiredFiles1 均已移除，Retention 只保留 ScheduledDeletion.DeleteExpiredFiles 一个公开操作。以下相关内容仅作为历史问题记录，不再是实施处方。
 ## 0. 先给结论
 
 | 你的问题 | 结论 |

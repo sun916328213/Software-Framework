@@ -4,7 +4,7 @@ using Device.RFID;
 using Device.RFID.Definition;
 using Device.Scan;
 using Device.Scan.Definition;
-using Extension.Core.ConvertEx;
+using Extension.Core.Conversion;
 using Prism.Ioc;
 using System;
 using System.Collections.ObjectModel;

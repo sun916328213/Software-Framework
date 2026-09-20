@@ -8,7 +8,7 @@ using Communication.Protocols.Modbus;
 using Communication.Protocols.Modbus.TCP;
 using Communication.Protocols.OpcUa.Client;
 using Communication.Protocols.OpcUa.Server;
-using Extension.Core.ConvertEx;
+using Extension.Core.Conversion;
 using Prism.Ioc;
 using System.Linq;
 using System.Text;

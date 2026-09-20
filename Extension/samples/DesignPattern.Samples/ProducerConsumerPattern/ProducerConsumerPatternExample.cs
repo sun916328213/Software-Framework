@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Extension.DesignPattern.ProducerConsumerPattern;
+using Extension.Patterns.Pipelines.ProducerConsumer;
 
 namespace Extension.DesignPattern.ProducerConsumerPattern.Examples
 {

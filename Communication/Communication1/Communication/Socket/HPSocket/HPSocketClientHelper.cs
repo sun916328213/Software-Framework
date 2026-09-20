@@ -2,7 +2,7 @@ using Communication.Core.Definition;
 using Communication.Communication.Socket;
 using Communication.Tools.Stream.FrameSplitter;
 using Communication.Tools.Stream.FrameSplitter.Splitter;
-using Extension.Core.TaskEx;
+using Extension.Core.Concurrency;
 using HPSocket;
 using HPSocket.Adapter;
 using HPSocket.Base;

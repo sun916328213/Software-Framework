@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Extension.Struct;
+using Extension.Core.Models;
+using Extension.Imaging.Models;
+using Extension.Automation.Device;
 using Mapster;
 using System;
 using System.Collections.Generic;

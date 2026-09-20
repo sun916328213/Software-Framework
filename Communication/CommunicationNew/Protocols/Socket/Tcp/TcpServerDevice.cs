@@ -10,7 +10,8 @@ namespace CommunicationNew.Protocols.Socket
     /// <summary>
     /// TCP 服务器设备
     /// </summary>
-    public class TcpServerDevice : CommunicationDeviceBase, IConnection, IRawSender, IReceiveSource<ReceivedPacket>
+    public class TcpServerDevice : CommunicationDeviceBase, IConnection, IRawSender,
+        IReceiveSource<ReceivedPacket>, IPeerConnectionSource
     {
         private new SocketParam Param => (SocketParam)base.Param;
         private readonly ITcpServerListener _listener;
@@ -20,6 +21,9 @@ namespace CommunicationNew.Protocols.Socket
         private readonly object _clientLock = new();
         private ConnectionState _state = ConnectionState.Disconnected;
         private long _receiveGeneration;
+
+        /// <inheritdoc />
+        public event EventHandler<PeerConnectionChangedEventArgs>? PeerConnectionChanged;
 
         /// <summary>使用系统 TCP 监听器创建服务器。</summary>
         public TcpServerDevice(SocketParam param)
@@ -41,6 +45,9 @@ namespace CommunicationNew.Protocols.Socket
 
         /// <summary>新连接边界暴露的显式生命周期状态。</summary>
         public ConnectionState State => _state;
+
+        /// <summary>实际监听的端口号（Port=0 时由系统分配，Connect 后可读回）。</summary>
+        public int LocalPort => _listener.LocalPort;
 
         /// <summary>已连接的客户端列表</summary>
         public IReadOnlyList<TcpClient> ConnectedClients
@@ -147,9 +154,18 @@ namespace CommunicationNew.Protocols.Socket
                 try
                 {
                     var client = await _listener.AcceptTcpClientAsync(ct);
-                    lock (_clientLock) _clients.Add(client);
+                    int activePeerCount;
+                    lock (_clientLock)
+                    {
+                        _clients.Add(client);
+                        activePeerCount = _clients.Count;
+                    }
                     var ep = client.Client.RemoteEndPoint?.ToString();
-                    OnConnectionStateChanged(true, $"客户端已连接: {ep}");
+                    // 客户端上线不是服务端监听器的生命周期变化。
+                    // 若复用 ConnectionStateChanged，单个客户端断开会让调用方误以为整个服务端已停止。
+                    PeerConnectionChanged?.Invoke(
+                        this,
+                        new PeerConnectionChangedEventArgs(true, ep, activePeerCount));
 
                     var clientTask = HandleClientAsync(client, ct);
                     lock (_clientLock) _clientTasks[client] = clientTask;
@@ -163,6 +179,7 @@ namespace CommunicationNew.Protocols.Socket
         {
             var encoding = System.Text.Encoding.GetEncoding(Param.Encoding);
             var buffer = new byte[Param.BufferSize];
+            var remoteAddress = client.Client.RemoteEndPoint?.ToString();
             try
             {
                 using var stream = client.GetStream();
@@ -183,10 +200,13 @@ namespace CommunicationNew.Protocols.Socket
             catch (Exception ex) { OnErrorOccurred(ex); }
             finally
             {
+                int activePeerCount;
+                bool removed;
                 lock (_clientLock)
                 {
-                    _clients.Remove(client);
+                    removed = _clients.Remove(client);
                     _clientTasks.Remove(client);
+                    activePeerCount = _clients.Count;
                 }
                 try
                 {
@@ -197,7 +217,13 @@ namespace CommunicationNew.Protocols.Socket
                 {
                     // 服务器断开流程可能已先释放客户端。
                 }
-                OnConnectionStateChanged(false, "客户端断开");
+                if (removed)
+                {
+                    // 只报告对端下线；只要监听器未停止，IsConnected 就必须保持 true。
+                    PeerConnectionChanged?.Invoke(
+                        this,
+                        new PeerConnectionChangedEventArgs(false, remoteAddress, activePeerCount));
+                }
             }
         }
 

@@ -1,8 +1,8 @@
-using Communication.Tools.Stream.FrameSplitter.SplitModules;
+﻿using Communication.Tools.Stream.FrameSplitter.SplitModules;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Extension.Core.DataEx.BufferEx;
+using static Extension.Core.Buffers.BufferEx;
 
 namespace Communication.Tools.Stream.FrameSplitter.Splitter
 {

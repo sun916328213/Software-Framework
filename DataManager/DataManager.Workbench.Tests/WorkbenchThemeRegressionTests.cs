@@ -1,5 +1,5 @@
-using DataManager.Controls.Services;
-using Extension.Core.ThemeEx;
+﻿using DataManager.Controls.Services;
+using Extension.UI.Theme;
 using MaterialDesignColors;
 using Prism.Ioc;
 using System.Collections.ObjectModel;

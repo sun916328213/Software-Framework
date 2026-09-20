@@ -3,7 +3,7 @@ using Communication.Communication;
 using Communication.Communication.Socket;
 using Communication.Core.Definition;
 using Communication.Tools.Stream.FrameSplitter.Splitter;
-using Extension.Core.ConvertEx;
+using Extension.Core.Conversion;
 using Prism.Ioc;
 using System;
 using System.Collections;

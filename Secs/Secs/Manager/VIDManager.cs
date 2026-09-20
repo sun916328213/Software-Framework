@@ -1,4 +1,4 @@
-﻿using Extension.Tool;
+﻿using Extension.Core.Collections;
 using Prism.Ioc;
 using Secs.Variable;
 using Secs.Variable.Data;

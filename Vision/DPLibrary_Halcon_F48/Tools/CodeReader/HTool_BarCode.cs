@@ -4,6 +4,7 @@ using DPLibrary_Halcon_F48.Base;
 using DPLibrary_Halcon_F48.Base.DispMessage;
 using DPLibrary_Halcon_F48.Tool;
 using HalconDotNet;
+using System.Data.Common;
 using System.Diagnostics;
 
 using System.Text.Json.Serialization;
@@ -531,6 +532,13 @@ namespace DPLibrary_Halcon_F48.Tools
                 // 按排序后的顺序添加到结果集合
                 foreach (var item in sortedResults)
                 {
+
+                    //获取条码最大旋转外接矩形
+                    HOperatorSet.SmallestRectangle1(item.region.GetRegion(), out HTuple row1, out HTuple col1, out HTuple row2, out HTuple col2);
+
+                    double width = col2.D - col1.D  ;
+                    double height = row2.D - row1.D ;
+
                     Results.Add(new HCodeResult()
                     {
                         ResultRegion = item.region,
@@ -538,7 +546,9 @@ namespace DPLibrary_Halcon_F48.Tools
                         Code = item.code,
                         Center = item.center,
                         R = item.r,
-                        Quality = item.quality
+                        Quality = item.quality,
+                        Height= height,
+                        Width = width
                     });
 
                     ResultRegions.Add(item.region);

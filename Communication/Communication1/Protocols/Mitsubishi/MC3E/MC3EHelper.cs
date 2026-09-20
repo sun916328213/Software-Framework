@@ -1,9 +1,9 @@
-using Communication.Communication.Socket;
+﻿using Communication.Communication.Socket;
 using Communication.Core.Definition;
 using Communication.Tools.Stream;
 using Communication.Tools.Stream.FrameSplitter.Splitter;
-using Extension.Core.CompareEx;
-using Extension.Core.ConvertEx;
+using Extension.Core.Comparison;
+using Extension.Core.Conversion;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;

@@ -1,4 +1,4 @@
-using Extension.Tool;
+using Extension.Core.Collections;
 using System.Collections.Generic;
 
 namespace Secs.Variable

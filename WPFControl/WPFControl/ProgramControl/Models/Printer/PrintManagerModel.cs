@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Device.PrintSoftware;
-using Extension.Core.ConvertEx;
+using Extension.Core.Conversion;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;

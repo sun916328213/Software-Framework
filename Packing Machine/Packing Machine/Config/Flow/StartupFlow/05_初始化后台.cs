@@ -1,4 +1,4 @@
-using Extension.Core.ControlEx;
+﻿using Extension.UI.Controls;
 using WPFControl.Resources;
 
 public class Script
@@ -27,7 +27,7 @@ public class Script
     {
         Console.WriteLine("开始执行脚本");
         _ResourceMonitorService.StartAutoRefresh();
-        _CommunicationManager.SetReadTask("Data", "D8000", 1000, Extension.Core.CompareEx.EComparePolarity.None);
+        _CommunicationManager.SetReadTask("Data", "D8000", 1000, Extension.Core.Comparison.EComparePolarity.None);
         _CommunicationManager.StartLoop();
 
 

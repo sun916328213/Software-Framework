@@ -1,4 +1,6 @@
-﻿using Extension.Struct;
+﻿using Extension.Core.Models;
+using Extension.Imaging.Models;
+using Extension.Automation.Device;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;

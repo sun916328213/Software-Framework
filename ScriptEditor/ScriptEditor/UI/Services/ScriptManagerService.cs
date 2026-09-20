@@ -1,5 +1,5 @@
-using Extension.Core.ConvertEx;
-using Extension.Tool;
+﻿using Extension.Core.Conversion;
+using Extension.Core.Collections;
 using ScriptEditor.Models;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -290,7 +290,7 @@ namespace ScriptEditor.Services
                 var itemsSnapshot = _items.ToList();
                 await Task.Run(() =>
                 {
-                    Extension.Core.FileEx.FileEx.Write(json, System.IO.Path.GetDirectoryName(path), System.IO.Path.GetFileName(path));
+                    Extension.IO.Files.FileEx.Write(json, System.IO.Path.GetDirectoryName(path), System.IO.Path.GetFileName(path));
 
                     // 同步导出各脚本为独立 .cs（供 VSCode 查看/编辑）
                     try { ExportScriptsCore(itemsSnapshot, path); } catch { /* 镜像导出失败不阻断保存 */ }
@@ -454,7 +454,7 @@ namespace ScriptEditor.Services
             for (var i = 0; i < items.Count; i++)
             {
                 var item = items[i];
-                Extension.Core.FileEx.FileEx.Write(
+                Extension.IO.Files.FileEx.Write(
                     item.Code ?? string.Empty,
                     GetScriptFolder(taskprojPath),
                     ScriptFileName(item.Title, i));

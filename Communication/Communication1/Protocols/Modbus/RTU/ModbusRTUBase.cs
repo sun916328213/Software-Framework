@@ -1,6 +1,6 @@
 ﻿using Communication.Communication.SerialPort;
 using Communication.Protocols.Modbus.RTU.Definition;
-using Extension.Helper.Channel;
+using Extension.Core.Concurrency;
 
 namespace Communication.Protocols.Modbus.RTU
 {

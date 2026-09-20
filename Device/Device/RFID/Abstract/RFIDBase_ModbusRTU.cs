@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Communication.ModbusRTU;
 using Device.RFID.Definition;
-using Extension.Core.ConvertEx;
+using Extension.Core.Conversion;
 
 namespace Device.RFID.Abstract
 {

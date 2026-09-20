@@ -1,8 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Extension.DesignPattern.PublishSubscribePattern;
-using Extension.DesignPattern.PublishSubscribePattern.Advanced;
+using Extension.Patterns.Messaging.PublishSubscribe;
+using Extension.Patterns.Messaging.PublishSubscribe.Advanced;
+// 别名：基命名空间与 .Advanced 下各有一个 AdvancedMessageBroker<T>，
+// 去掉限定会 CS0104 二义性，故保留 Advanced. 前缀并让该命名空间可解析。
+using Advanced = Extension.Patterns.Messaging.PublishSubscribe.Advanced;
 
 namespace Extension.DesignPattern.PublishSubscribePattern.Examples
 {

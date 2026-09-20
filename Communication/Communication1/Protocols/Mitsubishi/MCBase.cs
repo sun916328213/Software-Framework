@@ -1,6 +1,6 @@
 ﻿using Communication.Communication;
 using Communication.Core.Definition;
-using Extension.Core.CompareEx;
+using Extension.Core.Comparison;
 using Prism.Ioc;
 using System;
 using System.Collections;

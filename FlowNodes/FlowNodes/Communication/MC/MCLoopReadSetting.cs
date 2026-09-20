@@ -55,7 +55,7 @@ namespace FlowNodes.Communication.MC
         public override Task ExecuteAsync(CancellationToken ct)
         {
             int L = Convert.ToInt32(RegisterLength);
-             CommunicationManager.SetRead(RegisterName, RegisterStartAdd, L, Extension.Core.CompareEx.EComparePolarity.None); ;
+             CommunicationManager.SetRead(RegisterName, RegisterStartAdd, L, Extension.Core.Comparison.EComparePolarity.None); ;
             return Task.CompletedTask;
         }
     }

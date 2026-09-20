@@ -1,7 +1,7 @@
 ﻿using Device.Camera;
 using Device.Camera.Gige;
 using Device.Camera.Gige.Definition;
-using Extension.Core.SystemEx;
+using Extension.UI.Controls;
 using HalconDotNet;
 using WPFControl.CustomControl.Models;
 using WPFCustomControls.Controls;

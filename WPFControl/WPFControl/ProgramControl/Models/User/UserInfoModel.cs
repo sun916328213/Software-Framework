@@ -128,7 +128,7 @@ namespace WPFControl.ProgramControl.Models
 
         public UserInfoModel()
         {
-            iUserLevels = new ObservableCollection<string>(Extension.Core.EnumEx.EnumEx.GetName<EUserLevel>());
+            iUserLevels = new ObservableCollection<string>(Extension.Core.Enums.EnumEx.GetName<EUserLevel>());
             iUserLevels.Remove(EUserLevel.SuperAdmin.ToString()); //排除管理员
             iUserLevels.Remove(EUserLevel.Guest.ToString()); //排除管理员
         }

@@ -1,5 +1,5 @@
 ﻿using Communication.Struct;
-using Extension.Helper.Channel;
+using Extension.Core.Concurrency;
 
 namespace Communication.ModbusRTU
 {

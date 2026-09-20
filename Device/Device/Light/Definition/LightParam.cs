@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Extension.DesignPattern.ObserverPattern;
+using Extension.Patterns.Messaging.Observer;
 using System;
 using System.Collections.Generic;
 using System.Linq;

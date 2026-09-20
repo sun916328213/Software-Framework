@@ -1,6 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
-using Extension.Struct;
+using Extension.Core.Models;
+using Extension.Imaging.Models;
+using Extension.Automation.Device;
+using Extension.Automation.Secs;
 using System.Runtime;
 
 namespace WPFControl.ProgramControl.Models

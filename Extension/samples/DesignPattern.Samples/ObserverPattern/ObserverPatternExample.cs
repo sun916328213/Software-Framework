@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
-using Extension.DesignPattern.ObserverPattern;
+using Extension.Patterns.Messaging.Observer;
 
 namespace Extension.DesignPattern.ObserverPattern.Examples
 {

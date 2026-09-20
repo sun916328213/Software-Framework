@@ -1,5 +1,5 @@
-﻿using Extension.DesignPattern.SingletonPattern;
-using Extension.Tool;
+﻿using Extension.Patterns.Creation.Singleton;
+using Extension.Core.Collections;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,0 +1,1030 @@
+<UserControl
+    x:Class="Communication.Controls.Views.CommunicationView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:Communication.Controls.Views"
+    xmlns:vm="clr-namespace:Communication.Controls.ViewModels"
+    d:DataContext="{d:DesignInstance Type=vm:CommunicationViewModel}"
+    d:DesignHeight="860"
+    d:DesignWidth="1280"
+    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <!--  页面样式归页面自己所有，由本页合并（宿主只合并壳层 Styles/Theme.xaml）  -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Communication.Controls;component/Themes/PageStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+            <views:NonEmptyStringToVisibilityConverter x:Key="NonEmptyStringToVis" />
+            <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
+
+            <Style TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+            </Style>
+
+            <!--  输入框标题：MD 的浮动 hint 在"绑定预填值"时会和文字叠在一起，改成静态小标签  -->
+            <Style
+                x:Key="FieldLabel"
+                BasedOn="{StaticResource {x:Type TextBlock}}"
+                TargetType="TextBlock">
+                <Setter Property="Margin" Value="0,0,0,2" />
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="Opacity" Value="0.65" />
+            </Style>
+
+            <!--  危险动作按钮：MD 没有「危险实心」样式，压在 ValidationError 底色上要按深浅翻字色  -->
+            <Style
+                x:Key="DangerButton"
+                BasedOn="{StaticResource MaterialDesignRaisedButton}"
+                TargetType="Button">
+                <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.ValidationError}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.ValidationError}" />
+                <Setter Property="Foreground" Value="{DynamicResource Brush.OnDanger}" />
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Opacity" Value="0.38" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!--  次要动作：与实心主按钮同宽，避免一屏里全是实心  -->
+            <Style
+                x:Key="QuietButton"
+                BasedOn="{StaticResource MaterialDesignOutlinedButton}"
+                TargetType="Button">
+                <Setter Property="Margin" Value="0,0,8,8" />
+                <Setter Property="MinWidth" Value="88" />
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Opacity" Value="0.38" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!--
+                动作按钮：MD 的 disabled 描边和 enabled 几乎看不出差别，点下去没反应会被当成"界面坏了"，
+                所以禁用态要明显压暗——灰只表示"没连接"这一种意思。
+            -->
+            <Style
+                x:Key="ActionSolid"
+                BasedOn="{StaticResource MaterialDesignRaisedButton}"
+                TargetType="Button">
+                <Setter Property="MinWidth" Value="76" />
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Opacity" Value="0.38" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style
+                x:Key="ActionGhost"
+                BasedOn="{StaticResource MaterialDesignOutlinedButton}"
+                TargetType="Button">
+                <Setter Property="MinWidth" Value="76" />
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Opacity" Value="0.38" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <DataTemplate x:Key="DeviceItemTemplate" DataType="{x:Type vm:DeviceViewModel}">
+                <Grid Margin="0,3" ToolTip="{Binding StatusText}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        Grid.Column="0"
+                        Width="30"
+                        Height="30"
+                        Margin="0,0,10,0"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource MaterialDesign.Brush.Primary.Background}"
+                        CornerRadius="8">
+                        <materialDesign:PackIcon
+                            Width="16"
+                            Height="16"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                            Kind="{Binding ProtocolIcon}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                FontSize="13"
+                                FontWeight="SemiBold"
+                                Text="{Binding Name}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                FontFamily="Consolas"
+                                FontSize="11"
+                                Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                Text="{Binding StatusShort}"
+                                TextTrimming="CharacterEllipsis"
+                                ToolTip="{Binding StatusText}" />
+                        </Grid>
+                        <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
+                            <TextBlock FontSize="11" Text="{Binding Protocol}" />
+                            <TextBlock
+                                Margin="5,0"
+                                FontSize="11"
+                                Text="·" />
+                            <TextBlock FontSize="11" Text="{Binding RoleText}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <Ellipse
+                        Grid.Column="2"
+                        Width="10"
+                        Height="10"
+                        VerticalAlignment="Center">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                                <Setter Property="Opacity" Value="0.3" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                        <Setter Property="Fill" Value="{DynamicResource Brush.Success}" />
+                                        <Setter Property="Opacity" Value="1" />
+                                        <Setter Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect
+                                                    BlurRadius="6"
+                                                    Opacity="0.5"
+                                                    ShadowDepth="0"
+                                                    Color="{DynamicResource Brush.Success.Color}" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                </Grid>
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Margin="24,16,24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="16" />
+            <RowDefinition Height="*" MinHeight="420" />
+        </Grid.RowDefinitions>
+
+        <!--  页头：标题 + 会话概览（壳的侧栏负责主题与导航，这里不再放主题切换）  -->
+        <Grid Grid.Row="0">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon
+                    Width="28"
+                    Height="28"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                    Kind="Network" />
+                <StackPanel Margin="12,0,0,0">
+                    <TextBlock Style="{StaticResource PageTitle}" Text="通讯设备测试" />
+                    <TextBlock
+                        Margin="0"
+                        Style="{StaticResource PageSubTitle}"
+                        Text="全部协议统一走 CommunicationNew 的 ICommunicationDevice 一套对外接口：连接控制、地址读写、原始收发与收发日志都在本页完成" />
+                </StackPanel>
+            </StackPanel>
+            <StackPanel
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Orientation="Horizontal">
+                <materialDesign:Chip
+                    VerticalAlignment="Center"
+                    Content="{Binding DeviceSummary}"
+                    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                <materialDesign:Chip
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Center"
+                    Content="{Binding StatusHint}"
+                    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
+            </StackPanel>
+        </Grid>
+
+        <!--  两栏：左设备 | 右操作+日志。可拖拽调整宽度  -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition
+                    Width="300"
+                    MinWidth="300"
+                    MaxWidth="400" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" MinWidth="400" />
+            </Grid.ColumnDefinitions>
+
+            <GridSplitter
+                Grid.Column="1"
+                Width="5"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Stretch"
+                Background="Transparent"
+                Cursor="SizeWE" />
+
+            <!--  设备：列表 + 生命周期动作  -->
+            <materialDesign:Card
+                Grid.Column="0"
+                Padding="16"
+                UniformCornerRadius="12">
+                <DockPanel>
+                    <Grid Margin="0,0,0,12" DockPanel.Dock="Top">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Style="{StaticResource SectionTitle}"
+                            Text="通讯设备" />
+                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                            <Button Command="{Binding AddDeviceCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon VerticalAlignment="Center" Kind="Plus" />
+                                    <TextBlock Margin="6,0,0,0" Text="新建" />
+                                </StackPanel>
+                            </Button>
+                            <!--  编辑选中设备参数（协议/角色锁定，只改参数）  -->
+                            <Button
+                                Margin="6,0,0,0"
+                                Padding="8,0"
+                                Command="{Binding EditDeviceCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                ToolTip="编辑选中设备的参数">
+                                <materialDesign:PackIcon VerticalAlignment="Center" Kind="Pencil" />
+                            </Button>
+                            <!--  批量与配置动作收进菜单：设备列只有 300 宽，按钮堆到底部会吃掉列表  -->
+                            <materialDesign:PopupBox
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                ToolTip="批量操作与配置导入导出">
+                                <StackPanel>
+                                    <Button
+                                        Command="{Binding SaveConfigCommand}"
+                                        Content="保存配置"
+                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                        ToolTip="设备参数 JSON（全部协议走 CommunicationNew）" />
+                                    <Button
+                                        Command="{Binding LoadConfigCommand}"
+                                        Content="加载配置"
+                                        Style="{StaticResource MaterialDesignFlatButton}" />
+                                    <Separator />
+                                    <Button
+                                        Command="{Binding ConnectAllCommand}"
+                                        Content="全部连接"
+                                        Style="{StaticResource MaterialDesignFlatButton}" />
+                                    <Button
+                                        Command="{Binding DisconnectAllCommand}"
+                                        Content="全部断开"
+                                        Style="{StaticResource MaterialDesignFlatButton}" />
+                                </StackPanel>
+                            </materialDesign:PopupBox>
+                        </StackPanel>
+                    </Grid>
+
+                    <!--
+                        常态只有 连接/断开/移除 三个等宽按钮；"取消操作"只在真的有耗时操作在跑时出现，
+                        平时它是一个永远点不动的灰按钮，占掉一格还让人以为少了功能。
+                    -->
+                    <StackPanel Margin="0,8,0,0" DockPanel.Dock="Bottom">
+                        <Button
+                            Height="28"
+                            Margin="0,0,0,6"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding CancelOperationCommand}"
+                            Content="取消当前操作"
+                            FontSize="11"
+                            Style="{StaticResource QuietButton}"
+                            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+                        <UniformGrid Columns="3">
+                            <Button
+                                Margin="3"
+                                Command="{Binding ConnectCommand}"
+                                Content="连接"
+                                Style="{StaticResource ActionSolid}"
+                                ToolTip="连接当前选中的设备" />
+                            <Button
+                                Margin="3"
+                                Command="{Binding DisconnectCommand}"
+                                Content="断开"
+                                Style="{StaticResource QuietButton}" />
+                            <Button
+                                Margin="3"
+                                Command="{Binding RemoveCommand}"
+                                Content="移除"
+                                Style="{StaticResource DangerButton}" />
+                        </UniformGrid>
+                    </StackPanel>
+
+                    <Grid>
+                        <ListBox
+                            Margin="0,4,0,0"
+                            HorizontalContentAlignment="Stretch"
+                            ItemTemplate="{StaticResource DeviceItemTemplate}"
+                            ItemsSource="{Binding Devices}"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            SelectedItem="{Binding SelectedDevice}">
+                            <!--  选中项：左侧色条 + 微亮背景，一眼看到当前操作的是哪台  -->
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="10,6" />
+                                    <Setter Property="Margin" Value="0,2" />
+                                    <Setter Property="BorderThickness" Value="3,0,0,0" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border
+                                                    Padding="{TemplateBinding Padding}"
+                                                    Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    CornerRadius="8">
+                                                    <ContentPresenter />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                            <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Background}" />
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Background}" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+
+                        <!--  空列表时给一句下一步指引，而不是留一块看不出原因的空白  -->
+                        <TextBlock
+                            Margin="0,30,0,0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            TextAlignment="Center">
+                            <TextBlock.Style>
+                                <Style BasedOn="{StaticResource HintText}" TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasDevices}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                            <Run Text="还没有通讯设备" />
+                            <LineBreak />
+                            <Run Text="点右上「新建」，先选协议再填参数" />
+                        </TextBlock>
+                    </Grid>
+                </DockPanel>
+            </materialDesign:Card>
+
+            <!--  右栏：上操作区 + 下输出区（接收数据 / 通讯日志合成一页），可拖拽高度  -->
+            <Grid Grid.Column="2" Margin="10,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="5*" MinHeight="330" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="4*" MinHeight="240" />
+                </Grid.RowDefinitions>
+
+                <GridSplitter
+                    Grid.Row="1"
+                    Height="5"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    Cursor="SizeNS" />
+
+                <!--  操作：按协议分组（地址组 / 原始收发组二选一），按钮内联进各组标题行  -->
+                <materialDesign:Card
+                    Grid.Row="0"
+                    Padding="12"
+                    UniformCornerRadius="12">
+                    <!--  矮窗口下让整列滚动，而不是把行高压扁、提示文字被裁  -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Grid MinHeight="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <!--  标题随协议切换（地址读写 / 原始收发），HEX 开关收进标题行  -->
+                            <Grid Grid.Row="0" Margin="0,0,0,6">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource SectionTitle}"
+                                    Text="{Binding OperationTitle}" />
+                                <CheckBox
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Content="HEX"
+                                    FontSize="11"
+                                    IsChecked="{Binding UseHex}"
+                                    ToolTip="收发统一格式：勾选按十六进制，去掉按 UTF-8 文本" />
+                            </Grid>
+
+                            <!--  协议提示：一行说清本协议能干什么 + 当前连接态  -->
+                            <Grid Grid.Row="1" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Width="14"
+                                    Height="14"
+                                    Margin="0,0,6,0"
+                                    VerticalAlignment="Top"
+                                    Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                    Kind="ShieldOutline" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    Opacity="0.85"
+                                    Text="{Binding CapabilitySummary}"
+                                    TextWrapping="Wrap"
+                                    ToolTip="{Binding ProtocolUsageHint}" />
+                            </Grid>
+                            <!--
+                                地址读写组（Modbus / MC / OPC UA / HTTP）：
+                                地址、读取长度、写入数据放在同一个 Grid 的同一套列里，
+                                两组的左右边界与行距因此必然一致，不会再出现"地址和写入数据间距不一样"。
+                            -->
+                            <StackPanel
+                                Grid.Row="2"
+                                Margin="0,0,0,10"
+                                Visibility="{Binding DeviceSupportsAddress, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Style="{StaticResource GroupTitle}" Text="按地址读写" />
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="88" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="4" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="10" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="4" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="地址" />
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="2"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="读取长度"
+                                        ToolTip="一次读多少个：Modbus 是寄存器数，MC / OPC UA 是元素数，HTTP 是字节数" />
+
+                                    <TextBox
+                                        Grid.Row="2"
+                                        Grid.Column="0"
+                                        MinHeight="34"
+                                        Style="{StaticResource DmInput}"
+                                        Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}"
+                                        ToolTip="{Binding AddressDetailHint}" />
+                                    <TextBox
+                                        Grid.Row="2"
+                                        Grid.Column="2"
+                                        MinHeight="34"
+                                        FontSize="11"
+                                        Style="{StaticResource DmInput}"
+                                        Text="{Binding ReadLength, UpdateSourceTrigger=PropertyChanged}"
+                                        ToolTip="读取长度（寄存器数 / 元素数 / 字节数）" />
+                                    <Button
+                                        Grid.Row="2"
+                                        Grid.Column="4"
+                                        MinWidth="72"
+                                        Padding="14,2"
+                                        VerticalAlignment="Center"
+                                        Command="{Binding ReadCommand}"
+                                        Content="读取"
+                                        FontSize="11"
+                                        Style="{StaticResource ActionSolid}"
+                                        ToolTip="按左侧地址与读取长度取数，结果显示在下方「接收数据」" />
+
+                                    <TextBlock
+                                        Grid.Row="4"
+                                        Grid.Column="0"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="写入数据" />
+                                    <TextBox
+                                        Grid.Row="6"
+                                        Grid.Column="0"
+                                        Grid.ColumnSpan="3"
+                                        MinHeight="34"
+                                        MaxHeight="80"
+                                        VerticalContentAlignment="Center"
+                                        AcceptsReturn="True"
+                                        FontFamily="Consolas"
+                                        Style="{StaticResource DmInput}"
+                                        Text="{Binding Payload, UpdateSourceTrigger=PropertyChanged}"
+                                        TextWrapping="Wrap"
+                                        ToolTip="HEX 勾选时按十六进制解析，去掉勾选按 UTF-8 文本" />
+                                    <Button
+                                        Grid.Row="6"
+                                        Grid.Column="4"
+                                        MinWidth="72"
+                                        Padding="14,2"
+                                        VerticalAlignment="Center"
+                                        Command="{Binding WriteCommand}"
+                                        Content="写入"
+                                        FontSize="11"
+                                        Style="{StaticResource ActionGhost}"
+                                        ToolTip="写入到上方那个地址" />
+                                </Grid>
+                                <TextBlock
+                                    Margin="0,6,0,0"
+                                    Style="{StaticResource HintText}"
+                                    Text="{Binding AddressHint, StringFormat=地址样例：{0}}"
+                                    ToolTip="{Binding AddressDetailHint}" />
+                                <TextBlock
+                                    Margin="0,2,0,0"
+                                    Style="{StaticResource HintText}"
+                                    Text="{Binding WriteLengthHint}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <!--  原始发送组（TCP / UDP / 串口）：发送框 + 右侧发送/收发按钮，调试助手式  -->
+                            <StackPanel
+                                Grid.Row="3"
+                                Margin="0,0,0,10"
+                                Visibility="{Binding DeviceSupportsRaw, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Style="{StaticResource GroupTitle}" Text="发送数据" />
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <!--  回车发送：按 Enter 直接触发发送，不用再去点按钮  -->
+                                    <TextBox
+                                        Grid.Column="0"
+                                        VerticalContentAlignment="Center"
+                                        AcceptsReturn="True"
+                                        FontFamily="Consolas"
+                                        Style="{StaticResource DmInput}"
+                                        Text="{Binding Payload, UpdateSourceTrigger=PropertyChanged}"
+                                        ToolTip="HEX 勾选时按十六进制解析，否则按文本发送">
+                                        <TextBox.InputBindings>
+                                            <KeyBinding Key="Enter" Command="{Binding SendRawCommand}" />
+                                        </TextBox.InputBindings>
+                                    </TextBox>
+                                    <StackPanel
+                                        Grid.Column="2"
+                                        VerticalAlignment="Center"
+                                        Orientation="Horizontal">
+                                        <Button
+                                            MinWidth="64"
+                                            Command="{Binding SendRawCommand}"
+                                            Content="发送"
+                                            FontSize="11"
+                                            Style="{StaticResource ActionSolid}"
+                                            ToolTip="原始发送，仅字节流/数据报协议（TCP / UDP / 串口）" />
+                                        <Button
+                                            MinWidth="64"
+                                            Margin="6,0,0,0"
+                                            Command="{Binding SendAndReceiveCommand}"
+                                            Content="收发"
+                                            FontSize="11"
+                                            Style="{StaticResource ActionGhost}"
+                                            ToolTip="发送并等待回复，需要设备实现 IRequestReplyClient（服务端没有这项能力）"
+                                            Visibility="{Binding DeviceSupportsRequestReply, Converter={StaticResource BoolToVis}}" />
+                                    </StackPanel>
+                                </Grid>
+                                <StackPanel
+                                    Margin="0,6,0,0"
+                                    Orientation="Horizontal"
+                                    ToolTip="已发送过的报文（最新在前），选中即填入上方发送框">
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="历史数据" />
+                                    <ComboBox
+                                        Width="240"
+                                        Margin="8,0,0,0"
+                                        VerticalAlignment="Center"
+                                        FontFamily="Consolas"
+                                        FontSize="11"
+                                        IsEditable="True"
+                                        ItemsSource="{Binding PayloadHistory}"
+                                        SelectedItem="{Binding Payload, Mode=OneWay}"
+                                        Style="{StaticResource DmCombo}" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!--
+                                循环发送独立成组：字节流协议循环「发送」，地址协议循环「读取」。
+                                原来它挂在发送组里，选 Modbus 时整块都不显示，看起来就像这个功能没有。
+                            -->
+                            <StackPanel
+                                Grid.Row="4"
+                                Margin="0,0,0,10"
+                                Visibility="{Binding SupportsLoop, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Style="{StaticResource GroupTitle}" Text="{Binding LoopTitle}" />
+                                <StackPanel
+                                    Margin="0,6,0,0"
+                                    Orientation="Horizontal"
+                                    ToolTip="按间隔反复执行当前协议的主动作">
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="间隔 (ms)" />
+                                    <TextBox
+                                        Width="64"
+                                        Margin="8,0,0,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Style="{StaticResource DmInput}"
+                                        Text="{Binding LoopIntervalMs, UpdateSourceTrigger=PropertyChanged}"
+                                        ToolTip="每隔多少毫秒自动执行一次，最小 10 毫秒" />
+                                    <Button
+                                        Margin="10,0,0,0"
+                                        Padding="14,2"
+                                        VerticalAlignment="Center"
+                                        Command="{Binding StartLoopSendCommand}"
+                                        Content="开始"
+                                        FontSize="11"
+                                        Style="{StaticResource ActionSolid}"
+                                        ToolTip="设备已连接后可点：按上面的间隔反复执行当前动作" />
+                                    <Button
+                                        Margin="6,0,0,0"
+                                        Padding="14,2"
+                                        VerticalAlignment="Center"
+                                        Command="{Binding StopLoopSendCommand}"
+                                        Content="停止"
+                                        FontSize="11"
+                                        Style="{StaticResource ActionGhost}"
+                                        ToolTip="停止循环；断开、移除设备或切换设备时也会自动停止" />
+                                    <TextBlock
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Style="{StaticResource HintText}"
+                                        Text="{Binding LoopSendStateText}" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!--  底部说明：无内容时整行收起，不占高度  -->
+                            <TextBlock
+                                Grid.Row="5"
+                                Margin="0,8,0,0"
+                                Style="{StaticResource HintText}"
+                                Text="{Binding BottomNotice}"
+                                TextWrapping="Wrap"
+                                Visibility="{Binding BottomNotice, Converter={StaticResource NonEmptyStringToVis}}" />
+                        </Grid>
+                    </ScrollViewer>
+                </materialDesign:Card>
+
+                <!--
+                    输出区：接收数据与通讯日志合成一张卡片的两个页签。
+                    以前同一帧 RX 在两个窗口各显示一遍，还各带一套清空/滚动工具栏，用户得先决定该看哪个。
+                -->
+                <materialDesign:Card
+                    Grid.Row="2"
+                    Padding="12"
+                    UniformCornerRadius="12">
+                    <DockPanel>
+                        <!--  页签行：左边选看哪一份，右边只放当前这一份的动作  -->
+                        <Grid Margin="0,0,0,8" DockPanel.Dock="Top">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton
+                                    VerticalAlignment="Center"
+                                    Content="接收数据"
+                                    FontSize="12"
+                                    IsChecked="{Binding OutputShowsData}"
+                                    ToolTip="只看收到的数据，按当前设备分开累积" />
+                                <RadioButton
+                                    Margin="14,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Content="通讯日志"
+                                    FontSize="12"
+                                    IsChecked="{Binding OutputShowsLog}"
+                                    ToolTip="连接、收发、错误混排的事件时间线，可导出" />
+                            </StackPanel>
+
+                            <StackPanel
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal"
+                                Visibility="{Binding OutputShowsData, Converter={StaticResource BoolToVis}}">
+                                <!--  接收记录按设备分开存，先说明现在看的是哪一台、几条多少字节  -->
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource HintText}"
+                                    Text="{Binding ReceiveOwner}" />
+                                <TextBlock
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Consolas"
+                                    FontSize="11"
+                                    Opacity="0.7"
+                                    Text="{Binding ResponseBytes}"
+                                    Visibility="{Binding ResponseBytes, Converter={StaticResource NonEmptyStringToVis}}" />
+                                <CheckBox
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Content="自动滚动"
+                                    FontSize="11"
+                                    IsChecked="{Binding AutoScrollReceive}"
+                                    ToolTip="新数据到达时自动滚到底部" />
+                                <Button
+                                    Width="28"
+                                    Height="26"
+                                    Margin="8,0,0,0"
+                                    Padding="0"
+                                    Command="{Binding ClearResponseCommand}"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    ToolTip="清空当前设备的接收记录（其它设备的不动）">
+                                    <materialDesign:PackIcon
+                                        Width="15"
+                                        Height="15"
+                                        Kind="DeleteSweepOutline" />
+                                </Button>
+                                <Button
+                                    Width="28"
+                                    Height="26"
+                                    Padding="0"
+                                    Command="{Binding CopyResponseCommand}"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    ToolTip="复制接收窗口文本到剪贴板">
+                                    <materialDesign:PackIcon
+                                        Width="15"
+                                        Height="15"
+                                        Kind="ContentCopy" />
+                                </Button>
+                            </StackPanel>
+
+                            <StackPanel
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal"
+                                Visibility="{Binding OutputShowsLog, Converter={StaticResource BoolToVis}}">
+                                <Border
+                                    Padding="4,1"
+                                    Background="{DynamicResource Brush.Warning.Soft}"
+                                    CornerRadius="4">
+                                    <TextBlock
+                                        FontSize="10"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource Brush.Warning}"
+                                        Text="TX" />
+                                </Border>
+                                <TextBlock
+                                    Margin="4,0,10,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Consolas"
+                                    FontSize="11"
+                                    Text="{Binding TxCountText}" />
+                                <Border
+                                    Padding="4,1"
+                                    Background="{DynamicResource Brush.Info.Soft}"
+                                    CornerRadius="4">
+                                    <TextBlock
+                                        FontSize="10"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource Brush.Info}"
+                                        Text="RX" />
+                                </Border>
+                                <TextBlock
+                                    Margin="4,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Consolas"
+                                    FontSize="11"
+                                    Text="{Binding RxCountText}" />
+                                <CheckBox
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Content="自动滚动"
+                                    FontSize="11"
+                                    IsChecked="{Binding AutoScrollLog}" />
+                                <Button
+                                    Margin="8,0,0,0"
+                                    Padding="8,2"
+                                    Command="{Binding ClearLogCommand}"
+                                    Content="清空"
+                                    FontSize="11"
+                                    Style="{StaticResource MaterialDesignFlatButton}" />
+                                <Button
+                                    Margin="4,0,0,0"
+                                    Padding="8,2"
+                                    Command="{Binding ExportLogCommand}"
+                                    Content="导出"
+                                    FontSize="11"
+                                    Style="{StaticResource MaterialDesignFlatButton}" />
+                                <Button
+                                    Margin="4,0,0,0"
+                                    Padding="8,2"
+                                    Command="{Binding ResetCountersCommand}"
+                                    Content="归零"
+                                    FontSize="11"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    ToolTip="TX / RX 计数归零" />
+                            </StackPanel>
+                        </Grid>
+                        <Grid>
+                            <TextBox
+                                x:Name="ReceiveBox"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                Style="{StaticResource OutputBox}"
+                                Text="{Binding Response, Mode=OneWay}" />
+                            <TextBlock
+                                Margin="6,4,6,0"
+                                VerticalAlignment="Top"
+                                FontSize="11"
+                                IsHitTestVisible="False"
+                                Opacity="0.5"
+                                Text="{Binding ResponsePlaceholder}"
+                                TextWrapping="Wrap" />
+                        </Grid>
+                    </DockPanel>
+                </materialDesign:Card>
+
+                <!--  通讯日志：全工作台共用一份收发日志，不单独成页  -->
+                <materialDesign:Card
+                    Grid.Row="4"
+                    Padding="16"
+                    UniformCornerRadius="12">
+                    <DockPanel>
+                        <Grid Margin="0,0,0,10" DockPanel.Dock="Top">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Style="{StaticResource SectionTitle}"
+                                Text="通讯日志" />
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="12,0,0,0"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Border
+                                    Padding="4,1"
+                                    Background="{DynamicResource Brush.Warning.Soft}"
+                                    CornerRadius="4">
+                                    <TextBlock
+                                        FontSize="10"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource Brush.Warning}"
+                                        Text="TX" />
+                                </Border>
+                                <TextBlock
+                                    Margin="4,0,12,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Consolas"
+                                    FontSize="11"
+                                    Text="{Binding TxCountText}" />
+                                <Border
+                                    Padding="4,1"
+                                    Background="{DynamicResource Brush.Info.Soft}"
+                                    CornerRadius="4">
+                                    <TextBlock
+                                        FontSize="10"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource Brush.Info}"
+                                        Text="RX" />
+                                </Border>
+                                <TextBlock
+                                    Margin="4,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Consolas"
+                                    FontSize="11"
+                                    Text="{Binding RxCountText}" />
+                            </StackPanel>
+                            <Button
+                                Grid.Column="2"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Command="{Binding ClearLogCommand}"
+                                Content="清空"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" />
+                        </Grid>
+
+                        <WrapPanel
+                            Margin="0,0,0,8"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <ComboBox
+                                Width="86"
+                                VerticalAlignment="Center"
+                                ItemsSource="{Binding LogLevelOptions}"
+                                SelectedItem="{Binding LogLevelFilter, Mode=TwoWay}"
+                                Style="{StaticResource DmCombo}"
+                                ToolTip="日志级别过滤" />
+                            <TextBox
+                                Width="130"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                materialDesign:HintAssist.Hint="关键字"
+                                Style="{StaticResource DmInput}"
+                                Text="{Binding LogKeyword, UpdateSourceTrigger=PropertyChanged}" />
+                            <CheckBox
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                Content="自动滚动"
+                                IsChecked="{Binding AutoScrollLog}" />
+                            <Button
+                                Margin="8,0,0,0"
+                                Command="{Binding ExportLogCommand}"
+                                Content="导出"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" />
+                            <Button
+                                Margin="8,0,0,0"
+                                Command="{Binding ResetCountersCommand}"
+                                Content="归零"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                ToolTip="TX / RX 计数归零" />
+                        </WrapPanel>
+
+                        <ListBox
+                            x:Name="LogList"
+                            FontFamily="Consolas"
+                            ItemsSource="{Binding Logs}"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            VirtualizingPanel.ScrollUnit="Pixel">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="4,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="76" />
+                                            <ColumnDefinition Width="40" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" MinWidth="90" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            VerticalAlignment="Top"
+                                            FontSize="11"
+                                            Opacity="0.6"
+                                            Text="{Binding TimeText}" />
+                                        <Border Grid.Column="1" Style="{StaticResource LogLevelBadge}">
+                                            <TextBlock
+                                                FontSize="10"
+                                                FontWeight="SemiBold"
+                                                Style="{StaticResource LogLevelText}"
+                                                Text="{Binding LevelText}" />
+                                        </Border>
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            MaxWidth="120"
+                                            VerticalAlignment="Top"
+                                            FontSize="11"
+                                            Opacity="0.75"
+                                            Text="{Binding Source}"
+                                            TextTrimming="CharacterEllipsis"
+                                            ToolTip="{Binding Source}" />
+                                        <TextBlock
+                                            Grid.Column="3"
+                                            Margin="6,0,0,0"
+                                            FontSize="12"
+                                            Text="{Binding Message}"
+                                            TextWrapping="Wrap"
+                                            ToolTip="{Binding Message}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </materialDesign:Card>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

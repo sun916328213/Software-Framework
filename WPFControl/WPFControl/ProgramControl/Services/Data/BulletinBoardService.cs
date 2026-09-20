@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WPFControl.ProgramControl.Models;
 using Prism.Ioc;
-using Extension.Core.ConvertEx;
+using Extension.Core.Conversion;
 using System.Collections.ObjectModel;
 using WPFControl.CustomControl.Models;
 using System.ComponentModel;

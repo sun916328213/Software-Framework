@@ -1,10 +1,12 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using DataManager.Log;
 using DataManager.Log.Definition;
 using DryIoc;
-using Extension.Struct;
+using Extension.Core.Models;
+using Extension.Imaging.Models;
+using Extension.Automation.Device;
 using Prism.DryIoc;
 using Prism.Ioc;
 using WPFControl.Helper;

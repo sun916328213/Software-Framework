@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Linq;
-using Extension.Core.CompareEx;
-using Extension.Core.ConvertEx;
-using Extension.Core.EnumEx;
+using Extension.Core.Comparison;
+using Extension.Core.Conversion;
+using Extension.Core.Enums;
 using Xunit;
 
 namespace Extension.Tests
