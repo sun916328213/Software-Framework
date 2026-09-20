@@ -44,7 +44,7 @@ public sealed class CommunicationSessionService : IDisposable
 
     /// <summary>
     /// 任一设备被动收到数据（原始字节 + 对端地址），在 UI 线程之外触发。
-    /// 日志与响应框都从这一条路径取数，避免界面上"收到了但看不见"。
+    /// 统一记入通讯日志，界面只看日志一处。
     /// </summary>
     public event Action<ICommunicationDevice, byte[], string?>? DataObserved;
 
@@ -274,7 +274,7 @@ public sealed class CommunicationSessionService : IDisposable
         }
     }
 
-    /// <summary>收到数据的统一出口：日志按显示格式截断，界面拿原始字节。</summary>
+    /// <summary>收到数据的统一出口：记通讯日志，界面从日志看全文。</summary>
     private void ObserveData(ICommunicationDevice device, byte[] data, string? remoteAddress)
     {
         _log.Rx(device.DeviceName, FormatData(data, remoteAddress));
@@ -286,7 +286,7 @@ public sealed class CommunicationSessionService : IDisposable
         string body;
         if (data.Length == 0)
         {
-            body = string.Empty;
+            body = "(空响应)";
         }
         else if (ReceiveDisplayFormat == "文本")
         {
@@ -297,8 +297,7 @@ public sealed class CommunicationSessionService : IDisposable
             body = BitConverter.ToString(data).Replace("-", " ");
         }
 
-        var text = body.Length > 128 ? body[..128] + "…" : body;
-        return string.IsNullOrEmpty(remoteAddress) ? text : $"{text}  ({remoteAddress})";
+        return string.IsNullOrEmpty(remoteAddress) ? body : $"{body}  ({remoteAddress})";
     }
 
     public void Dispose()

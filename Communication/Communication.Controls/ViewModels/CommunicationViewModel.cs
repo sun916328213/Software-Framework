@@ -11,7 +11,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
-using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
 using Extension.UI.Theme;
@@ -22,7 +21,7 @@ namespace Communication.Controls.ViewModels;
 /// <summary>
 /// 通讯测试页视图模型：设备列表 + 连接控制 + 地址读写 + 原始收发 + 通讯日志。
 /// 全部 IO 只经 <see cref="CommunicationSessionService"/>（其下就是 CommunicationNew 一套接口），
-/// 因此整个工作台只有这一个页面。
+/// 输出只有通讯日志一处（接收数据页签已合并进日志的 RX 记录）。
 /// </summary>
 public sealed partial class CommunicationViewModel : ObservableObject
 {
@@ -34,14 +33,6 @@ public sealed partial class CommunicationViewModel : ObservableObject
     private CancellationTokenSource? _operationCts;
     private long _rxCount;
     private long _txCount;
-
-    /// <summary>
-    /// 接收窗口历史（调试助手式累积显示，最多保留 200 条）。
-    /// 按设备分组保存：切走再切回来不该把这台设备收到的数据弄丢。
-    /// </summary>
-    private readonly List<(string DeviceId, DateTime Time, string Context, byte[] Data)> _receiveEntries = [];
-
-    private const int MaxReceiveEntries = 200;
 
     [ObservableProperty]
     private DeviceViewModel? selectedDevice;
@@ -56,29 +47,7 @@ public sealed partial class CommunicationViewModel : ObservableObject
     private string payload = "00";
 
     [ObservableProperty]
-    private string response = string.Empty;
-
-    [ObservableProperty]
     private bool autoScrollLog = true;
-
-    [ObservableProperty]
-    private bool autoScrollReceive = true;
-
-    /// <summary>
-    /// 输出区看哪个页签：true=接收数据，false=通讯日志。
-    /// 同一份 RX 内容以前在两个窗口各显示一遍，用户得先决定看哪个；合成一页就不用了。
-    /// </summary>
-    [ObservableProperty]
-    private bool outputShowsData = true;
-
-    /// <summary>有 setter 是因为 RadioButton.IsChecked 默认双向绑定，只读属性会被绑定报回写失败。</summary>
-    public bool OutputShowsLog
-    {
-        get => !OutputShowsData;
-        set => OutputShowsData = !value;
-    }
-
-    partial void OnOutputShowsDataChanged(bool value) => OnPropertyChanged(nameof(OutputShowsLog));
 
     [ObservableProperty]
     private bool useHex;
@@ -107,6 +76,18 @@ public sealed partial class CommunicationViewModel : ObservableObject
     [ObservableProperty]
     private string logLevelFilter = "全部";
 
+    [ObservableProperty]
+    private string logDeviceFilter = "全部";
+
+    /// <summary>日志是否跟随左侧选中设备：选中即只看该设备的日志，效果等同“一个设备一个日志”。手动改设备下拉会自动取消跟随。</summary>
+    [ObservableProperty]
+    private bool followSelectedDevice = true;
+
+    private bool _syncingDeviceFilter;
+
+    /// <summary>日志按设备过滤的下拉选项：替代原来接收数据页的按设备隔离。</summary>
+    public IReadOnlyList<string> LogDeviceOptions => ["全部", "Session", .. Devices.Select(d => d.Name).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct()];
+
     // ===== 发送便捷：循环发送 + 历史报文 =====
 
     [ObservableProperty]
@@ -132,11 +113,14 @@ public sealed partial class CommunicationViewModel : ObservableObject
 
         _log.RxReceived += OnRxCounted;
         _log.TxReceived += OnTxCounted;
-        _session.DataObserved += OnSessionDataObserved;
 
         _session.ReceiveDisplayFormat = UseHex ? "HEX" : "文本";
 
-        Devices.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasDevices));
+        Devices.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(HasDevices));
+            OnPropertyChanged(nameof(LogDeviceOptions));
+        };
 
         LogLevelOptions = ["全部", "INFO", "OK", "WARN", "FAIL", "RX", "TX"];
         _logView = CollectionViewSource.GetDefaultView(Logs);
@@ -152,75 +136,6 @@ public sealed partial class CommunicationViewModel : ObservableObject
 
     /// <summary>地址提示：随选中设备的协议变化。</summary>
     public string AddressHint => SelectedDevice?.Info.AddressHint ?? "-";
-
-    /// <summary>
-    /// 响应框空时叠在框里的说明：不写就分不清"没收到"和"界面坏了"。
-    /// 帧协议（Modbus / MC / OPC UA / HTTP）不会主动推数据，这里如果照抄"对端推的会显示"，
-    /// 用户对着网络调试助手发字节就会一直等一个永远不会来的响应。
-    /// </summary>
-    public string ResponsePlaceholder => Response.Length > 0
-        ? string.Empty
-        : SelectedDevice is not { } device
-            ? "暂无数据：先在左侧选一台设备（或新建一台）。"
-            : DeviceSupportsRaw
-                ? "暂无数据：点「发送」发原始字节，对端主动推来的字节会直接显示在这里。"
-                : $"暂无数据：点「读取」按地址取数。{device.Protocol} 是按帧应答的协议，只发字节给对端不会有任何数据显示。";
-
-    partial void OnResponseChanged(string value)
-    {
-        OnPropertyChanged(nameof(ResponsePlaceholder));
-        OnPropertyChanged(nameof(ResponseBytes));
-    }
-
-    /// <summary>接收窗口现在显示的是哪台设备的记录（记录按设备分开保存）。</summary>
-    public string ReceiveOwner => SelectedDevice is not { } device
-        ? "· 未选择设备"
-        : string.IsNullOrWhiteSpace(device.Name) ? string.Empty : $"· {device.Name}";
-
-    /// <summary>接收窗口统计（当前设备的累计条数 + 字节数，清空时收起）。</summary>
-    public string ResponseBytes => CurrentReceiveEntries() is { Count: > 0 } entries
-        ? $"{entries.Count} 条 · {entries.Sum(e => e.Data.Length)} 字节"
-        : string.Empty;
-
-    private List<(string DeviceId, DateTime Time, string Context, byte[] Data)> CurrentReceiveEntries() =>
-        SelectedDevice is not { } device
-            ? []
-            : _receiveEntries.Where(e => e.DeviceId == device.Id).ToList();
-
-    /// <summary>追加一条接收记录并刷新窗口（读取响应 / 收发应答 / 对端推送都走这里）。</summary>
-    private void AppendReceive(string context, byte[] data)
-    {
-        if (SelectedDevice is not { } device)
-        {
-            return;
-        }
-
-        _receiveEntries.Add((device.Id, DateTime.Now, context, data));
-        while (_receiveEntries.Count > MaxReceiveEntries)
-        {
-            _receiveEntries.RemoveAt(0);
-        }
-
-        RebuildReceiveText();
-    }
-
-    /// <summary>按当前 HEX 开关重渲染接收窗口（切换显示格式或切换设备时都从这里重建）。</summary>
-    private void RebuildReceiveText()
-    {
-        Response = string.Join("\n", CurrentReceiveEntries().Select(e =>
-            $"[{e.Time:HH:mm:ss}] {e.Context}\n{(e.Data.Length > 0 ? ToDisplay(e.Data) : "(空响应)")}"));
-    }
-
-    /// <summary>只清当前设备的接收记录，别的设备还在收。</summary>
-    private void ClearReceiveHistory()
-    {
-        if (SelectedDevice is { } device)
-        {
-            _receiveEntries.RemoveAll(e => e.DeviceId == device.Id);
-        }
-
-        RebuildReceiveText();
-    }
 
     /// <summary>地址读写能力：IAddressReader + 协议目录双重判定，避免 TCP/UDP/串口伪装成功。</summary>
     public bool DeviceSupportsAddress => SelectedDevice is not null
@@ -250,7 +165,7 @@ public sealed partial class CommunicationViewModel : ObservableObject
     /// <summary>收发区底部说明：能干活时讲格式与广播，不能干活时讲为什么不能干。</summary>
     public string BottomNotice => RawNotice.Length > 0
         ? RawNotice
-        : "内容格式跟随右上角 HEX 开关；对端主动推来的数据按时间追加到下方「接收数据」窗口。服务端设备的发送是广播，当前没有客户端连着时不会送达任何对端。";
+        : "内容格式跟随右上角 HEX 开关；对端主动推来的数据按时间追加到下方「通讯日志」（RX 记录，显示全文）。服务端设备的发送是广播，当前没有客户端连着时不会送达任何对端。";
 
     /// <summary>操作区标题：按协议切换，地址协议只谈读写、字节流协议只谈收发。</summary>
     public string OperationTitle => SelectedDevice is not { } device
@@ -377,7 +292,20 @@ public sealed partial class CommunicationViewModel : ObservableObject
     {
         // 换设备后继续对旧设备发帧是没人预期的行为，先停掉上一台留下的循环。
         CancelLoopSend("切换设备");
-        RebuildReceiveText();
+
+        // 跟随模式下切设备即切日志：一个设备对应一份日志视图。
+        if (FollowSelectedDevice)
+        {
+            _syncingDeviceFilter = true;
+            try
+            {
+                LogDeviceFilter = value?.Name ?? "全部";
+            }
+            finally
+            {
+                _syncingDeviceFilter = false;
+            }
+        }
 
         OnPropertyChanged(nameof(AddressHint));
         OnPropertyChanged(nameof(DeviceSupportsAddress));
@@ -394,8 +322,6 @@ public sealed partial class CommunicationViewModel : ObservableObject
         OnPropertyChanged(nameof(SupportsLoop));
         OnPropertyChanged(nameof(RawNotice));
         OnPropertyChanged(nameof(BottomNotice));
-        OnPropertyChanged(nameof(ResponsePlaceholder));
-        OnPropertyChanged(nameof(ReceiveOwner));
         ApplyProtocolAddressHint();
         RaiseCommandStates();
     }
@@ -403,13 +329,41 @@ public sealed partial class CommunicationViewModel : ObservableObject
     partial void OnUseHexChanged(bool value)
     {
         _session.ReceiveDisplayFormat = value ? "HEX" : "文本";
-        RebuildReceiveText();
         OnPropertyChanged(nameof(WriteLengthHint));
     }
 
     partial void OnLogLevelFilterChanged(string value) => _logView.Refresh();
 
     partial void OnLogKeywordChanged(string value) => _logView.Refresh();
+
+    partial void OnLogDeviceFilterChanged(string value)
+    {
+        // 手动改设备下拉视为退出跟随；程序自动跟随选中设备时不退出。
+        if (!_syncingDeviceFilter && FollowSelectedDevice
+            && !string.Equals(value, SelectedDevice?.Name, StringComparison.Ordinal))
+        {
+            FollowSelectedDevice = false;
+        }
+
+        _logView.Refresh();
+    }
+
+    partial void OnFollowSelectedDeviceChanged(bool value)
+    {
+        // 重新勾选跟随时立刻对齐到当前选中设备。
+        if (value && SelectedDevice is { } device)
+        {
+            _syncingDeviceFilter = true;
+            try
+            {
+                LogDeviceFilter = device.Name;
+            }
+            finally
+            {
+                _syncingDeviceFilter = false;
+            }
+        }
+    }
 
     // ===== 命令 =====
 
@@ -658,24 +612,6 @@ public sealed partial class CommunicationViewModel : ObservableObject
     }
 
 
-    /// <summary>清空接收窗口（响应文本与字节计数一起收起）。</summary>
-    [RelayCommand]
-    private void ClearResponse()
-    {
-        ClearReceiveHistory();
-        LastElapsed = "-";
-    }
-
-    /// <summary>复制接收窗口文本到剪贴板（空时不动作）。</summary>
-    [RelayCommand]
-    private void CopyResponse()
-    {
-        if (!string.IsNullOrEmpty(Response))
-        {
-            Clipboard.SetText(Response);
-        }
-    }
-
     [RelayCommand]
     private void ClearLog() => _log.Clear();
 
@@ -834,7 +770,6 @@ public sealed partial class CommunicationViewModel : ObservableObject
             var data = await reader.ReadAsync(address, length, ct);
             sw.Stop();
             LastElapsed = $"{sw.ElapsedMilliseconds} ms";
-            AppendReceive($"读取 {address}×{length} · {sw.ElapsedMilliseconds} ms", data);
             _log.Success(device.Name, $"读取 {address}×{length} → {data.Length} 字节, {sw.ElapsedMilliseconds} ms");
             _log.Rx(device.Name, data.Length == 0 ? "(空响应)" : ToDisplay(data));
         });
@@ -906,12 +841,6 @@ public sealed partial class CommunicationViewModel : ObservableObject
             var response = await client.SendAndReceiveAsync(payload, ct);
             sw.Stop();
             LastElapsed = $"{sw.ElapsedMilliseconds} ms";
-            // 同一批字节 CommunicationNew 既交给等待中的请求、又写进收件箱；
-            // 有收件箱的设备由排空路径显示，这里再追加一次就会出现两条一模一样的回复。
-            if (device.Device is not IReceiveSource<ReceivedPacket>)
-            {
-                AppendReceive($"收发应答 · {sw.ElapsedMilliseconds} ms", response);
-            }
 
             _log.Tx(device.Name, ToDisplay(payload));
             _log.Rx(device.Name, $"{(response.Length == 0 ? "(空响应)" : ToDisplay(response))} ({sw.ElapsedMilliseconds} ms)");
@@ -991,6 +920,11 @@ public sealed partial class CommunicationViewModel : ObservableObject
     {
         var online = Devices.Count(d => d.IsConnected);
         DeviceSummary = $"设备 {Devices.Count} · 在线 {online}";
+        OnPropertyChanged(nameof(LogDeviceOptions));
+        if (LogDeviceFilter != "全部" && !LogDeviceOptions.Contains(LogDeviceFilter))
+        {
+            LogDeviceFilter = "全部";
+        }
     }
 
     /// <summary>CommunityToolkit 命令不挂 CommandManager，能力位变化后要手工刷新可用态。</summary>
@@ -1044,6 +978,11 @@ public sealed partial class CommunicationViewModel : ObservableObject
             return false;
         }
 
+        if (LogDeviceFilter != "全部" && !string.Equals(entry.Source, LogDeviceFilter, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
         if (!string.IsNullOrWhiteSpace(LogKeyword))
         {
             var keyword = LogKeyword.Trim();
@@ -1072,25 +1011,6 @@ public sealed partial class CommunicationViewModel : ObservableObject
 
         payload = Encoding.UTF8.GetBytes(input);
         return true;
-    }
-
-    /// <summary>被动接收也进响应框：否则对端主动推数据时界面上只有日志，看着像没收到。</summary>
-    private void OnSessionDataObserved(ICommunicationDevice device, byte[] data, string? remoteAddress)
-    {
-        if (SelectedDevice?.Device != device)
-        {
-            return;
-        }
-
-        DispatcherEx.UIInvokeSafe(() =>
-        {
-            var from = string.IsNullOrWhiteSpace(device.DeviceName)
-                ? remoteAddress
-                : string.IsNullOrWhiteSpace(remoteAddress)
-                    ? device.DeviceName
-                    : $"{device.DeviceName} ({remoteAddress})";
-            AppendReceive($"接收 ← {from}", data);
-        });
     }
 
     private void OnRxCounted(string source, string message) =>

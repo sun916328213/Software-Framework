@@ -32,12 +32,5 @@ public partial class CommunicationView : UserControl
                 LogList.ScrollIntoView(e.NewItems![^1]);
             }
         };
-        ReceiveBox.TextChanged += (_, _) =>
-        {
-            if (vm.AutoScrollReceive)
-            {
-                ReceiveBox.ScrollToEnd();
-            }
-        };
     }
 }

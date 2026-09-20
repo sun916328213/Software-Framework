@@ -43,6 +43,8 @@
                 x:Key="DangerButton"
                 BasedOn="{StaticResource MaterialDesignRaisedButton}"
                 TargetType="Button">
+                <Setter Property="Margin" Value="8" />
+                <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8" />
                 <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.ValidationError}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.ValidationError}" />
                 <Setter Property="Foreground" Value="{DynamicResource Brush.OnDanger}" />
@@ -58,7 +60,8 @@
                 x:Key="QuietButton"
                 BasedOn="{StaticResource MaterialDesignOutlinedButton}"
                 TargetType="Button">
-                <Setter Property="Margin" Value="0,0,8,8" />
+                <Setter Property="Margin" Value="8" />
+                <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8" />
                 <Setter Property="MinWidth" Value="88" />
                 <Style.Triggers>
                     <Trigger Property="IsEnabled" Value="False">
@@ -75,6 +78,8 @@
                 x:Key="ActionSolid"
                 BasedOn="{StaticResource MaterialDesignRaisedButton}"
                 TargetType="Button">
+                <Setter Property="Margin" Value="8" />
+                <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8" />
                 <Setter Property="MinWidth" Value="76" />
                 <Style.Triggers>
                     <Trigger Property="IsEnabled" Value="False">
@@ -86,6 +91,8 @@
                 x:Key="ActionGhost"
                 BasedOn="{StaticResource MaterialDesignOutlinedButton}"
                 TargetType="Button">
+                <Setter Property="Margin" Value="8" />
+                <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8" />
                 <Setter Property="MinWidth" Value="76" />
                 <Style.Triggers>
                     <Trigger Property="IsEnabled" Value="False">
@@ -103,9 +110,7 @@
                     </Grid.ColumnDefinitions>
                     <Border
                         Grid.Column="0"
-                        Width="30"
-                        Height="30"
-                        Margin="0,0,10,0"
+                        Margin="2"
                         VerticalAlignment="Center"
                         Background="{DynamicResource MaterialDesign.Brush.Primary.Background}"
                         CornerRadius="8">
@@ -117,7 +122,10 @@
                             Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
                             Kind="{Binding ProtocolIcon}" />
                     </Border>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <StackPanel
+                        Grid.Column="1"
+                        Margin="6,0"
+                        VerticalAlignment="Center">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -253,7 +261,10 @@
                             Style="{StaticResource SectionTitle}"
                             Text="通讯设备" />
                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                            <Button Command="{Binding AddDeviceCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
+                            <Button
+                                materialDesign:ButtonAssist.CornerRadius="8"
+                                Command="{Binding AddDeviceCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon VerticalAlignment="Center" Kind="Plus" />
                                     <TextBlock Margin="6,0,0,0" Text="新建" />
@@ -263,6 +274,7 @@
                             <Button
                                 Margin="6,0,0,0"
                                 Padding="8,0"
+                                materialDesign:ButtonAssist.CornerRadius="8"
                                 Command="{Binding EditDeviceCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
                                 ToolTip="编辑选中设备的参数">
@@ -302,32 +314,30 @@
                         平时它是一个永远点不动的灰按钮，占掉一格还让人以为少了功能。
                     -->
                     <StackPanel Margin="0,8,0,0" DockPanel.Dock="Bottom">
-                        <Button
-                            Height="28"
-                            Margin="0,0,0,6"
-                            HorizontalContentAlignment="Left"
-                            Command="{Binding CancelOperationCommand}"
-                            Content="取消当前操作"
-                            FontSize="11"
-                            Style="{StaticResource QuietButton}"
-                            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
-                        <UniformGrid Columns="3">
+
+                        <UniformGrid Columns="2">
+
                             <Button
-                                Margin="3"
+                                Margin="5"
                                 Command="{Binding ConnectCommand}"
                                 Content="连接"
                                 Style="{StaticResource ActionSolid}"
                                 ToolTip="连接当前选中的设备" />
                             <Button
-                                Margin="3"
+                                Margin="5"
                                 Command="{Binding DisconnectCommand}"
                                 Content="断开"
                                 Style="{StaticResource QuietButton}" />
                             <Button
-                                Margin="3"
+                                Margin="5"
                                 Command="{Binding RemoveCommand}"
                                 Content="移除"
                                 Style="{StaticResource DangerButton}" />
+                            <Button
+                                Margin="5"
+                                Command="{Binding CancelOperationCommand}"
+                                Content="取消当前操作"
+                                Style="{StaticResource QuietButton}" />
                         </UniformGrid>
                     </StackPanel>
 
@@ -399,12 +409,12 @@
                 </DockPanel>
             </materialDesign:Card>
 
-            <!--  右栏：上操作区 + 下输出区（接收数据 / 通讯日志合成一页），可拖拽高度  -->
+            <!--  右栏：上操作区 + 下输出区（通讯日志），可拖拽高度  -->
             <Grid Grid.Column="2" Margin="10,0,0,0">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="5*" MinHeight="330" />
+                    <RowDefinition Height="4*" MinHeight="330" />
                     <RowDefinition Height="10" />
-                    <RowDefinition Height="4*" MinHeight="240" />
+                    <RowDefinition Height="5*" MinHeight="260" />
                 </Grid.RowDefinitions>
 
                 <GridSplitter
@@ -512,7 +522,6 @@
                                     <TextBox
                                         Grid.Row="2"
                                         Grid.Column="0"
-                                        MinHeight="34"
                                         Style="{StaticResource DmInput}"
                                         Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}"
                                         ToolTip="{Binding AddressDetailHint}" />
@@ -534,7 +543,7 @@
                                         Content="读取"
                                         FontSize="11"
                                         Style="{StaticResource ActionSolid}"
-                                        ToolTip="按左侧地址与读取长度取数，结果显示在下方「接收数据」" />
+                                        ToolTip="按左侧地址与读取长度取数，结果记入下方「通讯日志」（RX 记录）" />
 
                                     <TextBlock
                                         Grid.Row="4"
@@ -545,8 +554,6 @@
                                         Grid.Row="6"
                                         Grid.Column="0"
                                         Grid.ColumnSpan="3"
-                                        MinHeight="34"
-                                        MaxHeight="80"
                                         VerticalContentAlignment="Center"
                                         AcceptsReturn="True"
                                         FontFamily="Consolas"
@@ -566,11 +573,7 @@
                                         Style="{StaticResource ActionGhost}"
                                         ToolTip="写入到上方那个地址" />
                                 </Grid>
-                                <TextBlock
-                                    Margin="0,6,0,0"
-                                    Style="{StaticResource HintText}"
-                                    Text="{Binding AddressHint, StringFormat=地址样例：{0}}"
-                                    ToolTip="{Binding AddressDetailHint}" />
+
                                 <TextBlock
                                     Margin="0,2,0,0"
                                     Style="{StaticResource HintText}"
@@ -593,6 +596,7 @@
                                     <!--  回车发送：按 Enter 直接触发发送，不用再去点按钮  -->
                                     <TextBox
                                         Grid.Column="0"
+                                        Height="38"
                                         VerticalContentAlignment="Center"
                                         AcceptsReturn="True"
                                         FontFamily="Consolas"
@@ -626,6 +630,7 @@
                                     </StackPanel>
                                 </Grid>
                                 <StackPanel
+                                    Height="38"
                                     Margin="0,6,0,0"
                                     Orientation="Horizontal"
                                     ToolTip="已发送过的报文（最新在前），选中即填入上方发送框">
@@ -656,6 +661,7 @@
                                 Visibility="{Binding SupportsLoop, Converter={StaticResource BoolToVis}}">
                                 <TextBlock Style="{StaticResource GroupTitle}" Text="{Binding LoopTitle}" />
                                 <StackPanel
+                                    Height="38"
                                     Margin="0,6,0,0"
                                     Orientation="Horizontal"
                                     ToolTip="按间隔反复执行当前协议的主动作">
@@ -709,95 +715,33 @@
                     </ScrollViewer>
                 </materialDesign:Card>
 
-                <!--
-                    输出区：接收数据与通讯日志合成一张卡片的两个页签。
-                    以前同一帧 RX 在两个窗口各显示一遍，还各带一套清空/滚动工具栏，用户得先决定该看哪个。
-                -->
+                <!--  输出区：只有通讯日志。读取/收发应答/被动推送统一记为 RX（含全文），不再另设接收窗口。  -->
                 <materialDesign:Card
                     Grid.Row="2"
                     Padding="12"
                     UniformCornerRadius="12">
                     <DockPanel>
-                        <!--  页签行：左边选看哪一份，右边只放当前这一份的动作  -->
+                        <!--  标题行：左边标题，右边计数与动作  -->
                         <Grid Margin="0,0,0,8" DockPanel.Dock="Top">
-                            <StackPanel Orientation="Horizontal">
-                                <RadioButton
+                            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                <TextBlock
                                     VerticalAlignment="Center"
-                                    Content="接收数据"
-                                    FontSize="12"
-                                    IsChecked="{Binding OutputShowsData}"
-                                    ToolTip="只看收到的数据，按当前设备分开累积" />
-                                <RadioButton
-                                    Margin="14,0,0,0"
-                                    VerticalAlignment="Center"
-                                    Content="通讯日志"
-                                    FontSize="12"
-                                    IsChecked="{Binding OutputShowsLog}"
-                                    ToolTip="连接、收发、错误混排的事件时间线，可导出" />
+                                    Style="{StaticResource SectionTitle}"
+                                    Text="通讯日志"
+                                    ToolTip="连接、收发、错误混排的事件时间线，可导出；RX 为全文显示" />
                             </StackPanel>
 
                             <StackPanel
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
-                                Orientation="Horizontal"
-                                Visibility="{Binding OutputShowsData, Converter={StaticResource BoolToVis}}">
-                                <!--  接收记录按设备分开存，先说明现在看的是哪一台、几条多少字节  -->
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    Style="{StaticResource HintText}"
-                                    Text="{Binding ReceiveOwner}" />
-                                <TextBlock
-                                    Margin="8,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontFamily="Consolas"
-                                    FontSize="11"
-                                    Opacity="0.7"
-                                    Text="{Binding ResponseBytes}"
-                                    Visibility="{Binding ResponseBytes, Converter={StaticResource NonEmptyStringToVis}}" />
-                                <CheckBox
-                                    Margin="8,0,0,0"
-                                    VerticalAlignment="Center"
-                                    Content="自动滚动"
-                                    FontSize="11"
-                                    IsChecked="{Binding AutoScrollReceive}"
-                                    ToolTip="新数据到达时自动滚到底部" />
-                                <Button
-                                    Width="28"
-                                    Height="26"
-                                    Margin="8,0,0,0"
-                                    Padding="0"
-                                    Command="{Binding ClearResponseCommand}"
-                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                    ToolTip="清空当前设备的接收记录（其它设备的不动）">
-                                    <materialDesign:PackIcon
-                                        Width="15"
-                                        Height="15"
-                                        Kind="DeleteSweepOutline" />
-                                </Button>
-                                <Button
-                                    Width="28"
-                                    Height="26"
-                                    Padding="0"
-                                    Command="{Binding CopyResponseCommand}"
-                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                    ToolTip="复制接收窗口文本到剪贴板">
-                                    <materialDesign:PackIcon
-                                        Width="15"
-                                        Height="15"
-                                        Kind="ContentCopy" />
-                                </Button>
-                            </StackPanel>
-
-                            <StackPanel
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Orientation="Horizontal"
-                                Visibility="{Binding OutputShowsLog, Converter={StaticResource BoolToVis}}">
+                                Orientation="Horizontal">
                                 <Border
+                                    Height="20"
                                     Padding="4,1"
                                     Background="{DynamicResource Brush.Warning.Soft}"
                                     CornerRadius="4">
                                     <TextBlock
+                                        VerticalAlignment="Center"
                                         FontSize="10"
                                         FontWeight="SemiBold"
                                         Foreground="{DynamicResource Brush.Warning}"
@@ -810,10 +754,12 @@
                                     FontSize="11"
                                     Text="{Binding TxCountText}" />
                                 <Border
+                                    Height="20"
                                     Padding="4,1"
                                     Background="{DynamicResource Brush.Info.Soft}"
                                     CornerRadius="4">
                                     <TextBlock
+                                        VerticalAlignment="Center"
                                         FontSize="10"
                                         FontWeight="SemiBold"
                                         Foreground="{DynamicResource Brush.Info}"
@@ -855,124 +801,46 @@
                                     ToolTip="TX / RX 计数归零" />
                             </StackPanel>
                         </Grid>
-                        <Grid>
-                            <TextBox
-                                x:Name="ReceiveBox"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                Style="{StaticResource OutputBox}"
-                                Text="{Binding Response, Mode=OneWay}" />
-                            <TextBlock
-                                Margin="6,4,6,0"
-                                VerticalAlignment="Top"
-                                FontSize="11"
-                                IsHitTestVisible="False"
-                                Opacity="0.5"
-                                Text="{Binding ResponsePlaceholder}"
-                                TextWrapping="Wrap" />
-                        </Grid>
-                    </DockPanel>
-                </materialDesign:Card>
-
-                <!--  通讯日志：全工作台共用一份收发日志，不单独成页  -->
-                <materialDesign:Card
-                    Grid.Row="4"
-                    Padding="16"
-                    UniformCornerRadius="12">
-                    <DockPanel>
-                        <Grid Margin="0,0,0,10" DockPanel.Dock="Top">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Style="{StaticResource SectionTitle}"
-                                Text="通讯日志" />
-                            <StackPanel
-                                Grid.Column="1"
-                                Margin="12,0,0,0"
-                                VerticalAlignment="Center"
-                                Orientation="Horizontal">
-                                <Border
-                                    Padding="4,1"
-                                    Background="{DynamicResource Brush.Warning.Soft}"
-                                    CornerRadius="4">
-                                    <TextBlock
-                                        FontSize="10"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource Brush.Warning}"
-                                        Text="TX" />
-                                </Border>
-                                <TextBlock
-                                    Margin="4,0,12,0"
-                                    VerticalAlignment="Center"
-                                    FontFamily="Consolas"
-                                    FontSize="11"
-                                    Text="{Binding TxCountText}" />
-                                <Border
-                                    Padding="4,1"
-                                    Background="{DynamicResource Brush.Info.Soft}"
-                                    CornerRadius="4">
-                                    <TextBlock
-                                        FontSize="10"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource Brush.Info}"
-                                        Text="RX" />
-                                </Border>
-                                <TextBlock
-                                    Margin="4,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontFamily="Consolas"
-                                    FontSize="11"
-                                    Text="{Binding RxCountText}" />
-                            </StackPanel>
-                            <Button
-                                Grid.Column="2"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Command="{Binding ClearLogCommand}"
-                                Content="清空"
-                                Style="{StaticResource MaterialDesignOutlinedButton}" />
-                        </Grid>
-
+                        <!--  过滤行：级别 + 设备 + 关键字  -->
                         <WrapPanel
                             Margin="0,0,0,8"
                             DockPanel.Dock="Top"
                             Orientation="Horizontal">
                             <ComboBox
                                 Width="86"
+                                Padding="4"
                                 VerticalAlignment="Center"
                                 ItemsSource="{Binding LogLevelOptions}"
                                 SelectedItem="{Binding LogLevelFilter, Mode=TwoWay}"
                                 Style="{StaticResource DmCombo}"
                                 ToolTip="日志级别过滤" />
+                            <ComboBox
+                                Width="130"
+                                Margin="10,0,0,0"
+                                Padding="4"
+                                VerticalAlignment="Center"
+                                ItemsSource="{Binding LogDeviceOptions}"
+                                SelectedItem="{Binding LogDeviceFilter, Mode=TwoWay}"
+                                Style="{StaticResource DmCombo}"
+                                ToolTip="按设备过滤：一个设备对应一份日志视图" />
+                            <CheckBox
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Content="跟随选中设备"
+                                FontSize="11"
+                                IsChecked="{Binding FollowSelectedDevice}"
+                                ToolTip="勾选后左侧切设备，日志自动切到该设备；手动改设备下拉会自动取消勾选" />
                             <TextBox
                                 Width="130"
-                                Margin="8,0,0,0"
+                                Margin="10,0,0,0"
+                                Padding="4"
                                 VerticalAlignment="Center"
                                 materialDesign:HintAssist.Hint="关键字"
                                 Style="{StaticResource DmInput}"
                                 Text="{Binding LogKeyword, UpdateSourceTrigger=PropertyChanged}" />
-                            <CheckBox
-                                Margin="8,0,0,0"
-                                VerticalAlignment="Center"
-                                Content="自动滚动"
-                                IsChecked="{Binding AutoScrollLog}" />
-                            <Button
-                                Margin="8,0,0,0"
-                                Command="{Binding ExportLogCommand}"
-                                Content="导出"
-                                Style="{StaticResource MaterialDesignOutlinedButton}" />
-                            <Button
-                                Margin="8,0,0,0"
-                                Command="{Binding ResetCountersCommand}"
-                                Content="归零"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                ToolTip="TX / RX 计数归零" />
                         </WrapPanel>
 
+                        <!--  日志：连接/收发/错误的事件时间线，RX 为全文  -->
                         <ListBox
                             x:Name="LogList"
                             FontFamily="Consolas"
