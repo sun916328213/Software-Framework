@@ -1,0 +1,24 @@
+[
+  {
+    "date": "2026-09-20",
+    "mode": "Architecture Audit",
+    "score": 94,
+    "findings": {
+      "critical": 0,
+      "warning": 1,
+      "suggestion": 1
+    },
+    "scope": "Device solution: new Device.Core/Runtime/Drivers/Controls/Workbench modules; legacy Device retained for comparison"
+  },
+  {
+    "date": "2026-09-21",
+    "mode": "Architecture Audit",
+    "score": 94,
+    "findings": {
+      "critical": 0,
+      "warning": 1,
+      "suggestion": 1
+    },
+    "scope": "Device.Core, Device.Drivers and their tests; Device.Controls, Device.Workbench and legacy Device excluded by request"
+  }
+]

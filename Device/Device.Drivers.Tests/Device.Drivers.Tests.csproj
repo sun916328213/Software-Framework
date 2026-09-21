@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- 测试项目保持 AnyCPU，与被测试类库的平台策略一致。 -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Device.Core\Device.Core.csproj" />
+    <ProjectReference Include="..\Device.Drivers\Device.Drivers.csproj" />
+    <!-- 与 Device.Drivers 保持一致：仅关闭已知的 64 位 Interop 架构提示，不强制测试进程为 x64。 -->
+    <ProjectReference Include="..\..\Communication\CommunicationNew\CommunicationNew.csproj"
+                      AdditionalProperties="ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch=None" />
+  </ItemGroup>
+</Project>

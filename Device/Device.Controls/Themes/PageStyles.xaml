@@ -1,0 +1,127 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!--
+        Device.Controls 页面样式（CameraView 及 Shared 子控件共用）。
+        与 DataManager.Controls 同一约定：样式归页面所有，由各页面在
+        UserControl.Resources 里自行合并本字典，宿主不替页面合并；
+        BasedOn 的 MD 原生键经宿主 Application.Resources 合并链延迟解析。
+    -->
+
+    <!--  页面标题（前景钉 MD 原生键，深浅切换自动跟随）  -->
+    <Style x:Key="PageTitle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+    </Style>
+    <Style x:Key="PageSubTitle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        <Setter Property="Opacity" Value="0.6" />
+        <Setter Property="Margin" Value="0,4,0,0" />
+    </Style>
+    <Style x:Key="SectionTitle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+    </Style>
+
+    <!--  输入框（MD 默认样式不把主题前景赋到 Foreground 属性，深色下会回落黑色，故显式钉）  -->
+    <Style
+        x:Key="DmInput"
+        BasedOn="{StaticResource MaterialDesignTextBox}"
+        TargetType="TextBox">
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+    </Style>
+
+    <!--  下拉框（控件与弹层前景各钉一次）  -->
+    <Style
+        x:Key="DmCombo"
+        BasedOn="{StaticResource MaterialDesignComboBox}"
+        TargetType="ComboBox">
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        <Style.Resources>
+            <Style TargetType="ComboBoxItem">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+            </Style>
+        </Style.Resources>
+    </Style>
+
+    <!--  表格（单元格文字随原生前景键跟随主题）  -->
+    <Style
+        x:Key="DmGrid"
+        BasedOn="{StaticResource MaterialDesignDataGrid}"
+        TargetType="DataGrid">
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+    </Style>
+
+    <!--  运行输出框（等宽字体跟随主题；ScrollViewer_Style 由 WPFCustomControls 提供）  -->
+    <Style x:Key="OutputBox" TargetType="TextBox">
+        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Background}" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        <Setter Property="FontFamily" Value="Consolas" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="IsReadOnly" Value="True" />
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+        <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                        <ScrollViewer
+                            x:Name="PART_ContentHost"
+                            Margin="12,10"
+                            HorizontalScrollBarVisibility="{TemplateBinding HorizontalScrollBarVisibility}"
+                            Style="{StaticResource ScrollViewer_Style}"
+                            VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--  「断开」按钮压在 ValidationError 底上的 on-color（浅色基准白字）  -->
+    <SolidColorBrush x:Key="Brush.OnDanger" Color="#FFFFFF" />
+
+    <!--
+        控制面板复用样式（CameraView 内联同名样式的共享版）：
+        标签 120 居中、按钮 130 抬起、断开用危险色、表格中文表头前景钉主题。
+    -->
+    <Style
+        x:Key="PanelLabel"
+        BasedOn="{StaticResource MaterialDesignLabel}"
+        TargetType="Label">
+        <Setter Property="Width" Value="120" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style
+        x:Key="PanelButton"
+        BasedOn="{StaticResource MaterialDesignRaisedButton}"
+        TargetType="Button">
+        <Setter Property="Width" Value="130" />
+    </Style>
+
+    <Style
+        x:Key="DangerButton"
+        BasedOn="{StaticResource MaterialDesignRaisedButton}"
+        TargetType="Button">
+        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.ValidationError}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.ValidationError}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnDanger}" />
+    </Style>
+
+    <Style
+        x:Key="DmHeader"
+        BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}"
+        TargetType="DataGridColumnHeader">
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+    </Style>
+
+</ResourceDictionary>

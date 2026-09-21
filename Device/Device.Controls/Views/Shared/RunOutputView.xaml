@@ -1,0 +1,53 @@
+<UserControl
+    x:Class="Device.Controls.Views.Shared.RunOutputView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <!--  页面样式归 Device.Controls 自己所有，由本页自行合并（宿主不替页面合并）  -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Device.Controls;component/Themes/PageStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!--  运行输出卡：输出框 + 耗时 + 清空。绑定走继承来的 DataContext，
+          约定 OutputText / LastElapsed / ClearOutputCommand，无 VM 类型耦合。  -->
+    <materialDesign:Card Padding="16" UniformCornerRadius="12">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Style="{StaticResource SectionTitle}"
+                    Text="运行输出" />
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                    <TextBlock
+                        Margin="0,0,12,0"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        Opacity="0.6"
+                        Text="{Binding LastElapsed, StringFormat='耗时：{0}'}" />
+                    <Button
+                        Command="{Binding ClearOutputCommand}"
+                        Content="清空"
+                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}" />
+                </StackPanel>
+            </Grid>
+            <TextBox
+                Grid.Row="1"
+                Height="{Binding ElementName=Root, Path=OutputHeight}"
+                Margin="0,12,0,0"
+                Style="{StaticResource OutputBox}"
+                Text="{Binding OutputText, Mode=OneWay}" />
+        </Grid>
+    </materialDesign:Card>
+</UserControl>
