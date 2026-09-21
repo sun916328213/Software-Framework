@@ -45,13 +45,14 @@
 
     <!--  卡片容器：底色/描边用 MD 原生动态键，自动跟随主题（别钉写死的 Color_Main）  -->
     <Style x:Key="Border_Style" TargetType="Border">
-        <Setter Property="Margin" Value="2" />
-        <Setter Property="Padding" Value="2" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="12" />
         <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
         <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Card.Border}" />
         <Setter Property="assist:RoundedCornerClipAssist.IsEnabled" Value="True" />
+
     </Style>
 
     <Style
