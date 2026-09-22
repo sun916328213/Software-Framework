@@ -23,7 +23,7 @@ public abstract class DeviceWorkspaceBase<TModel, TProfile>
     protected DeviceWorkspaceBase(IReadOnlyList<DeviceDriverDescriptor> availableDrivers)
     {
         foreach (var descriptor in availableDrivers)
-            Model.Drivers.Add(new DeviceDriverOption(descriptor.Id.Value, descriptor.DisplayName));
+            Model.Drivers.Add(descriptor.Id.Value);
 
         if (Model.Drivers.Count == 0)
             throw new InvalidOperationException($"未注册任何{CategoryName}驱动，无法初始化配置。");
@@ -44,11 +44,11 @@ public abstract class DeviceWorkspaceBase<TModel, TProfile>
     protected abstract IDevice CreateDevice(TProfile profile);
 
     /// <summary>工厂目录中的第一个驱动作为新档案和旧空配置的默认值。</summary>
-    protected string DefaultDriverId => Model.Drivers[0].Value;
+    protected string DefaultDriverId => Model.Drivers[0];
 
     protected IDevice? Device => _device;
 
-    public async Task ConnectAsync()
+    public virtual async Task ConnectAsync()
     {
         var device = await EnsureDeviceAsync(Model.SelectedProfileOrThrow()).ConfigureAwait(false);
         var result = await device.ConnectAsync().ConfigureAwait(false);
@@ -63,7 +63,7 @@ public abstract class DeviceWorkspaceBase<TModel, TProfile>
         });
     }
 
-    public async Task DisconnectAsync()
+    public virtual async Task DisconnectAsync()
     {
         if (_device is null)
             return;

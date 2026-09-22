@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using Basler.Pylon;
 using Device.Core.Cameras;
 using Device.Core.Devices;
+using Device.Drivers.Cameras;
 
 namespace Device.Drivers.Cameras.Basler;
 
@@ -52,9 +53,10 @@ internal sealed class BaslerGigeCamera : Device.Core.Cameras.ICamera
             _camera.StreamGrabber.ImageGrabbed += OnImageGrabbed;
             _camera.Open();
 
+            LoadParameterFile();
             ApplyExposure(Options.ExposureMilliseconds);
             ApplyGain(Options.Gain);
-            ConfigureSoftwareTrigger();
+            ConfigureTriggers();
 
             if (!_camera.Parameters[PLCamera.AcquisitionMode]
                     .TrySetValue(PLCamera.AcquisitionMode.Continuous))
@@ -113,7 +115,8 @@ internal sealed class BaslerGigeCamera : Device.Core.Cameras.ICamera
 
         try
         {
-            camera.ExecuteSoftwareTrigger();
+            if (CameraDriverConfiguration.ShouldExecuteSoftwareTrigger(Options))
+                camera.ExecuteSoftwareTrigger();
 
             using var timeout = new CancellationTokenSource(Options.TimeoutMilliseconds);
             using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
@@ -216,14 +219,36 @@ internal sealed class BaslerGigeCamera : Device.Core.Cameras.ICamera
         throw new InvalidOperationException("Basler 相机不支持可写的增益参数。");
     }
 
-    private void ConfigureSoftwareTrigger()
+    private void LoadParameterFile()
+    {
+        if (Options.ParameterFilePath is null)
+            return;
+
+        GetConnectedCamera().Parameters.Load(Options.ParameterFilePath, ParameterPath.CameraDevice);
+    }
+
+    private void ConfigureTriggers()
     {
         var camera = GetConnectedCamera();
-        if (!camera.Parameters[PLCamera.TriggerMode].TrySetValue(PLCamera.TriggerMode.On))
-            throw new InvalidOperationException("开启 Basler 触发模式失败。");
+        foreach (var binding in CameraDriverConfiguration.GetTriggerBindings(Options))
+        {
+            if (binding.Selector is not null
+                && !camera.Parameters[PLCamera.TriggerSelector].TrySetValue(binding.Selector))
+            {
+                throw new InvalidOperationException($"设置 Basler 触发选择器 '{binding.Selector}' 失败。");
+            }
 
-        if (!camera.Parameters[PLCamera.TriggerSource].TrySetValue(PLCamera.TriggerSource.Software))
-            throw new InvalidOperationException("设置 Basler 软件触发源失败。");
+            var mode = CameraDriverConfiguration.ToGenICamMode(binding.Settings.Mode);
+            if (!camera.Parameters[PLCamera.TriggerMode].TrySetValue(mode))
+                throw new InvalidOperationException($"设置 Basler {binding.Selector ?? "当前"}触发模式失败。");
+
+            if (binding.Settings.Mode == CameraTriggerMode.On
+                && !camera.Parameters[PLCamera.TriggerSource].TrySetValue(binding.Settings.Source))
+            {
+                throw new InvalidOperationException(
+                    $"设置 Basler {binding.Selector ?? "当前"}触发源 '{binding.Settings.Source}' 失败。");
+            }
+        }
     }
 
     private void OnImageGrabbed(object? sender, ImageGrabbedEventArgs eventArgs)

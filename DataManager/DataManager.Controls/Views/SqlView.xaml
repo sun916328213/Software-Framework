@@ -5,7 +5,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:shared="clr-namespace:DataManager.Controls.Views.Shared"
     xmlns:sql="clr-namespace:DataManager.SQL.Definition;assembly=DataManager"
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
     xmlns:viewmodels="clr-namespace:DataManager.Controls.ViewModels"
@@ -73,7 +72,7 @@
             </Grid.RowDefinitions>
 
             <!--  页头  -->
-            <shared:PageHeaderView
+            <wpfcc:PageHeaderView
                 Title="SQL 数据库测试"
                 Grid.Row="0"
                 Grid.Column="0"
@@ -339,11 +338,14 @@
             </materialDesign:Card>
 
             <!--  运行输出  -->
-            <shared:RunOutputView
+            <wpfcc:RunOutputView
                 Grid.Row="3"
                 Grid.Column="2"
                 Margin="0,0,0,12"
-                OutputHeight="210" />
+                ClearCommand="{Binding ClearOutputCommand}"
+                Elapsed="{Binding LastElapsed}"
+                ExportCommand="{Binding ExportOutputCommand}"
+                Text="{Binding OutputText}" />
 
         </Grid>
     </ScrollViewer>

@@ -6,7 +6,6 @@
     xmlns:log="clr-namespace:DataManager.Log.Definition;assembly=DataManager"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:shared="clr-namespace:DataManager.Controls.Views.Shared"
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
     xmlns:wpfcc="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
     d:DesignWidth="1360"
@@ -97,7 +96,7 @@
             </Grid.RowDefinitions>
 
             <!--  页头  -->
-            <shared:PageHeaderView
+            <wpfcc:PageHeaderView
                 Title="日志测试"
                 Grid.Row="0"
                 Grid.Column="0"
@@ -423,11 +422,14 @@
             </materialDesign:Card>
 
             <!--  运行输出（卡片内部的输出框也会跟着这一行一起长高）  -->
-            <shared:RunOutputView
+            <wpfcc:RunOutputView
                 Grid.Row="3"
                 Grid.Column="2"
                 Margin="0,0,0,12"
-                OutputHeight="200" />
+                ClearCommand="{Binding ClearOutputCommand}"
+                Elapsed="{Binding LastElapsed}"
+                ExportCommand="{Binding ExportOutputCommand}"
+                Text="{Binding OutputText}" />
 
         </Grid>
     </ScrollViewer>

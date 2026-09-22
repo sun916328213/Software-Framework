@@ -6,7 +6,6 @@
     xmlns:excel="clr-namespace:DataManager.Excel.Definition;assembly=DataManager"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:shared="clr-namespace:DataManager.Controls.Views.Shared"
     xmlns:viewmodels="clr-namespace:DataManager.Controls.ViewModels"
     xmlns:wpfcc="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
     d:DesignWidth="1360"
@@ -43,7 +42,7 @@
             </Grid.RowDefinitions>
 
             <!--  页头  -->
-            <shared:PageHeaderView
+            <wpfcc:PageHeaderView
                 Title="Excel 测试"
                 Grid.Row="0"
                 Grid.Column="0"
@@ -251,11 +250,14 @@
             </materialDesign:Card>
 
             <!--  运行输出  -->
-            <shared:RunOutputView
+            <wpfcc:RunOutputView
                 Grid.Row="3"
                 Grid.Column="2"
                 Margin="0,0,0,12"
-                OutputHeight="130" />
+                ClearCommand="{Binding ClearOutputCommand}"
+                Elapsed="{Binding LastElapsed}"
+                ExportCommand="{Binding ExportOutputCommand}"
+                Text="{Binding OutputText}" />
 
         </Grid>
     </ScrollViewer>

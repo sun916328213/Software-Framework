@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Device.Core.Cameras;
 using Device.Core.Devices;
+using Device.Drivers.Cameras;
 using MVSDK_Net;
 
 namespace Device.Drivers.Cameras.Dahua;
@@ -56,8 +57,9 @@ internal sealed class DahuaGigeCamera : ICamera
             EnsureSuccess(_camera.IMV_SetBufferCount(8), "设置采集缓冲区数量");
             EnsureSuccess(_camera.IMV_SubscribeConnectArg(_connectionCallback, IntPtr.Zero), "注册连接状态回调");
             EnsureSuccess(_camera.IMV_AttachGrabbing(_frameCallback, IntPtr.Zero), "注册图像回调");
+            LoadParameterFile();
             ApplyExposureAndGain(Options.ExposureMilliseconds, Options.Gain);
-            ConfigureSoftwareTrigger();
+            ConfigureTriggers();
             EnsureSuccess(_camera.IMV_StartGrabbing(), "启动相机采集");
             _grabbing = true;
 
@@ -110,7 +112,8 @@ internal sealed class DahuaGigeCamera : ICamera
 
         try
         {
-            EnsureSuccess(_camera.IMV_ExecuteCommandFeature("TriggerSoftware"), "执行软件触发");
+            if (CameraDriverConfiguration.ShouldExecuteSoftwareTrigger(Options))
+                EnsureSuccess(_camera.IMV_ExecuteCommandFeature("TriggerSoftware"), "执行软件触发");
 
             using var timeout = new CancellationTokenSource(Options.TimeoutMilliseconds);
             using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
@@ -169,10 +172,41 @@ internal sealed class DahuaGigeCamera : ICamera
         EnsureSuccess(_camera.IMV_SetDoubleFeatureValue("Gain", gain), "设置相机增益");
     }
 
-    private void ConfigureSoftwareTrigger()
+    private void LoadParameterFile()
     {
-        EnsureSuccess(_camera.IMV_SetEnumFeatureSymbol("TriggerMode", "On"), "开启触发模式");
-        EnsureSuccess(_camera.IMV_SetEnumFeatureSymbol("TriggerSource", "Software"), "设置软件触发源");
+        if (Options.ParameterFilePath is null)
+            return;
+
+        var errors = new IMVDefine.IMV_ErrorList();
+        EnsureSuccess(
+            _camera.IMV_LoadDeviceCfg(Options.ParameterFilePath, ref errors),
+            "加载大华相机参数文件");
+    }
+
+    private void ConfigureTriggers()
+    {
+        foreach (var binding in CameraDriverConfiguration.GetTriggerBindings(Options))
+        {
+            if (binding.Selector is not null)
+            {
+                EnsureSuccess(
+                    _camera.IMV_SetEnumFeatureSymbol("TriggerSelector", binding.Selector),
+                    $"设置大华触发选择器 '{binding.Selector}'");
+            }
+
+            EnsureSuccess(
+                _camera.IMV_SetEnumFeatureSymbol(
+                    "TriggerMode",
+                    CameraDriverConfiguration.ToGenICamMode(binding.Settings.Mode)),
+                $"设置大华 {binding.Selector ?? "当前"}触发模式");
+
+            if (binding.Settings.Mode == CameraTriggerMode.On)
+            {
+                EnsureSuccess(
+                    _camera.IMV_SetEnumFeatureSymbol("TriggerSource", binding.Settings.Source),
+                    $"设置大华 {binding.Selector ?? "当前"}触发源 '{binding.Settings.Source}'");
+            }
+        }
     }
 
     private void OnFrameReceived(ref IMVDefine.IMV_Frame frame, IntPtr userData)

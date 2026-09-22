@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Device.Core.Cameras;
 using Device.Core.Devices;
+using Device.Drivers.Cameras;
 using IKapC.NET;
 
 namespace Device.Drivers.Cameras.ITek;
@@ -71,8 +72,9 @@ internal sealed class ITekGigeCamera : ICamera
                 IKapCLib.ItkDevRegisterCallback(_camera, "DeviceRemove", _deviceRemovedCallback, _camera),
                 "注册掉线回调");
 
+            LoadParameterFile();
             ConfigureExposureAndGain(Options.ExposureMilliseconds, Options.Gain);
-            ConfigureSoftwareTrigger();
+            ConfigureTriggers();
             CreateStreamAndBuffers();
             StartStream();
 
@@ -125,7 +127,8 @@ internal sealed class ITekGigeCamera : ICamera
 
         try
         {
-            EnsureSuccess(IKapCLib.ItkDevExecuteCommand(_camera, "TriggerSoftware"), "执行软件触发");
+            if (CameraDriverConfiguration.ShouldExecuteSoftwareTrigger(Options))
+                EnsureSuccess(IKapCLib.ItkDevExecuteCommand(_camera, "TriggerSoftware"), "执行软件触发");
 
             using var timeout = new CancellationTokenSource(Options.TimeoutMilliseconds);
             using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
@@ -205,13 +208,30 @@ internal sealed class ITekGigeCamera : ICamera
         EnsureSuccess(IKapCLib.ItkDevSetDouble(_camera, "DigitalGain", gain), "设置相机增益");
     }
 
-    private void ConfigureSoftwareTrigger()
+    private void LoadParameterFile()
     {
-        SetStringFeature("TriggerSelector", "LineStart");
-        SetStringFeature("TriggerMode", "Off");
-        SetStringFeature("TriggerSelector", "FrameStart");
-        SetStringFeature("TriggerMode", "On");
-        SetStringFeature("TriggerSource", "Software");
+        if (Options.ParameterFilePath is null)
+            return;
+
+        EnsureSuccess(
+            IKapCLib.ItkDevLoadConfigurationFromFile(_camera, Options.ParameterFilePath),
+            "加载 I-Tek 相机参数文件");
+    }
+
+    private void ConfigureTriggers()
+    {
+        foreach (var binding in CameraDriverConfiguration.GetTriggerBindings(Options))
+        {
+            if (binding.Selector is not null)
+                SetStringFeature("TriggerSelector", binding.Selector);
+
+            SetStringFeature(
+                "TriggerMode",
+                CameraDriverConfiguration.ToGenICamMode(binding.Settings.Mode));
+
+            if (binding.Settings.Mode == CameraTriggerMode.On)
+                SetStringFeature("TriggerSource", binding.Settings.Source);
+        }
     }
 
     private void CreateStreamAndBuffers()

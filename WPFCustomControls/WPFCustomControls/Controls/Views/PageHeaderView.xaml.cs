@@ -2,10 +2,10 @@ using MaterialDesignThemes.Wpf;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Device.Controls.Views.Shared
+namespace WPFCustomControls.Controls
 {
     /// <summary>
-    /// 测试页页头：图标 + 标题 + 副标题（纯展示，无 VM 耦合，DataContext 穿透）。
+    /// 页面页头：图标 + 标题 + 副标题（纯展示，无 VM 耦合）。
     /// </summary>
     public partial class PageHeaderView : UserControl
     {

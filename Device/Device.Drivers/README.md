@@ -60,6 +60,44 @@ var camera = factory.Create(new CameraOptions
 
 因此配置相机时仍然可以选择品牌，但领域模型和配置文件不需要品牌枚举。
 
+### 面阵、线扫与触发配置
+
+相机配置通过 `CameraScanType` 枚举区分面阵和线扫。品牌是开放集合，继续使用驱动标识；
+扫描类型是稳定的封闭集合，使用枚举可以在编译期避免无效值。线扫相机可以提供厂商参数文件，
+驱动在打开设备后先加载文件，再应用 `CameraOptions` 中的曝光、增益和触发配置。
+帧触发与行触发分开保存，因此可以表达“外部信号开始一帧、编码器触发每一行”的常见线扫流程：
+
+```csharp
+var lineScanOptions = new CameraOptions
+{
+    Name = "LineCamera01",
+    DriverId = selectedDriver.Id,
+    IpAddress = "192.168.1.20",
+    ScanType = CameraScanType.LineScan,
+    ParameterFilePath = @"CameraConfig\LineScan.cfg",
+    ExposureMilliseconds = 1,
+    Gain = 0,
+    FrameTrigger = new CameraTriggerSettings
+    {
+        Selector = CameraTriggerSelectors.FrameStart,
+        Mode = CameraTriggerMode.On,
+        Source = CameraTriggerSources.Line1,
+    },
+    LineTrigger = new CameraTriggerSettings
+    {
+        Selector = CameraTriggerSelectors.LineStart,
+        Mode = CameraTriggerMode.On,
+        Source = CameraTriggerSources.RotaryEncoder1,
+    },
+};
+```
+
+面阵相机默认使用帧开始软件触发。设置为外部触发或自由运行后，`CaptureAsync` 不再发送
+软件触发命令，而是等待相机回调的下一帧。各型号支持的触发源不同；常用值由
+`CameraTriggerSources` 提供，特殊型号也可以保存其 SDK 支持的 GenICam 触发源符号。
+如果线扫型号使用 `FrameBurstStart` 而不是 `FrameStart`，可通过
+`CameraTriggerSettings.Selector` 显式指定，不需要修改驱动代码。
+
 ## 光源控制器
 
 光源模块采用相同方式，由一个 `LightControllerFactory` 提供全部品牌：

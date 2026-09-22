@@ -5,7 +5,7 @@
 
     <ResourceDictionary.MergedDictionaries>
         <!--
-            页面样式（PageTitle / PageSubTitle / SectionTitle / DmInput / DmCombo / DmGrid / OutputBox）
+            页面样式（SectionTitle / DmInput / DmCombo / DmGrid 等）
             不在本文件定义，只**引用** Device.Controls 自己那份 —— 样式归页面所有，宿主只做引用。
             本文件只留壳级样式：侧栏导航 + 品牌色。
         -->

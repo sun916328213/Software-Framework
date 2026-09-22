@@ -10,8 +10,11 @@ public interface ICamera : IDevice
     /// <summary>创建该相机时使用的配置快照。</summary>
     CameraOptions Options { get; }
 
-    /// <summary>触发一次采集并返回图像。</summary>
-    /// <param name="cancellationToken">用于在触发采集前或驱动支持时取消采集。</param>
+    /// <summary>
+    /// 等待并返回一帧图像。帧触发源为 Software 时先发送软件触发命令；
+    /// 自由运行或外部触发时等待相机返回下一帧。
+    /// </summary>
+    /// <param name="cancellationToken">用于在触发或等待图像期间取消采集。</param>
     /// <returns>采集到的图像帧。</returns>
     ValueTask<ImageFrame> CaptureAsync(CancellationToken cancellationToken = default);
 

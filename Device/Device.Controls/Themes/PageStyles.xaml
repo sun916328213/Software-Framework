@@ -4,24 +4,13 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
     <!--
-        Device.Controls 页面样式（CameraView 及 Shared 子控件共用）。
+        Device.Controls 页面样式（各设备页共用）。
         与 DataManager.Controls 同一约定：样式归页面所有，由各页面在
         UserControl.Resources 里自行合并本字典，宿主不替页面合并；
         BasedOn 的 MD 原生键经宿主 Application.Resources 合并链延迟解析。
+        页头 / 运行输出卡已迁往 WPFCustomControls（自带样式），此处不再放页面级标题与输出框键。
     -->
 
-    <!--  页面标题（前景钉 MD 原生键，深浅切换自动跟随）  -->
-    <Style x:Key="PageTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="22" />
-        <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-    </Style>
-    <Style x:Key="PageSubTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="12" />
-        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-        <Setter Property="Opacity" Value="0.6" />
-        <Setter Property="Margin" Value="0,4,0,0" />
-    </Style>
     <Style x:Key="SectionTitle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="15" />
         <Setter Property="FontWeight" Value="SemiBold" />
@@ -50,6 +39,44 @@
         </Style.Resources>
     </Style>
 
+    <!--  表格文本列展示态（各设备页复用；对标 CameraView）：垂直居中 + 去内边距，与下拉列同基线  -->
+    <Style x:Key="DmTextElementStyle" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+
+    <!--
+        档案表下拉列展示/编辑态（各设备页复用；对标 CameraView）：
+        DataGridComboBoxColumn 不吃宿主隐式 ComboBox 样式，必须显式挂 ElementStyle/EditingElementStyle；
+        必须基于 MaterialDesignComboBox（弹层里才有 ColorZone，PrimaryLight 才生效）；
+        藏下划线 + 去内边距后与 Text 列同基线；展示态点穿，上锁（IsReadOnly）时点不开。
+    -->
+    <Style
+        x:Key="DmComboElementStyle"
+        BasedOn="{StaticResource MaterialDesignComboBox}"
+        TargetType="ComboBox">
+        <Setter Property="materialDesign:ColorZoneAssist.Mode" Value="PrimaryLight" />
+        <Setter Property="materialDesign:TextFieldAssist.DecorationVisibility" Value="Collapsed" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="0,4" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+    <Style
+        x:Key="DmComboEditingStyle"
+        BasedOn="{StaticResource MaterialDesignComboBox}"
+        TargetType="ComboBox">
+        <Setter Property="materialDesign:ColorZoneAssist.Mode" Value="PrimaryLight" />
+        <Setter Property="materialDesign:TextFieldAssist.DecorationVisibility" Value="Collapsed" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="0,4" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+
     <!--  表格（单元格文字随原生前景键跟随主题）  -->
     <Style
         x:Key="DmGrid"
@@ -58,39 +85,13 @@
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
     </Style>
 
-    <!--  运行输出框（等宽字体跟随主题；ScrollViewer_Style 由 WPFCustomControls 提供）  -->
-    <Style x:Key="OutputBox" TargetType="TextBox">
-        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Background}" />
-        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-        <Setter Property="FontFamily" Value="Consolas" />
-        <Setter Property="FontSize" Value="12" />
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="IsReadOnly" Value="True" />
-        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
-        <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
-        <Setter Property="TextWrapping" Value="NoWrap" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="TextBox">
-                    <Border Background="{TemplateBinding Background}" CornerRadius="8">
-                        <ScrollViewer
-                            x:Name="PART_ContentHost"
-                            Margin="12,10"
-                            HorizontalScrollBarVisibility="{TemplateBinding HorizontalScrollBarVisibility}"
-                            Style="{StaticResource ScrollViewer_Style}"
-                            VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}" />
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
     <!--  「断开」按钮压在 ValidationError 底上的 on-color（浅色基准白字）  -->
     <SolidColorBrush x:Key="Brush.OnDanger" Color="#FFFFFF" />
 
     <!--
-        控制面板复用样式（CameraView 内联同名样式的共享版）：
-        标签 120 居中、按钮 130 抬起、断开用危险色、表格中文表头前景钉主题。
+        控制面板复用样式（对标 CameraView 的 Button_fill：拉伸填格、圆角 4、Margin 12,6）：
+        标签 120 居中、按钮拉伸抬起、断开用危险色、表格中文表头前景钉主题。
+        连接/断开并排小按钮（Width=62）在各页 XAML 用本地 Margin 覆盖此处 Margin。
     -->
     <Style
         x:Key="PanelLabel"
@@ -105,7 +106,9 @@
         x:Key="PanelButton"
         BasedOn="{StaticResource MaterialDesignRaisedButton}"
         TargetType="Button">
-        <Setter Property="Width" Value="130" />
+        <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="4" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Margin" Value="12,6" />
     </Style>
 
     <Style
@@ -115,6 +118,9 @@
         <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.ValidationError}" />
         <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.ValidationError}" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.OnDanger}" />
+        <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="4" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Margin" Value="12,6" />
     </Style>
 
     <Style

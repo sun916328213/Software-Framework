@@ -5,7 +5,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:views="clr-namespace:Communication.Controls.Views"
     xmlns:vm="clr-namespace:Communication.Controls.ViewModels"
     d:DataContext="{d:DesignInstance Type=vm:CommunicationViewModel}"
     d:DesignHeight="860"
@@ -21,12 +20,12 @@
             </ResourceDictionary.MergedDictionaries>
 
             <BooleanToVisibilityConverter x:Key="BoolToVis" />
-            <views:NonEmptyStringToVisibilityConverter x:Key="NonEmptyStringToVis" />
             <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
 
             <Style TargetType="TextBlock">
                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
             </Style>
+
 
             <!--  输入框标题：MD 的浮动 hint 在"绑定预填值"时会和文字叠在一起，改成静态小标签  -->
             <Style
@@ -413,7 +412,7 @@
             <Grid Grid.Column="2" Margin="10,0,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="4*" MinHeight="330" />
-                    <RowDefinition Height="10" />
+                    <RowDefinition Height="12" />
                     <RowDefinition Height="5*" MinHeight="260" />
                 </Grid.RowDefinitions>
 
@@ -709,8 +708,7 @@
                                 Margin="0,8,0,0"
                                 Style="{StaticResource HintText}"
                                 Text="{Binding BottomNotice}"
-                                TextWrapping="Wrap"
-                                Visibility="{Binding BottomNotice, Converter={StaticResource NonEmptyStringToVis}}" />
+                                TextWrapping="Wrap" />
                         </Grid>
                     </ScrollViewer>
                 </materialDesign:Card>

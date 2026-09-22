@@ -26,10 +26,13 @@
                 <Setter Property="materialDesign:ColorZoneAssist.Mode" Value="PrimaryLight" />
             </Style>
 
+            
+
             <Style BasedOn="{StaticResource MaterialDesignRaisedButton}" TargetType="Button">
                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
                 <Setter Property="Margin" Value="8" />
                 <Setter Property="VerticalAlignment" Value="Bottom" />
+                <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="4" />
             </Style>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -58,7 +61,7 @@
             </GroupBox>
 
             <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Hidden">
-                <DockPanel>
+                <DockPanel LastChildFill="False">
 
                     <Button
                         Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=SaveCommand}"

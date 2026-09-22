@@ -6,7 +6,6 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:Communication.Controls.ViewModels"
-    xmlns:views="clr-namespace:Communication.Controls.Views"
     Width="820"
     d:DataContext="{d:DesignInstance Type=vm:DeviceConfigDialogViewModel}"
     d:DesignHeight="640"
@@ -21,8 +20,6 @@
             </ResourceDictionary.MergedDictionaries>
 
             <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
-
-            <views:NonEmptyStringToVisibilityConverter x:Key="NonEmptyStringToVis" />
 
             <Style TargetType="TextBlock">
                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
@@ -193,6 +190,7 @@
                 <ComboBox
                     Grid.Row="0"
                     Grid.Column="1"
+                    materialDesign:ColorZoneAssist.Mode="Standard"
                     IsEnabled="{Binding CanChangeProtocol}"
                     ItemsSource="{Binding ProtocolOptions}"
                     SelectedIndex="{Binding SelectedProtocolIndex, Mode=TwoWay}"
@@ -203,8 +201,8 @@
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon
-                                    Width="14"
-                                    Height="14"
+                                    Width="18"
+                                    Height="18"
                                     VerticalAlignment="Center"
                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
                                     Kind="{Binding Icon}" />
@@ -220,6 +218,7 @@
                             <GroupStyle.HeaderTemplate>
                                 <DataTemplate>
                                     <TextBlock
+                                        Margin="4"
                                         FontSize="11"
                                         FontWeight="SemiBold"
                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
@@ -228,6 +227,7 @@
                             </GroupStyle.HeaderTemplate>
                         </GroupStyle>
                     </ComboBox.GroupStyle>
+
                 </ComboBox>
                 <TextBlock
                     Grid.Row="0"
@@ -262,15 +262,14 @@
                     Text="{Binding DeviceName, UpdateSourceTrigger=PropertyChanged}"
                     ToolTip="默认按协议与角色自动生成（如 TCP客户端-Client），改过之后就以你写的为准" />
 
-                <!--  无提示时整行收起，不再占一行空白  -->
+                <!--  每种协议都有选型提示，这行不会空  -->
                 <TextBlock
                     Grid.Row="4"
                     Grid.Column="0"
                     Grid.ColumnSpan="4"
                     Style="{StaticResource HintText}"
                     Text="{Binding SelectedProtocolInfo.UsageHint}"
-                    TextWrapping="Wrap"
-                    Visibility="{Binding SelectedProtocolInfo.UsageHint, Converter={StaticResource NonEmptyStringToVis}}" />
+                    TextWrapping="Wrap" />
             </Grid>
         </materialDesign:Card>
 

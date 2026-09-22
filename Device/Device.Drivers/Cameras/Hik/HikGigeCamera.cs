@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Device.Core.Cameras;
 using Device.Core.Devices;
+using Device.Drivers.Cameras;
 using MvCamCtrl.NET;
 using MvCamCtrl.NET.CameraParams;
 
@@ -49,8 +50,9 @@ internal sealed class HikGigeCamera : ICamera
 
             EnsureSuccess(_camera.OpenDevice(), "打开相机");
             ConfigureNetworkPacket(cameraInfo);
+            LoadParameterFile();
             ApplyExposureAndGain(Options.ExposureMilliseconds, Options.Gain);
-            ConfigureSoftwareTrigger();
+            ConfigureTriggers();
             EnsureSuccess(_camera.RegisterImageCallBackEx(_imageCallback, IntPtr.Zero), "注册图像回调");
             EnsureSuccess(_camera.StartGrabbing(), "启动相机采集");
             _grabbing = true;
@@ -102,7 +104,8 @@ internal sealed class HikGigeCamera : ICamera
 
         try
         {
-            EnsureSuccess(_camera.SetCommandValue("TriggerSoftware"), "执行软件触发");
+            if (CameraDriverConfiguration.ShouldExecuteSoftwareTrigger(Options))
+                EnsureSuccess(_camera.SetCommandValue("TriggerSoftware"), "执行软件触发");
 
             using var timeout = new CancellationTokenSource(Options.TimeoutMilliseconds);
             using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
@@ -199,12 +202,38 @@ internal sealed class HikGigeCamera : ICamera
         EnsureSuccess(_camera.SetFloatValue("Gain", Convert.ToSingle(gain)), "设置相机增益");
     }
 
-    private void ConfigureSoftwareTrigger()
+    private void LoadParameterFile()
     {
-        EnsureSuccess(_camera.SetEnumValue("TriggerMode", (uint)MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_ON), "开启触发模式");
-        EnsureSuccess(
-            _camera.SetEnumValue("TriggerSource", (uint)MV_CAM_TRIGGER_SOURCE.MV_TRIGGER_SOURCE_SOFTWARE),
-            "设置软件触发源");
+        if (Options.ParameterFilePath is null)
+            return;
+
+        EnsureSuccess(_camera.FeatureLoad(Options.ParameterFilePath), "加载海康相机参数文件");
+    }
+
+    private void ConfigureTriggers()
+    {
+        foreach (var binding in CameraDriverConfiguration.GetTriggerBindings(Options))
+        {
+            if (binding.Selector is not null)
+            {
+                EnsureSuccess(
+                    _camera.SetEnumValueByString("TriggerSelector", binding.Selector),
+                    $"设置海康触发选择器 '{binding.Selector}'");
+            }
+
+            EnsureSuccess(
+                _camera.SetEnumValueByString(
+                    "TriggerMode",
+                    CameraDriverConfiguration.ToGenICamMode(binding.Settings.Mode)),
+                $"设置海康 {binding.Selector ?? "当前"}触发模式");
+
+            if (binding.Settings.Mode == CameraTriggerMode.On)
+            {
+                EnsureSuccess(
+                    _camera.SetEnumValueByString("TriggerSource", binding.Settings.Source),
+                    $"设置海康 {binding.Selector ?? "当前"}触发源 '{binding.Settings.Source}'");
+            }
+        }
     }
 
     private void OnImageReceived(IntPtr data, ref MV_FRAME_OUT_INFO_EX frameInfo, IntPtr userData)

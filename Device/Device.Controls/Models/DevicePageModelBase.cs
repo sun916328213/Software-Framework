@@ -12,9 +12,6 @@ public interface IDeviceProfile
     string DriverId { get; set; }
 }
 
-/// <summary>驱动下拉项（Value = DriverId 字符串，DisplayName = 工厂描述名）。</summary>
-public sealed record DeviceDriverOption(string Value, string DisplayName);
-
 /// <summary>
 /// 设备页状态 Model 基类：档案集合 + 驱动目录 + 连接状态（一页一 JSON 文件约定）。
 /// 各类别页在其上追加自己的展示状态。
@@ -44,8 +41,8 @@ public abstract partial class DevicePageModelBase<TProfile> : ConfigManagerModel
         StatusText = "未连接";
     }
 
-    /// <summary>驱动下拉数据（来自工厂 AvailableDrivers）。</summary>
-    public ObservableCollection<DeviceDriverOption> Drivers { get; } = [];
+    /// <summary>驱动下拉数据（工厂 DriverId 字符串，与档案/JSON 存的值同一套，不做中文名映射）。</summary>
+    public ObservableCollection<string> Drivers { get; } = [];
 
     /// <summary>当前档案（空即报“请先添加”）。</summary>
     public TProfile SelectedProfileOrThrow() =>

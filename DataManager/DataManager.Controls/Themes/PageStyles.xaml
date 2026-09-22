@@ -4,7 +4,9 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
     <!--
-        DataManager.Controls 页面样式（SqlView / LogView / ExcelView 及 Shared 两个子控件共用）。
+        DataManager.Controls 页面样式（SqlView / LogView / ExcelView 共用）。
+        页头 / 运行输出卡已迁到 WPFCustomControls.Controls.PageHeaderView / RunOutputView
+        （样式内联在控件里），本字典不再定义 PageTitle / PageSubTitle。
 
         ⚠️ 本文件是这批样式的**唯一归属地**。
         它们原先定义在 DataManager.Workbench\Styles\Theme.xaml（宿主 WinExe）里 —— 那是错的：
@@ -25,18 +27,7 @@
         WPFCustomControlsModule 合并）。
     -->
 
-    <!--  页面标题（Material 风格字阶；前景钉 MD 原生键，深浅切换自动跟随，不自定义画刷）  -->
-    <Style x:Key="PageTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="22" />
-        <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-    </Style>
-    <Style x:Key="PageSubTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="12" />
-        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-        <Setter Property="Opacity" Value="0.6" />
-        <Setter Property="Margin" Value="0,4,0,0" />
-    </Style>
+    <!--  区块标题（前景钉 MD 原生键，深浅切换自动跟随，不自定义画刷）  -->
     <Style x:Key="SectionTitle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="15" />
         <Setter Property="FontWeight" Value="SemiBold" />

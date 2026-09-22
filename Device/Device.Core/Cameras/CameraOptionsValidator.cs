@@ -27,6 +27,17 @@ public static class CameraOptionsValidator
         if (!IPAddress.TryParse(options.IpAddress, out _))
             errors.Add($"相机 '{options.Name}' 的 IP 地址 '{options.IpAddress}' 无效。");
 
+        if (!Enum.IsDefined(options.ScanType))
+            errors.Add($"相机 '{options.Name}' 的扫描类型 '{options.ScanType}' 无效。");
+
+        if (options.ParameterFilePath is not null)
+        {
+            if (string.IsNullOrWhiteSpace(options.ParameterFilePath))
+                errors.Add($"相机 '{options.Name}' 的参数文件路径不能为空白字符串。");
+            else if (!File.Exists(options.ParameterFilePath))
+                errors.Add($"相机 '{options.Name}' 的参数文件 '{options.ParameterFilePath}' 不存在。");
+        }
+
         if (options.ExposureMilliseconds <= 0)
             errors.Add($"相机 '{options.Name}' 的曝光时间必须大于 0 毫秒。");
 
@@ -36,7 +47,33 @@ public static class CameraOptionsValidator
         if (options.TimeoutMilliseconds <= 0)
             errors.Add($"相机 '{options.Name}' 的超时时间必须大于 0 毫秒。");
 
+        ValidateTrigger(options.FrameTrigger, "帧开始", options.Name, errors);
+        if (options.ScanType == CameraScanType.LineScan)
+            ValidateTrigger(options.LineTrigger, "行开始", options.Name, errors);
+
         if (errors.Count > 0)
             throw new CameraConfigurationException(errors);
+    }
+
+    private static void ValidateTrigger(
+        CameraTriggerSettings? trigger,
+        string triggerName,
+        string cameraName,
+        ICollection<string> errors)
+    {
+        if (trigger is null)
+        {
+            errors.Add($"相机 '{cameraName}' 的{triggerName}触发配置不能为空。");
+            return;
+        }
+
+        if (trigger.Selector is not null && string.IsNullOrWhiteSpace(trigger.Selector))
+            errors.Add($"相机 '{cameraName}' 的{triggerName}触发选择器不能为空白字符串。");
+
+        if (!Enum.IsDefined(trigger.Mode))
+            errors.Add($"相机 '{cameraName}' 的{triggerName}触发模式 '{trigger.Mode}' 无效。");
+
+        if (trigger.Mode == CameraTriggerMode.On && string.IsNullOrWhiteSpace(trigger.Source))
+            errors.Add($"相机 '{cameraName}' 启用{triggerName}触发时必须指定触发源。");
     }
 }

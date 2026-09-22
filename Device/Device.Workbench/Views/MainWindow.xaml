@@ -72,16 +72,10 @@
             </DockPanel>
         </Border>
 
-        <!--
-            内容区域（Prism 区域导航）：整页套 ScrollViewer，窗口高度不足时页面可上下滚动。
-            页面外边距挪到这里，页面根 Grid 才能干净地绑定 ViewportHeight 撑满视口。
-        -->
-        <ScrollViewer
+        <!--  内容区域（Prism 区域导航）：宿主保持纯容器，页面级滚动由各页自己的 ScrollViewer 负责  -->
+        <ContentControl
             Grid.Column="1"
-            Margin="24,12,24,12"
-            HorizontalScrollBarVisibility="Disabled"
-            VerticalScrollBarVisibility="Auto">
-            <ContentControl prism:RegionManager.RegionName="MainRegion" />
-        </ScrollViewer>
+            Margin="12"
+            prism:RegionManager.RegionName="MainRegion" />
     </Grid>
 </Window>

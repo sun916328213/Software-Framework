@@ -69,7 +69,6 @@ namespace WPFCustomControls.Controls
               typeof(ConfigManagerView),
               new PropertyMetadata(null));
 
-
         /// <summary>
         /// 公开 DataGrid 列集合，外部可直接赋值
         /// </summary>

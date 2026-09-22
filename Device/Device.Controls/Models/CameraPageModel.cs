@@ -1,53 +1,85 @@
-using System.Collections.ObjectModel;
-using System.IO;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Device.Core.Cameras;
-using WPFCustomControls.Controls;
+using Device.Core.Devices;
 
 namespace Device.Controls.Models;
 
 /// <summary>
-/// 相机测试页状态 Model：档案集合与落盘走通用配置管理模型基类
-/// （<see cref="ConfigManagerModel{T}.DataCollection"/> / <see cref="ConfigManagerModel{T}.FullPath"/>），
-/// 连接状态、扫描结果与预览图像为本页扩展。
+/// 相机档案（相机列表的可编辑行；创建相机时转换成 <see cref="CameraOptions"/>）。
+/// Options 是 Device.Core 的不可变创建参数，不带变更通知、不能直接绑表格，
+/// 所以 DataGrid 行/落盘 JSON 用本类。
 /// </summary>
-public partial class CameraPageModel : ConfigManagerModel<CameraProfile>
+public partial class CameraProfile : ObservableObject, IDeviceProfile
+{
+    /// <summary>档案在应用中的唯一名称。</summary>
+    [ObservableProperty]
+    private string name = string.Empty;
+
+    /// <summary>驱动标识字符串（配置界面从工厂 AvailableDrivers 选择，不手填）。</summary>
+    [ObservableProperty]
+    private string driverId = string.Empty;
+
+    /// <summary>扫描类型（面阵/线扫），决定驱动的触发器下发方式。</summary>
+    [ObservableProperty]
+    private CameraScanType scanType = CameraScanType.AreaScan;
+
+    /// <summary>相机 IP 地址。</summary>
+    [ObservableProperty]
+    private string ipAddress = "127.0.0.1";
+
+    /// <summary>曝光时间，单位为毫秒。</summary>
+    [ObservableProperty]
+    private int exposureMilliseconds = 20;
+
+    /// <summary>相机增益。</summary>
+    [ObservableProperty]
+    private double gain;
+
+    /// <summary>采集超时时间，单位为毫秒。</summary>
+    [ObservableProperty]
+    private int timeoutMilliseconds = 1_000;
+
+    /// <summary>厂商参数文件路径（连接相机后先加载该文件再应用公共参数）；空 = 不加载。</summary>
+    [ObservableProperty]
+    private string parameterFilePath = string.Empty;
+
+    /// <summary>转换为运行时创建相机用的不可变配置。</summary>
+  
+     public CameraOptions ToOptions() => new()
+    {
+        Name = Name,
+        DriverId = new DeviceDriverId(DriverId),
+        ScanType = ScanType,
+        IpAddress = IpAddress,
+        ParameterFilePath = string.IsNullOrWhiteSpace(parameterFilePath) ? null : parameterFilePath,
+        ExposureMilliseconds = ExposureMilliseconds,
+        Gain = Gain,
+        TimeoutMilliseconds = TimeoutMilliseconds,
+    }; 
+}
+
+/// <summary>相机测试页状态：连接/档案/驱动目录走通用基类，此处只加预览图像与实时按钮文字。</summary>
+public partial class CameraPageModel : DevicePageModelBase<CameraProfile>
 {
     public CameraPageModel()
+        : base("Cameras.json")
     {
-        // 落盘位置一次给定（与 Sql/Log/Excel 各页「一页一文件」约定一致）。
-        FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config");
-        FileName = "Cameras.json";
     }
 
-    [ObservableProperty]
-    private CameraProfile? selectedProfile;
-
-    partial void OnSelectedProfileChanged(CameraProfile? value)
-    {
-        // 档案切换 = 连接要素变更，状态复位；实例由流程按指纹重建。
-        IsConnected = false;
-        StatusText = "未连接";
-    }
-
-    [ObservableProperty]
-    private bool isConnected;
-
-    [ObservableProperty]
-    private string statusText = "未连接";
+    /// <summary>
+    /// 扫描类型下拉数据（枚举名直出，不做中文映射）。静态：DataGridComboBoxColumn
+    /// 不在可视树里，只能 {x:Static} 绑定，拿不到实例属性。
+    /// </summary>
+    public static IReadOnlyList<CameraScanType> ScanTypes { get; } =
+    [
+        CameraScanType.AreaScan,
+        CameraScanType.LineScan,
+    ];
 
     /// <summary>实时预览按钮文字（图像实时 ↔ 实时关闭，对标 CamManagerModel）。</summary>
     [ObservableProperty]
     private string liveButtonText = "图像实时";
-
-    /// <summary>中心十字线按钮文字。</summary>
-    [ObservableProperty]
-    private string showCrossButtonText = "显示中心十字线";
-
-    /// <summary>预览区是否叠加中心十字线。</summary>
-    [ObservableProperty]
-    private bool isShowCross;
 
     /// <summary>最近一次抓图的渲染结果。</summary>
     [ObservableProperty]
@@ -56,22 +88,4 @@ public partial class CameraPageModel : ConfigManagerModel<CameraProfile>
     /// <summary>最近一次抓图的规格说明（尺寸 + 像素格式）。</summary>
     [ObservableProperty]
     private string frameInfo = "尚无图像";
-
-    /// <summary>扫描结果选中项。</summary>
-    [ObservableProperty]
-    private CameraDeviceDescriptor? selectedDevice;
-
-    /// <summary>驱动下拉数据（来自工厂 AvailableDrivers）。</summary>
-    public ObservableCollection<CameraDriverOption> Drivers { get; } = [];
-
-    /// <summary>最近一次扫描发现的在线相机。</summary>
-    public ObservableCollection<CameraDeviceDescriptor> Devices { get; } = [];
-
-    /// <summary>当前档案（空即报“请先添加”）。</summary>
-    public CameraProfile SelectedProfileOrThrow() =>
-        SelectedProfile ?? throw new InvalidOperationException("请先添加相机档案");
-
-    /// <summary>当前扫描选中设备。</summary>
-    public CameraDeviceDescriptor SelectedDeviceOrThrow() =>
-        SelectedDevice ?? throw new InvalidOperationException("请先在在线设备列表中选中一台相机");
 }

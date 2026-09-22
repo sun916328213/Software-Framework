@@ -74,6 +74,61 @@ public sealed class CameraFactoryTests
             Assert.Contains(driverId, exception.Message, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// 面阵相机只下发当前帧触发器，并在软件触发模式下主动发送触发命令。
+    /// </summary>
+    [Fact]
+    public void DriverConfiguration_AreaScanSoftwareTrigger_UsesCurrentSelector()
+    {
+        var options = ValidOptions(ExpectedDriverIds[0]);
+
+        var bindings = CameraDriverConfiguration.GetTriggerBindings(options);
+
+        var binding = Assert.Single(bindings);
+        Assert.Null(binding.Selector);
+        Assert.Equal(CameraTriggerSources.Software, binding.Settings.Source);
+        Assert.True(CameraDriverConfiguration.ShouldExecuteSoftwareTrigger(options));
+    }
+
+    /// <summary>
+    /// 线扫相机应依次设置行触发和帧触发；外部帧触发不能由 CaptureAsync 发送软件命令。
+    /// </summary>
+    [Fact]
+    public void DriverConfiguration_LineScanExternalTrigger_ConfiguresBothSelectors()
+    {
+        var options = ValidOptions(ExpectedDriverIds[0]) with
+        {
+            ScanType = CameraScanType.LineScan,
+            FrameTrigger = new CameraTriggerSettings
+            {
+                Selector = CameraTriggerSelectors.FrameBurstStart,
+                Mode = CameraTriggerMode.On,
+                Source = CameraTriggerSources.Line1,
+            },
+            LineTrigger = new CameraTriggerSettings
+            {
+                Mode = CameraTriggerMode.On,
+                Source = CameraTriggerSources.RotaryEncoder1,
+            },
+        };
+
+        var bindings = CameraDriverConfiguration.GetTriggerBindings(options);
+
+        Assert.Collection(
+            bindings,
+            line =>
+            {
+                Assert.Equal(CameraDriverConfiguration.LineStartSelector, line.Selector);
+                Assert.Equal(CameraTriggerSources.RotaryEncoder1, line.Settings.Source);
+            },
+            frame =>
+            {
+                Assert.Equal(CameraTriggerSelectors.FrameBurstStart, frame.Selector);
+                Assert.Equal(CameraTriggerSources.Line1, frame.Settings.Source);
+            });
+        Assert.False(CameraDriverConfiguration.ShouldExecuteSoftwareTrigger(options));
+    }
+
     private static CameraOptions ValidOptions(string driverId) => new()
     {
         Name = "Camera01",

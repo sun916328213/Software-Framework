@@ -5,7 +5,7 @@
 
     <ResourceDictionary.MergedDictionaries>
         <!--
-            页面样式（PageTitle / PageSubTitle / SectionTitle / DmInput / DmCombo / DmGrid / OutputBox）
+            页面样式（SectionTitle / DmInput / DmCombo / DmGrid / OutputBox）
             不在本文件定义，只**引用** DataManager.Controls 自己那份 —— 样式归页面所有，宿主只做引用。
             各页面也在自己的 UserControl.Resources 里合并同一字典，故页面换宿主也能独立工作。
         -->

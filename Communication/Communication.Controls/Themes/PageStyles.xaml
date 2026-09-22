@@ -52,6 +52,7 @@
         x:Key="DmCombo"
         BasedOn="{StaticResource MaterialDesignComboBox}"
         TargetType="ComboBox">
+        <Setter Property="materialDesign:ColorZoneAssist.Mode" Value="PrimaryLight" />
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
         <Style.Resources>
             <Style TargetType="ComboBoxItem">
