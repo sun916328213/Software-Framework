@@ -26,7 +26,7 @@
                 <Setter Property="materialDesign:ColorZoneAssist.Mode" Value="PrimaryLight" />
             </Style>
 
-            
+
 
             <Style BasedOn="{StaticResource MaterialDesignRaisedButton}" TargetType="Button">
                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
