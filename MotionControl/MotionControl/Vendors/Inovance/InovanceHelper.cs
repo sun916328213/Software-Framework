@@ -1,4 +1,5 @@
 using MotionControl.Definition;
+using MotionControl.Internal;
 
 namespace MotionControl.Vendors.Inovance
 {
@@ -33,18 +34,55 @@ namespace MotionControl.Vendors.Inovance
         private const ushort STS_POS_LIMIT = 1 << 3;
         private const ushort STS_NEG_LIMIT = 1 << 4;
         private const ushort STS_HOMED = 1 << 5;
+        private const int InputRegisterOffset = 10000;
+        private const int OutputRegisterOffset = 11000;
         /// <summary>报警监控轮询间隔（毫秒）</summary>
         private const int MonitorIntervalMs = 50;
         #endregion
 
         private readonly object _sync = new object();
-        private readonly ModbusTcpClient _client = new ModbusTcpClient();
-        private CancellationTokenSource? _monitorCts;
+        private readonly IInovanceTransport _transport;
+        private readonly AxisPollingMonitor _monitor;
         private bool[] _homing = Array.Empty<bool>();
         private bool[] _homeDone = Array.Empty<bool>();
+        private double[] _velOverride = Array.Empty<double>();
+
+        public InovanceHelper()
+            : this(new InovanceModbusTransport())
+        {
+        }
+
+        internal InovanceHelper(IInovanceTransport transport)
+        {
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            _monitor = new AxisPollingMonitor(
+                MonitorIntervalMs,
+                ReadMonitorSample,
+                (axis, rawStatus) => RaiseAlarm(axis, $"汇川控制器报警：{EffectiveParam.Name}(轴{axis})", rawStatus),
+                ObserveMonitorSample);
+        }
 
         /// <summary>强类型参数（含寄存器映射）</summary>
-        private InovanceParam InvParam => Param as InovanceParam ?? new InovanceParam();
+        private InovanceParam InvParam => EffectiveParam as InovanceParam ?? new InovanceParam();
+
+        protected override MotionResult ValidateParameters()
+        {
+            var common = base.ValidateParameters();
+            if (!common.IsSuccess)
+                return common;
+            if (string.IsNullOrWhiteSpace(EffectiveParam.IpAddress))
+                return MotionResult.Failure(EMotionResult.InvalidParam, "汇川控制器 IP 地址不能为空。");
+            if (EffectiveParam.TcpPort <= 0 || EffectiveParam.TcpPort > ushort.MaxValue)
+                return MotionResult.Failure(EMotionResult.InvalidParam, "汇川控制器 TCP 端口必须在 1 到 65535 之间。");
+
+            var parameter = InvParam;
+            if (parameter.RegisterStride < 8)
+                return MotionResult.Failure(EMotionResult.InvalidParam, "汇川轴寄存器跨度不能小于 8。");
+            var lastRegister = (long)parameter.RegisterBase + (AxisCount - 1L) * parameter.RegisterStride + 7;
+            if (lastRegister > ushort.MaxValue)
+                return MotionResult.Failure(EMotionResult.InvalidParam, "汇川轴寄存器映射超出 16 位地址范围。");
+            return MotionResult.Success();
+        }
 
         #region 连接/断开
         protected override EMotionResult ConnectRefactor()
@@ -55,22 +93,16 @@ namespace MotionControl.Vendors.Inovance
                     return EMotionResult.Success;
                 if (AxisCount <= 0)
                     return EMotionResult.InvalidParam;
-                if (string.IsNullOrWhiteSpace(Param.IpAddress))
+                if (string.IsNullOrWhiteSpace(EffectiveParam.IpAddress))
                     return EMotionResult.InvalidParam;
 
-                if (!_client.Connect(Param.IpAddress, Param.TcpPort))
+                if (!_transport.Connect(EffectiveParam.IpAddress, EffectiveParam.TcpPort, InvParam, AxisCount))
                     return EMotionResult.Fail;
-
-                // 连接探测：读0号轴状态字
-                if (_client.ReadHoldingRegisters(InvParam.SlaveId, InvParam.StatusWordAddress(0), 1) == null)
-                {
-                    _client.Disconnect();
-                    return EMotionResult.Fail;
-                }
 
                 _homing = new bool[AxisCount];
                 _homeDone = new bool[AxisCount];
-                StartMonitor();
+                _velOverride = new double[AxisCount];
+                _monitor.Start(AxisCount);
                 return EMotionResult.Success;
             }
         }
@@ -82,10 +114,11 @@ namespace MotionControl.Vendors.Inovance
                 if (!_isConnected)
                     return EMotionResult.Success;
                 StopAllInternal();
-                _monitorCts?.Cancel();
-                _monitorCts = null;
-                _client.Dispose();
+                _monitor.Stop();
+                _transport.Disconnect();
                 _homing = Array.Empty<bool>();
+                _homeDone = Array.Empty<bool>();
+                _velOverride = Array.Empty<double>();
                 return EMotionResult.Success;
             }
         }
@@ -127,10 +160,10 @@ namespace MotionControl.Vendors.Inovance
                 // 置位清错位并保持一个轮询周期后清除
                 var ret = SetControlBits(axis, CTL_CLEAR_ALARM, CTL_CLEAR_ALARM);
                 Thread.Sleep(MonitorIntervalMs);
-                SetControlBits(axis, 0, CTL_CLEAR_ALARM);
+                var clearResult = SetControlBits(axis, 0, CTL_CLEAR_ALARM);
                 _homeDone[axis] = false;
                 _homing[axis] = false;
-                return ret;
+                return ret == EMotionResult.Success ? clearResult : ret;
             }
         }
         #endregion
@@ -138,10 +171,15 @@ namespace MotionControl.Vendors.Inovance
         #region 运动控制
         protected override EMotionResult SetSpeedRefactor(int axis, long velPulse)
         {
-            // 速度在每次运动前按配置下发，此处无需缓存（用户单位直接写REAL）
             lock (_sync)
             {
-                return _isConnected ? EMotionResult.Success : EMotionResult.NotConnected;
+                if (!_isConnected)
+                    return EMotionResult.NotConnected;
+                var cfg = AxisConfig(axis);
+                if (cfg.PulseEquivalent <= 0)
+                    return EMotionResult.InvalidParam;
+                _velOverride[axis] = velPulse / cfg.PulseEquivalent;
+                return EMotionResult.Success;
             }
         }
 
@@ -153,7 +191,8 @@ namespace MotionControl.Vendors.Inovance
                     return _isConnected ? EMotionResult.Fail : EMotionResult.NotConnected;
                 if (!CheckSoftLimit(axis, pulse))
                     return EMotionResult.InvalidParam;
-                WriteTarget(axis, pulse, EffectiveVelocity(axis));
+                if (!WriteTarget(axis, pulse, EffectiveVelocity(axis)))
+                    return EMotionResult.Fail;
                 return SetControlBits(axis, CTL_MOVE_ABS, CTL_MOVE_ABS | CTL_JOG_POSITIVE | CTL_JOG_NEGATIVE | CTL_HOME_START);
             }
         }
@@ -164,10 +203,12 @@ namespace MotionControl.Vendors.Inovance
             {
                 if (!CheckReady(axis))
                     return _isConnected ? EMotionResult.Fail : EMotionResult.NotConnected;
-                long cur = ReadCurrentPosition(axis);
+                if (!TryReadCurrentPosition(axis, out long cur))
+                    return EMotionResult.Fail;
                 if (!CheckSoftLimit(axis, cur + pulse))
                     return EMotionResult.InvalidParam;
-                WriteTarget(axis, pulse, EffectiveVelocity(axis));
+                if (!WriteTarget(axis, pulse, EffectiveVelocity(axis)))
+                    return EMotionResult.Fail;
                 return SetControlBits(axis, CTL_MOVE_REL, CTL_MOVE_REL | CTL_JOG_POSITIVE | CTL_JOG_NEGATIVE | CTL_HOME_START);
             }
         }
@@ -178,7 +219,8 @@ namespace MotionControl.Vendors.Inovance
             {
                 if (!CheckReady(axis))
                     return _isConnected ? EMotionResult.Fail : EMotionResult.NotConnected;
-                WriteTarget(axis, 0, EffectiveVelocity(axis));
+                if (!WriteTarget(axis, 0, EffectiveVelocity(axis)))
+                    return EMotionResult.Fail;
                 var bit = direction > 0 ? CTL_JOG_POSITIVE : CTL_JOG_NEGATIVE;
                 return SetControlBits(axis, bit, CTL_MOVE_ABS | CTL_MOVE_REL | CTL_JOG_POSITIVE | CTL_JOG_NEGATIVE | CTL_HOME_START);
             }
@@ -201,18 +243,20 @@ namespace MotionControl.Vendors.Inovance
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                StopAllInternal();
-                return EMotionResult.Success;
+                return StopAllInternal()
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
-        private void StopAllInternal()
+        private bool StopAllInternal()
         {
+            var allSucceeded = true;
             for (int i = 0; i < AxisCount; i++)
             {
                 _homing[i] = false;
-                SetControlBits(i, CTL_STOP, CTL_STOP);
+                allSucceeded &= SetControlBits(i, CTL_STOP, CTL_STOP) == EMotionResult.Success;
             }
+            return allSucceeded;
         }
 
         /// <summary>运动前置检查（连接、就绪）</summary>
@@ -238,50 +282,37 @@ namespace MotionControl.Vendors.Inovance
         private double EffectiveVelocity(int axis)
         {
             var cfg = AxisConfig(axis);
-            return cfg.VelHigh;
+            return _velOverride[axis] > 0 ? _velOverride[axis] : cfg.VelHigh;
         }
 
         /// <summary>读-改-写控制字：setBits置位，mask中的位先清零</summary>
         private EMotionResult SetControlBits(int axis, ushort setBits, ushort clearMask)
         {
-            ushort addr = InvParam.ControlWordAddress(axis);
-            var cur = _client.ReadHoldingRegisters(InvParam.SlaveId, addr, 1);
-            if (cur == null)
-                return EMotionResult.Fail;
-            ushort word = (ushort)((cur[0] & ~clearMask) | setBits);
-            return _client.WriteSingleRegister(InvParam.SlaveId, addr, (short)word)
+            return _transport.UpdateControlWord(axis, setBits, clearMask)
                 ? EMotionResult.Success : EMotionResult.Fail;
         }
 
         /// <summary>写目标位置与目标速度</summary>
-        private void WriteTarget(int axis, long position, double velocity)
+        private bool WriteTarget(int axis, long position, double velocity)
         {
             int pos = (int)Math.Clamp(position * 1.0, int.MinValue, int.MaxValue);
-            // DINT低字在前；REAL按IEEE754两字（低字在前）
-            short posLow = (short)(pos & 0xFFFF);
-            short posHigh = (short)((pos >> 16) & 0xFFFF);
-            var velBytes = BitConverter.GetBytes((float)velocity);
-            short velLow = BitConverter.ToInt16(velBytes, 0);
-            short velHigh = BitConverter.ToInt16(velBytes, 2);
-
-            _client.WriteMultipleRegisters(InvParam.SlaveId, InvParam.TargetPositionAddress(axis), new[] { posLow, posHigh });
-            _client.WriteMultipleRegisters(InvParam.SlaveId, InvParam.TargetVelocityAddress(axis), new[] { velLow, velHigh });
+            return _transport.WriteTarget(axis, pos, (float)velocity);
         }
 
-        /// <summary>读取当前反馈位置（pulse）</summary>
-        private long ReadCurrentPosition(int axis)
+        /// <summary>读取当前反馈位置（pulse）。</summary>
+        private bool TryReadCurrentPosition(int axis, out long position)
         {
-            var data = _client.ReadHoldingRegisters(InvParam.SlaveId, InvParam.CurrentPositionAddress(axis), 2);
-            if (data == null || data.Length < 2)
-                return 0;
-            return ((data[1] << 16) | (ushort)data[0]);
+            position = 0;
+            if (!_transport.TryReadCurrentPosition(axis, out var value))
+                return false;
+            position = value;
+            return true;
         }
 
         /// <summary>读取状态字，失败返回null</summary>
         private ushort? ReadStatusWord(int axis)
         {
-            var data = _client.ReadHoldingRegisters(InvParam.SlaveId, InvParam.StatusWordAddress(axis), 1);
-            return data == null ? null : (ushort)data[0];
+            return _transport.TryReadStatus(axis, out var status) ? status : null;
         }
         #endregion
 
@@ -300,7 +331,8 @@ namespace MotionControl.Vendors.Inovance
                         return EMotionResult.InvalidParam;
                     case EHomeMode.SetCurrentAsOrigin:
                         // 直接将当前位置寄存器清零
-                        _client.WriteMultipleRegisters(InvParam.SlaveId, InvParam.CurrentPositionAddress(axis), new short[] { 0, 0 });
+                        if (!_transport.SetCurrentPosition(axis, 0))
+                            return EMotionResult.Fail;
                         _homeDone[axis] = true;
                         return EMotionResult.Success;
                     default:
@@ -320,8 +352,9 @@ namespace MotionControl.Vendors.Inovance
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                pulse = ReadCurrentPosition(axis);
-                return EMotionResult.Success;
+                return TryReadCurrentPosition(axis, out pulse)
+                    ? EMotionResult.Success
+                    : EMotionResult.Fail;
             }
         }
 
@@ -377,14 +410,14 @@ namespace MotionControl.Vendors.Inovance
         protected override EMotionResult GetInputRefactor(int index, out bool state)
         {
             state = false;
+            if (!IsIoIndexValid(index, InputRegisterOffset))
+                return EMotionResult.InvalidParam;
             lock (_sync)
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                var data = _client.ReadHoldingRegisters(InvParam.SlaveId, (ushort)(InvParam.RegisterBase + 10000 + index), 1);
-                if (data == null)
+                if (!_transport.TryReadInput(index, out state))
                     return EMotionResult.Fail;
-                state = data[0] != 0;
                 return EMotionResult.Success;
             }
         }
@@ -392,66 +425,62 @@ namespace MotionControl.Vendors.Inovance
         protected override EMotionResult GetOutputRefactor(int index, out bool state)
         {
             state = false;
+            if (!IsIoIndexValid(index, OutputRegisterOffset))
+                return EMotionResult.InvalidParam;
             lock (_sync)
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                var data = _client.ReadHoldingRegisters(InvParam.SlaveId, (ushort)(InvParam.RegisterBase + 11000 + index), 1);
-                if (data == null)
+                if (!_transport.TryReadOutput(index, out state))
                     return EMotionResult.Fail;
-                state = data[0] != 0;
                 return EMotionResult.Success;
             }
         }
 
         protected override EMotionResult SetOutputRefactor(int index, bool state)
         {
+            if (!IsIoIndexValid(index, OutputRegisterOffset))
+                return EMotionResult.InvalidParam;
             lock (_sync)
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                return _client.WriteSingleRegister(InvParam.SlaveId, (ushort)(InvParam.RegisterBase + 11000 + index), (short)(state ? 1 : 0))
+                return _transport.WriteOutput(index, state)
                     ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
+
+        private bool IsIoIndexValid(int index, int offset)
+            => index >= 0 && (long)InvParam.RegisterBase + offset + index <= ushort.MaxValue;
         #endregion
 
         #region 后台监控（报警事件 + 回零完成检测）
-        private void StartMonitor()
+        private AxisMonitorSample? ReadMonitorSample(int axis)
         {
-            _monitorCts = new CancellationTokenSource();
-            var token = _monitorCts.Token;
-            _ = Task.Run(() =>
+            lock (_sync)
             {
-                var lastAlm = new bool[_homing.Length];
-                while (!token.IsCancellationRequested)
-                {
-                    try
-                    {
-                        for (int i = 0; i < _homing.Length; i++)
-                        {
-                            var sts = ReadStatusWord(i);
-                            if (sts == null)
-                                continue;
-                            bool alm = (sts.Value & STS_ALARM) != 0;
-                            if (alm && !lastAlm[i])
-                                RaiseAlarm(i, $"汇川控制器报警：{Param.Name}(轴{i})", sts.Value);
-                            lastAlm[i] = alm;
+                if ((uint)axis >= (uint)_homing.Length)
+                    return null;
 
-                            if (_homing[i] && (sts.Value & STS_HOMED) != 0)
-                            {
-                                _homing[i] = false;
-                                _homeDone[i] = true;
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        // 监控线程不允许因瞬时异常退出
-                    }
-                    token.WaitHandle.WaitOne(MonitorIntervalMs);
-                }
-            }, token);
+                var status = ReadStatusWord(axis);
+                return status.HasValue
+                    ? new AxisMonitorSample(status.Value, (status.Value & STS_ALARM) != 0)
+                    : null;
+            }
+        }
+
+        private void ObserveMonitorSample(int axis, long rawStatus)
+        {
+            lock (_sync)
+            {
+                if ((uint)axis >= (uint)_homing.Length ||
+                    (uint)axis >= (uint)_homeDone.Length ||
+                    !_homing[axis] || (((ushort)rawStatus & STS_HOMED) == 0))
+                    return;
+
+                _homing[axis] = false;
+                _homeDone[axis] = true;
+            }
         }
         #endregion
     }

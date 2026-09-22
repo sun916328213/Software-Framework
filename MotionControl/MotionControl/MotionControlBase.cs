@@ -1,4 +1,5 @@
 using MotionControl.Definition;
+using MotionControl.Internal;
 
 namespace MotionControl
 {
@@ -8,18 +9,42 @@ namespace MotionControl
     /// </summary>
     public abstract class MotionControlBase : IMotionCard
     {
-        internal bool _isConnected;
+        private const double Int64ExclusiveUpperBound = 9223372036854775808d;
+        private readonly object _connectionSync = new();
+        private MotionCardParam _configuredParam = new MotionCardParam();
+        private volatile MotionCardParam? _activeParam;
+        internal volatile bool _isConnected;
         /// <inheritdoc/>
         public bool IsConnected => _isConnected;
 
         /// <inheritdoc/>
-        public virtual string Name { get => Param.Name; set => Param.Name = value; }
+        public virtual string Name
+        {
+            get => EffectiveParam.Name;
+            set
+            {
+                lock (_connectionSync)
+                    _configuredParam.Name = value;
+            }
+        }
 
         /// <inheritdoc/>
-        public virtual MotionCardParam Param { get; set; } = new MotionCardParam();
+        public virtual MotionCardParam Param
+        {
+            get => _configuredParam;
+            set
+            {
+                ArgumentNullException.ThrowIfNull(value);
+                lock (_connectionSync)
+                    _configuredParam = value;
+            }
+        }
+
+        /// <summary>当前连接使用的稳定参数；未连接时返回待连接配置。</summary>
+        protected MotionCardParam EffectiveParam => _activeParam ?? _configuredParam;
 
         /// <inheritdoc/>
-        public int AxisCount => Param?.Axises?.Count ?? 0;
+        public int AxisCount => EffectiveParam.Axises?.Count ?? 0;
 
         /// <inheritdoc/>
         public event EventHandler<AxisAlarmEventArgs>? AlarmOccurred;
@@ -42,41 +67,142 @@ namespace MotionControl
         /// <param name="axis">轴索引，从0开始</param>
         protected AxisParam AxisConfig(int axis)
         {
-            if (Param?.Axises == null || axis < 0 || axis >= Param.Axises.Count)
+            if (EffectiveParam.Axises == null || axis < 0 || axis >= EffectiveParam.Axises.Count)
                 throw new ArgumentOutOfRangeException(nameof(axis), $"轴索引 {axis} 超出范围（共 {AxisCount} 轴）");
-            return Param.Axises[axis];
+            return EffectiveParam.Axises[axis];
         }
 
         /// <summary>
         /// 用户单位转脉冲数
         /// </summary>
-        protected long ToPulse(int axis, double unit) => (long)Math.Round(unit * AxisConfig(axis).PulseEquivalent);
+        protected long ToPulse(int axis, double unit)
+        {
+            var pulse = Math.Round(unit * AxisConfig(axis).PulseEquivalent);
+            if (!double.IsFinite(pulse) || pulse < long.MinValue || pulse >= Int64ExclusiveUpperBound)
+                throw new ArgumentOutOfRangeException(nameof(unit), "数值换算为脉冲后超出 Int64 范围。");
+            return (long)pulse;
+        }
+
+        private bool TryToPulse(int axis, double unit, out long pulse)
+        {
+            pulse = 0;
+            if (!double.IsFinite(unit))
+                return false;
+
+            try
+            {
+                pulse = ToPulse(axis, unit);
+                return true;
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return false;
+            }
+        }
 
         /// <summary>
         /// 脉冲数转用户单位
         /// </summary>
         protected double ToUnit(int axis, long pulse) => pulse / AxisConfig(axis).PulseEquivalent;
+
+        private MotionResult ValidateAxis(int axis)
+            => axis >= 0 && axis < AxisCount
+                ? MotionResult.Success()
+                : MotionResult.Failure(EMotionResult.InvalidAxis, $"轴索引 {axis} 超出范围（共 {AxisCount} 轴）。");
+
+        private MotionResult ExecuteAxisCommand(int axis, string operation, Func<EMotionResult> command)
+        {
+            lock (_connectionSync)
+            {
+                var validation = ValidateAxis(axis);
+                return validation.IsSuccess
+                    ? ExecuteConnectedCommand(operation, command)
+                    : validation;
+            }
+        }
+
+        private MotionResult ExecuteConnectedCommand(string operation, Func<EMotionResult> command)
+        {
+            lock (_connectionSync)
+            {
+                if (!_isConnected)
+                    return MotionResult.Failure(EMotionResult.NotConnected, $"{operation}失败：控制卡未连接。");
+
+                var result = command();
+                return result == EMotionResult.Success
+                    ? MotionResult.Success()
+                    : MotionResult.Failure(result, $"{operation}失败（{result}）。");
+            }
+        }
         #endregion
 
         #region 连接/断开
         /// <inheritdoc/>
         public bool Connect()
+            => ConnectResult().IsSuccess;
+
+        /// <inheritdoc/>
+        public MotionResult ConnectResult()
         {
-            var iRet = ConnectRefactor();
-            _isConnected = iRet == EMotionResult.Success;
-            return _isConnected;
+            lock (_connectionSync)
+            {
+                if (_isConnected)
+                    return MotionResult.Success();
+
+                _activeParam = _configuredParam.Snapshot();
+                var validation = ValidateParameters();
+                if (!validation.IsSuccess)
+                {
+                    _activeParam = null;
+                    return validation;
+                }
+
+                try
+                {
+                    var result = ConnectRefactor();
+                    _isConnected = result == EMotionResult.Success;
+                    if (!_isConnected)
+                        _activeParam = null;
+                    return _isConnected
+                        ? MotionResult.Success()
+                        : MotionResult.Failure(result, "控制卡连接失败。");
+                }
+                catch
+                {
+                    _activeParam = null;
+                    throw;
+                }
+            }
         }
+
+        /// <summary>连接前参数校验；厂商实现可在通用规则之上追加约束。</summary>
+        protected virtual MotionResult ValidateParameters()
+            => MotionParameterValidator.Validate(EffectiveParam);
+
         /// <summary>
         /// 连接控制卡（打开卡）
         /// </summary>
         protected abstract EMotionResult ConnectRefactor();
 
         /// <inheritdoc/>
-        public bool DisConnect()
+        public bool DisConnect() => DisconnectResult().IsSuccess;
+
+        /// <inheritdoc/>
+        public MotionResult DisconnectResult()
         {
-            var iRet = DisConnectRefactor();
-            _isConnected = iRet != EMotionResult.Success;
-            return !_isConnected;
+            lock (_connectionSync)
+            {
+                if (!_isConnected)
+                    return MotionResult.Success();
+
+                var result = DisConnectRefactor();
+                _isConnected = result != EMotionResult.Success;
+                if (!_isConnected)
+                    _activeParam = null;
+                return !_isConnected
+                    ? MotionResult.Success()
+                    : MotionResult.Failure(result, $"控制卡断开失败（{result}）。");
+            }
         }
         /// <summary>
         /// 断开控制卡（关闭卡）
@@ -86,30 +212,33 @@ namespace MotionControl
 
         #region 伺服控制
         /// <inheritdoc/>
-        public bool ServoOn(int axis)
-        {
-            return ServoOnRefactor(axis) == EMotionResult.Success;
-        }
+        public bool ServoOn(int axis) => ServoOnResult(axis).IsSuccess;
+
+        /// <inheritdoc/>
+        public MotionResult ServoOnResult(int axis)
+            => ExecuteAxisCommand(axis, "伺服使能", () => ServoOnRefactor(axis));
         /// <summary>
         /// 伺服使能
         /// </summary>
         protected abstract EMotionResult ServoOnRefactor(int axis);
 
         /// <inheritdoc/>
-        public bool ServoOff(int axis)
-        {
-            return ServoOffRefactor(axis) == EMotionResult.Success;
-        }
+        public bool ServoOff(int axis) => ServoOffResult(axis).IsSuccess;
+
+        /// <inheritdoc/>
+        public MotionResult ServoOffResult(int axis)
+            => ExecuteAxisCommand(axis, "伺服失能", () => ServoOffRefactor(axis));
         /// <summary>
         /// 伺服失能
         /// </summary>
         protected abstract EMotionResult ServoOffRefactor(int axis);
 
         /// <inheritdoc/>
-        public bool ClearAxisStatus(int axis)
-        {
-            return ClearAxisStatusRefactor(axis) == EMotionResult.Success;
-        }
+        public bool ClearAxisStatus(int axis) => ClearAxisStatusResult(axis).IsSuccess;
+
+        /// <inheritdoc/>
+        public MotionResult ClearAxisStatusResult(int axis)
+            => ExecuteAxisCommand(axis, "清除轴状态", () => ClearAxisStatusRefactor(axis));
         /// <summary>
         /// 清除轴状态（报警、限位等）
         /// </summary>
@@ -119,10 +248,20 @@ namespace MotionControl
         #region 运动控制
         /// <inheritdoc/>
         public bool SetSpeed(int axis, double velocity)
+            => SetSpeedResult(axis, velocity).IsSuccess;
+
+        /// <inheritdoc/>
+        public MotionResult SetSpeedResult(int axis, double velocity)
         {
-            if (velocity <= 0)
-                return false;
-            return SetSpeedRefactor(axis, ToPulse(axis, velocity)) == EMotionResult.Success;
+            lock (_connectionSync)
+            {
+                var axisValidation = ValidateAxis(axis);
+                if (!axisValidation.IsSuccess)
+                    return axisValidation;
+                if (velocity <= 0 || !TryToPulse(axis, velocity, out long pulse) || pulse <= 0)
+                    return MotionResult.Failure(EMotionResult.InvalidParam, "速度必须是可换算为正脉冲数的有限正数。");
+                return ExecuteConnectedCommand("设置轴速度", () => SetSpeedRefactor(axis, pulse));
+            }
         }
         /// <summary>
         /// 设置轴运行速度
@@ -133,8 +272,20 @@ namespace MotionControl
 
         /// <inheritdoc/>
         public bool MoveAbs(int axis, double position)
+            => MoveAbsResult(axis, position).IsSuccess;
+
+        /// <inheritdoc/>
+        public MotionResult MoveAbsResult(int axis, double position)
         {
-            return MoveAbsRefactor(axis, ToPulse(axis, position)) == EMotionResult.Success;
+            lock (_connectionSync)
+            {
+                var axisValidation = ValidateAxis(axis);
+                if (!axisValidation.IsSuccess)
+                    return axisValidation;
+                if (!TryToPulse(axis, position, out long pulse))
+                    return MotionResult.Failure(EMotionResult.InvalidParam, "目标位置必须是可换算为脉冲数的有限数值。");
+                return ExecuteConnectedCommand("绝对运动", () => MoveAbsRefactor(axis, pulse));
+            }
         }
         /// <summary>
         /// 绝对运动到目标位置
@@ -145,8 +296,20 @@ namespace MotionControl
 
         /// <inheritdoc/>
         public bool MoveRel(int axis, double distance)
+            => MoveRelResult(axis, distance).IsSuccess;
+
+        /// <inheritdoc/>
+        public MotionResult MoveRelResult(int axis, double distance)
         {
-            return MoveRelRefactor(axis, ToPulse(axis, distance)) == EMotionResult.Success;
+            lock (_connectionSync)
+            {
+                var axisValidation = ValidateAxis(axis);
+                if (!axisValidation.IsSuccess)
+                    return axisValidation;
+                if (!TryToPulse(axis, distance, out long pulse))
+                    return MotionResult.Failure(EMotionResult.InvalidParam, "相对距离必须是可换算为脉冲数的有限数值。");
+                return ExecuteConnectedCommand("相对运动", () => MoveRelRefactor(axis, pulse));
+            }
         }
         /// <summary>
         /// 相对当前位置运动
@@ -156,9 +319,20 @@ namespace MotionControl
         protected abstract EMotionResult MoveRelRefactor(int axis, long pulse);
 
         /// <inheritdoc/>
-        public bool JogStart(int axis, EDirection direction)
+        public bool JogStart(int axis, EDirection direction) => JogStartResult(axis, direction).IsSuccess;
+
+        /// <inheritdoc/>
+        public MotionResult JogStartResult(int axis, EDirection direction)
         {
-            return JogStartRefactor(axis, (short)direction) == EMotionResult.Success;
+            lock (_connectionSync)
+            {
+                var axisValidation = ValidateAxis(axis);
+                if (!axisValidation.IsSuccess)
+                    return axisValidation;
+                if (!Enum.IsDefined(direction))
+                    return MotionResult.Failure(EMotionResult.InvalidParam, "点动方向无效。");
+                return ExecuteConnectedCommand("开始点动", () => JogStartRefactor(axis, (short)direction));
+            }
         }
         /// <summary>
         /// 开始点动
@@ -169,8 +343,20 @@ namespace MotionControl
 
         /// <inheritdoc/>
         public bool Stop(int axis, EStopMode stopMode = EStopMode.Decelerate)
+            => StopResult(axis, stopMode).IsSuccess;
+
+        /// <inheritdoc/>
+        public MotionResult StopResult(int axis, EStopMode stopMode = EStopMode.Decelerate)
         {
-            return StopAxisRefactor(axis, stopMode) == EMotionResult.Success;
+            lock (_connectionSync)
+            {
+                var axisValidation = ValidateAxis(axis);
+                if (!axisValidation.IsSuccess)
+                    return axisValidation;
+                if (!Enum.IsDefined(stopMode))
+                    return MotionResult.Failure(EMotionResult.InvalidParam, "停止方式无效。");
+                return ExecuteConnectedCommand("停止单轴", () => StopAxisRefactor(axis, stopMode));
+            }
         }
         /// <summary>
         /// 停止单轴
@@ -179,8 +365,17 @@ namespace MotionControl
 
         /// <inheritdoc/>
         public bool StopAll(EStopMode stopMode = EStopMode.Emergency)
+            => StopAllResult(stopMode).IsSuccess;
+
+        /// <inheritdoc/>
+        public MotionResult StopAllResult(EStopMode stopMode = EStopMode.Emergency)
         {
-            return StopAllRefactor(stopMode) == EMotionResult.Success;
+            lock (_connectionSync)
+            {
+                if (!Enum.IsDefined(stopMode))
+                    return MotionResult.Failure(EMotionResult.InvalidParam, "停止方式无效。");
+                return ExecuteConnectedCommand("停止全部轴", () => StopAllRefactor(stopMode));
+            }
         }
         /// <summary>
         /// 停止本卡所有轴
@@ -190,10 +385,11 @@ namespace MotionControl
 
         #region 回零
         /// <inheritdoc/>
-        public bool StartHome(int axis)
-        {
-            return HomeStartRefactor(axis) == EMotionResult.Success;
-        }
+        public bool StartHome(int axis) => StartHomeResult(axis).IsSuccess;
+
+        /// <inheritdoc/>
+        public MotionResult StartHomeResult(int axis)
+            => ExecuteAxisCommand(axis, "启动回零", () => HomeStartRefactor(axis));
         /// <summary>
         /// 启动回零
         /// </summary>
@@ -204,9 +400,33 @@ namespace MotionControl
         /// <inheritdoc/>
         public double GetCommandPosition(int axis)
         {
-            AxisConfig(axis);
-            var iRet = GetCommandPositionRefactor(axis, out long pulse);
-            return iRet == EMotionResult.Success ? ToUnit(axis, pulse) : 0;
+            lock (_connectionSync)
+            {
+                AxisConfig(axis);
+                var iRet = GetCommandPositionRefactor(axis, out long pulse);
+                return iRet == EMotionResult.Success ? ToUnit(axis, pulse) : 0;
+            }
+        }
+
+        /// <inheritdoc/>
+        public MotionResult<double> ReadCommandPosition(int axis)
+        {
+            lock (_connectionSync)
+            {
+                try
+                {
+                    AxisConfig(axis);
+                }
+                catch (ArgumentOutOfRangeException ex)
+                {
+                    return MotionResult<double>.Failure(EMotionResult.InvalidAxis, ex.Message);
+                }
+
+                var result = GetCommandPositionRefactor(axis, out long pulse);
+                return result == EMotionResult.Success
+                    ? MotionResult<double>.Success(ToUnit(axis, pulse))
+                    : MotionResult<double>.Failure(result, $"读取轴 {axis} 指令位置失败。");
+            }
         }
         /// <summary>
         /// 获取指令位置
@@ -218,9 +438,33 @@ namespace MotionControl
         /// <inheritdoc/>
         public double GetEncoderPosition(int axis)
         {
-            AxisConfig(axis);
-            var iRet = GetEncoderPositionRefactor(axis, out long pulse);
-            return iRet == EMotionResult.Success ? ToUnit(axis, pulse) : 0;
+            lock (_connectionSync)
+            {
+                AxisConfig(axis);
+                var iRet = GetEncoderPositionRefactor(axis, out long pulse);
+                return iRet == EMotionResult.Success ? ToUnit(axis, pulse) : 0;
+            }
+        }
+
+        /// <inheritdoc/>
+        public MotionResult<double> ReadEncoderPosition(int axis)
+        {
+            lock (_connectionSync)
+            {
+                try
+                {
+                    AxisConfig(axis);
+                }
+                catch (ArgumentOutOfRangeException ex)
+                {
+                    return MotionResult<double>.Failure(EMotionResult.InvalidAxis, ex.Message);
+                }
+
+                var result = GetEncoderPositionRefactor(axis, out long pulse);
+                return result == EMotionResult.Success
+                    ? MotionResult<double>.Success(ToUnit(axis, pulse))
+                    : MotionResult<double>.Failure(result, $"读取轴 {axis} 编码器位置失败。");
+            }
         }
         /// <summary>
         /// 获取编码器位置
@@ -232,11 +476,41 @@ namespace MotionControl
         /// <inheritdoc/>
         public AxisStatus GetAxisStatus(int axis)
         {
-            AxisConfig(axis);
-            var iRet = GetAxisStatusRefactor(axis, out long raw);
-            if (iRet != EMotionResult.Success)
-                return new AxisStatus { Axis = axis };
-            return new AxisStatus { Axis = axis, Raw = raw, Flags = ParseAxisFlags(axis, raw) };
+            lock (_connectionSync)
+            {
+                AxisConfig(axis);
+                var iRet = GetAxisStatusRefactor(axis, out long raw);
+                if (iRet != EMotionResult.Success)
+                    return new AxisStatus { Axis = axis };
+                return new AxisStatus { Axis = axis, Raw = raw, Flags = ParseAxisFlags(axis, raw) };
+            }
+        }
+
+        /// <inheritdoc/>
+        public MotionResult<AxisStatus> ReadAxisStatus(int axis)
+        {
+            lock (_connectionSync)
+            {
+                try
+                {
+                    AxisConfig(axis);
+                }
+                catch (ArgumentOutOfRangeException ex)
+                {
+                    return MotionResult<AxisStatus>.Failure(EMotionResult.InvalidAxis, ex.Message);
+                }
+
+                var result = GetAxisStatusRefactor(axis, out long raw);
+                if (result != EMotionResult.Success)
+                    return MotionResult<AxisStatus>.Failure(result, $"读取轴 {axis} 状态失败。");
+
+                return MotionResult<AxisStatus>.Success(new AxisStatus
+                {
+                    Axis = axis,
+                    Raw = raw,
+                    Flags = ParseAxisFlags(axis, raw),
+                });
+            }
         }
         /// <summary>
         /// 获取轴原始状态字
@@ -276,8 +550,23 @@ namespace MotionControl
         /// <inheritdoc/>
         public bool GetInput(int index)
         {
-            var iRet = GetInputRefactor(index, out bool state);
-            return iRet == EMotionResult.Success && state;
+            lock (_connectionSync)
+            {
+                var iRet = GetInputRefactor(index, out bool state);
+                return iRet == EMotionResult.Success && state;
+            }
+        }
+
+        /// <inheritdoc/>
+        public MotionResult<bool> ReadInput(int index)
+        {
+            lock (_connectionSync)
+            {
+                var result = GetInputRefactor(index, out bool state);
+                return result == EMotionResult.Success
+                    ? MotionResult<bool>.Success(state)
+                    : MotionResult<bool>.Failure(result, $"读取输入点 {index} 失败。");
+            }
         }
         /// <summary>
         /// 读取通用输入点
@@ -287,8 +576,23 @@ namespace MotionControl
         /// <inheritdoc/>
         public bool GetOutput(int index)
         {
-            var iRet = GetOutputRefactor(index, out bool state);
-            return iRet == EMotionResult.Success && state;
+            lock (_connectionSync)
+            {
+                var iRet = GetOutputRefactor(index, out bool state);
+                return iRet == EMotionResult.Success && state;
+            }
+        }
+
+        /// <inheritdoc/>
+        public MotionResult<bool> ReadOutput(int index)
+        {
+            lock (_connectionSync)
+            {
+                var result = GetOutputRefactor(index, out bool state);
+                return result == EMotionResult.Success
+                    ? MotionResult<bool>.Success(state)
+                    : MotionResult<bool>.Failure(result, $"读取输出点 {index} 失败。");
+            }
         }
         /// <summary>
         /// 读取通用输出点当前状态
@@ -296,9 +600,17 @@ namespace MotionControl
         protected abstract EMotionResult GetOutputRefactor(int index, out bool state);
 
         /// <inheritdoc/>
-        public bool SetOutput(int index, bool state)
+        public bool SetOutput(int index, bool state) => SetOutputResult(index, state).IsSuccess;
+
+        /// <inheritdoc/>
+        public MotionResult SetOutputResult(int index, bool state)
         {
-            return SetOutputRefactor(index, state) == EMotionResult.Success;
+            lock (_connectionSync)
+            {
+                if (index < 0)
+                    return MotionResult.Failure(EMotionResult.InvalidParam, "输出点索引不能小于 0。");
+                return ExecuteConnectedCommand($"写输出点 {index}", () => SetOutputRefactor(index, state));
+            }
         }
         /// <summary>
         /// 写通用输出点
@@ -310,33 +622,101 @@ namespace MotionControl
         /// <inheritdoc/>
         public async Task<bool> WaitInPositionAsync(int axis, int timeoutMs = 5000)
         {
+            return (await WaitInPositionResultAsync(axis, timeoutMs)).IsSuccess;
+        }
+
+        /// <inheritdoc/>
+        public async Task<MotionResult> WaitInPositionResultAsync(int axis, int timeoutMs = 5000,
+            CancellationToken cancellationToken = default)
+        {
+            if (timeoutMs <= 0)
+                return MotionResult.Failure(EMotionResult.InvalidParam, "超时时间必须大于 0。");
+
+            try
+            {
+                AxisConfig(axis);
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                return MotionResult.Failure(EMotionResult.InvalidAxis, ex.Message);
+            }
+
             var sw = System.Diagnostics.Stopwatch.StartNew();
             while (sw.ElapsedMilliseconds < timeoutMs)
             {
-                var status = GetAxisStatus(axis);
+                if (cancellationToken.IsCancellationRequested)
+                    return MotionResult.Failure(EMotionResult.Cancelled, "等待轴到位操作已取消。");
+
+                var statusResult = ReadAxisStatus(axis);
+                if (!statusResult.IsSuccess)
+                    return MotionResult.Failure(statusResult.Code, statusResult.Message, statusResult.VendorCode);
+                var status = statusResult.Value;
                 if (status.Alarm || status.EmergencyStop)
-                    return false;
+                    return status.EmergencyStop
+                        ? MotionResult.Failure(EMotionResult.EmergencyStop, $"轴 {axis} 触发急停。")
+                        : MotionResult.Failure(EMotionResult.Alarm, $"轴 {axis} 发生报警。");
                 if (!status.Moving && status.InPosition)
-                    return true;
-                await Task.Delay(10);
+                    return MotionResult.Success();
+                try
+                {
+                    await Task.Delay(10, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    return MotionResult.Failure(EMotionResult.Cancelled, "等待轴到位操作已取消。");
+                }
             }
-            return false;
+            return MotionResult.Failure(EMotionResult.Timeout, $"等待轴 {axis} 到位超时（{timeoutMs}ms）。");
         }
 
         /// <inheritdoc/>
         public async Task<bool> WaitHomeDoneAsync(int axis, int timeoutMs = 30000)
         {
+            return (await WaitHomeDoneResultAsync(axis, timeoutMs)).IsSuccess;
+        }
+
+        /// <inheritdoc/>
+        public async Task<MotionResult> WaitHomeDoneResultAsync(int axis, int timeoutMs = 30000,
+            CancellationToken cancellationToken = default)
+        {
+            if (timeoutMs <= 0)
+                return MotionResult.Failure(EMotionResult.InvalidParam, "超时时间必须大于 0。");
+
+            try
+            {
+                AxisConfig(axis);
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                return MotionResult.Failure(EMotionResult.InvalidAxis, ex.Message);
+            }
+
             var sw = System.Diagnostics.Stopwatch.StartNew();
             while (sw.ElapsedMilliseconds < timeoutMs)
             {
-                var status = GetAxisStatus(axis);
+                if (cancellationToken.IsCancellationRequested)
+                    return MotionResult.Failure(EMotionResult.Cancelled, "等待回零操作已取消。");
+
+                var statusResult = ReadAxisStatus(axis);
+                if (!statusResult.IsSuccess)
+                    return MotionResult.Failure(statusResult.Code, statusResult.Message, statusResult.VendorCode);
+                var status = statusResult.Value;
                 if (status.Alarm || status.EmergencyStop)
-                    return false;
+                    return status.EmergencyStop
+                        ? MotionResult.Failure(EMotionResult.EmergencyStop, $"轴 {axis} 回零时触发急停。")
+                        : MotionResult.Failure(EMotionResult.Alarm, $"轴 {axis} 回零时发生报警。");
                 if (status.Homed && !status.Moving)
-                    return true;
-                await Task.Delay(10);
+                    return MotionResult.Success();
+                try
+                {
+                    await Task.Delay(10, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    return MotionResult.Failure(EMotionResult.Cancelled, "等待回零操作已取消。");
+                }
             }
-            return false;
+            return MotionResult.Failure(EMotionResult.Timeout, $"等待轴 {axis} 回零超时（{timeoutMs}ms）。");
         }
         #endregion
     }

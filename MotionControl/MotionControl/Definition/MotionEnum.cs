@@ -29,6 +29,26 @@ namespace MotionControl.Definition
         /// 参数错误
         /// </summary>
         InvalidParam = 5,
+        /// <summary>
+        /// 操作超时
+        /// </summary>
+        Timeout = 6,
+        /// <summary>
+        /// 操作被取消
+        /// </summary>
+        Cancelled = 7,
+        /// <summary>
+        /// 轴报警
+        /// </summary>
+        Alarm = 8,
+        /// <summary>
+        /// 急停触发
+        /// </summary>
+        EmergencyStop = 9,
+        /// <summary>
+        /// 当前实现不支持该能力
+        /// </summary>
+        NotSupported = 10,
     }
 
     /// <summary>

@@ -8,42 +8,62 @@ namespace MotionControl.Vendors.Inovance
     /// </summary>
     internal sealed class ModbusTcpClient : IDisposable
     {
+        private const int MbapHeaderLength = 7;
+        private const int MaximumMbapLength = 254;
+        private readonly object _sync = new();
         private TcpClient? _client;
         private NetworkStream? _stream;
         private ushort _txId;
+        private int _timeoutMs = 2000;
 
         /// <summary>连接超时时间（毫秒）</summary>
-        public int TimeoutMs { get; set; } = 2000;
+        public int TimeoutMs
+        {
+            get => _timeoutMs;
+            set => _timeoutMs = value > 0
+                ? value
+                : throw new ArgumentOutOfRangeException(nameof(value), "超时时间必须大于 0。");
+        }
 
         /// <summary>
         /// 建立TCP连接
         /// </summary>
         public bool Connect(string ip, int port)
         {
-            try
+            lock (_sync)
             {
-                Disconnect();
-                _client = new TcpClient();
-                var task = _client.ConnectAsync(ip, port);
-                if (!task.Wait(TimeoutMs) || !_client.Connected)
+                try
                 {
-                    Dispose();
+                    CloseConnection();
+                    _client = new TcpClient();
+                    var task = _client.ConnectAsync(ip, port);
+                    if (!task.Wait(TimeoutMs) || !_client.Connected)
+                    {
+                        CloseConnection();
+                        return false;
+                    }
+                    _client.ReceiveTimeout = TimeoutMs;
+                    _client.SendTimeout = TimeoutMs;
+                    _stream = _client.GetStream();
+                    return true;
+                }
+                catch
+                {
+                    CloseConnection();
                     return false;
                 }
-                _client.ReceiveTimeout = TimeoutMs;
-                _client.SendTimeout = TimeoutMs;
-                _stream = _client.GetStream();
-                return true;
-            }
-            catch
-            {
-                Dispose();
-                return false;
             }
         }
 
         /// <summary>是否已连接</summary>
-        public bool IsConnected => _client?.Connected == true;
+        public bool IsConnected
+        {
+            get
+            {
+                lock (_sync)
+                    return _client?.Connected == true && _stream != null;
+            }
+        }
 
         /// <summary>
         /// 读保持寄存器（FC03）
@@ -54,24 +74,31 @@ namespace MotionControl.Vendors.Inovance
         /// <returns>寄存器值数组，失败返回null</returns>
         public short[]? ReadHoldingRegisters(byte slaveId, ushort address, ushort count)
         {
-            try
-            {
-                var request = BuildRequest(slaveId, 0x03);
-                // FC03：起始地址(2) + 数量(2)
-                request.AddRange(new byte[] { (byte)(address >> 8), (byte)address, (byte)(count >> 8), (byte)count });
-
-                var response = Transact(request.ToArray(), 9 + count * 2);
-                if (response == null || response[7] != 0x03)
-                    return null;
-                var result = new short[count];
-                for (int i = 0; i < count; i++)
-                    result[i] = (short)((response[9 + i * 2] << 8) | response[10 + i * 2]);
-                return result;
-            }
-            catch
-            {
-                Dispose();
+            if (count is 0 or > 125)
                 return null;
+
+            lock (_sync)
+            {
+                try
+                {
+                    var request = BuildRequest(slaveId, 0x03);
+                    request.AddRange(new byte[] { (byte)(address >> 8), (byte)address, (byte)(count >> 8), (byte)count });
+
+                    var response = Transact(request.ToArray());
+                    var byteCount = count * 2;
+                    if (response == null || response[7] != 0x03 || response.Length != 9 + byteCount ||
+                        response[8] != byteCount)
+                        return null;
+                    var result = new short[count];
+                    for (int i = 0; i < count; i++)
+                        result[i] = (short)((response[9 + i * 2] << 8) | response[10 + i * 2]);
+                    return result;
+                }
+                catch
+                {
+                    CloseConnection();
+                    return null;
+                }
             }
         }
 
@@ -80,17 +107,22 @@ namespace MotionControl.Vendors.Inovance
         /// </summary>
         public bool WriteSingleRegister(byte slaveId, ushort address, short value)
         {
-            try
+            lock (_sync)
             {
-                var request = BuildRequest(slaveId, 0x06);
-                request.AddRange(new byte[] { (byte)(address >> 8), (byte)address, (byte)(value >> 8), (byte)value });
-                var response = Transact(request.ToArray(), 12);
-                return response != null && response[7] == 0x06;
-            }
-            catch
-            {
-                Dispose();
-                return false;
+                try
+                {
+                    var request = BuildRequest(slaveId, 0x06);
+                    request.AddRange(new byte[] { (byte)(address >> 8), (byte)address, (byte)(value >> 8), (byte)value });
+                    var bytes = request.ToArray();
+                    var response = Transact(bytes);
+                    return response is { Length: 12 } && response[7] == 0x06 &&
+                        response.AsSpan(8, 4).SequenceEqual(bytes.AsSpan(8, 4));
+                }
+                catch
+                {
+                    CloseConnection();
+                    return false;
+                }
             }
         }
 
@@ -99,25 +131,34 @@ namespace MotionControl.Vendors.Inovance
         /// </summary>
         public bool WriteMultipleRegisters(byte slaveId, ushort address, short[] values)
         {
-            try
-            {
-                int byteCount = values.Length * 2;
-                var request = BuildRequest(slaveId, 0x10);
-                request.AddRange(new byte[]
-                {
-                    (byte)(address >> 8), (byte)address,
-                    (byte)(values.Length >> 8), (byte)values.Length,
-                    (byte)byteCount,
-                });
-                foreach (var v in values)
-                    request.AddRange(new byte[] { (byte)(v >> 8), (byte)v });
-                var response = Transact(request.ToArray(), 12);
-                return response != null && response[7] == 0x10;
-            }
-            catch
-            {
-                Dispose();
+            ArgumentNullException.ThrowIfNull(values);
+            if (values.Length is 0 or > 123)
                 return false;
+
+            lock (_sync)
+            {
+                try
+                {
+                    int byteCount = values.Length * 2;
+                    var request = BuildRequest(slaveId, 0x10);
+                    request.AddRange(new byte[]
+                    {
+                        (byte)(address >> 8), (byte)address,
+                        (byte)(values.Length >> 8), (byte)values.Length,
+                        (byte)byteCount,
+                    });
+                    foreach (var v in values)
+                        request.AddRange(new byte[] { (byte)(v >> 8), (byte)v });
+                    var bytes = request.ToArray();
+                    var response = Transact(bytes);
+                    return response is { Length: 12 } && response[7] == 0x10 &&
+                        response.AsSpan(8, 4).SequenceEqual(bytes.AsSpan(8, 4));
+                }
+                catch
+                {
+                    CloseConnection();
+                    return false;
+                }
             }
         }
 
@@ -134,8 +175,8 @@ namespace MotionControl.Vendors.Inovance
             };
         }
 
-        /// <summary>发送请求并接收响应（自动修正长度域）</summary>
-        private byte[]? Transact(byte[] request, int expectedLength)
+        /// <summary>发送请求并根据MBAP长度域接收、校验完整响应。</summary>
+        private byte[]? Transact(byte[] request)
         {
             if (_stream == null || !_stream.CanWrite)
                 return null;
@@ -146,11 +187,36 @@ namespace MotionControl.Vendors.Inovance
 
             _stream.Write(request, 0, request.Length);
 
-            var buffer = new byte[expectedLength];
-            int received = 0;
-            while (received < expectedLength)
+            var header = ReadExact(_stream, MbapHeaderLength);
+            if (header == null)
+                return CloseMalformedConnection();
+
+            int responseLength = (header[4] << 8) | header[5];
+            if (responseLength is < 2 or > MaximumMbapLength ||
+                header[0] != request[0] || header[1] != request[1] ||
+                header[2] != 0 || header[3] != 0 || header[6] != request[6])
+                return CloseMalformedConnection();
+
+            var response = new byte[6 + responseLength];
+            Buffer.BlockCopy(header, 0, response, 0, header.Length);
+            var body = ReadExact(_stream, responseLength - 1);
+            if (body == null)
+                return CloseMalformedConnection();
+            Buffer.BlockCopy(body, 0, response, MbapHeaderLength, body.Length);
+
+            var responseFunction = response[7];
+            if (responseFunction != request[7] && responseFunction != (request[7] | 0x80))
+                return CloseMalformedConnection();
+            return response;
+        }
+
+        private static byte[]? ReadExact(Stream stream, int count)
+        {
+            var buffer = new byte[count];
+            var received = 0;
+            while (received < count)
             {
-                int n = _stream.Read(buffer, received, expectedLength - received);
+                int n = stream.Read(buffer, received, count - received);
                 if (n <= 0)
                     return null;
                 received += n;
@@ -158,9 +224,21 @@ namespace MotionControl.Vendors.Inovance
             return buffer;
         }
 
-        public void Disconnect() => Dispose();
+        private byte[]? CloseMalformedConnection()
+        {
+            CloseConnection();
+            return null;
+        }
 
-        public void Dispose()
+        public void Disconnect()
+        {
+            lock (_sync)
+                CloseConnection();
+        }
+
+        public void Dispose() => Disconnect();
+
+        private void CloseConnection()
         {
             try { _stream?.Close(); } catch { }
             try { _client?.Close(); } catch { }

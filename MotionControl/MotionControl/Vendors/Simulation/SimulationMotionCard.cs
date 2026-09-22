@@ -18,6 +18,7 @@ namespace MotionControl.Vendors.Simulation
         private long[] _target = Array.Empty<long>();
         private long[] _vel = Array.Empty<long>();      // 运行速度（SetSpeed可修改）
         private long[] _runVel = Array.Empty<long>();   // 当前本次运动实际使用的速度
+        private double[] _fractionalPulse = Array.Empty<double>(); // 跨tick保留不足1脉冲的位移
         private EAxisStatusFlag[] _flags = Array.Empty<EAxisStatusFlag>();
         private bool[] _homing = Array.Empty<bool>();
         private bool[] _inputs = new bool[IoCount];
@@ -39,6 +40,7 @@ namespace MotionControl.Vendors.Simulation
                 _target = new long[AxisCount];
                 _vel = new long[AxisCount];
                 _runVel = new long[AxisCount];
+                _fractionalPulse = new double[AxisCount];
                 _flags = new EAxisStatusFlag[AxisCount];
                 _homing = new bool[AxisCount];
 
@@ -123,7 +125,7 @@ namespace MotionControl.Vendors.Simulation
                     return EMotionResult.NotConnected;
                 if ((_flags[axis] & EAxisStatusFlag.Enabled) == 0)
                     return EMotionResult.Fail;
-                if ((_flags[axis] & EAxisStatusFlag.Alarm) != 0)
+                if ((_flags[axis] & (EAxisStatusFlag.Alarm | EAxisStatusFlag.EmergencyStop)) != 0)
                     return EMotionResult.Fail;
 
                 var cfg = AxisConfig(axis);
@@ -139,7 +141,16 @@ namespace MotionControl.Vendors.Simulation
         {
             lock (_sync)
             {
-                return MoveAbsRefactor(axis, _cmdPos[axis] + pulse);
+                long target;
+                try
+                {
+                    target = checked(_cmdPos[axis] + pulse);
+                }
+                catch (OverflowException)
+                {
+                    return EMotionResult.InvalidParam;
+                }
+                return MoveAbsRefactor(axis, target);
             }
         }
 
@@ -149,11 +160,15 @@ namespace MotionControl.Vendors.Simulation
             {
                 if (!CheckOpened())
                     return EMotionResult.NotConnected;
-                if ((_flags[axis] & EAxisStatusFlag.Enabled) == 0 || (_flags[axis] & EAxisStatusFlag.Alarm) != 0)
+                if ((_flags[axis] & EAxisStatusFlag.Enabled) == 0 ||
+                    (_flags[axis] & (EAxisStatusFlag.Alarm | EAxisStatusFlag.EmergencyStop)) != 0)
                     return EMotionResult.Fail;
 
                 // 点动目标设为极远端，持续运动直到Stop
-                long farTarget = direction > 0 ? long.MaxValue / 4 : long.MinValue / 4;
+                var cfg = AxisConfig(axis);
+                long farTarget = cfg.EnableSoftLimit
+                    ? ToPulse(axis, direction > 0 ? cfg.SoftLimitPositive : cfg.SoftLimitNegative)
+                    : direction > 0 ? long.MaxValue / 4 : long.MinValue / 4;
                 StartMotion(axis, farTarget, _vel[axis], homing: false);
                 return EMotionResult.Success;
             }
@@ -188,6 +203,7 @@ namespace MotionControl.Vendors.Simulation
         {
             _target[axis] = target;
             _runVel[axis] = vel > 0 ? vel : 1;
+            _fractionalPulse[axis] = 0;
             _homing[axis] = homing;
             _flags[axis] &= ~EAxisStatusFlag.InPosition;
             _flags[axis] |= EAxisStatusFlag.Moving;
@@ -198,6 +214,7 @@ namespace MotionControl.Vendors.Simulation
         private void StopAxisInternal(int axis, EStopMode stopMode)
         {
             _target[axis] = _cmdPos[axis];
+            _fractionalPulse[axis] = 0;
             _homing[axis] = false;
             _flags[axis] &= ~EAxisStatusFlag.Moving;
             if (stopMode == EStopMode.Emergency)
@@ -220,7 +237,8 @@ namespace MotionControl.Vendors.Simulation
             {
                 if (!CheckOpened())
                     return EMotionResult.NotConnected;
-                if ((_flags[axis] & EAxisStatusFlag.Enabled) == 0 || (_flags[axis] & EAxisStatusFlag.Alarm) != 0)
+                if ((_flags[axis] & EAxisStatusFlag.Enabled) == 0 ||
+                    (_flags[axis] & (EAxisStatusFlag.Alarm | EAxisStatusFlag.EmergencyStop)) != 0)
                     return EMotionResult.Fail;
 
                 var cfg = AxisConfig(axis);
@@ -354,12 +372,18 @@ namespace MotionControl.Vendors.Simulation
                     if ((_flags[i] & EAxisStatusFlag.Moving) == 0)
                         continue;
 
-                    double step = _runVel[i] * dt;
-                    long diff = _target[i] - _cmdPos[i];
-                    if (Math.Abs(diff) <= step)
+                    double exactStep = _runVel[i] * dt + _fractionalPulse[i];
+                    long step = (long)Math.Floor(exactStep);
+                    _fractionalPulse[i] = exactStep - step;
+                    if (step <= 0)
+                        continue;
+
+                    decimal distance = Math.Abs((decimal)_target[i] - _cmdPos[i]);
+                    if (distance <= step)
                     {
                         _cmdPos[i] = _target[i];
                         _encPos[i] = _target[i];
+                        _fractionalPulse[i] = 0;
                         _flags[i] &= ~EAxisStatusFlag.Moving;
                         _flags[i] |= EAxisStatusFlag.InPosition;
                         if (_homing[i])
@@ -370,7 +394,7 @@ namespace MotionControl.Vendors.Simulation
                     }
                     else
                     {
-                        _cmdPos[i] += Math.Sign(diff) * (long)step;
+                        _cmdPos[i] += _target[i] > _cmdPos[i] ? step : -step;
                         _encPos[i] = _cmdPos[i];
                     }
                 }

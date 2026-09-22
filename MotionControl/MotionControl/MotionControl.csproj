@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Device\Device\Device.csproj" />
+    <InternalsVisibleTo Include="MotionControl.Tests" />
   </ItemGroup>
 
 </Project>

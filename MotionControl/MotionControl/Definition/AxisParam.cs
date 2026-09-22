@@ -57,5 +57,10 @@ namespace MotionControl.Definition
         /// 回零偏移量（用户单位），回到原点后再偏移该距离作为零点
         /// </summary>
         public double HomeOffset { get; set; }
+
+        /// <summary>
+        /// 创建运行期快照。派生类型包含额外可变成员时应重写此方法并完成深拷贝。
+        /// </summary>
+        public virtual AxisParam Snapshot() => (AxisParam)MemberwiseClone();
     }
 }

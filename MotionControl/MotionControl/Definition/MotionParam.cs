@@ -49,6 +49,11 @@ namespace MotionControl.Definition
         /// </summary>
         public EMotionCardType CardType { get; set; } = EMotionCardType.Simulation;
         /// <summary>
+        /// 可扩展驱动标识。为空时继续使用 <see cref="CardType"/>，从而兼容现有配置。
+        /// 第三方驱动应设置稳定的自定义标识，而无需扩展 <see cref="EMotionCardType"/>。
+        /// </summary>
+        public string? DriverId { get; set; }
+        /// <summary>
         /// 厂商配置文件路径（凌华：MotionCreatorPro2导出的XML；固高：gts.cfg配置文件；为空则使用板卡默认配置）
         /// </summary>
         public string? ConfigFile { get; set; }
@@ -64,5 +69,24 @@ namespace MotionControl.Definition
         /// 各轴参数（列表顺序即轴索引顺序，从0开始）
         /// </summary>
         public List<AxisParam> Axises { get; set; } = new List<AxisParam>();
+
+        /// <summary>解析当前配置最终使用的驱动标识。</summary>
+        public MotionDriverId ResolveDriverId()
+            => string.IsNullOrWhiteSpace(DriverId)
+                ? MotionDriverId.From(CardType)
+                : new MotionDriverId(DriverId);
+
+        /// <summary>
+        /// 创建连接期间使用的独立参数快照。
+        /// 派生类型包含额外可变引用成员时应重写此方法并完成深拷贝。
+        /// </summary>
+        public virtual MotionCardParam Snapshot()
+        {
+            var snapshot = (MotionCardParam)MemberwiseClone();
+            snapshot.Axises = Axises == null
+                ? null!
+                : Axises.Select(axis => axis?.Snapshot()!).ToList();
+            return snapshot;
+        }
     }
 }

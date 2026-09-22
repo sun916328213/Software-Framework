@@ -1,4 +1,5 @@
 using MotionControl.Definition;
+using MotionControl.Internal;
 
 namespace MotionControl.Vendors.ZMotion
 {
@@ -22,12 +23,39 @@ namespace MotionControl.Vendors.ZMotion
         #endregion
 
         private readonly object _sync = new object();
-        private IntPtr _handle = IntPtr.Zero;
-        private CancellationTokenSource? _monitorCts;
+        private readonly IZMotionTransport _transport;
+        private readonly AxisPollingMonitor _monitor;
         private DateTime[] _homeStartAt = Array.Empty<DateTime>();
         private bool[] _homing = Array.Empty<bool>();
         private bool[] _homeDone = Array.Empty<bool>();
         private double[] _velOverride = Array.Empty<double>(); // <=0表示未用SetSpeed覆盖
+
+        public ZMotionHelper()
+            : this(new ZMotionNativeTransport())
+        {
+        }
+
+        internal ZMotionHelper(IZMotionTransport transport)
+        {
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            _monitor = new AxisPollingMonitor(
+                MonitorIntervalMs,
+                ReadMonitorSample,
+                (axis, rawStatus) => RaiseAlarm(axis, $"正运动控制器报警：{EffectiveParam.Name}(轴{axis})", rawStatus),
+                (axis, _) => CheckHomeDone(axis));
+        }
+
+        protected override MotionResult ValidateParameters()
+        {
+            var common = base.ValidateParameters();
+            if (!common.IsSuccess)
+                return common;
+            if (string.IsNullOrWhiteSpace(EffectiveParam.IpAddress))
+                return MotionResult.Failure(EMotionResult.InvalidParam, "正运动控制器 IP 地址不能为空。");
+            if (EffectiveParam.TcpPort <= 0 || EffectiveParam.TcpPort > ushort.MaxValue)
+                return MotionResult.Failure(EMotionResult.InvalidParam, "正运动控制器 TCP 端口必须在 1 到 65535 之间。");
+            return MotionResult.Success();
+        }
 
         #region 连接/断开
         protected override EMotionResult ConnectRefactor()
@@ -40,26 +68,22 @@ namespace MotionControl.Vendors.ZMotion
                         return EMotionResult.Success;
                     if (AxisCount <= 0)
                         return EMotionResult.InvalidParam;
-                    if (string.IsNullOrWhiteSpace(Param.IpAddress))
+                    if (string.IsNullOrWhiteSpace(EffectiveParam.IpAddress))
                         return EMotionResult.InvalidParam;
 
-                    var ret = ZAux.ZAux_OpenEth(Param.IpAddress, (uint)Param.TcpPort, out _handle);
-                    if (ret != 0 || _handle == IntPtr.Zero)
-                    {
-                        _handle = IntPtr.Zero;
+                    if (!_transport.Connect(EffectiveParam.IpAddress, (uint)EffectiveParam.TcpPort))
                         return EMotionResult.Fail;
-                    }
 
                     // UNITS=1：控制器原生以脉冲为单位，与基类换算约定一致
                     for (int i = 0; i < AxisCount; i++)
-                        ZAux.ZAux_Direct_SetUnits(_handle, i, 1);
+                        _transport.ConfigureAxis(i);
 
                     _homing = new bool[AxisCount];
                     _homeDone = new bool[AxisCount];
                     _homeStartAt = new DateTime[AxisCount];
                     _velOverride = new double[AxisCount];
 
-                    StartMonitor();
+                    _monitor.Start(AxisCount);
                     return EMotionResult.Success;
                 }
             }
@@ -80,13 +104,8 @@ namespace MotionControl.Vendors.ZMotion
                 if (!_isConnected)
                     return EMotionResult.Success;
                 StopAllInternal(EStopMode.Emergency);
-                _monitorCts?.Cancel();
-                _monitorCts = null;
-                if (_handle != IntPtr.Zero)
-                {
-                    ZAux.ZAux_Close(_handle);
-                    _handle = IntPtr.Zero;
-                }
+                _monitor.Stop();
+                _transport.Disconnect();
                 _homing = Array.Empty<bool>();
                 return EMotionResult.Success;
             }
@@ -126,8 +145,8 @@ namespace MotionControl.Vendors.ZMotion
                 // DATUM(0)清除控制器轴状态错误；驱动器本体报警按其手册复位
                 _homeDone[axis] = false;
                 _homing[axis] = false;
-                var ret = ZAux.ZAux_Direct_Single_Datum(_handle, axis, ZAux.ZMC_DATUM_CLEAR_STATUS);
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return _transport.Datum(axis, ZAux.ZMC_DATUM_CLEAR_STATUS)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
         #endregion
@@ -153,8 +172,8 @@ namespace MotionControl.Vendors.ZMotion
                 if (!CheckSoftLimit(axis, pulse))
                     return EMotionResult.InvalidParam;
                 ApplyMotionParams(axis);
-                var ret = ZAux.ZAux_Direct_Single_Amove(_handle, axis, pulse);
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return _transport.MoveAbsolute(axis, pulse)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -167,8 +186,8 @@ namespace MotionControl.Vendors.ZMotion
                 if (!CheckSoftLimit(axis, CurrentPulse(axis) + pulse))
                     return EMotionResult.InvalidParam;
                 ApplyMotionParams(axis);
-                var ret = ZAux.ZAux_Direct_Single_Move(_handle, axis, pulse);
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return _transport.MoveRelative(axis, pulse)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -179,8 +198,8 @@ namespace MotionControl.Vendors.ZMotion
                 if (!CheckReady(axis))
                     return _isConnected ? EMotionResult.Fail : EMotionResult.NotConnected;
                 ApplyMotionParams(axis);
-                var ret = ZAux.ZAux_Direct_Single_Vmove(_handle, axis, direction > 0 ? 1 : -1);
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return _transport.Jog(axis, direction > 0 ? 1 : -1)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -192,8 +211,8 @@ namespace MotionControl.Vendors.ZMotion
                     return EMotionResult.NotConnected;
                 _homing[axis] = false;
                 int mode = stopMode == EStopMode.Emergency ? ZAux.ZMC_CANCEL_IMMEDIATE : ZAux.ZMC_CANCEL_ALL;
-                var ret = ZAux.ZAux_Direct_Single_Cancel(_handle, axis, mode);
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return _transport.Cancel(axis, mode)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -214,7 +233,7 @@ namespace MotionControl.Vendors.ZMotion
             {
                 _homing[i] = false;
                 int mode = stopMode == EStopMode.Emergency ? ZAux.ZMC_CANCEL_IMMEDIATE : ZAux.ZMC_CANCEL_ALL;
-                ZAux.ZAux_Direct_Single_Cancel(_handle, i, mode);
+                _transport.Cancel(i, mode);
             }
         }
 
@@ -223,9 +242,11 @@ namespace MotionControl.Vendors.ZMotion
         {
             var cfg = AxisConfig(axis);
             float vel = (float)EffectiveVelocity(axis);
-            ZAux.ZAux_Direct_SetSpeed(_handle, axis, vel);
-            ZAux.ZAux_Direct_SetAccel(_handle, axis, (float)(cfg.Accel * cfg.PulseEquivalent));
-            ZAux.ZAux_Direct_SetDecel(_handle, axis, (float)(cfg.Decel * cfg.PulseEquivalent));
+            _transport.SetMotionProfile(
+                axis,
+                vel,
+                (float)(cfg.Accel * cfg.PulseEquivalent),
+                (float)(cfg.Decel * cfg.PulseEquivalent));
         }
 
         /// <summary>运动前置检查（连接、伺服就绪）</summary>
@@ -252,16 +273,15 @@ namespace MotionControl.Vendors.ZMotion
         /// <summary>当前指令位置（pulse）</summary>
         private long CurrentPulse(int axis)
         {
-            float pos = 0;
-            ZAux.ZAux_Direct_GetDpos(_handle, axis, ref pos);
-            return (long)pos;
+            return _transport.TryGetCommandPosition(axis, out float position)
+                ? (long)position
+                : 0;
         }
 
         /// <summary>正运动的使能由控制器侧管理，此处以IDLE状态可读作为就绪判据</summary>
         private bool IsServoReady(int axis)
         {
-            int idle = 0;
-            return ZAux.ZAux_Direct_GetIfIdle(_handle, axis, ref idle) == 0;
+            return _transport.TryGetIdle(axis, out _);
         }
         #endregion
 
@@ -281,21 +301,24 @@ namespace MotionControl.Vendors.ZMotion
                     case EHomeMode.None:
                         return EMotionResult.InvalidParam;
                     case EHomeMode.SetCurrentAsOrigin:
-                        ZAux.ZAux_Direct_SetDpos(_handle, axis, 0);
+                        _transport.SetCommandPosition(axis, 0);
                         _homeDone[axis] = true;
                         return EMotionResult.Success;
                     default:
                         ApplyMotionParams(axis);
                         // 回零速度：DATUM使用SPEED/CREEP参数，这里将SPEED设为回零速度
-                        ZAux.ZAux_Direct_SetSpeed(_handle, axis,
-                            (float)Math.Max(1, cfg.HomeVelocity * Math.Max(cfg.PulseEquivalent, 1)));
+                        _transport.SetMotionProfile(
+                            axis,
+                            (float)Math.Max(1, cfg.HomeVelocity * Math.Max(cfg.PulseEquivalent, 1)),
+                            (float)(cfg.Accel * cfg.PulseEquivalent),
+                            (float)(cfg.Decel * cfg.PulseEquivalent));
                         _homing[axis] = true;
                         _homeDone[axis] = false;
                         _homeStartAt[axis] = DateTime.Now;
-                        var ret = ZAux.ZAux_Direct_Single_Datum(_handle, axis, ToZmotionHomeMode(cfg.HomeMode));
-                        if (ret != 0)
+                        var started = _transport.Datum(axis, ToZmotionHomeMode(cfg.HomeMode));
+                        if (!started)
                             _homing[axis] = false;
-                        return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                        return started ? EMotionResult.Success : EMotionResult.Fail;
                 }
             }
         }
@@ -316,12 +339,12 @@ namespace MotionControl.Vendors.ZMotion
         {
             lock (_sync)
             {
-                if (!_isConnected || !_homing[axis])
+                if (!_isConnected || (uint)axis >= (uint)_homing.Length ||
+                    (uint)axis >= (uint)_homeStartAt.Length || !_homing[axis])
                     return;
                 if ((DateTime.Now - _homeStartAt[axis]).TotalMilliseconds < HomeSettleMs)
                     return;
-                int idle = 0;
-                if (ZAux.ZAux_Direct_GetIfIdle(_handle, axis, ref idle) != 0 || idle != 0)
+                if (!_transport.TryGetIdle(axis, out int idle) || idle != 0)
                     return;   // -1表示仍在运动
 
                 _homing[axis] = false;
@@ -331,7 +354,7 @@ namespace MotionControl.Vendors.ZMotion
                 if (Math.Abs(offset) > double.Epsilon)
                 {
                     double offPulse = offset * Math.Max(AxisConfig(axis).PulseEquivalent, 1);
-                    ZAux.ZAux_Direct_SetDpos(_handle, axis, (float)offPulse);
+                    _transport.SetCommandPosition(axis, (float)offPulse);
                 }
             }
         }
@@ -345,10 +368,10 @@ namespace MotionControl.Vendors.ZMotion
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                float pos = 0;
-                var ret = ZAux.ZAux_Direct_GetDpos(_handle, axis, ref pos);
-                pulse = (long)pos;
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                if (!_transport.TryGetCommandPosition(axis, out float position))
+                    return EMotionResult.Fail;
+                pulse = (long)position;
+                return EMotionResult.Success;
             }
         }
 
@@ -359,10 +382,10 @@ namespace MotionControl.Vendors.ZMotion
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                float pos = 0;
-                var ret = ZAux.ZAux_Direct_GetMpos(_handle, axis, ref pos);
-                pulse = (long)pos;
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                if (!_transport.TryGetFeedbackPosition(axis, out float position))
+                    return EMotionResult.Fail;
+                pulse = (long)position;
+                return EMotionResult.Success;
             }
         }
 
@@ -373,11 +396,9 @@ namespace MotionControl.Vendors.ZMotion
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                int status = 0;
-                if (ZAux.ZAux_Direct_GetAxisStatus(_handle, axis, ref status) != 0)
+                if (!_transport.TryGetAxisStatus(axis, out int status))
                     return EMotionResult.Fail;
-                int idle = 0;
-                bool moving = ZAux.ZAux_Direct_GetIfIdle(_handle, axis, ref idle) == 0 && idle != 0;
+                bool moving = _transport.TryGetIdle(axis, out int idle) && idle != 0;
                 // 打包：低32位=AXISSTATUS；bit32=运动中
                 raw = (uint)status | ((moving ? 1L : 0L) << 32);
                 return EMotionResult.Success;
@@ -419,11 +440,9 @@ namespace MotionControl.Vendors.ZMotion
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                uint v = 0;
-                var ret = ZAux.ZAux_Direct_GetIn(_handle, index, ref v);
-                if (ret != 0)
+                if (!_transport.TryGetInput(index, out uint value))
                     return EMotionResult.Fail;
-                state = v != 0;
+                state = value != 0;
                 return EMotionResult.Success;
             }
         }
@@ -435,11 +454,9 @@ namespace MotionControl.Vendors.ZMotion
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                uint v = 0;
-                var ret = ZAux.ZAux_Direct_GetOp(_handle, index, ref v);
-                if (ret != 0)
+                if (!_transport.TryGetOutput(index, out uint value))
                     return EMotionResult.Fail;
-                state = v != 0;
+                state = value != 0;
                 return EMotionResult.Success;
             }
         }
@@ -450,44 +467,26 @@ namespace MotionControl.Vendors.ZMotion
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                var ret = ZAux.ZAux_Direct_SetOp(_handle, index, state ? 1u : 0u);
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return _transport.SetOutput(index, state ? 1u : 0u)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
         #endregion
 
         #region 后台监控（报警事件 + 回零完成检测）
-        private void StartMonitor()
+        private AxisMonitorSample? ReadMonitorSample(int axis)
         {
-            _monitorCts = new CancellationTokenSource();
-            var token = _monitorCts.Token;
-            _ = Task.Run(() =>
+            lock (_sync)
             {
-                var lastAlm = new bool[_homing.Length];
-                while (!token.IsCancellationRequested)
-                {
-                    try
-                    {
-                        for (int i = 0; i < _homing.Length; i++)
-                        {
-                            int status = 0;
-                            if (ZAux.ZAux_Direct_GetAxisStatus(_handle, i, ref status) != 0)
-                                continue;
-                            bool alm = (status & (ZAux.ZMC_STS_FOLLOW_ERROR | ZAux.ZMC_STS_EMERGENCY)) != 0;
-                            if (alm && !lastAlm[i])
-                                RaiseAlarm(i, $"正运动控制器报警：{Param.Name}(轴{i})", status);
-                            lastAlm[i] = alm;
+                if ((uint)axis >= (uint)_homing.Length || !_transport.IsConnected)
+                    return null;
 
-                            CheckHomeDone(i);
-                        }
-                    }
-                    catch
-                    {
-                        // 监控线程不允许因瞬时异常退出
-                    }
-                    token.WaitHandle.WaitOne(MonitorIntervalMs);
-                }
-            }, token);
+                if (!_transport.TryGetAxisStatus(axis, out int status))
+                    return null;
+
+                bool alarm = (status & (ZAux.ZMC_STS_FOLLOW_ERROR | ZAux.ZMC_STS_EMERGENCY)) != 0;
+                return new AxisMonitorSample(status, alarm);
+            }
         }
         #endregion
     }

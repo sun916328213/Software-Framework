@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.36408.4 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotionControl", "MotionControl\MotionControl.csproj", "{DE22BA38-DCE2-44AA-81F8-5B727AE4B380}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotionControl.Tests", "MotionControl.Tests\MotionControl.Tests.csproj", "{6B74FE24-D65E-48EB-B2A6-F954DADBCCEA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,14 @@ Global
 		{DE22BA38-DCE2-44AA-81F8-5B727AE4B380}.Debug|x64.Build.0 = Debug|Any CPU
 		{DE22BA38-DCE2-44AA-81F8-5B727AE4B380}.Release|x64.ActiveCfg = Release|Any CPU
 		{DE22BA38-DCE2-44AA-81F8-5B727AE4B380}.Release|x64.Build.0 = Release|Any CPU
+		{6B74FE24-D65E-48EB-B2A6-F954DADBCCEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B74FE24-D65E-48EB-B2A6-F954DADBCCEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B74FE24-D65E-48EB-B2A6-F954DADBCCEA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6B74FE24-D65E-48EB-B2A6-F954DADBCCEA}.Debug|x64.Build.0 = Debug|Any CPU
+		{6B74FE24-D65E-48EB-B2A6-F954DADBCCEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B74FE24-D65E-48EB-B2A6-F954DADBCCEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B74FE24-D65E-48EB-B2A6-F954DADBCCEA}.Release|x64.ActiveCfg = Release|Any CPU
+		{6B74FE24-D65E-48EB-B2A6-F954DADBCCEA}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,4 +1,5 @@
 using MotionControl.Definition;
+using MotionControl.Internal;
 
 namespace MotionControl.Vendors.Googol
 {
@@ -15,27 +16,43 @@ namespace MotionControl.Vendors.Googol
     internal class GoogolHelper : MotionControlBase
     {
         #region 厂商私有常量
-        /// <summary>GT_Stop平滑停止</summary>
-        private const long GTS_STOP_SMOOTH = 0;
-        /// <summary>GT_Stop紧急停止</summary>
-        private const long GTS_STOP_EMERGENCY = 1;
         /// <summary>报警监控轮询间隔（毫秒）</summary>
         private const int MonitorIntervalMs = 50;
         #endregion
 
         private readonly object _sync = new object();
-        private static readonly HashSet<short> _openedChannels = new HashSet<short>();
-
-        private CancellationTokenSource? _monitorCts;
+        private readonly IGoogolTransport _transport;
+        private readonly AxisPollingMonitor _monitor;
         private bool[] _homing = Array.Empty<bool>();
         private bool[] _homeDone = Array.Empty<bool>();
         private double[] _velOverride = Array.Empty<double>(); // <=0表示未用SetSpeed覆盖
 
-        /// <summary>固高轴号（逻辑索引+1）</summary>
-        private short AxisNo(int axis) => (short)(axis + 1);
+        public GoogolHelper()
+            : this(new GoogolNativeTransport())
+        {
+        }
 
-        /// <summary>轴位掩码：1&lt;&lt;逻辑索引</summary>
-        private long AxisMask(int axis) => 1L << axis;
+        internal GoogolHelper(IGoogolTransport transport)
+        {
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            _monitor = new AxisPollingMonitor(
+                MonitorIntervalMs,
+                ReadMonitorSample,
+                (axis, rawStatus) => RaiseAlarm(axis, $"固高卡报警：{EffectiveParam.Name}(轴{axis})", rawStatus),
+                (axis, _) => CheckHomeDone(axis));
+        }
+
+        protected override MotionResult ValidateParameters()
+        {
+            var common = base.ValidateParameters();
+            if (!common.IsSuccess)
+                return common;
+            if (EffectiveParam.CardNo > short.MaxValue)
+                return MotionResult.Failure(EMotionResult.InvalidParam, "固高通道号必须在 0 到 32767 之间。");
+            if (AxisCount > 64)
+                return MotionResult.Failure(EMotionResult.InvalidParam, "固高控制卡最多支持 64 个位掩码轴。 ");
+            return MotionResult.Success();
+        }
 
         #region 连接/断开
         protected override EMotionResult ConnectRefactor()
@@ -46,27 +63,17 @@ namespace MotionControl.Vendors.Googol
                 {
                     if (_isConnected)
                         return EMotionResult.Success;
-                    if (AxisCount <= 0)
-                        return EMotionResult.InvalidParam;
 
-                    short channel = (short)Param.CardNo;
-                    var ret = GTS.GT_Open(channel, 1);
-                    if (ret != 0)
-                        return EMotionResult.Fail;
-                    _openedChannels.Add(channel);
-
-                    // 下载配置文件（加载后需清状态生效）
-                    if (!string.IsNullOrEmpty(Param.ConfigFile))
-                        GTS.GT_LoadConfig(Param.ConfigFile);
-
-                    for (int i = 0; i < AxisCount; i++)
-                        GTS.GT_ClrSts(AxisNo(i), 1);
+                    var openResult = _transport.Open((short)EffectiveParam.CardNo,
+                        EffectiveParam.ConfigFile, AxisCount);
+                    if (openResult != EMotionResult.Success)
+                        return openResult;
 
                     _homing = new bool[AxisCount];
                     _homeDone = new bool[AxisCount];
                     _velOverride = new double[AxisCount];
 
-                    StartMonitor();
+                    _monitor.Start(AxisCount);
                     return EMotionResult.Success;
                 }
             }
@@ -88,14 +95,12 @@ namespace MotionControl.Vendors.Googol
                     return EMotionResult.Success;
 
                 StopAllInternal(EStopMode.Emergency);
-                _monitorCts?.Cancel();
-                _monitorCts = null;
-
-                _openedChannels.Remove((short)Param.CardNo);
-                if (_openedChannels.Count == 0)
-                    GTS.GT_Close();          // 最后一张卡断开时关闭库
+                _monitor.Stop();
+                _transport.Close();
 
                 _homing = Array.Empty<bool>();
+                _homeDone = Array.Empty<bool>();
+                _velOverride = Array.Empty<double>();
                 return EMotionResult.Success;
             }
         }
@@ -108,7 +113,7 @@ namespace MotionControl.Vendors.Googol
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                return GTS.GT_AxisOn(AxisNo(axis)) == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return _transport.SetServo(axis, true) ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -118,13 +123,13 @@ namespace MotionControl.Vendors.Googol
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                var ret = GTS.GT_AxisOff(AxisNo(axis));
-                if (ret == 0)
+                var succeeded = _transport.SetServo(axis, false);
+                if (succeeded)
                 {
                     _homing[axis] = false;
                     _homeDone[axis] = false;
                 }
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return succeeded ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -137,7 +142,7 @@ namespace MotionControl.Vendors.Googol
                 _homeDone[axis] = false;
                 _homing[axis] = false;
                 // 清除驱动器报警标志、跟随误差越限、限位触发标志；驱动器本体ALM需按其手册复位
-                return GTS.GT_ClrSts(AxisNo(axis), 1) == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return _transport.ClearStatus(axis) ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
         #endregion
@@ -165,8 +170,8 @@ namespace MotionControl.Vendors.Googol
                     return _isConnected ? EMotionResult.Fail : EMotionResult.NotConnected;
                 if (!CheckSoftLimit(axis, pulse))
                     return EMotionResult.InvalidParam;
-                StartTrapMove(axis, ClampPulse(pulse));
-                return EMotionResult.Success;
+                return StartTrapMove(axis, ClampPulse(pulse))
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -176,14 +181,13 @@ namespace MotionControl.Vendors.Googol
             {
                 if (!CheckReady(axis))
                     return _isConnected ? EMotionResult.Fail : EMotionResult.NotConnected;
-                double cur = 0;
-                if (GTS.GT_GetAxisPrfPos(AxisNo(axis), out cur, 1, IntPtr.Zero) != 0)
+                if (!_transport.TryGetCommandPosition(axis, out var cur))
                     return EMotionResult.Fail;
                 long target = (long)cur + pulse;
                 if (!CheckSoftLimit(axis, target))
                     return EMotionResult.InvalidParam;
-                StartTrapMove(axis, ClampPulse(target));
-                return EMotionResult.Success;
+                return StartTrapMove(axis, ClampPulse(target))
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -193,15 +197,11 @@ namespace MotionControl.Vendors.Googol
             {
                 if (!CheckReady(axis))
                     return _isConnected ? EMotionResult.Fail : EMotionResult.NotConnected;
-                short no = AxisNo(axis);
                 var cfg = AxisConfig(axis);
-                var jog = new GTS.TJogPrm { acc = ToAcc(cfg.Accel, axis), dec = ToAcc(cfg.Decel, axis), smooth = 0 };
-                GTS.GT_PrfJog(no);
-                GTS.GT_SetJogPrm(no, ref jog);
                 double vel = EffectiveVelocity(axis) * cfg.PulseEquivalent;
-                GTS.GT_SetVel(no, direction > 0 ? vel : -vel);   // 负速度=负方向
-                GTS.GT_Update(AxisMask(axis));
-                return EMotionResult.Success;
+                return _transport.StartJog(axis, ToAcc(cfg.Accel, axis), ToAcc(cfg.Decel, axis),
+                    direction > 0 ? vel : -vel)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -212,8 +212,8 @@ namespace MotionControl.Vendors.Googol
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
                 _homing[axis] = false;
-                var option = stopMode == EStopMode.Emergency ? GTS_STOP_EMERGENCY : GTS_STOP_SMOOTH;
-                return GTS.GT_Stop(AxisMask(axis), option) == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return _transport.StopAxis(axis, stopMode == EStopMode.Emergency)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -223,38 +223,26 @@ namespace MotionControl.Vendors.Googol
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                StopAllInternal(stopMode);
-                return EMotionResult.Success;
+                return StopAllInternal(stopMode)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
-        private void StopAllInternal(EStopMode stopMode)
+        private bool StopAllInternal(EStopMode stopMode)
         {
-            long mask = AxisCount >= 64 ? -1L : (1L << AxisCount) - 1;
-            var option = stopMode == EStopMode.Emergency ? GTS_STOP_EMERGENCY : GTS_STOP_SMOOTH;
-            GTS.GT_Stop(mask, option);
+            var succeeded = _transport.StopAll(AxisCount, stopMode == EStopMode.Emergency);
             for (int i = 0; i < _homing.Length; i++)
                 _homing[i] = false;
+            return succeeded;
         }
 
         /// <summary>启动点位(梯形)运动</summary>
-        private void StartTrapMove(int axis, int targetPulse)
+        private bool StartTrapMove(int axis, int targetPulse)
         {
-            short no = AxisNo(axis);
             var cfg = AxisConfig(axis);
             double vel = EffectiveVelocity(axis) * cfg.PulseEquivalent;
-            var trap = new GTS.TTrapPrm
-            {
-                acc = ToAcc(cfg.Accel, axis),
-                dec = ToAcc(cfg.Decel, axis),
-                velStart = Math.Max(1, cfg.VelLow * cfg.PulseEquivalent),
-                smoothTime = 0,
-            };
-            GTS.GT_PrfTrap(no);
-            GTS.GT_SetTrapPrm(no, ref trap);
-            GTS.GT_SetPos(no, targetPulse);
-            GTS.GT_SetVel(no, vel);
-            GTS.GT_Update(AxisMask(axis));
+            return _transport.StartTrapMove(axis, targetPulse, ToAcc(cfg.Accel, axis),
+                ToAcc(cfg.Decel, axis), Math.Max(1, cfg.VelLow * cfg.PulseEquivalent), vel);
         }
 
         /// <summary>运动前置检查（连接、伺服使能）</summary>
@@ -286,7 +274,7 @@ namespace MotionControl.Vendors.Googol
         /// <summary>伺服使能状态查询（状态字bit11，异常时回退到本地跟踪）</summary>
         private bool IsServoOn(int axis)
         {
-            if (GTS.GT_GetSts(AxisNo(axis), out int sts, 1, IntPtr.Zero) != 0)
+            if (!_transport.TryGetStatus(axis, out var sts))
                 return false;
             return (sts & GTS.GTS_STS_SERVO_ON) != 0;
         }
@@ -308,36 +296,26 @@ namespace MotionControl.Vendors.Googol
                     case EHomeMode.None:
                         return EMotionResult.InvalidParam;
                     case EHomeMode.SetCurrentAsOrigin:
-                        GTS.GT_ZeroPos(AxisNo(axis), 1);
+                        if (!_transport.SetCurrentAsOrigin(axis))
+                            return EMotionResult.Fail;
                         _homeDone[axis] = true;
                         return EMotionResult.Success;
                     default:
-                        short no = AxisNo(axis);
                         double equiv = cfg.PulseEquivalent > 0 ? cfg.PulseEquivalent : 1;
-                        var prm = new GTS.THomePrm
-                        {
-                            mode = ToGoogolHomeMode(cfg.HomeMode),
-                            moveDir = (short)cfg.HomeDirection,
-                            indexDir = (short)cfg.HomeDirection,
-                            edge = 0,
-                            triggerIndex = -1,
-                            velHigh = Math.Max(1, cfg.HomeVelocity * equiv),
-                            velLow = Math.Max(1, cfg.VelLow * equiv),
-                            acc = ToAcc(cfg.Accel, axis),
-                            dec = ToAcc(cfg.Decel, axis),
-                            smoothTime = 0,
-                            homeOffset = ClampPulse(ToPulse(axis, cfg.HomeOffset)),
-                            searchHomeDistance = 0,
-                            searchIndexDistance = 0,
-                            escapeStep = 0,
-                        };
-                        GTS.GT_ClrSts(no, 1);
+                        var profile = new GoogolHomeProfile(
+                            ToGoogolHomeMode(cfg.HomeMode),
+                            (short)cfg.HomeDirection,
+                            Math.Max(1, cfg.HomeVelocity * equiv),
+                            Math.Max(1, cfg.VelLow * equiv),
+                            ToAcc(cfg.Accel, axis),
+                            ToAcc(cfg.Decel, axis),
+                            ClampPulse(ToPulse(axis, cfg.HomeOffset)));
                         _homing[axis] = true;
                         _homeDone[axis] = false;
-                        var ret = GTS.GT_GoHome(no, ref prm);
-                        if (ret != 0)
+                        var succeeded = _transport.StartHome(axis, profile);
+                        if (!succeeded)
                             _homing[axis] = false;
-                        return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                        return succeeded ? EMotionResult.Success : EMotionResult.Fail;
                 }
             }
         }
@@ -358,21 +336,20 @@ namespace MotionControl.Vendors.Googol
         {
             lock (_sync)
             {
-                if (!_isConnected || !_homing[axis])
+                if (!_isConnected || (uint)axis >= (uint)_homing.Length || !_homing[axis])
                     return;
-                var st = new GTS.THomeStatus();
-                if (GTS.GT_GetHomeStatus(AxisNo(axis), ref st) != 0)
+                if (!_transport.TryGetHomeState(axis, out var state))
                     return;
-                if (st.stage < GTS.HOME_STAGE_END)
+                if (state.Stage < GTS.HOME_STAGE_END)
                     return;
                 _homing[axis] = false;
-                if (st.error != GTS.HOME_ERROR_NONE)
+                if (state.Error != GTS.HOME_ERROR_NONE)
                     return;
                 _homeDone[axis] = true;
 
                 double offset = AxisConfig(axis).HomeOffset;
-                if (Math.Abs(offset) > double.Epsilon && GTS.GT_GetAxisPrfPos(AxisNo(axis), out double cur, 1, IntPtr.Zero) == 0)
-                    GTS.GT_SetPrfPos(AxisNo(axis), ClampPulse(ToPulse(axis, offset)) + (int)cur);
+                if (Math.Abs(offset) > double.Epsilon && _transport.TryGetCommandPosition(axis, out var current))
+                    _transport.SetCommandPosition(axis, ClampPulse(ToPulse(axis, offset)) + (int)current);
             }
         }
         #endregion
@@ -385,9 +362,9 @@ namespace MotionControl.Vendors.Googol
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                var ret = GTS.GT_GetAxisPrfPos(AxisNo(axis), out double pos, 1, IntPtr.Zero);
+                var succeeded = _transport.TryGetCommandPosition(axis, out var pos);
                 pulse = (long)pos;
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return succeeded ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -398,9 +375,9 @@ namespace MotionControl.Vendors.Googol
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                var ret = GTS.GT_GetAxisEncPos(AxisNo(axis), out double pos, 1, IntPtr.Zero);
+                var succeeded = _transport.TryGetEncoderPosition(axis, out var pos);
                 pulse = (long)pos;
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return succeeded ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -411,7 +388,7 @@ namespace MotionControl.Vendors.Googol
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                if (GTS.GT_GetSts(AxisNo(axis), out int sts, 1, IntPtr.Zero) != 0)
+                if (!_transport.TryGetStatus(axis, out var sts))
                     return EMotionResult.Fail;
                 // 打包：低32位=固高状态字；bit32=运动中（规划速度非零）
                 bool moving = (sts & GTS.GTS_STS_ZERO_VEL) == 0;
@@ -454,8 +431,7 @@ namespace MotionControl.Vendors.Googol
             {
                 if (!_isConnected || index < 0 || index > 31)
                     return !_isConnected ? EMotionResult.NotConnected : EMotionResult.InvalidParam;
-                long value = 0;
-                if (GTS.GT_GetDi(GTS.MC_GPI, ref value) != 0)
+                if (!_transport.TryReadInputs(out var value))
                     return EMotionResult.Fail;
                 state = (value & (1L << index)) != 0;
                 return EMotionResult.Success;
@@ -469,8 +445,7 @@ namespace MotionControl.Vendors.Googol
             {
                 if (!_isConnected || index < 0 || index > 31)
                     return !_isConnected ? EMotionResult.NotConnected : EMotionResult.InvalidParam;
-                long value = 0;
-                if (GTS.GT_GetDo(GTS.MC_GPO, ref value) != 0)
+                if (!_transport.TryReadOutputs(out var value))
                     return EMotionResult.Fail;
                 state = (value & (1L << index)) != 0;
                 return EMotionResult.Success;
@@ -485,43 +460,23 @@ namespace MotionControl.Vendors.Googol
                     return EMotionResult.NotConnected;
                 if (index < 0 || index > short.MaxValue)
                     return EMotionResult.InvalidParam;
-                var ret = GTS.GT_SetDoBit(GTS.MC_GPO, (short)index, (short)(state ? 1 : 0));
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return _transport.WriteOutput(index, state)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
         #endregion
 
         #region 后台监控（报警事件 + 回零完成检测）
-        private void StartMonitor()
+        private AxisMonitorSample? ReadMonitorSample(int axis)
         {
-            _monitorCts = new CancellationTokenSource();
-            var token = _monitorCts.Token;
-            _ = Task.Run(() =>
+            lock (_sync)
             {
-                var lastAlm = new bool[_homing.Length];
-                while (!token.IsCancellationRequested)
-                {
-                    try
-                    {
-                        for (int i = 0; i < _homing.Length; i++)
-                        {
-                            if (GTS.GT_GetSts(AxisNo(i), out int sts, 1, IntPtr.Zero) != 0)
-                                continue;
-                            bool alm = (sts & GTS.GTS_STS_ALARM) != 0;
-                            if (alm && !lastAlm[i])
-                                RaiseAlarm(i, $"固高卡报警：{Param.Name}(轴{i})", sts);
-                            lastAlm[i] = alm;
+                if ((uint)axis >= (uint)_homing.Length ||
+                    !_transport.TryGetStatus(axis, out var status))
+                    return null;
 
-                            CheckHomeDone(i);
-                        }
-                    }
-                    catch
-                    {
-                        // 监控线程不允许因瞬时异常退出
-                    }
-                    token.WaitHandle.WaitOne(MonitorIntervalMs);
-                }
-            }, token);
+                return new AxisMonitorSample(status, (status & GTS.GTS_STS_ALARM) != 0);
+            }
         }
         #endregion
     }

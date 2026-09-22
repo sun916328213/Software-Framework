@@ -1,4 +1,5 @@
 using MotionControl.Definition;
+using MotionControl.Internal;
 
 namespace MotionControl.Vendors.ADLINK
 {
@@ -32,16 +33,38 @@ namespace MotionControl.Vendors.ADLINK
         #endregion
 
         private readonly object _sync = new object();
-        /// <summary>全局已初始化板卡位掩码（APS_initial为进程级全局操作，跨实例共享）</summary>
-        private static int _openBoardMask;
-
-        private CancellationTokenSource? _monitorCts;
-        private int[] _axisIds = Array.Empty<int>();      // 各逻辑轴对应的全局Axis_ID
+        private readonly IAdlinkTransport _transport;
+        private readonly AxisPollingMonitor _monitor;
         private bool[] _servoOn = Array.Empty<bool>();
         private bool[] _homing = Array.Empty<bool>();
         private bool[] _homeSeen = Array.Empty<bool>();   // 回零中已观察到HMV位（防误判）
         private bool[] _homeDone = Array.Empty<bool>();
         private double[] _velOverride = Array.Empty<double>(); // <=0表示未用SetSpeed覆盖
+
+        public AdlinkHelper()
+            : this(new AdlinkNativeTransport())
+        {
+        }
+
+        internal AdlinkHelper(IAdlinkTransport transport)
+        {
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            _monitor = new AxisPollingMonitor(
+                MonitorIntervalMs,
+                ReadMonitorSample,
+                (axis, rawStatus) => RaiseAlarm(axis, $"凌华卡报警：{EffectiveParam.Name}(轴{axis})", rawStatus),
+                (axis, _) => CheckHomeDone(axis));
+        }
+
+        protected override MotionResult ValidateParameters()
+        {
+            var common = base.ValidateParameters();
+            if (!common.IsSuccess)
+                return common;
+            if (EffectiveParam.CardNo > 31)
+                return MotionResult.Failure(EMotionResult.InvalidParam, "凌华板卡号必须在 0 到 31 之间。");
+            return MotionResult.Success();
+        }
 
         #region 连接/断开
         protected override EMotionResult ConnectRefactor()
@@ -53,48 +76,21 @@ namespace MotionControl.Vendors.ADLINK
                     if (_isConnected)
                         return EMotionResult.Success;
 
-                    var param = Param;
-                    int boardMask = 1 << param.CardNo;
+                    var profiles = Enumerable.Range(0, AxisCount)
+                        .Select(CreateAxisProfile)
+                        .ToArray();
+                    var openResult = _transport.Open(EffectiveParam.CardNo,
+                        EffectiveParam.ConfigFile, profiles);
+                    if (openResult != EMotionResult.Success)
+                        return openResult;
 
-                    // 加载MotionCreatorPro2导出的配置文件（须在initial之前）
-                    if (!string.IsNullOrEmpty(param.ConfigFile))
-                    {
-                        var retCfg = APS168.APS_load_param_from_file(param.ConfigFile);
-                        if (retCfg != APS168.ERR_NoError)
-                            return EMotionResult.Fail;
-                    }
-
-                    if ((_openBoardMask & boardMask) == 0)
-                    {
-                        var retInit = APS168.APS_initial(ref boardMask, 0);
-                        if (retInit != APS168.ERR_NoError && retInit != APS168.ERR_DeviceAlreadyInitialed)
-                            return EMotionResult.Fail;
-                        _openBoardMask |= 1 << param.CardNo;
-                    }
-
-                    // 获取板卡全局起始轴ID与轴总数，建立逻辑轴映射
-                    int startAxisId = 0, totalAxes = 0;
-                    var retAxis = APS168.APS_get_first_axisId(param.CardNo, ref startAxisId, ref totalAxes);
-                    if (retAxis != APS168.ERR_NoError)
-                        return EMotionResult.Fail;
-                    if (AxisCount <= 0 || AxisCount > totalAxes)
-                        return EMotionResult.InvalidParam;
-
-                    _axisIds = new int[AxisCount];
                     _servoOn = new bool[AxisCount];
                     _homing = new bool[AxisCount];
                     _homeSeen = new bool[AxisCount];
                     _homeDone = new bool[AxisCount];
                     _velOverride = new double[AxisCount];
 
-                    for (int i = 0; i < AxisCount; i++)
-                    {
-                        _axisIds[i] = startAxisId + i;
-                        ApplyAxisProfile(i);
-                    }
-
-                    StartMonitor();
-
+                    _monitor.Start(AxisCount);
                     return EMotionResult.Success;
                 }
             }
@@ -113,23 +109,19 @@ namespace MotionControl.Vendors.ADLINK
         /// <summary>
         /// 将轴参数（速度/加减速/回零参数）下发到板卡
         /// </summary>
-        private void ApplyAxisProfile(int axis)
+        private AdlinkAxisProfile CreateAxisProfile(int axis)
         {
             var cfg = AxisConfig(axis);
-            int id = _axisIds[axis];
             int acc = ToAccDec(cfg.Accel, axis);
             int dec = ToAccDec(cfg.Decel, axis);
-
-            APS168.APS_set_axis_param(id, APS168.PRA_MAX_VELOCITY, ToSpeed(cfg.VelHigh, axis));
-            APS168.APS_set_axis_param(id, APS168.PRA_ACC, acc);
-            APS168.APS_set_axis_param(id, APS168.PRA_DEC, dec);
-
-            APS168.APS_set_axis_param(id, APS168.PRA_HOME_MODE, ToAdlinkHomeMode(cfg.HomeMode));
-            APS168.APS_set_axis_param(id, APS168.PRA_HOME_DIR,
-                cfg.HomeDirection == EDirection.Positive ? ADL_HOME_DIR_POSITIVE : ADL_HOME_DIR_NEGATIVE);
-            APS168.APS_set_axis_param(id, APS168.PRA_HOME_ACC, acc);
-            APS168.APS_set_axis_param(id, APS168.PRA_HOME_VS, ToSpeed(cfg.VelLow, axis));
-            APS168.APS_set_axis_param(id, APS168.PRA_HOME_VM, ToSpeed(cfg.HomeVelocity, axis));
+            return new AdlinkAxisProfile(
+                ToSpeed(cfg.VelHigh, axis),
+                acc,
+                dec,
+                ToAdlinkHomeMode(cfg.HomeMode),
+                cfg.HomeDirection == EDirection.Positive ? ADL_HOME_DIR_POSITIVE : ADL_HOME_DIR_NEGATIVE,
+                ToSpeed(cfg.VelLow, axis),
+                ToSpeed(cfg.HomeVelocity, axis));
         }
 
         /// <summary>通用回零模式映射到凌华回零模式值</summary>
@@ -151,19 +143,21 @@ namespace MotionControl.Vendors.ADLINK
                     return EMotionResult.Success;
 
                 StopAllInternal(EStopMode.Emergency);
-                _monitorCts?.Cancel();
-                _monitorCts = null;
+                _monitor.Stop();
+                _transport.Close();
 
-                _openBoardMask &= ~(1 << Param.CardNo);
-                if (_openBoardMask == 0)
-                {
-                    // 本进程最后一张卡断开时才关闭整个APS库（APS_close关闭所有板卡）
-                    APS168.APS_close();
-                }
-
-                _axisIds = Array.Empty<int>();
+                ResetRuntimeState();
                 return EMotionResult.Success;
             }
+        }
+
+        private void ResetRuntimeState()
+        {
+            _servoOn = Array.Empty<bool>();
+            _homing = Array.Empty<bool>();
+            _homeSeen = Array.Empty<bool>();
+            _homeDone = Array.Empty<bool>();
+            _velOverride = Array.Empty<double>();
         }
         #endregion
 
@@ -174,10 +168,10 @@ namespace MotionControl.Vendors.ADLINK
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                var ret = APS168.APS_set_servo_on(_axisIds[axis], 1);
-                if (ret == APS168.ERR_NoError)
+                var succeeded = _transport.SetServo(axis, true);
+                if (succeeded)
                     _servoOn[axis] = true;
-                return ToResult(ret);
+                return succeeded ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -187,14 +181,14 @@ namespace MotionControl.Vendors.ADLINK
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                var ret = APS168.APS_set_servo_on(_axisIds[axis], 0);
-                if (ret == APS168.ERR_NoError)
+                var succeeded = _transport.SetServo(axis, false);
+                if (succeeded)
                 {
                     _servoOn[axis] = false;
                     _homing[axis] = false;
                     _homeDone[axis] = false;
                 }
-                return ToResult(ret);
+                return succeeded ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -208,10 +202,10 @@ namespace MotionControl.Vendors.ADLINK
                 // 脉冲型板卡无统一软件清报警指令：多数驱动器通过伺服重新上电复位ALM，
                 // 此处执行伺服关-延时-开循环；若驱动器需专用RST信号清障请改为输出RST。
                 bool wasOn = _servoOn[axis];
-                APS168.APS_set_servo_on(_axisIds[axis], 0);
-                Thread.Sleep(100);
-                if (wasOn)
-                    APS168.APS_set_servo_on(_axisIds[axis], 1);
+                _servoOn[axis] = false;
+                if (!_transport.ResetServo(axis, wasOn))
+                    return EMotionResult.Fail;
+                _servoOn[axis] = wasOn;
 
                 _homeDone[axis] = false;
                 _homing[axis] = false;
@@ -227,7 +221,10 @@ namespace MotionControl.Vendors.ADLINK
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                _velOverride[axis] = velPulse;
+                var cfg = AxisConfig(axis);
+                if (cfg.PulseEquivalent <= 0)
+                    return EMotionResult.InvalidParam;
+                _velOverride[axis] = velPulse / cfg.PulseEquivalent;
                 return EMotionResult.Success;
             }
         }
@@ -237,11 +234,11 @@ namespace MotionControl.Vendors.ADLINK
             lock (_sync)
             {
                 if (!CheckReady(axis))
-                    return EMotionResult.NotConnected;
+                    return _isConnected ? EMotionResult.Fail : EMotionResult.NotConnected;
                 if (!CheckSoftLimit(axis, pulse))
                     return EMotionResult.InvalidParam;
-                var ret = APS168.APS_absolute_move(_axisIds[axis], ClampPulse(pulse), EffectiveSpeed(axis));
-                return ToResult(ret);
+                return _transport.MoveAbsolute(axis, ClampPulse(pulse), EffectiveSpeed(axis))
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -250,15 +247,14 @@ namespace MotionControl.Vendors.ADLINK
             lock (_sync)
             {
                 if (!CheckReady(axis))
-                    return EMotionResult.NotConnected;
-                int cur = 0;
-                if (APS168.APS_get_command(_axisIds[axis], ref cur) != APS168.ERR_NoError)
+                    return _isConnected ? EMotionResult.Fail : EMotionResult.NotConnected;
+                if (!_transport.TryGetCommandPosition(axis, out var current))
                     return EMotionResult.Fail;
-                long target = cur + pulse;
+                long target = current + pulse;
                 if (!CheckSoftLimit(axis, target))
                     return EMotionResult.InvalidParam;
-                var ret = APS168.APS_relative_move(_axisIds[axis], ClampPulse(pulse), EffectiveSpeed(axis));
-                return ToResult(ret);
+                return _transport.MoveRelative(axis, ClampPulse(pulse), EffectiveSpeed(axis))
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -267,9 +263,10 @@ namespace MotionControl.Vendors.ADLINK
             lock (_sync)
             {
                 if (!CheckReady(axis))
-                    return EMotionResult.NotConnected;
-                var ret = APS168.APS_velocity_move(_axisIds[axis], direction > 0 ? EffectiveSpeed(axis) : -EffectiveSpeed(axis));
-                return ToResult(ret);
+                    return _isConnected ? EMotionResult.Fail : EMotionResult.NotConnected;
+                return _transport.MoveVelocity(axis,
+                    direction > 0 ? EffectiveSpeed(axis) : -EffectiveSpeed(axis))
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -280,10 +277,8 @@ namespace MotionControl.Vendors.ADLINK
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
                 _homing[axis] = false;
-                var ret = stopMode == EStopMode.Emergency
-                    ? APS168.APS_emg_stop(_axisIds[axis])
-                    : APS168.APS_stop_move(_axisIds[axis]);
-                return ToResult(ret);
+                return _transport.StopAxis(axis, stopMode == EStopMode.Emergency)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -293,21 +288,17 @@ namespace MotionControl.Vendors.ADLINK
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                StopAllInternal(stopMode);
-                return EMotionResult.Success;
+                return StopAllInternal(stopMode)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
-        private void StopAllInternal(EStopMode stopMode)
+        private bool StopAllInternal(EStopMode stopMode)
         {
-            for (int i = 0; i < _axisIds.Length; i++)
-            {
+            var succeeded = _transport.StopAll(AxisCount, stopMode == EStopMode.Emergency);
+            for (int i = 0; i < _homing.Length; i++)
                 _homing[i] = false;
-                if (stopMode == EStopMode.Emergency)
-                    APS168.APS_emg_stop(_axisIds[i]);
-                else
-                    APS168.APS_stop_move(_axisIds[i]);
-            }
+            return succeeded;
         }
 
         /// <summary>运动前置检查（连接、伺服使能、无报警）</summary>
@@ -345,8 +336,6 @@ namespace MotionControl.Vendors.ADLINK
         private static int ClampPulse(long pulse)
             => (int)Math.Clamp(pulse, int.MinValue, int.MaxValue);
 
-        private static EMotionResult ToResult(int apsRet)
-            => apsRet == APS168.ERR_NoError ? EMotionResult.Success : EMotionResult.Fail;
         #endregion
 
         #region 回零
@@ -365,8 +354,8 @@ namespace MotionControl.Vendors.ADLINK
                     case EHomeMode.None:
                         return EMotionResult.InvalidParam;
                     case EHomeMode.SetCurrentAsOrigin:
-                        APS168.APS_set_command(_axisIds[axis], 0);
-                        APS168.APS_set_position(_axisIds[axis], 0);
+                        if (!_transport.SetCurrentPosition(axis, 0))
+                            return EMotionResult.Fail;
                         _homeDone[axis] = true;
                         return EMotionResult.Success;
                     default:
@@ -375,10 +364,10 @@ namespace MotionControl.Vendors.ADLINK
                         _homing[axis] = true;
                         _homeSeen[axis] = false;
                         _homeDone[axis] = false;
-                        var ret = APS168.APS_home_move(_axisIds[axis]);
-                        if (ret != APS168.ERR_NoError)
+                        var succeeded = _transport.StartHome(axis);
+                        if (!succeeded)
                             _homing[axis] = false;
-                        return ToResult(ret);
+                        return succeeded ? EMotionResult.Success : EMotionResult.Fail;
                 }
             }
         }
@@ -392,10 +381,9 @@ namespace MotionControl.Vendors.ADLINK
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                int pos = 0;
-                var ret = APS168.APS_get_command(_axisIds[axis], ref pos);
+                var succeeded = _transport.TryGetCommandPosition(axis, out var pos);
                 pulse = pos;
-                return ToResult(ret);
+                return succeeded ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -406,10 +394,9 @@ namespace MotionControl.Vendors.ADLINK
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                int pos = 0;
-                var ret = APS168.APS_get_position(_axisIds[axis], ref pos);
+                var succeeded = _transport.TryGetEncoderPosition(axis, out var pos);
                 pulse = pos;
-                return ToResult(ret);
+                return succeeded ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -420,8 +407,8 @@ namespace MotionControl.Vendors.ADLINK
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                int mts = APS168.APS_motion_status(_axisIds[axis]);
-                int mio = APS168.APS_motion_io_status(_axisIds[axis]);
+                int mts = _transport.GetMotionStatus(axis);
+                int mio = _transport.GetMotionIoStatus(axis);
                 // 打包：低32位=运动状态字，高32位=IO状态字，由ParseAxisFlags解析
                 raw = (uint)mts | ((long)mio << 32);
                 return EMotionResult.Success;
@@ -478,16 +465,11 @@ namespace MotionControl.Vendors.ADLINK
                     state = false;
                     return EMotionResult.NotConnected;
                 }
-                int group = index / DIO_GROUP_BITS;
-                int bit = index % DIO_GROUP_BITS;
-                int data = 0;
-                var ret = APS168.APS_read_d_input(Param.CardNo, group, ref data);
-                if (ret != APS168.ERR_NoError)
+                if (!_transport.TryReadInput(index, out state))
                 {
                     state = false;
                     return EMotionResult.Fail;
                 }
-                state = (data & (1 << bit)) != 0;
                 return EMotionResult.Success;
             }
         }
@@ -506,16 +488,11 @@ namespace MotionControl.Vendors.ADLINK
                     state = false;
                     return EMotionResult.NotConnected;
                 }
-                int group = index / DIO_GROUP_BITS;
-                int bit = index % DIO_GROUP_BITS;
-                int data = 0;
-                var ret = APS168.APS_read_d_output(Param.CardNo, group, ref data);
-                if (ret != APS168.ERR_NoError)
+                if (!_transport.TryReadOutput(index, out state))
                 {
                     state = false;
                     return EMotionResult.Fail;
                 }
-                state = (data & (1 << bit)) != 0;
                 return EMotionResult.Success;
             }
         }
@@ -526,53 +503,26 @@ namespace MotionControl.Vendors.ADLINK
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                if (index < 0)
+                if (index < 0 || index >= DIO_GROUP_BITS * 16)
                     return EMotionResult.InvalidParam;
 
-                int group = index / DIO_GROUP_BITS;
-                int bit = index % DIO_GROUP_BITS;
-                int data = 0;
-                if (APS168.APS_read_d_output(Param.CardNo, group, ref data) != APS168.ERR_NoError)
-                    return EMotionResult.Fail;
-                data = state ? data | (1 << bit) : data & ~(1 << bit);
-                return ToResult(APS168.APS_write_d_output(Param.CardNo, group, data));
+                return _transport.WriteOutput(index, state)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
         #endregion
 
         #region 后台监控（报警事件 + 回零完成检测）
-        /// <summary>
-        /// 启动后台监控线程：轮询各轴IO状态字，报警上升沿抛出AlarmOccurred；检测回零完成后置Homed并施加偏移
-        /// </summary>
-        private void StartMonitor()
+        private AxisMonitorSample? ReadMonitorSample(int axis)
         {
-            _monitorCts = new CancellationTokenSource();
-            var token = _monitorCts.Token;
-            _ = Task.Run(() =>
+            lock (_sync)
             {
-                var lastAlm = new bool[_axisIds.Length];
-                while (!token.IsCancellationRequested)
-                {
-                    try
-                    {
-                        for (int i = 0; i < _axisIds.Length; i++)
-                        {
-                            int mio = APS168.APS_motion_io_status(_axisIds[i]);
-                            bool alm = (mio & APS168.MIO_ALM) != 0;
-                            if (alm && !lastAlm[i])
-                                RaiseAlarm(i, $"凌华卡报警：{Param.Name}(轴{i})", mio);
-                            lastAlm[i] = alm;
+                if ((uint)axis >= (uint)_homing.Length)
+                    return null;
 
-                            CheckHomeDone(i);
-                        }
-                    }
-                    catch
-                    {
-                        // 监控线程不允许因瞬时异常退出
-                    }
-                    token.WaitHandle.WaitOne(MonitorIntervalMs);
-                }
-            }, token);
+                int status = _transport.GetMotionIoStatus(axis);
+                return new AxisMonitorSample(status, (status & APS168.MIO_ALM) != 0);
+            }
         }
 
         /// <summary>回零完成检测：HMV位出现后消失且轴停止，判定回零完成</summary>
@@ -580,9 +530,10 @@ namespace MotionControl.Vendors.ADLINK
         {
             lock (_sync)
             {
-                if (!_isConnected || !_homing[axis])
+                if (!_isConnected || (uint)axis >= (uint)_homing.Length ||
+                    !_homing[axis])
                     return;
-                int mts = APS168.APS_motion_status(_axisIds[axis]);
+                int mts = _transport.GetMotionStatus(axis);
                 if ((mts & APS168.MTS_HMV) != 0)
                 {
                     _homeSeen[axis] = true;
@@ -592,16 +543,16 @@ namespace MotionControl.Vendors.ADLINK
                     return;
 
                 _homing[axis] = false;
-                _homeDone[axis] = true;
 
                 // 施加回零偏移：指令/反馈位置同时偏移
                 double offset = AxisConfig(axis).HomeOffset;
                 if (Math.Abs(offset) > double.Epsilon)
                 {
                     int off = ClampPulse(ToPulse(axis, offset));
-                    APS168.APS_set_command(_axisIds[axis], off);
-                    APS168.APS_set_position(_axisIds[axis], off);
+                    if (!_transport.SetCurrentPosition(axis, off))
+                        return;
                 }
+                _homeDone[axis] = true;
             }
         }
         #endregion

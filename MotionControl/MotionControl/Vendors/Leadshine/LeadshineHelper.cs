@@ -1,4 +1,5 @@
 using MotionControl.Definition;
+using MotionControl.Internal;
 
 namespace MotionControl.Vendors.Leadshine
 {
@@ -15,24 +16,6 @@ namespace MotionControl.Vendors.Leadshine
     internal class LeadshineHelper : MotionControlBase
     {
         #region 厂商私有常量
-        /// <summary>SEVON信号低电平有效：写0为使能伺服</summary>
-        private const ushort LTS_SEVON_ENABLE = 0;
-        /// <summary>SEVON信号低电平有效：写1为失能伺服</summary>
-        private const ushort LTS_SEVON_DISABLE = 1;
-        /// <summary>dmc_pmove位置模式：相对</summary>
-        private const ushort LTS_POS_RELATIVE = 0;
-        /// <summary>dmc_pmove位置模式：绝对</summary>
-        private const ushort LTS_POS_ABSOLUTE = 1;
-        /// <summary>dmc_stop停止方式：减速停止</summary>
-        private const ushort LTS_STOP_DECELERATE = 0;
-        /// <summary>dmc_stop停止方式：立即停止</summary>
-        private const ushort LTS_STOP_EMERGENCY = 1;
-        /// <summary>dmc_vmove方向：正方向</summary>
-        private const ushort LTS_DIR_POSITIVE = 0;
-        /// <summary>dmc_vmove方向：负方向</summary>
-        private const ushort LTS_DIR_NEGATIVE = 1;
-        /// <summary>回零遇限位反找使能</summary>
-        private const ushort LTS_HOME_EL_RETURN_ENABLE = 1;
         /// <summary>最小加减速时间（秒），防止除零或过小</summary>
         private const double MinAccDecTime = 0.005;
         /// <summary>报警监控轮询间隔（毫秒）</summary>
@@ -40,14 +23,37 @@ namespace MotionControl.Vendors.Leadshine
         #endregion
 
         private readonly object _sync = new object();
-        /// <summary>已调用dmc_board_init的实例计数（库初始化为进程级全局操作）</summary>
-        private static int _initCount;
-
-        private CancellationTokenSource? _monitorCts;
+        private readonly ILeadshineTransport _transport;
+        private readonly AxisPollingMonitor _monitor;
         private bool[] _servoOn = Array.Empty<bool>();
         private bool[] _homing = Array.Empty<bool>();
         private bool[] _homeDone = Array.Empty<bool>();
         private double[] _velOverride = Array.Empty<double>(); // <=0表示未用SetSpeed覆盖
+
+        public LeadshineHelper()
+            : this(new LeadshineNativeTransport())
+        {
+        }
+
+        internal LeadshineHelper(ILeadshineTransport transport)
+        {
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            _monitor = new AxisPollingMonitor(
+                MonitorIntervalMs,
+                ReadMonitorSample,
+                (axis, rawStatus) => RaiseAlarm(axis, $"雷赛卡报警：{EffectiveParam.Name}(轴{axis})", rawStatus),
+                (axis, _) => CheckHomeDone(axis));
+        }
+
+        protected override MotionResult ValidateParameters()
+        {
+            var common = base.ValidateParameters();
+            if (!common.IsSuccess)
+                return common;
+            if (EffectiveParam.CardNo > ushort.MaxValue)
+                return MotionResult.Failure(EMotionResult.InvalidParam, "雷赛卡号必须在 0 到 65535 之间。");
+            return MotionResult.Success();
+        }
 
         #region 连接/断开
         protected override EMotionResult ConnectRefactor()
@@ -59,33 +65,9 @@ namespace MotionControl.Vendors.Leadshine
                     if (_isConnected)
                         return EMotionResult.Success;
 
-                    // 库初始化（进程级一次）
-                    if (_initCount == 0)
-                    {
-                        short cards = LTDMC.dmc_board_init();
-                        if (cards <= 0)
-                            return EMotionResult.Fail;
-                    }
-
-                    // 校验卡号存在
-                    ushort cardNum = 0;
-                    var typeList = new uint[16];
-                    var idList = new ushort[16];
-                    if (LTDMC.dmc_get_CardInfList(ref cardNum, typeList, idList) != 0
-                        || !idList.Take(cardNum).Contains((ushort)Param.CardNo))
-                    {
-                        TryFinalClose();
-                        return EMotionResult.Fail;
-                    }
-
-                    // 校验轴数
-                    uint totalAxes = 0;
-                    if (LTDMC.dmc_get_total_axes((ushort)Param.CardNo, ref totalAxes) != 0
-                        || AxisCount <= 0 || AxisCount > totalAxes)
-                    {
-                        TryFinalClose();
-                        return EMotionResult.InvalidParam;
-                    }
+                    var openResult = _transport.Open((ushort)EffectiveParam.CardNo, AxisCount);
+                    if (openResult != EMotionResult.Success)
+                        return openResult;
 
                     _servoOn = new bool[AxisCount];
                     _homing = new bool[AxisCount];
@@ -93,10 +75,16 @@ namespace MotionControl.Vendors.Leadshine
                     _velOverride = new double[AxisCount];
 
                     for (int i = 0; i < AxisCount; i++)
-                        ApplyProfile(i);
+                    {
+                        if (ApplyProfile(i))
+                            continue;
 
-                    StartMonitor();
-                    _initCount++;
+                        _transport.Close();
+                        ResetRuntimeState();
+                        return EMotionResult.Fail;
+                    }
+
+                    _monitor.Start(AxisCount);
                     return EMotionResult.Success;
                 }
             }
@@ -120,29 +108,24 @@ namespace MotionControl.Vendors.Leadshine
                     return EMotionResult.Success;
 
                 StopAllInternal(EStopMode.Emergency);
-                _monitorCts?.Cancel();
-                _monitorCts = null;
+                _monitor.Stop();
+                _transport.Close();
 
-                _initCount--;
-                TryFinalClose();
-
-                _servoOn = Array.Empty<bool>();
+                ResetRuntimeState();
                 return EMotionResult.Success;
             }
         }
 
-        /// <summary>本进程最后一张卡断开时关闭整个LTDMC库</summary>
-        private void TryFinalClose()
+        private void ResetRuntimeState()
         {
-            if (_initCount <= 0)
-            {
-                _initCount = 0;
-                LTDMC.dmc_board_close();
-            }
+            _servoOn = Array.Empty<bool>();
+            _homing = Array.Empty<bool>();
+            _homeDone = Array.Empty<bool>();
+            _velOverride = Array.Empty<double>();
         }
 
         /// <summary>下发速度曲线（时间型加减速：Tacc=速度/加速度）</summary>
-        private void ApplyProfile(int axis)
+        private bool ApplyProfile(int axis)
         {
             var cfg = AxisConfig(axis);
             double equiv = cfg.PulseEquivalent > 0 ? cfg.PulseEquivalent : 1;
@@ -153,7 +136,7 @@ namespace MotionControl.Vendors.Leadshine
             double tacc = cfg.Accel > 0 ? Math.Max(MinAccDecTime, velUnit / cfg.Accel) : MinAccDecTime;
             double tdec = cfg.Decel > 0 ? Math.Max(MinAccDecTime, velUnit / cfg.Decel) : MinAccDecTime;
 
-            LTDMC.dmc_set_profile((ushort)Param.CardNo, (ushort)axis, minVel, maxVel, tacc, tdec, stopVel);
+            return _transport.SetProfile(axis, minVel, maxVel, tacc, tdec, stopVel);
         }
         #endregion
 
@@ -164,10 +147,10 @@ namespace MotionControl.Vendors.Leadshine
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                var ret = LTDMC.dmc_write_sevon_pin((ushort)Param.CardNo, (ushort)axis, LTS_SEVON_ENABLE);
-                if (ret == 0)
+                var succeeded = _transport.SetServo(axis, true);
+                if (succeeded)
                     _servoOn[axis] = true;
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return succeeded ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -177,14 +160,14 @@ namespace MotionControl.Vendors.Leadshine
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                var ret = LTDMC.dmc_write_sevon_pin((ushort)Param.CardNo, (ushort)axis, LTS_SEVON_DISABLE);
-                if (ret == 0)
+                var succeeded = _transport.SetServo(axis, false);
+                if (succeeded)
                 {
                     _servoOn[axis] = false;
                     _homing[axis] = false;
                     _homeDone[axis] = false;
                 }
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return succeeded ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -198,10 +181,16 @@ namespace MotionControl.Vendors.Leadshine
                 // 脉冲型板卡无软件清报警指令：通过伺服重新使能复位ALM；
                 // 若驱动器需专用RST信号清障请改为输出RST。
                 bool wasOn = _servoOn[axis];
-                LTDMC.dmc_write_sevon_pin((ushort)Param.CardNo, (ushort)axis, LTS_SEVON_DISABLE);
+                if (!_transport.SetServo(axis, false))
+                    return EMotionResult.Fail;
+                _servoOn[axis] = false;
                 Thread.Sleep(100);
                 if (wasOn)
-                    LTDMC.dmc_write_sevon_pin((ushort)Param.CardNo, (ushort)axis, LTS_SEVON_ENABLE);
+                {
+                    if (!_transport.SetServo(axis, true))
+                        return EMotionResult.Fail;
+                    _servoOn[axis] = true;
+                }
 
                 _homeDone[axis] = false;
                 _homing[axis] = false;
@@ -233,9 +222,10 @@ namespace MotionControl.Vendors.Leadshine
                     return _isConnected ? EMotionResult.Fail : EMotionResult.NotConnected;
                 if (!CheckSoftLimit(axis, pulse))
                     return EMotionResult.InvalidParam;
-                ApplyProfile(axis);
-                var ret = LTDMC.dmc_pmove((ushort)Param.CardNo, (ushort)axis, ClampPulse(pulse), LTS_POS_ABSOLUTE);
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                if (!ApplyProfile(axis))
+                    return EMotionResult.Fail;
+                return _transport.MovePosition(axis, ClampPulse(pulse), true)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -245,12 +235,13 @@ namespace MotionControl.Vendors.Leadshine
             {
                 if (!CheckReady(axis))
                     return _isConnected ? EMotionResult.Fail : EMotionResult.NotConnected;
-                long target = LTDMC.dmc_get_position((ushort)Param.CardNo, (ushort)axis) + pulse;
+                long target = _transport.GetCommandPosition(axis) + pulse;
                 if (!CheckSoftLimit(axis, target))
                     return EMotionResult.InvalidParam;
-                ApplyProfile(axis);
-                var ret = LTDMC.dmc_pmove((ushort)Param.CardNo, (ushort)axis, ClampPulse(pulse), LTS_POS_RELATIVE);
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                if (!ApplyProfile(axis))
+                    return EMotionResult.Fail;
+                return _transport.MovePosition(axis, ClampPulse(pulse), false)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -260,10 +251,10 @@ namespace MotionControl.Vendors.Leadshine
             {
                 if (!CheckReady(axis))
                     return _isConnected ? EMotionResult.Fail : EMotionResult.NotConnected;
-                ApplyProfile(axis);
-                var dir = direction > 0 ? LTS_DIR_POSITIVE : LTS_DIR_NEGATIVE;
-                var ret = LTDMC.dmc_vmove((ushort)Param.CardNo, (ushort)axis, dir);
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                if (!ApplyProfile(axis))
+                    return EMotionResult.Fail;
+                return _transport.MoveVelocity(axis, direction > 0)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -274,9 +265,8 @@ namespace MotionControl.Vendors.Leadshine
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
                 _homing[axis] = false;
-                var mode = stopMode == EStopMode.Emergency ? LTS_STOP_EMERGENCY : LTS_STOP_DECELERATE;
-                var ret = LTDMC.dmc_stop((ushort)Param.CardNo, (ushort)axis, mode);
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return _transport.Stop(axis, stopMode == EStopMode.Emergency)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
@@ -286,26 +276,28 @@ namespace MotionControl.Vendors.Leadshine
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                StopAllInternal(stopMode);
-                return EMotionResult.Success;
+                return StopAllInternal(stopMode)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
-        private void StopAllInternal(EStopMode stopMode)
+        private bool StopAllInternal(EStopMode stopMode)
         {
             if (stopMode == EStopMode.Emergency)
             {
                 // 急停直接调用整卡急停指令
-                LTDMC.dmc_emg_stop((ushort)Param.CardNo);
+                var succeeded = _transport.EmergencyStopAll();
                 for (int i = 0; i < _homing.Length; i++)
                     _homing[i] = false;
-                return;
+                return succeeded;
             }
+            var allSucceeded = true;
             for (int i = 0; i < _homing.Length; i++)
             {
                 _homing[i] = false;
-                LTDMC.dmc_stop((ushort)Param.CardNo, (ushort)i, LTS_STOP_DECELERATE);
+                allSucceeded &= _transport.Stop(i, false);
             }
+            return allSucceeded;
         }
 
         /// <summary>运动前置检查（连接、伺服使能）</summary>
@@ -351,8 +343,8 @@ namespace MotionControl.Vendors.Leadshine
                     case EHomeMode.None:
                         return EMotionResult.InvalidParam;
                     case EHomeMode.SetCurrentAsOrigin:
-                        LTDMC.dmc_set_position((ushort)Param.CardNo, (ushort)axis, 0);
-                        LTDMC.dmc_set_encoder((ushort)Param.CardNo, (ushort)axis, 0);
+                        if (!_transport.SetCurrentPosition(axis, 0))
+                            return EMotionResult.Fail;
                         _homeDone[axis] = true;
                         return EMotionResult.Success;
                     default:
@@ -361,22 +353,21 @@ namespace MotionControl.Vendors.Leadshine
                         double equiv = cfg.PulseEquivalent > 0 ? cfg.PulseEquivalent : 1;
                         ushort mode = ToLeadshineHomeMode(cfg.HomeMode);
 
-                        LTDMC.dmc_set_homemode((ushort)Param.CardNo, (ushort)axis, dir,
-                            Math.Max(1, cfg.HomeVelocity * equiv), mode, 0);
-                        LTDMC.dmc_set_home_el_return((ushort)Param.CardNo, (ushort)axis,
-                            cfg.HomeMode == EHomeMode.LimitSwitch ? LTS_HOME_EL_RETURN_ENABLE : (ushort)0);
-
                         // 回零偏移由板卡自动执行
                         double offset = cfg.HomeOffset;
-                        if (Math.Abs(offset) > double.Epsilon)
-                            LTDMC.dmc_set_home_position((ushort)Param.CardNo, (ushort)axis, 1, ClampPulse(ToPulse(axis, offset)));
+                        int? offsetPulse = Math.Abs(offset) > double.Epsilon
+                            ? ClampPulse(ToPulse(axis, offset))
+                            : null;
+                        if (!_transport.ConfigureHome(axis, dir, Math.Max(1, cfg.HomeVelocity * equiv), mode,
+                                cfg.HomeMode == EHomeMode.LimitSwitch, offsetPulse))
+                            return EMotionResult.Fail;
 
                         _homing[axis] = true;
                         _homeDone[axis] = false;
-                        var ret = LTDMC.dmc_home_move((ushort)Param.CardNo, (ushort)axis);
-                        if (ret != 0)
+                        var succeeded = _transport.StartHome(axis);
+                        if (!succeeded)
                             _homing[axis] = false;
-                        return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                        return succeeded ? EMotionResult.Success : EMotionResult.Fail;
                 }
             }
         }
@@ -402,7 +393,7 @@ namespace MotionControl.Vendors.Leadshine
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                pulse = LTDMC.dmc_get_position((ushort)Param.CardNo, (ushort)axis);
+                pulse = _transport.GetCommandPosition(axis);
                 return EMotionResult.Success;
             }
         }
@@ -414,7 +405,7 @@ namespace MotionControl.Vendors.Leadshine
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                pulse = LTDMC.dmc_get_encoder((ushort)Param.CardNo, (ushort)axis);
+                pulse = _transport.GetEncoderPosition(axis);
                 return EMotionResult.Success;
             }
         }
@@ -426,9 +417,9 @@ namespace MotionControl.Vendors.Leadshine
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                uint ioStatus = LTDMC.dmc_axis_io_status((ushort)Param.CardNo, (ushort)axis);
+                uint ioStatus = _transport.GetAxisIoStatus(axis);
                 // dmc_check_done返回0表示运动中，1表示已停止(到位)
-                bool done = LTDMC.dmc_check_done((ushort)Param.CardNo, (ushort)axis) == 1;
+                bool done = _transport.CheckDone(axis) == 1;
                 long packed = (done ? 1L << 1 : 1L << 0); // 高32位自定义：bit0=Moving bit1=InPosition
                 raw = ioStatus | (packed << 32);
                 return EMotionResult.Success;
@@ -471,12 +462,12 @@ namespace MotionControl.Vendors.Leadshine
         #region IO控制
         protected override EMotionResult GetInputRefactor(int index, out bool state)
         {
-            return ReadBit(LTDMC.dmc_read_inbit, index, out state);
+            return ReadBit(_transport.ReadInput, index, out state);
         }
 
         protected override EMotionResult GetOutputRefactor(int index, out bool state)
         {
-            return ReadBit(LTDMC.dmc_read_outbit, index, out state);
+            return ReadBit(_transport.ReadOutput, index, out state);
         }
 
         protected override EMotionResult SetOutputRefactor(int index, bool state)
@@ -487,12 +478,12 @@ namespace MotionControl.Vendors.Leadshine
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                var ret = LTDMC.dmc_write_outbit((ushort)Param.CardNo, (ushort)index, (ushort)(state ? 1 : 0));
-                return ret == 0 ? EMotionResult.Success : EMotionResult.Fail;
+                return _transport.WriteOutput(index, state)
+                    ? EMotionResult.Success : EMotionResult.Fail;
             }
         }
 
-        private EMotionResult ReadBit(Func<ushort, ushort, short> readFunc, int index, out bool state)
+        private EMotionResult ReadBit(Func<int, short> readFunc, int index, out bool state)
         {
             state = false;
             if (index < 0 || index > ushort.MaxValue)
@@ -501,7 +492,7 @@ namespace MotionControl.Vendors.Leadshine
             {
                 if (!_isConnected)
                     return EMotionResult.NotConnected;
-                var level = readFunc((ushort)Param.CardNo, (ushort)index);
+                var level = readFunc(index);
                 if (level < 0)
                     return EMotionResult.Fail;
                 state = level > 0;
@@ -511,38 +502,16 @@ namespace MotionControl.Vendors.Leadshine
         #endregion
 
         #region 后台监控（报警事件 + 回零完成检测）
-        /// <summary>
-        /// 启动后台监控线程：轮询各轴IO状态字，报警上升沿抛出AlarmOccurred；检测回零完成后置Homed
-        /// </summary>
-        private void StartMonitor()
+        private AxisMonitorSample? ReadMonitorSample(int axis)
         {
-            _monitorCts = new CancellationTokenSource();
-            var token = _monitorCts.Token;
-            _ = Task.Run(() =>
+            lock (_sync)
             {
-                var lastAlm = new bool[_servoOn.Length];
-                while (!token.IsCancellationRequested)
-                {
-                    try
-                    {
-                        for (int i = 0; i < _servoOn.Length; i++)
-                        {
-                            uint ioStatus = LTDMC.dmc_axis_io_status((ushort)Param.CardNo, (ushort)i);
-                            bool alm = (ioStatus & LTDMC.LTS_IO_ALM) != 0;
-                            if (alm && !lastAlm[i])
-                                RaiseAlarm(i, $"雷赛卡报警：{Param.Name}(轴{i})", ioStatus);
-                            lastAlm[i] = alm;
+                if ((uint)axis >= (uint)_servoOn.Length)
+                    return null;
 
-                            CheckHomeDone(i);
-                        }
-                    }
-                    catch
-                    {
-                        // 监控线程不允许因瞬时异常退出
-                    }
-                    token.WaitHandle.WaitOne(MonitorIntervalMs);
-                }
-            }, token);
+                uint status = _transport.GetAxisIoStatus(axis);
+                return new AxisMonitorSample(status, (status & LTDMC.LTS_IO_ALM) != 0);
+            }
         }
 
         /// <summary>回零完成检测：dmc_get_home_result返回1表示回零完成</summary>
@@ -550,10 +519,9 @@ namespace MotionControl.Vendors.Leadshine
         {
             lock (_sync)
             {
-                if (!_isConnected || !_homing[axis])
+                if (!_isConnected || (uint)axis >= (uint)_homing.Length || !_homing[axis])
                     return;
-                ushort state = 0;
-                if (LTDMC.dmc_get_home_result((ushort)Param.CardNo, (ushort)axis, ref state) != 0)
+                if (!_transport.TryGetHomeResult(axis, out var state))
                     return;
                 if (state == 1)
                 {
