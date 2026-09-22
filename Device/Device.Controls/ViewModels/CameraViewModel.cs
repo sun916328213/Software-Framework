@@ -1,6 +1,3 @@
-using System.IO;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
 using Device.Controls.Models;
 using Device.Controls.Services;
@@ -9,7 +6,7 @@ namespace Device.Controls.ViewModels;
 
 /// <summary>
 /// 相机测试页 ViewModel：通用部分（连接/断开、档案回调、运行输出/计时）在基类，
-/// 此处只留相机专属命令（连接切换合一、抓图、实时、保存图像）。
+/// 此处只留相机专属命令（连接切换合一、抓图、实时、下发触发）。
 /// </summary>
 public partial class CameraViewModel(CameraWorkspace workspace)
     : DevicePageViewModelBase<CameraWorkspace, CameraPageModel, CameraProfile>(workspace)
@@ -37,25 +34,16 @@ public partial class CameraViewModel(CameraWorkspace workspace)
         Log($"✓ {(Model.LiveButtonText == "实时关闭" ? "已开启实时预览" : "已停止实时预览")}");
     });
 
+    /// <summary>把测试卡上的触发配置下发到已连接的相机（未连接时什么都不做，连接时会按档案重新播种）。</summary>
     [RelayCommand]
-    private Task SaveImageAsync() => RunAsync("保存图像", () =>
-    {
-        var preview = Model.Preview as BitmapSource ?? throw new InvalidOperationException("请先抓图");
-        return Task.Run(() =>
+    private Task ApplyTriggerAsync() => Model.IsConnected
+        ? RunAsync("下发触发配置", async () =>
         {
-            var dialog = new Microsoft.Win32.SaveFileDialog
-            {
-                Filter = "PNG 图像 (*.png)|*.png",
-                FileName = $"camera-frame-{DateTime.Now:yyyyMMdd-HHmmss}.png",
-            };
-            if (dialog.ShowDialog() != true)
-                return;
-
-            var encoder = new PngBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(preview));
-            using var stream = File.Create(dialog.FileName);
-            encoder.Save(stream);
-            Log($"✓ 已保存 {stream.Length} 字节 → {dialog.FileName}");
-        });
-    });
+            await Workspace.ApplyTriggerAsync();
+            Log($"✓ 帧触发 {Model.RuntimeFrameTriggerMode}/{Model.RuntimeFrameTriggerSource}"
+                + (Model.IsLineTriggerEnabled
+                    ? $"，行触发 {Model.RuntimeLineTriggerMode}/{Model.RuntimeLineTriggerSource}"
+                    : "，行触发不适用（面阵）"));
+        })
+        : Task.CompletedTask;
 }

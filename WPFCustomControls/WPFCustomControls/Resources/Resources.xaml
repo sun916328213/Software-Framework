@@ -384,15 +384,15 @@
         </Style.Triggers>
     </Style>
 
-    <!--
-        ScrollViewer 样式：继承 MD，隐藏右下角正方形（滚动条外观见上面的 ScrollBar_Style）。
-        可选 IsAutoHideEnabled 由 MD 模板内部实现，只对套本样式的 ScrollViewer 生效，
-        DataGrid/ListView 的内联模板吃不到 —— 故本仓统一靠 ScrollBar 自己的 Opacity 做淡入淡出。
-    -->
+  
     <Style
         x:Key="ScrollViewer_Style"
         BasedOn="{StaticResource MaterialDesignScrollViewer}"
         TargetType="ScrollViewer">
+        <Style.Resources>
+            <!--  本 ScrollViewer（含其模板内的滚动条）自动套上 ScrollBar_Style  -->
+            <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="{x:Type ScrollBar}" />
+        </Style.Resources>
         <Setter Property="materialDesign:ScrollViewerAssist.CornerRectangleVisibility" Value="Collapsed" />
     </Style>
 </ResourceDictionary>

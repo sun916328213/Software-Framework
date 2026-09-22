@@ -19,9 +19,15 @@ internal sealed class DahuaGigeCamera : ICamera
     private bool _handleCreated;
     private bool _grabbing;
 
+    /// <summary>当前生效的触发配置；连接时取创建配置，运行时可由 SetTriggerAsync 改写。</summary>
+    private CameraTriggerSettings _frameTrigger;
+    private CameraTriggerSettings _lineTrigger;
+
     public DahuaGigeCamera(CameraOptions options)
     {
         Options = options;
+        _frameTrigger = options.FrameTrigger;
+        _lineTrigger = options.LineTrigger;
         _frameCallback = OnFrameReceived;
         _connectionCallback = OnConnectionChanged;
     }
@@ -112,7 +118,7 @@ internal sealed class DahuaGigeCamera : ICamera
 
         try
         {
-            if (CameraDriverConfiguration.ShouldExecuteSoftwareTrigger(Options))
+            if (CameraDriverConfiguration.ShouldExecuteSoftwareTrigger(_frameTrigger))
                 EnsureSuccess(_camera.IMV_ExecuteCommandFeature("TriggerSoftware"), "执行软件触发");
 
             using var timeout = new CancellationTokenSource(Options.TimeoutMilliseconds);
@@ -159,6 +165,35 @@ internal sealed class DahuaGigeCamera : ICamera
     }
 
     /// <inheritdoc />
+    public ValueTask<DeviceResult> SetTriggerAsync(
+        CameraTriggerSettings frameTrigger,
+        CameraTriggerSettings lineTrigger,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (State != DeviceState.Connected)
+            return ValueTask.FromResult(DeviceResult.Failure(
+                "camera.dahua.not_connected", $"相机 '{{Name}}' 尚未连接。"));
+
+        var invalid = CameraDriverConfiguration.ValidateTriggerSettings(Options.ScanType, frameTrigger, lineTrigger);
+        if (invalid is not null)
+            return ValueTask.FromResult(DeviceResult.Failure("camera.dahua.trigger_invalid", invalid));
+
+        try
+        {
+            // 下发成功后才记住新配置：失败时 CaptureAsync 仍按上一次生效的帧触发判断是否发软件触发。
+            ApplyTriggers(frameTrigger, lineTrigger);
+            _frameTrigger = frameTrigger;
+            _lineTrigger = lineTrigger;
+            return ValueTask.FromResult(DeviceResult.Ok());
+        }
+        catch (Exception exception)
+        {
+            return ValueTask.FromResult(DeviceResult.Failure("camera.dahua.trigger_failed", exception.Message));
+        }
+    }
+
+    /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
         await DisconnectAsync().ConfigureAwait(false);
@@ -183,9 +218,13 @@ internal sealed class DahuaGigeCamera : ICamera
             "加载大华相机参数文件");
     }
 
-    private void ConfigureTriggers()
+    /// <summary>连接期下发触发配置（用创建相机时的那一组）。</summary>
+    private void ConfigureTriggers() => ApplyTriggers(_frameTrigger, _lineTrigger);
+
+    /// <summary>下发一组触发配置；连接期与运行时改触发共用此实现。</summary>
+    private void ApplyTriggers(CameraTriggerSettings frameTrigger, CameraTriggerSettings lineTrigger)
     {
-        foreach (var binding in CameraDriverConfiguration.GetTriggerBindings(Options))
+        foreach (var binding in CameraDriverConfiguration.GetTriggerBindings(Options.ScanType, frameTrigger, lineTrigger))
         {
             if (binding.Selector is not null)
             {

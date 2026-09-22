@@ -13,28 +13,43 @@ namespace Device.Controls.Services;
 /// 实时预览循环（100ms 定时器）、单帧抓图回填。
 /// 只依赖 Device.Core 抽象与工厂契约，不引用 Device.Drivers。
 /// </summary>
-public sealed class CameraWorkspace(ICameraFactory factory)
-    : DeviceWorkspaceBase<CameraPageModel, CameraProfile>(factory.AvailableDrivers)
+public sealed class CameraWorkspace : DeviceWorkspaceBase<CameraPageModel, CameraProfile>
 {
+    private readonly ICameraFactory _factory;
     private DispatcherTimer? _liveTimer;
     private int _liveBusy;
+
+    public CameraWorkspace(ICameraFactory factory)
+        : base(factory.AvailableDrivers)
+    {
+        _factory = factory;
+
+        // 打开页面时测试卡要显示「当前选中档案」的触发配置，而不是 Model 的初始默认值。
+        SyncRuntimeTriggerFromProfile();
+    }
 
     protected override string CategoryName => "相机";
 
     protected override string FallbackProfileName => "相机01";
 
-    /// <summary>档案指纹：驱动 + 扫描类型 + IP + 参数文件 + 全部参数任一改动都重建实例（曝光/增益在连接时下发）。</summary>
+    /// <summary>
+    /// 档案指纹：驱动 + 扫描类型 + IP + 参数文件 + 全部参数（含触发）任一改动都重建实例
+    /// （曝光/增益/触发在连接时下发）。触发必须进指纹，否则改了触发配置不会重建实例，等于没改。
+    /// </summary>
     protected override string BuildKey(CameraProfile profile) =>
-        $"{profile.DriverId}:{profile.ScanType}:{profile.IpAddress}:{profile.ParameterFilePath}:{profile.ExposureMilliseconds}:{profile.Gain}:{profile.TimeoutMilliseconds}";
+        $"{profile.DriverId}:{profile.ScanType}:{profile.IpAddress}:{profile.ParameterFilePath}:{profile.ExposureMilliseconds}:{profile.Gain}:{profile.TimeoutMilliseconds}:{profile.FrameTriggerMode}:{profile.FrameTriggerSource}:{profile.LineTriggerMode}:{profile.LineTriggerSource}";
 
     /// <summary>实例创建由工厂延迟触发，Workbench 注册工厂时不会预先创建各品牌相机；此步骤不连接硬件。</summary>
     protected override IDevice CreateDevice(CameraProfile profile) =>
-        factory.Create(profile.ToOptions());
+        _factory.Create(profile.ToOptions());
 
     public override async Task ConnectAsync()
     {
         StopLive();
         await base.ConnectAsync();
+
+        // 连接后把测试卡拉回档案值：上次连接的临时改动不应跨连接残留。
+        SyncRuntimeTriggerFromProfile();
     }
 
     public override async Task DisconnectAsync()
@@ -44,7 +59,43 @@ public sealed class CameraWorkspace(ICameraFactory factory)
     }
 
     /// <summary>选中行切换（ConfigManagerView SelectedCallback → 对标 CamManagerService.SetCurCam）。</summary>
-    public override void SetCurDevice() => StopLive();
+    public override void SetCurDevice()
+    {
+        StopLive();
+        SyncRuntimeTriggerFromProfile();
+    }
+
+    /// <summary>
+    /// 把测试卡上的触发配置下发到已连接的相机。运行时覆盖，不写档案
+    /// —— 档案里的值仍是产线工况，测试完断开重连即回到档案值。
+    /// </summary>
+    public async Task ApplyTriggerAsync()
+    {
+        var camera = Connected<ICamera>();
+        var result = await camera
+            .SetTriggerAsync(Model.BuildRuntimeFrameTrigger(), Model.BuildRuntimeLineTrigger())
+            .ConfigureAwait(false);
+
+        if (!result.Success)
+            throw new InvalidOperationException(result.Message ?? result.ErrorCode ?? "下发触发配置失败");
+    }
+
+    /// <summary>切行/连接后把档案的触发配置播种到测试卡（测试卡改动只作用于当前连接）。</summary>
+    private void SyncRuntimeTriggerFromProfile()
+    {
+        var profile = Model.SelectedProfile;
+        if (profile is null)
+            return;
+
+        DispatcherEx.UIInvokeSafe(() =>
+        {
+            Model.RuntimeFrameTriggerMode = profile.FrameTriggerMode;
+            Model.RuntimeFrameTriggerSource = profile.FrameTriggerSource;
+            Model.RuntimeLineTriggerMode = profile.LineTriggerMode;
+            Model.RuntimeLineTriggerSource = profile.LineTriggerSource;
+            Model.RefreshLineTriggerAvailability();
+        });
+    }
 
     /// <summary>触发一次采集并回填预览。</summary>
     public async Task CaptureAsync()

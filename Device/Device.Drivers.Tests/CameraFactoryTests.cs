@@ -129,6 +129,204 @@ public sealed class CameraFactoryTests
         Assert.False(CameraDriverConfiguration.ShouldExecuteSoftwareTrigger(options));
     }
 
+    /// <summary>
+    /// 运行时下发与连接期下发必须共用同一套决策：线扫先行触发、再帧触发。
+    /// </summary>
+    [Fact]
+    public void GetTriggerBindings_LineScanRuntimeSettings_UsesLineThenFrameOrder()
+    {
+        var frame = new CameraTriggerSettings
+        {
+            Mode = CameraTriggerMode.On,
+            Source = CameraTriggerSources.Line2,
+        };
+        var line = new CameraTriggerSettings
+        {
+            Mode = CameraTriggerMode.On,
+            Source = CameraTriggerSources.RotaryEncoder1,
+        };
+
+        var bindings = CameraDriverConfiguration.GetTriggerBindings(
+            CameraScanType.LineScan,
+            frame,
+            line);
+
+        Assert.Collection(
+            bindings,
+            first =>
+            {
+                Assert.Equal(CameraDriverConfiguration.LineStartSelector, first.Selector);
+                Assert.Equal(CameraTriggerSources.RotaryEncoder1, first.Settings.Source);
+            },
+            second =>
+            {
+                Assert.Equal(CameraDriverConfiguration.FrameStartSelector, second.Selector);
+                Assert.Equal(CameraTriggerSources.Line2, second.Settings.Source);
+            });
+    }
+
+    /// <summary>
+    /// 面阵相机不下发行触发，并保留设备当前的触发选择器。
+    /// </summary>
+    [Fact]
+    public void GetTriggerBindings_AreaScanRuntimeSettings_IgnoresLineTrigger()
+    {
+        var frame = new CameraTriggerSettings
+        {
+            Mode = CameraTriggerMode.On,
+            Source = CameraTriggerSources.Line0,
+        };
+        var line = new CameraTriggerSettings
+        {
+            Mode = CameraTriggerMode.On,
+            Source = CameraTriggerSources.RotaryEncoder1,
+        };
+
+        var bindings = CameraDriverConfiguration.GetTriggerBindings(
+            CameraScanType.AreaScan,
+            frame,
+            line);
+
+        var binding = Assert.Single(bindings);
+        Assert.Null(binding.Selector);
+        Assert.Equal(CameraTriggerSources.Line0, binding.Settings.Source);
+    }
+
+    /// <summary>
+    /// 运行时改过触发后，是否主动发软件触发命令必须看当前生效的帧触发，
+    /// 而不是创建相机时的 <see cref="CameraOptions.FrameTrigger"/>。
+    /// </summary>
+    [Fact]
+    public void ShouldExecuteSoftwareTrigger_RuntimeSettings_FollowsCurrentSource()
+    {
+        Assert.True(CameraDriverConfiguration.ShouldExecuteSoftwareTrigger(
+            new CameraTriggerSettings
+            {
+                Mode = CameraTriggerMode.On,
+                Source = CameraTriggerSources.Software,
+            }));
+
+        Assert.False(CameraDriverConfiguration.ShouldExecuteSoftwareTrigger(
+            new CameraTriggerSettings
+            {
+                Mode = CameraTriggerMode.On,
+                Source = CameraTriggerSources.Line1,
+            }));
+
+        // 关闭帧触发时相机自由运行，同样不能主动发软件触发命令
+        Assert.False(CameraDriverConfiguration.ShouldExecuteSoftwareTrigger(
+            new CameraTriggerSettings
+            {
+                Mode = CameraTriggerMode.Off,
+                Source = CameraTriggerSources.Software,
+            }));
+    }
+
+    /// <summary>
+    /// 合法的运行时触发配置应通过校验。
+    /// </summary>
+    [Fact]
+    public void ValidateTriggerSettings_ValidLineScanSettings_ReturnsNull()
+    {
+        var error = CameraDriverConfiguration.ValidateTriggerSettings(
+            CameraScanType.LineScan,
+            new CameraTriggerSettings
+            {
+                Mode = CameraTriggerMode.On,
+                Source = CameraTriggerSources.Line1,
+            },
+            new CameraTriggerSettings
+            {
+                Mode = CameraTriggerMode.Off,
+                Source = CameraTriggerSources.Line1,
+            });
+
+        Assert.Null(error);
+    }
+
+    /// <summary>
+    /// 面阵相机不下发行触发，因此行触发里的无效值不能阻断帧触发的下发。
+    /// </summary>
+    [Fact]
+    public void ValidateTriggerSettings_AreaScanWithInvalidLineTrigger_IsAccepted()
+    {
+        var error = CameraDriverConfiguration.ValidateTriggerSettings(
+            CameraScanType.AreaScan,
+            new CameraTriggerSettings
+            {
+                Mode = CameraTriggerMode.On,
+                Source = CameraTriggerSources.Software,
+            },
+            new CameraTriggerSettings
+            {
+                Mode = CameraTriggerMode.On,
+                Source = "   ",
+            });
+
+        Assert.Null(error);
+    }
+
+    /// <summary>
+    /// 线扫相机的行触发无效时同样要拦下。
+    /// </summary>
+    [Fact]
+    public void ValidateTriggerSettings_LineScanWithBlankLineTriggerSource_ReportsError()
+    {
+        var error = CameraDriverConfiguration.ValidateTriggerSettings(
+            CameraScanType.LineScan,
+            new CameraTriggerSettings
+            {
+                Mode = CameraTriggerMode.On,
+                Source = CameraTriggerSources.Software,
+            },
+            new CameraTriggerSettings
+            {
+                Mode = CameraTriggerMode.On,
+                Source = "   ",
+            });
+
+        Assert.NotNull(error);
+        Assert.Contains("行", error, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// 启用触发却没给触发源时必须拦下，否则厂商 SDK 会报参数错误。
+    /// </summary>
+    [Fact]
+    public void ValidateTriggerSettings_EnabledTriggerWithoutSource_ReportsError()
+    {
+        var error = CameraDriverConfiguration.ValidateTriggerSettings(
+            CameraScanType.AreaScan,
+            new CameraTriggerSettings
+            {
+                Mode = CameraTriggerMode.On,
+                Source = string.Empty,
+            },
+            new CameraTriggerSettings());
+
+        Assert.NotNull(error);
+        Assert.Contains("帧", error, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// 触发模式为未定义枚举值时应被拦下（JSON 反序列化可以塞进任意整数）。
+    /// </summary>
+    [Fact]
+    public void ValidateTriggerSettings_UndefinedTriggerMode_ReportsError()
+    {
+        var error = CameraDriverConfiguration.ValidateTriggerSettings(
+            CameraScanType.AreaScan,
+            new CameraTriggerSettings
+            {
+                Mode = (CameraTriggerMode)42,
+                Source = CameraTriggerSources.Software,
+            },
+            new CameraTriggerSettings());
+
+        Assert.NotNull(error);
+        Assert.Contains("模式", error, StringComparison.Ordinal);
+    }
+
     private static CameraOptions ValidOptions(string driverId) => new()
     {
         Name = "Camera01",

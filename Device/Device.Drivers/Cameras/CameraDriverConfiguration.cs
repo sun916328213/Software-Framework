@@ -20,32 +20,97 @@ internal static class CameraDriverConfiguration
     internal static IReadOnlyList<CameraTriggerBinding> GetTriggerBindings(CameraOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
+        return GetTriggerBindings(options.ScanType, options.FrameTrigger, options.LineTrigger);
+    }
 
-        if (options.ScanType == CameraScanType.LineScan)
+    /// <summary>
+    /// 按扫描类型和一组触发配置返回需要下发的触发器；运行时改触发与连接期下发共用此实现。
+    /// </summary>
+    /// <param name="scanType">扫描类型；面阵只用帧触发，线扫先下行触发再下帧触发。</param>
+    /// <param name="frameTrigger">帧触发配置。</param>
+    /// <param name="lineTrigger">行触发配置；面阵相机忽略。</param>
+    internal static IReadOnlyList<CameraTriggerBinding> GetTriggerBindings(
+        CameraScanType scanType,
+        CameraTriggerSettings frameTrigger,
+        CameraTriggerSettings lineTrigger)
+    {
+        ArgumentNullException.ThrowIfNull(frameTrigger);
+        ArgumentNullException.ThrowIfNull(lineTrigger);
+
+        if (scanType == CameraScanType.LineScan)
         {
             return
             [
                 new CameraTriggerBinding(
-                    options.LineTrigger.Selector ?? LineStartSelector,
-                    options.LineTrigger),
+                    lineTrigger.Selector ?? LineStartSelector,
+                    lineTrigger),
                 new CameraTriggerBinding(
-                    options.FrameTrigger.Selector ?? FrameStartSelector,
-                    options.FrameTrigger),
+                    frameTrigger.Selector ?? FrameStartSelector,
+                    frameTrigger),
             ];
         }
 
         // 面阵相机保留相机当前的 TriggerSelector，只覆盖模式和触发源，
         // 兼容没有 FrameStart 节点或使用旧版 SFNC 的型号。
-        return [new CameraTriggerBinding(options.FrameTrigger.Selector, options.FrameTrigger)];
+        return [new CameraTriggerBinding(frameTrigger.Selector, frameTrigger)];
     }
 
     /// <summary>判断 CaptureAsync 是否需要主动发送软件触发命令。</summary>
-    internal static bool ShouldExecuteSoftwareTrigger(CameraOptions options) =>
-        options.FrameTrigger.Mode == CameraTriggerMode.On
-        && string.Equals(
-            options.FrameTrigger.Source,
-            CameraTriggerSources.Software,
-            StringComparison.OrdinalIgnoreCase);
+    internal static bool ShouldExecuteSoftwareTrigger(CameraOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        return ShouldExecuteSoftwareTrigger(options.FrameTrigger);
+    }
+
+    /// <summary>
+    /// 判断按给定帧触发配置采集时是否需要主动发送软件触发命令。
+    /// </summary>
+    /// <remarks>
+    /// 运行时改过触发后必须以「当前生效的帧触发」判断，不能用创建时的
+    /// <see cref="CameraOptions.FrameTrigger"/>，否则切到外部触发后仍会多发一条软件触发命令。
+    /// </remarks>
+    internal static bool ShouldExecuteSoftwareTrigger(CameraTriggerSettings frameTrigger)
+    {
+        ArgumentNullException.ThrowIfNull(frameTrigger);
+        return frameTrigger.Mode == CameraTriggerMode.On
+            && string.Equals(
+                frameTrigger.Source,
+                CameraTriggerSources.Software,
+                StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// 校验运行时下发的触发配置；返回 <c>null</c> 表示可以下发，否则返回失败原因。
+    /// </summary>
+    /// <param name="scanType">扫描类型；面阵相机的行触发不会被下发，因此不参与校验。</param>
+    /// <param name="frameTrigger">帧触发配置。</param>
+    /// <param name="lineTrigger">行触发配置。</param>
+    internal static string? ValidateTriggerSettings(
+        CameraScanType scanType,
+        CameraTriggerSettings frameTrigger,
+        CameraTriggerSettings lineTrigger)
+    {
+        ArgumentNullException.ThrowIfNull(frameTrigger);
+        ArgumentNullException.ThrowIfNull(lineTrigger);
+
+        var frameError = ValidateTrigger(frameTrigger, "帧");
+        if (frameError is not null)
+            return frameError;
+
+        // 面阵相机只下发帧触发，行触发配置无效值不应阻断帧触发的下发。
+        return scanType == CameraScanType.LineScan ? ValidateTrigger(lineTrigger, "行") : null;
+    }
+
+    private static string? ValidateTrigger(CameraTriggerSettings trigger, string triggerName)
+    {
+        if (!Enum.IsDefined(trigger.Mode))
+            return $"{triggerName}触发模式 '{trigger.Mode}' 无效。";
+
+        if (trigger.Mode == CameraTriggerMode.On && string.IsNullOrWhiteSpace(trigger.Source))
+            return $"启用{triggerName}触发时必须指定触发源。";
+
+        return null;
+    }
 
     /// <summary>把公共触发模式转换为 GenICam 使用的符号。</summary>
     internal static string ToGenICamMode(CameraTriggerMode mode) =>
