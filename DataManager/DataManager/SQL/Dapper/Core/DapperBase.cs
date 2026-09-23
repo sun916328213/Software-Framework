@@ -530,7 +530,18 @@ namespace DataManager.SQL.Dapper
 
         public void DeleteAll()
         {
-            Delete(x => true);
+            using var releaser = OpenScoped(out var conn);
+
+            if (DapperSplitRouter<T>.IsSplitTableEntity())
+            {
+                foreach (var table in Split.GetSplitTables(conn))
+                    conn.Execute($"DELETE FROM {SqlNamingHelper.FormatTableName(table, SQLParam.DBType)}", transaction: _tx);
+                return;
+            }
+
+            var tableAttr = typeof(T).GetCustomAttribute<TableAttribute>();
+            var baseTable = tableAttr?.Name ?? typeof(T).Name;
+            conn.Execute(DapperSqlBuilder<T>.BuildDeleteAllSql(SQLParam, baseTable), transaction: _tx);
         }
 
         /// <remarks>P4-2 补齐：分表逐表 DELETE（此前只删基表名，分表数据残留）。</remarks>
