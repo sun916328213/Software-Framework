@@ -494,6 +494,9 @@ grep -rn --include=*.cs -E 'catch[^A-Za-z]*\{\s*\}' WPFControl/WPFControl       
 
 ### 6.1 补的 6 个工程引用
 
+> ⚠️ **后续更正（见 6.6）**：这轮**漏了 2 个**（`FlowEditor` / `WPFCustomControls`），
+> 已于同日补上 ⇒ 该工程 `ProjectReference` 实为 **12 条**（4 原有 + 6 本轮 + 2 补漏）。
+
 ```
 ..\..\Extension\Extension\Extension.csproj
 ..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj
@@ -513,11 +516,14 @@ grep -rn --include=*.cs -E 'catch[^A-Za-z]*\{\s*\}' WPFControl/WPFControl       
 
 ### 6.2 守卫测试（`ArchitectureDependencyTests`，4 个用例）
 
+> ⚠️ **后续更新**：用例数 4 → **6**（+`HostProject_DeclaresItsDirectlyUsedProjects`，见 6.4；
+> 下表第 3 行已改名 `ProjectFile_DeclaresTheDirectlyUsedProjects` 且期望 6 → 8 条，见 6.6）。
+
 | 用例 | 钉住什么 | 当前登记（已知债务） |
 |---|---|---|
 | `Models_DoNotDependOnUpperLayers` | `Models` 不得依赖 `Services`/`ViewModels`/`Views` | 1 条：`ProgramControl/Models/Shell/DisplayModel.cs :: WPFControl.CustomControl.Views` |
 | `CustomControl_DoNotDependOnProgramControl` | `CustomControl` 不得反向依赖 `ProgramControl` | 2 条：`PrintModel.cs`、`ModifyUserView.xaml.cs`（均 `:: ...ProgramControl.Models`） |
-| `ProjectFile_DeclaresTheSixDirectlyUsedProjects` | 6 个直接引用不得被回退；LogR 死配置不得回潮 | — |
+| `ProjectFile_DeclaresTheSixDirectlyUsedProjects`<br>（现名 `ProjectFile_DeclaresTheDirectlyUsedProjects`） | 直接引用不得被回退；LogR 死配置不得回潮 | — |
 | `DirectDependencies_ExistAndDoNotReferenceWpfControl` | 引用的工程必须存在，且不得反引 `WPFControl`（防循环） | — |
 
 两点设计说明：
@@ -547,7 +553,7 @@ grep -rn --include=*.cs -E 'catch[^A-Za-z]*\{\s*\}' WPFControl/WPFControl       
 - 3.9 `ForceFullRender` 注释与实现不符：P3，未动。
 - `Packing Machine.csproj` 里 `WPFControl.csproj` 的**重复引用**（`:33` 与 `:96`）：未动。
 
-### 6.4 ⚠️ 新发现：`Packing Machine` 是同一问题的更极端版本（未动，待批准）
+### 6.4 `Packing Machine` 是同一问题的更极端版本 —— ✅ 已修复（2026-09-23）
 
 `Packing Machine.csproj`（**`WinExe` 应用宿主**）目前只声明了：
 
@@ -584,8 +590,12 @@ grep -rn --include=*.cs -E 'catch[^A-Za-z]*\{\s*\}' WPFControl/WPFControl       
 ⛔ 包引用一条都不补 —— `HalconDotNet` 尤其必须留在 `Extension.csproj` 一处锁 `23110.0.0`。
 `Packing Machine` 位于依赖图**顶端**（全仓无人引用它）⇒ 不会引入循环引用，构建闭包不变。
 
-**未动原因**：它是**应用宿主**，「组合根靠闭包」算不算问题有真实争议；且项目规则是
-「授权逐项生效、不累积」—— `WPFControl` 那 6 条的批准**不覆盖**这里。**待单独确认。**
+**落地（2026-09-23）**：11 条 `ProjectReference` 已补齐（**纯新增、无任何删除**；包引用一条未补）。
+文件为 CRLF + 2 行裸 LF（第 2、4 行）+ 末行无换行符，用「按 `\n` 切分再重组」原样保住。
+**构建闭包实测不变（改前 21 = 改后 21，多出 0 个工程）**；`dotnet build Frame.sln -m` **0 错误**。
+守卫 `HostProject_DeclaresItsDirectlyUsedProjects` 已加（在 `WPFControl.Tests`，`[Fact]` 4 → 5；
+变异验证过：摘掉 `Extension` 那条即变红）。详见 `.workbuddy-ai/memory/2026-09-23.md` 第七节。
+⛔ **仍未动**：`:33` / `:96` 那条**重复的** `WPFControl` 引用 —— 属删除动作，按规则待批。
 
 ### 6.5 ✅ 全量回归首次全绿（2026-09-23 13:07）
 
@@ -596,3 +606,246 @@ grep -rn --include=*.cs -E 'catch[^A-Za-z]*\{\s*\}' WPFControl/WPFControl       
 同轮修掉了 `FlowEditor` 的 4 条架构守卫失败（`FlowEditor.sln` + 测试里共 9 处硬编码旧路径，
 `FlowEditorTest` → `FlowEditor.Test`、`FlowEditor.Runtime.Smoke.csproj` → `FlowEditor.Runtime.Test.csproj`）；
 `FlowEditor.sln` 由「加载不了」变为 7 个工程路径全部有效，单跑 **345/345**。详见 `.workbuddy-ai/memory/2026-09-23.md` 第四节。
+
+### 6.6 全仓「声明 ≠ 使用」审计 —— 又扫出 2 个漏项（2026-09-23）
+
+起因是用户问「**传递引用不合适吗**」。结论要先澄清：**传递引用本身没问题**，
+有问题的是「**借来的依赖**」—— 源码直接用了某工程的类型，csproj 却不声明它。
+这条边不归自己管，上游一清理就断，而且**报错落在没改过的工程上**（正是 6.4 的情形）。
+
+为把范围一次查清，做了一次全仓审计。
+
+**算法**：正则扫每个 `.cs` 的 `namespace`（= 拥有者）与 `using`（= 使用者）→ 建工程依赖图
+→ 对每个工程算**传递闭包** → 分两类：
+
+- **A 类（疑似断裂）**：用到的命名空间**没有任何拥有者在自己的闭包内** ⇒ 编译本该失败；
+- **B 类（借来的依赖）**：在闭包内、但**没有直接声明** ⇒ 上游一断就炸。
+
+**A 类结论：全仓 0 条真断裂。** 扫出的两条全是**误报**，原因值得记下来：
+
+| 误报 | 真因 |
+|---|---|
+| `Communication.Protocols.OpcUa` | 是 `Communication1` **自己的子命名空间** —— `owners()` 往上找祖先找错了 |
+| `CommunicationNew.Protocols.Mitsubishi` | `MxComponentBridge` 用 `<Compile Include="..\CommunicationNew\...">` **链接编译**了别的工程的源文件 ⇒ 命名空间其实归自己 |
+
+其余噪音（`Secs4Net → WpfVisualizer` 等）是**命名空间前缀撞车**，
+已排除 `secs4net-base/`、`_wpftmp` 临时工程与包根命名空间。
+⚠️ 另一个坑：按**根**命名空间统计会误判 —— `using FlowEditor.DataManagerLogging;`
+会被算成「FlowEditor 工程」，实际归 `FlowEditor.DataManagerLogging`。
+
+**B 类结论：`WPFControl` 在 6.1 那轮漏了 2 个工程** —— 它们同样只在闭包里（经 `FlowNodes`）：
+
+| 工程 | 源码实际使用（`grep` 实测） |
+|---|---|
+| `FlowEditor` | 7 个文件：`FlowEditor.Core`(1) / `FlowEditor.ViewModels`(4) / `Views`(2 个 `.xaml`) |
+| `WPFCustomControls` | 51 个文件：`Controls`(15) / `Window.Views`(9) —— 且 `.xaml` 里带 `assembly=WPFCustomControls`，**markup 编译期硬依赖** |
+
+**落地**：`WPFControl.csproj` 的 `ProjectReference` 由 10 → **12 条**（纯新增）。
+编码原样保住（CRLF 94 / 裸 LF 仍 2 / 无 BOM / 末字节 `>`）。
+守卫 `ProjectFile_DeclaresTheSixDirectlyUsedProjects` 相应改名
+`ProjectFile_DeclaresTheDirectlyUsedProjects`，期望数组 6 → **8 条**。
+
+**变异验证（这次拿到了真红，不是假红）**：
+
+⛔ 陷阱：这两个工程是**承重依赖**，直接摘掉 `ProjectReference` 会让**构建先挂**
+（`error CS0234` / markup 找不到 assembly）⇒ 拿到的是「假红」——只证明引用承重，
+**没证明断言有牙齿**。
+
+改用「**删 `ProjectReference`，换成 `Reference` + `HintPath` 指向已编译 dll**」：
+构建仍能通过（类型解析得到），但 `ProjectReference` 确实没了。结果：
+
+```
+失败 WPFControl.Tests.ArchitectureDependencyTests.ProjectFile_DeclaresTheDirectlyUsedProjects [2 ms]
+   Assert.Contains() Failure: Sub-string not found
+Not found: "..\\..\\WPFCustomControls\\WPFCustomControls"···
+```
+
+**构建 0 错误 + 恰好 1 条红 + 红的正是那条** ⇒ 真红。还原后 md5 逐字节一致
+（`6b2c591a8d9c2c54a2f81562bf275df6`），无残留。
+
+**其余 B 类（8 个工程，未动、等批准）**：`VisionDemo` / `Device.Workbench` /
+`WPFControl.Tests` / `DataManager.Workbench.Tests` / `FlowEditor.Tests` / `FlowNodes` /
+`Ctr_WPF_F48` / `Secs.Tests` —— 同一模式，处理方式与 6.1 / 6.4 相同（纯新增引用）。
+⚠️ 其中 `Ctr_WPF_F48` 需先确认它不是 `Vision` 里的第三方目录。
+
+> ⚠️ **上列 8 个是「上一轮口径」的结论，本轮重跑后已修正** —— 见 6.6.1。
+> 准确口径下 B 类有 **46 个**工程，且「借来的依赖」**本身是 .NET 的常态**，
+> **不建议**把这 8 个当作待办清单。
+
+> 本节修正 6.1 的「6 个」为 **8 个**、6.2 的「4 个用例」为 **6 个**
+> （4 原始 + `HostProject_DeclaresItsDirectlyUsedProjects` + 本轮改名那条）。
+> 原文保留不删，以本节为准。
+
+#### 6.6.1 口径修正与复核（同日重跑完整脚本）
+
+6.6 里「其余 B 类 8 个工程」是**上一轮口径**的结论，本轮用完整脚本（58 个 `csproj` 全量）重跑后修正。
+
+**A 类（真断裂）：仍是 2 条，且仍是那两条误报 ⇒ 全仓 0 条真断裂。** 结论稳定。
+
+**B 类（借来的依赖）：58 个 `csproj` 里 46 个命中。** 这说明「借来的依赖」在 .NET 里
+**是常态而非缺陷** —— `ProjectReference` 默认就是**传递**的（`PrivateAssets` 不含 `compile`），
+「A 引用 B、B 引用 C、A 直接使用 C 的命名空间」本来就是合法且常见的写法。
+⇒ ⛔ **不能一刀切全改**（会引入几百条引用，噪音远大于收益），
+也不该把那 8 个当作待办清单。
+
+**真正值得处理的判据**（6.4 那个才是真问题）：
+提供方是**纯中转站**、且**它自己并不需要**被借用的那条引用 ⇒ 上游一清理就**静默断链**，
+而报错会落在没改过的工程上。按此判据，**主链路只有 2 个**：
+`WPFControl`（6.1 + 6.6）与 `Packing Machine`（6.4）—— **均已修**。
+
+**复核「是否还有漏项」**（对已修的两个工程，逐命名空间反查归属工程）：
+
+| 工程 | 闭包 | 借来的命名空间归属 | 未声明 |
+|---|---|---|---|
+| `WPFControl` | 21 个工程 | 12 个工程 | **0** ✅ |
+| `Packing Machine` | 22 个工程 | 13 个工程 | **0** ✅ |
+
+初筛各剩 1 条「未声明」，**逐条核实后均为误报** —— 都是**同名命名空间跨工程**：
+
+- `FlowEditor.Core` 的 owner 是 `{FlowEditor, FlowEditor.Runtime}` ——
+  `FlowEditor.Runtime/Core/*.cs` 里也写着 `namespace FlowEditor.Core;`；
+  真正的提供方 `FlowEditor` **已声明**。
+- `DPLibrary_Halcon_F48.Tools` 的 owner 是 `{DPLibrary_Halcon_F48, DPLibrary_Base_F48}` ——
+  `Vision/DPLibrary_Base_F48/Tools/ToolMge.cs` 里写的是 `namespace DPLibrary_Halcon_F48.Tools`；
+  真正的提供方 `DPLibrary_Halcon_F48` **已声明**。
+
+⇒ **两个工程的修复是完整的**，无残留漏项。
+
+> ⛔ 审计脚本自身的噪音（下次跑必须先排除）：`Device - 副本/`、`.tmp-render/`、
+> `secs4net-base/`、`_wpftmp` 临时工程；
+> 以及**别按根命名空间统计**（`using FlowEditor.DataManagerLogging;` 会被算成 `FlowEditor` 工程，
+> 实际归 `FlowEditor.DataManagerLogging`）。
+
+### 6.7 ✅ 本轮最终验证（2026-09-23 13:45）
+
+| 项 | 结果 |
+|---|---|
+| `dotnet build WPFControl.sln --no-restore -m` | **0 错误**（258 警告） |
+| `dotnet test WPFControl.sln` | **6/6 通过** |
+| 变异验证（见 6.6） | **真红**：构建 0 错误 + 恰好 1 条红，红的正是目标用例；还原后 md5 逐字节一致 |
+| `DM_PG_PASSWORD=123 dotnet test Frame.sln -m --no-restore` | **退出码 0**、**1695 / 1695 通过 / 0 失败 / 0 跳过**、`: error ` **0 条** |
+
+分工程明细：`Secs.Tests` 25 / `DataManager.Tests` 180 / `Device.Drivers.Tests` 77 /
+`Extension.Tests` 905 / `WPFCustomControls.Tests` 103 / `FlowEditor.Tests` 341 /
+`DataManager.Workbench.Tests` 58 / `WPFControl.Tests` 6。
+
+⚠️ 上一轮（6.4 / 6.5）出现过的 `BranchMergeNodeTests.Cycle_…` 时序抖动本轮**未复现**
+（`TimeoutException` 出现 **0** 次）—— 印证那是并行负载下的抖动，不是回归。
+
+**本轮改动文件（4 个，全部纯新增/改名，零删除）**：
+
+| 文件 | 改动 |
+|---|---|
+| `WPFControl/WPFControl/WPFControl.csproj` | `ProjectReference` 10 → **12**（+`FlowEditor` / +`WPFCustomControls`） |
+| `WPFControl/WPFControl.Tests/ArchitectureDependencyTests.cs` | 用例改名 + 期望 6 → 8 条（BOM 已核回） |
+| `WPFControl-架构分析与优化方向.md` | 新增 6.6 / 6.6.1 / 6.7 |
+| `.workbuddy-ai/memory/2026-09-23.md` | 新增第九节 |
+
+⛔ **未提交** —— 仓库处于并发状态（`.git/index` mtime `13:16:37`，暂存区混有别的进程的
+`AGENTS.md` / `.gitignore`），提交有碰撞风险。详见记忆第八节。
+
+### 6.8 ⛔⛔ 一个**编译期看不见**的运行时炸弹：`Assembly.Load("FlowNodes")`（2026-09-23）
+
+6.3 遗留项里有一条「`FlowNodes` 直引是否还需要摘除」。本轮做了**中转站审计**后，
+这条边看起来是「纯冗余」（`WPFControl` 自己一处不用、补完 12 条后也无人借用）——
+**但实测推翻了这个结论**。
+
+**发现**：`Packing Machine/App.xaml.cs:268-269`
+
+```csharp
+// 强制加载 FlowNodes 程序集，确保其节点能被工具箱扫描到
+System.Reflection.Assembly.Load("FlowNodes");
+```
+
+这是**运行时反射加载**，编译期完全看不见它。
+
+**实测（摘掉 `WPFControl → FlowNodes` 这条边）**：
+
+| 指标 | 正常 | 摘掉后 |
+|---|---|---|
+| `Packing Machine` 编译 | 0 错误 | **仍 0 错误** ⚠️ |
+| 输出目录 `FlowNodes.dll` | 在（146944 字节） | **消失** |
+| `deps.json`（201 个库） | 含 `FlowNodes/1.0.0` | **不含** |
+| 运行时 `Assembly.Load` | OK | **`FileNotFoundException`** |
+
+⇒ 那条边是 `Packing Machine` 拿到 FlowNodes.dll 的**唯一通道**。
+**编译全绿、测试全绿，一启动就炸** —— 这类依赖最难排查。
+
+**修复**（纯新增）：`Packing Machine.csproj` 补第 12 条工程引用
+`..\..\FlowNodes\FlowNodes\FlowNodes.csproj`（该文件 `ProjectReference` 由 13 行 → **14 行**，
+其中 `WPFControl` 仍重复声明两次，未动）。
+
+**修复验证**：在「上游那条边已摘 **且** 手工删掉 `FlowNodes.dll`」的状态下重建 ⇒
+`FlowNodes.dll` **重新出现**、`deps.json` **有** `FlowNodes/1.0.0` ⇒ 宿主已自给自足。
+
+**守卫**（`WPFControl.Tests`，用例 6 → **7**）：
+
+| 用例 | 钉住什么 |
+|---|---|
+| `HostProject_DeclaresItsDirectlyUsedProjects` | 数组 11 → **12** 条（加 `FlowNodes`） |
+| `HostProject_RuntimeLoadedAssemblies_AreDeclared`（**新增**） | 扫宿主源码里所有 `Assembly.Load("X")` 字面量，断言 csproj 声明了 `X.csproj`；扫不到就 `Assert.NotEmpty` 红（防正则失效造成假绿） |
+
+**变异验证**：摘掉 `Packing Machine` 的 `FlowNodes` 引用 ⇒ 构建 **0 错误**、
+**恰好 2 条红**（正是这两个用例）、5 条绿 ⇒ **真红，守卫有牙齿**。
+
+> ⛔ **对 6.3 遗留项的修正**：`FlowNodes` **不能摘**（至少在有 `Assembly.Load` 的前提下）。
+> 正确顺序是**先**让 `Packing Machine` 显式声明它（本轮已做），**再**评估摘除 ——
+> 且摘除前必须重跑「输出目录 + `deps.json`」检查，**不能只看编译**。
+
+> ⛔ **审计方法的盲区**：`using` / `namespace` 扫描**扫不到** `Assembly.Load`、
+> `XamlReader`、`Activator.CreateInstance` 这类反射加载。
+> 全仓 grep `Assembly.Load` 是这类审计**必要的补充动作**。
+
+> 本节改动文件 +1 ⇒ 本轮共 **5 个**（上表 4 个 + `Packing Machine.csproj`）。
+> 另外：`WPFControl → DataManager.Controls` 也是纯冗余边（自己不用、无人借用），
+> 实测摘掉后编译仍 0 错误 —— 按「不删」规则**未动**，仅记录。
+
+### 6.9 ✅ 第二轮最终验证（2026-09-23 14:06）
+
+| 项 | 结果 |
+|---|---|
+| `dotnet build WPFControl.sln` / `Packing Machine.csproj` | **0 错误** |
+| `dotnet test WPFControl.sln` | **7/7 通过**（+1 = 新增的运行时守卫） |
+| 变异验证（摘掉宿主 `FlowNodes` 引用） | **真红**：构建 0 错误 + 恰好 **2 条红** + 5 绿 |
+| 修复验证（上游边已摘 **且** 手工删 dll） | `FlowNodes.dll` **重新出现**、`deps.json` **有** `FlowNodes/1.0.0` |
+| `DM_PG_PASSWORD=123 dotnet test Frame.sln -m --no-restore` | **退出码 0**、**1696 / 1696 通过 / 0 失败 / 0 跳过**、`: error ` **0 条** |
+
+分工程：`Secs.Tests` 25 / `DataManager.Tests` 180 / `Device.Drivers.Tests` 77 /
+`Extension.Tests` 905 / `WPFCustomControls.Tests` 103 / `FlowEditor.Tests` 341 /
+`DataManager.Workbench.Tests` 58 / `WPFControl.Tests` **7**。
+
+**本轮累计改动 5 个文件**（4 个见 6.7 表 + `Packing Machine.csproj`）：
+
+| 文件 | 改动 | md5 |
+|---|---|---|
+| `WPFControl/WPFControl/WPFControl.csproj` | `ProjectReference` 10 → **12** | `6b2c591a…` |
+| `Packing Machine/Packing Machine/Packing Machine.csproj` | 13 → **14** 行（+`FlowNodes`，运行时依赖） | `ff71a9b0…` |
+| `WPFControl/WPFControl.Tests/ArchitectureDependencyTests.cs` | `[Fact]` 5 → **6**；两个期望数组分别为 **8** / **12** 条 | `7e53907a…` |
+| `WPFControl-架构分析与优化方向.md` | 新增 6.6 / 6.6.1 / 6.7 / 6.8 / 6.9 | — |
+| `.workbuddy-ai/memory/2026-09-23.md` | 新增第九 / 十节 | — |
+
+⛔ **仍未提交**（并发状态未解除，理由同 6.7）。
+
+### 6.10 ✅ 全仓反射加载排查（2026-09-23 14:20）—— 只有 1 处真问题
+
+按 6.8 的教训，把「全仓 grep `Assembly.Load`」这条补充动作真正做到底。结果：
+
+| 工程 | 调用 | 声明 | 结论 |
+|---|---|---|---|
+| `Packing Machine` | `Assembly.Load("FlowNodes")` | 本轮补 | ✅ **唯一真问题**，已修 |
+| `FlowNodes.Workbench` | `Assembly.Load("FlowNodes")` | 已声明 | ✅ 正常 |
+| `FlowEditor` | `Assembly.Load("FlowNodes")` | 未声明 | ✅ **故意的** —— `FlowNodes` 反过来引 `FlowEditor`，声明会**循环**；用 `try { … } catch { return null; }` 降级（失败只是工具箱扫不到节点） |
+| `ScriptEditor` | `Assembly.Load("RoslynPad.Roslyn.Windows")`<br>`Assembly.Load("RoslynPad.Editor.Windows")` | NuGet 包 | ✅ 正常 —— 前者是显式 `PackageReference`，后者是它的**传递依赖**（实测在 `deps.json` 里） |
+| `WPFControl.Tests` | — | — | ✅ 误报（我自己守卫注释里的 `Assembly.Load("X")`） |
+
+**其余反射 API 全仓为空**：`XamlReader.*` **0** 处、`Type.GetType("…")` **0** 处、
+`Activator.CreateInstance("…")` **0** 处。
+
+**顺带修掉审计脚本的两个误报源**（已回写 skill 脚本）：
+
+1. 只查 `ProjectReference` ⇒ NuGet 包被判「未声明」→ 改为同时认 `Include="包名"`；
+2. 不剥注释 ⇒ 文档注释里的示例被当成真实调用 → 先剥掉整行 `//`；
+3. 输出加提示：**循环依赖**与 **NuGet 传递依赖**是「未声明」的两类**合理例外**。
+
+> **结论：`Assembly.Load` 这条线收口。** 全仓唯一的运行时炸弹就是 `Packing Machine`，
+> 已修，且已有守卫 `HostProject_RuntimeLoadedAssemblies_AreDeclared` 钉住。

@@ -330,6 +330,11 @@ namespace DPLibrary_Halcon_F48.Tools
             }
         }
 
+        // ⚠️ setter 是 protected，System.Text.Json 默认**不给非公有 setter 赋值且静默跳过**
+        // ⇒ 读档后训练中心点会静默回退成 Point(0,0)（JSON 里明明写着 "BasePoint"）。
+        // 加 [JsonInclude] 让 STJ 使用这个非公有 setter；保留 protected 是因为它是训练结果，
+        // 面板里应保持只读（改 public set 会让它在属性面板里变成可手改）。
+        [JsonInclude]
         [JsonPropertyName("BasePoint")]
         [ToolPropertyAttribute(Group = "3.训练结果", DisplayName = "基础中心点", Description = "训练后的中心点，作为后续匹配的基准",
                 EditorType = E_PropertyEditorType.Text)]
