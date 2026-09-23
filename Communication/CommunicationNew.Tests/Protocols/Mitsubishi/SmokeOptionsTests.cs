@@ -1,6 +1,7 @@
+using CommunicationNew.Protocols.Mitsubishi;
 using Xunit;
 
-namespace CommunicationNew.MxComponentSmokeTest.Tests;
+namespace CommunicationNew.Tests.Protocols.Mitsubishi;
 
 public sealed class SmokeOptionsTests
 {

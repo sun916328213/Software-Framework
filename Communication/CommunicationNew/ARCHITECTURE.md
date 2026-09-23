@@ -104,7 +104,7 @@ MQTTnet 在接口中声明连接、断开和收发操作的并发约束，并由
 
 MC 的有效通信超时默认取通用 `CommunicationParam.TimeoutMs`；旧 `McParam.CommunicationTimeout` 未显式设置时自动跟随该值，显式设置后继续作为兼容覆盖值。SLMP 的请求等待与监视定时器、MX 桥接的读写及关闭均使用这一有效值。
 
-`CommunicationNew.MxComponentSmokeTest.Tests` 另有 15/15 个 Windows x64 自动化测试，直接覆盖验收工具的默认只读、显式写确认、位/字地址匹配、密码命令行拒绝、写选项互斥、逻辑站范围，以及连接前的 MC 单次点数、24 位末地址和 `--count`/写入列表冲突校验；这些工具测试不连接 COM 或 PLC。
+验收工具的参数解析类型 `SmokeOptions` 位于 `CommunicationNew.Protocols.Mitsubishi`（库内 `internal`，经 `InternalsVisibleTo` 对工具程序集开放），其 15 个自动化测试并入 `CommunicationNew.Tests` 的 `Protocols/Mitsubishi/SmokeOptionsTests.cs`；参数校验本身不依赖 Windows，这些测试随宿主测试工程运行在纯 `net9.0` 下，直接覆盖验收工具的默认只读、显式写确认、位/字地址匹配、密码命令行拒绝、写选项互斥、逻辑站范围，以及连接前的 MC 单次点数、24 位末地址和 `--count`/写入列表冲突校验；这些工具测试不连接 COM 或 PLC。
 
 MC TCP 实现以三菱官方 SLMP Reference Manual 为协议依据。二进制 3E 请求子头为 `50 00`，4E 请求子头为 `54 00` 并携带由外部设备管理的序列号；二进制多字节字段按低字节到高字节发送。设备批量读取和写入分别使用 `0401`、`1401`，位/字单位由 subcommand 区分。`McCommand` 公开同一组数值命令和子命令，旧的字符串常量只作为带替代说明的兼容别名，避免把随机读写命令误当成批量字访问。
 

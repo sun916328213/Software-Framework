@@ -849,3 +849,82 @@ System.Reflection.Assembly.Load("FlowNodes");
 
 > **结论：`Assembly.Load` 这条线收口。** 全仓唯一的运行时炸弹就是 `Packing Machine`，
 > 已修，且已有守卫 `HostProject_RuntimeLoadedAssemblies_AreDeclared` 钉住。
+
+### 6.11 ✅ 依赖审计的「五条线」全部收口（2026-09-23 15:40）
+
+6.6 / 6.8 / 6.10 之后，把「一个工程需要另一个工程」的**所有通路**逐个查完 ——
+`using` 只是其中一条，**漏掉任何一条都会得到假结论**。
+
+| # | 通路 | 怎么查 | 全仓结果 |
+|---|---|---|---|
+| 1 | `.cs` 的 `using` / 完全限定名 | 正则 + 最长前缀匹配 | A 类 **0** 真断裂；B 类 46 个工程（主链路 2 个已修） |
+| 2 | `Assembly.Load("X")` **反射加载** | **额外 grep**（编译期看不见） | 4 处调用 ⇒ **1 处真问题**（`Packing Machine`，已修） |
+| 3 | `.xaml` 的 `assembly=X` | 扫 `.xaml`（**不能只扫 `.cs`**） | 11 个本仓程序集 ⇒ **0 漏项** |
+| 4 | `<Private>` / `PrivateAssets` / `ExcludeAssets` | grep csproj | 24 处，**全是测试工程标准写法**（xunit）+ 1 处正常 `<Private>true</Private>` ⇒ **无危险设置** |
+| 5 | `<Compile Include="..\Other\X.cs">` **链接编译** | 扫 csproj 的 `Compile Include` | 3 处，全在 `CommunicationNew.MxComponentBridge`；那些文件**只用 BCL**（自包含纯算法类），且该工程**没有任何 `ProjectReference`** ⇒ **0 漏项，是故意的** |
+
+**结论：全仓依赖图没有残留的「声明 ≠ 使用」漏项。**
+唯一真正的运行时隐患（`Packing Machine` 的 `Assembly.Load("FlowNodes")`）已修复并有守卫。
+
+> ⛔ **方法论**：判「某条依赖边能不能摘」**必须把五条通路都查一遍**；
+> 第 2 条要用「输出目录 + `deps.json`」验证（编译通过说明不了什么），
+> 第 3 / 5 条**不能靠 `.cs` 扫描覆盖**。已回写 skill 脚本（新增反射加载检查）。
+
+### 6.12 🚨 别的进程把我的改动提交了 + merge 后回归（2026-09-23 15:38~15:50）
+
+**15:38 检查时发现历史变了**：`git log` 顶部从 `9e1c657` 变成 **`488cb2a`**（merge），
+中间多了 `55dd3fd` / `b3fb20c` / **`ce39c6b WPFControl架构优化`** / `8589576` 四个提交，
+`.git/index` mtime = **`15:38:50`**。
+
+**`ce39c6b` 里混着我的改动**（8 文件 = 我的 6 个 + 别的进程的 `.gitignore` / `AGENTS.md`）
+⇒ 这正是 6.7 担心的「谁先 commit 都会带上对方的东西」，**成真了**。
+⛔ **不是我提交的** —— 我全程没执行过 `git commit`。
+
+**✅ 但工作区与 HEAD 都完好**（逐项核过；用户记忆里那条「Desktop 路径 git 写入会被回滚」这次没发生）：
+
+| 检查 | 工作区 | HEAD |
+|---|---|---|
+| `WPFControl.csproj` 引用数 | **12** | **12** |
+| `Packing Machine.csproj` 引用数 | **14** | **14** |
+| 守卫 `[Fact]` 数 | **6** | **6** |
+
+**merge 后回归**（`DM_PG_PASSWORD=123 dotnet test Frame.sln -m --no-restore`）：
+**总计 1853 / 通过 1841 / 失败 12**。
+
+| 工程 | 结果 | 备注 |
+|---|---|---|
+| `DataManager.Tests` | **268 ✅ / 12 ❌** | 280 个（原 180，**+100** SQL 测试） |
+| `Device.Controls.Tests` | 53 ✅ | **新工程**（merge 带来） |
+| `WPFControl.Tests` | **11 ✅** | 原 7，**+4** = `SerializationContractTests`（`8589576` 引入） |
+| 其余 6 个 | 全绿 | `Extension` 905 / `FlowEditor` 341 / `WPFCustomControls` 103 / `Device.Drivers` 77 / `DataManager.Workbench` 58 / `Secs` 25 |
+
+**12 个失败全是环境缺失**：`MySqlException : Unable to connect to any of the specified MySQL hosts`
+（`MySQLIntegrationTests` 6 + `SqlServerIntegrationTests` 6）—— 本机只有 PostgreSQL，
+没有 MySQL / SqlServer 实例；这些测试由 **`b3fb20c`**（别人的提交）引入 ⇒ **非回归**。
+
+> ⚠️ 另一个新情况：Git 报
+> `LF will be replaced by CRLF the next time Git touches it`（本文档）⇒
+> `core.autocrlf` 会把纯 LF 文档转成 CRLF。要保住 LF 需加 `.gitattributes`（**新文件，需批准**）。
+
+### 6.13 ⚠️ 那 12 个失败需要什么环境（只读分析，2026-09-23 16:00）
+
+| 测试类 | 需要 | 默认连接 | 覆盖用环境变量 |
+|---|---|---|---|
+| `MySQLIntegrationTests`（6 个 `[Fact]`） | 本机 MySQL | `127.0.0.1:3306`，`root` / `mysql`，库 `dm_integration` | `DM_MYSQL_HOST` / `_PORT` / `_USER` / `_PASSWORD` / `_DB` |
+| `SqlServerIntegrationTests`（6 个 `[Fact]`） | 本机 SqlServer **命名实例** | `localhost\BARTENDER`，库 `dm_integration`，**Windows 身份验证**（账号默认空） | `DM_MSSQL_HOST` / `_DB` / `_USER` / `_PASSWORD` |
+
+⛔ **两者都没有 `Skip` / `Ignore` 机制** —— 全文件只有 `Environment.GetEnvironmentVariable`
+读配置（各在 `:61`），环境不可用时**硬失败**。
+⇒ 「没装这两个库的机器上，全量回归永远不干净」，**基线不可信**。
+
+**建议（待批准；属改别人的测试代码，未动）**：加环境探测 + `Assert.Skip`
+（或 `[SkippableFact]`），探测不到就**跳过而不是失败**。
+
+**⚠️ 别混淆两批「12 条失败」**：
+
+| | 触发条件 | 性质 |
+|---|---|---|
+| PostgreSQL 那 12 条（5+5+2） | **不带** `DM_PG_PASSWORD` | 本机有 PG，给了密码就过 |
+| 本次这 12 条（MySQL 6 + SqlServer 6） | 本机**没有** MySQL / SqlServer 实例 | 给密码也没用，缺的是实例 |
+
+⇒ 两者**不是同一批**，都不构成本轮回归。

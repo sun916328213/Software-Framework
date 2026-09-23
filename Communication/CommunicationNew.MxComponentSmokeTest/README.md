@@ -31,8 +31,8 @@ dotnet run --project CommunicationNew.MxComponentSmokeTest -c Release -- --stati
 
 工具会在创建 MX COM 对象和连接 PLC 前校验参数：字设备单次最多 960 点，位设备单次最多 7168 点，并确保访问末地址没有超出 MC 的 24 位设备编号范围。
 
-命令行解析、连接前边界和写保护由独立的 `CommunicationNew.MxComponentSmokeTest.Tests` 验证。测试不连接 MX Component 或 PLC，可单独运行：
+命令行解析、连接前边界和写保护由 `CommunicationNew.Tests` 的 `Protocols/Mitsubishi/SmokeOptionsTests.cs` 覆盖。参数解析类型 `SmokeOptions` 本身位于 `CommunicationNew.Protocols.Mitsubishi`（库内 `internal`，通过 `InternalsVisibleTo` 对本工具程序集开放），因此这些测试不需要引用本工具工程，也不连接 MX Component 或 PLC：
 
 ```powershell
-dotnet test CommunicationNew.MxComponentSmokeTest.Tests -c Release
+dotnet test CommunicationNew.Tests -c Release
 ```

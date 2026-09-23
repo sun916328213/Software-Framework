@@ -3,35 +3,35 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowNodes", "..\..\FlowNodes\FlowNodes\FlowNodes.csproj", "{68F92117-D37A-432B-959B-A79828918078}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowNodes", "..\FlowNodes\FlowNodes\FlowNodes.csproj", "{68F92117-D37A-432B-959B-A79828918078}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication", "..\..\Communication\Communication\Communication.csproj", "{E38705BA-59F8-4DEB-9EB2-5720F87E387D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication", "..\Communication\Communication\Communication.csproj", "{E38705BA-59F8-4DEB-9EB2-5720F87E387D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataManager", "..\..\DataManager\DataManager\DataManager.csproj", "{247CAE3C-7F07-4E36-9C3F-0F207DCDA822}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataManager", "..\DataManager\DataManager\DataManager.csproj", "{247CAE3C-7F07-4E36-9C3F-0F207DCDA822}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extension", "..\..\Extension\Extension\Extension.csproj", "{06F9ABBA-4FB6-4F26-95E0-33D908DCA8FA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extension", "..\Extension\Extension\Extension.csproj", "{06F9ABBA-4FB6-4F26-95E0-33D908DCA8FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Device", "..\..\Device\Device\Device.csproj", "{387CB04A-F4ED-473A-BFF1-EEE74FC4D266}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Device", "..\Device\Device\Device.csproj", "{387CB04A-F4ED-473A-BFF1-EEE74FC4D266}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor", "FlowEditor\FlowEditor.csproj", "{53A2F41B-CF03-49AA-B675-E83CF1203F88}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Runtime", "FlowEditor.Runtime\FlowEditor.Runtime.csproj", "{10A0D7CB-69F6-4DAB-9BD6-27696D472237}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFCustomControls", "..\..\WPFCustomControls\WPFCustomControls.csproj", "{9D65448D-A72F-4B3C-813B-E1F2235E2DC2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFCustomControls", "..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj", "{9D65448D-A72F-4B3C-813B-E1F2235E2DC2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptEditor", "..\Script\ScriptEditor\ScriptEditor.csproj", "{AD78E054-896E-4E14-8A1B-73C9628177A0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptEditor", "..\ScriptEditor\ScriptEditor\ScriptEditor.csproj", "{AD78E054-896E-4E14-8A1B-73C9628177A0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotionControl", "..\..\MotionControl\MotionControl\MotionControl.csproj", "{177B5737-78CC-4765-9C24-CCAECB8DF72D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotionControl", "..\MotionControl\MotionControl\MotionControl.csproj", "{177B5737-78CC-4765-9C24-CCAECB8DF72D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ctr_WPF_F48", "..\..\Vision\Ctr_WPF_F48\Ctr_WPF_F48.csproj", "{45CBBB7A-0538-4605-9E2C-0C867E9393A8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ctr_WPF_F48", "..\Vision\Ctr_WPF_F48\Ctr_WPF_F48.csproj", "{45CBBB7A-0538-4605-9E2C-0C867E9393A8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DPLibrary_Base_F48", "..\..\Vision\DPLibrary_Base_F48\DPLibrary_Base_F48.csproj", "{8DCD026C-7E3D-4D81-97B9-096781CA68E8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DPLibrary_Base_F48", "..\Vision\DPLibrary_Base_F48\DPLibrary_Base_F48.csproj", "{8DCD026C-7E3D-4D81-97B9-096781CA68E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DPLibrary_Halcon_F48", "..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj", "{CED12710-B751-489E-BEF8-B6AAA34B018D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DPLibrary_Halcon_F48", "..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj", "{CED12710-B751-489E-BEF8-B6AAA34B018D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditorTest", "FlowEditorTest\FlowEditorTest.csproj", "{FCB1C333-FE57-48B3-A705-AD1E068E32EE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditorTest", "FlowEditor.Test\FlowEditor.Tests.csproj", "{FCB1C333-FE57-48B3-A705-AD1E068E32EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Runtime.Smoke", "FlowEditor.Runtime.Smoke\FlowEditor.Runtime.Smoke.csproj", "{7D87F19C-D8CF-4D0B-AE61-4661A1D7F94F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Runtime.Smoke", "FlowEditor.Runtime.Smoke\FlowEditor.Runtime.Test.csproj", "{7D87F19C-D8CF-4D0B-AE61-4661A1D7F94F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
