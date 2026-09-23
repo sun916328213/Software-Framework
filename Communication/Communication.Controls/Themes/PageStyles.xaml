@@ -46,6 +46,8 @@
         TargetType="TextBox">
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
         <Setter Property="CaretBrush" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+
     </Style>
 
     <Style

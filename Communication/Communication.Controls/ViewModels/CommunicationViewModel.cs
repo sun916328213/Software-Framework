@@ -4,11 +4,14 @@ using Communication.Controls.Services;
 using Communication.Controls.Views;
 using CommunicationNew.Abstractions;
 using CommunicationNew.Core;
+using CommunicationNew.Core.Converters;
+using CommunicationNew.Core.Interfaces;
 using CommunicationNew.Protocols.Socket;
 using Microsoft.Win32;
 using Prism.Services.Dialogs;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows.Data;
@@ -45,6 +48,14 @@ public sealed partial class CommunicationViewModel : ObservableObject
 
     [ObservableProperty]
     private string payload = "00";
+
+    /// <summary>地址读写的数据类型：写入按此编码，读取按此解码；仅 String 走 UTF-8。</summary>
+    [ObservableProperty]
+    private DataPointType selectedDataType = DataPointType.UInt16;
+
+    /// <summary>数值类型的字/字节顺序；String / ByteArray / Bool / Byte 忽略。</summary>
+    [ObservableProperty]
+    private DataFormat selectedDataFormat = DataFormat.ABCD;
 
     [ObservableProperty]
     private bool autoScrollLog = true;
@@ -84,6 +95,8 @@ public sealed partial class CommunicationViewModel : ObservableObject
     private bool followSelectedDevice = true;
 
     private bool _syncingDeviceFilter;
+
+    private ProtocolType? _lastProtocol;
 
     /// <summary>日志按设备过滤的下拉选项：替代原来接收数据页的按设备隔离。</summary>
     public IReadOnlyList<string> LogDeviceOptions => ["全部", "Session", .. Devices.Select(d => d.Name).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct()];
@@ -129,6 +142,14 @@ public sealed partial class CommunicationViewModel : ObservableObject
     }
 
     public IReadOnlyList<string> LogLevelOptions { get; }
+
+    /// <summary>数据类型下拉：与 CommunicationNew.DataPointType 一一对应。</summary>
+    public IReadOnlyList<DataPointType> DataTypeOptions { get; } =
+        Enum.GetValues<DataPointType>();
+
+    /// <summary>字节序下拉：ABCD / BADC / CDAB / DCBA。</summary>
+    public IReadOnlyList<DataFormat> DataFormatOptions { get; } =
+        Enum.GetValues<DataFormat>();
 
     public ObservableCollection<DeviceViewModel> Devices { get; } = [];
 
@@ -204,18 +225,84 @@ public sealed partial class CommunicationViewModel : ObservableObject
             }
 
             var bytes = PayloadByteCount;
-            return $"写入长度由数据决定：当前 {bytes} 字节"
+            var typeNote = UseHex
+                ? "（HEX：原始字节，忽略数据类型）"
+                : $"（{SelectedDataType}"
+                    + (SelectedDataType is DataPointType.Int16 or DataPointType.UInt16
+                        or DataPointType.Int32 or DataPointType.UInt32
+                        or DataPointType.Int64 or DataPointType.Float or DataPointType.Double
+                        ? $"/{SelectedDataFormat}"
+                        : string.Empty)
+                    + "）";
+            return $"写入长度由数据决定：当前 {bytes} 字节{typeNote}"
                 + (SelectedDevice!.Device.ProtocolType is ProtocolType.ModbusTcp or ProtocolType.ModbusRtu
-                    ? $"（Modbus 每 2 字节 1 个寄存器，奇数长度会按寄存器对齐）"
+                    ? "（Modbus 每 2 字节 1 个寄存器，奇数长度会按寄存器对齐）"
                     : string.Empty);
         }
     }
 
-    private int PayloadByteCount => UseHex
-        ? Payload.Count(c => !char.IsWhiteSpace(c)) / 2
-        : Encoding.UTF8.GetByteCount(Payload);
+    /// <summary>
+    /// 写入字节数：HEX 按十六进制对；否则按所选类型编码后的长度（String/ByteArray 才按 UTF-8 文本长度）。
+    /// </summary>
+    private int PayloadByteCount
+    {
+        get
+        {
+            if (UseHex)
+            {
+                return Payload.Count(c => !char.IsWhiteSpace(c)) / 2;
+            }
+
+            if (SelectedDataType is DataPointType.String or DataPointType.ByteArray)
+            {
+                return Encoding.UTF8.GetByteCount(Payload);
+            }
+
+            try
+            {
+                return ValueConverterFactory
+                    .Create(SelectedDataType, ResolveDataFormat())
+                    .GetByteCount();
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return Encoding.UTF8.GetByteCount(Payload);
+            }
+        }
+    }
 
     partial void OnPayloadChanged(string value) => OnPropertyChanged(nameof(WriteLengthHint));
+
+    partial void OnSelectedDataTypeChanged(DataPointType value) =>
+        OnPropertyChanged(nameof(WriteLengthHint));
+
+    partial void OnSelectedDataFormatChanged(DataFormat value)
+    {
+        // 界面始终显示用户所选字节序（MC 默认 DCBA）；编码/解码经 ResolveDataFormat 做设备内交换补偿。
+        OnPropertyChanged(nameof(WriteLengthHint));
+    }
+
+    /// <summary>
+    /// MC 设备 Write/Read 都在字内做一次交换；界面格式表示期望的 PLC 线上字节序，
+    /// 编码前映射为其补偿格式（互为字内交换：ABCD↔BADC、CDAB↔DCBA），解码用同一映射。
+    /// </summary>
+    private static DataFormat MapMcDataFormat(DataFormat format) => format switch
+    {
+        DataFormat.ABCD => DataFormat.BADC,
+        DataFormat.BADC => DataFormat.ABCD,
+        DataFormat.CDAB => DataFormat.DCBA,
+        DataFormat.DCBA => DataFormat.CDAB,
+        _ => format,
+    };
+
+    /// <summary>实际编解码用的字节序：MC 先做设备交换补偿，其它协议原样。</summary>
+    private DataFormat ResolveDataFormat()
+    {
+        var format = SelectedDataFormat;
+        return SelectedDevice?.Device.ProtocolType == ProtocolType.MitsubishiMc
+            ? MapMcDataFormat(format)
+            : format;
+    }
 
     /// <summary>能力摘要：灰掉的按钮要说清为什么。</summary>
     public string CapabilitySummary
@@ -292,6 +379,15 @@ public sealed partial class CommunicationViewModel : ObservableObject
     {
         // 换设备后继续对旧设备发帧是没人预期的行为，先停掉上一台留下的循环。
         CancelLoopSend("切换设备");
+
+        // 进入三菱 MC 协议（含首台设备）时默认字节序给线上小端 DCBA；同协议换设备不改用户已选值。
+        var protocol = value?.Device.ProtocolType;
+        if (protocol == ProtocolType.MitsubishiMc && _lastProtocol != ProtocolType.MitsubishiMc)
+        {
+            SelectedDataFormat = DataFormat.DCBA;
+        }
+
+        _lastProtocol = protocol;
 
         // 跟随模式下切设备即切日志：一个设备对应一份日志视图。
         if (FollowSelectedDevice)
@@ -771,7 +867,7 @@ public sealed partial class CommunicationViewModel : ObservableObject
             sw.Stop();
             LastElapsed = $"{sw.ElapsedMilliseconds} ms";
             _log.Success(device.Name, $"读取 {address}×{length} → {data.Length} 字节, {sw.ElapsedMilliseconds} ms");
-            _log.Rx(device.Name, data.Length == 0 ? "(空响应)" : ToDisplay(data));
+            _log.Rx(device.Name, data.Length == 0 ? "(空响应)" : FormatAddressRx(data));
         });
     }
 
@@ -785,7 +881,11 @@ public sealed partial class CommunicationViewModel : ObservableObject
         var address = Address.Trim();
         if (!TryParsePayload(Payload, out var data))
         {
-            _log.Warning(device.Name, "写入数据格式无效（HEX 勾选时按十六进制，否则按 UTF-8 文本）");
+            _log.Warning(
+                device.Name,
+                UseHex
+                    ? "写入数据格式无效（HEX 需每字节两位十六进制）"
+                    : $"写入数据无法按 {SelectedDataType} 解析（HEX 勾选可改为原始字节）");
             return Task.CompletedTask;
         }
 
@@ -795,8 +895,8 @@ public sealed partial class CommunicationViewModel : ObservableObject
             var ok = await writer.WriteAsync(address, data, ct);
             sw.Stop();
             LastElapsed = $"{sw.ElapsedMilliseconds} ms";
-            _log.Tx(device.Name, ToDisplay(data));
-            _log.Success(device.Name, $"写入 {address} → {(ok ? "成功" : "失败")}, {sw.ElapsedMilliseconds} ms");
+            _log.Tx(device.Name, FormatAddressTx(data));
+            _log.Success(device.Name, $"写入 {address} → {(ok ? "成功" : "失败")}, {sw.ElapsedMilliseconds} ms ({data.Length} 字节, {SelectedDataType})");
         });
     }
 
@@ -996,6 +1096,10 @@ public sealed partial class CommunicationViewModel : ObservableObject
         return true;
     }
 
+    /// <summary>
+    /// 地址写入组的字节解析：HEX 勾选仍走原始十六进制；否则必须按所选 DataPointType 解析并编码，
+    /// 数值/布尔绝不能无脑 UTF-8.GetBytes。
+    /// </summary>
     private bool TryParsePayload(string input, out byte[] payload)
     {
         if (UseHex)
@@ -1003,14 +1107,135 @@ public sealed partial class CommunicationViewModel : ObservableObject
             var ok = TryParseHex(input, out payload);
             if (!ok)
             {
-                StatusHint = "内容不是合法 HEX：每字节两位十六进制，或取消 HEX 勾选按文本发送";
+                StatusHint = "内容不是合法 HEX：每字节两位十六进制，或取消 HEX 勾选按类型解析";
             }
 
             return ok;
         }
 
-        payload = Encoding.UTF8.GetBytes(input);
-        return true;
+        try
+        {
+            payload = EncodeTyped(input, SelectedDataType, ResolveDataFormat());
+            return true;
+        }
+        catch (Exception ex) when (ex is FormatException or OverflowException or ArgumentException or InvalidOperationException)
+        {
+            payload = [];
+            StatusHint = $"按 {SelectedDataType} 解析失败: {ex.Message}";
+            return false;
+        }
+    }
+
+    /// <summary>把界面上的文本按数据类型编成寄存器字节；仅 String/ByteArray 文本走 UTF-8。</summary>
+    private static byte[] EncodeTyped(string text, DataPointType type, DataFormat format)
+    {
+        var converter = ValueConverterFactory.Create(type, format);
+        object? value = type switch
+        {
+            DataPointType.String => text,
+            DataPointType.ByteArray => Encoding.UTF8.GetBytes(text),
+            DataPointType.Bool => ParseBool(text),
+            DataPointType.Byte => byte.Parse(text.Trim(), CultureInfo.InvariantCulture),
+            DataPointType.Int16 => short.Parse(text.Trim(), CultureInfo.InvariantCulture),
+            DataPointType.UInt16 => ushort.Parse(text.Trim(), CultureInfo.InvariantCulture),
+            DataPointType.Int32 => int.Parse(text.Trim(), CultureInfo.InvariantCulture),
+            DataPointType.UInt32 => uint.Parse(text.Trim(), CultureInfo.InvariantCulture),
+            DataPointType.Int64 => long.Parse(text.Trim(), CultureInfo.InvariantCulture),
+            DataPointType.Float => float.Parse(text.Trim(), CultureInfo.InvariantCulture),
+            DataPointType.Double => double.Parse(text.Trim(), CultureInfo.InvariantCulture),
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "不支持的数据类型"),
+        };
+        return converter.Encode(value);
+    }
+
+    private static bool ParseBool(string text)
+    {
+        var t = text.Trim();
+        return t.Equals("true", StringComparison.OrdinalIgnoreCase)
+            || t.Equals("1", StringComparison.Ordinal)
+            || t.Equals("on", StringComparison.OrdinalIgnoreCase)
+            || t.Equals("yes", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>地址读 RX 显示：HEX 看原始字节；否则按数据类型解码（String 才是文本）。</summary>
+    private string FormatAddressRx(byte[] data)
+    {
+        if (data.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        if (UseHex || SelectedDataType is DataPointType.ByteArray)
+        {
+            return ToHex(data);
+        }
+
+        return TryDecodeTyped(data, SelectedDataType, ResolveDataFormat(), out var text)
+            ? text
+            : ToHex(data);
+    }
+
+    /// <summary>地址写 TX 显示：回显编码结果字节，并附类型化预览。</summary>
+    private string FormatAddressTx(byte[] data)
+    {
+        if (data.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var hex = ToHex(data);
+        if (UseHex || SelectedDataType is DataPointType.ByteArray)
+        {
+            return hex;
+        }
+
+        return TryDecodeTyped(data, SelectedDataType, ResolveDataFormat(), out var text)
+            ? $"{hex}  ⇒ {text}"
+            : hex;
+    }
+
+    /// <summary>按类型解码原始字节；长度不够或转换失败时返回 false，由调用方回退 HEX。</summary>
+    private static bool TryDecodeTyped(
+        byte[] data,
+        DataPointType type,
+        DataFormat format,
+        out string text)
+    {
+        text = string.Empty;
+        try
+        {
+            var converter = ValueConverterFactory.Create(type, format);
+            if (type is DataPointType.String)
+            {
+                text = converter.Decode(data)?.ToString() ?? string.Empty;
+                return true;
+            }
+
+            if (type is DataPointType.Bool or DataPointType.Byte)
+            {
+                text = converter.Decode(data)?.ToString() ?? string.Empty;
+                return true;
+            }
+
+            var width = converter.GetByteCount();
+            if (width <= 0 || data.Length < width)
+            {
+                return false;
+            }
+
+            var parts = new List<string>(data.Length / width);
+            for (var offset = 0; offset + width <= data.Length; offset += width)
+            {
+                parts.Add(converter.Decode(data, offset)?.ToString() ?? string.Empty);
+            }
+
+            text = parts.Count == 1 ? parts[0] : string.Join(", ", parts);
+            return parts.Count > 0;
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or InvalidDataException)
+        {
+            return false;
+        }
     }
 
     private void OnRxCounted(string source, string message) =>

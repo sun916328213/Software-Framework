@@ -6,6 +6,7 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:Communication.Controls.ViewModels"
+    xmlns:wpfcc="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
     d:DataContext="{d:DesignInstance Type=vm:CommunicationViewModel}"
     d:DesignHeight="860"
     d:DesignWidth="1280"
@@ -133,7 +134,6 @@
                             <TextBlock
                                 Grid.Column="0"
                                 VerticalAlignment="Center"
-                                FontSize="13"
                                 FontWeight="SemiBold"
                                 Text="{Binding Name}"
                                 TextTrimming="CharacterEllipsis" />
@@ -142,19 +142,15 @@
                                 Margin="6,0,0,0"
                                 VerticalAlignment="Center"
                                 FontFamily="Consolas"
-                                FontSize="11"
                                 Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
                                 Text="{Binding StatusShort}"
                                 TextTrimming="CharacterEllipsis"
                                 ToolTip="{Binding StatusText}" />
                         </Grid>
                         <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
-                            <TextBlock FontSize="11" Text="{Binding Protocol}" />
-                            <TextBlock
-                                Margin="5,0"
-                                FontSize="11"
-                                Text="·" />
-                            <TextBlock FontSize="11" Text="{Binding RoleText}" />
+                            <TextBlock Text="{Binding Protocol}" />
+                            <TextBlock Margin="5,0" Text="·" />
+                            <TextBlock Text="{Binding RoleText}" />
                         </StackPanel>
                     </StackPanel>
                     <Ellipse
@@ -411,9 +407,9 @@
             <!--  右栏：上操作区 + 下输出区（通讯日志），可拖拽高度  -->
             <Grid Grid.Column="2" Margin="10,0,0,0">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="4*" MinHeight="330" />
+                    <RowDefinition Height="4*" />
                     <RowDefinition Height="12" />
-                    <RowDefinition Height="5*" MinHeight="260" />
+                    <RowDefinition Height="5*" />
                 </Grid.RowDefinitions>
 
                 <GridSplitter
@@ -451,9 +447,8 @@
                                     HorizontalAlignment="Right"
                                     VerticalAlignment="Center"
                                     Content="HEX"
-                                    FontSize="11"
                                     IsChecked="{Binding UseHex}"
-                                    ToolTip="收发统一格式：勾选按十六进制，去掉按 UTF-8 文本" />
+                                    ToolTip="勾选：收发按原始十六进制字节（地址写入忽略数据类型）；取消：地址读写按所选数据类型编解码，仅 String 用 UTF-8" />
                             </Grid>
 
                             <!--  协议提示：一行说清本协议能干什么 + 当前连接态  -->
@@ -472,7 +467,6 @@
                                 <TextBlock
                                     Grid.Column="1"
                                     VerticalAlignment="Center"
-                                    FontSize="11"
                                     Opacity="0.85"
                                     Text="{Binding CapabilitySummary}"
                                     TextWrapping="Wrap"
@@ -492,7 +486,11 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="10" />
-                                        <ColumnDefinition Width="88" />
+                                        <ColumnDefinition Width="72" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="96" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="10" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
@@ -517,32 +515,61 @@
                                         Style="{StaticResource FieldLabel}"
                                         Text="读取长度"
                                         ToolTip="一次读多少个：Modbus 是寄存器数，MC / OPC UA 是元素数，HTTP 是字节数" />
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="4"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="数据类型"
+                                        ToolTip="写入按该类型编码为寄存器字节；读取按该类型解码显示。仅 String 用 UTF-8，数值类型按字节序二进制" />
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="字节序"
+                                        ToolTip="32 位及以上数值的字/字节顺序（ABCD 大端 … DCBA 小端）；String / ByteArray 忽略。三菱 MC 默认 DCBA（线上小端），编解码自动做设备内交换补偿" />
 
                                     <TextBox
                                         Grid.Row="2"
                                         Grid.Column="0"
+                                        Height="32"
                                         Style="{StaticResource DmInput}"
                                         Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}"
                                         ToolTip="{Binding AddressDetailHint}" />
                                     <TextBox
                                         Grid.Row="2"
                                         Grid.Column="2"
-                                        MinHeight="34"
-                                        FontSize="11"
+                                        Height="32"
                                         Style="{StaticResource DmInput}"
                                         Text="{Binding ReadLength, UpdateSourceTrigger=PropertyChanged}"
                                         ToolTip="读取长度（寄存器数 / 元素数 / 字节数）" />
-                                    <Button
+                                    <ComboBox
                                         Grid.Row="2"
                                         Grid.Column="4"
+                                        Height="32"
+                                        VerticalContentAlignment="Center"
+                                        ItemsSource="{Binding DataTypeOptions}"
+                                        SelectedItem="{Binding SelectedDataType, Mode=TwoWay}"
+                                        Style="{StaticResource DmCombo}"
+                                        ToolTip="写入按该类型编码；读取按该类型解码。HEX 勾选时写入仍按原始字节，忽略类型" />
+                                    <ComboBox
+                                        Grid.Row="2"
+                                        Grid.Column="6"
+                                        Height="32"
+                                        VerticalContentAlignment="Center"
+                                        ItemsSource="{Binding DataFormatOptions}"
+                                        SelectedItem="{Binding SelectedDataFormat, Mode=TwoWay}"
+                                        Style="{StaticResource DmCombo}"
+                                        ToolTip="设备侧字/字节顺序；String、ByteArray、Bool、Byte 不受此影响。三菱 MC 默认 DCBA（线上小端），编解码会自动做设备内交换补偿" />
+                                    <Button
+                                        Grid.Row="2"
+                                        Grid.Column="8"
                                         MinWidth="72"
                                         Padding="14,2"
                                         VerticalAlignment="Center"
                                         Command="{Binding ReadCommand}"
                                         Content="读取"
-                                        FontSize="11"
                                         Style="{StaticResource ActionSolid}"
-                                        ToolTip="按左侧地址与读取长度取数，结果记入下方「通讯日志」（RX 记录）" />
+                                        ToolTip="按左侧地址、长度与数据类型取数，结果记入下方「通讯日志」（RX 记录）" />
 
                                     <TextBlock
                                         Grid.Row="4"
@@ -552,25 +579,25 @@
                                     <TextBox
                                         Grid.Row="6"
                                         Grid.Column="0"
-                                        Grid.ColumnSpan="3"
+                                        Grid.ColumnSpan="7"
+                                        Height="32"
                                         VerticalContentAlignment="Center"
                                         AcceptsReturn="True"
                                         FontFamily="Consolas"
                                         Style="{StaticResource DmInput}"
                                         Text="{Binding Payload, UpdateSourceTrigger=PropertyChanged}"
                                         TextWrapping="Wrap"
-                                        ToolTip="HEX 勾选时按十六进制解析，去掉勾选按 UTF-8 文本" />
+                                        ToolTip="HEX 勾选：按十六进制原始字节写入；否则按上方数据类型解析（如 Int16 填 1234，Float 填 3.14，String 才按 UTF-8）" />
                                     <Button
                                         Grid.Row="6"
-                                        Grid.Column="4"
+                                        Grid.Column="8"
                                         MinWidth="72"
                                         Padding="14,2"
                                         VerticalAlignment="Center"
                                         Command="{Binding WriteCommand}"
                                         Content="写入"
-                                        FontSize="11"
                                         Style="{StaticResource ActionGhost}"
-                                        ToolTip="写入到上方那个地址" />
+                                        ToolTip="按数据类型编码后写入到上方地址" />
                                 </Grid>
 
                                 <TextBlock
@@ -595,7 +622,7 @@
                                     <!--  回车发送：按 Enter 直接触发发送，不用再去点按钮  -->
                                     <TextBox
                                         Grid.Column="0"
-                                        Height="38"
+                                        Height="32"
                                         VerticalContentAlignment="Center"
                                         AcceptsReturn="True"
                                         FontFamily="Consolas"
@@ -614,7 +641,6 @@
                                             MinWidth="64"
                                             Command="{Binding SendRawCommand}"
                                             Content="发送"
-                                            FontSize="11"
                                             Style="{StaticResource ActionSolid}"
                                             ToolTip="原始发送，仅字节流/数据报协议（TCP / UDP / 串口）" />
                                         <Button
@@ -622,14 +648,13 @@
                                             Margin="6,0,0,0"
                                             Command="{Binding SendAndReceiveCommand}"
                                             Content="收发"
-                                            FontSize="11"
                                             Style="{StaticResource ActionGhost}"
                                             ToolTip="发送并等待回复，需要设备实现 IRequestReplyClient（服务端没有这项能力）"
                                             Visibility="{Binding DeviceSupportsRequestReply, Converter={StaticResource BoolToVis}}" />
                                     </StackPanel>
                                 </Grid>
                                 <StackPanel
-                                    Height="38"
+                                    Height="32"
                                     Margin="0,6,0,0"
                                     Orientation="Horizontal"
                                     ToolTip="已发送过的报文（最新在前），选中即填入上方发送框">
@@ -642,7 +667,6 @@
                                         Margin="8,0,0,0"
                                         VerticalAlignment="Center"
                                         FontFamily="Consolas"
-                                        FontSize="11"
                                         IsEditable="True"
                                         ItemsSource="{Binding PayloadHistory}"
                                         SelectedItem="{Binding Payload, Mode=OneWay}"
@@ -660,7 +684,7 @@
                                 Visibility="{Binding SupportsLoop, Converter={StaticResource BoolToVis}}">
                                 <TextBlock Style="{StaticResource GroupTitle}" Text="{Binding LoopTitle}" />
                                 <StackPanel
-                                    Height="38"
+                                    Height="32"
                                     Margin="0,6,0,0"
                                     Orientation="Horizontal"
                                     ToolTip="按间隔反复执行当前协议的主动作">
@@ -672,7 +696,6 @@
                                         Width="64"
                                         Margin="8,0,0,0"
                                         VerticalAlignment="Center"
-                                        FontSize="11"
                                         Style="{StaticResource DmInput}"
                                         Text="{Binding LoopIntervalMs, UpdateSourceTrigger=PropertyChanged}"
                                         ToolTip="每隔多少毫秒自动执行一次，最小 10 毫秒" />
@@ -682,7 +705,6 @@
                                         VerticalAlignment="Center"
                                         Command="{Binding StartLoopSendCommand}"
                                         Content="开始"
-                                        FontSize="11"
                                         Style="{StaticResource ActionSolid}"
                                         ToolTip="设备已连接后可点：按上面的间隔反复执行当前动作" />
                                     <Button
@@ -691,7 +713,6 @@
                                         VerticalAlignment="Center"
                                         Command="{Binding StopLoopSendCommand}"
                                         Content="停止"
-                                        FontSize="11"
                                         Style="{StaticResource ActionGhost}"
                                         ToolTip="停止循环；断开、移除设备或切换设备时也会自动停止" />
                                     <TextBlock
@@ -714,6 +735,7 @@
                 </materialDesign:Card>
 
                 <!--  输出区：只有通讯日志。读取/收发应答/被动推送统一记为 RX（含全文），不再另设接收窗口。  -->
+                <!--  子内容在缩放/改高后若画进 Card 圆角象限会把圆角盖成直角，这里按圆角几何裁剪  -->
                 <materialDesign:Card
                     Grid.Row="2"
                     Padding="12"

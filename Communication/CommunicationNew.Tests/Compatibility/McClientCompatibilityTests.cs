@@ -166,7 +166,7 @@ public sealed class McClientCompatibilityTests
         Assert.True(await device.ConnectAsync());
 
         Assert.Equal(
-            new byte[] { 0x34, 0x12, 0x78, 0x56 },
+            new byte[] { 0x12, 0x34, 0x56, 0x78 },
             await device.ReadAsync("D100", 2));
         Assert.Equal(ConnectionState.Connected, ((IConnection)device).State);
     }
@@ -281,7 +281,7 @@ public sealed class McClientCompatibilityTests
             0x06, 0x00, 0x00, 0x00, 0x34, 0x12, 0x78, 0x56,
         });
 
-        Assert.Equal(new byte[] { 0x34, 0x12, 0x78, 0x56 }, await readTask);
+        Assert.Equal(new byte[] { 0x12, 0x34, 0x56, 0x78 }, await readTask);
         Assert.Equal(ConnectionState.Connected, ((IConnection)device).State);
     }
 

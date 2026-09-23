@@ -83,7 +83,7 @@ internal static class Program
         }
         for (var index = 0; index < quantity; index++)
         {
-            var value = BinaryPrimitives.ReadUInt16LittleEndian(data.AsSpan(index * 2, 2));
+            var value = BinaryPrimitives.ReadUInt16BigEndian(data.AsSpan(index * 2, 2));
             Console.WriteLine($"{address.Offset(index)} = 0x{value:X4} ({value})");
         }
     }

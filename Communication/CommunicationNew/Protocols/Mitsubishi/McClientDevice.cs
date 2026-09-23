@@ -76,7 +76,11 @@ public class McClientDevice : CommunicationDeviceBase, IConnection, IAddressRead
         OnConnectionStateChanged(false, "MC协议客户端已断开");
     }
 
-    /// <summary>按设备地址批量读取指定点数。</summary>
+    /// <summary>
+    /// 按设备地址批量读取指定点数。
+    /// 字设备与写入对称：adapter 返回 MC 小端线格式，此处换回大端字节供上层解码；
+    /// 位设备保持打包原样，不做字节序交换。
+    /// </summary>
     public override Task<byte[]> ReadAsync(
         string address,
         int length,
@@ -86,16 +90,19 @@ public class McClientDevice : CommunicationDeviceBase, IConnection, IAddressRead
         {
             throw new ArgumentOutOfRangeException(nameof(length));
         }
-        var request = McRequest.Read(McAddressValue.Parse(address), (ushort)length);
+        var parsedAddress = McAddressValue.Parse(address);
+        var request = McRequest.Read(parsedAddress, (ushort)length);
         return ExecuteWithRetryAsync(async () =>
         {
             var response = await _adapter.ExecuteAsync(request, ct).ConfigureAwait(false);
-            return response.Data.ToArray();
+            var data = response.Data.ToArray();
+            return parsedAddress.IsBit ? data : SwapWordByteOrder(data);
         }, ct);
     }
 
     /// <summary>
-    /// 批量写入设备；字设备沿用旧接口的大端字节输入，adapter 转换为 MC 小端线格式。
+    /// 批量写入设备；字设备沿用旧接口的大端字节输入，adapter 转换为 MC 小端线格式，
+    /// 与 <see cref="ReadAsync"/> 返回的大端字节对称。
     /// 位设备把每个输入字节解释为一个布尔点。
     /// </summary>
     public override async Task<bool> WriteAsync(
