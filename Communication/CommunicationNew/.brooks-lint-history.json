@@ -1,0 +1,46 @@
+[
+  {
+    "date": "2026-09-03",
+    "mode": "Architecture Audit",
+    "score": 43,
+    "findings": {
+      "critical": 2,
+      "warning": 5,
+      "suggestion": 2
+    },
+    "scope": "Communication/CommunicationNew (55 C# files, approximately 4,135 LOC; bin/ and obj/ excluded)"
+  },
+  {
+    "date": "2026-09-04",
+    "mode": "Architecture Audit",
+    "score": 90,
+    "findings": {
+      "critical": 0,
+      "warning": 2,
+      "suggestion": 0
+    },
+    "scope": "Communication/CommunicationNew (incremental architecture audit; generated output excluded)"
+  },
+  {
+    "date": "2026-09-08",
+    "mode": "Architecture Audit",
+    "score": 84,
+    "findings": {
+      "critical": 1,
+      "warning": 0,
+      "suggestion": 1
+    },
+    "scope": "Communication/CommunicationNew (132 C# files, approximately 12,980 LOC; bin/ and obj/ excluded)"
+  },
+  {
+    "date": "2026-09-12",
+    "mode": "Tech Debt Assessment",
+    "score": 60,
+    "findings": {
+      "critical": 2,
+      "warning": 2,
+      "suggestion": 0
+    },
+    "scope": "Communication/CommunicationNew (133 C# files, approximately 11,516 LOC; bin/ and obj/ excluded)"
+  }
+]
