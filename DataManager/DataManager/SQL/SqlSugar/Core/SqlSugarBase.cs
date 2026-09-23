@@ -116,7 +116,11 @@ namespace DataManager.SQL.SqlSugarSQL
         {
             if (IsSplitTableEntity())
             {
-                GetDbClient().Deleteable<T>().Where(predicate).SplitTable().ExecuteCommand();
+                // SqlSugar 约束：条件不能直接挂在 Deleteable().SplitTable() 上；
+                // 分表条件删除 = 跨表查出实体后按实体集合 + SplitTable 删。
+                var list = GetDbClient().Queryable<T>().Where(predicate).SplitTable().ToList();
+                if (list.Count > 0)
+                    GetDbClient().Deleteable(list).SplitTable().ExecuteCommand();
             }
             else
             {
@@ -127,28 +131,40 @@ namespace DataManager.SQL.SqlSugarSQL
         /// <summary>
         /// 清空表（P4-1：改走 Deleteable，原生支持分表；不再用 TruncateTable——
         /// 行为差异：自增种子不再重置，DELETE 语义跨四库一致）。
+        /// 分表：Deleteable&lt;T&gt;().SplitTable() 无参仅支持实体集合模式，需先查出再按集合删。
         /// </summary>
         public void DeleteAll()
         {
-            var q = GetDbClient().Deleteable<T>();
             if (IsSplitTableEntity())
-                q.SplitTable();
-            q.ExecuteCommand();
+            {
+                var list = GetDbClient().Queryable<T>().SplitTable().ToList();
+                if (list.Count > 0)
+                    GetDbClient().Deleteable(list).SplitTable().ExecuteCommand();
+                return;
+            }
+            GetDbClient().Deleteable<T>().ExecuteCommand();
         }
 
         public async Task DeleteAllAsync()
         {
-            var q = GetDbClient().Deleteable<T>();
             if (IsSplitTableEntity())
-                q.SplitTable();
-            await q.ExecuteCommandAsync();
+            {
+                var list = (await GetDbClient().Queryable<T>().SplitTable().ToListAsync()).ToList();
+                if (list.Count > 0)
+                    await GetDbClient().Deleteable(list).SplitTable().ExecuteCommandAsync();
+                return;
+            }
+            await GetDbClient().Deleteable<T>().ExecuteCommandAsync();
         }
 
         public async Task DeleteAsync(Expression<Func<T, bool>> predicate)
         {
             if (IsSplitTableEntity())
             {
-                await GetDbClient().Deleteable<T>().Where(predicate).SplitTable().ExecuteCommandAsync();
+                // 同步 Delete 注释：分表条件删除 = 跨表查出实体后按实体集合 + SplitTable 删。
+                var list = (await GetDbClient().Queryable<T>().Where(predicate).SplitTable().ToListAsync()).ToList();
+                if (list.Count > 0)
+                    await GetDbClient().Deleteable(list).SplitTable().ExecuteCommandAsync();
             }
             else
             {

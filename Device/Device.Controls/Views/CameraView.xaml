@@ -84,7 +84,7 @@
             <wpfcc:PageHeaderView
                 Title="相机测试"
                 Grid.Row="0"
-                Margin="0,0,0,16"
+                Margin="0,0,0,12"
                 IconKind="Camera"
                 SubTitle="通过 Device.Core 的 ICameraFactory 与 ICamera 管理相机列表、测试连接与抓图；曝光/增益等参数由检测项下发" />
 
@@ -117,7 +117,7 @@
                     <!--  驱动列 = DriverId 一套名（展示与下拉同源）；下拉数据是运行时目录，经 PageProxy 递进来  -->
                     <DataGridComboBoxColumn
                         Width="*"
-                        MinWidth="126"
+                        MinWidth="150"
                         EditingElementStyle="{StaticResource DmComboEditingStyle}"
                         ElementStyle="{StaticResource DmComboElementStyle}"
                         Header="驱动"
@@ -127,7 +127,7 @@
                     <!--  类型 = CameraScanType 枚举名直出（AreaScan/LineScan），与驱动列同一定案：不做中文映射；静态列表用 x:Static 取  -->
                     <DataGridComboBoxColumn
                         Width="*"
-                        MinWidth="88"
+                        MinWidth="120"
                         EditingElementStyle="{StaticResource DmComboEditingStyle}"
                         ElementStyle="{StaticResource DmComboElementStyle}"
                         Header="类型"
@@ -136,14 +136,14 @@
                         SelectedItemBinding="{Binding ScanType}" />
                     <DataGridTextColumn
                         Width="*"
-                        MinWidth="100"
+                        MinWidth="120"
                         Binding="{Binding IpAddress, UpdateSourceTrigger=PropertyChanged}"
                         ElementStyle="{StaticResource DmTextElementStyle}"
                         Header="IP 地址"
                         HeaderStyle="{StaticResource CamHeader}" />
                     <DataGridTextColumn
                         Width="*"
-                        MinWidth="90"
+                        MinWidth="70"
                         Binding="{Binding ExposureMilliseconds, UpdateSourceTrigger=PropertyChanged}"
                         ElementStyle="{StaticResource DmTextElementStyle}"
                         Header="曝光ms"
