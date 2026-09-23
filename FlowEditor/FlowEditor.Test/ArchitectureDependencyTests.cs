@@ -33,9 +33,9 @@ public sealed class ArchitectureDependencyTests
         Assert.Equal(7, projectPaths.Count);
         Assert.Contains("FlowEditor\\FlowEditor.csproj", projectPaths);
         Assert.Contains("FlowEditor.Runtime\\FlowEditor.Runtime.csproj", projectPaths);
-        Assert.Contains("FlowEditor.Runtime.Smoke\\FlowEditor.Runtime.Smoke.csproj", projectPaths);
+        Assert.Contains("FlowEditor.Runtime.Smoke\\FlowEditor.Runtime.Test.csproj", projectPaths);
         Assert.Contains("FlowEditor.PluginContractFixture\\FlowEditor.PluginContractFixture.csproj", projectPaths);
-        Assert.Contains("FlowEditorTest\\FlowEditor.Tests.csproj", projectPaths);
+        Assert.Contains("FlowEditor.Test\\FlowEditor.Tests.csproj", projectPaths);
         Assert.Contains("WPFControl.Host.Tests\\WPFControl.Host.Tests.csproj", projectPaths);
         Assert.Contains("FlowEditor.DataManagerLogging\\FlowEditor.DataManagerLogging.csproj", projectPaths);
         Assert.All(projectPaths, relativePath =>
@@ -206,7 +206,7 @@ public sealed class ArchitectureDependencyTests
         var smokeDirectory = Path.Combine(solutionDirectory, "FlowEditor.Runtime.Smoke");
         var project = File.ReadAllText(Path.Combine(runtimeDirectory, "FlowEditor.Runtime.csproj"));
         var smokeProject = File.ReadAllText(Path.Combine(
-            smokeDirectory, "FlowEditor.Runtime.Smoke.csproj"));
+            smokeDirectory, "FlowEditor.Runtime.Test.csproj"));
         var sourceFiles = Directory.EnumerateFiles(runtimeDirectory, "*.cs", SearchOption.AllDirectories)
             .Where(path =>
             {
@@ -782,11 +782,11 @@ public sealed class ArchitectureDependencyTests
                                 ?? throw new InvalidOperationException("无法定位解决方案目录。");
         var testProject = File.ReadAllText(Path.Combine(
             solutionDirectory,
-            "FlowEditorTest",
+            "FlowEditor.Test",
             "FlowEditor.Tests.csproj"));
         var contractTests = File.ReadAllText(Path.Combine(
             solutionDirectory,
-            "FlowEditorTest",
+            "FlowEditor.Test",
             "PluginContractTests.cs"));
 
         Assert.Contains("FlowEditor.PluginContractFixture.csproj", testProject, StringComparison.Ordinal);
@@ -800,8 +800,8 @@ public sealed class ArchitectureDependencyTests
     public void TestSources_NullForgivingDependencies_AreAbsent()
     {
         var testDirectory = Directory.GetParent(ProjectDirectory)?.FullName is { } solutionDirectory
-            ? Path.Combine(solutionDirectory, "FlowEditorTest")
-            : throw new DirectoryNotFoundException("无法定位 FlowEditorTest 目录。");
+            ? Path.Combine(solutionDirectory, "FlowEditor.Test")
+            : throw new DirectoryNotFoundException("无法定位 FlowEditor.Test 目录。");
         var nullForgivingToken = string.Concat("null", "!");
         var offenders = Directory.EnumerateFiles(testDirectory, "*.cs", SearchOption.TopDirectoryOnly)
             .Where(path => File.ReadAllText(path).Contains(nullForgivingToken, StringComparison.Ordinal))

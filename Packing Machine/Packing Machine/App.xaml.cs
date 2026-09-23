@@ -91,7 +91,9 @@ namespace Packing_Machine
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("View预热失败");
+                    // 2026-09-23：原实现未把 ex 作为 innerException 传出，预热失败时看不到真因
+                    // （见 WPFControl-架构分析与优化方向.md 3.8）。同时带上视图名，便于定位。
+                    throw new Exception($"View预热失败：视图「{name}」", ex);
                 }
             }
         }

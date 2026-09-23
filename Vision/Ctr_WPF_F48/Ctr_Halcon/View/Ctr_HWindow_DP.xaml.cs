@@ -148,6 +148,15 @@ namespace Ctr_WPF_F48.Ctr_Halcon.View
             EnsureDispROIDatas();
             CreateROIType = (E_ROIType)Enum.Parse(typeof(E_ROIType), ((MenuItem)sender).Header.ToString());
             IsDrawingROI = true;
+            // ⚠️ 下面两行不能少（09-23 补齐）：本方法才是「新增 ROI」的**实际入口**
+            // （第 44 行 `menuItem.Click += ROIMenuItem_Click`），
+            // 而看起来更「正确」的 public 入口 BeginDrawROI（153）**全仓零调用**。
+            // 少了这两行 ⇒ ShowRoiLayer 仍为 false、DisplayLayers 不含 ROI ⇒
+            // DispROI() 的 `ShowRoiLayer || HasFlag(DisplayLayers.ROI)`（1183）走 else
+            // ⇒ DeDispROI() ⇒ **绘制中的 ROI 不显示**。
+            // 与 MeasureMenuItem_Click（163，会 `| DisplayLayers.MeasurePath`）保持对称。
+            SetCurrentValue(ShowRoiLayerProperty, true);
+            SetCurrentValue(DisplayLayersProperty, DisplayLayers | DisplayLayers.ROI);
         }
 
         public void BeginDrawROI(E_ROIType roiType)
@@ -836,7 +845,14 @@ namespace Ctr_WPF_F48.Ctr_Halcon.View
                 if (roi == null)
                     continue;
 
-                roi.IsHit = ShowRoiLayer && ReferenceEquals(roi, SelectedEditableRoi);
+                // ⚠️ 这里**不要**再带 ShowRoiLayer 闸门（09-23 去掉）：
+                // IsHit 的语义是「选中色」——ROIs.cs:72 ⇒ IsHit ? DispSelectColor(红) : DispColor；
+                // 而 ShowRoiLayer 的语义是「编辑态」——默认 false，只在 BeginDrawROI /
+                // 新建 ROI 完成后置 true，没有任何 UI 入口。
+                // 把两者绑在一起 ⇒ 非编辑态下所有 ROI 的选中色都会被清掉；只要「点击已有 ROI」
+                // 也走一次本方法（例如将来支持拖拽把手），「点击 ROI 不变红」立刻复发。
+                // 去掉闸门后，本行与 OnDispROIDatasCollectionChanged 的 Add 分支口径完全一致。
+                roi.IsHit = ReferenceEquals(roi, SelectedEditableRoi);
             }
 
             mCurrentDrawing = ShowRoiLayer ? SelectedEditableRoi : null;

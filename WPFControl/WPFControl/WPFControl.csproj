@@ -9,20 +9,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="ProgramControl\Models\LogR\**" />
-    <Compile Remove="ProgramControl\Services\LogR\**" />
-    <Compile Remove="ProgramControl\ViewModels\LogR\**" />
-    <EmbeddedResource Remove="ProgramControl\Models\LogR\**" />
-    <EmbeddedResource Remove="ProgramControl\Services\LogR\**" />
-    <EmbeddedResource Remove="ProgramControl\ViewModels\LogR\**" />
-    <None Remove="ProgramControl\Models\LogR\**" />
-    <None Remove="ProgramControl\Services\LogR\**" />
-    <None Remove="ProgramControl\ViewModels\LogR\**" />
-    <Page Remove="ProgramControl\Models\LogR\**" />
-    <Page Remove="ProgramControl\Services\LogR\**" />
-    <Page Remove="ProgramControl\ViewModels\LogR\**" />
-  </ItemGroup>
+  <!-- 2026-09-23 清理：此处原有 12 行 <Compile/EmbeddedResource/None/Page Remove>，
+       指向 ProgramControl\{Models,Services,ViewModels}\LogR\** —— 这三个目录已不存在，
+       属死配置（见 WPFControl-架构分析与优化方向.md 3.10）。 -->
   <ItemGroup>
     <Content Remove="C:\Users\91632\.nuget\packages\materialdesignthemes\5.3.0\contentFiles\any\net8.0-windows7.0\Resources\Noto\NotoSans-Bold.ttf" />
     <Content Remove="C:\Users\91632\.nuget\packages\materialdesignthemes\5.3.0\contentFiles\any\net8.0-windows7.0\Resources\Noto\NotoSans-BoldItalic.ttf" />
@@ -70,6 +59,22 @@
            一起被引用（见 WPFControlModule.RegisterTypes 中的说明），宿主只引用 WPFControl。 -->
     <ProjectReference Include="..\..\FlowEditor\FlowEditor.DataManagerLogging\FlowEditor.DataManagerLogging.csproj" />
     <ProjectReference Include="..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj" />
+    <!-- 2026-09-23：按架构分析文档 3.1 补全直接引用。这 6 个工程此前只存在于传递闭包里
+         （经 FlowNodes / Extension / DataManager），而源码确实在用它们的类型 ⇒ 上游一动
+         就可能静默打断 WPFControl 的编译。显式声明让依赖图可读；构建闭包不变。
+         ⛔ Halcon 包仍只在 Extension.csproj 一处锁版本（项目约定），此处不重复声明。 -->
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+    <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />
+    <ProjectReference Include="..\..\Secs\Secs\Secs.csproj" />
+    <ProjectReference Include="..\..\Device\Device\Device.csproj" />
+    <ProjectReference Include="..\..\Vision\Ctr_WPF_F48\Ctr_WPF_F48.csproj" />
+    <ProjectReference Include="..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj" />
+    <!-- 2026-09-23（审计补漏）：这两个工程此前同样只靠传递闭包（经 FlowNodes）拿到 ——
+         上一轮补 6 个时漏了它们，是全仓「声明≠使用」审计扫出来的。
+         · FlowEditor        —— FlowEditor.Core(1 文件) / FlowEditor.ViewModels(4 文件)
+         · WPFCustomControls —— WPFCustomControls.Controls(15 文件) / WPFCustomControls.Window.Views(9 文件) -->
+    <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />
+    <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\图标.ico" />

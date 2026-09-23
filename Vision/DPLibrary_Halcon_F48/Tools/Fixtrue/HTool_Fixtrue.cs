@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -94,6 +95,12 @@ namespace DPLibrary_Halcon_F48.Tools
             }
         }
 
+        // ⚠️ setter 是 protected，System.Text.Json 默认**不给非公有 setter 赋值且静默跳过**。
+        // Tool.Save()（ITool.cs:242）会整实例 JsonHelper.SerializeToFile(this, …) 存盘、
+        // ToolMge.cs:275 读回 ⇒ 不加这一行的话，存盘能写出真实标定矩阵、读回却回退成单位矩阵
+        // （下游 HTool_Blob.cs:170 / HTool_FindLine.cs:223 的 GetMatrix() 会拿到错值）。
+        // 用 [JsonInclude] 而不是把 setter 改 public：外部仍不可写，只有 STJ 能用它。
+        [JsonInclude]
         public string Matrix { get; protected set; } = "1, 0, 0, 0, 1, 0, 0, 0, 1";
 
         public override void Config()

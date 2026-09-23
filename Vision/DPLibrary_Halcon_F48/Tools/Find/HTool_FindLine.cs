@@ -65,6 +65,17 @@ namespace DPLibrary_Halcon_F48.Tools.FindLine
             }
         }
 
+        // ⚠️ setter 保持非公有（面板本来就不让改类型，这是设计如此），但**必须加 [JsonInclude]**：
+        // ① System.Text.Json 默认不给非公有 setter 赋值，而且是**静默跳过**（不抛异常）——
+        //    JSON 里明明写着 "XLDType": "SectorCircle"，反序列化后却回退成枚举默认值
+        //    E_XLDType.Null(0)，表现为「读档后卡尺类型丢失」。旧版 Newtonsoft.Json 能写
+        //    private setter，所以迁到 STJ 之后才暴露（不是 STJ 的 bug，是契约差异）。
+        //    [JsonInclude] 就是让 STJ 使用这个非公有 setter（private / protected 都实测有效）。
+        // ② ⛔ **不要把 setter 改成 public** —— 那会让 SetMethod.IsPublic 变 true，
+        //    PropertyEditorBindingHelper.IsEditableProperty 随之放行 ⇒ 面板把它从
+        //    「灰色只读文本」变成可编辑下拉 ⇒ **改不了类型是刻意的，改成 public 是行为变更**。
+        //    类型只在构造时确定（见本类构造函数；「功能新增卡尺」时选定）。
+        [JsonInclude]
         [JsonPropertyName("XLDType")]
         [ToolPropertyAttribute(DisplayName = "卡尺类型", Description = "卡尺的类型",EditorType = E_PropertyEditorType.SingleSelect)]
         public E_XLDType XLDType

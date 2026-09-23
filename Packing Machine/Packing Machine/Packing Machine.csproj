@@ -31,6 +31,31 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\WPFControl\WPFControl\WPFControl.csproj" />
+    <!-- 2026-09-23：按架构分析文档 6.4 补全直接引用。本工程 47 个 .cs 实际在用这 11 个工程的
+         命名空间（Extension 16 处、DataManager.Log.Definition 15 处、Secs 11 处 …），但此前
+         只声明了 WPFControl，全靠传递闭包（WPFControl → FlowNodes）送来 ⇒ 上游一清理就会
+         静默打断本工程的编译。显式声明让依赖图可读；构建闭包不变。
+         ⛔ 包引用一条都不补：HalconDotNet 仍只在 Extension.csproj 一处锁 23110.0.0（项目约定）。 -->
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+    <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
+    <ProjectReference Include="..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj" />
+    <ProjectReference Include="..\..\Device\Device\Device.csproj" />
+    <ProjectReference Include="..\..\Communication\Communication\Communication.csproj" />
+    <ProjectReference Include="..\..\Secs\Secs\Secs.csproj" />
+    <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />
+    <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />
+    <ProjectReference Include="..\..\Vision\DPLibrary_Base_F48\DPLibrary_Base_F48.csproj" />
+    <ProjectReference Include="..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj" />
+    <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
+    <!-- 2026-09-23（运行时补漏）：这条与前 11 条不同 —— 不是编译需要，而是**运行时**需要。
+         App.xaml.cs:269 有 `System.Reflection.Assembly.Load("FlowNodes");`
+         （原注释写「确保其节点能被工具箱扫描到」）—— 编译期完全看不见这个依赖，
+         它只要求 FlowNodes.dll 出现在输出目录 / deps.json 里。
+         实测：摘掉 WPFControl → FlowNodes 那条边后，本工程**编译仍 0 错误**，
+         但输出目录里 FlowNodes.dll 消失、deps.json 的 201 个库里也没有它
+         ⇒ 那行 Assembly.Load 会在运行时抛 FileNotFoundException。
+         显式声明后，FlowNodes.dll 由本工程自己保证，不再依赖上游传递。 -->
+    <ProjectReference Include="..\..\FlowNodes\FlowNodes\FlowNodes.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Prism.Core" Version="8.1.97" />
