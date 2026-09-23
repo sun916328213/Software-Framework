@@ -13,14 +13,12 @@
   <ItemGroup>
     <Compile Remove="Config\Flow\StartupFlow\01_初始化控件.cs" />
     <Compile Remove="Config\Flow\StartupFlow\02_初始化工具.cs" />
-    <Compile Remove="Config\Flow\StartupFlow\03_初始化通讯.cs" />
     <Compile Remove="Config\Flow\StartupFlow\04_初始化硬件.cs" />
     <Compile Remove="Config\Flow\StartupFlow\05_初始化后台.cs" />
   </ItemGroup>
   <ItemGroup> 
     <None Remove="Config\Flow\StartupFlow\01_初始化控件.cs.bak" />
     <None Remove="Config\Flow\StartupFlow\02_初始化工具.cs.bak" />
-    <None Remove="Config\Flow\StartupFlow\03_初始化通讯.cs.bak" />
     <None Remove="Config\Flow\StartupFlow\04_初始化硬件.cs.bak" />
     <None Remove="Config\Flow\StartupFlow\05_初始化后台.cs.bak" />
     <None Remove="Config\Flow\StartupFlow\StartupFlow.taskproj.bak" />
@@ -40,7 +38,6 @@
     <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
     <ProjectReference Include="..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj" />
     <ProjectReference Include="..\..\Device\Device\Device.csproj" />
-    <ProjectReference Include="..\..\Communication\Communication\Communication.csproj" />
     <ProjectReference Include="..\..\Secs\Secs\Secs.csproj" />
     <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />
     <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />

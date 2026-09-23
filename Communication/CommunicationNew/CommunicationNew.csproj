@@ -44,11 +44,6 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- NuGet 页面使用根目录 README，帮助使用方识别协议能力和平台限制。 -->
-    <None Update="README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
-
   <ItemGroup Condition="'$(IncludeMxComponentInteropInPackage)' == 'true'">
     <!-- Interop 是主程序集的附加托管依赖；平台限制由 MX adapter 在连接前检查。 -->
     <None Include="..\..\Dll\Mitsubishi\Interop.ActSupportMsg64Lib.dll" Pack="true" PackagePath="lib/net9.0/" />

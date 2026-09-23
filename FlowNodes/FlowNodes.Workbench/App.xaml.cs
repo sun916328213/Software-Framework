@@ -1,6 +1,5 @@
 using System.Reflection;
 using System.Windows;
-using Communication;
 using CommunicationNew;
 using DataManager;
 using Device;
@@ -32,10 +31,9 @@ public partial class App : PrismApplication
 
     protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
     {
-        // 节点构造依赖（MCHelper / CamManager 等）由这些模块提供单例，
+        // 节点构造依赖（CamManager 等）由这些模块提供单例，
         // 缺失会导致含 DI 构造参数的节点无法物化。
         moduleCatalog.AddModule<DataManagerModule>();
-        moduleCatalog.AddModule<CommunicationModule>();
         moduleCatalog.AddModule<CommunicationNewModule>();
         moduleCatalog.AddModule<DeviceModule>();
         moduleCatalog.AddModule<WPFCustomControlsModule>();

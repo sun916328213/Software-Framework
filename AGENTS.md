@@ -53,6 +53,9 @@ WPF 工业自动化控制框架。多模块解决方案（主解决方案 `Frame
 
 - `Secs/secs4net-base` 是第三方库（secs4net）的本地化副本，**不换 NuGet 包**。其 src 多目标 `netstandard2.0;net9.0-windows` 为有意保留（net472/net48 消费方经 netstandard2.0 桥接）；`Directory.Build.props` 中 PolySharp 仅对 `< net8.0` 目标生效、测试项目钉 `Microsoft.Bcl.AsyncInterfaces 10.0.8` 均为既定修复，勿回退。
 - `CommunicationNew.MxComponentBridge` 是 net48 孤岛（三菱 PLC 原生组件依赖），不得被 net9 项目引用，勿升级其 TFM。
+  > ⚠️ 2026-09-23：该工程已按《Software-Framework_Communication_Device重构删除实施说明》**删除**，
+  > 上述红线随之失效（原行保留备查）。MX Component 现只保留 64 位 Interop 直接模式
+  > （`MxComponentMcClientAdapter`），不再有 net48 桥接进程。
 - 分层红线：核心库不得引用 WPF 类型（保持纯 `net9.0`）；跨层依赖只能自上而下（宿主/演示 → 模块 → 核心库）。
 - 勿改动其他 AI 工具的配置目录（`.qoder/`、`.trae/`、`.workbuddy*`、`.zcode/`、`.vscode/`、`.vs/`）。
 

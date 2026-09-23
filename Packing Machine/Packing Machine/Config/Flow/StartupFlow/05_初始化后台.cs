@@ -5,21 +5,17 @@ public class Script
 {
     ResourceMonitorService _ResourceMonitorService;
     BulletinBoardService _BulletinBoardService;
-    CommunicationManager _CommunicationManager;
     StatisticService _StatisticService;
     AlarmInfoManagerService _AlarmInfoService;
-    MCHelper _MCHelper;
     SecsControl _SecsControl;
 
     public void Initialize()
     {
         // 初始化逻辑
         _ResourceMonitorService = ContainerManager.Resolve<ResourceMonitorService>();
-        _CommunicationManager = ContainerManager.Resolve<CommunicationManager>();
         _BulletinBoardService = ContainerManager.Resolve<BulletinBoardService>();
         _StatisticService = ContainerManager.Resolve<StatisticService>();
         _AlarmInfoService = ContainerManager.Resolve<AlarmInfoManagerService>();
-        _MCHelper = ContainerManager.Resolve<MCHelper>();
         _SecsControl = ContainerManager.Resolve<SecsControl>();
     }
 
@@ -27,8 +23,6 @@ public class Script
     {
         Console.WriteLine("开始执行脚本");
         _ResourceMonitorService.StartAutoRefresh();
-        _CommunicationManager.SetReadTask("Data", "D8000", 1000, Extension.Core.Comparison.EComparePolarity.None);
-        _CommunicationManager.StartLoop();
 
 
         DispatcherTimerEx.DispatcherTimer(new Action(Loop), 1000, "Loop");
@@ -82,7 +76,8 @@ public class Script
         }
 
 
-        var plcstatus = _MCHelper.IsConnected ? ELinkStatus.Online : ELinkStatus.Offline;
+        // 旧 MCHelper.IsConnected 已随旧通信栈删除；PLC 状态暂按 Offline 处理。
+        var plcstatus = ELinkStatus.Offline;
         if (plcstatus == ELinkStatus.Online)
         {
             //await RefreshSystem();
@@ -115,8 +110,7 @@ public class Script
 
     private void RefreshAlarm()
     {
-        var data = _CommunicationManager.GetData("Alarm");
-        if (data != null)
-            _AlarmInfoService.Organize(data);
+        // 旧实现走 CommunicationManager.GetData("Alarm")，该能力已随旧通信栈删除。
+        // 报警读取暂时停用：不伪造数据，待迁移到 Communication.Core 后恢复。
     }
 }

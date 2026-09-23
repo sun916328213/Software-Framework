@@ -1,5 +1,17 @@
 ﻿# Extension 文件分级方案（v2 · 2026-09-18 **已实施**）
 
+> ⚠️ 2026-09-23 状态注（就地追加，不覆盖原文）：本报告引用的旧通信栈路径
+> `Communication/Communication1/`、`Communication/Communication/`、
+> `Communication/CommunicationNew.MxComponentBridge/`、
+> `Communication/CommunicationNew.MxComponentSmokeTest/` 已于本日按
+> 《Software-Framework_Communication_Device重构删除实施说明》**整体删除**；
+> `FlowNodes/FlowNodes/Communication/MC/` 与 Packing Machine 的 `StartupFlow/03_初始化通讯.cs` 同批删除。
+> 下文所有指向这些路径的行**保留原样备查**，引用时请以当前仓库为准。
+> 对本报告 §5.13 的具体影响：`ToASCII(this byte[])` 的**生产**调用点由 10 处降为 **5 处**
+> （`Device/Device/RFID/Abstract/RFIDBase_ModbusRTU.cs` ×2、`Device/Device/RFID/椹诺/XK15A_R01Helper.cs` ×2、
+> `Packing Machine/.../Business/Flow/AutoProcess.cs` ×1）；**「非零调用、原判定成立」的结论不变**。
+> 另注：原文引用的 `Communication/CommunicationDemo/` 在删除前**就已经不在仓库中**（非本次改动所致）。
+
 > 范围：`Extension/Extension/` 单 csproj，**80 个 `.cs` / 14,614 行**（逐文件实测，口径 `splitlines`）。
 > 方法：逐文件解析 `using` → 反查依赖包 → 按「依赖级别」分层；再按「变化原因」做归属审查。
 > 落地：**不新建 csproj**，准入线由 `Extension.Tests/TierGuardTests.cs` 强制（**12/12 绿**）。

@@ -121,6 +121,10 @@ namespace WPFControl.Tests
         /// （架构文档 6.4）。它此前只声明 WPFControl，其余 11 个全靠传递闭包
         /// （WPFControl → FlowNodes）送来 ⇒ 上游一清理就会静默打断宿主的编译。
         /// 本测试防止这条修复被回退。
+        /// ⚠️ 2026-09-23：`..\..\Communication\Communication\Communication.csproj` 登记条目**已删除** ——
+        /// 该旧通信工程已按《Software-Framework_Communication_Device重构删除实施说明》整体删除，
+        /// 宿主也不再使用其类型（PLC 调用点改为显式 `NotSupportedException`），
+        /// 故按本类约定「偿还一处债务即同步删登记条目」收敛清单。
         /// ⚠️ 2026-09-23 追加 <c>FlowNodes</c>：它**不是编译依赖，而是运行时依赖** ——
         /// <c>App.xaml.cs</c> 里有 <c>Assembly.Load("FlowNodes")</c>，只要求 FlowNodes.dll
         /// 出现在输出目录 / deps.json 里，编译期完全看不见 ⇒ 特别容易被当成"冗余"清掉。
@@ -147,7 +151,6 @@ namespace WPFControl.Tests
                 @"..\..\DataManager\DataManager\DataManager.csproj",
                 @"..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj",
                 @"..\..\Device\Device\Device.csproj",
-                @"..\..\Communication\Communication\Communication.csproj",
                 @"..\..\Secs\Secs\Secs.csproj",
                 @"..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj",
                 @"..\..\FlowEditor\FlowEditor\FlowEditor.csproj",

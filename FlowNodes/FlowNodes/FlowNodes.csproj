@@ -19,7 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Communication\Communication\Communication.csproj" />
     <ProjectReference Include="..\..\Communication\CommunicationNew\CommunicationNew.csproj" />
     <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
     <ProjectReference Include="..\..\Device\Device\Device.csproj" />

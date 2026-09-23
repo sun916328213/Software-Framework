@@ -11,17 +11,11 @@ namespace CommunicationNew.Protocols.Mitsubishi
         /// <summary>MC 客户端使用的通信后端；默认使用无需 MX Component 的 SLMP。</summary>
         public McClientBackend Backend { get; set; } = McClientBackend.Slmp;
 
-        /// <summary>可选的 net48 桥接程序绝对路径；为空时直接调用已引用的 64 位 MX Interop。</summary>
-        public string? MxBridgeExecutablePath { get; set; }
-
         /// <summary>MX Component Communication Setup Utility 中配置的逻辑站号，范围为 0 到 1023。</summary>
         public int MxLogicalStationNumber { get; set; }
 
         /// <summary>MX Component 逻辑站访问密码；为空表示不使用密码。</summary>
         public string MxPassword { get; set; } = string.Empty;
-
-        /// <summary>等待 MX 桥接进程建立命名管道的超时时间（毫秒）。</summary>
-        public int MxBridgeStartupTimeoutMs { get; set; } = 10000;
 
         /// <summary>服务器IP（TCP模式）</summary>
         public string ServerIP { get; set; } = "192.168.1.1";
@@ -63,7 +57,7 @@ namespace CommunicationNew.Protocols.Mitsubishi
         /// <summary>由 CommunicationNew 自行编解码 3E/4E 报文的 TCP SLMP 后端。</summary>
         Slmp,
 
-        /// <summary>调用 MX Component V5；默认直接调用，也可配置隔离桥接进程。</summary>
+        /// <summary>调用 MX Component V5（64 位 Interop 直接模式）。</summary>
         MxComponent,
     }
 

@@ -174,10 +174,7 @@ public class McClientDevice : CommunicationDeviceBase, IConnection, IAddressRead
     {
         if (Param.Backend == McClientBackend.MxComponent)
         {
-            var mode = string.IsNullOrWhiteSpace(Param.MxBridgeExecutablePath)
-                ? "直接模式"
-                : "桥接模式";
-            return $"MC协议客户端已连接: MX Component 逻辑站 {Param.MxLogicalStationNumber} ({mode})";
+            return $"MC协议客户端已连接: MX Component 逻辑站 {Param.MxLogicalStationNumber} (直接模式)";
         }
 
         return $"MC协议客户端已连接: {Param.ServerIP}:{Param.Port} (帧类型:{Param.FrameType})";
@@ -214,30 +211,9 @@ public class McClientDevice : CommunicationDeviceBase, IConnection, IAddressRead
                 "MX Component 逻辑站号必须在 0 到 1023 之间。");
         }
 
-        if (string.IsNullOrWhiteSpace(param.MxBridgeExecutablePath))
-        {
-            return new MxComponentMcClientAdapter(
-                param.MxLogicalStationNumber,
-                param.MxPassword);
-        }
-
-        if (param.MxBridgeStartupTimeoutMs <= 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(param.MxBridgeStartupTimeoutMs),
-                param.MxBridgeStartupTimeoutMs,
-                "MX 桥接启动超时必须大于零。");
-        }
-
-        return new MxComponentBridgeClientAdapter(
-            new MxComponentBridgeOptions
-            {
-                ExecutablePath = param.MxBridgeExecutablePath,
-                LogicalStationNumber = param.MxLogicalStationNumber,
-                Password = param.MxPassword,
-                StartupTimeout = TimeSpan.FromMilliseconds(param.MxBridgeStartupTimeoutMs),
-                OperationTimeout = TimeSpan.FromMilliseconds(param.CommunicationTimeout),
-            });
+        return new MxComponentMcClientAdapter(
+            param.MxLogicalStationNumber,
+            param.MxPassword);
     }
 
     private static ushort ValidateWriteQuantity(McAddressValue address, int quantity)

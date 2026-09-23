@@ -162,6 +162,7 @@ namespace Extension.Tests
             // 全仓下游之所以没出事，是因为**一律显式限定**，例如
             // Device/Device/RFID/.../XK15A_R01Helper.cs:12  `ASCIIEx.ToHex(page.ToString())`
             // Communication/Communication/MC/MCHelper11.cs:814 `BinaryEx.ToASC(InputData[...])`
+            // ⚠️ 2026-09-23：上一条引用文件已随旧通信栈删除，保留原行仅作溯源。
             // ⇒ 这是一个"靠调用方自律才不炸"的 API 设计。
         }
 

@@ -4,7 +4,7 @@ namespace CommunicationNew.Protocols.Mitsubishi;
 
 /// <summary>
 /// 在 MX Component 的 16 点位字表示与 MC 二进制半字节表示之间转换。
-/// 该纯逻辑模块由直接模式和 net48 桥接模式共同使用，不依赖 COM。
+/// 该纯逻辑模块供 64 位 Interop 直接模式使用，不依赖 COM。
 /// </summary>
 internal static class MxComponentBitCodec
 {

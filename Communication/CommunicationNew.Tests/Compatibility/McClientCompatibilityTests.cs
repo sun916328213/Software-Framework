@@ -56,12 +56,11 @@ public sealed class McClientCompatibilityTests
     }
 
     [Fact]
-    public async Task Mx_component_backend_can_be_created_without_a_bridge_path()
+    public async Task Mx_component_backend_can_be_created_in_direct_mode()
     {
         await using var device = new McClientDevice(new McParam
         {
             Backend = McClientBackend.MxComponent,
-            MxBridgeExecutablePath = null,
         });
 
         Assert.Equal(ConnectionState.Disconnected, device.State);
@@ -83,34 +82,6 @@ public sealed class McClientCompatibilityTests
     }
 
     [Theory]
-    [InlineData(-1)]
-    [InlineData(1024)]
-    public void Public_mx_bridge_adapter_rejects_an_invalid_logical_station(int station)
-    {
-        var executablePath = Path.GetFullPath("MxComponentBridge.exe");
-
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new MxComponentBridgeClientAdapter(new MxComponentBridgeOptions
-            {
-                ExecutablePath = executablePath,
-                LogicalStationNumber = station,
-            }));
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    public void Public_mx_bridge_adapter_rejects_a_non_positive_operation_timeout(int milliseconds)
-    {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new MxComponentBridgeClientAdapter(new MxComponentBridgeOptions
-            {
-                ExecutablePath = Path.GetFullPath("MxComponentBridge.exe"),
-                OperationTimeout = TimeSpan.FromMilliseconds(milliseconds),
-            }));
-    }
-
-    [Theory]
     [InlineData(0)]
     [InlineData(-1)]
     public void Mx_backend_rejects_a_non_positive_communication_timeout(int milliseconds)
@@ -127,20 +98,6 @@ public sealed class McClientCompatibilityTests
     public async Task Direct_mx_adapter_shares_concurrent_disposal_and_cannot_be_reused()
     {
         var adapter = new MxComponentMcClientAdapter(0, password: null);
-
-        await Task.WhenAll(Enumerable.Range(0, 16).Select(_ => adapter.DisposeAsync().AsTask()));
-
-        Assert.Equal(ConnectionState.Disconnected, adapter.State);
-        await Assert.ThrowsAsync<ObjectDisposedException>(() => adapter.ConnectAsync().AsTask());
-    }
-
-    [Fact]
-    public async Task Bridge_mx_adapter_shares_concurrent_disposal_and_cannot_be_reused()
-    {
-        var adapter = new MxComponentBridgeClientAdapter(new MxComponentBridgeOptions
-        {
-            ExecutablePath = Path.GetFullPath("MxComponentBridge.exe"),
-        });
 
         await Task.WhenAll(Enumerable.Range(0, 16).Select(_ => adapter.DisposeAsync().AsTask()));
 

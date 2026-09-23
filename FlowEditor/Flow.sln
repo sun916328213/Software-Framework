@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowNodes", "..\FlowNodes\FlowNodes\FlowNodes.csproj", "{68F92117-D37A-432B-959B-A79828918078}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication", "..\Communication\Communication\Communication.csproj", "{E38705BA-59F8-4DEB-9EB2-5720F87E387D}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataManager", "..\DataManager\DataManager\DataManager.csproj", "{247CAE3C-7F07-4E36-9C3F-0F207DCDA822}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extension", "..\Extension\Extension\Extension.csproj", "{06F9ABBA-4FB6-4F26-95E0-33D908DCA8FA}"
@@ -55,18 +53,6 @@ Global
 		{68F92117-D37A-432B-959B-A79828918078}.Release|x64.Build.0 = Release|Any CPU
 		{68F92117-D37A-432B-959B-A79828918078}.Release|x86.ActiveCfg = Release|Any CPU
 		{68F92117-D37A-432B-959B-A79828918078}.Release|x86.Build.0 = Release|Any CPU
-		{E38705BA-59F8-4DEB-9EB2-5720F87E387D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E38705BA-59F8-4DEB-9EB2-5720F87E387D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E38705BA-59F8-4DEB-9EB2-5720F87E387D}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{E38705BA-59F8-4DEB-9EB2-5720F87E387D}.Debug|x64.Build.0 = Debug|Any CPU
-		{E38705BA-59F8-4DEB-9EB2-5720F87E387D}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{E38705BA-59F8-4DEB-9EB2-5720F87E387D}.Debug|x86.Build.0 = Debug|Any CPU
-		{E38705BA-59F8-4DEB-9EB2-5720F87E387D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E38705BA-59F8-4DEB-9EB2-5720F87E387D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E38705BA-59F8-4DEB-9EB2-5720F87E387D}.Release|x64.ActiveCfg = Release|Any CPU
-		{E38705BA-59F8-4DEB-9EB2-5720F87E387D}.Release|x64.Build.0 = Release|Any CPU
-		{E38705BA-59F8-4DEB-9EB2-5720F87E387D}.Release|x86.ActiveCfg = Release|Any CPU
-		{E38705BA-59F8-4DEB-9EB2-5720F87E387D}.Release|x86.Build.0 = Release|Any CPU
 		{247CAE3C-7F07-4E36-9C3F-0F207DCDA822}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{247CAE3C-7F07-4E36-9C3F-0F207DCDA822}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{247CAE3C-7F07-4E36-9C3F-0F207DCDA822}.Debug|x64.ActiveCfg = Debug|Any CPU

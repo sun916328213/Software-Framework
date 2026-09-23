@@ -1,5 +1,4 @@
 ﻿
-using Communication.Serial;
 using Device.RFID.Abstract;
 using Extension.Core.Conversion;
 
@@ -12,7 +11,7 @@ namespace Device.RFID
             string pagehex = ASCIIEx.ToHex(page.ToString());
             string order = $"0A 52 50 50 {pagehex} 0D".Replace(" ", "");
             byte[] buffer = order.ToBytes();
-            var d1 = SerialHelper.WriteWithReply(buffer, 0, buffer.Length, 500);
+            var d1 = SendAndReceive(buffer);
             string d2 = d1.ToASCII(EEndianType.Little_Endian);
             if (d2.Contains("FAIL")) throw new Exception("RFID write fail");
             else
@@ -40,7 +39,7 @@ namespace Device.RFID
             string datahex = ASCIIEx.ToHex(data);
             string order = $"0A 57 50 50 {pagehex} 2C {datahex} 0D".Replace(" ", "");
             byte[] buffer = order.ToBytes();
-            var d1 = SerialHelper.WriteWithReply(buffer, 0, buffer.Length, 500);
+            var d1 = SendAndReceive(buffer);
             string d2 = d1.ToASCII(EEndianType.Little_Endian);
             if (d2.Contains("FAIL")) throw new Exception("RFID write fail");
         }

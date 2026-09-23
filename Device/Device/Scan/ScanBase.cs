@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Communication.Serial;
+using CommunicationNew.Protocols.Serial;
 using Device.Scan.Definition;
 using Device.Scan;
 
@@ -17,7 +17,7 @@ namespace Device.Scan
         /// <summary>
         /// 对于的连接串口
         /// </summary>
-         private   SerialHelper mPort = new SerialHelper();
+         private   SerialPortDevice mPort;
 
         /// <summary>
         /// 数据获取后的回调
@@ -41,20 +41,23 @@ namespace Device.Scan
 
         public bool Connect()
         {
-            mPort.SerialParam = ScanParam;
-            mPort.DataReceivedEvent += (sender, bytes) =>
+            mPort?.Dispose();
+            mPort = new SerialPortDevice(ScanParam);
+            mPort.DataReceived += (sender, e) =>
             {
                 Task.Run(() =>
                 {
-                    mValueCallBack(sender, bytes);
+                    mValueCallBack(sender, e.Data);
                 });
             };
-            return mPort.Connect();
+            return Task.Run(() => mPort.ConnectAsync()).GetAwaiter().GetResult();
         }
 
         public bool DisConnect()
         {
-            return mPort.DisConnect();
+            if (mPort == null) return true;
+            Task.Run(() => mPort.DisconnectAsync()).GetAwaiter().GetResult();
+            return true;
         }
 
         public abstract void Trigger();

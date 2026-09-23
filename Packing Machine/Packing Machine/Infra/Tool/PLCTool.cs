@@ -1,14 +1,10 @@
-﻿using Communication;
-using Communication.MC;
-using Extension.UI.Controls;
+﻿using Extension.UI.Controls;
 using DataManager.Log.Definition;
 using Packing_Machine.Data;
 using Packing_Machine.Business.Order;
 using Prism.Ioc;
 using Secs;
-using System.Diagnostics;
 using WPFControl.CustomControl.Models;
-using WPFControl.Helper;
 using WPFControl.ProgramControl.Services;
 using Packing_Machine.Business.Station;
 
@@ -26,82 +22,51 @@ namespace Packing_Machine.Infra.Tool
         public static int ID = 10;
     }
 
+    /// <summary>
+    /// PLC 业务入口。
+    /// <para>
+    /// ⚠️ 当前版本**没有可用的 PLC 实现**。旧实现依赖已删除的
+    /// CommunicationManager / MCHelper（旧 Communication 工程），
+    /// 本类只保留类型与全部业务方法签名，任何调用都会抛出
+    /// <see cref="NotSupportedException"/> —— 明确失败，不静默、不伪造数据。
+    /// </para>
+    /// <para>
+    /// 迁移方向：新建 PlcService/PlcRuntime，依赖 Communication.Core 的
+    /// McClientDevice + PlcTagDefinition/PlcTagCache/PlcPollingService，
+    /// 详见《Software-Framework_Communication_Device重构删除实施说明》第 10 章。
+    /// </para>
+    /// </summary>
     public class PLCTool
     {
+        private const string MigrationMessage =
+            "Packing Machine 的 PLC 能力已随旧通信栈（CommunicationManager/MCHelper）删除，"
+            + "当前不可用。请迁移到 Communication.Core 的 McClientDevice/DataPoint 体系后再调用"
+            + "（详见实施说明第 10 章）。";
 
-        readonly MCHelper _MCHelper;
-        readonly CommunicationManager _CommunicationManager;
         readonly IContainerProvider _container;
         LogInfoService _LogInfoService => _container.Resolve<LogInfoService>();
         readonly SecsControl _SecsControl;
-     
-        readonly object _Lock = new object();
 
         public PLCTool(IContainerProvider container)
         {
             _container = container;
-            _CommunicationManager = container.Resolve<CommunicationManager>();
-            _MCHelper = container.Resolve<MCHelper>();
             _SecsControl = container.Resolve<SecsControl>();
-           
         }
 
         /// <summary>
         /// 刷新任务
         /// </summary>
-        public void Refresh()
-        {
-            TryCatchHelper.TryExecute(() =>
-          {
-              _CommunicationManager.SetWriteTask(PLCSystem.Online, 1);//设置心跳
+        public void Refresh() => throw new NotSupportedException(MigrationMessage);
 
-              _CommunicationManager.SetReadTask("Trigger", "D8000", 1000, Extension.Core.Comparison.EComparePolarity.BothEdges);//设置读取数据区间
-              _CommunicationManager.SetReadTask("Alarm", "D6000", 1000, Extension.Core.Comparison.EComparePolarity.None);//设置读取数据区间
+        public void StopRefresh() => throw new NotSupportedException(MigrationMessage);
 
-              _CommunicationManager.StartLoop();//开启循环
-          });
-        }
-
-        public void StopRefresh()
-        {
-            _CommunicationManager.StopLoopRead();
-        }
-
- 
         /// <summary>
         /// 触发回复
         /// </summary>
-        /// <param name="sationName"></param>
+        /// <param name="stationName"></param>
         /// <param name="pPLCOrder"></param>
-        public void TriggerReply(string stationName, string pPLCOrder)
-        {
-            TryCatchHelper.TryExecute(() =>
-            {
-                lock (_Lock)
-                {
-                    short triggerval = (short)_CommunicationManager.Read(pPLCOrder);
-                    AddLog(stationName, "接收触发信息", pPLCOrder, PLCAddressOffest.Trigger, triggerval.ToString());
-
-                    if (_CommunicationManager.Reset(pPLCOrder, PLCAddressOffest.Result, 1))
-                        AddLog(stationName, "复位结果", pPLCOrder, PLCAddressOffest.Result, null);
-
-                    ////for(int i=0;i<10;i++)
-                    //if (_CommunicationManager.Reset(pPLCOrder, PLCAddressOffest.ID, 20))
-                    //    AddLog(stationName, "复位ID", pPLCOrder, PLCAddressOffest.ID, null);
-
-                    //写入回复
-                    triggerval = 1;
-                    if (_CommunicationManager.Write(pPLCOrder, PLCAddressOffest.Reply, triggerval))
-                        AddLog(stationName, "发送回复", pPLCOrder, PLCAddressOffest.Reply, triggerval.ToString());
-
-                    //读取计数
-                    short countval = (short)_CommunicationManager.Read(pPLCOrder, PLCAddressOffest.Count);
-                    //写入计数
-                    if (_CommunicationManager.Write(pPLCOrder, PLCAddressOffest.CountReply, Convert.ToInt16(countval)))
-                        AddLog(stationName, "发送计数", pPLCOrder, PLCAddressOffest.CountReply, countval.ToString());
-                }
-            });
-        }
+        public void TriggerReply(string stationName, string pPLCOrder) =>
+            throw new NotSupportedException(MigrationMessage);
 
         /// <summary>
         /// 发送数据
@@ -110,30 +75,16 @@ namespace Packing_Machine.Infra.Tool
         /// <param name="pPLCOrder"></param>
         /// <param name="OffestAdd"></param>
         /// <param name="info"></param>
-        public void SendData(string sationName, string pPLCOrder, int OffestAdd, object info)
-        {
-            TryCatchHelper.TryExecute(() =>
-            {
-                if (_CommunicationManager.Write(pPLCOrder, OffestAdd, info))
-                    AddLog(sationName, "发送数据", pPLCOrder, OffestAdd,  info.ToString());
-            });
-        }
-
+        public void SendData(string sationName, string pPLCOrder, int OffestAdd, object info) =>
+            throw new NotSupportedException(MigrationMessage);
 
         /// <summary>
         /// 发送结果
         /// </summary>
         /// <param name="pPLCOrder"></param>
         /// <param name="info"></param>
-        public void SendResult(string sationName, string pPLCOrder, EPLCResult info)
-        {
-            TryCatchHelper.TryExecute(() =>
-            {
-                //写入结果
-                if (_CommunicationManager.Write(pPLCOrder, PLCAddressOffest.Result, info))
-                    AddLog(sationName, "发送结果", pPLCOrder, PLCAddressOffest.Result, info.ToString());
-            });
-        }
+        public void SendResult(string sationName, string pPLCOrder, EPLCResult info) =>
+            throw new NotSupportedException(MigrationMessage);
 
         /// <summary>
         /// 流程结束
@@ -141,15 +92,8 @@ namespace Packing_Machine.Infra.Tool
         /// <param name="sationName"></param>
         /// <param name="pPLCOrder"></param>
         /// <param name="info"></param>
-        public void Complete(string sationName, string pPLCOrder)
-        {
-            TryCatchHelper.TryExecute(() =>
-            {
-                //复位
-                if (_CommunicationManager.Reset(pPLCOrder, PLCAddressOffest.Reply, 1))
-                    AddLog(sationName, "复位", pPLCOrder, PLCAddressOffest.Reply, null);
-            });
-        }
+        public void Complete(string sationName, string pPLCOrder) =>
+            throw new NotSupportedException(MigrationMessage);
 
         /// <summary>
         /// 所有流程结束
@@ -157,15 +101,8 @@ namespace Packing_Machine.Infra.Tool
         /// <param name="sationName"></param>
         /// <param name="pPLCOrder"></param>
         /// <param name="length"></param>
-        public void CompleteAll(string sationName, string pPLCOrder, int length)
-        {
-            TryCatchHelper.TryExecute(() =>
-            {
-                if (_CommunicationManager.Reset(pPLCOrder, 0, length))
-                    AddLog(sationName, "复位所有", pPLCOrder, 0, null);
-            });
-        }
-
+        public void CompleteAll(string sationName, string pPLCOrder, int length) =>
+            throw new NotSupportedException(MigrationMessage);
 
         /// <summary>
         /// 读取数据
@@ -174,49 +111,38 @@ namespace Packing_Machine.Infra.Tool
         /// <param name="pPLCOrder"></param>
         /// <param name="OffestAdd"></param>
         /// <returns></returns>
-        public string ReadData(string sationName, string pPLCOrder, int OffestAdd = 0,bool islog=true)
-        {
-            return TryCatchHelper.TryExecute(() =>
-              {
-                  var d = _CommunicationManager.Read(pPLCOrder, OffestAdd)?.ToString();
-                  if (islog) AddLog(sationName, "读取数据", pPLCOrder, OffestAdd, d);
-                  return d;
-              });
-        }
+        public string ReadData(string sationName, string pPLCOrder, int OffestAdd = 0, bool islog = true) =>
+            throw new NotSupportedException(MigrationMessage);
 
         /// <summary>
         /// 写入用户信息
         /// </summary>
         /// <param name="pPLCOrder"></param>
         /// <param name="value"></param>
-        public void TriggerUserInfo( UserInfo value)
-        {
-            TryCatchHelper.TryExecute(() =>
-          {
-              _CommunicationManager.Reset(PLCSystem.PC_UserName, 0, 10);
-              if (_CommunicationManager.Write(PLCSystem.PC_UserName, 0, value.Name))
-                  AddLog("Alarm", "报警信息", PLCSystem.PC_UserName, 0, value.Name.ToString());
-              if (_CommunicationManager.Write(PLCSystem.PC_Level, 0, (int)value.Level))
-                  AddLog("Alarm", "报警信息", PLCSystem.PC_Level, 0, ((int)value.Level).ToString());
-          });
-        }
+        public void TriggerUserInfo(UserInfo value) =>
+            throw new NotSupportedException(MigrationMessage);
 
         /// <summary>
         /// 写入报警信息
         /// </summary>
         /// <param name="pPLCOrder"></param>
         /// <param name="value"></param>
-        public void TriggerAlarm(string pPLCOrder, short value)
-        {
-            TryCatchHelper.TryExecute(() =>
-            {
-                if (_CommunicationManager.Write(pPLCOrder, 0, value))
-                    AddLog("Alarm", "报警信息", pPLCOrder, 0, value.ToString());
-            });
-        }
+        public void TriggerAlarm(string pPLCOrder, short value) =>
+            throw new NotSupportedException(MigrationMessage);
 
         /// <summary>
-        /// 添加日志
+        /// 触发PLC
+        /// </summary>
+        /// <param name="stationName"></param>
+        /// <param name="pPLCOrder"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public Task<EPLCResult> TriggerAsync(string stationName, string pPLCOrder, string data) =>
+            throw new NotSupportedException(MigrationMessage);
+
+        /// <summary>
+        /// 添加日志。保留原实现：PLC 读写已禁用，但日志通道本身与旧通信栈无关，
+        /// 后续迁移后的 PlcService 仍可复用同一格式。
         /// </summary>
         /// <param name="stationName"></param>
         /// <param name="fun"></param>
@@ -227,77 +153,6 @@ namespace Packing_Machine.Infra.Tool
         {
             stationName = stationName.Replace(":","").Trim() + ": ";
             _LogInfoService.AddRunInfo(stationName + fun + " " + "地址:" + pPLCOrder + " " + "偏移:" + offestAdd + " " + "数据:" + value);
-        }
-
-        int count;
-
-       /// <summary>
-       /// 触发PLC 
-       /// </summary>
-       /// <param name="stationName"></param>
-       /// <param name="pPLCOrder"></param>
-       /// <param name="data"></param>
-       /// <returns></returns>
-        public async Task<EPLCResult> TriggerAsync(string stationName, string pPLCOrder, string data)
-        {
-            try
-            {
-                Stopwatch stopwatch = Stopwatch.StartNew();
-                //写入计数
-                if (_CommunicationManager.Write(pPLCOrder, PLCAddressOffest.Count, Convert.ToInt16(count++)))
-                    AddLog(stationName, "发送计数", pPLCOrder, PLCAddressOffest.Count, count.ToString());
-
-                //数据
-                if (_CommunicationManager.Write(pPLCOrder, PLCAddressOffest.CountReply + 1, data))
-                    AddLog(stationName, "发送数据", pPLCOrder, PLCAddressOffest.CountReply + 1, data);
-
-                if (_CommunicationManager.Write(pPLCOrder, PLCAddressOffest.Trigger, 1))
-                    AddLog(stationName, "触发信息", pPLCOrder, PLCAddressOffest.Trigger, "1");
-
-                //等待发送回复
-                while (true)
-                {
-                    int d1 = Convert.ToInt32(_CommunicationManager.Read(pPLCOrder, PLCAddressOffest.Reply));
-                    if (d1 == 1)
-                        break;
-                    else if (stopwatch.ElapsedMilliseconds > 200)
-                    {
-                        _LogInfoService.AddRunInfo(stationName + Message.PLC回复超时.GetMessage(), ELogLevel.Error);
-                        throw new Exception("time out");
-                    }
-                    await Task.Delay(100);
-                }
-
-                //读取计数
-                short countval = (short)_CommunicationManager.Read(pPLCOrder, PLCAddressOffest.CountReply);
-                AddLog(stationName, "读取计数", pPLCOrder, PLCAddressOffest.CountReply, countval.ToString());
-
-
-                ///等待发送结果
-                while (true)
-                {
-                    int d1 = Convert.ToInt32(_CommunicationManager.Read(pPLCOrder, PLCAddressOffest.Result));
-                    if (d1 == 1)
-                        break;
-                    else if (stopwatch.ElapsedMilliseconds > 200)
-                    {
-                        _LogInfoService.AddRunInfo(stationName + Message.PLC回复超时.GetMessage(), ELogLevel.Error);
-                        throw new Exception("time out");
-                    }
-                    await Task.Delay(100);
-                }
-                return EPLCResult.OK;
-                }
-            catch (Exception ex)
-            {
-                return EPLCResult.NG;
-            }
-            finally {
-
-                //清除触发
-                if (_CommunicationManager.Write(pPLCOrder, PLCAddressOffest.Trigger, 0))
-                    AddLog(stationName, "触发信息清除", pPLCOrder, PLCAddressOffest.Trigger, "0");
-            }
         }
     }
 }

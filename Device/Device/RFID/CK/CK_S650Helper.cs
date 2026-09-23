@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Device.RFID.Abstract;
 
 namespace Device.RFID.CK
@@ -12,12 +13,13 @@ namespace Device.RFID.CK
 
         protected override bool ConnectRefactor()
         {
-            return ModbusRTUHelper.Connect();
+            return Task.Run(() => ModbusClient.ConnectAsync()).GetAwaiter().GetResult();
         }
 
         protected override bool DisConnectRefactor()
         {
-            return ModbusRTUHelper.DisConnect();
+            Task.Run(() => ModbusClient.DisconnectAsync()).GetAwaiter().GetResult();
+            return true;
         }
     }
 }

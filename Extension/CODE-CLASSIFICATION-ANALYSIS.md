@@ -4,6 +4,17 @@
 > 方法：目录/命名空间清单比对 + 全仓引用矩阵 + 依赖清单审计
 > 结论：**分类方向对，粒度错；集中复用对，"全塞一个程序集"错。**
 
+> ⚠️ 2026-09-23 状态注（就地追加，不覆盖原文）：本报告引用的旧通信栈路径
+> `Communication/Communication1/`、`Communication/Communication/`、
+> `Communication/CommunicationNew.MxComponentBridge/`、
+> `Communication/CommunicationNew.MxComponentSmokeTest/` 已于本日按
+> 《Software-Framework_Communication_Device重构删除实施说明》**整体删除**；
+> `FlowNodes/FlowNodes/Communication/MC/` 与 Packing Machine 的 `StartupFlow/03_初始化通讯.cs` 同批删除。
+> 下文所有指向这些路径的行**保留原样备查**，引用时请以当前仓库为准。
+> 对本报告的具体影响：文中「`Communication/` 与 `Communication1/` 两套并行（`SerialHelper`、
+> `SocketHelper`、`MCHelper`、`ModbusRTUHelper` 重复）→ 双份代码」这一**重复项已彻底消除**
+> （两套旧栈整体删除，不再需要「择一保留」的处置）。
+
 ---
 
 ## ⛔ 全篇勘误（2026-09-15）：本报告所有「删除」类建议一律作废

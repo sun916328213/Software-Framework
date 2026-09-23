@@ -1,6 +1,4 @@
-﻿using Communication;
-using Communication.MC;
-using Device.Scan;
+﻿using Device.Scan;
 using Extension.UI.Controls;
 using Extension.Core.Conversion;
 using Extension.Core.Enums;
@@ -31,9 +29,6 @@ namespace Packing_Machine.Business.Flow
         readonly StatusBarModel _Model_StatusBar;
         readonly StatisticService _StatisticService;
           LogInfoService _LogInfoService => _container.Resolve<LogInfoService>();
-
-        readonly MCHelper _MCHelper;
-        readonly CommunicationManager _CommunicationManager;
 
         readonly PLCTool _PLCMethod;
         readonly SecsTool _SecsMethod;
@@ -70,9 +65,6 @@ namespace Packing_Machine.Business.Flow
             _Model_StatusBar = container.Resolve<StatusBarModel>();
             _StatisticService = container.Resolve<StatisticService>();
             _ResourceMonitorService = container.Resolve<ResourceMonitorService>();
-
-            _MCHelper = container.Resolve<MCHelper>();
-
 
             _PLCMethod = container.Resolve<PLCTool>();
             _SecsMethod = container.Resolve<SecsTool>();
@@ -171,7 +163,9 @@ namespace Packing_Machine.Business.Flow
                     }
 
 
-                    var plcstatus = _MCHelper.IsConnected ? ELinkStatus.Online : ELinkStatus.Offline;
+                    // 旧 MCHelper.IsConnected 已随旧通信栈删除；
+                    // Packing Machine 的 PLC 尚未迁移到 Communication.Core，状态暂按 Offline 处理。
+                    var plcstatus = ELinkStatus.Offline;
                     if (plcstatus == ELinkStatus.Online)
                     {
                         await RefreshSystem();
@@ -299,9 +293,8 @@ namespace Packing_Machine.Business.Flow
         /// </summary>
         public void RefreshAlarm()
         {
-            var data = _CommunicationManager.GetData("Alarm");
-            if (data != null)
-                _AlarmInfoService.Organize(data);
+            // 旧实现走 CommunicationManager.GetData("Alarm")，该能力已随旧通信栈删除。
+            // 报警读取暂时停用：不伪造数据，待迁移到 Communication.Core 的 DataPoint 后恢复。
         }
  
 

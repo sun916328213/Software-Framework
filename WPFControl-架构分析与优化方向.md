@@ -5,6 +5,18 @@
 > 方法：静态扫描（全仓检索 + 脚本统计）+ 关键文件精读。**所有数字均可复现**，命令见附录 A。
 > 口径声明：文中凡标 **[实测]** 的为脚本/检索直接得出；标 **[推断]** 的为基于事实的推理，需运行时确认。
 
+> ⚠️ 2026-09-23 状态注（就地追加，不覆盖原文）：本报告引用的旧通信栈路径
+> `Communication/Communication1/`、`Communication/Communication/`、
+> `Communication/CommunicationNew.MxComponentBridge/`、
+> `Communication/CommunicationNew.MxComponentSmokeTest/` 已于本日按
+> 《Software-Framework_Communication_Device重构删除实施说明》**整体删除**；
+> `FlowNodes/FlowNodes/Communication/MC/` 与 Packing Machine 的 `StartupFlow/03_初始化通讯.cs` 同批删除。
+> 下文所有指向这些路径的行**保留原样备查**，引用时请以当前仓库为准。
+> 对 §「A 类结论」的具体影响：其中解释「误报」所依据的 `Communication1` 与 `MxComponentBridge`
+> **两个工程均已不存在**（前者被删、后者被删），故那两条「误报」解释属**历史记录**；
+> 附录 A 扫描表第 5 行所述「3 处 `<Compile Include>` 全在 `CommunicationNew.MxComponentBridge`」
+> 也随该工程删除而**归零**。
+
 ---
 
 ## 一、结论摘要

@@ -1,5 +1,4 @@
-﻿using Communication;
-using Extension.Core.Conversion;
+﻿using Extension.Core.Conversion;
 using Extension.UI.Controls;
 using DataManager.Log.Definition;
 using Packing_Machine.Data;

@@ -1,5 +1,4 @@
-﻿using Communication.ModbusRTU;
-using Communication.Struct;
+﻿using CommunicationNew.Protocols.Serial;
 
 namespace Device.Scan.Definition
 {

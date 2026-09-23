@@ -1,5 +1,3 @@
-using Communication;
-using Communication.MC;
 using DataManager.Log;
 using DataManager.Log.Definition;
 using DataManager.SQL;
@@ -15,8 +13,6 @@ using WPFControl.ProgramControl.Services;
 public class Script
 {
 
-    private static CommunicationManager _CommunicationManager;
-    private static MCHelper _MCHelper;
     private static PLCTool _PLCMethod;
     private static SecsControl _SecsControl;
 
@@ -30,8 +26,6 @@ public class Script
     public static void Initialize()
     {
         // 初始化逻辑
-        _MCHelper = ContainerManager.Resolve<MCHelper>();
-        _CommunicationManager = ContainerManager.Resolve<CommunicationManager>();
         _PLCMethod = ContainerManager.Resolve<PLCTool>();
 
         _SecsControl = ContainerManager.Resolve<SecsControl>();

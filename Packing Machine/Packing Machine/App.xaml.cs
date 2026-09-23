@@ -1,5 +1,4 @@
-﻿using Communication;
-using DataManager;
+﻿using DataManager;
 using Device;
 using Extension.Integration.Prism;
 using Extension.Integration.Mapster;
@@ -148,7 +147,6 @@ namespace Packing_Machine
         {
             // 添加WPFControl模块到模块目录
             moduleCatalog.AddModule<DataManagerModule>();
-            moduleCatalog.AddModule<CommunicationModule>();
             moduleCatalog.AddModule<SecsToolModule>();
             moduleCatalog.AddModule<DeviceModule>();
             moduleCatalog.AddModule<WPFControlModule>();

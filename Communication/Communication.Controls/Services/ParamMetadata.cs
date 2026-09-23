@@ -54,10 +54,8 @@ public static class ParamMetadata
 
         // ===== 三菱 MC =====
         ["Backend"] = new("MC 后端", "Slmp（免 MX 驱动）/ MxComponent（需安装 MX）"),
-        ["MxBridgeExecutablePath"] = new("桥接程序路径", "为空则直接调用 64 位 MX Interop"),
         ["MxLogicalStationNumber"] = new("逻辑站号", "0～1023，MX Setup 中配置"),
         ["MxPassword"] = new("逻辑站密码", "为空表示无密码"),
-        ["MxBridgeStartupTimeoutMs"] = new("桥接启动超时（毫秒）", "等待桥接进程建连"),
         ["SerialPortName"] = new("串口名（已停用）", "当前 MC 只支持 TCP，设置后会显式拒绝"),
         ["NetworkNo"] = new("网络号", "0～15"),
         ["StationNo"] = new("站号", "0～255，默认 255"),
