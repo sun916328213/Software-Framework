@@ -17,7 +17,7 @@
     <Compile Remove="Config\Flow\StartupFlow\04_初始化硬件.cs" />
     <Compile Remove="Config\Flow\StartupFlow\05_初始化后台.cs" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup> 
     <None Remove="Config\Flow\StartupFlow\01_初始化控件.cs.bak" />
     <None Remove="Config\Flow\StartupFlow\02_初始化工具.cs.bak" />
     <None Remove="Config\Flow\StartupFlow\03_初始化通讯.cs.bak" />
