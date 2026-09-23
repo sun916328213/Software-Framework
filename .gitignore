@@ -52,3 +52,4 @@ Dll/
 /.workbuddy-ai/memory
 /.workbuddy-ai
 .tmp-*/
+/frame-arch-full.json
