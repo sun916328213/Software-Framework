@@ -4,7 +4,7 @@
 
 ## 包含内容
 
-6 个托管 Interop 程序集，全部位于 `lib/net9.0-windows7.0/`：
+6 个托管 Interop 程序集，全部位于 `lib/net9.0/`（与正式 Communication 的 `net9.0` TFM 对齐；运行时仍限定 Windows x64，见下）：
 
 | 程序集 | 接口 | 位数 |
 |---|---|---|
@@ -27,6 +27,11 @@
 using Interop.ActUtlTypeLib;
 using Interop.ActUtlType64Lib;
 ```
+
+## 运行布局
+
+包内 `build/Mitsubishi.MxComponent.Interop.targets` 会在消费项目构建/发布时把 6 个 RCW
+复制到输出目录（与旧 HintPath 引用的复制行为一致），运行时 COM 激活可直接找到它们。
 
 ## 32 位 / 64 位选择
 

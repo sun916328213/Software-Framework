@@ -2,7 +2,7 @@
 
 此目录包含可选的 MX Component 客户端 adapter。默认 MC 实现位于相邻的 `Slmp` 目录，两者通过上级目录中的 `IMcClientAdapter` 并存。
 
-`CommunicationNew` 已引用用户提供的 MX Component V5 64 位 Interop DLL。`McParam.Backend = McClientBackend.MxComponent` 时，由内部 `MxComponentMcClientAdapter` 直接调用 `ActUtlType64Class`；第三方类型不会暴露到公共接口。
+MX Component V5 64 位 RCW 由内部 NuGet 包 `Mitsubishi.MxComponent.Interop`（5.0.0）提供，构建时自动复制到输出目录。`McParam.Backend = McClientBackend.MxComponent` 时，由内部 `MxComponentMcClientAdapter` 直接调用 `ActUtlType64Class`；第三方类型不会暴露到公共接口。
 
 `MxLogicalStationNumber` 必须是 Communication Setting Utility 可注册的 0–1023；adapter 会在创建 COM 对象前验证该范围。
 
@@ -25,7 +25,7 @@
 > 调用方主动取消仍抛出 `OperationCanceledException`。
 
 
-默认 `dotnet pack` 不会再分发三菱厂商 DLL。发布方确认拥有再分发权限后，可使用 `dotnet pack -p:IncludeMxComponentInteropInPackage=true`，两个 64 位 Interop DLL 会作为附加托管程序集进入包内的 `lib/net9.0`；MX adapter 仍会在连接前拒绝非 Windows 或非 x64 进程。源码项目引用会把 DLL 复制到本地构建输出，不受该开关影响。
+Communication 不再自行打包三菱厂商 DLL：RCW 统一由内部 NuGet 包 `Mitsubishi.MxComponent.Interop` 提供并随构建复制到输出；MX adapter 仍会在连接前拒绝非 Windows 或非 x64 进程。源码项目引用会把 DLL 复制到本地构建输出。
 
 实现参考了 CM1 `MCHelper` 的逻辑站配置、`ActPassword` 和 `ReadDeviceBlock2` 用法。三菱 MX Component V5 Reference Manual 确认位设备块读起始编号必须是 16 的倍数，size 表示以 16 点为一字的字数，数据按低位优先存放；共享的 `MxComponentBitCodec` 会自动向下对齐、批量读取并裁剪到请求范围，因此不会产生位偏移或负载格式差异。位写为保护请求范围外的相邻位，仍使用逐点写。字设备通过共享的 `MxComponentWordCodec` 显式转换 `short[]` 与 MC 小端负载，不再依赖 `Buffer.BlockCopy` 和宿主机端序。厂商返回码不会像旧实现一样被忽略；adapter 会优先使用 `ActSupportMsg64Class.GetErrorMessage` 获取官方错误文本，再转换为 `MxComponentException`。
 

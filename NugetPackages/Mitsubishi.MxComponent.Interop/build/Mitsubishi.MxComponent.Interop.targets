@@ -1,0 +1,18 @@
+<Project>
+  <!--
+    RCW 运行布局：把包内 6 个 Interop DLL 复制到消费项目的输出目录。
+    原因：RCW 经 PackageReference 解析为非嵌入编译引用，但 RAR 默认不将其复制到输出；
+    旧 HintPath 引用会复制，此处显式恢复该布局，保证运行时 COM 激活可找到 RCW。
+    运行时仍限定 Windows x64 且目标机器需安装/授权 MX Component（见包 README）。
+  -->
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\lib\net9.0\Interop.ActUtlType64Lib.dll;$(MSBuildThisFileDirectory)..\lib\net9.0\Interop.ActUtlTypeLib.dll;$(MSBuildThisFileDirectory)..\lib\net9.0\Interop.ActProgType64Lib.dll;$(MSBuildThisFileDirectory)..\lib\net9.0\Interop.ActProgTypeLib.dll;$(MSBuildThisFileDirectory)..\lib\net9.0\Interop.ActSupportMsg64Lib.dll;$(MSBuildThisFileDirectory)..\lib\net9.0\Interop.ActSupportMsgLib.dll">
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <!-- 仅影响直接构建/发布输出：RCW 不随消费项目再次打包。下游通过本包的 PackageReference
+           依赖自动获取 RCW，避免厂商二进制未经确认就被二次分发。 -->
+      <Pack>false</Pack>
+    </Content>
+  </ItemGroup>
+</Project>

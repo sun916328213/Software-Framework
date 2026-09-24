@@ -6,7 +6,7 @@
     打包为独立 NuGet 包，供各工程通过 PackageReference 引用，替代手工 HintPath 拷贝。
   -->
   <PropertyGroup>
-    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Platforms>AnyCPU</Platforms>
 
     <!-- 包元数据 -->
@@ -31,16 +31,19 @@
     <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
 
-  <!-- 把 Dll\Mitsubishi\ 下的 6 个 dll 作为包内容打进 lib/net9.0-windows7.0/ -->
+  <!-- 把 Dll\Mitsubishi\ 下的 6 个 dll 作为包内容打进 lib/net9.0/（与正式 Communication 的 net9.0 TFM 对齐；运行时仍限定 Windows+x64，见包 README） -->
   <ItemGroup>
-    <None Include="..\..\Dll\Mitsubishi\Interop.ActUtlType64Lib.dll" Pack="true" PackagePath="lib/net9.0-windows7.0/" />
-    <None Include="..\..\Dll\Mitsubishi\Interop.ActUtlTypeLib.dll" Pack="true" PackagePath="lib/net9.0-windows7.0/" />
-    <None Include="..\..\Dll\Mitsubishi\Interop.ActProgType64Lib.dll" Pack="true" PackagePath="lib/net9.0-windows7.0/" />
-    <None Include="..\..\Dll\Mitsubishi\Interop.ActProgTypeLib.dll" Pack="true" PackagePath="lib/net9.0-windows7.0/" />
-    <None Include="..\..\Dll\Mitsubishi\Interop.ActSupportMsg64Lib.dll" Pack="true" PackagePath="lib/net9.0-windows7.0/" />
-    <None Include="..\..\Dll\Mitsubishi\Interop.ActSupportMsgLib.dll" Pack="true" PackagePath="lib/net9.0-windows7.0/" />
+    <None Include="..\..\Dll\Mitsubishi\Interop.ActUtlType64Lib.dll" Pack="true" PackagePath="lib/net9.0/" />
+    <None Include="..\..\Dll\Mitsubishi\Interop.ActUtlTypeLib.dll" Pack="true" PackagePath="lib/net9.0/" />
+    <None Include="..\..\Dll\Mitsubishi\Interop.ActProgType64Lib.dll" Pack="true" PackagePath="lib/net9.0/" />
+    <None Include="..\..\Dll\Mitsubishi\Interop.ActProgTypeLib.dll" Pack="true" PackagePath="lib/net9.0/" />
+    <None Include="..\..\Dll\Mitsubishi\Interop.ActSupportMsg64Lib.dll" Pack="true" PackagePath="lib/net9.0/" />
+    <None Include="..\..\Dll\Mitsubishi\Interop.ActSupportMsgLib.dll" Pack="true" PackagePath="lib/net9.0/" />
 
     <None Include="README.md" Pack="true" PackagePath="\" />
+
+    <!-- 运行布局 targets：消费项目构建/发布时把 6 个 RCW 复制到输出目录（替代旧 HintPath 的复制行为） -->
+    <None Include="build\Mitsubishi.MxComponent.Interop.targets" Pack="true" PackagePath="build/" />
   </ItemGroup>
 
 </Project>

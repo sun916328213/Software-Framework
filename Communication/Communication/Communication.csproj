@@ -21,8 +21,6 @@
     <NoWarn>$(NoWarn);1591</NoWarn>
     <!-- Pack 后执行 SDK 自带的包结构、目标框架与公开兼容性检查。 -->
     <EnablePackageValidation>true</EnablePackageValidation>
-    <!-- 厂商 DLL 的再分发需由发布方确认授权；内部包可显式设为 true。 -->
-    <IncludeMxComponentInteropInPackage>false</IncludeMxComponentInteropInPackage>
     <Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
 
@@ -34,28 +32,13 @@
     <PackageReference Include="Prism.Core" Version="8.1.97" />
     <PackageReference Include="System.IO.Ports" Version="8.0.0" />
     <PackageReference Include="System.IO.Pipelines" Version="10.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Interop.ActSupportMsg64Lib">
-      <HintPath>..\..\Dll\Mitsubishi\Interop.ActSupportMsg64Lib.dll</HintPath>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Interop.ActUtlType64Lib">
-      <HintPath>..\..\Dll\Mitsubishi\Interop.ActUtlType64Lib.dll</HintPath>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
+    <!-- P4：MX Component RCW 改由内部 NuGet 包提供（替代旧厂商 DLL 直引）；运行时仍限定 Windows x64。 -->
+    <PackageReference Include="Mitsubishi.MxComponent.Interop" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- NuGet 页面使用根目录 README，帮助使用方识别协议能力和平台限制。 -->
     <None Update="README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(IncludeMxComponentInteropInPackage)' == 'true'">
-    <!-- Interop 是主程序集的附加托管依赖；平台限制由 MX adapter 在连接前检查。 -->
-    <None Include="..\..\Dll\Mitsubishi\Interop.ActSupportMsg64Lib.dll" Pack="true" PackagePath="lib/net9.0/" />
-    <None Include="..\..\Dll\Mitsubishi\Interop.ActUtlType64Lib.dll" Pack="true" PackagePath="lib/net9.0/" />
   </ItemGroup>
 
 </Project>
