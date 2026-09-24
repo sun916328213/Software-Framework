@@ -6,12 +6,13 @@
     打包为独立 NuGet 包，供各工程通过 PackageReference 引用，替代手工 HintPath 拷贝。
   -->
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net9.0-windows</TargetFramework>
     <Platforms>AnyCPU</Platforms>
 
     <!-- 包元数据 -->
     <PackageId>Mitsubishi.MxComponent.Interop</PackageId>
-    <Version>5.0.0</Version>
+    <!-- 5.0.2：回退为标准 lib 引用（无 build targets）。dll 放 lib/net9.0/，消费方自动获得编译引用 + 运行时复制到 bin。 -->
+    <Version>5.0.2</Version>
     <Authors>sun_lei123</Authors>
     <Company>Software-Framework</Company>
     <Description>
@@ -41,9 +42,6 @@
     <None Include="..\..\Dll\Mitsubishi\Interop.ActSupportMsgLib.dll" Pack="true" PackagePath="lib/net9.0/" />
 
     <None Include="README.md" Pack="true" PackagePath="\" />
-
-    <!-- 运行布局 targets：消费项目构建/发布时把 6 个 RCW 复制到输出目录（替代旧 HintPath 的复制行为） -->
-    <None Include="build\Mitsubishi.MxComponent.Interop.targets" Pack="true" PackagePath="build/" />
   </ItemGroup>
 
 </Project>

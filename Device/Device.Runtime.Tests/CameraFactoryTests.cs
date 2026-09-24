@@ -10,7 +10,9 @@ namespace Device.Runtime.Tests;
 /// </summary>
 /// <remarks>
 /// 这些测试只创建尚未连接的相机实例，不访问相机硬件或启动厂商 SDK 数据流。
+/// 与运行时守卫测试同集合串行执行，避免进程级守卫状态互相干扰。
 /// </remarks>
+[Collection("RuntimePlatformGuard")]
 public sealed class CameraFactoryTests
 {
     private static readonly string[] ExpectedDriverIds =

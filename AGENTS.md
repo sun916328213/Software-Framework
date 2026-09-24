@@ -46,7 +46,7 @@ WPF 工业自动化控制框架。多模块解决方案（主解决方案 `Frame
 
 - 主栈统一 `net9.0-windows7.0`（WPF 宿主、控件、演示程序）；纯逻辑/运行时库用 `net9.0`（不带 `-windows`，如 FlowEditor.Runtime、CommunicationNew、WPFCustomControls.PropertyGrid.Core）。
 - `UseWPF=true` 或 `OutputType=WinExe` 的 WPF 项目 Must 使用 `-windows` TFM。
-- 平台统一 `AnyCPU`：csproj 内 `<Platform>AnyCPU</Platform>`、sln 平台映射全部指向 `Any CPU`。不应新增 x64/x86 项目平台（SDK 风格项目需在 csproj 显式声明 `<ProjectConfigurations>` 才支持）。位宽由 `<PlatformTarget>` 决定。
+- 平台统一 `AnyCPU`：csproj 内 `<Platform>AnyCPU</Platform>`、sln 平台映射全部指向 `Any CPU`。不应新增 x64/x86 项目平台（SDK 风格项目需在 csproj 显式声明 `<ProjectConfigurations>` 才支持）。位宽由 `<PlatformTarget>` 决定。不得通过 `PlatformTarget=x64` 绕过 AnyCPU 约定；厂商 SDK 位数限制在运行时检查并给出诊断。
 - 新增项目时：TFM 按上述规则选、平台复制现有 AnyCPU 写法、并在对应 sln 补齐三个平台映射（Debug|Any CPU / Release|Any CPU 的 ActiveCfg 与 Build.0）。
 
 ## 模块与依赖红线

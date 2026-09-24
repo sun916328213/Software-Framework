@@ -9,8 +9,6 @@
     <ApplicationIcon>Resources\图标.ico</ApplicationIcon>
     <LangVersion>13.0</LangVersion>
     <UseWPF>true</UseWPF>
-    <!-- P5：产线使用 MX Component 64-bit 后端，最终进程必须为 x64；solution 平台映射保持 AnyCPU 不动。 -->
-    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Config\Flow\StartupFlow\01_初始化控件.cs" />

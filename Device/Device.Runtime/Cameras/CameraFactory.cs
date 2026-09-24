@@ -4,6 +4,7 @@ using Device.Runtime.Cameras.Basler;
 using Device.Runtime.Cameras.Dahua;
 using Device.Runtime.Cameras.Hik;
 using Device.Runtime.Cameras.ITek;
+using Device.Runtime.Common;
 
 namespace Device.Runtime.Cameras;
 
@@ -29,27 +30,32 @@ public sealed class CameraFactory : ICameraFactory
         {
             // 驱动标识与适配器绑定只在这里声明一次。下列 Lambda 仅保存延迟创建逻辑，
             // 只有调用方使用对应 DriverId 调用 Create 时才会实例化相机。
+            // Basler / Hik / Dahua 的厂商引用路径明确指向 64 位程序集（Dll/Camera 下的
+            // x64 / win64），在触碰厂商类型前先做运行时位数检查；I-Tek 证据不足，不硬编码。
             CreateRegistration(
                 "camera.hik.gige",
                 "Hikvision",
                 "GigE",
                 "海康 GigE 相机",
                 options => new HikGigeCamera(options),
-                HikCameraEnumerator.Enumerate),
+                HikCameraEnumerator.Enumerate,
+                () => RuntimePlatformGuard.Require64BitProcess("海康 GigE 相机")),
             CreateRegistration(
                 "camera.basler.gige",
                 "Basler",
                 "GigE",
                 "Basler GigE 相机",
                 options => new BaslerGigeCamera(options),
-                BaslerCameraEnumerator.Enumerate),
+                BaslerCameraEnumerator.Enumerate,
+                () => RuntimePlatformGuard.Require64BitProcess("Basler GigE 相机")),
             CreateRegistration(
                 "camera.dahua.gige",
                 "Dahua",
                 "GigE",
                 "大华 GigE 相机",
                 options => new DahuaGigeCamera(options),
-                DahuaCameraEnumerator.Enumerate),
+                DahuaCameraEnumerator.Enumerate,
+                () => RuntimePlatformGuard.Require64BitProcess("大华 GigE 相机")),
             CreateRegistration(
                 "camera.itek.gige",
                 "I-Tek",
@@ -79,6 +85,9 @@ public sealed class CameraFactory : ICameraFactory
         {
             if (registration.Descriptor.Id == options.DriverId)
             {
+                // 先执行可选的运行时校验（位数不满足抛 PlatformNotSupportedException，
+                // 明确是环境不满足而非驱动不存在），再实例化当前品牌相机。
+                registration.ValidateRuntime?.Invoke();
                 // 仅执行当前 DriverId 命中的一个创建委托，不会实例化其他品牌相机。
                 return registration.CreateCamera(options);
             }
@@ -100,13 +109,15 @@ public sealed class CameraFactory : ICameraFactory
         string model,
         string displayName,
         Func<CameraOptions, ICamera> createCamera,
-        Func<DeviceDriverId, IReadOnlyList<CameraDeviceDescriptor>> enumerate)
+        Func<DeviceDriverId, IReadOnlyList<CameraDeviceDescriptor>> enumerate,
+        Action? validateRuntime = null)
     {
         var id = new DeviceDriverId(driverId);
         return new Registration(
             new DeviceDriverDescriptor(id, DeviceCategory.Camera, brand, model, displayName),
             createCamera,
-            () => enumerate(id));
+            () => enumerate(id),
+            validateRuntime);
     }
 
     /// <inheritdoc />
@@ -131,6 +142,9 @@ public sealed class CameraFactory : ICameraFactory
             cancellationToken.ThrowIfCancellationRequested();
             try
             {
+                // 枚举前同样先做运行时校验；不满足的品牌记为单品牌失败，
+                // 不影响其余品牌的枚举（partial/failure 语义不变）。
+                registration.ValidateRuntime?.Invoke();
                 devices.AddRange(registration.Enumerate());
             }
             catch (Exception exception)
@@ -157,5 +171,6 @@ public sealed class CameraFactory : ICameraFactory
     private sealed record Registration(
         DeviceDriverDescriptor Descriptor,
         Func<CameraOptions, ICamera> CreateCamera,
-        Func<IReadOnlyList<CameraDeviceDescriptor>> Enumerate);
+        Func<IReadOnlyList<CameraDeviceDescriptor>> Enumerate,
+        Action? ValidateRuntime = null);
 }

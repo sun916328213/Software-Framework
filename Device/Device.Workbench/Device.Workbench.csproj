@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- Device.Runtime 强制 x64（厂商 SDK 原生 dll），宿主必须跟随。 -->
-    <Platform>x64</Platform>
+    <!-- P6：项目统一 AnyCPU；厂商 SDK 位数限制改由 Device.Runtime 在运行时检查，不再强制宿主架构。 -->
+    <Platform>AnyCPU</Platform>
     <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>

@@ -11,7 +11,9 @@ namespace Device.Runtime.Tests;
 /// <remarks>
 /// 这些测试只使用尚未连接的相机实例，执行路径在进入厂商 SDK 之前就返回，
 /// 因此不需要相机硬件或厂商运行时环境。
+/// 与运行时守卫测试同集合串行执行，避免进程级守卫状态互相干扰。
 /// </remarks>
+[Collection("RuntimePlatformGuard")]
 public sealed class CameraLifecycleTests
 {
     private static readonly string[] DriverIds =

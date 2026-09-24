@@ -32,8 +32,8 @@
     <PackageReference Include="Prism.Core" Version="8.1.97" />
     <PackageReference Include="System.IO.Ports" Version="8.0.0" />
     <PackageReference Include="System.IO.Pipelines" Version="10.0.2" />
-    <!-- P4：MX Component RCW 改由内部 NuGet 包提供（替代旧厂商 DLL 直引）；运行时仍限定 Windows x64。 -->
-    <PackageReference Include="Mitsubishi.MxComponent.Interop" Version="5.0.0" />
+    <!-- P4：MX Component RCW 由内部 NuGet 包提供（替代旧厂商 DLL 直引）；标准 lib 引用，运行时复制到输出；运行时仍限定 Windows x64。 -->
+    <PackageReference Include="Mitsubishi.MxComponent.Interop" Version="5.0.2" />
   </ItemGroup>
 
   <ItemGroup>
