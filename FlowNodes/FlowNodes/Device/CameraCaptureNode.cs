@@ -37,7 +37,7 @@ public class CameraCaptureNode : NodeModel
     public List<string> CameraNames => _cameras.Names.ToList();
 
     /// <summary>曝光时间,单位ms。</summary>
-    private int _exposure = 2000;
+    private int _exposure = 20;
     [NodeProperty(DisplayName = "曝光时间(ms)", Group = "1.采集参数", Order = 1, Description = "相机的曝光时间,单位ms")]
     public int Exposure
     {

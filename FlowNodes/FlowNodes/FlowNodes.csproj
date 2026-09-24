@@ -21,7 +21,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Communication\CommunicationNew\CommunicationNew.csproj" />
     <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
-    <ProjectReference Include="..\..\Device\Device\Device.csproj" />
     <ProjectReference Include="..\..\Device\Device.Core\Device.Core.csproj" />
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
     <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />
@@ -30,27 +29,6 @@
     <ProjectReference Include="..\..\Vision\Ctr_WPF_F48\Ctr_WPF_F48.csproj" />
     <ProjectReference Include="..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj" />
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Interop.ActProgType64Lib">
-      <HintPath>..\..\Dll\Mitsubishi\Interop.ActProgType64Lib.dll</HintPath>
-    </Reference>
-    <Reference Include="Interop.ActProgTypeLib">
-      <HintPath>..\..\Dll\Mitsubishi\Interop.ActProgTypeLib.dll</HintPath>
-    </Reference>
-    <Reference Include="Interop.ActSupportMsg64Lib">
-      <HintPath>..\..\Dll\Mitsubishi\Interop.ActSupportMsg64Lib.dll</HintPath>
-    </Reference>
-    <Reference Include="Interop.ActSupportMsgLib">
-      <HintPath>..\..\Dll\Mitsubishi\Interop.ActSupportMsgLib.dll</HintPath>
-    </Reference>
-    <Reference Include="Interop.ActUtlType64Lib">
-      <HintPath>..\..\Dll\Mitsubishi\Interop.ActUtlType64Lib.dll</HintPath>
-    </Reference>
-    <Reference Include="Interop.ActUtlTypeLib">
-      <HintPath>..\..\Dll\Mitsubishi\Interop.ActUtlTypeLib.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

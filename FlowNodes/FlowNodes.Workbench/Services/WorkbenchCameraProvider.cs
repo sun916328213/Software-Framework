@@ -9,9 +9,10 @@ namespace FlowNodes.Workbench.Services;
 /// </summary>
 /// <remarks>
 /// “怎样按名称找到相机”是宿主的组合职责，不是设备领域契约，因此这个类放在工作台而不是 Device.Core。
-/// 相机实例在节点第一次按名称取用时才创建，构造过程和启动路径都不枚举硬件、不连接硬件。
+/// 它同时是缓存相机实例的所有者：相机在节点第一次按名称取用时才创建，由本类在释放时统一断开。
+/// 生命周期写法与 Device.Drivers 的驱动基类保持一致（互锁标记 + 幂等释放）。
 /// </remarks>
-public sealed class WorkbenchCameraProvider : ICameraProvider
+public sealed class WorkbenchCameraProvider : ICameraProvider, IAsyncDisposable
 {
     /// <summary>
     /// 工作台演示配置；真实宿主应改为从自己的配置源读取相机配置。
@@ -27,7 +28,9 @@ public sealed class WorkbenchCameraProvider : ICameraProvider
     ];
 
     private readonly ICameraFactory _factory;
+    private readonly object _gate = new();
     private readonly Dictionary<string, ICamera> _cameras = new(StringComparer.OrdinalIgnoreCase);
+    private int _disposeStarted;
 
     /// <summary>创建提供器；此时不创建任何相机实例。</summary>
     /// <param name="factory">按驱动标识创建相机的工厂。</param>
@@ -48,18 +51,51 @@ public sealed class WorkbenchCameraProvider : ICameraProvider
     /// <inheritdoc />
     public ICamera Get(string name)
     {
-        if (_cameras.TryGetValue(name, out var camera))
+        // 查配置与创建实例放在同一把锁内，保证并发按同一个名称取用时不会创建出两台相机。
+        lock (_gate)
+        {
+            ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposeStarted) != 0, this);
+
+            if (_cameras.TryGetValue(name, out var camera))
+                return camera;
+
+            var options = Array.Find(
+                DemoConfigurations,
+                x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+
+            if (options is null)
+                throw new KeyNotFoundException($"没有名称为 '{name}' 的相机配置。");
+
+            camera = _factory.Create(options);
+            _cameras[name] = camera;
             return camera;
+        }
+    }
 
-        var options = Array.Find(
-            DemoConfigurations,
-            x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+    /// <summary>断开并释放全部缓存的相机；重复调用保持幂等。</summary>
+    /// <returns>释放完成的异步操作。</returns>
+    public async ValueTask DisposeAsync()
+    {
+        if (Interlocked.Exchange(ref _disposeStarted, 1) != 0)
+            return;
 
-        if (options is null)
-            throw new KeyNotFoundException($"没有名称为 '{name}' 的相机配置。");
+        ICamera[] cameras;
+        lock (_gate)
+        {
+            cameras = _cameras.Values.ToArray();
+            _cameras.Clear();
+        }
 
-        camera = _factory.Create(options);
-        _cameras[name] = camera;
-        return camera;
+        foreach (var camera in cameras)
+        {
+            try
+            {
+                await camera.DisposeAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                // 单台相机释放失败不能中断其余相机的释放，也不应向退出流程再抛。
+            }
+        }
     }
 }

@@ -2,7 +2,6 @@ using System.Reflection;
 using System.Windows;
 using CommunicationNew;
 using DataManager;
-using Device;
 using Device.Core.Cameras;
 using Device.Drivers.Cameras;
 using FlowEditor;
@@ -39,14 +38,36 @@ public partial class App : PrismApplication
 
     protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
     {
-        // 节点构造依赖（CamManager 等）由这些模块提供单例，
+        // 节点构造所需的单例由这些模块与 RegisterTypes 共同提供，
         // 缺失会导致含 DI 构造参数的节点无法物化。
         moduleCatalog.AddModule<DataManagerModule>();
         moduleCatalog.AddModule<CommunicationNewModule>();
-        moduleCatalog.AddModule<DeviceModule>();
         moduleCatalog.AddModule<WPFCustomControlsModule>();
         moduleCatalog.AddModule<FlowEditorModule>();
         moduleCatalog.AddModule<ScriptEditorModule>();
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        // WorkbenchCameraProvider 是缓存相机的所有者，容器不会隐式释放 IAsyncDisposable，
+        // 因此在退出时显式收尾，避免厂商 SDK 句柄随进程退出而被强杀。
+        try
+        {
+            if (Container.Resolve<ICameraProvider>() is IAsyncDisposable disposable)
+            {
+                // 退出入口没有可 await 的上下文；Provider 内部全部 ConfigureAwait(false)，
+                // 不会回调 UI 线程，因此这里的同步等待不会死锁。
+#pragma warning disable VSTHRD002
+                disposable.DisposeAsync().AsTask().GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
+            }
+        }
+        catch
+        {
+            // 退出阶段的释放失败不应阻止进程退出。
+        }
+
+        base.OnExit(e);
     }
 
     protected override void OnInitialized()
