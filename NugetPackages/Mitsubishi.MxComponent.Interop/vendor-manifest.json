@@ -1,0 +1,13 @@
+{
+  "$comment": "Vendor binary traceability manifest: records allowed file names, file versions and SHA-256 only; vendor binaries themselves are NOT stored. Dll/Mitsubishi is not in Git and must come from legitimate MX installation media or a controlled binary store. Verify with verify-vendor-manifest.ps1 before pack; any mismatch fails the pack.",
+  "vendorProduct": "Mitsubishi MX Component V5",
+  "vendorVersion": "5.0.0",
+  "files": [
+    { "name": "Interop.ActUtlType64Lib.dll", "sha256": "6018df3e623636f49ab9c294b07df7a10f9c19eeb74f4a0a9bb27805f6992e84", "fileVersion": "5.0.0.0" },
+    { "name": "Interop.ActUtlTypeLib.dll", "sha256": "61480becdcbed7a67b05241076bf14f1eb8b0e1a20b38ddff686cb9ecd5381a3", "fileVersion": "1.0.0.0" },
+    { "name": "Interop.ActProgType64Lib.dll", "sha256": "5dcb019884509f933ad636c2c7f59fa0d9552538d2e641b6651fefcd9db0b1a3", "fileVersion": "5.0.0.0" },
+    { "name": "Interop.ActProgTypeLib.dll", "sha256": "ac92231c29abbacd6518c7781328d05557e9e424beda22d26e3ef782d080b576", "fileVersion": "1.0.0.0" },
+    { "name": "Interop.ActSupportMsg64Lib.dll", "sha256": "b0f45b2e3168ae20a136336027be58e7c778a8d54879411b95de238a6e8a4ebd", "fileVersion": "5.0.0.0" },
+    { "name": "Interop.ActSupportMsgLib.dll", "sha256": "be99c38e88acf4224cee3c8ce2fd3accf855789f950d52006314ea9a4644d1cb", "fileVersion": "1.0.0.0" }
+  ]
+}

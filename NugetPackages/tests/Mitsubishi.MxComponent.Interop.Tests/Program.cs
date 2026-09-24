@@ -17,3 +17,23 @@ var types = new Type[]
     typeof(ActSupportMsgClass),
 };
 Console.WriteLine(string.Join(", ", types.Select(t => t.Name)));
+
+// 输出布局断言：6 个 RCW 必须作为 NuGet 运行时资产出现在输出目录。
+// 缺失即验收失败（run consumer 可失败）。
+string[] expected =
+[
+    "Interop.ActUtlType64Lib.dll",
+    "Interop.ActUtlTypeLib.dll",
+    "Interop.ActProgType64Lib.dll",
+    "Interop.ActProgTypeLib.dll",
+    "Interop.ActSupportMsg64Lib.dll",
+    "Interop.ActSupportMsgLib.dll",
+];
+
+foreach (var file in expected)
+{
+    if (!File.Exists(Path.Combine(AppContext.BaseDirectory, file)))
+        throw new FileNotFoundException($"NuGet runtime asset missing: {file}");
+}
+
+Console.WriteLine("runtime assets ok: 6/6");

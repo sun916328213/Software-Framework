@@ -21,7 +21,7 @@
     <NoWarn>$(NoWarn);1591</NoWarn>
     <!-- Pack 后执行 SDK 自带的包结构、目标框架与公开兼容性检查。 -->
     <EnablePackageValidation>true</EnablePackageValidation>
-    <Platforms>AnyCPU;ARM64</Platforms>
+    <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,8 +32,8 @@
     <PackageReference Include="Prism.Core" Version="8.1.97" />
     <PackageReference Include="System.IO.Ports" Version="8.0.0" />
     <PackageReference Include="System.IO.Pipelines" Version="10.0.2" />
-    <!-- P4：MX Component RCW 由内部 NuGet 包提供（替代旧厂商 DLL 直引）；标准 lib 引用，运行时复制到输出；项目 AnyCPU，运行时仍限定 Windows x64（由 adapter 运行时守卫负责）。 -->
-    <PackageReference Include="Mitsubishi.MxComponent.Interop" Version="5.0.3" />
+    <!-- P4：MX Component RCW 由内部 NuGet 包提供（替代旧厂商 DLL 直引）；标准 lib 引用，运行时复制到输出；项目 AnyCPU，运行时限定 Windows x64（由 adapter 运行时守卫负责）。 -->
+    <PackageReference Include="Mitsubishi.MxComponent.Interop" Version="5.0.0-internal.3" />
   </ItemGroup>
 
   <ItemGroup>

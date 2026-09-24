@@ -45,10 +45,10 @@ internal sealed class MxComponentMcClientAdapter : IMcClientAdapter
             {
                 throw new PlatformNotSupportedException("MX Component 直接模式仅支持 Windows。");
             }
-            if (!Environment.Is64BitProcess)
+            if (RuntimeInformation.ProcessArchitecture != Architecture.X64)
             {
                 throw new PlatformNotSupportedException(
-                    "当前引用的是 MX Component 64 位 Interop，宿主进程必须以 x64 运行。");
+                    "当前 MX Component adapter 使用 64 位 Interop，仅支持 Windows x64 进程。");
             }
 
             State = ConnectionState.Connecting;

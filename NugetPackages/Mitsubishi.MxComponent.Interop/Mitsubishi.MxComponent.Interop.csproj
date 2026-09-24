@@ -12,8 +12,10 @@
 
     <!-- 包元数据 -->
     <PackageId>Mitsubishi.MxComponent.Interop</PackageId>
-    <!-- 内部包装版本：仅表示本次内部封装修订，不等同于 MX Component 厂商产品版本。详见 README。 -->
-    <Version>5.0.3</Version>
+    <!-- 内部包装版本：源 RCW 属于厂商 5.0.0；internal.3 是第三次内部包装修订。详见 README。 -->
+    <Version>5.0.0-internal.3</Version>
+    <!-- 厂商来源版本（MX Component 产品/RCW 来源版本），与内部包装修订解耦。 -->
+    <MxComponentVendorVersion>5.0.0</MxComponentVendorVersion>
     <Authors>sun_lei123</Authors>
     <Company>Software-Framework</Company>
     <Description>
@@ -30,7 +32,6 @@
     <!-- 纯打包：不打入本项目的编译输出，不生成程序集 -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
 
   <!-- 把 Dll\Mitsubishi\ 下的 6 个 dll 作为包内容打进 lib/net9.0/（标准 lib 引用，无自定义 build targets；

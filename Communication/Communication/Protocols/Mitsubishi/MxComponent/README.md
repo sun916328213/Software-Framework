@@ -2,7 +2,7 @@
 
 此目录包含可选的 MX Component 客户端 adapter。默认 MC 实现位于相邻的 `Slmp` 目录，两者通过上级目录中的 `IMcClientAdapter` 并存。
 
-MX Component V5 64 位 RCW 由内部 NuGet 包 `Mitsubishi.MxComponent.Interop`（5.0.0）提供，构建时自动复制到输出目录。`McParam.Backend = McClientBackend.MxComponent` 时，由内部 `MxComponentMcClientAdapter` 直接调用 `ActUtlType64Class`；第三方类型不会暴露到公共接口。
+MX Component V5 64 位 RCW 由内部 NuGet 包 `Mitsubishi.MxComponent.Interop`（5.0.0-internal.3）提供，构建时自动复制到输出目录。`McParam.Backend = McClientBackend.MxComponent` 时，由内部 `MxComponentMcClientAdapter` 直接调用 `ActUtlType64Class`；第三方类型不会暴露到公共接口。
 
 `MxLogicalStationNumber` 必须是 Communication Setting Utility 可注册的 0–1023；adapter 会在创建 COM 对象前验证该范围。
 

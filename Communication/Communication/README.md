@@ -27,7 +27,7 @@ CommunicationNew 是面向工业通信场景的 .NET 9 通信库。公共能力�
 
 ## 三菱 MX Component
 
-MX Component 直接模式仅支持 Windows x64，并要求目标机器正确安装和授权 Mitsubishi MX Component。RCW 由内部 NuGet 包 `Mitsubishi.MxComponent.Interop`（5.0.0）提供，构建/发布时自动复制到输出目录；本包不再自行打包厂商 Interop DLL。
+MX Component 直接模式仅支持 Windows x64，并要求目标机器正确安装和授权 Mitsubishi MX Component。RCW 由内部 NuGet 包 `Mitsubishi.MxComponent.Interop`（5.0.0-internal.3）提供，构建/发布时自动复制到输出目录；本包不再自行打包厂商 Interop DLL。
 
 需要隔离同步 COM 调用或提供硬超时时，可使用项目中的 net48 x64 bridge 模式。
 

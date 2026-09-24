@@ -11,6 +11,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Mitsubishi.MxComponent.Interop" Version="5.0.3" />
+    <PackageReference Include="Mitsubishi.MxComponent.Interop" Version="5.0.0-internal.3" />
   </ItemGroup>
 </Project>
