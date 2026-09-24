@@ -1,10 +1,11 @@
 # Mitsubishi.MxComponent.Interop
 
-三菱 PLC **MX Component** 的 COM Interop 程序集（RCW）NuGet 包。
+三菱 PLC **MX Component** 的 COM Interop 程序集（RCW）内部 NuGet 包。
+本包为 Software-Framework 内部封装，**不代表 Mitsubishi 官方 NuGet**。
 
 ## 包含内容
 
-6 个托管 Interop 程序集，全部位于 `lib/net9.0/`（与正式 Communication 的 `net9.0` TFM 对齐；运行时仍限定 Windows x64，见下）：
+6 个托管 Interop 程序集，全部位于 `lib/net9.0/`（标准 lib 引用，无自定义 `build/*.targets`）：
 
 | 程序集 | 接口 | 位数 |
 |---|---|---|
@@ -15,34 +16,44 @@
 | `Interop.ActSupportMsg64Lib.dll` | 支持消息（ActSupportMsg） | 64 位 |
 | `Interop.ActSupportMsgLib.dll` | 支持消息（ActSupportMsg） | 32 位 |
 
+`lib/net9.0/` 下的程序集同时作为编译引用与运行时资产：消费方通过 `PackageReference`
+引用后自动获得编译解析，构建/发布时自动复制到输出目录。
+
 ## 使用方式
 
 ```xml
-<PackageReference Include="Mitsubishi.MxComponent.Interop" Version="5.0.0" />
+<PackageReference Include="Mitsubishi.MxComponent.Interop" Version="5.0.3" />
 ```
 
 引用后即可在代码中 `using` 对应的 Interop 命名空间，例如：
 
 ```csharp
-using Interop.ActUtlTypeLib;
-using Interop.ActUtlType64Lib;
+using ActUtlType64Lib;
+using ActSupportMsg64Lib;
 ```
 
-## 运行布局
+当前 `Communication` 的 MX adapter 仅使用其中 64 位类型
+（`ActUtlType64Lib` / `ActSupportMsg64Lib`）；其余 4 个作为通用内部二进制容器保留，
+供仓库内其他项目按需使用。
 
-包内 `build/Mitsubishi.MxComponent.Interop.targets` 会在消费项目构建/发布时把 6 个 RCW
-复制到输出目录（与旧 HintPath 引用的复制行为一致），运行时 COM 激活可直接找到它们。
+## 版本语义
 
-## 32 位 / 64 位选择
+- NuGet `Version`（如 `5.0.3`）是**内部包装版本**，仅表示本次内部封装修订。
+- MX Component 厂商产品版本 / RCW 文件版本另行记录，不再通过 `PackageVersion`
+  暗示两者完全相同。
 
-- 64 位进程使用 `Interop.*64Lib.dll` 程序集。
-- 32 位进程使用 `Interop.*Lib.dll`（无 64 后缀）程序集。
-- 两个程序集可同时被引用；运行时按进程位数加载对应的本机 COM 组件。
+## 平台与运行条件
+
+- 打包项目与消费项目统一 `AnyCPU`；本包不设置 `PlatformTarget=x64/x86`，
+  不新增 `x64/x86` solution platform。
+- 当前 `Communication` 的 MX adapter 仅在 **Windows 64 位进程**中可用；
+  非 Windows / 非 64 位进程由运行时守卫（`MxComponentMcClientAdapter` /
+  `RuntimePlatformGuard`）明确拒绝并给出可诊断错误，不通过 csproj 固定架构。
 
 ## 重要说明
 
-- 本包只封装托管 Interop 层（RCW），**运行机器必须安装三菱 MX Component 原生运行时**
-  （如 `ActUtlType.dll`、`ActProgType.dll` 等），并正确注册 COM 组件（通常是 64 位注册到
-  64 位注册表、32 位注册到 WOW64 注册表）。
-- 程序集来自三菱电机，版权归原厂商所有，**仅供内部项目使用，不得对外分发牟利**。
-- 包内版本号以 64 位程序集的 `v5.0.0` 为准。
+- 本包只封装托管 Interop 层（RCW），**目标机器仍需安装/授权三菱 MX Component
+  原生运行时**（如 `ActUtlType.dll`、`ActProgType.dll` 等），并正确注册 COM 组件
+  （通常是 64 位注册到 64 位注册表、32 位注册到 WOW64 注册表）。
+- 程序集来自三菱电机，版权归原厂商所有，**仅供内部/私有 NuGet 源使用**。
+  厂商 RCW 的再分发权限须由实际许可证确认；未确认前不要公开发布到 nuget.org。

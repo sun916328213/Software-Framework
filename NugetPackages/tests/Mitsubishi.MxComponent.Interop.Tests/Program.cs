@@ -6,6 +6,7 @@ using ActProgTypeLib;
 using ActSupportMsgLib;
 
 // 仅触发编译引用，验证 6 个 RCW 命名空间的类型可被消费方解析。
+// 不创建 COM 对象，不依赖本机 MX Component 安装。
 var types = new Type[]
 {
     typeof(ActUtlType64Class),

@@ -6,13 +6,14 @@
     打包为独立 NuGet 包，供各工程通过 PackageReference 引用，替代手工 HintPath 拷贝。
   -->
   <PropertyGroup>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
+    <Platform>AnyCPU</Platform>
     <Platforms>AnyCPU</Platforms>
 
     <!-- 包元数据 -->
     <PackageId>Mitsubishi.MxComponent.Interop</PackageId>
-    <!-- 5.0.2：回退为标准 lib 引用（无 build targets）。dll 放 lib/net9.0/，消费方自动获得编译引用 + 运行时复制到 bin。 -->
-    <Version>5.0.2</Version>
+    <!-- 内部包装版本：仅表示本次内部封装修订，不等同于 MX Component 厂商产品版本。详见 README。 -->
+    <Version>5.0.3</Version>
     <Authors>sun_lei123</Authors>
     <Company>Software-Framework</Company>
     <Description>
@@ -32,7 +33,8 @@
     <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
 
-  <!-- 把 Dll\Mitsubishi\ 下的 6 个 dll 作为包内容打进 lib/net9.0/（与正式 Communication 的 net9.0 TFM 对齐；运行时仍限定 Windows+x64，见包 README） -->
+  <!-- 把 Dll\Mitsubishi\ 下的 6 个 dll 作为包内容打进 lib/net9.0/（标准 lib 引用，无自定义 build targets；
+       与 Communication 的 net9.0 / AnyCPU 对齐；Windows + 64 位属于运行条件，由消费方运行时守卫负责，见包 README） -->
   <ItemGroup>
     <None Include="..\..\Dll\Mitsubishi\Interop.ActUtlType64Lib.dll" Pack="true" PackagePath="lib/net9.0/" />
     <None Include="..\..\Dll\Mitsubishi\Interop.ActUtlTypeLib.dll" Pack="true" PackagePath="lib/net9.0/" />

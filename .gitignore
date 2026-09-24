@@ -31,6 +31,8 @@ artifacts/
 packages/
 *.nuget.props
 *.nuget.targets
+# 内部本地 feed 为本机/CI 临时产物，不入库
+NugetPackages/.feed/
 
 # 备份文件
 *.bak
