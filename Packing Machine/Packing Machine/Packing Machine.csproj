@@ -9,6 +9,8 @@
     <ApplicationIcon>Resources\图标.ico</ApplicationIcon>
     <LangVersion>13.0</LangVersion>
     <UseWPF>true</UseWPF>
+    <!-- P5：产线使用 MX Component 64-bit 后端，最终进程必须为 x64；solution 平台映射保持 AnyCPU 不动。 -->
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Config\Flow\StartupFlow\01_初始化控件.cs" />
@@ -53,38 +55,15 @@
          ⇒ 那行 Assembly.Load 会在运行时抛 FileNotFoundException。
          显式声明后，FlowNodes.dll 由本工程自己保证，不再依赖上游传递。 -->
     <ProjectReference Include="..\..\FlowNodes\FlowNodes\FlowNodes.csproj" />
+    <!-- P5：PLC 新实现直接依赖 Communication，不再经 WPFControl/FlowNodes 传递引用。 -->
+    <ProjectReference Include="..\..\Communication\Communication\Communication.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Prism.Core" Version="8.1.97" />
     <PackageReference Include="Prism.DryIoc" Version="8.1.97" />
     <PackageReference Include="Prism.Wpf" Version="8.1.97" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Interop.ActProgType64Lib">
-      <HintPath>..\..\Dll\Mitsubishi\Interop.ActProgType64Lib.dll</HintPath>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Interop.ActProgTypeLib">
-      <HintPath>..\..\Dll\Mitsubishi\Interop.ActProgTypeLib.dll</HintPath>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Interop.ActSupportMsg64Lib">
-      <HintPath>..\..\Dll\Mitsubishi\Interop.ActSupportMsg64Lib.dll</HintPath>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Interop.ActSupportMsgLib">
-      <HintPath>..\..\Dll\Mitsubishi\Interop.ActSupportMsgLib.dll</HintPath>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Interop.ActUtlType64Lib">
-      <HintPath>..\..\Dll\Mitsubishi\Interop.ActUtlType64Lib.dll</HintPath>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Interop.ActUtlTypeLib">
-      <HintPath>..\..\Dll\Mitsubishi\Interop.ActUtlTypeLib.dll</HintPath>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-  </ItemGroup>
+  <!-- P5：Mitsubishi Interop 改由 Communication → Mitsubishi.MxComponent.Interop 统一管理，业务宿主不再直接感知厂商 Interop。 -->
   <ItemGroup>
     <None Include="Config\Alarm.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -96,6 +75,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Config\PLCIO.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\PLC.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Config\SecsJson\CEID\CEID.csv">
@@ -114,9 +96,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\WPFControl\WPFControl\WPFControl.csproj" />
-  </ItemGroup>
+  <!-- P5：删除末尾重复的第二条 WPFControl 引用（与第 31 行重复）。 -->
   <ItemGroup>
     <None Update="Config\LogConfig.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -125,6 +125,14 @@ namespace Packing_Machine
 
          
             containerRegistry.RegisterSingleton<AutoProcess>();
+            // P5：PLC 最小可用恢复。点位表非法时 PlcTagCatalog 构造即抛错（启动即失败）；
+            // PLC.json 缺失时使用默认连接配置，连接阶段再反映真实状态。
+            var plcConfigDir = System.IO.Path.Combine(System.AppContext.BaseDirectory, "Config");
+            containerRegistry.RegisterInstance(
+                Packing_Machine.Infra.Plc.PlcOptions.Load(System.IO.Path.Combine(plcConfigDir, "PLC.json")));
+            containerRegistry.RegisterInstance(
+                new Packing_Machine.Infra.Plc.PlcTagCatalog(System.IO.Path.Combine(plcConfigDir, "PLCIO.csv")));
+            containerRegistry.RegisterSingleton<Packing_Machine.Infra.Plc.PlcService>();
             containerRegistry.RegisterSingleton<PLCTool>();
             containerRegistry.RegisterSingleton<VisionTool>();
             containerRegistry.RegisterSingleton<VisionViewModel>();
@@ -176,6 +184,16 @@ namespace Packing_Machine
 
         protected override void OnExit(ExitEventArgs e)
         {
+            // P5：先停 PLC 心跳并断开，释放 COM 句柄；不能只依赖进程强制退出。
+            try
+            {
+                Container.Resolve<PLCTool>()?.StopRefresh();
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"退出时停止 PLC 失败: {ex.Message}");
+            }
+
             // 确保在应用程序主线程上释放资源
             if (this.Dispatcher.CheckAccess())
             {

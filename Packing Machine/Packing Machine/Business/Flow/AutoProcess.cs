@@ -163,9 +163,8 @@ namespace Packing_Machine.Business.Flow
                     }
 
 
-                    // 旧 MCHelper.IsConnected 已随旧通信栈删除；
-                    // Packing Machine 的 PLC 尚未迁移到 Communication.Core，状态暂按 Offline 处理。
-                    var plcstatus = ELinkStatus.Offline;
+                    // P5：PLC 状态改为真实连接状态；断线后自动反映 Offline。
+                    var plcstatus = _PLCMethod.IsOnline ? ELinkStatus.Online : ELinkStatus.Offline;
                     if (plcstatus == ELinkStatus.Online)
                     {
                         await RefreshSystem();
