@@ -8,13 +8,13 @@ using Device.Core.Scanners;
 using Device.Controls.Services;
 using Device.Controls.ViewModels;
 using Device.Controls.Views;
-using Device.Drivers.Cameras;
-using Device.Drivers.FrameGrabbers;
-using Device.Drivers.LabelPrinting;
-using Device.Drivers.Lights;
-using Device.Drivers.Printers;
-using Device.Drivers.Rfid;
-using Device.Drivers.Scanners;
+using Device.Runtime.Cameras;
+using Device.Runtime.FrameGrabbers;
+using Device.Runtime.LabelPrinting;
+using Device.Runtime.Lights;
+using Device.Runtime.Printers;
+using Device.Runtime.Rfid;
+using Device.Runtime.Scanners;
 using Device.Workbench.Views;
 using Extension.UI.Theme;
 using Prism.DryIoc;
@@ -40,7 +40,7 @@ namespace Device.Workbench
             containerRegistry.RegisterSingleton<ThemeService>();
 
             // 这里只注册统一工厂，不创建设备实例；具体实例由各 Workspace 按用户所选驱动延迟创建。
-            // 只有宿主引用 Device.Drivers，Controls 始终面向 Device.Core 契约工作。
+            // 只有宿主引用 Device.Runtime，Controls 始终面向 Device.Core 契约工作。
             containerRegistry.RegisterInstance<ICameraFactory>(new CameraFactory());
             containerRegistry.RegisterInstance<IFrameGrabberFactory>(new FrameGrabberFactory());
             containerRegistry.RegisterInstance<ILightControllerFactory>(new LightControllerFactory());

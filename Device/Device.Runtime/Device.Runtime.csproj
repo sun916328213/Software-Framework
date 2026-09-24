@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Device.Runtime</AssemblyName>
+    <RootNamespace>Device.Runtime</RootNamespace>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- 类库不决定最终进程架构，由引用 Device.Runtime 的应用选择 AnyCPU 或 x64。 -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <!-- 部分厂商只提供 64 位程序集；该差异由最终应用的平台选择负责，类库构建时不重复报告 MSB3270。 -->
+    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Device.Core\Device.Core.csproj" />
+    <!-- CommunicationNew 也引用可选的 64 位 Interop；仅关闭架构提示，不改变它的目标平台。 -->
+    <ProjectReference Include="..\..\Communication\CommunicationNew\CommunicationNew.csproj"
+                      AdditionalProperties="ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch=None" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Basler.Pylon">
+      <HintPath>..\..\Dll\Camera\Basler\x64\Basler.Pylon.dll</HintPath>
+    </Reference>
+    <Reference Include="MvCamCtrl.Net">
+      <HintPath>..\..\Dll\Camera\Hik\win64\MvCamCtrl.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="MVSDK_Net">
+      <HintPath>..\..\Dll\Camera\Dahua\x64\MVSDK_Net.dll</HintPath>
+    </Reference>
+    <Reference Include="IKapC.NET">
+      <HintPath>..\..\Dll\Camera\I-Tek\IKapC.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="SdkApi_Core">
+      <HintPath>..\..\Dll\Print\Zebra\SdkApi_Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Matrox.MatroxImagingLibrary">
+      <HintPath>..\..\Dll\CamlinkCard\Matrox\Matrox.MatroxImagingLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="Seagull.BarTender.Print">
+      <HintPath>..\..\Dll\Print\Bartender\Seagull.BarTender.Print.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="native\CSTControllerDll.dll" CopyToOutputDirectory="PreserveNewest" TargetPath="CSTControllerDll.dll" />
+    <None Update="native\OPTController.dll" CopyToOutputDirectory="PreserveNewest" TargetPath="OPTController.dll" />
+  </ItemGroup>
+</Project>

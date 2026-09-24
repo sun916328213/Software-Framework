@@ -8,7 +8,7 @@ namespace Device.Controls.Services;
 /// <summary>
 /// 设备测试页流程基类（对标 CameraWorkspace 的通用部分）：
 /// 驱动目录填充、档案读盘/兜底、按指纹创建设备实例、连接/断开、ConfigManagerView 回调。
-/// 只依赖 Device.Core 抽象与工厂契约，不引用 Device.Drivers。
+/// 只依赖 Device.Core 抽象与工厂契约，不引用 Device.Runtime。
 /// </summary>
 public abstract class DeviceWorkspaceBase<TModel, TProfile>
     where TModel : DevicePageModelBase<TProfile>, new()

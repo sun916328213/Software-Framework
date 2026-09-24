@@ -10,7 +10,7 @@ namespace FlowNodes.Workbench.Services;
 /// <remarks>
 /// “怎样按名称找到相机”是宿主的组合职责，不是设备领域契约，因此这个类放在工作台而不是 Device.Core。
 /// 它同时是缓存相机实例的所有者：相机在节点第一次按名称取用时才创建，由本类在释放时统一断开。
-/// 生命周期写法与 Device.Drivers 的驱动基类保持一致（互锁标记 + 幂等释放）。
+/// 生命周期写法与 Device.Runtime 的设备实现生命周期保持一致（互锁标记 + 幂等释放）。
 /// </remarks>
 public sealed class WorkbenchCameraProvider : ICameraProvider, IAsyncDisposable
 {

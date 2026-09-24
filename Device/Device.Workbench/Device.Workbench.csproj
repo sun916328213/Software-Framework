@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- Device.Drivers 强制 x64（厂商 SDK 原生 dll），宿主必须跟随。 -->
+    <!-- Device.Runtime 强制 x64（厂商 SDK 原生 dll），宿主必须跟随。 -->
     <Platform>x64</Platform>
     <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
     <OutputType>WinExe</OutputType>
@@ -22,7 +22,7 @@
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
     <ProjectReference Include="..\Device.Controls\Device.Controls.csproj" />
-    <ProjectReference Include="..\Device.Drivers\Device.Drivers.csproj" />
+    <ProjectReference Include="..\Device.Runtime\Device.Runtime.csproj" />
   </ItemGroup>
 
 </Project>

@@ -113,13 +113,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Tests", "FlowEdi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Device.Core", "Device\Device.Core\Device.Core.csproj", "{21DD5D98-4A15-6572-4B49-DF6E4319020A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Device.Drivers", "Device\Device.Drivers\Device.Drivers.csproj", "{A781384A-9E1A-A1EB-5831-3D030063EBF1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Device.Runtime", "Device\Device.Runtime\Device.Runtime.csproj", "{A781384A-9E1A-A1EB-5831-3D030063EBF1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Device.Workbench", "Device\Device.Workbench\Device.Workbench.csproj", "{BA7EF060-848B-A0AF-7887-650BCC7AF66F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Device.Controls", "Device\Device.Controls\Device.Controls.csproj", "{A3DFEDB4-3C97-9DE8-E63E-E18A1844825D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Device.Drivers.Tests", "Device\Device.Drivers.Tests\Device.Drivers.Tests.csproj", "{81C9C456-604E-F7B7-B888-B9C85DC7785B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Device.Runtime.Tests", "Device\Device.Runtime.Tests\Device.Runtime.Tests.csproj", "{81C9C456-604E-F7B7-B888-B9C85DC7785B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Device.Core.Tests", "Device\Device.Core.Tests\Device.Core.Tests.csproj", "{C7B056DE-AE8C-D487-F464-E4608513CAD7}"
 EndProject

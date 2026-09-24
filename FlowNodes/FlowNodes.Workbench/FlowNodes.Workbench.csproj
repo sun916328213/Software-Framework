@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- 解决方案平台保持 AnyCPU；Device.Drivers 带来的厂商 SDK 只有 64 位，
+    <!-- 解决方案平台保持 AnyCPU；Device.Runtime 带来的厂商 SDK 只有 64 位，
          因此这里单独指定最终进程为 x64，避免真实相机测试时加载原生 DLL 失败。 -->
     <Platform>AnyCPU</Platform>
     <PlatformTarget>x64</PlatformTarget>
@@ -27,7 +27,7 @@
     <ProjectReference Include="..\..\Communication\CommunicationNew\CommunicationNew.csproj" />
     <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
     <ProjectReference Include="..\..\Device\Device.Core\Device.Core.csproj" />
-    <ProjectReference Include="..\..\Device\Device.Drivers\Device.Drivers.csproj" />
+    <ProjectReference Include="..\..\Device\Device.Runtime\Device.Runtime.csproj" />
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
     <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />
     <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />

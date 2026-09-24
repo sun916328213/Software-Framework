@@ -11,7 +11,7 @@ namespace Device.Controls.Services;
 /// 相机测试页实际流程：档案读盘/兜底、驱动目录、实例指纹重建、连接/断开都在
 /// <see cref="DeviceWorkspaceBase{TModel, TProfile}"/>，此处只留相机专属：
 /// 实时预览循环（100ms 定时器）、单帧抓图回填。
-/// 只依赖 Device.Core 抽象与工厂契约，不引用 Device.Drivers。
+/// 只依赖 Device.Core 抽象与工厂契约，不引用 Device.Runtime。
 /// </summary>
 public sealed class CameraWorkspace : DeviceWorkspaceBase<CameraPageModel, CameraProfile>
 {
