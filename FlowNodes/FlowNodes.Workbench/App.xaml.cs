@@ -3,8 +3,12 @@ using System.Windows;
 using CommunicationNew;
 using DataManager;
 using Device;
+using Device.Core.Cameras;
+using Device.Drivers.Cameras;
 using FlowEditor;
 using FlowEditor.Interfaces;
+using FlowNodes.Device;
+using FlowNodes.Workbench.Services;
 using Prism.DryIoc;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -27,6 +31,10 @@ public partial class App : PrismApplication
 
     protected override void RegisterTypes(IContainerRegistry containerRegistry)
     {
+        // “相机采集”节点只依赖 ICameraProvider 与 Device.Core 的 ICamera；
+        // 品牌工厂与按名称查找都由宿主在这里接好，节点不会接触厂商 SDK 类型。
+        containerRegistry.RegisterSingleton<ICameraFactory, CameraFactory>();
+        containerRegistry.RegisterSingleton<ICameraProvider, WorkbenchCameraProvider>();
     }
 
     protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)

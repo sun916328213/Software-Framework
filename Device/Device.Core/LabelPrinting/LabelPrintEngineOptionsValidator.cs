@@ -6,6 +6,9 @@ namespace Device.Core.LabelPrinting;
 public static class LabelPrintEngineOptionsValidator
 {
     /// <summary>验证配置；失败时一次返回全部问题。</summary>
+    /// <param name="options">待验证的标签打印引擎配置。</param>
+    /// <exception cref="ArgumentNullException"><paramref name="options"/> 为 <see langword="null"/>。</exception>
+    /// <exception cref="LabelPrintEngineConfigurationException">配置包含一个或多个错误。</exception>
     public static void Validate(LabelPrintEngineOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);

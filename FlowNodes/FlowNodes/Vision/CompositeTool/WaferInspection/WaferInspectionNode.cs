@@ -1,6 +1,6 @@
 using DPLibrary_Base_F48.Tools;
 using DPLibrary_Halcon_F48.Tools.Blob;
-using Device.Camera.Definition;
+using Device.Core.Cameras;
 using FlowEditor.Core;
 using FlowNodes.Vision.SingleTool.Definition;
 using HalconDotNet;
@@ -52,11 +52,11 @@ namespace FlowNodes.Vision.CompositeTool.WaferInspection
 
         #region 1. 输入
 
-        /// <summary>可选：直接接收"相机采集"节点的图像输出（ImageData），优先于基类输入图像端口。</summary>
+        /// <summary>可选：直接接收"相机采集"节点的图像输出（ImageFrame），优先于基类输入图像端口。</summary>
         [NodeProperty(DisplayName = "相机图像", Group = "1.基础信息", Order = 3, IsInput = true, IsDisplay = false,
-            Description = "可选，接收相机采集节点输出的 ImageData；未绑定时使用输入图像端口")]
+            Description = "可选，接收相机采集节点输出的 ImageFrame；未绑定时使用输入图像端口")]
         [JsonIgnore]
-        public ImageData CameraImage { get; set; }
+        public ImageFrame? CameraImage { get; set; }
 
         #endregion
 
@@ -527,25 +527,26 @@ namespace FlowNodes.Vision.CompositeTool.WaferInspection
 
         private HObject? ResolveInputImage()
         {
-            // CameraImage 为结构体，未绑定上游时 RawData 为空、宽高为 0，此时回退到基类输入图像端口
-            ImageData cameraImage = CameraImage;
-            if (cameraImage.RawData != null && cameraImage.Width > 0 && cameraImage.Height > 0)
+            // CameraImage 未绑定上游时为 null，此时回退到基类输入图像端口
+            ImageFrame? cameraImage = CameraImage;
+            if (cameraImage is not null && cameraImage.Width > 0 && cameraImage.Height > 0)
                 return ConvertToHObject(cameraImage);
             return Image;
         }
 
-        private static HObject? ConvertToHObject(ImageData data)
+        private static HObject? ConvertToHObject(ImageFrame data)
         {
-            if (data.RawData == null || data.RawData.Length == 0 || data.Width <= 0 || data.Height <= 0)
+            byte[] rawData = data.Data.ToArray();
+            if (rawData.Length == 0 || data.Width <= 0 || data.Height <= 0)
                 return null;
 
             int pixelCount = data.Width * data.Height;
-            int bytesPerPixel = pixelCount > 0 ? data.RawData.Length / pixelCount : 1;
+            int bytesPerPixel = pixelCount > 0 ? rawData.Length / pixelCount : 1;
 
-            IntPtr ptr = Marshal.AllocHGlobal(data.RawData.Length);
+            IntPtr ptr = Marshal.AllocHGlobal(rawData.Length);
             try
             {
-                Marshal.Copy(data.RawData, 0, ptr, data.RawData.Length);
+                Marshal.Copy(rawData, 0, ptr, rawData.Length);
                 HObject image;
                 if (bytesPerPixel >= 3)
                 {

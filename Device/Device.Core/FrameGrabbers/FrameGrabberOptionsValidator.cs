@@ -7,6 +7,7 @@ public static class FrameGrabberOptionsValidator
 {
     /// <summary>验证配置；失败时一次返回全部问题。</summary>
     /// <param name="options">待验证的采集卡配置。</param>
+    /// <exception cref="ArgumentNullException"><paramref name="options"/> 为 <see langword="null"/>。</exception>
     /// <exception cref="FrameGrabberConfigurationException">配置包含一个或多个错误。</exception>
     public static void Validate(FrameGrabberOptions options)
     {

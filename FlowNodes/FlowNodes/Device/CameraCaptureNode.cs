@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
-using Device.Camera;
-using Device.Camera.Definition;
+using Device.Core.Cameras;
+using Device.Core.Devices;
 using FlowEditor.Core;
 using FlowEditor.Nodes;
 using WPFCustomControls.PropertyGrid.Models;
@@ -8,17 +8,17 @@ using WPFCustomControls.PropertyGrid.Models;
 namespace FlowNodes.Device;
 
 /// <summary>
-/// 相机采集节点：按相机名称采集一张图像，输出 HObject 可绑定到后续节点。
+/// 相机采集节点：按相机名称采集一帧图像，输出 ImageFrame 可绑定到后续节点。
 /// </summary>
 [FlowTool("相机采集", "Camera", ToolGroup = "设备", ToolSubGroup = "相机", SortIndex = 10, Description = "按相机名称采集一张图像")]
 public class CameraCaptureNode : NodeModel
 {
-    private readonly CamManager _camManager;
-    private ImageData? _image;
+    private readonly ICameraProvider _cameras;
+    private ImageFrame? _image;
 
-    public CameraCaptureNode(CamManager camManager)
+    public CameraCaptureNode(ICameraProvider cameras)
     {
-        _camManager = camManager;
+        _cameras = cameras;
         Name = "相机采集";
         IsInEnabled = true;
         IsOutEnabled = true;
@@ -26,15 +26,15 @@ public class CameraCaptureNode : NodeModel
 
     /// <summary>相机名称（从 <see cref="CameraNames"/> 下拉选择）。</summary>
     private string _cameraName = "";
-    [NodeProperty(DisplayName = "相机名称", Group = "1.采集参数", Order = 0, Description = "相机名称（CamManager 中配置的设备名）", ItemsSource = nameof(CameraNames))]
+    [NodeProperty(DisplayName = "相机名称", Group = "1.采集参数", Order = 0, Description = "相机名称（宿主 ICameraProvider 中配置的设备名）", ItemsSource = nameof(CameraNames))]
     public string CameraName
     {
         get => _cameraName;
         set => SetProperty(ref _cameraName, value);
     }
 
-    /// <summary>可选相机集合（从 CamManager 动态读取，作为下拉选项）。</summary>
-    public List<string> CameraNames => _camManager.DeviceNameCollection();
+    /// <summary>可选相机集合（从宿主 <see cref="ICameraProvider"/> 动态读取，作为下拉选项）。</summary>
+    public List<string> CameraNames => _cameras.Names.ToList();
 
     /// <summary>曝光时间,单位ms。</summary>
     private int _exposure = 2000;
@@ -57,7 +57,7 @@ public class CameraCaptureNode : NodeModel
     /// <summary>采集到的图像（可绑定到输出端口）。</summary>
     [NodeProperty(DisplayName = "图像", Group = "1.采集参数", Order = 3, Description = "采集到的图像", IsOutput = true, IsDisplay = false)]
     [JsonIgnore]
-    public ImageData? Image
+    public ImageFrame? Image
     {
         get => _image;
         set => SetProperty(ref _image, value);
@@ -67,17 +67,19 @@ public class CameraCaptureNode : NodeModel
     {
         ct.ThrowIfCancellationRequested();
 
-        var cam = _camManager[CameraName]
-            ?? throw new System.Exception($"未找到相机: {CameraName}");
+        var camera = _cameras.Get(CameraName);
 
-        if (!cam.IsConnected)
-            cam.Connect();
+        if (camera.State != DeviceState.Connected)
+        {
+            var connect = await camera.ConnectAsync(ct);
+            if (!connect.Success)
+                throw new InvalidOperationException($"相机 '{CameraName}' 连接失败：{connect.Message}");
+        }
 
-        cam.Exposure = Exposure;
-        cam.Gain = Gain;
-        cam.Snap();
- 
-        Image    = cam.GetImage();
-        await Task.CompletedTask;
+        var parameters = await camera.SetExposureGainAsync(Exposure, Gain, ct);
+        if (!parameters.Success)
+            throw new InvalidOperationException($"相机 '{CameraName}' 下发曝光增益失败：{parameters.Message}");
+
+        Image = await camera.CaptureAsync(ct);
     }
 }

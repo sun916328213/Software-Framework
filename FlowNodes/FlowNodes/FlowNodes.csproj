@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\Communication\CommunicationNew\CommunicationNew.csproj" />
     <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
     <ProjectReference Include="..\..\Device\Device\Device.csproj" />
+    <ProjectReference Include="..\..\Device\Device.Core\Device.Core.csproj" />
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
     <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />
     <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />

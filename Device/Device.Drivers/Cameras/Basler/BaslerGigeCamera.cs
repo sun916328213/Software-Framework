@@ -179,7 +179,7 @@ internal sealed class BaslerGigeCamera : Device.Core.Cameras.ICamera
         cancellationToken.ThrowIfCancellationRequested();
         if (State != DeviceState.Connected)
             return ValueTask.FromResult(DeviceResult.Failure(
-                "camera.basler.not_connected", $"相机 '{{Name}}' 尚未连接。"));
+                "camera.basler.not_connected", $"相机 '{Name}' 尚未连接。"));
 
         var invalid = CameraDriverConfiguration.ValidateTriggerSettings(Options.ScanType, frameTrigger, lineTrigger);
         if (invalid is not null)

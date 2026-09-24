@@ -1,5 +1,3 @@
-using Device.Core.Rfid;
-
 namespace Device.Core.Rfid;
 
 /// <summary>
@@ -12,6 +10,7 @@ public static class RfidOptionsValidator
 
     /// <summary>验证配置；失败时一次返回全部问题。</summary>
     /// <param name="options">待验证的配置。</param>
+    /// <exception cref="ArgumentNullException"><paramref name="options"/> 为 <see langword="null"/>。</exception>
     /// <exception cref="RfidConfigurationException">配置包含一个或多个错误。</exception>
     public static void Validate(RfidOptions options)
     {
@@ -22,7 +21,9 @@ public static class RfidOptionsValidator
             errors.Add("RFID 名称不能为空。");
         if (string.IsNullOrWhiteSpace(options.DriverId.Value))
             errors.Add("RFID 驱动标识不能为空。");
-        if (!IsComPort(options.PortName))
+        if (string.IsNullOrWhiteSpace(options.PortName))
+            errors.Add("RFID 串口名称不能为空。");
+        else if (!IsComPort(options.PortName))
             errors.Add($"RFID 串口 '{options.PortName}' 必须使用 COM 加正整数的格式。");
         if (options.BaudRate <= 0)
             errors.Add("RFID 波特率必须大于 0。");

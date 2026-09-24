@@ -27,7 +27,11 @@ public sealed class LabelPrintEngineFactory : ILabelPrintEngineFactory
                 options => new BarTenderLabelPrintEngine(options)),
         };
 
-        AvailableDrivers = registrations.Select(x => x.Descriptor).ToArray();
+        AvailableDrivers = registrations
+            .Select(x => x.Descriptor)
+            .OrderBy(x => x.Brand, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(x => x.Model, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
         _creators = registrations.ToDictionary(x => x.Descriptor.Id, x => x.Create);
     }
 

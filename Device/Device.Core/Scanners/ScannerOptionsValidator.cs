@@ -1,5 +1,3 @@
-using Device.Core.Scanners;
-
 namespace Device.Core.Scanners;
 
 /// <summary>
@@ -23,7 +21,9 @@ public static class ScannerOptionsValidator
             errors.Add("扫码器名称不能为空。");
         if (string.IsNullOrWhiteSpace(options.DriverId.Value))
             errors.Add("扫码器驱动标识不能为空。");
-        if (!IsComPort(options.PortName))
+        if (string.IsNullOrWhiteSpace(options.PortName))
+            errors.Add("扫码器串口名称不能为空。");
+        else if (!IsComPort(options.PortName))
             errors.Add($"扫码器串口 '{options.PortName}' 必须使用 COM 加正整数的格式。");
         if (options.BaudRate <= 0)
             errors.Add("扫码器波特率必须大于 0。");

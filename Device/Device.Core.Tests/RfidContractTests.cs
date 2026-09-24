@@ -33,6 +33,22 @@ public sealed class RfidContractTests
         Assert.Equal(10, exception.Errors.Count);
     }
 
+    /// <summary>串口名为空时应直接提示名称缺失，而不是报告串口格式错误。</summary>
+    [Fact]
+    public void Validate_BlankPortName_ReportsMissingPortName()
+    {
+        var exception = Assert.Throws<RfidConfigurationException>(() =>
+            RfidOptionsValidator.Validate(new RfidOptions
+            {
+                Name = "Rfid01",
+                DriverId = new DeviceDriverId("rfid.fake.serial"),
+                PortName = "   ",
+            }));
+
+        var error = Assert.Single(exception.Errors);
+        Assert.Contains("串口名称不能为空", error, StringComparison.Ordinal);
+    }
+
     /// <summary>串口名称和校验方式应忽略大小写。</summary>
     [Fact]
     public void Validate_CaseInsensitiveSerialValues_AreAccepted()
