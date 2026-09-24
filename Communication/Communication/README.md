@@ -1,4 +1,7 @@
-# CommunicationNew
+# Communication
+
+仓库项目名已收敛为 Communication。
+为避免本轮产生公开 API / 二进制破坏，现有 namespace、程序集名与 NuGet PackageId 仍保持 CommunicationNew。
 
 CommunicationNew 是面向工业通信场景的 .NET 9 通信库。公共能力按连接、地址读写、原始发送、请求/回复和被动接收拆分，应用可以只依赖实际需要的接口。
 

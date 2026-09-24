@@ -8,10 +8,13 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>13.0</LangVersion>
+    <!-- P3 项目层正名为 Communication.Benchmarks，基准程序集 / namespace 身份冻结为 CommunicationNew.Benchmarks。 -->
+    <RootNamespace>CommunicationNew.Benchmarks</RootNamespace>
+    <AssemblyName>CommunicationNew.Benchmarks</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CommunicationNew\CommunicationNew.csproj" />
+    <ProjectReference Include="..\Communication\Communication.csproj" />
   </ItemGroup>
 
 </Project>

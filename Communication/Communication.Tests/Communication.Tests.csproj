@@ -9,6 +9,9 @@
     <LangVersion>13.0</LangVersion>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- P3 项目层正名为 Communication.Tests，但测试程序集身份冻结为 CommunicationNew.Tests（主库 InternalsVisibleTo 保持不变）。 -->
+    <RootNamespace>CommunicationNew.Tests</RootNamespace>
+    <AssemblyName>CommunicationNew.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CommunicationNew\CommunicationNew.csproj" />
+    <ProjectReference Include="..\Communication\Communication.csproj" />
   </ItemGroup>
 
 </Project>

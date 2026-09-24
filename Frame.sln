@@ -61,7 +61,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "11 FlowNodes", "11 FlowNode
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowNodes", "FlowNodes\FlowNodes\FlowNodes.csproj", "{109C85F4-E981-288F-8CC0-F26F2ECA4393}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunicationNew", "Communication\CommunicationNew\CommunicationNew.csproj", "{24EA6DF4-A9E8-8E0A-BB47-A6D43CEC1AFD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication", "Communication\Communication\Communication.csproj", "{24EA6DF4-A9E8-8E0A-BB47-A6D43CEC1AFD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataManager.Workbench", "DataManager\DataManager.Workbench\DataManager.Workbench.csproj", "{4B741AA8-143C-6346-1D0E-D9E231D671F6}"
 EndProject
@@ -123,13 +123,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Device.Runtime.Tests", "Dev
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Device.Core.Tests", "Device\Device.Core.Tests\Device.Core.Tests.csproj", "{C7B056DE-AE8C-D487-F464-E4608513CAD7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunicationNew.Tests", "Communication\CommunicationNew.Tests\CommunicationNew.Tests.csproj", "{8B26F91F-EF51-44F8-BD58-45197BEE944A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication.Tests", "Communication\Communication.Tests\Communication.Tests.csproj", "{8B26F91F-EF51-44F8-BD58-45197BEE944A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFControl.Host.Tests", "FlowEditor\WPFControl.Host.Tests\WPFControl.Host.Tests.csproj", "{03E0B82A-7814-476C-B635-31ADC7B0C601}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotionControl.Tests", "MotionControl\MotionControl.Tests\MotionControl.Tests.csproj", "{3862686C-0420-4A24-9594-233AD23BA24A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Device.Controls.Tests", "Device\Device.Controls.Tests\Device.Controls.Tests.csproj", "{28E95A12-6AEA-3C04-57BC-2EB3FA5A34D4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "13 NugetPackages", "13 NugetPackages", "{05566A8C-08A2-4B7B-BE1B-8BB2EDCC5B12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mitsubishi.MxComponent.Interop", "NugetPackages\Mitsubishi.MxComponent.Interop\Mitsubishi.MxComponent.Interop.csproj", "{00F08B0E-5DF1-2898-F132-9474B7AF59B7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -959,6 +963,22 @@ Global
 		{28E95A12-6AEA-3C04-57BC-2EB3FA5A34D4}.Release|x64.Build.0 = Release|Any CPU
 		{28E95A12-6AEA-3C04-57BC-2EB3FA5A34D4}.Release|x86.ActiveCfg = Release|Any CPU
 		{28E95A12-6AEA-3C04-57BC-2EB3FA5A34D4}.Release|x86.Build.0 = Release|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Debug|x64.Build.0 = Debug|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Debug|x86.Build.0 = Debug|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Release|ARM64.Build.0 = Release|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Release|x64.ActiveCfg = Release|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Release|x64.Build.0 = Release|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Release|x86.ActiveCfg = Release|Any CPU
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1015,6 +1035,7 @@ Global
 		{03E0B82A-7814-476C-B635-31ADC7B0C601} = {9822E00B-4344-4229-A5AD-7704A434369C}
 		{3862686C-0420-4A24-9594-233AD23BA24A} = {407CAF19-D506-2637-4B8A-F4DE78C81282}
 		{28E95A12-6AEA-3C04-57BC-2EB3FA5A34D4} = {7DC331D0-3EC4-40A6-69FB-1CBEB2E0D1EA}
+		{00F08B0E-5DF1-2898-F132-9474B7AF59B7} = {05566A8C-08A2-4B7B-BE1B-8BB2EDCC5B12}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {25C91A8A-767A-4AF4-85DE-3DF5E5BC9E4A}

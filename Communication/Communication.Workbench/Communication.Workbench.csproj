@@ -21,7 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
     <ProjectReference Include="..\Communication.Controls\Communication.Controls.csproj" />
-    <ProjectReference Include="..\CommunicationNew\CommunicationNew.csproj" />
+    <ProjectReference Include="..\Communication\Communication.csproj" />
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
   </ItemGroup>
 </Project>

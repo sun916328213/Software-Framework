@@ -9,6 +9,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>13.0</LangVersion>
     <RootNamespace>CommunicationNew</RootNamespace>
+    <!-- P3 项目层正名为 Communication，但程序集 / NuGet 身份显式冻结为 CommunicationNew，保持 API 与二进制兼容。 -->
+    <AssemblyName>CommunicationNew</AssemblyName>
+    <PackageId>CommunicationNew</PackageId>
     <Description>面向工业设备的 .NET 通信库，提供 Modbus、三菱 MC/MX、OPC UA、Socket、Serial、HTTP 与 WebApi adapter。</Description>
     <PackageTags>industrial;communication;modbus;mitsubishi;opcua;tcp;udp;serial</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>

@@ -1,7 +1,7 @@
 # CommunicationNew 架构优化方案
 
 > 更新日期：2026-09-08
-> 范围：`Communication/CommunicationNew`  
+> 范围：`Communication/Communication`  
 > 口径：本文是 CommunicationNew 架构优化的唯一入口，合并代码审计、外部项目调研、目标架构、迁移顺序和验收标准。
 
 ## 1. 结论
@@ -148,10 +148,10 @@ Modbus 官方实现指南允许在同一 TCP 连接上同时激活多个事务�
 
 ### 3.9 Modbus 批量读取基准
 
-`CommunicationNew.Benchmarks` 提供无外部基准框架依赖的可重复 Release 测量，固定执行 100 个相邻 `Int16` 保持寄存器的批量规划和 200 字节响应切片提取。运行命令：
+`Communication.Benchmarks` 提供无外部基准框架依赖的可重复 Release 测量，固定执行 100 个相邻 `Int16` 保持寄存器的批量规划和 200 字节响应切片提取。运行命令：
 
 ```powershell
-dotnet run --project CommunicationNew.Benchmarks\CommunicationNew.Benchmarks.csproj -c Release
+dotnet run --project Communication.Benchmarks\Communication.Benchmarks.csproj -c Release
 ```
 
 2026-09-07 本机基线（.NET 9.0.18、Windows 10.0.26200、22 个逻辑处理器）：100 个逐点请求被合并为 1 个批量请求，请求数减少 99%；预热后执行 10,000 轮共耗时 1,269.085 ms，平均 126.908 μs/轮，吞吐约 7,879.69 轮/秒。该数值覆盖 `ModbusReadBatchPlanner.Plan` 与 `ModbusReadBatch.ExtractResponse`，用于观察后续代码修改是否产生明显退化，不设置受机器负载影响的硬性通过阈值。
