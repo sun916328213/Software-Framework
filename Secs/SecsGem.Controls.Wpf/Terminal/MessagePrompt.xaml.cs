@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Windows;
 
-namespace Secs.Order.S10.Presentation
+namespace SecsGem.Controls.Wpf.Terminal
 {
     /// <summary>
     /// Window1.xaml 的交互逻辑

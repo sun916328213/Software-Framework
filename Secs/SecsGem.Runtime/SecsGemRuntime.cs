@@ -7,7 +7,6 @@ using Extension.Automation.Secs;
 using Prism.Ioc;
 using Secs;
 using Secs.Manager;
-using Secs.Order.S10.Presentation;
 using Secs.Order.S6;
 using Secs.Order.S9;
 using Secs.Variable;
@@ -15,6 +14,7 @@ using Secs.Variable.Data;
 using SecsGem.Runtime.Transport;
 using SecsGem.Runtime.DataBinding;
 using SecsGem.Runtime.Protocol;
+using SecsGem.Runtime.Protocol.Messages.S10;
 using MessageRegistry = SecsGem.Runtime.Protocol.Registry.SecsMessageRegistry;
 using Secs4Net;
 using SemiTool.Tool;
@@ -40,8 +40,11 @@ namespace SecsGem.Runtime
         private readonly StatusManager _statusManager;
         private readonly MessageRegistry _messageRegistry;
 
-        /// <summary>S10 终端消息的显示服务；宿主可注入 WPF 或其他实现。</summary>
-        public ITerminalDisplay TerminalDisplay { get; set; } = new WpfTerminalDisplay();
+        /// <summary>S10 终端消息事件；宿主也可通过 TerminalDisplay 指定显示方式。</summary>
+        public event Action<string, string>? TerminalMessageReceived;
+
+        /// <summary>S10 终端消息的显示服务，由 WPF 宿主或其他调用方注入。</summary>
+        public ITerminalDisplay TerminalDisplay { get; set; }
 
         /// <summary>
         /// VID 管理实例
@@ -79,6 +82,7 @@ namespace SecsGem.Runtime
         public SecsGemRuntime(IContainerProvider container)
         {
             _container = container;
+            TerminalDisplay = new TerminalMessageEventDisplay((title, message) => TerminalMessageReceived?.Invoke(title, message));
             _transport = new Secs4NetTransport(container);
             _statusManager = container.Resolve<StatusManager>();
             _vidManager = container.Resolve<VIDManager>();

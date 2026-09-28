@@ -10,4 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\SecsGem.Core\SecsGem.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+  </ItemGroup>
 </Project>

@@ -105,6 +105,30 @@ namespace SecsGem.Runtime.Tests.Integration
         }
 
         [Fact]
+        public void Terminal_Message_Is_Published_Without_A_Wpf_Display()
+        {
+            using var control = CreateControl(out var container);
+            string? title = null;
+            string? text = null;
+            control.TerminalMessageReceived += (receivedTitle, receivedText) =>
+            {
+                title = receivedTitle;
+                text = receivedText;
+            };
+            var registry = (ProtocolRegistry)container.Resolve(typeof(ProtocolRegistry));
+            var message = new SecsMessage(10, 3, true)
+            {
+                SecsItem = Item.L(Item.B(1), Item.A("Headless host"))
+            };
+
+            var reply = registry.GetHandler("S10F3").GetReplyItem(message);
+
+            Assert.Equal(SecsFormat.Binary, reply.Format);
+            Assert.Equal("S10F3", title);
+            Assert.Equal("1/r/nHeadless host", text);
+        }
+
+        [Fact]
         public void CoreContract_Refreshes_Configured_Variable_From_Equipment()
         {
             using var control = CreateControl();
