@@ -10,5 +10,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Vision.Core\Vision.Core.csproj" />
+    <!-- P3（2026-09-28）：传统 HALCON Tool 迁移与标准化。
+         HalconDotNet 唯一入口是 Extension（仓库硬规则 12），不得直引 halcondotnet。 -->
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
   </ItemGroup>
 </Project>

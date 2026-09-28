@@ -13,6 +13,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Vision.Controls\Vision.Controls.csproj" />
+    <!-- P3（2026-09-28）：Workbench 是新 Tool 的标准研发/验收入口（计划 §11）。
+         引用标准化后的 Vision.Tools.Halcon；旧 DPLibrary_Halcon_F48 的页签保持不动，
+         P9 退场前新旧并存。 -->
+    <ProjectReference Include="..\Vision.Tools.Halcon\Vision.Tools.Halcon.csproj" />
   </ItemGroup>
 
   <ItemGroup>
