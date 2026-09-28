@@ -75,6 +75,15 @@
          · WPFCustomControls —— WPFCustomControls.Controls(15 文件) / WPFCustomControls.Window.Views(9 文件) -->
     <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
+    <!-- 2026-09-24（P8-1）：接入新 Device 栈，取代旧 Device/Device 的相机/光源/RFID/扫码/标签打印能力。
+         · Device.Core     —— 契约 / Options / Result（Controls 与 Runtime 都只面向它）
+         · Device.Controls —— 可复用的设备测试页（Camera/Light/Rfid/Scanner/LabelPrint 的 View + Workspace）
+         · Device.Runtime  —— 工厂与厂商 SDK 实现；**只用于组合**，由 WPFControlModule 注册成单例
+         WPFControl 是宿主侧 Prism 模块、天然承担组合职责，所以工厂注册放 WPFControlModule，
+         不把 Prism 依赖塞进 Device.Runtime（见 P8 计划 3.2 / 4）。 -->
+    <ProjectReference Include="..\..\Device\Device.Core\Device.Core.csproj" />
+    <ProjectReference Include="..\..\Device\Device.Controls\Device.Controls.csproj" />
+    <ProjectReference Include="..\..\Device\Device.Runtime\Device.Runtime.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\图标.ico" />

@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace MotionControl.Internal
 {
     /// <summary>一次轴状态轮询的标准化结果。</summary>
@@ -65,6 +67,7 @@ namespace MotionControl.Internal
         {
             var token = cancellation.Token;
             var lastAlarm = new bool[axisCount];
+            var unobservedErrorReported = false;
 
             try
             {
@@ -90,10 +93,17 @@ namespace MotionControl.Internal
                                 _alarmRaised(axis, value.RawStatus);
                             _sampleObserved?.Invoke(axis, value.RawStatus);
                         }
+                        unobservedErrorReported = false;
                     }
                     catch (Exception ex)
                     {
-                        _errorObserved?.Invoke(ex);
+                        if (_errorObserved is not null)
+                            _errorObserved(ex);
+                        else if (!unobservedErrorReported)
+                        {
+                            Trace.TraceError($"轴状态轮询异常：{ex}");
+                            unobservedErrorReported = true;
+                        }
                     }
 
                     await Task.Delay(_intervalMs, token).ConfigureAwait(false);

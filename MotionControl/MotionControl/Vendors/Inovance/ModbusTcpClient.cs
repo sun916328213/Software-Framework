@@ -12,9 +12,19 @@ namespace MotionControl.Vendors.Inovance
         private const int MaximumMbapLength = 254;
         private readonly object _sync = new();
         private TcpClient? _client;
-        private NetworkStream? _stream;
+        private Stream? _stream;
         private ushort _txId;
         private int _timeoutMs = 2000;
+
+        public ModbusTcpClient() { }
+
+        internal ModbusTcpClient(Stream stream)
+        {
+            ArgumentNullException.ThrowIfNull(stream);
+            if (!stream.CanRead || !stream.CanWrite)
+                throw new ArgumentException("Modbus 字节流必须同时支持读取和写入。", nameof(stream));
+            _stream = stream;
+        }
 
         /// <summary>连接超时时间（毫秒）</summary>
         public int TimeoutMs
@@ -61,7 +71,7 @@ namespace MotionControl.Vendors.Inovance
             get
             {
                 lock (_sync)
-                    return _client?.Connected == true && _stream != null;
+                    return _stream != null && (_client?.Connected ?? true);
             }
         }
 

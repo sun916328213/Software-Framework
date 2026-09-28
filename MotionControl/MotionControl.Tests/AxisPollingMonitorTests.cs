@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using MotionControl.Internal;
 using Xunit;
 
@@ -5,6 +6,40 @@ namespace MotionControl.Tests;
 
 public sealed class AxisPollingMonitorTests
 {
+    [Fact]
+    public async Task PollingException_WithoutObserver_IsReportedToTrace()
+    {
+        using var output = new StringWriter();
+        using var listener = new TextWriterTraceListener(output);
+        Trace.Listeners.Add(listener);
+        try
+        {
+            var reads = 0;
+            var recovered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var monitor = new AxisPollingMonitor(
+                1,
+                _ =>
+                {
+                    if (Interlocked.Increment(ref reads) == 1)
+                        throw new InvalidOperationException("poll fault");
+                    return new AxisMonitorSample(0, false);
+                },
+                (_, _) => { },
+                (_, _) => recovered.TrySetResult());
+
+            monitor.Start(1);
+            await recovered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            monitor.Stop();
+            listener.Flush();
+
+            Assert.Contains("poll fault", output.ToString());
+        }
+        finally
+        {
+            Trace.Listeners.Remove(listener);
+        }
+    }
+
     [Fact]
     public async Task AlarmRaised_OnlyOnRisingEdge()
     {
