@@ -9,15 +9,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Secs4Net.Json", "secs4net-b
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Secs4Net.Sml", "secs4net-base\src\Secs4Net.Sml\Secs4Net.Sml.csproj", "{92227E70-3401-4810-12C2-DC83337D3C40}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Secs.Core", "Secs.Core\Secs.Core.csproj", "{57628B47-9A28-4397-AA91-5017C7EA3C9C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecsGem.Core", "SecsGem.Core\SecsGem.Core.csproj", "{57628B47-9A28-4397-AA91-5017C7EA3C9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Secs.Runtime", "Secs.Runtime\Secs.Runtime.csproj", "{230BA9B6-895C-441D-A63C-02FD2A5683DA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecsGem.Runtime", "SecsGem.Runtime\SecsGem.Runtime.csproj", "{230BA9B6-895C-441D-A63C-02FD2A5683DA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Secs.Controls", "Secs.Controls\Secs.Controls.csproj", "{505D7DFD-906C-4769-9F2E-F9DBE31EC6C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecsGem.Controls.Wpf", "SecsGem.Controls.Wpf\SecsGem.Controls.Wpf.csproj", "{505D7DFD-906C-4769-9F2E-F9DBE31EC6C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Secs.Workbench", "Secs.Workbench\Secs.Workbench.csproj", "{26A75F60-B981-4F07-939D-060239AFFCA6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecsGem.Workbench", "SecsGem.Workbench\SecsGem.Workbench.csproj", "{26A75F60-B981-4F07-939D-060239AFFCA6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Secs.Runtime.Tests", "Secs.Runtime.Tests\Secs.Runtime.Tests.csproj", "{1365E68F-B5A4-4A1E-B333-57FF3151FB96}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecsGem.Runtime.Tests", "SecsGem.Runtime.Tests\SecsGem.Runtime.Tests.csproj", "{1365E68F-B5A4-4A1E-B333-57FF3151FB96}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SecsGem.Core\SecsGem.Core.csproj" />
+  </ItemGroup>
+</Project>
