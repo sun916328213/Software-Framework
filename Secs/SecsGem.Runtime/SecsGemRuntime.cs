@@ -25,7 +25,7 @@ namespace SecsGem.Runtime
     /// 连接、数据读写、报警/事件上报、上下线控制、远程命令回调全部收敛于本类；
     /// 各 Manager 为内部实现细节，业务代码不要再直接访问。
     /// </summary>
-    public class SecsGemRuntime : SecsHelper
+    public partial class SecsGemRuntime : SecsHelper
     {
         #region 管理器实例
         private readonly IContainerProvider _container;
@@ -190,6 +190,7 @@ namespace SecsGem.Runtime
             if (pCEID == null) return false;
             try
             {
+                RefreshEquipmentData();
                 await SendItem("S6F11", true, new S6F11Info() { CEID = pCEID }).ConfigureAwait(false);
                 return true;
             }
@@ -288,6 +289,17 @@ namespace SecsGem.Runtime
         /// </summary>
         internal async Task RaiseRemoteCommandAsync(RemoteCommandArgs e)
         {
+            var gemHandler = _gemEventHandler;
+            if (gemHandler != null)
+            {
+                e.Return = await gemHandler.OnRemoteCommandAsync(
+                    new SecsGem.Core.SecsGemRemoteCommand(
+                        e.RCMD,
+                        new System.Collections.Generic.Dictionary<string, string>(e.Params)))
+                    .ConfigureAwait(false);
+                return;
+            }
+
             var handler = _events;
             if (handler == null)
             {
@@ -309,6 +321,11 @@ namespace SecsGem.Runtime
             if (pSecsMessage == null) return;
 
             string order = "S" + pSecsMessage.S + "F" + pSecsMessage.F;
+
+            if (order is "S1F3" or "S1F11")
+            {
+                RefreshEquipmentData();
+            }
 
             // 从缓存字典获取处理器（O(1)，无反射）
             var handler = _FactoryCollection.GetHandler(order);

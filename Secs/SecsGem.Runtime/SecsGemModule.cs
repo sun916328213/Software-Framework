@@ -2,6 +2,7 @@
 using Prism.Ioc;
 using Prism.Modularity;
 using Secs;
+using SecsGem.Core;
 using Secs.Manager;
 using Secs.Order;
 using SemiTool.Tool;
@@ -29,6 +30,7 @@ namespace SecsGem.Runtime
             containerRegistry.RegisterSingleton<SecsMessageRegistry>(provider => provider.Resolve<FactoryCollection>());
             containerRegistry.RegisterSingleton<SecsControl>();
             containerRegistry.RegisterSingleton<SecsGemRuntime>(provider => provider.Resolve<SecsControl>());
+            containerRegistry.RegisterSingleton<ISecsGemRuntime>(provider => provider.Resolve<SecsControl>());
         }
         /// <summary>
         /// 模块初始化完成后的回调

@@ -18,6 +18,5 @@
   <ItemGroup>
     <ProjectReference Include="..\FlowEditor.DataManagerLogging\FlowEditor.DataManagerLogging.csproj" />
     <ProjectReference Include="..\FlowEditor.Runtime\FlowEditor.Runtime.csproj" />
-    <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
   </ItemGroup>
 </Project>

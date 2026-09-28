@@ -7,6 +7,8 @@ using Secs.Manager;
 using SecsGem.Runtime.Tests.Infrastructure;
 using Secs.Variable;
 using Secs.Variable.Data;
+using SecsGem.Core;
+using SecsGem.Runtime;
 using SemiTool.Tool;
 using Xunit;
 
@@ -27,7 +29,7 @@ namespace SecsGem.Runtime.Tests.Integration
         {
             var container = new TestPrismContainer();
 
-            container.RegisterSingleton(typeof(LogManager), typeof(LogManager));
+            container.RegisterSingleton(typeof(LogManager), () => new LogManager());
 
             // Variable 数据类
             container.RegisterSingleton(typeof(ReportID), typeof(ReportID));
@@ -38,29 +40,51 @@ namespace SecsGem.Runtime.Tests.Integration
             container.RegisterSingleton(typeof(Alarm), typeof(Alarm));
             container.RegisterSingleton(typeof(ActiveReceive), typeof(ActiveReceive));
 
-            // Manager 与门面
-            container.RegisterSingleton(typeof(VIDManager), typeof(VIDManager));
-            container.RegisterSingleton(typeof(DeviceManager), typeof(DeviceManager));
-            container.RegisterSingleton(typeof(StatusManager), typeof(StatusManager));
-            container.RegisterSingleton(typeof(ConnectManager), typeof(ConnectManager));
-            container.RegisterSingleton(typeof(TraceManager), typeof(TraceManager));
-            container.RegisterSingleton(typeof(FactoryCollection), typeof(FactoryCollection));
-            container.RegisterSingleton(typeof(SecsControl), typeof(SecsControl));
-
-            return (SecsControl)container.Resolve(typeof(SecsControl));
+            // 使用正式模块注册，保证 Core 接口与旧门面指向同一个运行时。
+            new SecsGemModule().RegisterTypes(container);
+            var control = (SecsControl)container.Resolve(typeof(SecsControl));
+            Assert.Same(control, container.Resolve(typeof(ISecsGemRuntime)));
+            return control;
         }
 
-        private sealed class TestEvents : ISecsControlEvents
+        private sealed class TestEvents : ISecsGemEventHandler
         {
-            public RemoteCommandArgs LastArgs;
+            public SecsGemRemoteCommand LastCommand;
             public int CallCount;
 
-            public Task OnRemoteCommandAsync(RemoteCommandArgs e)
+            public Task<byte> OnRemoteCommandAsync(SecsGemRemoteCommand command)
             {
-                LastArgs = e;
+                LastCommand = command;
                 CallCount++;
-                return Task.CompletedTask;
+                return Task.FromResult((byte)0);
             }
+        }
+
+        private sealed class TestEquipmentDataProvider : IEquipmentDataProvider
+        {
+            public IReadOnlyDictionary<string, object?> GetVariableValues() =>
+                new Dictionary<string, object?> { ["LotId"] = "LOT-42" };
+        }
+
+        [Fact]
+        public void CoreContract_Refreshes_Configured_Variable_From_Equipment()
+        {
+            using var control = CreateControl();
+            control._VIDManager.VIDDic_Name["LotId"] = new VIDInfo
+            {
+                ID = "1",
+                Name = "LotId",
+                Value = "old",
+                DataTypeName = "A"
+            };
+
+            ISecsGemRuntime runtime = control;
+            runtime.SetEquipmentDataProvider(new TestEquipmentDataProvider());
+
+            Assert.Equal(SecsGemMode.Offline, runtime.GetState().Mode);
+            Assert.False(runtime.GetState().IsConnected);
+            Assert.Equal("LOT-42", runtime.GetVariableValue("LotId"));
+            Assert.Equal("LOT-42", control.GetVidValue("LotId"));
         }
 
         private static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout, string description)
@@ -118,7 +142,7 @@ namespace SecsGem.Runtime.Tests.Integration
             using var control = CreateControl();
 
             var events = new TestEvents();
-            control.SetEvents(events);
+            ((ISecsGemRuntime)control).SetEventHandler(events);
 
             await control.ConnectAsync(true, "127.0.0.1", host.Port, DeviceId).ConfigureAwait(false);
             await host.WaitForDeviceAsync(cts.Token).ConfigureAwait(false);
@@ -150,8 +174,8 @@ namespace SecsGem.Runtime.Tests.Integration
 
             // 业务回调应被触发并携带解析结果（替代旧的 ActiveReceive 轮询）
             await WaitUntilAsync(() => events.CallCount > 0, TimeSpan.FromSeconds(5), "远程命令回调被调用").ConfigureAwait(false);
-            Assert.Equal("START", events.LastArgs.RCMD);
-            Assert.Equal("V1", events.LastArgs.Params["P1"]);
+            Assert.Equal("START", events.LastCommand.Name);
+            Assert.Equal("V1", events.LastCommand.Parameters["P1"]);
 
             var reply = await host.ReadMessageAsync(cts.Token).ConfigureAwait(false);
             Assert.Equal(HsmsHostSimulator.StypeData, reply.SType);
@@ -163,7 +187,7 @@ namespace SecsGem.Runtime.Tests.Integration
             Assert.Equal(0x02, reply.Body[1]);
             Assert.Equal(0x21, reply.Body[2]);
             Assert.Equal(0x01, reply.Body[3]);
-            Assert.Equal(events.LastArgs.Return, reply.Body[4]);
+            Assert.Equal(0, reply.Body[4]);
         }
 
         [Fact(Timeout = 30000)]

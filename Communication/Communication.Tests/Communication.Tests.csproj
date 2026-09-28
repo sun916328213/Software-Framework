@@ -27,7 +27,6 @@
     <!-- P11：测试直接引用 Core + Runtime；兼容门面用于旧 API / 二进制加载兼容测试。 -->
     <ProjectReference Include="..\Communication.Core\Communication.Core.csproj" />
     <ProjectReference Include="..\Communication.Runtime\Communication.Runtime.csproj" />
-    <ProjectReference Include="..\Communication\Communication.csproj" />
   </ItemGroup>
 
 </Project>

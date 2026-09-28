@@ -22,7 +22,5 @@
     <ProjectReference Include="..\Device.Core\Device.Core.csproj" />
     <ProjectReference Include="..\Device.Runtime\Device.Runtime.csproj" />
     <!-- 与 Device.Runtime 保持一致：仅关闭已知的 64 位 Interop 架构提示，不强制测试进程为 x64。 -->
-    <ProjectReference Include="..\..\Communication\Communication\Communication.csproj"
-                      AdditionalProperties="ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch=None" />
   </ItemGroup>
 </Project>

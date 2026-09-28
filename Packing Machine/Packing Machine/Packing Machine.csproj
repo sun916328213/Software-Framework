@@ -35,10 +35,9 @@
          静默打断本工程的编译。显式声明让依赖图可读；构建闭包不变。
          ⛔ 包引用一条都不补：HalconDotNet 仍只在 Extension.csproj 一处锁 23110.0.0（项目约定）。 -->
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
-    <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
     <ProjectReference Include="..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj" />
     <ProjectReference Include="..\..\Device\Device\Device.csproj" />
-    <ProjectReference Include="..\..\Secs\Secs.Runtime\Secs.Runtime.csproj" />
+    <ProjectReference Include="..\..\Secs\SecsGem.Runtime\SecsGem.Runtime.csproj" />
     <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />
     <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />
     <ProjectReference Include="..\..\Vision\Vision.Core\Vision.Core.csproj" />
@@ -54,7 +53,6 @@
          显式声明后，FlowNodes.dll 由本工程自己保证，不再依赖上游传递。 -->
     <ProjectReference Include="..\..\FlowNodes\FlowNodes\FlowNodes.csproj" />
     <!-- P5：PLC 新实现直接依赖 Communication，不再经 WPFControl/FlowNodes 传递引用。 -->
-    <ProjectReference Include="..\..\Communication\Communication\Communication.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Prism.Core" Version="8.1.97" />

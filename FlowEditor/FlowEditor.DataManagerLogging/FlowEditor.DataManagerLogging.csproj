@@ -10,6 +10,5 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\FlowEditor.Runtime\FlowEditor.Runtime.csproj" />
-    <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
   </ItemGroup>
 </Project>

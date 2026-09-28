@@ -17,6 +17,5 @@
     <!-- P12：测试直接引用 Core + Runtime；兼容门面用于旧 API 兼容测试。 -->
     <ProjectReference Include="..\DataManager.Core\DataManager.Core.csproj" />
     <ProjectReference Include="..\DataManager.Runtime\DataManager.Runtime.csproj" />
-    <ProjectReference Include="..\DataManager\DataManager.csproj" />
   </ItemGroup>
 </Project>

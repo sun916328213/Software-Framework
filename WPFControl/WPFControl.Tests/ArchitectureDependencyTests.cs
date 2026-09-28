@@ -77,7 +77,7 @@ namespace WPFControl.Tests
                      {
                          @"..\..\Extension\Extension\Extension.csproj",
                          @"..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj",
-                         @"..\..\Secs\Secs.Runtime\Secs.Runtime.csproj",
+                         @"..\..\Secs\SecsGem.Runtime\SecsGem.Runtime.csproj",
                          @"..\..\Device\Device\Device.csproj",
                          @"..\..\Vision\Vision.Controls\Vision.Controls.csproj",
                          @"..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj",
@@ -151,7 +151,7 @@ namespace WPFControl.Tests
                 @"..\..\DataManager\DataManager\DataManager.csproj",
                 @"..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj",
                 @"..\..\Device\Device\Device.csproj",
-                @"..\..\Secs\Secs.Runtime\Secs.Runtime.csproj",
+                @"..\..\Secs\SecsGem.Runtime\SecsGem.Runtime.csproj",
                 @"..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj",
                 @"..\..\FlowEditor\FlowEditor\FlowEditor.csproj",
                 @"..\..\Vision\Vision.Core\Vision.Core.csproj",

@@ -17,7 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DataManager\DataManager.csproj" />
     <ProjectReference Include="..\DataManager.Controls\DataManager.Controls.csproj" />
     <ProjectReference Include="..\DataManager.Workbench\DataManager.Workbench.csproj" />
   </ItemGroup>

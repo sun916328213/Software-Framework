@@ -102,9 +102,9 @@ public static class HalconHelper
         if (values.Length != 9)
             throw new ArgumentException("矩阵必须恰好 9 个数字。", nameof(values));
         return string.Join("|",
-            string.Join(",", values[0..3].Select(v => v.ToString("F3", CultureInfo.InvariantCulture))),
-            string.Join(",", values[3..6].Select(v => v.ToString("F3", CultureInfo.InvariantCulture))),
-            string.Join(",", values[6..9].Select(v => v.ToString("F3", CultureInfo.InvariantCulture))));
+            string.Join(",", values[0..3].Select(v => (v + 0.0).ToString("F3", CultureInfo.InvariantCulture))),
+            string.Join(",", values[3..6].Select(v => (v + 0.0).ToString("F3", CultureInfo.InvariantCulture))),
+            string.Join(",", values[6..9].Select(v => (v + 0.0).ToString("F3", CultureInfo.InvariantCulture))));
     }
 
     /// <summary>是否为单位矩阵串（Blob 的仿射分支用它决定是否跳过 AffineTransRegion）。</summary>
