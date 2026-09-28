@@ -80,10 +80,15 @@ namespace SecsGem.Runtime
 
         #region 构造函数
         public SecsGemRuntime(IContainerProvider container)
+            : this(container, new Secs4NetTransport(container))
+        {
+        }
+
+        internal SecsGemRuntime(IContainerProvider container, ISecsTransport transport)
         {
             _container = container;
             TerminalDisplay = new TerminalMessageEventDisplay((title, message) => TerminalMessageReceived?.Invoke(title, message));
-            _transport = new Secs4NetTransport(container);
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
             _statusManager = container.Resolve<StatusManager>();
             _vidManager = container.Resolve<VIDManager>();
             _messageRegistry = container.Resolve<MessageRegistry>();

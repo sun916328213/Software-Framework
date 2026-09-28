@@ -31,6 +31,7 @@ public partial class SecsGemRuntime : ISecsGemRuntime
     public Task<bool> ConnectAsync(SecsGemOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
+        options.Validate();
         return ConnectAsync(
             options.IsActiveMode,
             options.IpAddress,

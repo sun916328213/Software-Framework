@@ -3,6 +3,7 @@ using SecsGem.Runtime.Protocol.Building;
 using SecsGem.Runtime.Protocol.Parsing;
 using Secs.Manager;
 using Secs4Net;
+using SecsGem.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,7 +14,7 @@ namespace Secs.Order
     {
         IContainerProvider ContainerProvider;
 
-        internal SecsControl SecsControl => ContainerProvider?.Resolve<SecsControl>();
+        internal SecsGemRuntime SecsControl => ContainerProvider?.Resolve<SecsGemRuntime>();
         internal VIDManager VIDManager => ContainerProvider?.Resolve<VIDManager>();
         internal DeviceManager DeviceManager => ContainerProvider?.Resolve<DeviceManager>();
         internal StatusManager StatusManager => ContainerProvider?.Resolve<StatusManager>();
