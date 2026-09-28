@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Ctr="clr-namespace:Vision.Controls.Ctr_Halcon.View;assembly=Vision.Controls"
+    xmlns:NewView="clr-namespace:Vision.Controls.View;assembly=Vision.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
     xmlns:local="clr-namespace:Vision.Workbench"
@@ -60,6 +61,21 @@
             </TabItem>
             <TabItem Header="Blob">
                 <Ctr:Ctr_HVisionTool_DP HTool="{Binding Bb}" />
+            </TabItem>
+            <!-- P8（2026-09-28）：新控件复用实证（ToolCardView + RoiEditorView 绑新 VM；
+                 旧页签不动，P9 再做完整 Tool Browser）。 -->
+            <TabItem Header="P8 新控件">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <NewView:ToolCardView x:Name="P8ToolCard" Margin="10" />
+                    <NewView:RoiEditorView
+                        x:Name="P8RoiEditor"
+                        Grid.Column="1"
+                        Margin="10" />
+                </Grid>
             </TabItem>
         </TabControl>
 

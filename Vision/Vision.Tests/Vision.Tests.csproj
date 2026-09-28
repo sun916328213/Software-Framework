@@ -38,5 +38,7 @@
     <ProjectReference Include="..\Vision.AI.Invi\Vision.AI.Invi.csproj" />
     <ProjectReference Include="..\Vision.AI.Aiditron\Vision.AI.Aiditron.csproj" />
     <ProjectReference Include="..\Vision.AI.Halcon\Vision.AI.Halcon.csproj" />
+    <!-- P8（2026-09-28）：新控件 VM/展示逻辑测试（无 UI 线程依赖）+ Controls 反向引用守卫。 -->
+    <ProjectReference Include="..\Vision.Controls\Vision.Controls.csproj" />
   </ItemGroup>
 </Project>
