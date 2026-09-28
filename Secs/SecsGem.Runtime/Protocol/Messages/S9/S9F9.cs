@@ -1,5 +1,5 @@
 ﻿using Prism.Ioc;
-using Secs.Tool;
+using SecsGem.Runtime.Protocol.Building;
 using Secs4Net;
 
 namespace Secs.Order.S9
@@ -33,7 +33,7 @@ namespace Secs.Order.S9
         {
             SS9F9 data=(SS9F9)pData[0] ;
           
-           byte[]  bytes = MessageHeader_Refactor.GetHeaderInfo(data.SecsMessage, data.DeviceID, data.ID);
+           byte[]  bytes = HsmsMessageHeaderBuilder.GetHeaderInfo(data.SecsMessage, data.DeviceID, data.ID);
 
             Item SecsItem = Item.B(bytes);
             return SecsItem;

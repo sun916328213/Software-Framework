@@ -6,6 +6,7 @@ using SecsGem.Core;
 using Secs.Manager;
 using Secs.Order;
 using SemiTool.Tool;
+using SecsGem.Runtime.Protocol.Registry;
 using System.Reflection;
 
 
@@ -27,7 +28,8 @@ namespace SecsGem.Runtime
             RegisterServicesEx.RegisterSingletonFromNamespace(assembly, containerRegistry, "Secs.Manager");
 
             containerRegistry.RegisterSingleton<FactoryCollection>();
-            containerRegistry.RegisterSingleton<SecsMessageRegistry>(provider => provider.Resolve<FactoryCollection>());
+            containerRegistry.RegisterSingleton<SemiTool.Tool.SecsMessageRegistry>(provider => provider.Resolve<FactoryCollection>());
+            containerRegistry.RegisterSingleton<SecsGem.Runtime.Protocol.Registry.SecsMessageRegistry>(provider => provider.Resolve<FactoryCollection>());
             containerRegistry.RegisterSingleton<SecsControl>();
             containerRegistry.RegisterSingleton<SecsGemRuntime>(provider => provider.Resolve<SecsControl>());
             containerRegistry.RegisterSingleton<ISecsGemRuntime>(provider => provider.Resolve<SecsControl>());

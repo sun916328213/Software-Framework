@@ -10,6 +10,8 @@ using Secs.Variable;
 using Secs.Variable.Data;
 using SecsGem.Core;
 using SecsGem.Runtime;
+using ProtocolRegistry = SecsGem.Runtime.Protocol.Registry.SecsMessageRegistry;
+using Secs4Net;
 using SemiTool.Tool;
 using Xunit;
 
@@ -26,9 +28,11 @@ namespace SecsGem.Runtime.Tests.Integration
         /// <summary>
         /// 组装一个完整可用的 SecsControl（迷你容器注册全部依赖）
         /// </summary>
-        private static SecsControl CreateControl()
+        private static SecsControl CreateControl() => CreateControl(out _);
+
+        private static SecsControl CreateControl(out TestPrismContainer container)
         {
-            var container = new TestPrismContainer();
+            container = new TestPrismContainer();
 
             container.RegisterSingleton(typeof(LogManager), () => new LogManager());
 
@@ -65,6 +69,39 @@ namespace SecsGem.Runtime.Tests.Integration
         {
             public IReadOnlyDictionary<string, object?> GetVariableValues() =>
                 new Dictionary<string, object?> { ["LotId"] = "LOT-42" };
+        }
+
+        private sealed class TestTerminalDisplay : ITerminalDisplay
+        {
+            public string Title { get; private set; }
+            public string Message { get; private set; }
+
+            public void Show(string title, string message)
+            {
+                Title = title;
+                Message = message;
+            }
+        }
+
+        [Theory]
+        [InlineData("S10F3", 3)]
+        [InlineData("S10F5", 5)]
+        public void Terminal_Message_Uses_Protocol_Parser_And_Display(string order, byte function)
+        {
+            using var control = CreateControl(out var container);
+            var display = new TestTerminalDisplay();
+            control.TerminalDisplay = display;
+            var registry = (ProtocolRegistry)container.Resolve(typeof(ProtocolRegistry));
+            var message = new SecsMessage(10, function, true)
+            {
+                SecsItem = Item.L(Item.B(1), Item.A("Host message"))
+            };
+
+            var reply = registry.GetHandler(order).GetReplyItem(message);
+
+            Assert.Equal(SecsFormat.Binary, reply.Format);
+            Assert.Equal(order, display.Title);
+            Assert.Equal("1/r/nHost message", display.Message);
         }
 
         [Fact]

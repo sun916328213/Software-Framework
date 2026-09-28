@@ -1,58 +1,17 @@
 ﻿using Secs.Order;
-using Extension.Patterns.Creation.Factory;
-using Extension.Patterns.Creation.Factory.Advanced;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using Prism.Ioc;
 
 
 
-namespace SemiTool.Tool
+namespace SecsGem.Runtime.Protocol.Registry
 {
     /// <summary>
-    /// Secs命令适配器 - 将SecsOrderBase转换为IAdvancedProduct接口
-    /// </summary>
-    public class SecsOrderAdapter : IAdvancedProduct
-    {
-        private readonly SecsOrderBase _secsOrder;
-
-        public string Id { get; }
-        public string Name { get; }
-        public string Type => "Secs命令";
-
-        public SecsOrderAdapter(SecsOrderBase secsOrder, string productId)
-        {
-            _secsOrder = secsOrder ?? throw new ArgumentNullException(nameof(secsOrder));
-            Id = productId ?? throw new ArgumentNullException(nameof(productId));
-            Name = secsOrder.GetType().Name;
-        }
-
-        public void Execute()
-        {
-            // Secs命令不需要执行默认操作
-            Console.WriteLine($"Secs命令 {Name} 已创建");
-        }
-
-        /// <summary>
-        /// 获取原始Secs命令实例
-        /// </summary>
-        public SecsOrderBase GetSecsOrder() => _secsOrder;
-        
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
-        {
-            // 释放Secs命令资源
-        }
-    }
-
-    /// <summary>
-    /// 基于Extension工厂模式的Secs命令工厂。
-    /// 启动时扫描一次并缓存 [SxFy → Type] 字典，热路径 GetHandler 为 O(1)，无反射开销。
+    /// SxFy 消息处理器注册表。
+    /// 启动时扫描一次并缓存 [SxFy → Type] 字典，热路径 GetHandler 无反射查找。
     /// </summary>
     public class SecsMessageRegistry
     {

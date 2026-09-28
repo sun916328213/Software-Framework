@@ -15,6 +15,7 @@ using Secs.Variable.Data;
 using SecsGem.Runtime.Transport;
 using SecsGem.Runtime.DataBinding;
 using SecsGem.Runtime.Protocol;
+using MessageRegistry = SecsGem.Runtime.Protocol.Registry.SecsMessageRegistry;
 using Secs4Net;
 using SemiTool.Tool;
 using System;
@@ -37,7 +38,7 @@ namespace SecsGem.Runtime
         private readonly SecsProtocolEngine _protocolEngine;
         private readonly VIDManager _vidManager;
         private readonly StatusManager _statusManager;
-        private readonly FactoryCollection _factoryCollection;
+        private readonly MessageRegistry _messageRegistry;
 
         /// <summary>S10 终端消息的显示服务；宿主可注入 WPF 或其他实现。</summary>
         public ITerminalDisplay TerminalDisplay { get; set; } = new WpfTerminalDisplay();
@@ -72,10 +73,6 @@ namespace SecsGem.Runtime
         [Obsolete("内部实现将收口，设备信息经 Config 加载", false)]
         public DeviceManager _DeviceManager => _container.Resolve<DeviceManager>();
 
-        /// <summary>
-        /// 指令工厂集合
-        /// </summary>
-        private FactoryCollection _FactoryCollection => _factoryCollection;
         #endregion
 
         #region 构造函数
@@ -85,11 +82,11 @@ namespace SecsGem.Runtime
             _transport = new Secs4NetTransport(container);
             _statusManager = container.Resolve<StatusManager>();
             _vidManager = container.Resolve<VIDManager>();
-            _factoryCollection = container.Resolve<FactoryCollection>();
+            _messageRegistry = container.Resolve<MessageRegistry>();
             _statusManager.SetConnection(_transport.IsConnected);
-            _factoryCollection.AutoRegisterHandlers();
+            _messageRegistry.AutoRegisterHandlers();
             _dataBinding = new SecsDataBinding(_vidManager);
-            _protocolEngine = new SecsProtocolEngine(_factoryCollection, _dataBinding, _transport, Send, ReplyAsync);
+            _protocolEngine = new SecsProtocolEngine(_messageRegistry, _dataBinding, _transport, Send, ReplyAsync);
             _transport.OnReceive += SecsBase_OnReceiveAsync;
             _transport.OnReply += SecsBase_OnReply;
             _transport.OnConnectChanged += SecsControl_OnConnectChanged;

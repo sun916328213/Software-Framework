@@ -1,12 +1,14 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Secs.Order;
+using SecsGem.Runtime.Protocol.Registry;
+using SecsGem.Runtime.Tests.Infrastructure;
 using Xunit;
 
 namespace SecsGem.Runtime.Tests
 {
     /// <summary>
-    /// Order 目录特征化测试：锁定当前支持的指令清单，
+    /// Protocol/Messages 指令清单测试：锁定当前支持的指令，
     /// 重构（如工厂缓存化、门面化）时若意外丢失某个指令会立刻被发现。
     /// </summary>
     public class SecsOrderCatalogTests
@@ -21,6 +23,20 @@ namespace SecsGem.Runtime.Tests
                          && typeof(SecsOrderBase).IsAssignableFrom(t)
                          && !t.IsAbstract)
                 .ToList();
+        }
+
+        [Fact]
+        public void Protocol_Registry_And_Legacy_Factory_Resolve_To_The_Same_Instance()
+        {
+            var container = new TestPrismContainer();
+            new SecsGemModule().RegisterTypes(container);
+
+            var registry = (SecsMessageRegistry)container.Resolve(typeof(SecsMessageRegistry));
+            var legacy = (SemiTool.Tool.FactoryCollection)container.Resolve(typeof(SemiTool.Tool.FactoryCollection));
+
+            Assert.Same(legacy, registry);
+            registry.AutoRegisterHandlers();
+            Assert.Equal("S1F13", registry.GetHandler("S1F13")?.GetType().Name);
         }
 
         [Fact]

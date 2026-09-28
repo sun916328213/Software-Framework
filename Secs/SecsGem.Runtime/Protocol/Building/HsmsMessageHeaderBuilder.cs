@@ -10,9 +10,9 @@ using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.HighPerformance.Buffers;
 
-namespace Secs.Tool
+namespace SecsGem.Runtime.Protocol.Building
 {
-    public class MessageHeader_Refactor
+    internal class HsmsMessageHeaderBuilder
     {
        static object _lock = new object();
         private  int Id { get; set; }
@@ -35,7 +35,7 @@ namespace Secs.Tool
             {
                 var headerBytes = new byte[10];
                 var buffer = new MemoryBufferWriter<byte>(headerBytes);
-                new MessageHeader_Refactor
+                new HsmsMessageHeaderBuilder
                 {
                     DeviceId = DeviceId,
                     ReplyExpected = secsMessage.ReplyExpected,
@@ -63,11 +63,11 @@ namespace Secs.Tool
             buffer.Advance(10);
         }
 
-        private static void Decode(ReadOnlySpan<byte> span, out MessageHeader_Refactor header)
+        private static void Decode(ReadOnlySpan<byte> span, out HsmsMessageHeaderBuilder header)
         {
             ref var r0 = ref MemoryMarshal.GetReference(span);
             var s = Unsafe.Add(ref r0, 2u);
-            header = new MessageHeader_Refactor
+            header = new HsmsMessageHeaderBuilder
             {
                 DeviceId = (ushort)(BinaryPrimitives.ReadUInt16BigEndian(span) & 0b01111111_11111111),
                 ReplyExpected = (s & 0b1000_0000) != 0,

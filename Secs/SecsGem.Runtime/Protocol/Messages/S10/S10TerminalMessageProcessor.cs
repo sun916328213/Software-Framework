@@ -1,19 +1,18 @@
 using Secs4Net;
+using SecsGem.Runtime.Protocol.Parsing;
 
 namespace Secs.Order.S10;
 
 /// <summary>处理 S10F3/S10F5 终端消息，并生成终端确认应答。</summary>
 internal static class S10TerminalMessageProcessor
 {
-    private static readonly SecsOrderBase ItemReader = new();
-
     public static Item? Process(string command, Item? terminalText, ITerminalDisplay display)
     {
         try
         {
             if (terminalText is not null)
             {
-                var lines = ItemReader.SecsItemToList(terminalText);
+                var lines = SecsItemParser.Flatten(terminalText);
                 var message = string.Join("/r/n", lines);
                 if (lines is not null)
                     display.Show(command, message);

@@ -3,7 +3,7 @@ using Secs.Order.S9;
 using Secs4Net;
 using SecsGem.Runtime.DataBinding;
 using SecsGem.Runtime.Transport;
-using SemiTool.Tool;
+using SecsGem.Runtime.Protocol.Registry;
 
 namespace SecsGem.Runtime.Protocol;
 
