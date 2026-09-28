@@ -53,9 +53,23 @@ internal sealed class SecsProtocolEngine
 
         var handler = _registry.GetHandler(order)
             ?? throw new InvalidOperationException($"未找到对应的处理器: {order}");
-        var item = order == "S6F11"
-            ? handler.GetSendItem(data, _binding.Manager)
-            : handler.GetSendItem(data);
+        Item? item;
+        if (order == "S6F11")
+        {
+            // S6F11 的 GetSendItem 约定 pData = { S6F11Info, VIDManager }。
+            // ⛔ 它的签名是 params object[]，两个元素必须装进**同一个数组**再传：
+            //    若写成 GetSendItem(data, _binding.Manager)，C# 会按展开形参包成 { data, manager }，
+            //    pData[0] 就成了 object[] ⇒ S6F11 内 (S6F11Info)pData[0] 抛 InvalidCastException
+            //    ⇒ 被其 catch 吞成 null ⇒ 误报「S6F11 组包失败，已取消发送」。
+            item = data.Length > 0
+                ? handler.GetSendItem(new object[] { data[0], _binding.Manager })
+                : null;
+        }
+        else
+        {
+            item = handler.GetSendItem(data);
+        }
+
         if (item == null)
         {
             throw new InvalidOperationException($"{order} 组包失败，已取消发送");
