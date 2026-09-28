@@ -12,6 +12,9 @@ using Secs.Order.S6;
 using Secs.Order.S9;
 using Secs.Variable;
 using Secs.Variable.Data;
+using SecsGem.Runtime.Transport;
+using SecsGem.Runtime.DataBinding;
+using SecsGem.Runtime.Protocol;
 using Secs4Net;
 using SemiTool.Tool;
 using System;
@@ -25,10 +28,16 @@ namespace SecsGem.Runtime
     /// 连接、数据读写、报警/事件上报、上下线控制、远程命令回调全部收敛于本类；
     /// 各 Manager 为内部实现细节，业务代码不要再直接访问。
     /// </summary>
-    public partial class SecsGemRuntime : SecsHelper
+    public partial class SecsGemRuntime
     {
         #region 管理器实例
         private readonly IContainerProvider _container;
+        private readonly ISecsTransport _transport;
+        private readonly SecsDataBinding _dataBinding;
+        private readonly SecsProtocolEngine _protocolEngine;
+        private readonly VIDManager _vidManager;
+        private readonly StatusManager _statusManager;
+        private readonly FactoryCollection _factoryCollection;
 
         /// <summary>S10 终端消息的显示服务；宿主可注入 WPF 或其他实现。</summary>
         public ITerminalDisplay TerminalDisplay { get; set; } = new WpfTerminalDisplay();
@@ -37,13 +46,13 @@ namespace SecsGem.Runtime
         /// VID 管理实例
         /// </summary>
         [Obsolete("内部实现将收口，请改用 SetVid/GetVid 等门面方法", false)]
-        public VIDManager _VIDManager => _container.Resolve<VIDManager>();
+        public VIDManager _VIDManager => _vidManager;
 
         /// <summary>
         /// 状态管理器实例 使用时必须配置
         /// </summary>
         [Obsolete("内部实现将收口，请改用 Mode/Status/GoOnlineRemoteAsync 等门面成员", false)]
-        public StatusManager _StatusManager => _container.Resolve<StatusManager>();
+        public StatusManager _StatusManager => _statusManager;
 
         /// <summary>
         /// 连接管理器实例
@@ -66,25 +75,33 @@ namespace SecsGem.Runtime
         /// <summary>
         /// 指令工厂集合
         /// </summary>
-        private FactoryCollection _FactoryCollection => _container.Resolve<FactoryCollection>();
+        private FactoryCollection _FactoryCollection => _factoryCollection;
         #endregion
 
         #region 构造函数
-        public SecsGemRuntime(IContainerProvider container) : base(container)
+        public SecsGemRuntime(IContainerProvider container)
         {
             _container = container;
-            _FactoryCollection.AutoRegisterHandlers();
-            OnReceive += SecsBase_OnReceiveAsync;
-            OnReply += SecsBase_OnReply;
-            OnConnectChanged += SecsControl_OnConnectChanged;
+            _transport = new Secs4NetTransport(container);
+            _statusManager = container.Resolve<StatusManager>();
+            _vidManager = container.Resolve<VIDManager>();
+            _factoryCollection = container.Resolve<FactoryCollection>();
+            _statusManager.SetConnection(_transport.IsConnected);
+            _factoryCollection.AutoRegisterHandlers();
+            _dataBinding = new SecsDataBinding(_vidManager);
+            _protocolEngine = new SecsProtocolEngine(_factoryCollection, _dataBinding, _transport, Send, ReplyAsync);
+            _transport.OnReceive += SecsBase_OnReceiveAsync;
+            _transport.OnReply += SecsBase_OnReply;
+            _transport.OnConnectChanged += SecsControl_OnConnectChanged;
         }
 
         private void SecsControl_OnConnectChanged(object sender, ConnectionState e)
         {
+            var status = _statusManager;
+            status.SetConnection(e == ConnectionState.Selected);
             if (e != ConnectionState.Selected)
             {
-                // 断线必须把模式写回 Offline（StatusManager 已修复断线门禁拦截问题）
-                var status = _container.Resolve<StatusManager>();
+                // 断线仍记录 Offline，待下一次联机再上报。
                 status.UpdateSEMIMode(status.Mode_VIDName, ESecsMode.Offline);
             }
         }
@@ -137,26 +154,26 @@ namespace SecsGem.Runtime
         /// </summary>
         /// <param name="pName">VID名称</param>
         /// <param name="pValue">数据</param>
-        public void SetVid(string pName, object pValue) => _VIDManager.UpdateVID(pName, pValue);
+        public void SetVid(string pName, object pValue) => _dataBinding.SetVariable(pName, pValue);
 
         /// <summary>
         /// 追加VID数据（列表型VID追加一项）
         /// </summary>
         /// <param name="pName">VID名称</param>
         /// <param name="pValue">数据</param>
-        public void AppendVid(string pName, object pValue) => _VIDManager.AppendVID(pName, pValue);
+        public void AppendVid(string pName, object pValue) => _dataBinding.AppendVariable(pName, pValue);
 
         /// <summary>
         /// 根据名称获取VID信息对象
         /// </summary>
         /// <param name="pName">VID名称</param>
-        public VIDInfo GetVid(string pName) => _VIDManager.GetVIDByName(pName);
+        public VIDInfo GetVid(string pName) => _dataBinding.GetVariable(pName);
 
         /// <summary>
         /// 根据名称获取VID值字符串
         /// </summary>
         /// <param name="pName">VID名称</param>
-        public string GetVidValue(string pName) => _VIDManager.GetValueByName(pName);
+        public string GetVidValue(string pName) => _dataBinding.GetVariableValue(pName);
         #endregion
 
         #region 门面API：主动上报
@@ -318,29 +335,7 @@ namespace SecsGem.Runtime
         /// <param name="pData">SecsMessage转string数据</param>
         public async Task SecsBase_OnReceiveAsync(SecsMessage pSecsMessage, string pData)
         {
-            if (pSecsMessage == null) return;
-
-            string order = "S" + pSecsMessage.S + "F" + pSecsMessage.F;
-
-            if (order is "S1F3" or "S1F11")
-            {
-                RefreshEquipmentData();
-            }
-
-            // 从缓存字典获取处理器（O(1)，无反射）
-            var handler = _FactoryCollection.GetHandler(order);
-            if (handler == null)
-            {
-                // 抛出后由接收循环捕获并自动回 S9Fx 兜底，Host 不必等 T3 超时
-                throw new Exception($"未找到对应的处理器: {order}");
-            }
-
-            // 异步回包入口（支持需要回调业务的指令）；返回 null 时底层自动回 S9F7
-            Item item = await handler.GetReplyItemAsync(pSecsMessage).ConfigureAwait(false);
-            await ReplyAsync(pSecsMessage, item).ConfigureAwait(false);
-
-            // 触发字典中对应指令的事件（供 EventHelper.WaitForEventAsync 使用）
-            EventHelper.TriggerEvent(order);
+            await _protocolEngine.ReceiveAsync(pSecsMessage).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -352,48 +347,7 @@ namespace SecsGem.Runtime
         /// <returns></returns>
         public virtual async Task SendItem(string pOrder, bool IsWait, params object[] pData)
         {
-            if (string.IsNullOrEmpty(pOrder)) return;
-
-            var handler = _FactoryCollection.GetHandler(pOrder);
-            if (handler == null)
-            {
-                throw new Exception($"未找到对应的处理器: {pOrder}");
-            }
-
-            Item item;
-
-            switch (pOrder)
-            {
-                case "S6F11":
-                    item = handler.GetSendItem(pData, _VIDManager);
-                    break;
-                default:
-                    item = handler.GetSendItem(pData);
-                    break;
-            }
-
-            // 组包失败禁止发出空消息（原实现会发出 SecsItem=null 的畸形消息）
-            if (item == null)
-            {
-                throw new Exception($"{pOrder} 组包失败，已取消发送");
-            }
-
-            try
-            {
-                await Send(pOrder, item, IsWait).ConfigureAwait(false);
-            }
-            catch (SecsException ex)
-            {
-                if (ex.Message.Contains("T3 Timeout"))   ///T3对话超时
-                {
-                    SecsMessage secsMessage = ex.SecsMessage;
-                    SS9F9 data = new SS9F9() { SecsMessage = secsMessage, DeviceID = DeviceID, ID = ID };
-                    await SendItem("S9F9", false, data).ConfigureAwait(false);
-                    throw new Exception($"T3超时: {ex.Message}", ex);
-                }
-                // 使用统一的异常处理机制记录Secs异常
-                throw new Exception($"Secs异常: {ex.Message}", ex);
-            }
+            await _protocolEngine.SendItemAsync(pOrder, IsWait, pData).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -408,22 +362,5 @@ namespace SecsGem.Runtime
         }
         #endregion
 
-        #region IDisposable Support
-        private bool _disposed = false;
-
-        protected override void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                }
-
-                // 调用基类的Dispose方法
-                base.Dispose(disposing);
-                _disposed = true;
-            }
-        }
-        #endregion
     }
 }

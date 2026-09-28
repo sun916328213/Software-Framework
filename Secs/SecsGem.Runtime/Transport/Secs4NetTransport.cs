@@ -10,29 +10,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using ConnectionState = Secs4Net.ConnectionState;
 using DataManager.Log.SeriLog;
+using Secs;
+using SecsGem.Runtime.Transport;
 
-namespace Secs
+namespace SecsGem.Runtime.Transport
 {
-    /// <summary>
-    /// Secs事件处理委托
-    /// </summary>
-    /// <param name="pSecsMessage">Secs消息</param>
-    /// <param name="pData">数据</param>
-    /// <returns>异步任务</returns>
-    public delegate Task SecsHandle(SecsMessage pSecsMessage, string pData);
-
-    /// <summary>
-    /// Secs级别事件处理委托
-    /// </summary>
-    /// <param name="pData">数据</param>
-    public delegate void SecsLevelHandle(string pData);
-
     /// <summary>
     /// Secs/GEM通信助手类 - 提供与Secs/GEM设备的通信功能
     /// 接收循环串行分发：收到主消息直接回包（O(1)，无轮询队列），异常单条隔离。
     /// 实现ISecsGemLogger接口，支持日志记录；实现IDisposable模式，确保资源正确释放。
     /// </summary>
-    public class SecsHelper : ISecsGemLogger, IDisposable
+    public class Secs4NetTransport : ISecsTransport, ISecsGemLogger
     {
         #region 依赖注入属性
         internal LogManager _logManager;
@@ -40,7 +28,7 @@ namespace Secs
         #endregion
 
         #region 构造函数
-        public SecsHelper(IContainerProvider container)
+        public Secs4NetTransport(IContainerProvider container)
         {
             _logManager = container.Resolve<LogManager>();
         }
@@ -260,6 +248,7 @@ namespace Secs
         /// </summary>
         public virtual void Close()
         {
+            var wasConnected = IsConnected;
             if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
             {
                 _cancellationTokenSource.Cancel();
@@ -277,6 +266,10 @@ namespace Secs
             _currentPrimary = null;
             _secsGem = null;
             IsConnected = false;
+            if (wasConnected)
+            {
+                OnConnectChanged?.Invoke(this, ConnectionState.Retry);
+            }
         }
 
         #endregion
@@ -391,8 +384,8 @@ namespace Secs
         /// </summary>
         void OnConnectionChanged(object obj, Secs4Net.ConnectionState e)
         {
-            OnConnectChanged?.Invoke(obj, e);
             IsConnected = e == ConnectionState.Selected;
+            OnConnectChanged?.Invoke(obj, e);
         }
 
         /// <summary>

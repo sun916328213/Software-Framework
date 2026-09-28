@@ -9,6 +9,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SecsGem.Runtime.StateMachine;
 
 namespace Secs.Manager
 {
@@ -37,27 +38,20 @@ namespace Secs.Manager
 
         private readonly SemaphoreSlim _semaphore;
         private readonly object _lockObject = new object();
+        private readonly SecsStateMachine _state = new SecsStateMachine();
   
 
         /// <summary>
         /// 当前设备状态
         /// </summary>
-        public EDeviceStatus CurrentStatus { get; private set; } = EDeviceStatus.Idle;
+        public EDeviceStatus CurrentStatus => _state.Status;
 
         /// <summary>
         /// 当前SEMI模式
         /// </summary>
-        public ESecsMode CurrentMode { get; private set; } = ESecsMode.Offline;
+        public ESecsMode CurrentMode => _state.Mode;
 
-        /// <summary>
-        /// 上一次设备状态
-        /// </summary>
-        private EDeviceStatus LastStatus { get; set; }
-
-        /// <summary>
-        /// 上一次SEMI模式
-        /// </summary>
-        private ESecsMode LastMode { get; set; }
+        internal void SetConnection(bool connected) => _state.SetConnection(connected);
 
         /// <summary>
         /// 延时时间
@@ -101,16 +95,11 @@ namespace Secs.Manager
             {
                 try
                 {
-                    CurrentMode = pSecsMode;
-
-                    // 离线时只记录状态，不触发事件上报
-                    if (!SecsControl.IsConnected) return;
-
-                    if (CurrentMode != LastMode)
+                    if (_state.SetMode(pSecsMode))
                     {
                         Mode_VIDName = pVIDName;
                         EventHelper.TriggerEvent(Mode_VIDName);
-                        LastMode = CurrentMode;
+                        _state.MarkModeReported();
                     }
                 }
                 catch (Exception ex)
@@ -131,15 +120,11 @@ namespace Secs.Manager
             {
                 try
                 {
-                    CurrentStatus = pStatus;
-
-                    if (!SecsControl.IsConnected) return;
-
-                    if (CurrentStatus != LastStatus)
+                    if (_state.SetStatus(pStatus))
                     {
                         Status_VIDName = pVIDName;
                         EventHelper.TriggerEvent(Status_VIDName);
-                        LastStatus = CurrentStatus;
+                        _state.MarkStatusReported();
                     }
                 }
                 catch (Exception ex)

@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using DataManager.Log;
+using Extension.Automation.Secs;
 using Secs;
 using Secs.Manager;
 using SecsGem.Runtime.Tests.Infrastructure;
@@ -85,6 +86,27 @@ namespace SecsGem.Runtime.Tests.Integration
             Assert.False(runtime.GetState().IsConnected);
             Assert.Equal("LOT-42", runtime.GetVariableValue("LotId"));
             Assert.Equal("LOT-42", control.GetVidValue("LotId"));
+        }
+
+        [Fact(Timeout = 30000)]
+        public async Task Disconnect_Records_Offline_Mode_Without_A_Host()
+        {
+            using var host = HsmsHostSimulator.Start();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+            using var control = CreateControl();
+
+            // State changes made while disconnected are retained locally.
+            control._StatusManager.UpdateSEMIMode("Mode", ESecsMode.Online_Remote);
+            Assert.Equal(ESecsMode.Online_Remote, control.GetDeviceMode());
+
+            await control.ConnectAsync(true, "127.0.0.1", host.Port, DeviceId).ConfigureAwait(false);
+            await host.WaitForDeviceAsync(cts.Token).ConfigureAwait(false);
+            await host.CompleteSelectAsync(cts.Token).ConfigureAwait(false);
+            await WaitUntilAsync(() => control.IsConnected, TimeSpan.FromSeconds(5), "设备进入 Selected").ConfigureAwait(false);
+
+            control.Close();
+            await WaitUntilAsync(() => !control.IsConnected, TimeSpan.FromSeconds(5), "设备断开").ConfigureAwait(false);
+            Assert.Equal(ESecsMode.Offline, control.GetDeviceMode());
         }
 
         private static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout, string description)

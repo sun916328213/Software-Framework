@@ -8,7 +8,6 @@ namespace SecsGem.Runtime;
 public partial class SecsGemRuntime : ISecsGemRuntime
 {
     private ISecsGemEventHandler? _gemEventHandler;
-    private IEquipmentDataProvider? _equipmentDataProvider;
 
     public SecsGemState GetState() => new(
         IsConnected,
@@ -69,21 +68,7 @@ public partial class SecsGemRuntime : ISecsGemRuntime
     public void SetEventHandler(ISecsGemEventHandler? handler) => _gemEventHandler = handler;
 
     public void SetEquipmentDataProvider(IEquipmentDataProvider? provider) =>
-        _equipmentDataProvider = provider;
+        _dataBinding.SetProvider(provider);
 
-    private void RefreshEquipmentData()
-    {
-        var provider = _equipmentDataProvider;
-        if (provider == null) return;
-
-        var values = provider.GetVariableValues()
-            ?? throw new InvalidOperationException("Equipment data provider returned no variable snapshot.");
-        foreach (var (name, value) in values)
-        {
-            if (_VIDManager.VIDDic_Name.TryGetValue(name, out var vid))
-            {
-                vid.Value = value!;
-            }
-        }
-    }
+    private void RefreshEquipmentData() => _dataBinding.Refresh();
 }
