@@ -79,7 +79,7 @@ namespace WPFControl.Tests
                          @"..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj",
                          @"..\..\Secs\Secs.Runtime\Secs.Runtime.csproj",
                          @"..\..\Device\Device\Device.csproj",
-                         @"..\..\Vision\Ctr_WPF_F48\Ctr_WPF_F48.csproj",
+                         @"..\..\Vision\Vision.Controls.Wpf\Vision.Controls.Wpf.csproj",
                          @"..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj",
                          @"..\..\FlowEditor\FlowEditor\FlowEditor.csproj",
                          @"..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj"
@@ -154,7 +154,7 @@ namespace WPFControl.Tests
                 @"..\..\Secs\Secs.Runtime\Secs.Runtime.csproj",
                 @"..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj",
                 @"..\..\FlowEditor\FlowEditor\FlowEditor.csproj",
-                @"..\..\Vision\DPLibrary_Base_F48\DPLibrary_Base_F48.csproj",
+                @"..\..\Vision\Vision.Core\Vision.Core.csproj",
                 @"..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj",
                 @"..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj",
                 @"..\..\FlowNodes\FlowNodes\FlowNodes.csproj"

@@ -1,4 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 迁移源（P1 · 2026-09-28）—— 按《Vision_Architecture_Optimization_Plan v1.1》
+       §P1：「DPLibrary_Halcon_F48 暂不一次性删除，作为迁移源逐步拆出」。
+       · 传统 HALCON Tool 迁往 Vision.Tools.Halcon（P3）；
+       · HALCON AI 迁往 Vision.AI.Halcon（P6）；
+       · 不应存在的 OpenCvSharp 依赖在 P4 清理（附录 A）；
+       · 迁移完成后按 P9 退场。
+       ⛔ 本工程只作为迁移来源，**不得再新增功能**。 -->
   <PropertyGroup>
     <Platform>AnyCPU</Platform>
     <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
@@ -16,7 +23,7 @@
     <Page Remove="Tools\æ–°æ–‡ä»¶å¤¹\**" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DPLibrary_Base_F48\DPLibrary_Base_F48.csproj" />
+    <ProjectReference Include="..\Vision.Core\Vision.Core.csproj" />
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
   </ItemGroup>
   <ItemGroup>

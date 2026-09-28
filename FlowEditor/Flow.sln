@@ -21,9 +21,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptEditor", "..\ScriptEd
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotionControl", "..\MotionControl\MotionControl\MotionControl.csproj", "{177B5737-78CC-4765-9C24-CCAECB8DF72D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ctr_WPF_F48", "..\Vision\Ctr_WPF_F48\Ctr_WPF_F48.csproj", "{45CBBB7A-0538-4605-9E2C-0C867E9393A8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vision.Controls.Wpf", "..\Vision\Vision.Controls.Wpf\Vision.Controls.Wpf.csproj", "{45CBBB7A-0538-4605-9E2C-0C867E9393A8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DPLibrary_Base_F48", "..\Vision\DPLibrary_Base_F48\DPLibrary_Base_F48.csproj", "{8DCD026C-7E3D-4D81-97B9-096781CA68E8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vision.Core", "..\Vision\Vision.Core\Vision.Core.csproj", "{8DCD026C-7E3D-4D81-97B9-096781CA68E8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DPLibrary_Halcon_F48", "..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj", "{CED12710-B751-489E-BEF8-B6AAA34B018D}"
 EndProject

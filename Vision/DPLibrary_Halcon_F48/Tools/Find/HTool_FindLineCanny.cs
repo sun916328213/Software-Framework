@@ -1,5 +1,5 @@
-﻿using DPLibrary_Base_F48;
-using DPLibrary_Base_F48.Tools;
+﻿using Vision.Core;
+using Vision.Core.Tools;
 using DPLibrary_Halcon_F48.Base;
 using HalconDotNet;
 using System;

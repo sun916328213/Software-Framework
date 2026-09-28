@@ -8,7 +8,7 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:view="clr-namespace:WPFControl.CustomControl.Views"
-    xmlns:visiontool="clr-namespace:Ctr_WPF_F48.Ctr_Halcon.View;assembly=Ctr_WPF_F48"
+    xmlns:visiontool="clr-namespace:Vision.Controls.Wpf.Ctr_Halcon.View;assembly=Vision.Controls.Wpf"
     x:Name="UserControl"
     d:DesignHeight="450"
     d:DesignWidth="800"

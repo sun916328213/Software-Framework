@@ -1,4 +1,4 @@
-using DPLibrary_Base_F48;
+using Vision.Core;
 using DPLibrary_Halcon_F48.Base.DispMessage;
 using HalconDotNet;
 using System;
@@ -9,9 +9,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DPLibrary_Halcon_F48.Base;
-using DPLibrary_Base_F48.Tools;
+using Vision.Core.Tools;
 using System.Diagnostics;
-using DPLibrary_Base_F48.Vision;
+using Vision.Core.Vision;
 
 namespace DPLibrary_Halcon_F48.Tools
 {

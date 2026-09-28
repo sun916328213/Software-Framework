@@ -1,7 +1,7 @@
 using FlowEditor.Nodes;
 using Common.StreamEX.Json;
-using Ctr_WPF_F48.Ctr_Halcon.View;
-using DPLibrary_Base_F48.Tools;
+using Vision.Controls.Wpf.Ctr_Halcon.View;
+using Vision.Core.Tools;
 using DPLibrary_Halcon_F48.Tools;
 using FlowEditor.Core;
 using FlowEditor.Interfaces;

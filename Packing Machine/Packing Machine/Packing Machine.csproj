@@ -41,7 +41,7 @@
     <ProjectReference Include="..\..\Secs\Secs.Runtime\Secs.Runtime.csproj" />
     <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />
     <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />
-    <ProjectReference Include="..\..\Vision\DPLibrary_Base_F48\DPLibrary_Base_F48.csproj" />
+    <ProjectReference Include="..\..\Vision\Vision.Core\Vision.Core.csproj" />
     <ProjectReference Include="..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj" />
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
     <!-- 2026-09-23（运行时补漏）：这条与前 11 条不同 —— 不是编译需要，而是**运行时**需要。

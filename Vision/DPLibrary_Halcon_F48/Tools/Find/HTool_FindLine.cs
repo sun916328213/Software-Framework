@@ -1,8 +1,8 @@
 using System;
-using DPLibrary_Base_F48;
-using DPLibrary_Base_F48.ObservableCollectionEx;
-using DPLibrary_Base_F48.Tools;
-using DPLibrary_Base_F48.Vision;
+using Vision.Core;
+using Vision.Core.ObservableCollectionEx;
+using Vision.Core.Tools;
+using Vision.Core.Vision;
 using DPLibrary_Halcon_F48.Base;
 using DPLibrary_Halcon_F48.Tools.Find;
 using HalconDotNet;

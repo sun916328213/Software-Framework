@@ -1,4 +1,4 @@
-﻿using Ctr_WPF_F48.Ctr_Halcon.View;
+﻿using Vision.Controls.Wpf.Ctr_Halcon.View;
 using DataManager.Log;
 using Device.Camera;
 using Device.Camera.Gige;

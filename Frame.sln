@@ -27,9 +27,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "12 WPFControl", "12 WPFCont
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "07 Secs", "07 Secs", "{3DEC4C3B-F2C2-40C9-AD8E-E393EC9B0FE9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ctr_WPF_F48", "Vision\Ctr_WPF_F48\Ctr_WPF_F48.csproj", "{6F194CCB-F005-425B-8C32-4B55D357C47F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vision.Controls.Wpf", "Vision\Vision.Controls.Wpf\Vision.Controls.Wpf.csproj", "{6F194CCB-F005-425B-8C32-4B55D357C47F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DPLibrary_Base_F48", "Vision\DPLibrary_Base_F48\DPLibrary_Base_F48.csproj", "{1FE55FB6-0E2A-4CB5-9A3D-4EEA629B370B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vision.Core", "Vision\Vision.Core\Vision.Core.csproj", "{1FE55FB6-0E2A-4CB5-9A3D-4EEA629B370B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DPLibrary_Halcon_F48", "Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj", "{6589BECD-29F2-4433-B2B3-0E3142092358}"
 EndProject
@@ -51,7 +51,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Secs4Net.Sml", "Secs\secs4n
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "02 WPFCustomControls", "02 WPFCustomControls", "{FF0D73C9-2A59-4676-93C7-08E9E2E6D983}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisionDemo", "Vision\VisionDemo\VisionDemo.csproj", "{92C307D2-E9AE-2413-F3A8-0072DD2A8708}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vision.Workbench", "Vision\Vision.Workbench\Vision.Workbench.csproj", "{92C307D2-E9AE-2413-F3A8-0072DD2A8708}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "11 FlowNodes", "11 FlowNodes", "{FF01EDED-B69E-4057-9264-94A7563CFA86}"
 EndProject

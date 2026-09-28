@@ -1,4 +1,4 @@
-﻿using DPLibrary_Base_F48.Vision;
+﻿using Vision.Core.Vision;
 using DPLibrary_Halcon_F48.Base;
 using DPLibrary_Halcon_F48.Base.DispMessage;
 using HalconDotNet;

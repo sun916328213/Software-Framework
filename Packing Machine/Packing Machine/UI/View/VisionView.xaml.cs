@@ -1,7 +1,7 @@
 ﻿using Device.Camera;
 using Device.Camera.Gige;
 using Device.Scan;
-using DPLibrary_Base_F48.Vision;
+using Vision.Core.Vision;
 using DPLibrary_Halcon_F48;
 using DPLibrary_Halcon_F48.Tools;
 using DPLibrary_Halcon_F48.Tools.FindLine;

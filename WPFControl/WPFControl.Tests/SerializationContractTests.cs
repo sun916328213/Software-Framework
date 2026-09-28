@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json.Serialization;
-using DPLibrary_Base_F48;
+using Vision.Core;
 using DPLibrary_Halcon_F48.Tools;
 using DPLibrary_Halcon_F48.Tools.FindLine;
 using Xunit;
@@ -24,7 +24,7 @@ namespace WPFControl.Tests
     /// （引用类型 = null、枚举 = 0 值成员、Point = (0,0)）。编译期、运行期都不报错。
     ///
     /// 同一组合还会连带打掉**属性面板**的可编辑性 ——
-    /// <c>Vision/Ctr_WPF_F48/Ctr_Base/PropertyEditorBindingHelper.cs</c> 的判据是
+    /// <c>Vision/Vision.Controls.Wpf/Ctr_Base/PropertyEditorBindingHelper.cs</c> 的判据是
     /// <c>prop.CanWrite &amp;&amp; prop.SetMethod != null &amp;&amp; prop.SetMethod.IsPublic</c>。
     ///
     /// ⚠️ 本守卫**必须用反射**，不能用正则扫源码。实测教训：
@@ -42,13 +42,13 @@ namespace WPFControl.Tests
     {
         /// <summary>
         /// 序列化域：真正会走 STJ 存/读档的两个程序集。
-        /// <c>DPLibrary_Halcon_F48</c> 引 <c>DPLibrary_Base_F48</c>；
+        /// <c>DPLibrary_Halcon_F48</c> 引 <c>Vision.Core</c>；
         /// <c>Tool.Save()</c>（ITool.cs）用 <c>JsonHelper.SerializeToFile(this, …)</c> 整实例存盘，
         /// <c>ToolMge</c> 读回 ⇒ 这两棵树里的属性都在契约射程内。
         /// </summary>
         private static readonly Assembly[] DomainAssemblies =
         [
-            typeof(ToolPropertyAttribute).Assembly,   // DPLibrary_Base_F48
+            typeof(ToolPropertyAttribute).Assembly,   // Vision.Core
             typeof(MeasureParam).Assembly             // DPLibrary_Halcon_F48
         ];
 
@@ -119,8 +119,8 @@ namespace WPFControl.Tests
                     // （HTool_Fixtrue.cs / HTool_TemplateMatch.cs）⇒ 行为一致。
                     // ⛔ 一旦改成 public，STJ 会尝试构造 ToolInputPorts
                     // ⇒ NotSupportedException（没有可用的无参构造函数）。改了就炸。
-                    "DPLibrary_Base_F48.Tools.Tool::Inputs",
-                    "DPLibrary_Base_F48.Tools.Tool::Outputs"
+                    "Vision.Core.Tools.Tool::Inputs",
+                    "Vision.Core.Tools.Tool::Outputs"
                     // 2026-09-23：HBase_TemplateControl::BasePoint 与 HTool_Fixtrue::Matrix
                     // 已按「计算结果」语义加 [JsonInclude]（保留 protected set）修复，
                     // 因此被本守卫的 [JsonInclude] 豁免口径排除 —— 按仓库约定，

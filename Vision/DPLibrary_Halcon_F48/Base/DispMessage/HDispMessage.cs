@@ -1,4 +1,4 @@
-﻿using DPLibrary_Base_F48.Vision;
+﻿using Vision.Core.Vision;
 using HalconDotNet;
 using System;
 using System.Collections.Generic;

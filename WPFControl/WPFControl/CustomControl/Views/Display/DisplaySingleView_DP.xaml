@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:halcon="http://schemas.mvtec.com/halcondotnet"
-    xmlns:halcon_dp="clr-namespace:Ctr_WPF_F48.Ctr_Halcon.View;assembly=Ctr_WPF_F48"
+    xmlns:halcon_dp="clr-namespace:Vision.Controls.Wpf.Ctr_Halcon.View;assembly=Vision.Controls.Wpf"
     xmlns:local="clr-namespace:WPFControl.CustomControl.Views.Display"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
