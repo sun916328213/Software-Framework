@@ -21,7 +21,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using OpenCvSharp;
 
 namespace DPLibrary_Halcon_F48.Tools.AI.Invi
 {

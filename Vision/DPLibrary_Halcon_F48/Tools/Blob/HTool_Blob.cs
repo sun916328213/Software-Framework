@@ -7,7 +7,6 @@ using DPLibrary_Halcon_F48.Base.DispMessage;
 using DPLibrary_Halcon_F48.Tools.Find;
 using DPLibrary_Halcon_F48.Tools.FindLine;
 using HalconDotNet;
-using OpenCvSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

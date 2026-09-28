@@ -10,5 +10,10 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Vision.Core\Vision.Core.csproj" />
+    <!-- P4（2026-09-28）：OpenCV 正式后端。OpenCvSharp 由本工程直接引用，
+         不经 Extension / 不经 DPLibrary_Halcon_F48（计划 §P4「从原工程移除不应存在的依赖」）。
+         runtime.win 一并声明，使本后端可独立部署（验收：不依赖 HALCON）。 -->
+    <PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
+    <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.11.0.20250507" />
   </ItemGroup>
 </Project>

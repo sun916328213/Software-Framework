@@ -17,6 +17,9 @@
          引用标准化后的 Vision.Tools.Halcon；旧 DPLibrary_Halcon_F48 的页签保持不动，
          P9 退场前新旧并存。 -->
     <ProjectReference Include="..\Vision.Tools.Halcon\Vision.Tools.Halcon.csproj" />
+    <!-- P4（2026-09-28）：OpenCV 正式后端同样注册进 Workbench（与 P3 HalconToolCatalog 对等），
+         为 P9 的 HALCON vs OpenCV Compare 预留装配点。 -->
+    <ProjectReference Include="..\Vision.Tools.OpenCv\Vision.Tools.OpenCv.csproj" />
   </ItemGroup>
 
   <ItemGroup>

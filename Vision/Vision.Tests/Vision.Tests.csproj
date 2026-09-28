@@ -28,5 +28,8 @@
     <!-- P3（2026-09-28）：HALCON Tool Contract Tests 引用标准化后的 Vision.Tools.Halcon。
          只测 Validate/Parameters/Result/纯 helper，无 HALCON Runtime 也能跑（计划 §9.1）。 -->
     <ProjectReference Include="..\Vision.Tools.Halcon\Vision.Tools.Halcon.csproj" />
+    <!-- P4（2026-09-28）：OpenCV Tool 首批能力 + HALCON/OpenCV 对比测试。
+         OpenCvSharp4.runtime.win 随 Vision.Tools.OpenCv 传递，测试可真实执行 Cv2 算子。 -->
+    <ProjectReference Include="..\Vision.Tools.OpenCv\Vision.Tools.OpenCv.csproj" />
   </ItemGroup>
 </Project>

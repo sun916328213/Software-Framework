@@ -3,7 +3,7 @@
        §P1：「DPLibrary_Halcon_F48 暂不一次性删除，作为迁移源逐步拆出」。
        · 传统 HALCON Tool 迁往 Vision.Tools.Halcon（P3）；
        · HALCON AI 迁往 Vision.AI.Halcon（P6）；
-       · 不应存在的 OpenCvSharp 依赖在 P4 清理（附录 A）；
+       · 不应存在的 OpenCvSharp 直接依赖已在 P4 清理（附录 A；全仓核实零真实调用，仅两处无效 using 一并删除）；
        · 迁移完成后按 P9 退场。
        ⛔ 本工程只作为迁移来源，**不得再新增功能**。 -->
   <PropertyGroup>
@@ -28,7 +28,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
+    <!-- P4（2026-09-28）：已移除 OpenCvSharp4 直接引用。OpenCV 能力归 Vision.Tools.OpenCv（正式后端）；
+         本迁移源内零真实 OpenCvSharp 调用（P4 已全仓核实），经 Extension 传递的包不再被任何源码使用。 -->
   </ItemGroup>
   <!-- P10-4：InviHelper / IInviNativeApi / AITool.CreateAIHelper 是 internal 的实现细节，
        只对 Vision.Tests 开放，以便用 fake native API 做无 DLL 生命周期测试。 -->
