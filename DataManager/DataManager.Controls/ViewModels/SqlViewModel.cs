@@ -86,7 +86,7 @@ namespace DataManager.Controls.ViewModels
         });
 
         [RelayCommand]
-        private Task DeleteAllAsync() => RunWork("清空表", _workspace.DeleteAll);
+        private Task DeleteAllAsync() => RunAsync("清空表", _workspace.DeleteAllAsync);
 
         [RelayCommand]
         private void SplitTables() => Run(() =>
@@ -165,6 +165,12 @@ namespace DataManager.Controls.ViewModels
         public void OnProfilesSavedExternally() => Run(() =>
             Log($"✓ 已保存 {Model.DataCollection.Count} 个连接档案 → {Model.FullPath}"));
 
+        /// <summary>
+        /// P9-5：取消在途数据库操作（宿主在关闭工作台/离开页面时调用；UI 上不新增控件）。
+        /// 取消属正常流程——不弹系统错误，只记一行“已取消”。
+        /// </summary>
+        public void CancelInFlight() => _workspace.CancelInFlight();
+
         // ---------- 展示层：日志输出/计时/忙指示 ----------
         private void Log(string msg) => DispatcherEx.UIInvokeSafe(
             () => OutputText = $"[{DateTime.Now:HH:mm:ss}] {msg}\n" + OutputText);
@@ -182,6 +188,13 @@ namespace DataManager.Controls.ViewModels
                     sw.Stop();
                     LastElapsed = $"{sw.ElapsedMilliseconds} ms";
                     Log($"✓ {title} ({LastElapsed})");
+                }
+                catch (OperationCanceledException)
+                {
+                    // P9-5：取消不是失败——不按错误记录，也不弹系统错误。
+                    sw.Stop();
+                    LastElapsed = $"{sw.ElapsedMilliseconds} ms";
+                    Log($"… {title} 已取消 ({LastElapsed})");
                 }
                 catch (Exception ex)
                 {
@@ -208,6 +221,13 @@ namespace DataManager.Controls.ViewModels
                 LastElapsed = $"{sw.ElapsedMilliseconds} ms";
                 Log($"✓ {title} ({LastElapsed})");
             }
+            catch (OperationCanceledException)
+            {
+                // P9-5：取消不是失败——不按错误记录，也不弹系统错误。
+                sw.Stop();
+                LastElapsed = $"{sw.ElapsedMilliseconds} ms";
+                Log($"… {title} 已取消 ({LastElapsed})");
+            }
             catch (Exception ex)
             {
                 sw.Stop();
@@ -225,6 +245,10 @@ namespace DataManager.Controls.ViewModels
             try
             {
                 action();
+            }
+            catch (OperationCanceledException)
+            {
+                Log("… 操作已取消");
             }
             catch (Exception ex)
             {

@@ -78,14 +78,30 @@ namespace DataManager.SQL.Definition
         private ESQLToolType _toolType = ESQLToolType.EFCore;
 
         /// <summary>
+        /// P9-4：统一命令执行超时（秒）。默认 0 = 保持 provider 默认行为（升级后不改变现场超时）。
+        /// 只控制命令执行（Dapper CommandDefinition.CommandTimeout / EFCore CommandTimeout /
+        /// SqlSugar Ado.CommandTimeOut），不修改 ConnectionString 直通串里的 Connect Timeout。
+        /// </summary>
+        [ObservableProperty]
+        private int _commandTimeoutSeconds = 0;
+
+        /// <summary>
+        /// P9-4：命令超时映射为「provider 原生口径」：0 表示不设置（null = provider 默认），否则为秒数。
+        /// </summary>
+        public int? CommandTimeoutOrNull => CommandTimeoutSeconds > 0 ? CommandTimeoutSeconds : null;
+
+        /// <summary>
         /// P2-3：参数校验，缺失必填项抛 ArgumentException。
         /// P3-1：按库类型分支校验。直通连接串非空时仅校验 Name + DBType；
         /// SQLite 要求 FilePath/DBName 任一非空；SQL Server 端口可选；其余库保持原规则。
+        /// P9-4：额外校验 CommandTimeoutSeconds 非负（0 合法，表示 provider 默认）。
         /// </summary>
         public void Validate()
         {
             if (string.IsNullOrWhiteSpace(Name))
                 throw new ArgumentException("SQLParam.Name 不能为空。", nameof(Name));
+            if (CommandTimeoutSeconds < 0)
+                throw new ArgumentException("SQLParam.CommandTimeoutSeconds 不能为负（0 表示 provider 默认）。", nameof(CommandTimeoutSeconds));
             if (!string.IsNullOrWhiteSpace(ConnectionString))
                 return;
             if (DBType == ESQLType.SQLite)

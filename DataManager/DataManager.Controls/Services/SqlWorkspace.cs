@@ -3,6 +3,7 @@ using Extension.UI.Controls;
 using Extension.Core.Conversion;
 using DataManager.SQL.Definition;
 using System.Collections.ObjectModel;
+using System.Threading;
 
 namespace DataManager.Controls.Services
 {
@@ -12,14 +13,24 @@ namespace DataManager.Controls.Services
     /// 职责：Model 初始化（读 Config 文件 → 默认）、连接实例生命周期（指纹重建）、
     /// 测试数据生成、全部数据操作（含结果集回填）。
     /// 行实体由宿主定义（实现 <see cref="Models.ISqlEntity"/>），ORM 映射随实体走。
+    /// P9-5：长操作（连接/查询/清表）走可取消 Token；重连、切换档案与释放时先取消在途操作，
+    /// 已释放或已取消的操作不再回写界面。
     /// </summary>
-    public sealed class SqlWorkspace<T>
+    public sealed class SqlWorkspace<T> : IDisposable
         where T : class, Models.ISqlEntity, new()
     {
         private readonly SQLManager _sqlManager;
         private ISQL<T>? _db;
         private string? _currentKey;
         private SQLParam? _currentParam;
+
+        /// <summary>
+        /// P9-5：在途操作取消源。同一时刻至多一个在途操作——签发新 Token 前先取消旧的。
+        /// 只取消不释放：取消后可能仍有在途调用在 Token 上注册回调（EF Core 会），
+        /// 提前 Dispose 会让注册抛 ObjectDisposedException；无定时器的 CTS 无托管外资源，交给 GC 即可。
+        /// </summary>
+        private CancellationTokenSource? _operationCts;
+        private bool _disposed;
 
         /// <summary>页状态（单例 Workspace 持有，VM 直接暴露）。</summary>
         public Models.SqlPageModel<T> Model { get; } = new();
@@ -31,21 +42,87 @@ namespace DataManager.Controls.Services
         }
 
         /// <summary>
+        /// P9-5：签发本次操作的取消标记。若已有在途操作，先取消它（新操作即“接管”）。
+        /// 已释放时返回已取消的 Token，调用方会立刻观察到取消，不会再触碰数据库或界面。
+        /// </summary>
+        public CancellationToken BeginOperation()
+        {
+            if (_disposed)
+                return new CancellationToken(canceled: true);
+            _operationCts?.Cancel();
+            _operationCts = new CancellationTokenSource();
+            return _operationCts.Token;
+        }
+
+        /// <summary>
+        /// P9-5：取消在途操作（重连、切换数据库配置、关闭工作台时调用）。
+        /// 取消属正常流程——不抛异常、不弹错误，调用方按“操作已取消”处理。
+        /// </summary>
+        public void CancelInFlight() => _operationCts?.Cancel();
+
+        /// <summary>
+        /// P9-5：释放——先取消在途操作，再断开并释放 SQL 实例；此后一切界面回写都被丢弃。
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+            _disposed = true;
+            CancelInFlight();
+            _operationCts = null;
+
+            var db = _db;
+            _db = null;
+            _currentKey = null;
+            _currentParam = null;
+            if (db is null)
+                return;
+            try { db.DisConnect(); } catch { }
+            try { _sqlManager.Remove(db); } catch { }
+            try { db.Dispose(); } catch { }
+        }
+
+        /// <summary>
+        /// P9-5：结果回填的统一出口。已释放、或本次操作已被取消时直接丢弃，
+        /// 保证关闭工作台后不会再有后台任务继续改界面（排队期间被取消的也拦在第二道检查上）。
+        /// </summary>
+        private void PostToModel(CancellationToken operationToken, Action write)
+        {
+            if (_disposed || operationToken.IsCancellationRequested)
+                return;
+            DispatcherEx.UIInvokeSafe(() =>
+            {
+                if (_disposed || operationToken.IsCancellationRequested)
+                    return;
+                write();
+            });
+        }
+
+        /// <summary>
         /// 连接指纹：库类型 + 工具类型 + 分字段全文参与，任一改动（含密码纠错）都重建实例。
         /// 曾用“工具+库类型”做键，导致密码改对后仍复用旧实例，一直报密码错误。
         /// P3-1：纳入学 FilePath/ConnectionString/TrustServerCertificate，
         /// 否则 SQLite 换文件、直通串变更不触发重建（同款旧 bug）。
+        /// P9-4：纳入 CommandTimeoutSeconds——EF Core 的命令超时在构造 DbContext 时固化，
+        /// 改了超时值必须重建实例才能生效（Dapper/SqlSugar 虽按命令读取，此处口径统一）。
         /// </summary>
         public static string BuildDbKey(SQLParam param) =>
-            $"{param.ToolType}:{param.DBType}:{param.ServerIP}:{param.Port}:{param.UserName}:{param.Password}:{param.DBName}:{param.FilePath}:{param.ConnectionString}:{param.TrustServerCertificate}";
+            $"{param.ToolType}:{param.DBType}:{param.ServerIP}:{param.Port}:{param.UserName}:{param.Password}:{param.DBName}:{param.FilePath}:{param.ConnectionString}:{param.TrustServerCertificate}:{param.CommandTimeoutSeconds}";
 
-        /// <summary>按参数确保连接实例（指纹命中复用，否则断开旧实例重建）。</summary>
+        /// <summary>
+        /// 按参数确保连接实例（指纹命中复用，否则断开旧实例重建）。
+        /// P9-5：重建前先取消在途操作——否则旧操作会在被释放的旧实例上继续跑（旧实现只 DisConnect 不取消）。
+        /// </summary>
         public ISQL<T> EnsureDb(SQLParam param)
         {
             ArgumentNullException.ThrowIfNull(param);
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(SqlWorkspace<T>));
             var key = BuildDbKey(param);
             if (_db != null && _currentKey == key)
                 return _db;
+
+            CancelInFlight();
 
             if (_db != null)
             {
@@ -62,8 +139,9 @@ namespace DataManager.Controls.Services
         public async Task ConnectAsync()
         {
             var db = EnsureDb(Model.SelectedProfile());
-            await Task.Run(() => db.Connect());
-            DispatcherEx.UIInvokeSafe(() =>
+            var token = BeginOperation();
+            await Task.Run(() => db.Connect(), token);
+            PostToModel(token, () =>
             {
                 Model.IsConnected = true;
                 Model.StatusText = "已连接";
@@ -72,6 +150,8 @@ namespace DataManager.Controls.Services
 
         public void Disconnect()
         {
+            // P9-5：先取消在途操作再断开，避免断开后仍有任务回写“已连接”。
+            CancelInFlight();
             _db?.DisConnect();
             Model.IsConnected = false;
             Model.StatusText = "未连接";
@@ -80,8 +160,9 @@ namespace DataManager.Controls.Services
         public async Task TestConnectionAsync()
         {
             var db = EnsureDb(Model.SelectedProfile());
-            await Task.Run(() => db.Connect());
-            await Task.Run(() => db.DisConnect());
+            var token = BeginOperation();
+            await Task.Run(() => db.Connect(), token);
+            await Task.Run(() => db.DisConnect(), token);
         }
 
         private T NewEntity() => new()
@@ -95,10 +176,13 @@ namespace DataManager.Controls.Services
         public void AddNewBatch(int count) =>
             EnsureCurrent().AddRange(Enumerable.Range(1, count).Select(_ => NewEntity()));
 
+        /// <summary>查询全部（可取消；取消/释放后不回写结果集）。</summary>
         public async Task QueryAllAsync()
         {
-            var data = (await EnsureCurrent().QueryAsync()).ToList();
-            DispatcherEx.UIInvokeSafe(() => Model.Results = new ObservableCollection<T>(data));
+            var db = EnsureCurrent();
+            var token = BeginOperation();
+            var data = (await db.QueryAsync(token)).ToList();
+            PostToModel(token, () => Model.Results = new ObservableCollection<T>(data));
         }
 
         public void UpdateSelected(T selected)
@@ -121,6 +205,15 @@ namespace DataManager.Controls.Services
         {
             EnsureCurrent().DeleteAll();
             DispatcherEx.UIInvokeSafe(() => Model.Results.Clear());
+        }
+
+        /// <summary>P9-5：清空表（可取消；取消/释放后不清空结果集）。</summary>
+        public async Task DeleteAllAsync()
+        {
+            var db = EnsureCurrent();
+            var token = BeginOperation();
+            await db.DeleteAllAsync(token);
+            PostToModel(token, () => Model.Results.Clear());
         }
 
         /// <summary>分表名查询（Dapper / EFCore / SqlSugar；其他抛业务异常由 VM 记日志）。</summary>

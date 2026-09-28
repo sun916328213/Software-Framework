@@ -7,6 +7,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataManager.SQL.Dapper
@@ -152,12 +153,14 @@ namespace DataManager.SQL.Dapper
             conn.Execute(DapperSqlBuilder<T>.BuildInsertSql(_param, tableName, props), data, transaction: Tx);
         }
 
-        internal async Task InsertToTableAsync(IDbConnection conn, string tableName, T data)
+        internal async Task InsertToTableAsync(IDbConnection conn, string tableName, T data, CancellationToken cancellationToken = default)
         {
-            // 建表判存走同步（DDL 无真异步 API，原地执行；DML 走真异步）。
+            // 建表判存走同步（DDL 无真异步 API，原地执行；DML 走真异步并携带 Token + 命令超时）。
+            cancellationToken.ThrowIfCancellationRequested();
             EnsureTable(conn, tableName);
             var props = InsertableProps(data);
-            await conn.ExecuteAsync(DapperSqlBuilder<T>.BuildInsertSql(_param, tableName, props), data, transaction: Tx);
+            await conn.ExecuteAsync(DapperCommandFactory.Create(
+                DapperSqlBuilder<T>.BuildInsertSql(_param, tableName, props), data, Tx, _param, cancellationToken));
         }
 
         internal void UpdateInSplitTable(IDbConnection conn, string tableName, T data)
@@ -167,11 +170,13 @@ namespace DataManager.SQL.Dapper
             conn.Execute(DapperSqlBuilder<T>.BuildUpdateByKeySql(_param, tableName, key, others), data, transaction: Tx);
         }
 
-        internal async Task UpdateInSplitTableAsync(IDbConnection conn, string tableName, T data)
+        internal async Task UpdateInSplitTableAsync(IDbConnection conn, string tableName, T data, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var key = RequireKey();
             var others = DapperSqlBuilder<T>.EntityProperties().Where(p => p.Name != key.Name);
-            await conn.ExecuteAsync(DapperSqlBuilder<T>.BuildUpdateByKeySql(_param, tableName, key, others), data, transaction: Tx);
+            await conn.ExecuteAsync(DapperCommandFactory.Create(
+                DapperSqlBuilder<T>.BuildUpdateByKeySql(_param, tableName, key, others), data, Tx, _param, cancellationToken));
         }
 
         internal void DeleteFromSplitTable(IDbConnection conn, string tableName, T data)
@@ -183,13 +188,15 @@ namespace DataManager.SQL.Dapper
         internal List<T> QueryTable(IDbConnection conn, string tableName) =>
             conn.Query<T>(DapperSqlBuilder<T>.BuildSelectAllSql(_param, tableName), transaction: Tx).ToList();
 
-        internal async Task<List<T>> QueryTableAsync(IDbConnection conn, string tableName) =>
-            (await conn.QueryAsync<T>(DapperSqlBuilder<T>.BuildSelectAllSql(_param, tableName), transaction: Tx)).ToList();
+        internal async Task<List<T>> QueryTableAsync(IDbConnection conn, string tableName, CancellationToken cancellationToken = default) =>
+            (await conn.QueryAsync<T>(DapperCommandFactory.Create(
+                DapperSqlBuilder<T>.BuildSelectAllSql(_param, tableName), null, Tx, _param, cancellationToken))).ToList();
 
         internal List<T> QueryWhere(IDbConnection conn, string tableName, string whereClause, DynamicParameters pars) =>
             conn.Query<T>(DapperSqlBuilder<T>.BuildSelectWhereSql(_param, tableName, whereClause), pars, transaction: Tx).ToList();
 
-        internal async Task<List<T>> QueryWhereAsync(IDbConnection conn, string tableName, string whereClause, DynamicParameters pars) =>
-            (await conn.QueryAsync<T>(DapperSqlBuilder<T>.BuildSelectWhereSql(_param, tableName, whereClause), pars, transaction: Tx)).ToList();
+        internal async Task<List<T>> QueryWhereAsync(IDbConnection conn, string tableName, string whereClause, DynamicParameters pars, CancellationToken cancellationToken = default) =>
+            (await conn.QueryAsync<T>(DapperCommandFactory.Create(
+                DapperSqlBuilder<T>.BuildSelectWhereSql(_param, tableName, whereClause), pars, Tx, _param, cancellationToken))).ToList();
     }
 }

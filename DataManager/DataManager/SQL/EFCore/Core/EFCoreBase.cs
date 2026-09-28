@@ -30,52 +30,53 @@ namespace DataManager.SQL.EFCore
                 {
                     case ESQLType.MySQL:
                         // 直通串优先（SQLParam 全局契约：非空时覆盖分字段，同 SqlDialectHelper/MySqlDialect）。
+                        // P9-4：统一命令超时映射到 provider 选项（0 → null → 保持 provider 默认，不改连接串）。
                         if (!string.IsNullOrWhiteSpace(SQLParam.ConnectionString))
                         {
-                            optionsBuilder.UseMySQL(SQLParam.ConnectionString);
+                            optionsBuilder.UseMySQL(SQLParam.ConnectionString, o => o.CommandTimeout(SQLParam.CommandTimeoutOrNull));
                             break;
                         }
                         con = $"server={SQLParam.ServerIP};port={SQLParam.Port};user={SQLParam.UserName};password={SQLParam.Password};database={SQLParam.DBName}";
-                        optionsBuilder.UseMySQL(con);
+                        optionsBuilder.UseMySQL(con, o => o.CommandTimeout(SQLParam.CommandTimeoutOrNull));
                         break;
 
                     case ESQLType.PostgreSQL:
                         // 直通串优先（SQLParam 全局契约：非空时覆盖分字段，同 SqlDialectHelper/PostgresDialect）。
                         if (!string.IsNullOrWhiteSpace(SQLParam.ConnectionString))
                         {
-                            optionsBuilder.UseNpgsql(SQLParam.ConnectionString);
+                            optionsBuilder.UseNpgsql(SQLParam.ConnectionString, o => o.CommandTimeout(SQLParam.CommandTimeoutOrNull));
                             break;
                         }
                         con = $"server={SQLParam.ServerIP} ;port= {SQLParam.Port} ;username= {SQLParam.UserName};password={SQLParam.Password};database={SQLParam.DBName}";
-                        optionsBuilder.UseNpgsql(con);
+                        optionsBuilder.UseNpgsql(con, o => o.CommandTimeout(SQLParam.CommandTimeoutOrNull));
                         break;
 
                     case ESQLType.SQLite:
                         // SQLite 无需账号端口；直通串优先（SQLParam 契约），否则走文件路径（目录预建，文件懒建）。
                         if (!string.IsNullOrWhiteSpace(SQLParam.ConnectionString))
                         {
-                            optionsBuilder.UseSqlite(SQLParam.ConnectionString);
+                            optionsBuilder.UseSqlite(SQLParam.ConnectionString, o => o.CommandTimeout(SQLParam.CommandTimeoutOrNull));
                             break;
                         }
                         var file = SQLParam.EffectiveFilePath;
                         var dir = Path.GetDirectoryName(Path.GetFullPath(file));
                         if (!string.IsNullOrEmpty(dir))
                             Directory.CreateDirectory(dir);
-                        optionsBuilder.UseSqlite($"Data Source={file}");
+                        optionsBuilder.UseSqlite($"Data Source={file}", o => o.CommandTimeout(SQLParam.CommandTimeoutOrNull));
                         break;
 
                     case ESQLType.SQL_Server:
                         // 直通串优先（SQLParam 全局契约：非空时覆盖分字段，同 SqlDialectHelper/SqlServerDialect）。
                         if (!string.IsNullOrWhiteSpace(SQLParam.ConnectionString))
                         {
-                            optionsBuilder.UseSqlServer(SQLParam.ConnectionString);
+                            optionsBuilder.UseSqlServer(SQLParam.ConnectionString, o => o.CommandTimeout(SQLParam.CommandTimeoutOrNull));
                             break;
                         }
                         var server = string.IsNullOrWhiteSpace(SQLParam.Port)
                             ? SQLParam.ServerIP
                             : $"{SQLParam.ServerIP},{SQLParam.Port}";
                         con = $"Server={server};Database={SQLParam.DBName};User Id={SQLParam.UserName};Password={SQLParam.Password};TrustServerCertificate={(SQLParam.TrustServerCertificate ? "True" : "False")}";
-                        optionsBuilder.UseSqlServer(con);
+                        optionsBuilder.UseSqlServer(con, o => o.CommandTimeout(SQLParam.CommandTimeoutOrNull));
                         break;
 
                     default:
@@ -314,18 +315,23 @@ namespace DataManager.SQL.EFCore
             target.SaveChangesOptimized();
         }
 
-        public virtual async Task AddAsync(T data)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public virtual Task AddAsync(T data) => AddAsync(data, CancellationToken.None);
+
+        /// <remarks>P9-3：Token 透传到 EF 原生可取消 API（AddAsync/SaveChangesAsync）；取消向上抛 OCE。</remarks>
+        public virtual async Task AddAsync(T data, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!IsSplitTableEntity())
             {
-                await Set<T>().AddAsync(data);
-                await SaveChangesOptimizedAsync();
+                await Set<T>().AddAsync(data, cancellationToken);
+                await SaveChangesOptimizedAsync(cancellationToken);
                 return;
             }
             using var target = RouteFor(data);
             target.EnsureTableExists();
-            await target.Set<T>().AddAsync(data);
-            await target.SaveChangesOptimizedAsync();
+            await target.Set<T>().AddAsync(data, cancellationToken);
+            await target.SaveChangesOptimizedAsync(cancellationToken);
         }
 
         public virtual void AddRange(IEnumerable<T> datas)
@@ -345,20 +351,26 @@ namespace DataManager.SQL.EFCore
             }
         }
 
-        public virtual async Task AddRangeAsync(IEnumerable<T> datas)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public virtual Task AddRangeAsync(IEnumerable<T> datas) => AddRangeAsync(datas, CancellationToken.None);
+
+        /// <remarks>P9-3：Token 透传到 EF 原生可取消 API；分表按日期分组时逐组检查取消。</remarks>
+        public virtual async Task AddRangeAsync(IEnumerable<T> datas, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!IsSplitTableEntity())
             {
-                await Set<T>().AddRangeAsync(datas);
-                await SaveChangesOptimizedAsync();
+                await Set<T>().AddRangeAsync(datas, cancellationToken);
+                await SaveChangesOptimizedAsync(cancellationToken);
                 return;
             }
             foreach (var group in datas.GroupBy(d => GetSplitTableName(EFCoreSplitNaming.GetSplitFieldValue(d))))
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 using var target = ForkForTable(group.Key);
                 target.EnsureTableExists();
-                await target.Set<T>().AddRangeAsync(group);
-                await target.SaveChangesOptimizedAsync();
+                await target.Set<T>().AddRangeAsync(group, cancellationToken);
+                await target.SaveChangesOptimizedAsync(cancellationToken);
             }
         }
 
@@ -381,17 +393,22 @@ namespace DataManager.SQL.EFCore
             }
         }
 
-        public virtual async Task DeleteAsync(Expression<Func<T, bool>> predicate)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public virtual Task DeleteAsync(Expression<Func<T, bool>> predicate) => DeleteAsync(predicate, CancellationToken.None);
+
+        /// <remarks>P9-3：Token 透传到 ToListAsync/SaveChangesAsync（EF 原生可取消）。</remarks>
+        public virtual async Task DeleteAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var scoped = ScopedForQuery(predicate);
             try
             {
                 foreach (var s in scoped)
                 {
-                    var entities = await s.Set<T>().Where(predicate).ToListAsync();
+                    var entities = await s.Set<T>().Where(predicate).ToListAsync(cancellationToken);
                     if (entities.Count == 0) continue;
                     s.Set<T>().RemoveRange(entities);
-                    await s.SaveChangesAsync();
+                    await s.SaveChangesAsync(cancellationToken);
                 }
             }
             finally
@@ -414,13 +431,21 @@ namespace DataManager.SQL.EFCore
             }
         }
 
-        public virtual async Task DeleteAllAsync()
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public virtual Task DeleteAllAsync() => DeleteAllAsync(CancellationToken.None);
+
+        /// <remarks>P9-3：Token 透传到 ExecuteDeleteAsync（EF 原生可取消）；分表逐表检查取消。</remarks>
+        public virtual async Task DeleteAllAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var scoped = ScopedForQuery();
             try
             {
                 foreach (var s in scoped)
-                    await s.Set<T>().ExecuteDeleteAsync();
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await s.Set<T>().ExecuteDeleteAsync(cancellationToken);
+                }
             }
             finally
             {
@@ -446,16 +471,24 @@ namespace DataManager.SQL.EFCore
             }
         }
 
-        public virtual async Task<IEnumerable<T>> QueryAsync()
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public virtual Task<IEnumerable<T>> QueryAsync() => QueryAsync(CancellationToken.None);
+
+        /// <remarks>P9-3：Token 透传到 ToListAsync（EF 原生可取消）；分表逐表检查取消。</remarks>
+        public virtual async Task<IEnumerable<T>> QueryAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var scoped = ScopedForQuery();
             try
             {
                 if (scoped.Count == 1)
-                    return await scoped[0].Set<T>().AsNoTracking().ToListAsync();
+                    return await scoped[0].Set<T>().AsNoTracking().ToListAsync(cancellationToken);
                 var all = new List<T>();
                 foreach (var s in scoped)
-                    all.AddRange(await s.Set<T>().AsNoTracking().ToListAsync());
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    all.AddRange(await s.Set<T>().AsNoTracking().ToListAsync(cancellationToken));
+                }
                 return all;
             }
             finally
@@ -486,16 +519,25 @@ namespace DataManager.SQL.EFCore
         }
 
         /// <remarks>P6-1：分表亦逐表服务端过滤（见同步重载说明）。</remarks>
-        public virtual async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public virtual Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate) =>
+            QueryAsync(predicate, CancellationToken.None);
+
+        /// <remarks>P6-1：分表亦逐表服务端过滤（见同步重载说明）。P9-3：Token 透传到 ToListAsync。</remarks>
+        public virtual async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var scoped = ScopedForQuery(predicate);
             try
             {
                 if (scoped.Count == 1)
-                    return await scoped[0].Set<T>().Where(predicate).AsNoTracking().ToListAsync();
+                    return await scoped[0].Set<T>().Where(predicate).AsNoTracking().ToListAsync(cancellationToken);
                 var all = new List<T>();
                 foreach (var s in scoped)
-                    all.AddRange(await s.Set<T>().Where(predicate).AsNoTracking().ToListAsync());
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    all.AddRange(await s.Set<T>().Where(predicate).AsNoTracking().ToListAsync(cancellationToken));
+                }
                 return all;
             }
             finally
@@ -521,17 +563,22 @@ namespace DataManager.SQL.EFCore
             target.SaveChangesOptimized();
         }
 
-        public virtual async Task UpdateAsync(T data)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public virtual Task UpdateAsync(T data) => UpdateAsync(data, CancellationToken.None);
+
+        /// <remarks>P9-3：Token 透传到 SaveChangesAsync（EF 原生可取消）。</remarks>
+        public virtual async Task UpdateAsync(T data, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!IsSplitTableEntity())
             {
                 UpdateTrackedOrAttach(this, data);
-                await SaveChangesOptimizedAsync();
+                await SaveChangesOptimizedAsync(cancellationToken);
                 return;
             }
             using var target = RouteFor(data);
             target.Set<T>().Update(data);
-            await target.SaveChangesOptimizedAsync();
+            await target.SaveChangesOptimizedAsync(cancellationToken);
         }
 
         /// <summary>
@@ -591,9 +638,18 @@ namespace DataManager.SQL.EFCore
             }
         }
 
-        public virtual async Task ExecuteInTransactionAsync(Func<Task> action)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public virtual Task ExecuteInTransactionAsync(Func<Task> action) =>
+            ExecuteInTransactionAsync(action, CancellationToken.None);
+
+        /// <remarks>
+        /// P9-3：进入前与提交前各检查一次 Token；作用域内取消（OCE）与异常同样走回滚后向上抛。
+        /// 回滚本身用 <see cref="CancellationToken.None"/>——回滚是取消的补救动作，绝不能被取消跳过。
+        /// </remarks>
+        public virtual async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(action);
+            cancellationToken.ThrowIfCancellationRequested();
             if (IsSplitTableEntity())
                 throw new NotSupportedException("分表实体暂不支持事务（fork 独立连接）。");
             if (_inTransaction)
@@ -601,15 +657,16 @@ namespace DataManager.SQL.EFCore
             _inTransaction = true;
             try
             {
-                using var tx = await Database.BeginTransactionAsync();
+                using var tx = await Database.BeginTransactionAsync(cancellationToken);
                 try
                 {
                     await action();
-                    await tx.CommitAsync();
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await tx.CommitAsync(cancellationToken);
                 }
                 catch
                 {
-                    await tx.RollbackAsync();
+                    await tx.RollbackAsync(CancellationToken.None);
                     throw;
                 }
             }
@@ -641,18 +698,24 @@ namespace DataManager.SQL.EFCore
             }
         }
 
-        public virtual async Task UpdateAsync(Expression<Func<T, bool>> predicate, T updatedata)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public virtual Task UpdateAsync(Expression<Func<T, bool>> predicate, T updatedata) =>
+            UpdateAsync(predicate, updatedata, CancellationToken.None);
+
+        /// <remarks>P9-3：Token 透传到 ToListAsync/SaveChangesAsync（EF 原生可取消）。</remarks>
+        public virtual async Task UpdateAsync(Expression<Func<T, bool>> predicate, T updatedata, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var scoped = ScopedForQuery(predicate);
             try
             {
                 foreach (var s in scoped)
                 {
-                    var entities = await s.Set<T>().Where(predicate).ToListAsync();
+                    var entities = await s.Set<T>().Where(predicate).ToListAsync(cancellationToken);
                     if (entities.Count == 0) continue;
                     foreach (var entity in entities)
                         CopyUpdatableValues(entity, updatedata);
-                    await s.SaveChangesAsync();
+                    await s.SaveChangesAsync(cancellationToken);
                 }
             }
             finally
@@ -699,15 +762,28 @@ namespace DataManager.SQL.EFCore
             }
         }
 
-        public async Task SaveChangesOptimizedAsync()
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task SaveChangesOptimizedAsync() => SaveChangesOptimizedAsync(CancellationToken.None);
+
+        /// <remarks>
+        /// P9-3：Token 透传到 base.SaveChangesAsync。
+        /// 取消（<see cref="OperationCanceledException"/>）必须原样向上传播——若被下面那条
+        /// 通用 catch 包装成普通 Exception，上层就无法把「取消」与「业务失败」区分开（P9 闸门第 3 条）。
+        /// </remarks>
+        public async Task SaveChangesOptimizedAsync(CancellationToken cancellationToken)
         {
             try
             {
                 ChangeTracker.AutoDetectChangesEnabled = false;
-                await base.SaveChangesAsync();
+                await base.SaveChangesAsync(cancellationToken);
                 ChangeTracker.AutoDetectChangesEnabled = true;
                 if (ChangeTracker.Entries().Count() > 100)
                     DetachEntities();
+            }
+            catch (OperationCanceledException)
+            {
+                ChangeTracker.AutoDetectChangesEnabled = true;
+                throw;
             }
             catch (Exception ex)
             {

@@ -42,6 +42,16 @@ namespace DataManager.Workbench
             base.OnInitialized();
         }
 
+        /// <summary>
+        /// P9-5：退出前先取消在途数据库操作，再释放 SQL 实例——
+        /// 保证关闭工作台后不会再有后台任务继续跑并回写界面。
+        /// </summary>
+        protected override void OnExit(ExitEventArgs e)
+        {
+            try { Container.Resolve<SqlWorkspace<TestEntity>>().Dispose(); } catch { }
+            base.OnExit(e);
+        }
+
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
         {
             // 注册 DataManager 模块（内部注册 LogManager / SQLManager / ExcelManager 单例）

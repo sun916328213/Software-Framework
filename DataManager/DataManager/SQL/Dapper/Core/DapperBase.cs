@@ -9,6 +9,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataManager.SQL.Dapper
@@ -104,9 +105,18 @@ namespace DataManager.SQL.Dapper
             }
         }
 
-        public async Task ExecuteInTransactionAsync(Func<Task> action)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task ExecuteInTransactionAsync(Func<Task> action) =>
+            ExecuteInTransactionAsync(action, CancellationToken.None);
+
+        /// <remarks>
+        /// P9-3：进入前与提交前各检查一次 Token；作用域内取消（OCE）与异常同样走回滚后向上抛。
+        /// 回滚本身不受 Token 影响——回滚是取消的补救动作，绝不能被取消跳过。
+        /// </remarks>
+        public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(action);
+            cancellationToken.ThrowIfCancellationRequested();
             if (_tx != null)
                 throw new InvalidOperationException("嵌套事务不受支持。");
             _txConn = new DapperConnectionFactory(SQLParam).CreateOpen();
@@ -116,6 +126,7 @@ namespace DataManager.SQL.Dapper
                 try
                 {
                     await action();
+                    cancellationToken.ThrowIfCancellationRequested();
                     _tx.Commit();
                 }
                 catch
@@ -218,16 +229,24 @@ namespace DataManager.SQL.Dapper
             }
         }
 
-        public async Task AddAsync(T data)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task AddAsync(T data) => AddAsync(data, CancellationToken.None);
+
+        /// <remarks>
+        /// P9-3：非分表走 Dommel 可取消重载；分表走 CommandDefinition（手写 SQL，原生可取消）。
+        /// 边界：短连接 <c>Open()</c> 是第三方同步 API，无取消入口。
+        /// </remarks>
+        public async Task AddAsync(T data, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             using var releaser = OpenScoped(out var conn);
             if (DapperSplitRouter<T>.IsSplitTableEntity())
             {
                 var tableName = Split.GetSplitTableName(Split.GetSplitFieldValue(data));
-                await Split.InsertToTableAsync(conn, tableName, data);
+                await Split.InsertToTableAsync(conn, tableName, data, cancellationToken);
                 return;
             }
-            await conn.InsertAsync(data, transaction: _tx);
+            await conn.InsertAsync(data, transaction: _tx, cancellationToken: cancellationToken);
         }
 
         public void AddRange(IEnumerable<T> datas)
@@ -253,8 +272,13 @@ namespace DataManager.SQL.Dapper
             }
         }
 
-        public async Task AddRangeAsync(IEnumerable<T> datas)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task AddRangeAsync(IEnumerable<T> datas) => AddRangeAsync(datas, CancellationToken.None);
+
+        /// <remarks>P9-3：逐条检查取消（分表按每条数据的日期路由）。</remarks>
+        public async Task AddRangeAsync(IEnumerable<T> datas, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             using var releaser = OpenScoped(out var conn);
 
             // 如果是分表实体，自动根据每条数据的日期路由
@@ -262,15 +286,17 @@ namespace DataManager.SQL.Dapper
             {
                 foreach (var data in datas)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     var tableName = Split.GetSplitTableName(Split.GetSplitFieldValue(data));
-                    await Split.InsertToTableAsync(conn, tableName, data);
+                    await Split.InsertToTableAsync(conn, tableName, data, cancellationToken);
                 }
             }
             else
             {
                 foreach (var data in datas)
                 {
-                    await conn.InsertAsync(data, transaction: _tx);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await conn.InsertAsync(data, transaction: _tx, cancellationToken: cancellationToken);
                 }
             }
         }
@@ -291,8 +317,13 @@ namespace DataManager.SQL.Dapper
             return conn.GetAll<T>(transaction: _tx);
         }
 
-        public async Task<IEnumerable<T>> QueryAsync()
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task<IEnumerable<T>> QueryAsync() => QueryAsync(CancellationToken.None);
+
+        /// <remarks>P9-3：非分表走 Dommel 可取消重载；分表逐表检查取消并走 CommandDefinition。</remarks>
+        public async Task<IEnumerable<T>> QueryAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             using var releaser = OpenScoped(out var conn);
 
             // 如果是分表实体，查询所有分表
@@ -300,11 +331,14 @@ namespace DataManager.SQL.Dapper
             {
                 var allData = new List<T>();
                 foreach (var table in Split.GetSplitTables())
-                    allData.AddRange(await Split.QueryTableAsync(conn, table));
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    allData.AddRange(await Split.QueryTableAsync(conn, table, cancellationToken));
+                }
                 return allData;
             }
 
-            return await conn.GetAllAsync<T>(transaction: _tx);
+            return await conn.GetAllAsync<T>(transaction: _tx, cancellationToken: cancellationToken);
         }
 
         /// <summary>
@@ -339,9 +373,14 @@ namespace DataManager.SQL.Dapper
             return conn.Select(predicate, transaction: _tx);
         }
 
-        /// <remarks>分表实体：可译下推，否则全表查+内存过滤，大表慎用。</remarks>
-        public async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate) =>
+            QueryAsync(predicate, CancellationToken.None);
+
+        /// <remarks>分表实体：可译下推，否则全表查+内存过滤，大表慎用。P9-3：Token 透传到各查询语句。</remarks>
+        public async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             using var releaser = OpenScoped(out var conn);
 
             // 分表实体：优先服务端过滤，不可翻译才内存过滤
@@ -351,18 +390,24 @@ namespace DataManager.SQL.Dapper
                 {
                     var pushed = new List<T>();
                     foreach (var table in Split.TablesFor(conn, predicate))
-                        pushed.AddRange(await Split.QueryWhereAsync(conn, table, where, pars));
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        pushed.AddRange(await Split.QueryWhereAsync(conn, table, where, pars, cancellationToken));
+                    }
                     return pushed;
                 }
 
                 var allData = new List<T>();
                 foreach (var table in Split.TablesFor(conn, predicate))
-                    allData.AddRange(await Split.QueryTableAsync(conn, table));
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    allData.AddRange(await Split.QueryTableAsync(conn, table, cancellationToken));
+                }
 
                 return allData.AsEnumerable().Where(predicate.Compile());
             }
 
-            return await conn.SelectAsync(predicate, transaction: _tx);
+            return await conn.SelectAsync(predicate, transaction: _tx, cancellationToken: cancellationToken);
         }
 
         /// <summary>
@@ -384,17 +429,26 @@ namespace DataManager.SQL.Dapper
             }
         }
 
-        public async Task UpdateAsync(T data)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task UpdateAsync(T data) => UpdateAsync(data, CancellationToken.None);
+
+        /// <remarks>
+        /// P9-3：非分表走 Dommel 可取消重载；分表走 CommandDefinition。
+        /// 现状保持：非分表分支历史上未携带环境事务（与同步重载 <c>Update(data, transaction: _tx)</c> 不一致），
+        /// P9 只加 Token、不改事务语义，该差异已登记待独立处理。
+        /// </remarks>
+        public async Task UpdateAsync(T data, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             using var releaser = OpenScoped(out var conn);
 
             if (DapperSplitRouter<T>.IsSplitTableEntity())
             {
                 var tableName = Split.GetSplitTableName(Split.GetSplitFieldValue(data));
-                await Split.UpdateInSplitTableAsync(conn, tableName, data);
+                await Split.UpdateInSplitTableAsync(conn, tableName, data, cancellationToken);
                 return;
             }
-            await conn.UpdateAsync(data);
+            await conn.UpdateAsync(data, cancellationToken: cancellationToken);
         }
 
         /// <remarks>
@@ -432,9 +486,14 @@ namespace DataManager.SQL.Dapper
             }
         }
 
-        /// <remarks>分表实体：定位行阶段可译下推（取行后仍逐行更新），大表慎用。</remarks>
-        public async Task UpdateAsync(Expression<Func<T, bool>> predicate, T updatedata)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task UpdateAsync(Expression<Func<T, bool>> predicate, T updatedata) =>
+            UpdateAsync(predicate, updatedata, CancellationToken.None);
+
+        /// <remarks>分表实体：定位行阶段可译下推（取行后仍逐行更新），大表慎用。P9-3：逐表/逐行检查取消。</remarks>
+        public async Task UpdateAsync(Expression<Func<T, bool>> predicate, T updatedata, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             using var releaser = OpenScoped(out var conn);
 
             if (DapperSplitRouter<T>.IsSplitTableEntity())
@@ -442,25 +501,28 @@ namespace DataManager.SQL.Dapper
                 var pushed = DapperPredicateTranslator<T>.TryTranslate(predicate, SQLParam.DBType, out var where, out var pars);
                 foreach (var table in Split.TablesFor(conn, predicate))
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     var allData = pushed
-                        ? await Split.QueryWhereAsync(conn, table, where, pars)
-                        : await Split.QueryTableAsync(conn, table);
+                        ? await Split.QueryWhereAsync(conn, table, where, pars, cancellationToken)
+                        : await Split.QueryTableAsync(conn, table, cancellationToken);
                     var entities = pushed ? allData : allData.AsEnumerable().Where(predicate.Compile()).ToList();
 
                     foreach (var entity in entities)
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
                         CopyUpdatableValues(entity, updatedata);
-                        await Split.UpdateInSplitTableAsync(conn, table, entity);
+                        await Split.UpdateInSplitTableAsync(conn, table, entity, cancellationToken);
                     }
                 }
             }
             else
             {
-                var entities = (await conn.SelectAsync(predicate, transaction: _tx)).ToList();
+                var entities = (await conn.SelectAsync(predicate, transaction: _tx, cancellationToken: cancellationToken)).ToList();
                 foreach (var entity in entities)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     CopyUpdatableValues(entity, updatedata);
-                    await conn.UpdateAsync(entity, transaction: _tx);
+                    await conn.UpdateAsync(entity, transaction: _tx, cancellationToken: cancellationToken);
                 }
             }
         }
@@ -495,12 +557,18 @@ namespace DataManager.SQL.Dapper
             }
         }
 
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task DeleteAsync(Expression<Func<T, bool>> predicate) =>
+            DeleteAsync(predicate, CancellationToken.None);
+
         /// <remarks>
         /// P4-2 补齐：分表实体走逐表删除（此前异步版漏掉分表分支，静默只删默认表）。
-        /// 定位行阶段可译下推（P6-2），大表慎用。
+        /// 定位行阶段可译下推（P6-2），大表慎用。P9-3：逐表/逐行检查取消。
+        /// 现状保持：非分表分支的历史定位查询未携带环境事务（与同步重载不一致），P9 只加 Token。
         /// </remarks>
-        public async Task DeleteAsync(Expression<Func<T, bool>> predicate)
+        public async Task DeleteAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             using var releaser = OpenScoped(out var conn);
 
             if (DapperSplitRouter<T>.IsSplitTableEntity())
@@ -508,23 +576,26 @@ namespace DataManager.SQL.Dapper
                 var pushed = DapperPredicateTranslator<T>.TryTranslate(predicate, SQLParam.DBType, out var where, out var pars);
                 foreach (var table in Split.TablesFor(conn, predicate))
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     var allData = pushed
-                        ? await Split.QueryWhereAsync(conn, table, where, pars)
-                        : await Split.QueryTableAsync(conn, table);
+                        ? await Split.QueryWhereAsync(conn, table, where, pars, cancellationToken)
+                        : await Split.QueryTableAsync(conn, table, cancellationToken);
                     var entities = pushed ? allData : allData.AsEnumerable().Where(predicate.Compile()).ToList();
 
                     foreach (var entity in entities)
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
                         Split.DeleteFromSplitTable(conn, table, entity);
                     }
                 }
                 return;
             }
 
-            var normals = (await conn.SelectAsync(predicate)).ToList();
+            var normals = (await conn.SelectAsync(predicate, cancellationToken: cancellationToken)).ToList();
             foreach (var entity in normals)
             {
-                await conn.DeleteAsync(entity, transaction: _tx);
+                cancellationToken.ThrowIfCancellationRequested();
+                await conn.DeleteAsync(entity, transaction: _tx, cancellationToken: cancellationToken);
             }
         }
 
@@ -544,21 +615,31 @@ namespace DataManager.SQL.Dapper
             conn.Execute(DapperSqlBuilder<T>.BuildDeleteAllSql(SQLParam, baseTable), transaction: _tx);
         }
 
-        /// <remarks>P4-2 补齐：分表逐表 DELETE（此前只删基表名，分表数据残留）。</remarks>
-        public async Task DeleteAllAsync()
+        /// <remarks>P4-2 补齐：分表逐表 DELETE（此前只删基表名，分表数据残留）。P9-3：逐表检查取消。</remarks>
+        public Task DeleteAllAsync() => DeleteAllAsync(CancellationToken.None);
+
+        /// <remarks>P9-3：手写 DELETE 走 CommandDefinition，原生携带 Token 与命令超时。</remarks>
+        public async Task DeleteAllAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             using var releaser = OpenScoped(out var conn);
 
             if (DapperSplitRouter<T>.IsSplitTableEntity())
             {
                 foreach (var table in Split.GetSplitTables(conn))
-                    await conn.ExecuteAsync($"DELETE FROM {SqlNamingHelper.FormatTableName(table, SQLParam.DBType)}", transaction: _tx);
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await conn.ExecuteAsync(DapperCommandFactory.Create(
+                        $"DELETE FROM {SqlNamingHelper.FormatTableName(table, SQLParam.DBType)}",
+                        null, _tx, SQLParam, cancellationToken));
+                }
                 return;
             }
 
             var tableAttr = typeof(T).GetCustomAttribute<TableAttribute>();
             var baseTable = tableAttr?.Name ?? typeof(T).Name;
-            await conn.ExecuteAsync(DapperSqlBuilder<T>.BuildDeleteAllSql(SQLParam, baseTable), transaction: _tx);
+            await conn.ExecuteAsync(DapperCommandFactory.Create(
+                DapperSqlBuilder<T>.BuildDeleteAllSql(SQLParam, baseTable), null, _tx, SQLParam, cancellationToken));
         }
 
         public void Dispose()

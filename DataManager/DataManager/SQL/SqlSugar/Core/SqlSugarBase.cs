@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataManager.SQL.SqlSugarSQL
@@ -76,15 +77,24 @@ namespace DataManager.SQL.SqlSugarSQL
             }
         }
 
-        public async Task AddAsync(T data)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task AddAsync(T data) => AddAsync(data, CancellationToken.None);
+
+        /// <remarks>
+        /// P9-3：非分表走 IInsertable&lt;T&gt;.ExecuteCommandAsync(token)（原生可取消）；
+        /// 分表 provider（SplitInsertable&lt;T&gt;）在 SqlSugar 5.1.4.207 无 Token 重载 ⇒ 明确边界：
+        /// 进入前检查取消，语句本身不可中断，不伪装成已取消。
+        /// </remarks>
+        public async Task AddAsync(T data, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (IsSplitTableEntity())
             {
                 await GetDbClient().Insertable(data).SplitTable().ExecuteCommandAsync();
             }
             else
             {
-                await GetDbClient().Insertable(data).ExecuteCommandAsync();
+                await GetDbClient().Insertable(data).ExecuteCommandAsync(cancellationToken);
             }
         }
 
@@ -100,15 +110,20 @@ namespace DataManager.SQL.SqlSugarSQL
             }
         }
 
-        public async Task AddRangeAsync(IEnumerable<T> datas)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task AddRangeAsync(IEnumerable<T> datas) => AddRangeAsync(datas, CancellationToken.None);
+
+        /// <remarks>P9-3：非分表原生可取消；分表同 <see cref="AddAsync(T, CancellationToken)"/> 的边界说明。</remarks>
+        public async Task AddRangeAsync(IEnumerable<T> datas, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (IsSplitTableEntity())
             {
                 await GetDbClient().Insertable(datas.ToList()).SplitTable().ExecuteCommandAsync();
             }
             else
             {
-                await GetDbClient().Insertable(datas.ToList()).ExecuteCommandAsync();
+                await GetDbClient().Insertable(datas.ToList()).ExecuteCommandAsync(cancellationToken);
             }
         }
 
@@ -145,30 +160,46 @@ namespace DataManager.SQL.SqlSugarSQL
             GetDbClient().Deleteable<T>().ExecuteCommand();
         }
 
-        public async Task DeleteAllAsync()
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task DeleteAllAsync() => DeleteAllAsync(CancellationToken.None);
+
+        /// <remarks>
+        /// P9-3：查询阶段原生可取消（ToListAsync(token)）；分表删除 provider 无 Token 重载，
+        /// 删除语句本身不可中断（边界明确）。
+        /// </remarks>
+        public async Task DeleteAllAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (IsSplitTableEntity())
             {
-                var list = (await GetDbClient().Queryable<T>().SplitTable().ToListAsync()).ToList();
+                var list = (await GetDbClient().Queryable<T>().SplitTable().ToListAsync(cancellationToken)).ToList();
+                cancellationToken.ThrowIfCancellationRequested();
                 if (list.Count > 0)
                     await GetDbClient().Deleteable(list).SplitTable().ExecuteCommandAsync();
                 return;
             }
-            await GetDbClient().Deleteable<T>().ExecuteCommandAsync();
+            await GetDbClient().Deleteable<T>().ExecuteCommandAsync(cancellationToken);
         }
 
-        public async Task DeleteAsync(Expression<Func<T, bool>> predicate)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task DeleteAsync(Expression<Func<T, bool>> predicate) =>
+            DeleteAsync(predicate, CancellationToken.None);
+
+        /// <remarks>P9-3：同 <see cref="DeleteAllAsync(CancellationToken)"/> 的取消边界说明。</remarks>
+        public async Task DeleteAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (IsSplitTableEntity())
             {
                 // 同步 Delete 注释：分表条件删除 = 跨表查出实体后按实体集合 + SplitTable 删。
-                var list = (await GetDbClient().Queryable<T>().Where(predicate).SplitTable().ToListAsync()).ToList();
+                var list = (await GetDbClient().Queryable<T>().Where(predicate).SplitTable().ToListAsync(cancellationToken)).ToList();
+                cancellationToken.ThrowIfCancellationRequested();
                 if (list.Count > 0)
                     await GetDbClient().Deleteable(list).SplitTable().ExecuteCommandAsync();
             }
             else
             {
-                await GetDbClient().Deleteable<T>().Where(predicate).ExecuteCommandAsync();
+                await GetDbClient().Deleteable<T>().Where(predicate).ExecuteCommandAsync(cancellationToken);
             }
         }
 
@@ -192,24 +223,35 @@ namespace DataManager.SQL.SqlSugarSQL
             return GetDbClient().Queryable<T>().Where(predicate).ToList();
         }
 
-        public async Task<IEnumerable<T>> QueryAsync()
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task<IEnumerable<T>> QueryAsync() => QueryAsync(CancellationToken.None);
+
+        /// <remarks>P9-3：查询走 ISugarQueryable&lt;T&gt;.ToListAsync(token)，分表同样原生可取消。</remarks>
+        public async Task<IEnumerable<T>> QueryAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (IsSplitTableEntity())
             {
-                return await GetDbClient().Queryable<T>().SplitTable().ToListAsync();
+                return await GetDbClient().Queryable<T>().SplitTable().ToListAsync(cancellationToken);
             }
             
-            return await GetDbClient().Queryable<T>().ToListAsync();
+            return await GetDbClient().Queryable<T>().ToListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate) =>
+            QueryAsync(predicate, CancellationToken.None);
+
+        /// <remarks>P9-3：同 <see cref="QueryAsync(CancellationToken)"/>，条件查询亦原生可取消。</remarks>
+        public async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (IsSplitTableEntity())
             {
-                return await GetDbClient().Queryable<T>().Where(predicate).SplitTable().ToListAsync();
+                return await GetDbClient().Queryable<T>().Where(predicate).SplitTable().ToListAsync(cancellationToken);
             }
             
-            return await GetDbClient().Queryable<T>().Where(predicate).ToListAsync();
+            return await GetDbClient().Queryable<T>().Where(predicate).ToListAsync(cancellationToken);
         }
 
         private bool IsSplitTableEntity()
@@ -232,15 +274,23 @@ namespace DataManager.SQL.SqlSugarSQL
             }
         }
 
-        public async Task UpdateAsync(T data)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task UpdateAsync(T data) => UpdateAsync(data, CancellationToken.None);
+
+        /// <remarks>
+        /// P9-3：非分表走 IUpdateable&lt;T&gt;.ExecuteCommandAsync(token)（原生可取消）；
+        /// 分表 provider（SplitTableUpdateByObjectProvider&lt;T&gt;）无 Token 重载 ⇒ 仅进入前检查取消。
+        /// </remarks>
+        public async Task UpdateAsync(T data, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (IsSplitTableEntity())
             {
                 await GetDbClient().Updateable(data).SplitTable().ExecuteCommandAsync();
             }
             else
             {
-                await GetDbClient().Updateable(data).ExecuteCommandAsync();
+                await GetDbClient().Updateable(data).ExecuteCommandAsync(cancellationToken);
             }
         }
 
@@ -275,9 +325,18 @@ namespace DataManager.SQL.SqlSugarSQL
             }
         }
 
-        public async Task ExecuteInTransactionAsync(Func<Task> action)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task ExecuteInTransactionAsync(Func<Task> action) =>
+            ExecuteInTransactionAsync(action, CancellationToken.None);
+
+        /// <remarks>
+        /// P9-3：进入前与提交前各检查一次 Token；作用域内取消（OCE）与异常同样走回滚后向上抛。
+        /// 回滚不受 Token 影响——回滚是取消的补救动作，绝不能被取消跳过。
+        /// </remarks>
+        public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(action);
+            cancellationToken.ThrowIfCancellationRequested();
             if (_inTransaction)
                 throw new InvalidOperationException("嵌套事务不受支持。");
             var ado = GetDbClient().Ado;
@@ -288,6 +347,7 @@ namespace DataManager.SQL.SqlSugarSQL
                 try
                 {
                     await action();
+                    cancellationToken.ThrowIfCancellationRequested();
                     ado.CommitTran();
                 }
                 catch
@@ -316,15 +376,21 @@ namespace DataManager.SQL.SqlSugarSQL
             }
         }
 
-        public async Task UpdateAsync(Expression<Func<T, bool>> predicate, T updatedata)
+        /// <summary>旧签名（无 Token）：等价于传 <see cref="CancellationToken.None"/>。</summary>
+        public Task UpdateAsync(Expression<Func<T, bool>> predicate, T updatedata) =>
+            UpdateAsync(predicate, updatedata, CancellationToken.None);
+
+        /// <remarks>P9-3：非分表原生可取消；分表同 <see cref="UpdateAsync(T, CancellationToken)"/> 的边界说明。</remarks>
+        public async Task UpdateAsync(Expression<Func<T, bool>> predicate, T updatedata, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (IsSplitTableEntity())
             {
                 await GetDbClient().Updateable(updatedata).Where(predicate).SplitTable().ExecuteCommandAsync();
             }
             else
             {
-                await GetDbClient().Updateable(updatedata).Where(predicate).ExecuteCommandAsync();
+                await GetDbClient().Updateable(updatedata).Where(predicate).ExecuteCommandAsync(cancellationToken);
             }
         }
 
@@ -346,6 +412,9 @@ namespace DataManager.SQL.SqlSugarSQL
                     if (client == null)
                     {
                         client = new SqlSugarClient(CreateConnectionConfig());
+                        // P9-4：统一命令超时（秒）。0 表示保持 provider 默认，不覆盖 Ado.CommandTimeOut。
+                        if (SQLParam.CommandTimeoutOrNull is int timeoutSeconds)
+                            client.Ado.CommandTimeOut = timeoutSeconds;
                         _dbClient = client;
                     }
                 }
