@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using HalconDotNet;
 using DPLibrary_Halcon_F48.Tools.FindLine;
 using DPLibrary_Halcon_F48.Tools.AI;
+using Vision.Core.Tools;   // P2：ToolMge 从 DPLibrary_Halcon_F48.Tools 收回 Vision.Core.Tools
 
 namespace Packing_Machine.UI.ViewModel
 {

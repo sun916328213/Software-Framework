@@ -43,7 +43,7 @@ Infrastructure adapters -> Application seams
 
 动态节点插件通过 `FlowEditor.PluginContractFixture` 独立程序集做发布 seam 验收。测试项目仅以 `ReferenceOutputAssembly="false"` 构建夹具，不编译引用插件类型；运行时从 DLL 加载并验证工具发现、反射创建、生命周期回调、历史文档类型名还原和无界面执行。该结构用于捕获插件公开契约或程序集加载规则的回归。
 
-仓库级构建与回归统一使用根目录的 `FlowEditor.sln`，其中包含 Runtime、WPF 编辑器、DataManager 日志 adapter、插件契约夹具、核心测试、宿主日志适配测试和 Runtime Smoke。旧 `Flow.sln` 仍是上层产品聚合入口；架构测试会验证独立解决方案内的每个项目路径真实存在。宿主日志测试只引用 adapter、Runtime 和 DataManager，不引用完整 WPFControl；核心测试仍保持无宿主反向依赖。
+仓库级构建与回归统一使用根目录的 `FlowEditor.sln`，其中包含 Runtime、WPF 编辑器、DataManager 日志 adapter、插件契约夹具、核心测试、宿主日志适配测试和 Runtime Smoke。跨模块聚合的旧 `Flow.sln` 已于 P13 删除（与 `Frame.sln` 职责重复且含失效项目路径）；`FlowEditor.sln` 是 FlowEditor 唯一官方入口。架构测试会验证独立解决方案内的每个项目路径真实存在。宿主日志测试只引用 adapter、Runtime 和 DataManager，不引用完整 WPFControl；核心测试仍保持无宿主反向依赖。
 
 `FlowChartService` 通过构造参数接收 `IFlowLogSink`，`FlowExecutionCoordinator` 在完整执行、单步、失败恢复和循环执行时建立异步日志作用域。`FlowLogRecord` 一次性携带 `ProcessName`、`FlowName`、`NodeName`、`RunId`、`Message` 和 `Level`；校验警告、执行取消、重试/容错和失败分别使用匹配的日志等级，而不是全部降级为 `Information`。Runtime 的 `FlowLogRoute` 是流程日志身份的唯一值对象：运行序号以结构化字段相等性分桶，显示键与稳定摘要也由该模块生成，避免各调用方重复拼接分隔字符串。标签页关闭、文档替换、容器名变更和标签改名统一释放旧路由的进程级运行序号；活动执行作用域持有可脱离全局字典的计数桶，因此异步收尾不会污染随后重开的同名任务。宿主构造后设置容器名时必须向已创建的首个标签页传播。
 

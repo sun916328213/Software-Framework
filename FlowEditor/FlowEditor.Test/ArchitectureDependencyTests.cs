@@ -923,14 +923,15 @@ public sealed class ArchitectureDependencyTests
                relativePath.StartsWith("obj/", StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>从测试输出目录向上查找 FlowEditor 项目目录。</summary>
+    /// <summary>从测试输出目录向上查找 FlowEditor 模块目录。</summary>
     /// <returns>FlowEditor.csproj 所在目录。</returns>
-    /// <exception cref="DirectoryNotFoundException">无法定位 Flow.sln 或 FlowEditor.csproj 时抛出。</exception>
+    /// <exception cref="DirectoryNotFoundException">无法定位 FlowEditor.sln 或 FlowEditor.csproj 时抛出。</exception>
     private static string FindProjectDirectory()
     {
         for (var current = new DirectoryInfo(AppContext.BaseDirectory); current != null; current = current.Parent)
         {
-            if (!File.Exists(Path.Combine(current.FullName, "Flow.sln")))
+            // P13：Flow.sln 已作为重复聚合入口删除，统一以 FlowEditor.sln 为模块入口。
+            if (!File.Exists(Path.Combine(current.FullName, "FlowEditor.sln")))
                 continue;
 
             var projectDirectory = Path.Combine(current.FullName, "FlowEditor");

@@ -505,7 +505,7 @@ IFlowDocumentStore       Save/Load 文档
 - [x] 清零全部生产 C# 文件的函数注释缺口，并将门禁从文件白名单升级为自动扫描整个项目；删除 4 个零引用转换器，`IExportService` 从 6 个入口收缩为 2 个实际对话框导出意图。
 - [x] 补齐函数以外的公共类型、属性、字段和事件注释。
 - [x] 增加架构依赖约束测试（以 allowlist 锁定现有债务）。
-- [x] 保存测试、构建和性能基线（模块项目可构建，260 个测试通过；旧 `Flow.sln` 含失效项目路径，不能作为当前入口）。
+- [x] 保存测试、构建和性能基线（模块项目可构建，260 个测试通过；旧 `Flow.sln` 含失效项目路径，不能作为当前入口——P13 已将其作为重复聚合入口删除）。
 
 验收：行为零变化，260 个当前测试通过；文档构建无 CS1591/CS1574 后完成本阶段。
 
@@ -561,7 +561,7 @@ IFlowDocumentStore       Save/Load 文档
 - [x] 维护复审第一阶段拆分 `NodeModel`：将画布附加/卸载、连线事件订阅、上游查询和数据绑定增删迁入 `NodeModel.DataBindings.cs`，主文件由 1,063 行降至 754 行，并增加职责位置门禁。
 - [x] 维护复审第二阶段拆分 `NodeModel`：将端口集合、缓存、编辑与配置迁入 `NodeModel.Ports.cs`，将端口查询、执行前后属性同步与反射缓存迁入 `NodeModel.PortValues.cs`；主文件最终降至 330 行，并增加文件职责和行数门禁。
 - [x] 新增独立 `FlowEditor.PluginContractFixture` 节点插件夹具；测试端不引用插件类型，只加载构建后的 DLL，覆盖工具发现、反射创建、附加/卸载、历史文档还原和无界面执行，并以架构门禁锁定独立产物验收方式。
-- [x] 新增独立 `FlowEditor.sln` 验收入口，包含 Runtime、编辑器、DataManager 日志 adapter、插件契约夹具、核心测试、Runtime Smoke 和独立宿主日志适配测试；保留旧 `Flow.sln` 作为上层聚合历史入口，并增加项目路径存在性门禁。
+- [x] 新增独立 `FlowEditor.sln` 验收入口，包含 Runtime、编辑器、DataManager 日志 adapter、插件契约夹具、核心测试、Runtime Smoke 和独立宿主日志适配测试；旧 `Flow.sln`（跨模块重复聚合入口）已于 P13 删除，`FlowEditor.sln` 为唯一官方入口，并增加项目路径存在性门禁。
 - [x] 将日志等级收敛为 Runtime 自有 `FlowLogLevel`，移除 FlowEditor 源码和项目文件对 `Extension` 的直接依赖；以相同枚举名称/序号兼容历史节点文档，并增加依赖与往返门禁。Prism 导航视图注册改由组合根本地完成。
 - [x] 引入 Runtime `IFlowLogSink` / `FlowLogRecord` 深契约，由 `FlowChartService` 构造注入并覆盖完整执行、校验、单步、恢复和循环入口；流程级事件、警告、取消和失败保留声明等级，DataManager 配置获取仅留在宿主 adapter。
 - [x] WPFControl 迁移收尾：独立 `FlowEditor.DataManagerLogging` 项目以 `DataManagerFlowLogSink` 实现 `IFlowLogSink`，仅使用 IoC 注入的共享 `LogManager` 按名解析 `FlowLog` 基础实例及模板参数；已同步删除宿主静态赋值、对整机 `LogConfigService` 的反向依赖和 `FlowLogContext.FileSink` 过渡属性。

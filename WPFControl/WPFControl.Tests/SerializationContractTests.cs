@@ -24,7 +24,7 @@ namespace WPFControl.Tests
     /// （引用类型 = null、枚举 = 0 值成员、Point = (0,0)）。编译期、运行期都不报错。
     ///
     /// 同一组合还会连带打掉**属性面板**的可编辑性 ——
-    /// <c>Vision/Vision.Controls.Wpf/Ctr_Base/PropertyEditorBindingHelper.cs</c> 的判据是
+    /// <c>Vision/Vision.Controls/Ctr_Base/PropertyEditorBindingHelper.cs</c> 的判据是
     /// <c>prop.CanWrite &amp;&amp; prop.SetMethod != null &amp;&amp; prop.SetMethod.IsPublic</c>。
     ///
     /// ⚠️ 本守卫**必须用反射**，不能用正则扫源码。实测教训：

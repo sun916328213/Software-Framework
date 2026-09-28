@@ -26,7 +26,7 @@
     <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />
     <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />
     <ProjectReference Include="..\..\Secs\Secs.Runtime\Secs.Runtime.csproj" />
-    <ProjectReference Include="..\..\Vision\Vision.Controls.Wpf\Vision.Controls.Wpf.csproj" />
+    <ProjectReference Include="..\..\Vision\Vision.Controls\Vision.Controls.csproj" />
     <ProjectReference Include="..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj" />
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
   </ItemGroup>

@@ -79,7 +79,7 @@ namespace WPFControl.Tests
                          @"..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj",
                          @"..\..\Secs\Secs.Runtime\Secs.Runtime.csproj",
                          @"..\..\Device\Device\Device.csproj",
-                         @"..\..\Vision\Vision.Controls.Wpf\Vision.Controls.Wpf.csproj",
+                         @"..\..\Vision\Vision.Controls\Vision.Controls.csproj",
                          @"..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj",
                          @"..\..\FlowEditor\FlowEditor\FlowEditor.csproj",
                          @"..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj"
