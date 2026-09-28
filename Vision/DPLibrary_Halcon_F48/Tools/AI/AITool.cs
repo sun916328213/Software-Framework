@@ -157,6 +157,9 @@ namespace DPLibrary_Halcon_F48.Tools.AI
 
         private IAI aIHelper;
 
+        /// <summary>P10-4：当前 AI 助手实例（诊断/测试用；null 表示尚未成功装配）。</summary>
+        internal IAI CurrentAIHelper => aIHelper;
+
         public AITool()
         { 
             Cmd_ModelPath.OnBtClick+=Cmd_ModelPath_OnBtClick;
@@ -270,21 +273,55 @@ namespace DPLibrary_Halcon_F48.Tools.AI
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// 装配当前配置对应的 AI 助手（Invi 品牌只走 <see cref="InviHelper"/> 这一条正式实现）。
+        /// P10-3：换配置前先释放旧 helper——旧实现每次 Config 都 new 一个 InviHelper，
+        /// 模型路径 / AI 类型 / 工具类型变更时旧 native manager 被遗留；
+        /// 新 helper 初始化失败时回滚释放，避免留下半个实例。
+        /// </summary>
         public override void Config()
         {
+            ReleaseHelper();
+
             if (AIBrand == AIBrand.Aiditron)
             {
-
+                // Aiditron 品牌暂无实现（保持原状：不创建 helper，aIHelper 保持 null）。
             }
             else if (AIBrand == AIBrand.Invi)
             {
-
-                InviHelper invIHelpr = new InviHelper();
-                invIHelpr.InitModel(  modelPath , (int)toolType);
-                aIHelper = invIHelpr;
+                IAI helper = CreateAIHelper();
+                try
+                {
+                    helper.InitModel(modelPath, (int)toolType);
+                }
+                catch
+                {
+                    // 初始化失败必须回滚：否则失败的 helper（已创建 native manager）会被遗留。
+                    if (helper is IDisposable disposable)
+                        disposable.Dispose();
+                    throw;
+                }
+                aIHelper = helper;
             }
+        }
 
-            
+        /// <summary>
+        /// P10-4：AI 助手的创建点。生产路径恒为 <see cref="InviHelper"/>；
+        /// 测试可覆写为 fake，从而在没有 INVI API.dll 的环境验证「重复 Config 会释放旧 helper」。
+        /// </summary>
+        internal virtual IAI CreateAIHelper() => new InviHelper();
+
+        /// <summary>
+        /// 释放当前 helper 并清空引用（无 helper 时无操作）。
+        /// <see cref="InviHelper.Dispose"/> 契约上不抛（幂等 + 状态清空），故此处不包 catch，
+        /// 避免把真实缺陷吞成静默失败。
+        /// </summary>
+        private void ReleaseHelper()
+        {
+            var previous = aIHelper;
+            aIHelper = null;
+            if (previous is IDisposable disposable)
+                disposable.Dispose();
         }
     }
 }

@@ -23,4 +23,9 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
   </ItemGroup>
+  <!-- P10-4：InviHelper / IInviNativeApi / AITool.CreateAIHelper 是 internal 的实现细节，
+       只对 Vision.Tests 开放，以便用 fake native API 做无 DLL 生命周期测试。 -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Vision.Tests" />
+  </ItemGroup>
 </Project>
