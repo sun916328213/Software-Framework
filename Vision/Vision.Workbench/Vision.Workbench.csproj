@@ -20,6 +20,9 @@
     <!-- P4（2026-09-28）：OpenCV 正式后端同样注册进 Workbench（与 P3 HalconToolCatalog 对等），
          为 P9 的 HALCON vs OpenCV Compare 预留装配点。 -->
     <ProjectReference Include="..\Vision.Tools.OpenCv\Vision.Tools.OpenCv.csproj" />
+    <!-- P5（2026-09-28）：统一 AI Tool 层同样注册进 Workbench；Provider 由 P6 三家实现注入，
+         P9 做 AI Provider 选择页。 -->
+    <ProjectReference Include="..\Vision.Tools.AI\Vision.Tools.AI.csproj" />
   </ItemGroup>
 
   <ItemGroup>
