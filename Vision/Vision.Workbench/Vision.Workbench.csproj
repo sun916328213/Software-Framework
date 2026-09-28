@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Vision.Controls.Wpf\Vision.Controls.Wpf.csproj" />
+    <ProjectReference Include="..\Vision.Controls\Vision.Controls.csproj" />
   </ItemGroup>
 
   <ItemGroup>

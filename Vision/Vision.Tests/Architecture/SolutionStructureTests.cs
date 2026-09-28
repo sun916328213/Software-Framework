@@ -8,7 +8,8 @@ using Xunit;
 namespace Vision.Tests.Architecture
 {
     /// <summary>
-    /// P1 验收守卫 —— 《Vision_Architecture_Optimization_Plan v1.1》§9.2「阶段验收与 Tests 对应」：
+    /// P1 验收守卫 —— 《Vision_Architecture_Optimization_Plan v1.2》§9.2「阶段验收与 Tests 对应」
+    /// （该条款自 v1.1 起未变，v1.2 的唯一实质差异是 <c>Vision.Controls.Wpf</c> → <c>Vision.Controls</c>）：
     /// <code>
     /// P1 | Solution/项目引用守卫；旧项目只作为迁移源；生产项目不得引用 Vision.Tests。
     /// </code>
@@ -46,7 +47,7 @@ namespace Vision.Tests.Architecture
             "Vision.AI.Halcon",       // ← P1 新建空壳
             "Vision.AI.Aiditron",     // ← P1 新建空壳
             "Vision.AI.Invi",         // ← P1 新建空壳
-            "Vision.Controls.Wpf",    // ← Ctr_WPF_F48（P1 改名）
+            "Vision.Controls",        // ← Ctr_WPF_F48（P1 改名 Vision.Controls.Wpf；P2 按 v1.2 §4 再收口为 Vision.Controls）
             "Vision.Workbench",       // ← VisionDemo（P1 改名）
             "Vision.Tests",           // 保留
             "DPLibrary_Halcon_F48",   // 迁移源（P1 不删）
@@ -62,7 +63,7 @@ namespace Vision.Tests.Architecture
 
         /// <summary>
         /// P1 的**新目标工程**（新建的 6 个空壳 + 新公共层 Core）。
-        /// ⛔ 刻意不含 <c>Vision.Controls.Wpf</c> / <c>Vision.Workbench</c> ——
+        /// ⛔ 刻意不含 <c>Vision.Controls</c> / <c>Vision.Workbench</c> ——
         /// 它们是被改名的既有工程，本来就带着指向迁移源的历史引用（见
         /// <see cref="MigrationSource_ConsumerSetIsFrozen"/> 的冻结清单），
         /// 那不是 P1 引入的越界。
@@ -87,7 +88,7 @@ namespace Vision.Tests.Architecture
         [
             "FlowNodes/FlowNodes/FlowNodes.csproj",
             "Packing Machine/Packing Machine/Packing Machine.csproj",
-            "Vision/Vision.Controls.Wpf/Vision.Controls.Wpf.csproj",
+            "Vision/Vision.Controls/Vision.Controls.csproj",
             "Vision/Vision.Tests/Vision.Tests.csproj",
             "WPFControl/WPFControl/WPFControl.csproj",
         ];

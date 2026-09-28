@@ -1,5 +1,4 @@
-using Common.StreamEX.Json;
-using DPLibrary_Halcon_F48.Tools;
+using Vision.Core.Serialization;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;

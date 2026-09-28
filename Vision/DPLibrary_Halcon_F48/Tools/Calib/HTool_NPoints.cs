@@ -1,4 +1,4 @@
-﻿using Common.StreamEX.Json;
+﻿using Vision.Core.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Vision.Core;
 using Vision.Core.Tools;

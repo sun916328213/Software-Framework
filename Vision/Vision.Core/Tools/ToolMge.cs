@@ -1,9 +1,16 @@
-using Common.StreamEX.Json;
+using Vision.Core.Serialization;
 using Vision.Core;
 using Vision.Core.Tools;
 using System.IO;
 
-namespace DPLibrary_Halcon_F48.Tools
+// ⛔ 历史坑（P2 · 2026-09-28 收口）：本文件原先声明的是
+//    namespace DPLibrary_Halcon_F48.Tools —— 与**真项目** DPLibrary_Halcon_F48 的
+//    Tools 命名空间同名。跨程序集同名命名空间会被编译期合并成一个逻辑命名空间，
+//    于是 Halcon 侧（HTool_* 等）**不写 using 就能直接用 ToolMge**，
+//    而 Vision.Core 也「声明」了一个属于别的项目的命名空间。
+//    P2 按《Vision_Architecture_Optimization_Plan v1.2》§5.1 把它收回 Vision.Core.Tools，
+//    代价是 Halcon 侧 13 个文件必须显式 using Vision.Core.Tools（已补）。
+namespace Vision.Core.Tools
 {
     public class ToolMge : Singleton<ToolMge>,ILog_DP
     {
@@ -151,7 +158,7 @@ namespace DPLibrary_Halcon_F48.Tools
 
                     if (tool is IMatrixSource)//当工具为矩阵数据时，添加到全局矩阵池
                     {
-                        IVisionTool.AllMatrixs.Add(new Vision.Core.Tools.MatrixData()
+                        IVisionTool.AllMatrixs.Add(new MatrixData()
                         {
                             ToolID = tool.ID,
                             ToolName = tool.Name

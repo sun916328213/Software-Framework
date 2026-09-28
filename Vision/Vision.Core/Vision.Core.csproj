@@ -7,11 +7,23 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <LangVersion>13.0</LangVersion>
+    <!-- P2（2026-09-28）：Vision.Core 确实需要 WPF 类型（I_ROIs / I_XLDs 的 System.Windows.Point、
+         Convertors 的 IValueConverter、ITool 里一处 MessageBox 调试残留），但**不需要 Extension**。
+         以前是靠 ProjectReference -> Extension 顺带把 WPF 框架引用「借」进来，
+         代价是 Core 的输出目录里躺着 Extension.dll，而 Extension 又传递
+         MVTec.HalconDotNet / OpenCvSharp4 —— 与 P2 验收「Core 可独立编译；无第三方视觉 SDK」冲突。
+         所以改成显式声明 UseWPF，并把那条 ProjectReference 删掉。
+         ⛔ WPF 残留本身归 P7（ROI / 坐标统一）处理，届时删掉这行 UseWPF 即可；
+            守卫测试 Vision.Tests/Architecture/CorePurityTests.cs 把这三处冻结成豁免清单。 -->
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="10.0.8" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
-  </ItemGroup>
+  <!-- P2（2026-09-28）删除：<ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+       实测 Vision.Core 的 .cs 里**零处**引用 Extension 的任何类型（grep "Extension" 命中 0），
+       这条引用纯粹是「借来的依赖」—— .NET 里 ProjectReference 默认传递，
+       以前靠它顺带拿到 WPF 框架引用。摘掉后 Core 的输出目录不再出现 Extension.dll。
+       ⛔ 不要再加回来：P3 的 Vision.Tools.Halcon 需要 HALCON 时自己去引 Extension
+          （HalconDotNet 的唯一入口，见仓库硬规则 12）。 -->
 </Project>

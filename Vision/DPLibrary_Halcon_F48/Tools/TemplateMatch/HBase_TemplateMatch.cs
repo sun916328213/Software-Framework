@@ -1,4 +1,5 @@
 using Vision.Core;
+using Vision.Core.Tools;   // P2：ToolMge 从 DPLibrary_Halcon_F48.Tools 收回 Vision.Core.Tools
 using System;
 using System.ComponentModel;
 using System.Windows.Input;

@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Vision.Core;
+using Vision.Core.Tools;   // P2：ToolMge 从 DPLibrary_Halcon_F48.Tools 收回 Vision.Core.Tools
 using DPLibrary_Halcon_F48;
 using DPLibrary_Halcon_F48.Tools;
 using DPLibrary_Halcon_F48.Tools.AI;
