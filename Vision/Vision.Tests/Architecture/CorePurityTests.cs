@@ -117,6 +117,12 @@ namespace Vision.Tests.Architecture
             typeof(Vision.Core.Regions.IVisionContour),
             typeof(Vision.Core.Roi.RoiKind),
             typeof(IRoi),
+            // P7（ROI / Fixture / Coordinate 统一）新增的坐标语义类型 —— 同样只允许 BCL/Core。
+            typeof(Vision.Core.Roi.Roi),
+            typeof(Vision.Core.Coordinate.AffineTransform2D),
+            typeof(Vision.Core.Coordinate.RigidTransform),
+            typeof(Vision.Core.Coordinate.AffineTransform),
+            typeof(Vision.Core.Coordinate.CoordinateChain),
             typeof(CoordinateSpace),
             typeof(ICoordinateTransform),
             typeof(ValidationResult),
