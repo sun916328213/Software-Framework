@@ -494,3 +494,46 @@ Runtime 注入 `TimeProvider`，测试使用 `FakeTimeProvider` 推进虚拟时�
 | 插件 | 动态加载后置 |
 | 数据点 | 通信层输出质量化值，Tag/报警/历史归上层 |
 | 新协议 | 核心稳定后再增加 S7 |
+
+## 13. P11 物理四层拆分（2026-09-28，已落地）
+
+P0–P3 的四个逻辑边界（Abstractions / Transports / Protocols / Runtime）已稳定，
+P11 将其变为可编译、可测试、可约束的程序集边界，同时保持 `CommunicationNew` 的兼容承诺。
+
+```text
+Communication/
+├─ Communication.Core      # net9.0 / AnyCPU：Abstractions、Core（契约/模型/纯转换/帧/事件）、
+│                         #   参数 DTO（8 个 *Param）、CommunicationParamFactory、ProtocolCapabilities、
+│                         #   ICommunicationManager、ICommunicationParameterSource、IPeerConnectionInfo
+├─ Communication.Runtime   # net9.0 / AnyCPU，引用 Core：Transports、Protocols（除参数 DTO）、
+│                         #   Runtime（Session/诊断/收件箱）、Composition（默认工厂/注册/DI/Prism 模块）、
+│                         #   CommunicationDeviceBase、CommunicationManager、DataPointAutoReader
+├─ Communication.Controls  # net9.0-windows7.0，仅引用 Core
+├─ Communication.Workbench # net9.0-windows7.0，组合 Core + Runtime + Controls
+├─ Communication           # 兼容门面：AssemblyName/PackageId=CommunicationNew，
+│                         #   TypeForwardedTo 到 Core/Runtime，无协议实现，可 pack，Package Validation 通过
+└─ Communication.Tests     # Architecture/LayeringTests（程序集级）+ PhysicalLayeringTests（csproj 级）
+```
+
+依赖方向：`Core ← Runtime`、`Core ← Controls`、`Workbench → Core + Runtime + Controls`、
+`门面 → Core + Runtime`。命名空间保持 `CommunicationNew.*` 不变，不强制全仓改 using。
+
+关键 seam 变更：
+
+1. `Core → Runtime` 反向依赖已切断：`CommunicationManager` 实现、`CommunicationDefaults`
+   默认工厂、`CommunicationFactory` 旧静态入口均归属 Runtime；Core 只保留可注入契约。
+2. `Core/Converters` 中 5 个接受 `Runtime.Conversion.DataFormatCodec` 的旧兼容构造已移除，
+   打破 `Core → Runtime` 编译环；旧 Runtime codec adapter 继续转发到 Core 实现。
+3. `DeviceConfigStore` 不再反射 `protected Param` 字段，改走
+   `ICommunicationParameterSource.GetParameterSnapshot()`（由 `CommunicationDeviceBase` 实现）。
+4. Controls 不再引用具体 Runtime 设备：`TcpServerDevice` 检查改为 `IPeerConnectionInfo`；
+   参数创建与能力判定委托 Core（`CommunicationParamFactory` / `ProtocolCapabilities`）；
+   `CommunicationSessionService` 依赖 `ICommunicationManager`。
+5. `CommunicationNewModule`（跟随 Runtime）同时注册 `CommunicationManager` 与
+   `ICommunicationManager` 到同一单例；`AddCommunicationNew` 同理。
+6. 消费者：`Device.Runtime → Communication.Runtime`；`FlowNodes` / `Packing Machine`
+   本轮走兼容门面，不迁移。
+
+验证：`Communication.Tests` 278/278 通过；`Communication.sln` 构建通过；
+`FlowNodes` 经兼容门面构建通过；`CommunicationNew.1.0.0.nupkg` 可 pack 且 Package Validation 通过。
+MX Component 仍为 AnyCPU + 运行时守卫，不设 `PlatformTarget=x64`。

@@ -6,7 +6,6 @@ using CommunicationNew.Abstractions;
 using CommunicationNew.Core;
 using CommunicationNew.Core.Converters;
 using CommunicationNew.Core.Interfaces;
-using CommunicationNew.Protocols.Socket;
 using Microsoft.Win32;
 using Prism.Services.Dialogs;
 using System.Collections.ObjectModel;
@@ -918,7 +917,8 @@ public sealed partial class CommunicationViewModel : ObservableObject
             LastElapsed = $"{sw.ElapsedMilliseconds} ms";
             _log.Tx(device.Name, ToDisplay(payload));
             _log.Success(device.Name, ok ? $"发送成功, {sw.ElapsedMilliseconds} ms" : "发送失败");
-            if (sender is TcpServerDevice { ConnectedClients.Count: 0 })
+            // P11：服务端广播可达性经 Core 能力接口判定，不引用具体 Runtime 服务端类型。
+            if (sender is IPeerConnectionInfo { ActivePeerCount: 0 })
             {
                 _log.Warning(device.Name, "服务端当前没有已连接的客户端，本次发送没有送达任何对端");
             }

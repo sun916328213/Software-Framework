@@ -36,3 +36,19 @@ MX Component 直接模式仅支持 Windows x64，并要求目标机器正确安�
 ## 兼容性与架构
 
 包构建启用了 .NET SDK Package Validation。完整的设计边界、迁移状态和验收结果见仓库中的 `ARCHITECTURE.md`。
+
+## P11 物理四层（2026-09-28）
+
+```text
+Communication/
+├─ Communication.Core      # net9.0 / AnyCPU：能力契约、参数 DTO、纯转换/帧、工厂与能力 seam
+├─ Communication.Runtime   # net9.0 / AnyCPU：协议、Transport、Session/诊断、默认组合（唯一真实 IO 归属）
+├─ Communication.Controls  # net9.0-windows7.0：仅依赖 Core（契约 + 参数描述）
+├─ Communication.Workbench # net9.0-windows7.0：组合 Core + Runtime + Controls
+├─ Communication           # 兼容门面：仍生成 CommunicationNew.dll（TypeForwardedTo），PackageId=CommunicationNew
+└─ Communication.Tests     # 含程序集级四层守卫（Architecture/LayeringTests + PhysicalLayeringTests）
+```
+
+依赖方向：`Core ← Runtime / Core ← Controls，Workbench → Core + Runtime + Controls，门面 → Core + Runtime`。
+命名空间保持 `CommunicationNew.*` 不变（避免全仓改 using）；程序集归属按上述切分。
+`Device.Runtime` 已迁移到 `Communication.Runtime`；`FlowNodes` / `Packing Machine` 本轮走兼容门面，不迁移。

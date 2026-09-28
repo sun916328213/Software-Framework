@@ -13,8 +13,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Device.Core\Device.Core.csproj" />
-    <!-- Communication 也引用可选的 64 位 Interop；仅关闭架构提示，不改变它的目标平台。 -->
-    <ProjectReference Include="..\..\Communication\Communication\Communication.csproj"
+    <!-- P11：Device.Runtime 为 Runtime 层，直接引用 Communication.Runtime；旧兼容路径经门面保留。 -->
+    <ProjectReference Include="..\..\Communication\Communication.Runtime\Communication.Runtime.csproj"
                       AdditionalProperties="ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch=None" />
   </ItemGroup>
   <ItemGroup>

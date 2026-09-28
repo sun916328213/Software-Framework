@@ -3,14 +3,6 @@ using System.IO.Ports;
 using System.Threading.Channels;
 using CommunicationNew.Abstractions;
 using CommunicationNew.Core;
-using CommunicationNew.Protocols.Http;
-using CommunicationNew.Protocols.Mitsubishi;
-using CommunicationNew.Protocols.Modbus.ModbusRtu;
-using CommunicationNew.Protocols.Modbus.ModbusTcp;
-using CommunicationNew.Protocols.OpcUa;
-using CommunicationNew.Protocols.Serial;
-using CommunicationNew.Protocols.Socket;
-using CommunicationNew.Protocols.WebApi;
 using MaterialDesignThemes.Wpf;
 
 namespace Communication.Controls.Services;
@@ -22,7 +14,7 @@ namespace Communication.Controls.Services;
 public sealed class CommunicationSessionService : IDisposable
 {
     private readonly ILogService _log;
-    private readonly CommunicationManager _manager;
+    private readonly ICommunicationManager _manager;
     private readonly Dictionary<string, CancellationTokenSource> _receiveDrains = [];
     private readonly object _drainGate = new();
     private bool _disposed;
@@ -33,7 +25,7 @@ public sealed class CommunicationSessionService : IDisposable
     /// </summary>
     public string ReceiveDisplayFormat { get; set; } = "HEX";
 
-    public CommunicationSessionService(ILogService log, CommunicationManager manager)
+    public CommunicationSessionService(ILogService log, ICommunicationManager manager)
     {
         _log = log;
         _manager = manager;
@@ -346,23 +338,24 @@ public static class ProtocolCatalog
         // 地址读写走 CommunicationNew IAddressReader；原始收发仅 TCP/UDP/Serial（字节流/数据报）。
         // HTTP/WebApi 是高层 adapter，不走原始收发 seam。
         // Modbus 地址按一基解释（HR1 才是首个保持寄存器），提示里给 HR0 会让用户照着填一个必然报错的地址。
-        ProtocolType.ModbusTcp => new(ProtocolType.ModbusTcp, "Modbus TCP", PackIconKind.CogOutline, true, true, false,
+        // P11：能力布尔值以 Core.ProtocolCapabilities 为准，UI 只保留显示名/图标/提示。
+        ProtocolType.ModbusTcp => new(ProtocolType.ModbusTcp, "Modbus TCP", PackIconKind.CogOutline, ProtocolCapabilities.SupportsServer(protocol), ProtocolCapabilities.SupportsAddressRead(protocol), ProtocolCapabilities.SupportsRaw(protocol),
             "HR1 / 40001 / 30001 (地址)", "地址一基：HR1 = 40001 = 首个保持寄存器；写成 HR0 会被判为非法地址"),
-        ProtocolType.ModbusRtu => new(ProtocolType.ModbusRtu, "Modbus RTU", PackIconKind.Cog, true, true, false,
+        ProtocolType.ModbusRtu => new(ProtocolType.ModbusRtu, "Modbus RTU", PackIconKind.Cog, ProtocolCapabilities.SupportsServer(protocol), ProtocolCapabilities.SupportsAddressRead(protocol), ProtocolCapabilities.SupportsRaw(protocol),
             "HR1 / 40001 (地址)", "地址一基：HR1 = 40001 = 首个保持寄存器"),
-        ProtocolType.MitsubishiMc => new(ProtocolType.MitsubishiMc, "三菱 MC", PackIconKind.Chip, false, true, false,
+        ProtocolType.MitsubishiMc => new(ProtocolType.MitsubishiMc, "三菱 MC", PackIconKind.Chip, ProtocolCapabilities.SupportsServer(protocol), ProtocolCapabilities.SupportsAddressRead(protocol), ProtocolCapabilities.SupportsRaw(protocol),
             "D100 / M10 (软元件)", "如 D100、M10、W0F0、R0"),
-        ProtocolType.OpcUa => new(ProtocolType.OpcUa, "OPC UA", PackIconKind.Sitemap, true, true, false,
+        ProtocolType.OpcUa => new(ProtocolType.OpcUa, "OPC UA", PackIconKind.Sitemap, ProtocolCapabilities.SupportsServer(protocol), ProtocolCapabilities.SupportsAddressRead(protocol), ProtocolCapabilities.SupportsRaw(protocol),
             "ns=2;s=Tag1 (节点ID)", "OPC UA NodeId，如 ns=2;s=Temperature"),
-        ProtocolType.Tcp => new(ProtocolType.Tcp, "TCP Socket", PackIconKind.Ethernet, true, false, true,
+        ProtocolType.Tcp => new(ProtocolType.Tcp, "TCP Socket", PackIconKind.Ethernet, ProtocolCapabilities.SupportsServer(protocol), ProtocolCapabilities.SupportsAddressRead(protocol), ProtocolCapabilities.SupportsRaw(protocol),
             "-", "TCP 字节流原始收发"),
-        ProtocolType.Udp => new(ProtocolType.Udp, "UDP Socket", PackIconKind.AccessPointNetwork, true, false, true,
+        ProtocolType.Udp => new(ProtocolType.Udp, "UDP Socket", PackIconKind.AccessPointNetwork, ProtocolCapabilities.SupportsServer(protocol), ProtocolCapabilities.SupportsAddressRead(protocol), ProtocolCapabilities.SupportsRaw(protocol),
             "-", "UDP 数据报收发"),
-        ProtocolType.Serial => new(ProtocolType.Serial, "串口 Raw", PackIconKind.SerialPort, false, false, true,
+        ProtocolType.Serial => new(ProtocolType.Serial, "串口 Raw", PackIconKind.SerialPort, ProtocolCapabilities.SupportsServer(protocol), ProtocolCapabilities.SupportsAddressRead(protocol), ProtocolCapabilities.SupportsRaw(protocol),
             "-", "原始串口收发"),
-        ProtocolType.Http => new(ProtocolType.Http, "HTTP", PackIconKind.Web, true, true, false,
+        ProtocolType.Http => new(ProtocolType.Http, "HTTP", PackIconKind.Web, ProtocolCapabilities.SupportsServer(protocol), ProtocolCapabilities.SupportsAddressRead(protocol), ProtocolCapabilities.SupportsRaw(protocol),
             "/api/path (相对路径)", "GET 相对路径，如 /api/data"),
-        ProtocolType.WebApi => new(ProtocolType.WebApi, "Web API", PackIconKind.Api, true, true, false,
+        ProtocolType.WebApi => new(ProtocolType.WebApi, "Web API", PackIconKind.Api, ProtocolCapabilities.SupportsServer(protocol), ProtocolCapabilities.SupportsAddressRead(protocol), ProtocolCapabilities.SupportsRaw(protocol),
             "/api/v1/resource", "RESTful 路径"),
         _ => throw new NotSupportedException(protocol.ToString()),
     };
@@ -373,10 +366,10 @@ public static class ProtocolCatalog
     /// 避免 TCP/UDP/Serial 伪装地址读取；原始收发仅字节流/数据报协议。
     /// </summary>
     public static bool SupportsAddress(ICommunicationDevice device) =>
-        device is IAddressReader && Describe(device.ProtocolType).SupportsAddressRead;
+        device is IAddressReader && ProtocolCapabilities.SupportsAddressRead(device.ProtocolType);
 
     public static bool SupportsRaw(ProtocolType protocol) =>
-        Describe(protocol).SupportsRaw;
+        ProtocolCapabilities.SupportsRaw(protocol);
 
     /// <summary>列出全部可用协议信息（按常用度排序）。</summary>
     public static IReadOnlyList<ProtocolInfo> All() =>
@@ -392,20 +385,9 @@ public static class ProtocolCatalog
         Describe(ProtocolType.WebApi),
     ];
 
-    /// <summary>根据协议与角色构造默认参数。</summary>
-    public static CommunicationParam CreateParam(ProtocolType protocol, DeviceRole role) => protocol switch
-    {
-        ProtocolType.ModbusTcp => new ModbusTcpParam { ProtocolType = protocol, Role = role },
-        ProtocolType.ModbusRtu => new ModbusRtuParam { ProtocolType = protocol, Role = role },
-        ProtocolType.MitsubishiMc => new McParam { ProtocolType = protocol, Role = role },
-        ProtocolType.OpcUa => new OpcUaParam { ProtocolType = protocol, Role = role },
-        ProtocolType.Tcp => new SocketParam { ProtocolType = protocol, Role = role },
-        ProtocolType.Udp => new SocketParam { ProtocolType = protocol, Role = role },
-        ProtocolType.Serial => new SerialParam { ProtocolType = protocol, Role = role },
-        ProtocolType.Http => new HttpParam { ProtocolType = protocol, Role = role },
-        ProtocolType.WebApi => new WebApiParam { ProtocolType = protocol, Role = role },
-        _ => throw new NotSupportedException(protocol.ToString()),
-    };
+    /// <summary>根据协议与角色构造默认参数（P11：委托 Core 工厂；Controls 不直接 new Runtime 参数之外的实现）。</summary>
+    public static CommunicationParam CreateParam(ProtocolType protocol, DeviceRole role) =>
+        CommunicationParamFactory.CreateParam(protocol, role);
 
     /// <summary>
     /// 协议参数白名单（顺序即表单显示顺序）：只列 CommunicationNew adapter 真正读取的字段。

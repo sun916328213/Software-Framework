@@ -2,7 +2,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Communication.Controls.Services;
 using CommunicationNew.Core;
-using CommunicationNew.Protocols.Serial;
 using Prism.Services.Dialogs;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -450,7 +449,8 @@ public sealed partial class DeviceConfigDialogViewModel : ObservableObject, IDia
                 continue;
             }
 
-            var isPort = property.Name == nameof(SerialParam.PortName);
+            // P11：串口号可编辑下拉按属性名判定，不直接引用具体参数类型，保持 Core-only。
+            var isPort = property.Name == "PortName";
             Fields.Add(NewField(property,
                 isPort ? SerialPortNames.ToList() : EnumOptions(property),
                 isPort));

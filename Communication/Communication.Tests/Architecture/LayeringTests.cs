@@ -5,25 +5,38 @@ using Xunit;
 
 namespace CommunicationNew.Tests.Architecture;
 
+/// <summary>
+/// P11 物理四层守卫：Core / Runtime 已拆为独立程序集，旧单程序集假设按归属改写。
+/// Core 程序集 = <see cref="IConnection"/> 所在；Runtime 程序集 = <see cref="CommunicationManager"/> 所在。
+/// </summary>
 public sealed class LayeringTests
 {
-    private static readonly Assembly CommunicationAssembly = typeof(IConnection).Assembly;
+    private static readonly Assembly CoreAssembly = typeof(IConnection).Assembly;
+    private static readonly Assembly RuntimeAssembly = typeof(CommunicationManager).Assembly;
+
+    private static Assembly FacadeAssembly => Assembly.Load("CommunicationNew");
 
     [Theory]
-    [InlineData("CommunicationNew.Abstractions", "CommunicationNew.Abstractions")]
-    [InlineData("CommunicationNew.Core", "CommunicationNew.Abstractions", "CommunicationNew.Core")]
-    [InlineData("CommunicationNew.Transports", "CommunicationNew.Abstractions", "CommunicationNew.Transports")]
-    [InlineData("CommunicationNew.Runtime", "CommunicationNew.Abstractions", "CommunicationNew.Transports", "CommunicationNew.Runtime")]
+    [InlineData("core", "CommunicationNew.Abstractions", "CommunicationNew.Abstractions")]
+    [InlineData("core", "CommunicationNew.Core", "CommunicationNew.Abstractions", "CommunicationNew.Core")]
+    [InlineData("runtime", "CommunicationNew.Transports", "CommunicationNew.Abstractions", "CommunicationNew.Transports", "CommunicationNew.Core", "CommunicationNew.Runtime")]
+    [InlineData("runtime", "CommunicationNew.Runtime", "CommunicationNew.Abstractions", "CommunicationNew.Transports", "CommunicationNew.Runtime", "CommunicationNew.Core")]
+    [InlineData("runtime", "CommunicationNew.Protocols", "CommunicationNew.Abstractions", "CommunicationNew.Core", "CommunicationNew.Transports", "CommunicationNew.Runtime", "CommunicationNew.Protocols")]
+    [InlineData("runtime", "CommunicationNew.Composition", "CommunicationNew.Abstractions", "CommunicationNew.Core", "CommunicationNew.Composition", "CommunicationNew.Protocols", "CommunicationNew.Transports", "CommunicationNew.Runtime")]
     public void Public_layer_surface_only_references_allowed_internal_namespaces(
+        string host,
         string layerNamespace,
         params string[] allowedNamespaces)
     {
-        var violations = CommunicationAssembly.ExportedTypes
+        var hostAssembly = host == "core" ? CoreAssembly : RuntimeAssembly;
+        var violations = hostAssembly.ExportedTypes
             .Where(type => IsInNamespace(type, layerNamespace))
             // 带 Obsolete 的旧类型由专门兼容测试管理，不扩散到当前分层接口。
             .Where(type => type.GetCustomAttribute<ObsoleteAttribute>() is null)
+            // P11：Runtime 宿主的 Core 命名空间实现（Base/Manager/Factory/AutoReader）由专项测试约束。
+            .Where(type => !(host == "runtime" && IsInNamespace(type, "CommunicationNew.Core")))
             .SelectMany(GetPublicSurfaceTypes)
-            .Where(type => type.Assembly == CommunicationAssembly)
+            .Where(type => type.Assembly == CoreAssembly || type.Assembly == RuntimeAssembly)
             .Where(type => !allowedNamespaces.Any(allowed => IsInNamespace(type, allowed)))
             .Select(type => type.FullName)
             .Distinct()
@@ -42,7 +55,7 @@ public sealed class LayeringTests
                 typeof(CommunicationManager),
             }
             .SelectMany(GetPublicSurfaceTypes)
-            .Where(type => type.Assembly == CommunicationAssembly)
+            .Where(type => type.Assembly == CoreAssembly || type.Assembly == RuntimeAssembly)
             .Where(type => !IsInNamespace(type, "CommunicationNew.Abstractions"))
             .Where(type => !IsInNamespace(type, "CommunicationNew.Core"))
             .Select(type => type.FullName)
@@ -64,7 +77,7 @@ public sealed class LayeringTests
         Assert.False(injectedConstructor.GetParameters()[0].IsOptional);
         Assert.NotNull(parameterlessConstructor);
         Assert.NotNull(parameterlessConstructor.GetCustomAttribute<ObsoleteAttribute>());
-        var legacyFactory = CommunicationAssembly.GetType(
+        var legacyFactory = RuntimeAssembly.GetType(
             "CommunicationNew.Core.CommunicationFactory",
             throwOnError: true)!;
         Assert.NotNull(legacyFactory.GetCustomAttribute<ObsoleteAttribute>());
@@ -73,7 +86,7 @@ public sealed class LayeringTests
     [Fact]
     public void Legacy_composition_factory_is_only_an_obsolete_core_alias()
     {
-        var legacyFactory = CommunicationAssembly.GetType(
+        var legacyFactory = RuntimeAssembly.GetType(
             "CommunicationNew.Composition.ICommunicationDeviceFactory",
             throwOnError: true)!;
 
@@ -86,7 +99,7 @@ public sealed class LayeringTests
     [Fact]
     public void Default_composition_entry_returns_core_factory_seam()
     {
-        var defaults = CommunicationAssembly.GetType(
+        var defaults = RuntimeAssembly.GetType(
             "CommunicationNew.Composition.CommunicationDefaults",
             throwOnError: true)!;
         var currentEntry = defaults.GetMethod("CreateDefaultFactory", Type.EmptyTypes);
@@ -136,10 +149,10 @@ public sealed class LayeringTests
     [Fact]
     public void Abstractions_public_surface_does_not_expose_third_party_assemblies()
     {
-        var violations = CommunicationAssembly.ExportedTypes
+        var violations = CoreAssembly.ExportedTypes
             .Where(type => IsInNamespace(type, "CommunicationNew.Abstractions"))
             .SelectMany(GetPublicSurfaceTypes)
-            .Where(type => type.Assembly != CommunicationAssembly)
+            .Where(type => type.Assembly != CoreAssembly)
             .Where(type => !IsAllowedFrameworkType(type))
             .Select(type => $"{type.FullName} ({type.Assembly.GetName().Name})")
             .Distinct()
@@ -150,12 +163,34 @@ public sealed class LayeringTests
     }
 
     [Fact]
+    public void Core_public_surface_does_not_expose_third_party_sdk_types()
+    {
+        var violations = CoreAssembly.ExportedTypes
+            .Where(type => IsInNamespace(type, "CommunicationNew.Core")
+                || IsInNamespace(type, "CommunicationNew.Protocols"))
+            .Where(type => type.GetCustomAttribute<ObsoleteAttribute>() is null)
+            .SelectMany(GetPublicSurfaceTypes)
+            .Where(type => type.Assembly != CoreAssembly)
+            .Where(type => !IsAllowedFrameworkType(type))
+            .Select(type => $"{type.FullName} ({type.Assembly.GetName().Name})")
+            .Distinct()
+            .OrderBy(name => name)
+            .ToArray();
+
+        // Core（含参数 DTO）不得迫使调用方引用 FluentModbus / OPC UA / MX 等协议 SDK。
+        Assert.Empty(violations);
+    }
+
+    [Fact]
     public void Protocols_public_surface_does_not_expose_third_party_sdk_types()
     {
-        var violations = CommunicationAssembly.ExportedTypes
+        var violations = RuntimeAssembly.ExportedTypes
             .Where(type => IsInNamespace(type, "CommunicationNew.Protocols"))
             .SelectMany(GetPublicSurfaceTypes)
-            .Where(type => type.Assembly != CommunicationAssembly)
+            .Where(type => type.Assembly != RuntimeAssembly)
+            // P11：协议面引用 Core 契约（Abstractions/Core/参数 DTO）属第一方，不视为第三方 SDK 泄漏。
+            .Where(type => !(type.Assembly == CoreAssembly
+                && (IsInNamespace(type, "CommunicationNew.Abstractions") || IsInNamespace(type, "CommunicationNew.Core") || IsInNamespace(type, "CommunicationNew.Protocols"))))
             .Where(type => !IsAllowedFrameworkType(type))
             .Select(type => $"{type.FullName} ({type.Assembly.GetName().Name})")
             .Distinct()
@@ -169,7 +204,7 @@ public sealed class LayeringTests
     [Fact]
     public void Built_in_protocol_devices_use_the_new_connection_seam()
     {
-        var violations = CommunicationAssembly.ExportedTypes
+        var violations = RuntimeAssembly.ExportedTypes
             .Where(type => IsInNamespace(type, "CommunicationNew.Protocols"))
             .Where(type => !type.IsAbstract)
             .Where(type => typeof(CommunicationDeviceBase).IsAssignableFrom(type))
@@ -198,7 +233,7 @@ public sealed class LayeringTests
             "CommunicationNew.Protocols.WebApi.WebApiClientDevice",
         ];
 
-        var protocolDevices = CommunicationAssembly.ExportedTypes
+        var protocolDevices = RuntimeAssembly.ExportedTypes
             .Where(type => IsInNamespace(type, "CommunicationNew.Protocols"))
             .Where(type => !type.IsAbstract)
             .Where(type => typeof(CommunicationDeviceBase).IsAssignableFrom(type))
@@ -240,7 +275,7 @@ public sealed class LayeringTests
             "CommunicationNew.Protocols.Socket.UdpClientDevice",
         ];
 
-        var protocolDevices = CommunicationAssembly.ExportedTypes
+        var protocolDevices = RuntimeAssembly.ExportedTypes
             .Where(type => IsInNamespace(type, "CommunicationNew.Protocols"))
             .Where(type => !type.IsAbstract)
             .Where(type => typeof(CommunicationDeviceBase).IsAssignableFrom(type))
@@ -266,6 +301,83 @@ public sealed class LayeringTests
         Assert.Equal(expectedRawSenders, rawSenders);
         Assert.Equal(expectedRequestReplyClients, requestReplyClients);
         Assert.Equal(expectedRawSenders, receiveSources);
+    }
+
+    [Fact]
+    public void Core_assembly_does_not_reference_runtime_or_protocol_sdks()
+    {
+        var references = CoreAssembly.GetReferencedAssemblies()
+            .Select(name => name.Name)
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.DoesNotContain("Communication.Runtime", references);
+        Assert.DoesNotContain("CommunicationNew", references);
+        Assert.DoesNotContain("FluentModbus", references);
+        Assert.DoesNotContain("Opc.Ua.Client", references);
+        Assert.DoesNotContain("Opc.Ua.Core", references);
+        Assert.DoesNotContain("Opc.Ua.Server", references);
+        Assert.DoesNotContain("Prism.Core", references);
+        Assert.DoesNotContain("System.IO.Pipelines", references);
+    }
+
+    [Fact]
+    public void Runtime_assembly_references_core()
+    {
+        var references = RuntimeAssembly.GetReferencedAssemblies()
+            .Select(name => name.Name)
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.Contains("Communication.Core", references);
+    }
+
+    [Fact]
+    public void Runtime_hosts_only_known_core_namespace_implementations()
+    {
+        var hosted = RuntimeAssembly.ExportedTypes
+            .Where(type => IsInNamespace(type, "CommunicationNew.Core"))
+            .Select(type => type.FullName)
+            .OrderBy(name => name)
+            .ToArray();
+
+        // P11：命名空间保持兼容（避免全仓改 using），但程序集归属收口到以下实现。
+        Assert.Equal(
+            new[]
+            {
+                "CommunicationNew.Core.CommunicationDeviceBase",
+                "CommunicationNew.Core.CommunicationFactory",
+                "CommunicationNew.Core.CommunicationManager",
+                "CommunicationNew.Core.Services.DataPointAutoReader",
+            },
+            hosted);
+    }
+
+    [Fact]
+    public void Facade_preserves_identity_and_defines_no_implementation()
+    {
+        var facade = FacadeAssembly;
+        Assert.Equal("CommunicationNew", facade.GetName().Name);
+
+        var definedPublic = facade.DefinedTypes
+            .Where(type => type.IsPublic)
+            .Select(type => type.FullName)
+            .OrderBy(name => name)
+            .ToArray();
+
+        // 兼容门面只做类型转发与必要 shim，不再承载协议实现。
+        Assert.Empty(definedPublic);
+    }
+
+    [Fact]
+    public void Parameter_snapshot_seam_is_implemented_by_device_base()
+    {
+        Assert.True(typeof(ICommunicationParameterSource).IsAssignableFrom(typeof(CommunicationDeviceBase)));
+        Assert.NotNull(typeof(CommunicationDeviceBase).GetMethod(nameof(ICommunicationParameterSource.GetParameterSnapshot)));
+    }
+
+    [Fact]
+    public void Manager_implements_core_contract()
+    {
+        Assert.True(typeof(ICommunicationManager).IsAssignableFrom(typeof(CommunicationManager)));
     }
 
     private static bool IsInNamespace(Type type, string expectedNamespace) =>

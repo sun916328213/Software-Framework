@@ -66,23 +66,16 @@ public static class DeviceConfigStore
         return (result, skipped);
     }
 
-    /// <summary>从设备反查其创建参数：优先取设备暴露的 Param 引用（深拷贝），取不到则按协议/角色重建默认参数。</summary>
+    /// <summary>从设备反查其创建参数：优先取设备暴露的参数快照，取不到则按协议/角色重建默认参数。</summary>
     private static CommunicationParam? ExtractLiveParam(ICommunicationDevice device)
     {
-        // CommunicationDeviceBase.Param 是 protected；此处用反射只读，避免给核心加持久化耦合。
-        var field = device.GetType().BaseType?.GetField("Param",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?? device.GetType().GetField("Param",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        // 沿继承链向上查找 Param 字段。
-        var type = device.GetType();
-        while (field is null && type.BaseType is not null)
+        // P11: 跨程序集反射 protected Param 字段已消除；Runtime 基类实现 ICommunicationParameterSource。
+        if (device is ICommunicationParameterSource source)
         {
-            type = type.BaseType;
-            field = type.GetField("Param",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            return source.GetParameterSnapshot();
         }
-        return field?.GetValue(device) as CommunicationParam;
+
+        return null;
     }
 
     private static string Serialize(CommunicationParam param) =>

@@ -21,7 +21,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
-    <ProjectReference Include="..\Communication\Communication.csproj" />
+    <!-- P11: Controls 只依赖 Core 契约与参数描述，不引用 Runtime 实现。 -->
+    <ProjectReference Include="..\Communication.Core\Communication.Core.csproj" />
   </ItemGroup>
 
 </Project>

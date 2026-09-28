@@ -21,7 +21,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
     <ProjectReference Include="..\Communication.Controls\Communication.Controls.csproj" />
-    <ProjectReference Include="..\Communication\Communication.csproj" />
+    <!-- P11: Workbench 直接组合 Core + Runtime + Controls。 -->
+    <ProjectReference Include="..\Communication.Core\Communication.Core.csproj" />
+    <ProjectReference Include="..\Communication.Runtime\Communication.Runtime.csproj" />
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
   </ItemGroup>
 </Project>
