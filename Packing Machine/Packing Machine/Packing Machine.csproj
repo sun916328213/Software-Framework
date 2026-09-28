@@ -38,7 +38,7 @@
     <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
     <ProjectReference Include="..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj" />
     <ProjectReference Include="..\..\Device\Device\Device.csproj" />
-    <ProjectReference Include="..\..\Secs\Secs\Secs.csproj" />
+    <ProjectReference Include="..\..\Secs\Secs.Runtime\Secs.Runtime.csproj" />
     <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />
     <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />
     <ProjectReference Include="..\..\Vision\DPLibrary_Base_F48\DPLibrary_Base_F48.csproj" />

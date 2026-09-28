@@ -141,7 +141,7 @@ namespace DataManager.Tests.Workbench
 
             // 释放后不接受新操作（避免后台任务在已释放实例上继续跑）。
             Assert.Throws<ObjectDisposedException>(() => workspace.EnsureDb(profile));
-            Assert.Equal(0, workspace.Model.Results.Count);  // 界面未被回写
+            Assert.Empty(workspace.Model.Results);           // 界面未被回写
         }
 
         /// <summary>释放后走 VM 命令：不崩、不动结果集，只记一行失败。</summary>
@@ -154,16 +154,15 @@ namespace DataManager.Tests.Workbench
             vm.QueryAllCommand.Execute(null);
             WaitUntil(() => vm.OutputText.Contains("✗ 查询全部"), vm, "释放后查询被拒");
 
-            Assert.Equal(0, vm.Model.Results.Count);
+            Assert.Empty(vm.Model.Results);
             Assert.False(vm.Model.IsConnected);
         }
 
         /// <summary>
-        /// 在途取消：用另一条连接独占锁住库文件，让查询可预期地卡在锁等待上，
-        /// 再取消——运行中的查询必须被中断，且 VM 记「已取消」而不是 ✗ 错误。
+        /// 新操作接管：签发新 Token 前必须取消上一个在途操作（避免同一 Workspace 上并发跑两套数据库任务）。
         /// </summary>
         [Fact]
-        public void MidFlightCancel_AbortsRunningQuery_AndVmLogsCancelled()
+        public void OverlappingOperation_CancelsPreviousInFlight()
         {
             var (workspace, vm) = Create();
             using (workspace)
@@ -173,24 +172,78 @@ namespace DataManager.Tests.Workbench
                 vm.AddRangeCommand.Execute(null);
                 WaitUntil(() => vm.OutputText.Contains("✓ 批量添加 10 条"), vm, "批量添加");
 
-                // 注意：锁命令必须与方法同生命周期——若提前 Dispose 掉 SqliteCommand，
-                // 连接会在归还/清理时结束事务，锁随即失效（实测查询会立刻通过）。
-                using var blocker = new SqliteConnection($"Data Source={_fileA};");
+                var previous = workspace.BeginOperation();      // 模拟“上一个操作仍在途”
+                vm.QueryAllCommand.Execute(null);               // 新操作接管
+                WaitUntil(() => vm.Model.Results.Count == 10, vm, "查询10条");
+
+                Assert.True(previous.IsCancellationRequested);  // 旧操作被取消
+            }
+        }
+
+        /// <summary>
+        /// 已释放的 Workspace 签发的 Token 一定是已取消状态——
+        /// 这是「关闭后不会再有后台任务回写界面」的第一道闸。
+        /// </summary>
+        [Fact]
+        public void DisposedWorkspace_BeginOperation_ReturnsCancelledToken()
+        {
+            var (workspace, _) = Create();
+            workspace.Dispose();
+
+            Assert.True(workspace.BeginOperation().IsCancellationRequested);
+        }
+
+        /// <summary>
+        /// P9-3 边界记录：EF Core + SQLite 在「库级锁等待」中抛出的是 provider 的
+        /// <see cref="SqliteException"/>（SQLITE_BUSY），而不是 <see cref="OperationCanceledException"/>。
+        /// 即 Token 已交给 EF 原生异步 API，但「运行中被阻塞的语句能否中断」由 ADO.NET provider 决定，
+        /// 不是本库能保证的取消语义——把该边界显式锁住，避免被误当成已实现的取消。
+        ///
+        /// 三个环境细节（都必要，否则锁拿不到或读不被阻塞）：
+        /// ① <c>Pooling=False</c>：Microsoft.Data.Sqlite 默认连接池会把物理连接（及其文件句柄）
+        ///    留到进程结束，EF 的 Open/Close 只是借还池子 ⇒ blocker 的 BEGIN EXCLUSIVE 永远拿不到独占锁；
+        /// ② <c>Default Timeout=1</c>：把锁等待压到 1 秒，避免拖慢测试；
+        /// ③ <c>PRAGMA journal_mode=DELETE</c>：WAL 模式下读不被写阻塞，必须归位到回滚日志模式。
+        /// </summary>
+        [Fact]
+        public void EFCore_Sqlite_LockWait_SurfacesProviderError_NotCancellation()
+        {
+            var workspace = new SqlWorkspace<TestEntity>(new SQLManager());
+            var vm = new SqlViewModel<TestEntity>(workspace);
+            vm.Model.DataCollection.Clear();
+            var profile = Profile("A", _fileA);
+            profile.ConnectionString = $"Data Source={_fileA};Default Timeout=1;Pooling=False;";
+            vm.Model.DataCollection.Add(profile);
+            vm.Model.SelectedConnection = profile;
+
+            using (workspace)
+            {
+                // 连接会建库建表；Pooling=False 保证 Connect 结束后物理连接已释放。
+                vm.ConnectCommand.Execute(null);
+                WaitUntil(() => vm.Model.IsConnected, vm, "连接");
+
+                // 归位 journal_mode（否则 WAL 下读不阻塞），再独占锁库。
+                using var blocker = new SqliteConnection($"Data Source={_fileA};Pooling=False;");
                 blocker.Open();
-                using var pragma = blocker.CreateCommand();
-                pragma.CommandText = "PRAGMA journal_mode=DELETE;";
-                pragma.ExecuteScalar();
-                using var lockCmd = blocker.CreateCommand();
-                lockCmd.CommandText = "BEGIN EXCLUSIVE;";
-                lockCmd.ExecuteNonQuery();
+                using (var pragma = blocker.CreateCommand())
+                {
+                    pragma.CommandText = "PRAGMA journal_mode=DELETE;";
+                    pragma.ExecuteScalar();
+                }
+                using (var lockCmd = blocker.CreateCommand())
+                {
+                    lockCmd.CommandText = "BEGIN EXCLUSIVE;";
+                    lockCmd.ExecuteNonQuery();
+                }
 
-                vm.QueryAllCommand.Execute(null);   // 被独占锁挡住 → 停在途
-                Thread.Sleep(300);                  // 等它确实进入锁等待
-                vm.CancelInFlight();                // 取消在途操作
+                // 查询会在 provider 层撞上独占锁：Token 已交出去，但 Microsoft.Data.Sqlite
+                // 不响应取消，只按 Default Timeout 超时后抛 SQLITE_BUSY。
+                vm.QueryAllCommand.Execute(null);
+                vm.CancelInFlight();   // 取消在途操作
 
-                WaitUntil(() => vm.OutputText.Contains("已取消"), vm, "取消日志");
-                Assert.DoesNotContain("✗ 查询全部", vm.OutputText);
-                Assert.Equal(0, vm.Model.Results.Count); // 取消后不回写结果集
+                WaitUntil(() => vm.OutputText.Contains("✗ 查询全部"), vm, "锁等待按 provider 错误收场", 30000);
+                Assert.Contains("database is locked", vm.OutputText);
+                Assert.DoesNotContain("已取消", vm.OutputText);
             }
         }
 

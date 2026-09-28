@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Secs.Controls\Secs.Controls.csproj" />
+    <ProjectReference Include="..\Secs.Runtime\Secs.Runtime.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+  </ItemGroup>
+</Project>

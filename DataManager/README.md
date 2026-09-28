@@ -2,8 +2,8 @@
 
 统一的数据 access 入口：日志（Serilog / NLog / log4net）、Excel（EPPlus / MiniExcel）、数据库（EFCore / SqlSugar / Dapper，支持 PostgreSQL / MySQL / SQLite / SQL Server），外加测试工程与 WPF 测试工作台。
 
-- 构建：`dotnet build DataManager.sln`（0 警告 0 错误）
-- 测试：`dotnet test DataManager.Tests/DataManager.Tests.csproj`（218 用例，需本机 PG + 见“测试”一节）
+- 构建：`dotnet build DataManager.sln`（0 错误；警告只来自同仓 Extension/WPFCustomControls 既有文件）
+- 测试：`dotnet test DataManager.Tests/DataManager.Tests.csproj` + `dotnet test DataManager.Workbench.Tests/DataManager.Workbench.Tests.csproj`（377 用例，真库用例需本机数据库，见“测试”一节）
 
 ## 目录结构
 
@@ -19,7 +19,9 @@ DataManager/
     SQL/                  # ISQL<T> / SQLManager（无容器依赖，Create<T> 工厂）
       Dapper/ EFCore/ SqlSugar/
     DataManagerModule.cs  # Prism 模块（注册三个 Manager 单例）
-  DataManager.Tests/      # xUnit（单元 + PG 真库集成 + 工作台冒烟）
+  DataManager.Controls/   # 可复用 WPF 控件层：SqlWorkspace<T> + SqlViewModel<T> 等
+  DataManager.Tests/      # xUnit（单元 + 真库集成）
+  DataManager.Workbench.Tests/ # xUnit（无头驱动工作台控件/VM；WPF 需 STA）
   DataManager.Workbench/  # WPF + Prism.DryIoc + .NET 9 手动测试台
 ```
 
@@ -30,6 +32,15 @@ DataManager/
 ```
 
 主要包（类库自带）：`Dapper` + `Dommel`、`EPPlus`、`MiniExcel`、`NLog`、`log4net`、`Serilog(.Sinks.File)`、`Npgsql.EntityFrameworkCore.PostgreSQL`、`MySql.EntityFrameworkCore`、`SqlSugarCore`。
+
+### 框架基础依赖（设计前提，不做隔离层）
+
+`DataManager.csproj` 直接引用两个同仓基础库，它们是**必需依赖**，不列入待解耦对象：
+
+- `Prism`（`Prism.Core` / `Prism.Wpf` / `Prism.DryIoc`）：`DataManagerModule : IModule` 本身就是模块契约；移除等于放弃模块化入口。
+- `Extension`（`net9.0-windows7.0` + WPF）：主题（`ThemeService`）、配置/JSON 读写、`DispatcherEx` 等共享基础设施。
+
+因此 DataManager 的 TFM 与 Extension 保持一致（`net9.0-windows`），**不追求改成纯 `net9.0`**（Extension 自带 WPF 目标框架，改不掉）。这两条依赖由守卫测试 `Tests/SQL/SqlDependencyArchitectureTests.cs` 的 `Prism_RemainsDirectlyReferenced` / `Extension_RemainsDirectlyReferenced` 锁定，避免被后续重构误删。
 
 ## Log：三实现同一文件格式
 
@@ -107,6 +118,48 @@ db.ExecuteInTransaction(() =>
 // EFCore 分表抛（fork 独立连接）；嵌套抛。
 ```
 
+```csharp
+// P9 取消：每个异步入口都有 CancellationToken 重载；旧无参签名保留，
+// 内部等价于传 CancellationToken.None（源码兼容，不必改既有调用点）。
+using var cts = new CancellationTokenSource();
+var token = cts.Token;
+
+await db.QueryAsync(token);
+await db.QueryAsync(x => x.Age > 20, token);
+await db.AddAsync(item, token);
+await db.AddRangeAsync(list, token);
+await db.UpdateAsync(item, token);
+await db.UpdateAsync(x => x.Id == 1, new MyEntity { ... }, token);
+await db.DeleteAsync(x => x.Id == 1, token);
+await db.DeleteAllAsync(token);
+await db.ExecuteInTransactionAsync(async () =>
+{
+    await db.AddAsync(a, token);
+    await db.AddAsync(b, token);
+}, token);
+// 取消语义（三 provider 对齐）：取消向上抛 OperationCanceledException——不吞掉、
+// 不返回空集合/false；事务内取消与异常一样整体回滚（回滚本身不受取消影响）。
+// Token 只走参数，不进 SQLParam（SQLParam 是连接配置，不含每次调用的运行时状态）。
+```
+
+```csharp
+// P9 命令超时：SQLParam.CommandTimeoutSeconds（秒）。默认 0 = 沿用 provider 默认，现场行为不变。
+var db2 = mgr.Create<MyEntity>(new SQLParam
+{
+    Name = "main", ServerIP = "127.0.0.1", Port = "5432", DBName = "mydb",
+    DBType = ESQLType.PostgreSQL, ToolType = ESQLToolType.Dapper,
+    CommandTimeoutSeconds = 30,
+});
+// 映射：Dapper → CommandDefinition.commandTimeout（0 → null）；
+//       EFCore → UseXxx(conn, o => o.CommandTimeout(...))（构造期固化 ⇒ 改值触发实例重建）；
+//       SqlSugar → IAdo.CommandTimeOut。
+// 负值由 SQLParam.Validate() 直接拒绝。
+```
+
+- 取消的 provider 边界（非本库可保证，已用测试显式锁住）：
+  - SqlSugar **分表** provider（`SplitInsertable` / `SplitTableUpdateByObjectProvider` / `SplitTableDeleteByObjectProvider`）无 Token 重载 ⇒ 只做「进入前检查」，不假装可中断。
+  - `Microsoft.Data.Sqlite` 在**库级锁等待**中不响应取消，按连接串 `Default Timeout` 超时后抛 `SqliteException`（SQLITE_BUSY）而非 `OperationCanceledException`。
+- 工作台侧：`SqlWorkspace` 同一时刻至多一个在途操作（新操作接管时先取消旧的），重连/切换档案/断开/释放都会先取消在途操作；释放后不再接受新操作、也不再回写结果集。`SqlViewModel.CancelInFlight()` 是宿主的取消入口。
 - 时间：全链路用 `DateTime.Now/Today`（Local）；Npgsql 兼容开关由库内静态构造自行保证，宿主无需设置。
 - Dapper 命名约定：表/列一律小写单数（`[Table]/[Column]` 名同样小写化），已注册全局 Dommel 解析器对齐，手写 SQL 与 Dommel 一致。
 - `SQLParam` 有 `Validate()`（按库分支校验，空值抛 `ArgumentException`），`Create` 入口自动校验；`Manager` 重名抛 `InvalidOperationException`。
@@ -155,13 +208,15 @@ public class MyLog
 ```powershell
 # 单元（无需数据库）
 dotnet test DataManager.Tests/DataManager.Tests.csproj
+dotnet test DataManager.Workbench.Tests/DataManager.Workbench.Tests.csproj
 # 含 PG 真库（需本机 PostgreSQL，先设密码）
 $env:DM_PG_PASSWORD="123"
 dotnet test DataManager.Tests/DataManager.Tests.csproj
 ```
 
-- 连接信息：`DM_PG_HOST/DM_PG_PORT/DM_PG_USER/DM_PG_PASSWORD/DM_PG_DB`，默认 `127.0.0.1:5432/postgres/dm_integration`，库表自建自清。无密码时仅 PG 真库 12 用例失败（5 集成 + 5 新功能 + 2 冒烟，环境问题，已实证其余 203 全绿）；SQLite 真库文件自建自清，CI 可跑；SQL Server/MySQL 暂无本机库，仅方言生成层覆盖。
-- 218 用例构成：Excel 20 / Log 32（含异步 4）/ Manager 12 / SQL 113（EFCore 分表 6 + PG 真库 10 + SQLite 真库 19 + 谓词翻译 14 + 日期裁剪 15 + 工厂/命名/方言等 49）/ Workbench 41（含 SQLite 端到端 1）。
+- 连接信息：`DM_PG_HOST/DM_PG_PORT/DM_PG_USER/DM_PG_PASSWORD/DM_PG_DB`，默认 `127.0.0.1:5432/postgres/dm_integration`，库表自建自清。**无本机真库时失败的都是集成用例**（DataManager.Tests 22 条：PG 10 + MySQL 6 + SQL Server 6；Workbench.Tests 2 条：PG 冒烟），属环境问题，非回归；SQLite 真库文件自建自清，CI 可跑。
+- 377 用例构成：DataManager.Tests 310（Excel / Log / Manager / SQL 单元 + 真库集成）+ DataManager.Workbench.Tests 67（工作台控件与 VM 无头驱动）。
+- P9 新增 39 条：`SQL/SqlAsyncApiCompatTests` 4（旧签名冻结）+ `SQL/SqlDependencyArchitectureTests` 6（Prism/Extension 基础依赖 + AnyCPU）+ `SQL/SqlCancellationTests` 12（取消契约与事务回滚）+ `SQL/SqlCommandTimeoutTests` 8（超时映射）+ `Workbench.Tests/SqlViewModelCancellationTests` 9（工作台取消与退出安全）。
 - 工作台冒烟（`Tests/Workbench/SqlViewModelSmokeTests`）无头驱动 `SqlViewModel` 全命令连真库；`LogViewModelRefreshTests` 端到端验证刷新能找到 `logyyyyMMdd` 文件。
 
 ## 工作台（手动测试，MaterialDesign + Prism）

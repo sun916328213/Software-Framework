@@ -322,3 +322,59 @@ DataManager.Workbench/              # WPF + Prism.DryIoc + .NET9 测试台
 - `LogManager.ReplaceConfigured()` 先构造全部新实例，再按调用方拥有的名称集合验证外部冲突并原子提交；构造/校验失败释放候选实例且保留旧集合，提交成功后才释放旧日志。
 - `LogConfigService.Load()` 改用该深模块 interface，删除宿主侧“先移除、再逐项注册”的重复事务逻辑。
 - `LogManagerTests` 专项 11/11 通过（含并发读取只能观察完整替换前/后快照）；DataManager 全套本机结果 169/179，剩余 10 项均为既有 PostgreSQL 密码认证失败。
+
+## 17. P9 续记（仓库整体优化 P9：异步取消 + 命令超时 + 退出安全）
+
+> ⚠️ **与 §10「P9 续记（API 对齐）」不是同一件事**：§10 那条是 DataManager **内部**的历史分期
+> （P8/P9/P10 指 DataManager 自己的优化轮次）；本条是仓库**整体**优化计划的第 9 期
+> （`Software-Framework_P9修改计划_2026-09-28.pdf`，基线 `f39b6a74` = P8 提交）。两者编号撞车，勿混。
+
+- **纠正上一版错误认识**：`Prism` 与 `Extension` 都是**基础必需库**，不做隔离层、不做移除审计，也不再追求把
+  DataManager 改成纯 `net9.0`。理由：`DataManagerModule : IModule` 本身就是 Prism 的模块契约；Extension 提供主题
+  （`ThemeService`）、配置/JSON 读写、`DispatcherEx` 等共享基础设施，且自身是 `net9.0-windows7.0 + WPF`，
+  TFM 改不掉。两条依赖由守卫测试 `SqlDependencyArchitectureTests` 锁定。
+- **P9-2 `ISQL<T>` 可取消重载**：9 个异步入口各加一个带 `CancellationToken` 的重载
+  （`AddAsync` / `AddRangeAsync` / `QueryAsync()` / `QueryAsync(predicate)` / `DeleteAsync(predicate)` /
+  `DeleteAllAsync` / `UpdateAsync(T)` / `UpdateAsync(predicate,T)` / `ExecuteInTransactionAsync`）。
+  **旧签名全部保留**并内部转调 `CancellationToken.None` ⇒ 源码兼容，既有调用点零改动。
+  Token 只走参数，**不进 `SQLParam`**（SQLParam 是连接配置，不含单次调用的运行时状态）。
+- **P9-3 三 provider 取消链路对齐**：
+  - EFCore：原生可取消 API（`ToListAsync` / `SaveChangesAsync` / `ExecuteDeleteAsync` / `AddAsync` /
+    `BeginTransactionAsync` / `CommitAsync`）；分表路径逐表 `ThrowIfCancellationRequested()`。
+    `SaveChangesOptimizedAsync` 新增 `catch (OperationCanceledException) { …; throw; }` 并放在通用 catch **之前**
+    ——否则 OCE 会被包装成普通 `Exception`，上层无法区分「取消」与「业务失败」（闸门第 3 条）。
+  - Dapper：非分表走 Dommel 的 `cancellationToken:` 参数；分表统一走新增的 `DapperCommandFactory.Create(...)`，
+    把 `commandTimeout` 与 `cancellationToken` 一起映射进 `CommandDefinition`。
+  - SqlSugar：**非分表**原生 `ExecuteCommandAsync(token)` / `ToListAsync(token)`；**分表** provider
+    （`SplitInsertable` / `SplitTableUpdateByObjectProvider` / `SplitTableDeleteByObjectProvider`）
+    **没有 Token 重载** ⇒ 只做「进入前检查」并显式注释边界，**不假装可中断**（拒绝用 `Task.Run` 包装伪造取消）。
+  - 事务：三路都是「进入前 + 提交前」各检查一次；catch 里回滚一律用 `CancellationToken.None`
+    ——回滚是取消的补救动作，绝不能被取消跳过。
+- **P9-4 统一命令超时**：`SQLParam.CommandTimeoutSeconds`（秒，**默认 0 = provider 默认**，现场行为不变；负值 `Validate()` 拒绝）。
+  映射：Dapper → `CommandDefinition.commandTimeout`（0 → null）；EFCore → `UseXxx(conn, o => o.CommandTimeout(...))`；
+  SqlSugar → `IAdo.CommandTimeOut`。EFCore 超时在构造 `DbContext` 时固化 ⇒ `BuildDbKey` 纳入 `CommandTimeoutSeconds`，
+  改值触发实例重建。**不重写连接串**（直通串优先级契约不变）。
+- **P9-5 工作台可取消 + 退出安全**：`SqlWorkspace<T>` 变 `IDisposable` 并持单一在途 `CancellationTokenSource`：
+  `BeginOperation()` 签发新 Token 前先取消旧的（同一 Workspace 不并发跑两套数据库任务）；
+  重连 / 切换档案 / 断开 / 释放都先 `CancelInFlight()`；`Dispose()` = 取消 → `DisConnect` → 从 `SQLManager` 摘除 → `Dispose`，
+  之后 `EnsureDb` 抛 `ObjectDisposedException`。`PostToModel` 双检（已释放 / 已取消）保证关闭后不再回写界面。
+  `SqlViewModel` 新增 `CancelInFlight()`，`RunWork/RunAsync/Run` 增加 `catch (OperationCanceledException)` 分支，
+  按「… 已取消」记录而不是 `✗` 错误。`Workbench/App.xaml.cs` 的 `OnExit` 释放 `SqlWorkspace<TestEntity>`。
+- **测试锁定的 provider 边界（重要：勿当成「已实现的取消」）**：
+  1. `Microsoft.Data.Sqlite` 在**库级锁等待**中不响应取消，按连接串 `Default Timeout` 超时后抛
+     `SqliteException`（SQLITE_BUSY），**不是** `OperationCanceledException`（独立探针 + 测试双证）。
+  2. SqlSugar 分表 provider 无 Token 重载（见上）。
+  3. 写 SQLite 锁用例的环境细节：必须 `Pooling=False`（默认连接池会一直持有文件句柄 ⇒ blocker 拿不到独占锁）
+     \+ `PRAGMA journal_mode=DELETE`（WAL 模式下读不被写阻塞）。
+- 新增测试文件：
+  - `DataManager.Tests/SQL/SqlAsyncApiCompatTests.cs` —— 旧（无 Token）签名冻结，三 provider 语义不变。
+  - `DataManager.Tests/SQL/SqlDependencyArchitectureTests.cs` —— Prism/Extension 基础依赖 + AnyCPU（PE 头）+ 不反引宿主工程。
+  - `DataManager.Tests/SQL/SqlCancellationTests.cs` —— 预取消无副作用且不污染实例、事务取消回滚、取消不被吞成空集合。
+  - `DataManager.Tests/SQL/SqlCommandTimeoutTests.cs` —— 超时映射到三 provider（含反射读 SqlSugar 私有 client）。
+  - `DataManager.Workbench.Tests/SqlViewModelCancellationTests.cs` —— 工作台取消与退出安全（含 SQLite 锁边界）。
+- 闸门遵守：①先补测试再改实现 ②新 API 保持旧 API 源码兼容 ③取消一律向上抛 OCE、不吞成空集合/false
+  ④事务中取消与异常同样回滚 ⑤`CommandTimeoutSeconds` 默认 0 不改变现场行为 ⑥全部 Any CPU，未新增 x64。
+- 计数（实测）：DataManager.Tests **310**（288 通过 / 22 失败）+ DataManager.Workbench.Tests **67**（65 通过 / 2 失败）= **377**，
+  24 条失败**全部**是外部真库实例缺失（PG 10 + MySQL 6 + SQL Server 6 + PG 冒烟 2；本机 5432 连接超时、3306 连接拒绝），
+  **非回归**；P9 新增 39 条**全绿**。
+  `dotnet build DataManager/DataManager.sln --no-restore -m` = **0 错误**；P9 改动文件**零新警告**。

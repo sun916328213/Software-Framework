@@ -1,0 +1,10 @@
+<Window
+    x:Class="Secs.Workbench.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Secs.Controls.Views;assembly=Secs.Controls"
+    Title="SECS/GEM 工作台"
+    Width="800"
+    Height="500">
+    <controls:SecsOverviewView />
+</Window>
