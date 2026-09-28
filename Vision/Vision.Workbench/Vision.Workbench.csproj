@@ -23,6 +23,11 @@
     <!-- P5（2026-09-28）：统一 AI Tool 层同样注册进 Workbench；Provider 由 P6 三家实现注入，
          P9 做 AI Provider 选择页。 -->
     <ProjectReference Include="..\Vision.Tools.AI\Vision.Tools.AI.csproj" />
+    <!-- P6（2026-09-28）：三家 AI Provider 注册进 Workbench；构造不碰 Runtime，
+         选择页（P9）按名切换，加载/推理/释放经 IAIProvider 统一入口。 -->
+    <ProjectReference Include="..\Vision.AI.Halcon\Vision.AI.Halcon.csproj" />
+    <ProjectReference Include="..\Vision.AI.Aiditron\Vision.AI.Aiditron.csproj" />
+    <ProjectReference Include="..\Vision.AI.Invi\Vision.AI.Invi.csproj" />
   </ItemGroup>
 
   <ItemGroup>

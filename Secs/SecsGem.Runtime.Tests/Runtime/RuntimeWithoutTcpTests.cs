@@ -3,6 +3,8 @@ using SecsGem.Core;
 using SecsGem.Runtime.Tests.Fakes;
 using SecsGem.Runtime.Tests.Infrastructure;
 using Secs.Variable;
+using Extension.Automation.Device;
+using Extension.Automation.Secs;
 using Xunit;
 
 namespace SecsGem.Runtime.Tests.Runtime;
@@ -64,5 +66,24 @@ public sealed class RuntimeWithoutTcpTests
         });
 
         Assert.Equal("LOT-42", transport.LastReplyItem?.Items[0].GetString());
+    }
+
+    [Fact]
+    public async Task Disconnect_Updates_Public_State_Without_Tcp()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+        ISecsGemRuntime service = runtime;
+        await service.ConnectAsync(new SecsGem.Core.SecsGemOptions());
+        runtime._StatusManager.UpdateSEMIMode("Mode", ESecsMode.Online_Remote);
+        runtime._StatusManager.UpdateDeviceStatus("Status", EDeviceStatus.Running);
+
+        Assert.Equal(new SecsGemState(true, SecsGemMode.OnlineRemote, SecsGemEquipmentStatus.Running),
+            service.GetState());
+
+        await service.DisconnectAsync();
+
+        Assert.Equal(new SecsGemState(false, SecsGemMode.Offline, SecsGemEquipmentStatus.Running),
+            service.GetState());
     }
 }

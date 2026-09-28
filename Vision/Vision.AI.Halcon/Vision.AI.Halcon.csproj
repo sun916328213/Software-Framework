@@ -10,5 +10,11 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Vision.Core\Vision.Core.csproj" />
+    <!-- P6（2026-09-28）：HALCON AI Provider。HalconDotNet 经 Extension 唯一入口。 -->
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+  </ItemGroup>
+  <!-- P6：会话/转换细节只对 Vision.Tests 开放。 -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Vision.Tests" />
   </ItemGroup>
 </Project>

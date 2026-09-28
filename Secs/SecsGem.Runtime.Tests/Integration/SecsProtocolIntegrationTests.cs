@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataManager.Log;
 using Extension.Automation.Secs;
+using System.Text;
 using Secs;
 using Secs.Manager;
 using SecsGem.Runtime.Tests.Infrastructure;
@@ -295,6 +296,71 @@ namespace SecsGem.Runtime.Tests.Integration
             Assert.Equal(HsmsHostSimulator.StypeData, reply.SType);
             Assert.Equal(9, reply.S);
             Assert.Equal(7, reply.F);
+        }
+
+        [Fact(Timeout = 30000)]
+        public async Task S5F1_Alarm_Is_Acknowledged_By_Host_S5F2()
+        {
+            using var host = HsmsHostSimulator.Start();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+            using var control = CreateControl();
+            await control.ConnectAsync(true, "127.0.0.1", host.Port, DeviceId).ConfigureAwait(false);
+            await host.WaitForDeviceAsync(cts.Token).ConfigureAwait(false);
+            await host.CompleteSelectAsync(cts.Token).ConfigureAwait(false);
+            await WaitUntilAsync(() => control.IsConnected, TimeSpan.FromSeconds(5), "设备进入 Selected").ConfigureAwait(false);
+
+            var report = control.S5F1AlarmReportSendAsync(new AlarmInfo
+            {
+                ID = "12", Description = "Low pressure", Code = 1, Enable = true
+            });
+            var primary = await host.ReadMessageAsync(cts.Token).ConfigureAwait(false);
+            Assert.Equal((byte)5, primary.S);
+            Assert.Equal((byte)1, primary.F);
+            Assert.True(primary.WBit);
+            Assert.Contains("Low pressure", Encoding.ASCII.GetString(primary.Body));
+
+            host.SendDataMessage(5, 2, w: false, DeviceId, primary.SystemBytes,
+                new byte[] { 0x21, 0x01, 0x00 }, cts.Token);
+            Assert.True(await report.ConfigureAwait(false));
+        }
+
+        [Fact(Timeout = 30000)]
+        public async Task S6F11_Event_Is_Acknowledged_By_Host_S6F12()
+        {
+            using var host = HsmsHostSimulator.Start();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+            using var control = CreateControl();
+            string? reportError = null;
+            control.OnError += message => reportError = message;
+            var catalog = control._VIDManager;
+            var lot = new VIDInfo { ID = "1", Name = "LotId", Value = "LOT-42", DataType = SecsFormat.ASCII };
+            var clock = new VIDInfo { ID = "2", Name = "Clock", Value = "", DataType = SecsFormat.ASCII };
+            catalog.VIDList.Add(lot);
+            catalog.VIDList.Add(clock);
+            catalog.VIDDic_Name[lot.Name] = lot;
+            catalog.VIDDic_Name[clock.Name] = clock;
+            catalog.ReportID.Datas.Add(new ReportInfo { ID = "7", Name = "LotReport", VID_Collection = "1" });
+            var ceid = new CEIDInfo { ID = "9", Name = "LotChanged", ReportID_Collection = "7" };
+            catalog.CEID.Datas.Add(ceid);
+            catalog.CEID.Update(catalog.ReportID.GetDatas());
+
+            await control.ConnectAsync(true, "127.0.0.1", host.Port, DeviceId).ConfigureAwait(false);
+            await host.WaitForDeviceAsync(cts.Token).ConfigureAwait(false);
+            await host.CompleteSelectAsync(cts.Token).ConfigureAwait(false);
+            await WaitUntilAsync(() => control.IsConnected, TimeSpan.FromSeconds(5), "设备进入 Selected").ConfigureAwait(false);
+
+            var report = control.S6F11EventReportSendAsync(ceid);
+            if (report.IsCompleted)
+                Assert.True(await report.ConfigureAwait(false), reportError);
+            var primary = await host.ReadMessageAsync(cts.Token).ConfigureAwait(false);
+            Assert.Equal((byte)6, primary.S);
+            Assert.Equal((byte)11, primary.F);
+            Assert.True(primary.WBit);
+            Assert.Contains("LOT-42", Encoding.ASCII.GetString(primary.Body));
+
+            host.SendDataMessage(6, 12, w: false, DeviceId, primary.SystemBytes,
+                new byte[] { 0x21, 0x01, 0x00 }, cts.Token);
+            Assert.True(await report.ConfigureAwait(false));
         }
     }
 }

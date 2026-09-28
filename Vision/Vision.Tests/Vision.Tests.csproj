@@ -33,5 +33,10 @@
     <ProjectReference Include="..\Vision.Tools.OpenCv\Vision.Tools.OpenCv.csproj" />
     <!-- P5（2026-09-28）：统一 AI Tool 层使用 fake Provider 完整测试，无真实 SDK 也能跑。 -->
     <ProjectReference Include="..\Vision.Tools.AI\Vision.Tools.AI.csproj" />
+    <!-- P6（2026-09-28）：三家 Provider 生命周期独立验证；Invi 用 fake native API，
+         Aiditron/Halcon 走“无 SDK 时行为”断言，真实推理留 RequiresRuntime。 -->
+    <ProjectReference Include="..\Vision.AI.Invi\Vision.AI.Invi.csproj" />
+    <ProjectReference Include="..\Vision.AI.Aiditron\Vision.AI.Aiditron.csproj" />
+    <ProjectReference Include="..\Vision.AI.Halcon\Vision.AI.Halcon.csproj" />
   </ItemGroup>
 </Project>
