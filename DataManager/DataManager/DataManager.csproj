@@ -3,32 +3,16 @@
     <Platform>AnyCPU</Platform>
     <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
     <OutputType>Library</OutputType>
+    <!-- P12 兼容门面：平台策略保持 AnyCPU；程序集名 DataManager 冻结，现有引用路径不变。 -->
     <TargetFramework>net9.0-windows7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>DataManager</AssemblyName>
+    <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DataManager.Core\DataManager.Core.csproj" />
+    <ProjectReference Include="..\DataManager.Runtime\DataManager.Runtime.csproj" />
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-  
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="Dapper" Version="2.1.72" />
-    <PackageReference Include="Dommel" Version="3.5.1" />
-    <PackageReference Include="EPPlus" Version="8.4.1" />
-    <PackageReference Include="Google.Protobuf" Version="3.33.2" />
-    <PackageReference Include="log4net" Version="3.3.0" />
-    <PackageReference Include="MiniExcel" Version="1.42.0" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
-    <PackageReference Include="NLog" Version="5.3.4" />
-    <PackageReference Include="MySql.EntityFrameworkCore" Version="10.0.1" />
-    <PackageReference Include="MySqlConnector" Version="2.5.0" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-    <PackageReference Include="Serilog" Version="4.3.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="SqlSugarCore" Version="5.1.4.207" />
   </ItemGroup>
 </Project>

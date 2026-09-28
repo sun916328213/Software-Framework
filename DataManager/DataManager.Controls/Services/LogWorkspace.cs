@@ -18,7 +18,7 @@ namespace DataManager.Controls.Services
         /// <summary>日志文件名前缀（logyyyyMMdd，无扩展名，三种实现一致）。</summary>
         public const string LogFilePattern = "log*";
 
-        private readonly LogManager _logManager;
+        private readonly ILogManager _logManager;
         private readonly Random _random = new();
         private ILog? _log;
         private string? _currentKey;
@@ -26,7 +26,7 @@ namespace DataManager.Controls.Services
         /// <summary>页状态（单例 Workspace 持有，VM 直接暴露）。</summary>
         public LogPageModel Model { get; } = new();
 
-        public LogWorkspace(LogManager logManager)
+        public LogWorkspace(ILogManager logManager)
         {
             _logManager = logManager;
             LoadProfiles();

@@ -1,15 +1,31 @@
 ﻿using DataManager.Log.Definition;
-using DataManager.Log.Log4Net;
-using DataManager.Log.NLog;
-using DataManager.Log.SeriLog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace DataManager.Log
 {
-    public class LogManager : ManagerBase<ILog, LogParam> 
+    /// <summary>
+    /// P12：实例创建经 <see cref="ILogProviderFactory"/> 可替换接缝；无参构造默认使用 Runtime 内建工厂，
+    /// 旧调用 <c>new LogManager()</c> 与 <c>Create(LogParam)</c> 签名行为保持。
+    /// </summary>
+    public class LogManager : ManagerBase<ILog, LogParam>, ILogManager
     {
+        private readonly ILogProviderFactory _factory;
+
+        public LogManager()
+            : this(new LogProviderFactory())
+        {
+        }
+
+        /// <summary>
+        /// 使用可注入的 Provider 工厂创建管理器；测试可传入 Fake/Stub，无需真实日志后端。
+        /// </summary>
+        public LogManager(ILogProviderFactory factory)
+        {
+            _factory = factory ?? throw new ArgumentNullException(nameof(factory));
+        }
+
         public override void Config (List<LogParam> param)
         {
             foreach (var item in param)
@@ -20,7 +36,7 @@ namespace DataManager.Log
 
         public override ILog Create (LogParam param)
         {
-            var log = CreateUnregistered(param);
+            var log = _factory.Create(param);
             try
             {
                 Add(log);
@@ -50,7 +66,7 @@ namespace DataManager.Log
             try
             {
                 foreach (var parameter in parameters)
-                    replacements.Add(CreateUnregistered(parameter));
+                    replacements.Add(_factory.Create(parameter));
 
                 removed = ReplaceOwnedItems(ownedNames, replacements);
             }
@@ -84,21 +100,6 @@ namespace DataManager.Log
                     }
                 }
             }
-        }
-
-        /// <summary>根据参数创建尚未加入管理器的日志实例。</summary>
-        private static ILog CreateUnregistered(LogParam logParam)
-        {
-            ArgumentNullException.ThrowIfNull(logParam);
-            logParam.Validate();
-
-            return logParam.LogType switch
-            {
-                ELogType.SeriLog => new SerilogHelper { Param = logParam },
-                ELogType.NLog => new NLogHelper { Param = logParam },
-                ELogType.Log4Net => new Log4NetHelper { Param = logParam },
-                _ => throw new NotSupportedException($"{logParam.LogType} not support."),
-            };
         }
 
         protected override string GetName(ILog device)

@@ -19,7 +19,7 @@ namespace DataManager.Controls.Services
     public sealed class SqlWorkspace<T> : IDisposable
         where T : class, Models.ISqlEntity, new()
     {
-        private readonly SQLManager _sqlManager;
+        private readonly ISQLManager _sqlManager;
         private ISQL<T>? _db;
         private string? _currentKey;
         private SQLParam? _currentParam;
@@ -35,7 +35,7 @@ namespace DataManager.Controls.Services
         /// <summary>页状态（单例 Workspace 持有，VM 直接暴露）。</summary>
         public Models.SqlPageModel<T> Model { get; } = new();
 
-        public SqlWorkspace(SQLManager sqlManager)
+        public SqlWorkspace(ISQLManager sqlManager)
         {
             _sqlManager = sqlManager;
             LoadProfiles();
@@ -216,16 +216,12 @@ namespace DataManager.Controls.Services
             PostToModel(token, () => Model.Results.Clear());
         }
 
-        /// <summary>分表名查询（Dapper / EFCore / SqlSugar；其他抛业务异常由 VM 记日志）。</summary>
+        /// <summary>分表名查询（P12：经 Core 能力接口，不再对具体 Provider 基类做类型判断）。</summary>
         public IReadOnlyList<string> GetSplitTableNames()
         {
             var db = EnsureDb(Model.SelectedProfile());
-            if (db is SQL.Dapper.DapperBase<T> dapper)
-                return dapper.GetSplitTables().ToList();
-            if (db is SQL.EFCore.EFCoreBase<T> ef)
-                return ef.GetSplitTables().ToList();
-            if (db is SQL.SqlSugarSQL.SqlSugarBase<T> sugar)
-                return sugar.GetSplitTables().ToList();
+            if (db is ISplitTableNameProvider split)
+                return split.GetSplitTables().ToList();
             throw new NotSupportedException("当前实例不支持分表名查询");
         }
 

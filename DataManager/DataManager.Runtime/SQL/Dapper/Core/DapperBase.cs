@@ -20,7 +20,7 @@ namespace DataManager.SQL.Dapper
     /// 支持分表功能（通过特性标记）。
     /// </summary>
     /// <typeparam name="T">实体类型</typeparam>
-    public class DapperBase<T> : ISQL<T> where T : class
+    public class DapperBase<T> : ISQL<T>, ISplitTableNameProvider where T : class
     {
         // 同 EFCoreBase：库层面保证 Npgsql Local 时间兼容（静态构造时序早于首次连接）。
         static DapperBase()

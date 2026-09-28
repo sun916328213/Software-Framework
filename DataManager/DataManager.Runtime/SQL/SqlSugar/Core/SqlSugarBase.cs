@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace DataManager.SQL.SqlSugarSQL
 {
-    public class SqlSugarBase<T> : ISQL<T> where T : class, new()
+    public class SqlSugarBase<T> : ISQL<T>, ISplitTableNameProvider where T : class, new()
     {
         // 同 EFCoreBase/DapperBase：库层面保证 Npgsql Local 时间兼容
         static SqlSugarBase() => AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);

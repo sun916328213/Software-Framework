@@ -5,33 +5,39 @@
 - 构建：`dotnet build DataManager.sln`（0 错误；警告只来自同仓 Extension/WPFCustomControls 既有文件）
 - 测试：`dotnet test DataManager.Tests/DataManager.Tests.csproj` + `dotnet test DataManager.Workbench.Tests/DataManager.Workbench.Tests.csproj`（377 用例，真库用例需本机数据库，见“测试”一节）
 
-## 目录结构
+## 目录结构（P12 四层化，2026-09-28）
 
 ```
 DataManager/
-  DataManager/            # 类库（net9.0-windows）
-    Manager/              # ManagerBase<T,TParam> + IManager（实例注册/重名检查/TryGet）
-    Excel/                # IExcel（= IExcelReader + IExcelWriter）/ ExcelManager
-      EPPlus/             # 全功能：读写、追加、更新
-      MiniExcel/          # 仅 Write/Query（追加/更新抛 NotSupportedException）
-    Log/                  # ILog / LogManager / LogBase（查询解析）
-      SeriLog/ NLog/ Log4Net/
-    SQL/                  # ISQL<T> / SQLManager（无容器依赖，Create<T> 工厂）
-      Dapper/ EFCore/ SqlSugar/
-    DataManagerModule.cs  # Prism 模块（注册三个 Manager 单例）
-  DataManager.Controls/   # 可复用 WPF 控件层：SqlWorkspace<T> + SqlViewModel<T> 等
-  DataManager.Tests/      # xUnit（单元 + 真库集成）
+  DataManager.Core/       # 契约层（net9.0-windows7.0/AnyCPU）：IManager/ManagerBase、
+                          #   ISQLManager/ILogManager/IExcelManager、ISQL/ILog/IExcel(+Reader/Writer)、
+                          #   Param/Definition/纯模型、Provider Factory 契约、ISplitTableNameProvider
+  DataManager.Runtime/    # 实现层（net9.0-windows7.0/AnyCPU，唯一引用 Core）：
+                          #   Dapper/EFCore/SqlSugar、Serilog/NLog/log4net、EPPlus/MiniExcel、
+                          #   SQLManager/LogManager/ExcelManager（含内建 Factory）、DataManagerModule
+  DataManager/            # 兼容门面：仍生成 DataManager.dll（TypeForwardedTo），无 Provider 实现
+  DataManager.Controls/   # 可复用 WPF 控件层：仅引用 Core（Workspace 持 Manager 接口）
+  DataManager.Tests/      # xUnit（单元 + 真库集成 + Architecture/LayeringTests 程序集守卫）
   DataManager.Workbench.Tests/ # xUnit（无头驱动工作台控件/VM；WPF 需 STA）
-  DataManager.Workbench/  # WPF + Prism.DryIoc + .NET 9 手动测试台
+  DataManager.Workbench/  # WPF + Prism.DryIoc：组合 Core + Runtime + Controls 的手动测试台
 ```
+
+依赖方向：`Core ← Runtime`、`Core ← Controls`、`Workbench → Core + Runtime + Controls`、
+`门面 → Core + Runtime`。命名空间（`DataManager.*`）保持不变，不强制改 using。
+`new SQLManager()` / `new LogManager()` / `new ExcelManager()` 继续可用（默认 Runtime 内建 factory）；
+测试可注入 Fake/Stub factory。Packing Machine 本轮不迁移，走兼容门面。
 
 ## 引用
 
 ```xml
+<!-- 旧消费者（Packing/WPFControl/FlowNodes 等）：继续引用兼容门面，零改动 -->
 <ProjectReference Include="...\DataManager\DataManager\DataManager.csproj" />
+<!-- 新代码：契约/模型 → Core；创建 Provider → Runtime -->
+<ProjectReference Include="...\DataManager\DataManager.Core\DataManager.Core.csproj" />
+<ProjectReference Include="...\DataManager\DataManager.Runtime\DataManager.Runtime.csproj" />
 ```
 
-主要包（类库自带）：`Dapper` + `Dommel`、`EPPlus`、`MiniExcel`、`NLog`、`log4net`、`Serilog(.Sinks.File)`、`Npgsql.EntityFrameworkCore.PostgreSQL`、`MySql.EntityFrameworkCore`、`SqlSugarCore`。
+主要包（Runtime 自带）：`Dapper` + `Dommel`、`EPPlus`、`MiniExcel`、`NLog`、`log4net`、`Serilog(.Sinks.File)`、`Npgsql.EntityFrameworkCore.PostgreSQL`、`MySql.EntityFrameworkCore`、`SqlSugarCore`。
 
 ### 框架基础依赖（设计前提，不做隔离层）
 

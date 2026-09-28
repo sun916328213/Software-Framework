@@ -15,14 +15,14 @@ namespace DataManager.Controls.Services
     public sealed class ExcelWorkspace<T>
         where T : class, Models.IExcelTestEntity, new()
     {
-        private readonly ExcelManager _excelManager;
+        private readonly IExcelManager _excelManager;
         private IExcel? _excel;
         private string? _currentKey;
 
         /// <summary>页状态（单例 Workspace 持有，VM 直接暴露）。</summary>
         public Models.ExcelPageModel<T> Model { get; } = new();
 
-        public ExcelWorkspace(ExcelManager excelManager)
+        public ExcelWorkspace(IExcelManager excelManager)
         {
             _excelManager = excelManager;
             LoadProfiles();

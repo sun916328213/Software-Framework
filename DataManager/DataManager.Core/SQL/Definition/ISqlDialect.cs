@@ -29,25 +29,4 @@ namespace DataManager.SQL.Definition
         /// </summary>
         string BuildSplitTablesLikeSql(string baseTableName, string dbName);
     }
-
-    /// <summary>
-    /// 方言注册表：四库单例常驻，按 ESQLType 路由。
-    /// </summary>
-    public static class SqlDialectRegistry
-    {
-        private static readonly Dictionary<ESQLType, ISqlDialect> _dialects = new()
-        {
-            [ESQLType.PostgreSQL] = new PostgresDialect(),
-            [ESQLType.MySQL] = new MySqlDialect(),
-            [ESQLType.SQLite] = new SqliteDialect(),
-            [ESQLType.SQL_Server] = new SqlServerDialect(),
-        };
-
-        public static ISqlDialect Get(ESQLType dbType) =>
-            _dialects.TryGetValue(dbType, out var dialect)
-                ? dialect
-                : throw new NotSupportedException($"不支持的数据库类型: {dbType}");
-
-        public static void Register(ISqlDialect dialect) => _dialects[dialect.DbType] = dialect;
-    }
 }

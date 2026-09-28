@@ -18,11 +18,18 @@ namespace DataManager
         /// <param name="containerRegistry">容器注册器</param>
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            containerRegistry.RegisterSingleton<LogManager>();
-            containerRegistry.RegisterSingleton<SQLManager>();
-            containerRegistry.RegisterSingleton<ExcelManager>();
             // 说明：IExcel 实例必须带 ExcelParam（文件路径等）经 ExcelManager.Create 创建，
             // 此处不再注册无参 IExcel 单例（旧注册解析后 ExcelParam 为空，调用即 NRE）。
+            // P12：Controls 只依赖 Core 契约；接口与实现解析到同一单例。
+            var logManager = new LogManager();
+            var sqlManager = new SQLManager();
+            var excelManager = new ExcelManager();
+            containerRegistry.RegisterInstance<LogManager>(logManager);
+            containerRegistry.RegisterInstance<ILogManager>(logManager);
+            containerRegistry.RegisterInstance<SQLManager>(sqlManager);
+            containerRegistry.RegisterInstance<ISQLManager>(sqlManager);
+            containerRegistry.RegisterInstance<ExcelManager>(excelManager);
+            containerRegistry.RegisterInstance<IExcelManager>(excelManager);
         }
 
         /// <summary>

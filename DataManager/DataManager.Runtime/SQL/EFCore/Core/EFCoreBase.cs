@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace DataManager.SQL.EFCore
 {
-    public abstract class EFCoreBase<T> : DbContext, ISQL<T>, ISplitTableModel where T : class
+    public abstract class EFCoreBase<T> : DbContext, ISQL<T>, ISplitTableModel, ISplitTableNameProvider where T : class
     {
         // 本库全链路使用 DateTime.Now/Today（Local），Npgsql 6+ 默认拒绝写入 Local 时间；
         // 此处在库层面保证兼容行为，不再依赖宿主（DataManagerModule/测试）是否设过开关。

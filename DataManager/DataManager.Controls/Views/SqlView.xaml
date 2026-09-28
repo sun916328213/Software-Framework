@@ -5,7 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:sql="clr-namespace:DataManager.SQL.Definition;assembly=DataManager"
+    xmlns:sql="clr-namespace:DataManager.SQL.Definition;assembly=DataManager.Core"
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
     xmlns:viewmodels="clr-namespace:DataManager.Controls.ViewModels"
     xmlns:wpfcc="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"

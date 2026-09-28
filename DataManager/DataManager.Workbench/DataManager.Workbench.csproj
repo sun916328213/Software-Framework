@@ -16,7 +16,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
-    <ProjectReference Include="..\DataManager\DataManager.csproj" />
+    <!-- P12: Workbench 直接组合 Core + Runtime + Controls。 -->
+    <ProjectReference Include="..\DataManager.Core\DataManager.Core.csproj" />
+    <ProjectReference Include="..\DataManager.Runtime\DataManager.Runtime.csproj" />
     <ProjectReference Include="..\DataManager.Controls\DataManager.Controls.csproj" />
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
   </ItemGroup>

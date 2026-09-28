@@ -17,7 +17,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
-    <ProjectReference Include="..\DataManager\DataManager.csproj" />
+    <!-- P12: Controls 只依赖 Core 契约，不引用 Runtime 实现。 -->
+    <ProjectReference Include="..\DataManager.Core\DataManager.Core.csproj" />
   </ItemGroup>
 
 </Project>
