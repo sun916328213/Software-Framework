@@ -343,7 +343,10 @@ namespace SecsGem.Runtime.Transport
                 var handler = OnReceive;
                 if (handler != null)
                 {
-                    await handler.Invoke(msg, sml).ConfigureAwait(false);
+                    foreach (SecsHandle subscriber in handler.GetInvocationList())
+                    {
+                        await subscriber(msg, sml).ConfigureAwait(false);
+                    }
                 }
                 else
                 {

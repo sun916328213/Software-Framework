@@ -11,6 +11,7 @@ using Secs.Variable;
 using Secs.Variable.Data;
 using SecsGem.Core;
 using SecsGem.Runtime;
+using SecsGem.Runtime.Transport;
 using ProtocolRegistry = SecsGem.Runtime.Protocol.Registry.SecsMessageRegistry;
 using Secs4Net;
 using SemiTool.Tool;
@@ -299,6 +300,54 @@ namespace SecsGem.Runtime.Tests.Integration
         }
 
         [Fact(Timeout = 30000)]
+        public async Task Multiple_Receive_Subscribers_Are_Awaited_Before_Reply_Context_Closes()
+        {
+            using var host = HsmsHostSimulator.Start();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+            var container = new TestPrismContainer();
+            container.RegisterSingleton(typeof(LogManager), () => new LogManager());
+            using var transport = new Secs4NetTransport(container);
+            var releaseHandler = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var monitorSeen = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var handlerResult = new TaskCompletionSource<Exception?>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            transport.OnReceive += async (message, _) =>
+            {
+                try
+                {
+                    await releaseHandler.Task.ConfigureAwait(false);
+                    await transport.ReplyAsync(message, Item.L()).ConfigureAwait(false);
+                    handlerResult.TrySetResult(null);
+                }
+                catch (Exception ex)
+                {
+                    handlerResult.TrySetResult(ex);
+                }
+            };
+            transport.OnReceive += (_, _) =>
+            {
+                monitorSeen.TrySetResult();
+                return Task.CompletedTask;
+            };
+
+            await transport.ConnectAsync(true, "127.0.0.1", host.Port, DeviceId).ConfigureAwait(false);
+            await host.WaitForDeviceAsync(cts.Token).ConfigureAwait(false);
+            await host.CompleteSelectAsync(cts.Token).ConfigureAwait(false);
+            await WaitUntilAsync(() => transport.IsConnected, TimeSpan.FromSeconds(5), "设备进入 Selected").ConfigureAwait(false);
+
+            host.SendDataMessage(1, 13, w: true, DeviceId, 0x0000_0404,
+                new byte[] { 0x01, 0x00 }, cts.Token);
+            await Task.Delay(100, cts.Token).ConfigureAwait(false);
+            Assert.False(monitorSeen.Task.IsCompleted);
+            releaseHandler.SetResult();
+            Assert.Null(await handlerResult.Task.WaitAsync(cts.Token).ConfigureAwait(false));
+            await monitorSeen.Task.WaitAsync(cts.Token).ConfigureAwait(false);
+            var reply = await host.ReadMessageAsync(cts.Token).ConfigureAwait(false);
+            Assert.Equal((byte)1, reply.S);
+            Assert.Equal((byte)14, reply.F);
+        }
+
+        [Fact(Timeout = 30000)]
         public async Task S5F1_Alarm_Is_Acknowledged_By_Host_S5F2()
         {
             using var host = HsmsHostSimulator.Start();
@@ -361,6 +410,27 @@ namespace SecsGem.Runtime.Tests.Integration
             host.SendDataMessage(6, 12, w: false, DeviceId, primary.SystemBytes,
                 new byte[] { 0x21, 0x01, 0x00 }, cts.Token);
             Assert.True(await report.ConfigureAwait(false));
+        }
+
+        [Fact(Timeout = 30000)]
+        public async Task Manual_Sml_Send_Uses_The_Workbench_Message_Format()
+        {
+            using var host = HsmsHostSimulator.Start();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+            using var control = CreateControl();
+            await control.ConnectAsync(true, "127.0.0.1", host.Port, DeviceId).ConfigureAwait(false);
+            await host.WaitForDeviceAsync(cts.Token).ConfigureAwait(false);
+            await host.CompleteSelectAsync(cts.Token).ConfigureAwait(false);
+            await WaitUntilAsync(() => control.IsConnected, TimeSpan.FromSeconds(5), "设备进入 Selected").ConfigureAwait(false);
+
+            var send = control.Send("'S1F1' W", true);
+            var primary = await host.ReadMessageAsync(cts.Token).ConfigureAwait(false);
+            Assert.Equal((byte)1, primary.S);
+            Assert.Equal((byte)1, primary.F);
+            host.SendDataMessage(1, 2, w: false, DeviceId, primary.SystemBytes,
+                new byte[] { 0x01, 0x00 }, cts.Token);
+            var reply = await send.ConfigureAwait(false);
+            Assert.Equal((byte)2, reply.F);
         }
     }
 }
