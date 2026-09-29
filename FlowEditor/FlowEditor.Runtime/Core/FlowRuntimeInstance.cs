@@ -70,7 +70,8 @@ public sealed class FlowRuntimeInstance<TNode> where TNode : INodeExecutable
     /// <summary>执行活动顶层图，并为结构化节点注入同一次运行的完整图快照。</summary>
     /// <param name="ct">取消令牌。</param>
     /// <param name="log">可选日志回调。</param>
-    public async Task RunAsync(CancellationToken ct, Action<string>? log = null)
+    /// <param name="telemetry">可选的遥测接收器（耗时/重试/失败类型）。</param>
+    public async Task RunAsync(CancellationToken ct, Action<string>? log = null, INodeTelemetry? telemetry = null)
     {
         Journal.Clear();
         var activeNodes = Nodes.Where(node => !node.IsExcludedFromExecution).ToList();
@@ -91,6 +92,7 @@ public sealed class FlowRuntimeInstance<TNode> where TNode : INodeExecutable
             log ?? (_ => { }),
             onBeforeNode: Debug == null ? null : nodeId => Debug.WaitIfPausedAsync(nodeId, ct),
             executionOrder: null,
-            journal: Journal);
+            journal: Journal,
+            telemetry: telemetry);
     }
 }

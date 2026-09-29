@@ -13,6 +13,7 @@ namespace FlowEditor.Nodes.FlowControl;
 /// </summary>
 [FlowTool("条件分支", "SourceBranch", ToolGroup = "流程控制", SortIndex = 2,
     Description = "旧版二选一节点，请改用条件分发", VisibleInToolbox = false)]
+[NodeTypeId("flow.condition")]
 public class ConditionNode : NodeModel
 {
     private bool _condition = true;

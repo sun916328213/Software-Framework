@@ -19,6 +19,7 @@ namespace FlowEditor.Nodes.FlowControl;
 /// </para>
 /// </summary>
 [FlowTool("循环", "Sync", ToolGroup = "流程控制", SortIndex = 4, Description = "循环执行 Body 分支指定次数后走 Completed（循环体末端无需接回本节点）")]
+[NodeTypeId("flow.loop")]
 public class LoopNode : NodeModel, ILoopControlNode
 {
     private readonly List<PortModel> _bodyPorts = new();

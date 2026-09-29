@@ -11,6 +11,7 @@ namespace FlowNodes.Device;
 /// 相机采集节点：按相机名称采集一帧图像，输出 ImageFrame 可绑定到后续节点。
 /// </summary>
 [FlowTool("相机采集", "Camera", ToolGroup = "设备", ToolSubGroup = "相机", SortIndex = 10, Description = "按相机名称采集一张图像")]
+[NodeTypeId("device.camera-capture")]
 public class CameraCaptureNode : NodeModel
 {
     private readonly ICameraProvider _cameras;
@@ -116,12 +117,12 @@ public class CameraCaptureNode : NodeModel
         ctx.ThrowIfCancellationRequested();
 
         if (string.IsNullOrWhiteSpace(CameraName))
-            throw FlowNodeException.Config("E-CAMERA-NAME-EMPTY", $"节点 [{Name}] 未配置相机名称。", NodeId: Id);
+            throw FlowNodeException.Config("E-CAMERA-NAME-EMPTY", $"节点 [{Name}] 未配置相机名称。", nodeId: Id);
 
         // P0：运行时依赖优先从 Context 获取，构造注入作为回退；不再主动访问全局单例。
         var cameras = ctx.GetService<ICameraProvider>() ?? _cameras;
         if (cameras == null)
-            throw FlowNodeException.Config("E-CAMERA-PROVIDER-MISSING", $"节点 [{Name}] 缺少相机服务（ICameraProvider）。", NodeId: Id);
+            throw FlowNodeException.Config("E-CAMERA-PROVIDER-MISSING", $"节点 [{Name}] 缺少相机服务（ICameraProvider）。", nodeId: Id);
 
         Device.Core.Cameras.ICamera camera;
         try
@@ -130,7 +131,7 @@ public class CameraCaptureNode : NodeModel
         }
         catch (Exception ex)
         {
-            throw FlowNodeException.Config("E-CAMERA-NOTFOUND", $"相机 '{CameraName}' 不存在。", NodeId: Id, inner: ex);
+            throw FlowNodeException.Config("E-CAMERA-NOTFOUND", $"相机 '{CameraName}' 不存在。", nodeId: Id, inner: ex);
         }
 
         if (camera.State != DeviceState.Connected)
@@ -142,26 +143,26 @@ public class CameraCaptureNode : NodeModel
             }
             catch (OperationCanceledException)
             {
-                throw FlowNodeException.Cancelled(NodeId: Id);
+                throw FlowNodeException.Cancelled(nodeId: Id);
             }
             catch (Exception ex)
             {
-                throw FlowNodeException.DeviceOffline($"相机 '{CameraName}' 连接异常：{ex.Message}", NodeId: Id, inner: ex);
+                throw FlowNodeException.DeviceOffline($"相机 '{CameraName}' 连接异常：{ex.Message}", nodeId: Id, inner: ex);
             }
             if (!connect.Success)
-                throw FlowNodeException.DeviceOffline($"相机 '{CameraName}' 连接失败：{connect.Message}", NodeId: Id);
+                throw FlowNodeException.DeviceOffline($"相机 '{CameraName}' 连接失败：{connect.Message}", nodeId: Id);
         }
 
         try
         {
             var parameters = await camera.SetExposureGainAsync(Exposure, Gain, ctx.CancellationToken);
             if (!parameters.Success)
-                throw FlowNodeException.Config("E-CAMERA-PARAM-REJECTED", $"相机 '{CameraName}' 下发曝光增益失败：{parameters.Message}", NodeId: Id);
+                throw FlowNodeException.Config("E-CAMERA-PARAM-REJECTED", $"相机 '{CameraName}' 下发曝光增益失败：{parameters.Message}", nodeId: Id);
         }
         catch (FlowNodeException) { throw; }
         catch (OperationCanceledException)
         {
-            throw FlowNodeException.Cancelled(NodeId: Id);
+            throw FlowNodeException.Cancelled(nodeId: Id);
         }
 
         try
@@ -170,12 +171,12 @@ public class CameraCaptureNode : NodeModel
         }
         catch (OperationCanceledException)
         {
-            throw FlowNodeException.Cancelled(NodeId: Id);
+            throw FlowNodeException.Cancelled(nodeId: Id);
         }
         catch (FlowNodeException) { throw; }
         catch (Exception ex)
         {
-            throw FlowNodeException.DeviceOffline($"相机 '{CameraName}' 采集失败：{ex.Message}", NodeId: Id, inner: ex);
+            throw FlowNodeException.DeviceOffline($"相机 '{CameraName}' 采集失败：{ex.Message}", nodeId: Id, inner: ex);
         }
 
         ctx.Logger.LogInfo($"相机 '{CameraName}' 采集完成。");

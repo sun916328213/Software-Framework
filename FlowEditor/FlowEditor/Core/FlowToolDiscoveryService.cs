@@ -72,6 +72,8 @@ public class FlowToolDiscoveryService : IFlowToolDiscoveryService
                     {
                         if (!type.IsAbstract && type.IsSubclassOf(typeof(NodeModel)))
                         {
+                            // P2：同步注册稳定节点标识（无标记的类型跳过），供流程加载时解析。
+                            NodeTypeRegistry.Register(type);
                             var attr = type.GetCustomAttribute<FlowToolAttribute>();
                             if (attr == null || !attr.VisibleInToolbox) continue;
 

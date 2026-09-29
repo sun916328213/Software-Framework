@@ -59,6 +59,9 @@ public interface INodeTelemetry
 
     /// <summary>记录重试。</summary>
     void RecordRetry(string nodeId, int attempt);
+
+    /// <summary>记录带错误码的重试（默认转调无错误码版本）。</summary>
+    void RecordRetry(string nodeId, int attempt, string? errorCode) => RecordRetry(nodeId, attempt);
 }
 
 /// <summary>无操作遥测，用于单元测试与无头宿主。</summary>

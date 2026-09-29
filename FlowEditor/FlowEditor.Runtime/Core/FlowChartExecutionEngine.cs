@@ -70,6 +70,7 @@ public class FlowChartExecutionEngine
     /// <param name="onBeforeNode">可选的节点前置回调；只传递节点 ID，避免将调用方节点类型泄漏给调试协作方。</param>
     /// <param name="executionOrder">可选的实际执行顺序收集器。</param>
     /// <param name="journal">可选的执行追踪日志。</param>
+    /// <param name="telemetry">可选的遥测接收器（耗时/重试/失败类型）；为空时不采集。</param>
     public async Task ExecuteAsync<TNode>(
         IReadOnlyList<TNode> nodes,
         IReadOnlyList<ConnectionModel> connections,
@@ -77,7 +78,8 @@ public class FlowChartExecutionEngine
         Action<string> log,
         Func<string, Task>? onBeforeNode = null,
         List<TNode>? executionOrder = null,
-        ExecutionJournal? journal = null) where TNode : INodeExecutable
+        ExecutionJournal? journal = null,
+        INodeTelemetry? telemetry = null) where TNode : INodeExecutable
     {
         if (nodes.Count == 0)
         {
@@ -99,7 +101,7 @@ public class FlowChartExecutionEngine
         // 调试模式：逐节点串行执行（注：串行模式按拓扑序遍历全图，不做分支过滤）
         if (onBeforeNode != null)
         {
-            await ExecuteSequentialAsync(graph, ct, log, onBeforeNode, executionOrder, journal);
+            await ExecuteSequentialAsync(graph, ct, log, onBeforeNode, executionOrder, journal, telemetry);
             return;
         }
 
@@ -107,12 +109,12 @@ public class FlowChartExecutionEngine
         if (graph.HasCycle)
         {
             log("[引擎] 检测到环路，使用路径追踪模式（点击停止按钮终止）");
-            await ExecuteCyclePathAsync(graph, ct, log, executionOrder, journal);
+            await ExecuteCyclePathAsync(graph, ct, log, executionOrder, journal, telemetry);
             return;
         }
 
         // 无环路 → 依赖驱动异步执行（DAG 模式，支持并行）
-        await ExecuteDagAsync(graph, ct, log, executionOrder, journal);
+        await ExecuteDagAsync(graph, ct, log, executionOrder, journal, telemetry);
     }
 
     /// <summary>
@@ -125,7 +127,8 @@ public class FlowChartExecutionEngine
         IReadOnlyList<ConnectionModel> connections,
         CancellationToken ct,
         Action<string> log,
-        ExecutionJournal? journal = null) where TNode : INodeExecutable
+        ExecutionJournal? journal = null,
+        INodeTelemetry? telemetry = null) where TNode : INodeExecutable
     {
         ArgumentNullException.ThrowIfNull(node);
         if (!nodes.Any(n => n.Id == node.Id))
@@ -136,7 +139,7 @@ public class FlowChartExecutionEngine
         var graph = CompiledFlowGraph<TNode>.Compile(nodes, connections);
         log($"[单步] 开始执行选中节点 [{node.Name}]");
         await ExecuteSingleNodeAsync(
-            node, graph, ct, log, orderBag: null, onExecuted: null, journal: journal);
+            node, graph, ct, log, orderBag: null, onExecuted: null, journal: journal, telemetry: telemetry);
         log($"[单步] 选中节点 [{node.Name}] 执行完成");
     }
 
@@ -183,6 +186,7 @@ public class FlowChartExecutionEngine
     /// <param name="enforceFailFast">强制快速失败（调试串行模式使用），忽略节点的容错策略。</param>
     /// <param name="journal">可选的执行追踪日志。</param>
     /// <param name="prestartedTimestamp">节点已由调度器标记为开始时使用的时间戳。</param>
+    /// <param name="telemetry">可选的遥测接收器。</param>
     private async Task<NodeRunResult> ExecuteSingleNodeAsync<TNode>(
         TNode nodeVm,
         CompiledFlowGraph<TNode> graph,
@@ -192,7 +196,8 @@ public class FlowChartExecutionEngine
         Func<string>? onExecuted,
         bool enforceFailFast = false,
         ExecutionJournal? journal = null,
-        long? prestartedTimestamp = null) where TNode : INodeExecutable
+        long? prestartedTimestamp = null,
+        INodeTelemetry? telemetry = null) where TNode : INodeExecutable
     {
         // 节点级日志统一为「#运行序号 [节点名] 内容」，与 NodeLog 面板/文件格式一致
         Action<string> nodeLog = msg => log($"#{_logContext.RunId} [{nodeVm.Name}] {msg}");
@@ -217,6 +222,8 @@ public class FlowChartExecutionEngine
                 if (attempt > 1)
                 {
                     nodeVm.Status = NodeStatus.Running;
+                    // P2：记录每次重试（含触发重试的错误码），供 Workbench/测试观测。
+                    telemetry?.RecordRetry(nodeVm.Id, attempt, RetryBoundary.GetErrorCode(failure));
                     if (retryDelayMs > 0)
                         await Task.Delay(retryDelayMs, ct);
                     nodeLog($"[重试] 第 {attempt - 1}/{maxAttempts - 1} 次");
@@ -237,7 +244,7 @@ public class FlowChartExecutionEngine
                     var effectiveCt = timeoutCts?.Token ?? ct;
                     var ctx = new NodeExecutionContext(
                         _logContext.RunId, null, nodeVm.Id, nodeVm.Name, effectiveCt,
-                        new CallbackNodeLogger(nodeLog));
+                        new CallbackNodeLogger(nodeLog), telemetry: telemetry);
                     // 节点执行作用域：由宿主日志 adapter 按当前节点路由。
                     using (_logContext.EnterNode(nodeVm.Name))
                     {
@@ -263,6 +270,11 @@ public class FlowChartExecutionEngine
                 {
                     failure = ex;
                 }
+
+                // P2 重试边界：明确不可重试的分类失败（配置/视觉/取消）直接终结本轮重试，
+                // 进入容错处理；可重试失败按用户配置继续。取消已在上文直接抛出。
+                if (!RetryBoundary.ShouldRetry(failure, attempt, maxAttempts))
+                    break;
             }
 
             if (failure == null)
@@ -275,6 +287,8 @@ public class FlowChartExecutionEngine
                 var extra = onExecuted?.Invoke() ?? "";
                 nodeLog($"[完成] - 耗时 {elapsedOk:F1}ms{extra}");
                 journal?.RecordNodeFinish(nodeVm.Id, nodeVm.Name, nodeVm.Status, (long)elapsedOk);
+                // P2：自动采集节点耗时与成功状态。
+                telemetry?.RecordExecution(nodeVm.Id, nodeVm.Name, (long)elapsedOk, nodeVm.Status != NodeStatus.Error, null);
 
                 return new NodeRunResult(ResolveActivatedPortIds(nodeVm, graph), false, false);
             }
@@ -285,6 +299,8 @@ public class FlowChartExecutionEngine
             journal?.RecordNodeFinish(nodeVm.Id, nodeVm.Name, NodeStatus.Error, nodeVm.LastElapsedMs);
             // P0：不解析异常字符串，按稳定 ErrorCode/Category 表达失败类型。
             var normalized = FlowNodeException.FromUnknown(failure, nodeVm.Id);
+            // P2：自动采集失败类型。
+            telemetry?.RecordExecution(nodeVm.Id, nodeVm.Name, nodeVm.LastElapsedMs, false, normalized.ErrorCode);
             var prefix = failure is FlowChartTypeMismatchException ? "[类型错误]" : "[错误]";
             var failureLabel = normalized.Category == NodeErrorCategory.Unknown
                 ? failure.Message
@@ -318,6 +334,8 @@ public class FlowChartExecutionEngine
         {
             nodeVm.LastElapsedMs = (long)ElapsedMs(startTimestamp);
             nodeVm.Status = NodeStatus.Error;
+            // P2：取消也留下一条执行记录（E-CANCELLED），便于区分"失败"与"停止"。
+            telemetry?.RecordExecution(nodeVm.Id, nodeVm.Name, nodeVm.LastElapsedMs, false, "E-CANCELLED");
             throw;
         }
     }
@@ -392,7 +410,8 @@ public class FlowChartExecutionEngine
         CancellationToken ct,
         Action<string> log,
         List<TNode>? executionOrder,
-        ExecutionJournal? journal) where TNode : INodeExecutable
+        ExecutionJournal? journal,
+        INodeTelemetry? telemetry = null) where TNode : INodeExecutable
     {
         log($"[引擎] 依赖图构建完成，共 {graph.Nodes.Count} 个节点");
 
@@ -429,7 +448,7 @@ public class FlowChartExecutionEngine
             QueueNodeDag(entry, graph, linkedCts.Token, log,
                 completionSources, remainingPredecessors,
                 failedPredecessorCount, activePredecessorCount, scheduledNodes, exceptionList,
-                counter, totalCount, orderBag, linkedCts, journal);
+                counter, totalCount, orderBag, linkedCts, journal, telemetry);
         }
 
         try { await Task.WhenAll(completionSources.Values.Select(tcs => tcs.Task)); }
@@ -467,12 +486,13 @@ public class FlowChartExecutionEngine
         int totalCount,
         ConcurrentQueue<TNode>? orderBag,
         CancellationTokenSource linkedCts,
-        ExecutionJournal? journal) where TNode : INodeExecutable
+        ExecutionJournal? journal,
+        INodeTelemetry? telemetry = null) where TNode : INodeExecutable
     {
         if (!scheduledNodes.TryAdd(nodeVm.Id, 0)) return;
         _ = Task.Run(() => RunNodeDagAsync(nodeVm, graph, ct, log,
             completionSources, remainingPredecessors, failedPredecessorCount, activePredecessorCount, scheduledNodes,
-            exceptionList, counter, totalCount, orderBag, linkedCts, journal));
+            exceptionList, counter, totalCount, orderBag, linkedCts, journal, telemetry));
     }
 
     /// <summary>DAG 模式单节点任务：执行核心 + 异常策略收集 + 下游调度。</summary>
@@ -491,7 +511,8 @@ public class FlowChartExecutionEngine
         int totalCount,
         ConcurrentQueue<TNode>? orderBag,
         CancellationTokenSource linkedCts,
-        ExecutionJournal? journal) where TNode : INodeExecutable
+        ExecutionJournal? journal,
+        INodeTelemetry? telemetry = null) where TNode : INodeExecutable
     {
         IReadOnlySet<string>? activated = null;
         bool propagateFailure = false;
@@ -505,7 +526,8 @@ public class FlowChartExecutionEngine
                     var executed = Interlocked.Increment(ref counter.Value);
                     return $" ({executed}/{totalCount})";
                 },
-                journal: journal);
+                journal: journal,
+                telemetry: telemetry);
             activated = result.ActivatedIds;
         }
         catch (OperationCanceledException ex)
@@ -533,7 +555,7 @@ public class FlowChartExecutionEngine
                 {
                     ScheduleSuccessorDag(conn, propagateFailure, result, graph, ct, log,
                         completionSources, remainingPredecessors, failedPredecessorCount, activePredecessorCount,
-                        scheduledNodes, exceptionList, counter, totalCount, orderBag, linkedCts, journal);
+                        scheduledNodes, exceptionList, counter, totalCount, orderBag, linkedCts, journal, telemetry);
                 }
             }
         }
@@ -561,7 +583,8 @@ public class FlowChartExecutionEngine
         int totalCount,
         ConcurrentQueue<TNode>? orderBag,
         CancellationTokenSource linkedCts,
-        ExecutionJournal? journal) where TNode : INodeExecutable
+        ExecutionJournal? journal,
+        INodeTelemetry? telemetry = null) where TNode : INodeExecutable
     {
         var succId = conn.TargetNodeId;
 
@@ -610,7 +633,7 @@ public class FlowChartExecutionEngine
             QueueNodeDag(succNode, graph, ct, log,
                 completionSources, remainingPredecessors,
                 failedPredecessorCount, activePredecessorCount, scheduledNodes, exceptionList,
-                counter, totalCount, orderBag, linkedCts, journal);
+                counter, totalCount, orderBag, linkedCts, journal, telemetry);
         }
 
         if (remaining != 0 || scheduledNodes.ContainsKey(succId)) return;
@@ -619,20 +642,20 @@ public class FlowChartExecutionEngine
         {
             SkipDownstream(succNode, graph,
                 completionSources, remainingPredecessors, failedPredecessorCount, activePredecessorCount,
-                scheduledNodes, log, propagateFailure: true, ct, exceptionList, counter, totalCount, orderBag, linkedCts, journal);
+                scheduledNodes, log, propagateFailure: true, ct, exceptionList, counter, totalCount, orderBag, linkedCts, journal, telemetry);
         }
         else if (ShouldRunAfterAllInputsResolved(succNode, graph, activePredecessorCount.GetValueOrDefault(succId, 0)))
         {
             QueueNodeDag(succNode, graph, ct, log,
                 completionSources, remainingPredecessors,
                 failedPredecessorCount, activePredecessorCount, scheduledNodes, exceptionList,
-                counter, totalCount, orderBag, linkedCts, journal);
+                counter, totalCount, orderBag, linkedCts, journal, telemetry);
         }
         else
         {
             SkipDownstream(succNode, graph,
                 completionSources, remainingPredecessors, failedPredecessorCount, activePredecessorCount,
-                scheduledNodes, log, propagateFailure: false, ct, exceptionList, counter, totalCount, orderBag, linkedCts, journal);
+                scheduledNodes, log, propagateFailure: false, ct, exceptionList, counter, totalCount, orderBag, linkedCts, journal, telemetry);
         }
     }
 
@@ -669,7 +692,8 @@ public class FlowChartExecutionEngine
         int totalCount,
         ConcurrentQueue<TNode>? orderBag,
         CancellationTokenSource linkedCts,
-        ExecutionJournal? journal = null) where TNode : INodeExecutable
+        ExecutionJournal? journal = null,
+        INodeTelemetry? telemetry = null) where TNode : INodeExecutable
     {
         log($"[跳过] {nodeVm.Name} - 上游未执行（失败或分支未选中）");
         journal?.RecordNodeSkipped(nodeVm.Id, nodeVm.Name);
@@ -700,20 +724,20 @@ public class FlowChartExecutionEngine
                         {
                             SkipDownstream(succNode, graph,
                                 completionSources, remainingPredecessors, failedPredecessorCount, activePredecessorCount,
-                                scheduledNodes, log, true, ct, exceptionList, counter, totalCount, orderBag, linkedCts, journal);
+                                scheduledNodes, log, true, ct, exceptionList, counter, totalCount, orderBag, linkedCts, journal, telemetry);
                         }
                         else if (ShouldRunAfterAllInputsResolved(
                                      succNode, graph, activePredecessorCount.GetValueOrDefault(succId, 0)))
                         {
                             QueueNodeDag(succNode, graph, ct, log,
                                 completionSources, remainingPredecessors, failedPredecessorCount, activePredecessorCount,
-                                scheduledNodes, exceptionList, counter, totalCount, orderBag, linkedCts, journal);
+                                scheduledNodes, exceptionList, counter, totalCount, orderBag, linkedCts, journal, telemetry);
                         }
                         else
                         {
                             SkipDownstream(succNode, graph,
                                 completionSources, remainingPredecessors, failedPredecessorCount, activePredecessorCount,
-                                scheduledNodes, log, false, ct, exceptionList, counter, totalCount, orderBag, linkedCts, journal);
+                                scheduledNodes, log, false, ct, exceptionList, counter, totalCount, orderBag, linkedCts, journal, telemetry);
                         }
                     }
                 }
@@ -734,7 +758,8 @@ public class FlowChartExecutionEngine
         CancellationToken ct,
         Action<string> log,
         List<TNode>? executionOrder,
-        ExecutionJournal? journal) where TNode : INodeExecutable
+        ExecutionJournal? journal,
+        INodeTelemetry? telemetry = null) where TNode : INodeExecutable
     {
         var nodeMap = graph.NodeMap;
         var entryIds = graph.EntryNodes.Select(n => n.Id).ToList();
@@ -807,7 +832,8 @@ public class FlowChartExecutionEngine
                         return $" (#{sequence})";
                     },
                     journal: journal,
-                    prestartedTimestamp: prestarted), runToken);
+                    prestartedTimestamp: prestarted,
+                    telemetry: telemetry), runToken);
                 running.Add((candidateId, candidateNode, task));
             }
 
@@ -938,7 +964,8 @@ public class FlowChartExecutionEngine
         Action<string> log,
         Func<string, Task> onBeforeNode,
         List<TNode>? executionOrder,
-        ExecutionJournal? journal) where TNode : INodeExecutable
+        ExecutionJournal? journal,
+        INodeTelemetry? telemetry = null) where TNode : INodeExecutable
     {
         bool hasCycle = graph.HasCycle;
         if (hasCycle)
@@ -965,7 +992,8 @@ public class FlowChartExecutionEngine
                     // 调试模式：节点 Count/CurrentRunCount 已在 ExecuteSingleNodeAsync 入口处累加
                     onExecuted: () => "",
                     enforceFailFast: true,
-                    journal: journal);
+                    journal: journal,
+                    telemetry: telemetry);
             }
 
             // 无环路：一轮就结束

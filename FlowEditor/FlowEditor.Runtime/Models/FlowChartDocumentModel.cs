@@ -36,8 +36,20 @@ public class NodeDocumentModel
     /// <summary>节点唯一 ID。</summary>
     public string Id { get; set; } = string.Empty;
 
-    /// <summary>节点类型全名（用于反射还原）。</summary>
+    /// <summary>节点类型全名（用于反射还原）。旧文档仅有此字段；新文档优先使用 NodeTypeId。</summary>
     public string TypeName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 稳定节点类型标识（P2，如 "flow.loop"）。保存时写入，加载时优先解析；
+    /// 旧文档为空，加载时走 TypeName 兼容路径。类名/命名空间/程序集调整不影响此标识。
+    /// </summary>
+    public string NodeTypeId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 节点 Schema 版本（P2）。1 = 旧格式（仅 CLR 类型名）；2 = 稳定标识。
+    /// 缺失插件恢复后可据此重新解析为真实节点。
+    /// </summary>
+    public int SchemaVersion { get; set; } = 1;
 
     /// <summary>节点名称。</summary>
     public string Name { get; set; } = string.Empty;

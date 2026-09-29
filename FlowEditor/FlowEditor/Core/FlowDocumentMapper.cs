@@ -52,10 +52,17 @@ public sealed class FlowDocumentMapper
     public NodeDocumentModel ToNodeDocument(NodeModel node)
     {
         ArgumentNullException.ThrowIfNull(node);
+        // P2：缺失占位节点 round-trip 必须保留原始标识与配置，不得用占位类型覆盖。
+        var missing = node as MissingNode;
+        var typeId = missing?.OriginalNodeTypeId
+            ?? NodeTypeRegistry.TryGetId(node.GetType()) ?? string.Empty;
         return new NodeDocumentModel
         {
             Id = node.Id,
-            TypeName = node.GetType().AssemblyQualifiedName ?? node.GetType().FullName ?? string.Empty,
+            TypeName = missing?.OriginalTypeName
+                ?? node.GetType().AssemblyQualifiedName ?? node.GetType().FullName ?? string.Empty,
+            NodeTypeId = typeId,
+            SchemaVersion = string.IsNullOrWhiteSpace(typeId) ? 1 : 2,
             Name = node.Name,
             X = node.X,
             Y = node.Y,
@@ -134,6 +141,9 @@ public sealed class FlowDocumentMapper
     /// <returns>属性名到当前值的映射。</returns>
     private static Dictionary<string, object?> SerializeNodeProperties(NodeModel node)
     {
+        // P2：占位节点直接回写捕获的原始配置，不反射占位类自身的簿记属性。
+        if (node is MissingNode missing)
+            return new Dictionary<string, object?>(missing.RawProperties);
         var properties = new Dictionary<string, object?>();
         var baseProperties = typeof(NodeModel).GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Select(property => property.Name)

@@ -51,6 +51,13 @@ public sealed class ReflectionNodeFactory : INodeFactory
         _fallbackResolver = fallbackResolver;
     }
 
+    /// <summary>
+    /// P2：是否允许缺失插件兼容。开启后，无法解析的节点文档不再抛 TypeLoadException，
+    /// 而是创建 <see cref="Nodes.MissingNode"/> 占位对象（完整保留原始配置和连线所需端口）；
+    /// 关闭时保持旧抛异常行为。默认关闭。
+    /// </summary>
+    public bool AllowMissingNodes { get; set; }
+
     /// <summary>注册单例服务实例。</summary>
     public void RegisterService<T>(T instance) where T : class
     {
@@ -82,8 +89,17 @@ public sealed class ReflectionNodeFactory : INodeFactory
     public NodeModel Create(NodeDocumentModel descriptor)
     {
         ArgumentNullException.ThrowIfNull(descriptor);
-        var type = ResolveType(descriptor.TypeName)
-                   ?? throw new TypeLoadException($"无法找到节点类型: {descriptor.TypeName}");
+        // P2：稳定 NodeTypeId 优先，旧 CLR 全名走兼容路径；均失败时按开关占位或抛异常。
+        var type = NodeTypeRegistry.TryResolve(descriptor.NodeTypeId)
+                   ?? ResolveType(descriptor.TypeName);
+        if (type == null)
+        {
+            if (!AllowMissingNodes)
+                throw new TypeLoadException($"无法找到节点类型: {descriptor.TypeName}");
+            var missing = Nodes.MissingNode.Capture(descriptor);
+            RestoreMissingNode(missing, descriptor);
+            return missing;
+        }
         if (!typeof(NodeModel).IsAssignableFrom(type))
             throw new InvalidOperationException($"类型 {type.Name} 不是有效的节点类型");
 
@@ -114,6 +130,31 @@ public sealed class ReflectionNodeFactory : INodeFactory
         ApplyProperties(node, descriptor.Properties);
 
         return node;
+    }
+
+    /// <summary>
+    /// 还原占位节点：基础字段、自定义端口与原始配置全部保留，连线可继续引用。
+    /// </summary>
+    /// <param name="missing">待填充的占位节点。</param>
+    /// <param name="descriptor">原始节点文档。</param>
+    private static void RestoreMissingNode(Nodes.MissingNode missing, NodeDocumentModel descriptor)
+    {
+        missing.Id = descriptor.Id;
+        missing.Name = descriptor.Name;
+        missing.X = descriptor.X;
+        missing.Y = descriptor.Y;
+        missing.IsInEnabled = descriptor.IsInEnabled;
+        missing.IsOutEnabled = descriptor.IsOutEnabled;
+        missing.Permission = descriptor.Permission;
+        missing.IsExcludedFromExecution = descriptor.IsExcludedFromExecution;
+        missing.ParentExecutionContainerId = descriptor.ParentExecutionContainerId;
+        missing.ExecutionLaneId = descriptor.ExecutionLaneId;
+        missing.ErrorPolicy = descriptor.ErrorPolicy;
+        missing.RetryCount = descriptor.RetryCount;
+        missing.RetryDelayMs = descriptor.RetryDelayMs;
+        missing.TimeoutMs = descriptor.TimeoutMs;
+        RestorePorts(missing, input: true, descriptor.CustomInputPorts);
+        RestorePorts(missing, input: false, descriptor.CustomOutputPorts);
     }
 
     /// <summary>按名称复用或创建自定义端口，并恢复持久化标识与类型。</summary>
