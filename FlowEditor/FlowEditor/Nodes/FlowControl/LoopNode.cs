@@ -28,6 +28,7 @@ public class LoopNode : NodeModel, ILoopControlNode
     /// <summary>循环次数（可由上游节点通过输入端口绑定，未绑定时用面板常量）。</summary>
     [NodeProperty(DisplayName = "循环次数", Group = "1.基础信息", Order = 1, Min = 1, Step = 1, IsInput = true,
         Description = "Body 分支重复执行的次数，可由上游节点绑定；面板值在未绑定时生效")]
+    [NodeInput(Description = "Body 分支重复执行的次数，可由上游节点绑定")]
     public int Iterations
     {
         get => _iterations;
@@ -39,6 +40,8 @@ public class LoopNode : NodeModel, ILoopControlNode
     /// <summary>当前迭代序号（1 起）。循环体可通过输出端口「当前索引」直接取用。</summary>
     [NodeProperty(DisplayName = "当前索引", Group = "1.基础信息", Order = 2, ReadOnly = 1, 
         Description = "当前第几次迭代（从 1 开始），循环结束后复位为 0")]
+    [NodeOutput(Description = "当前第几次迭代（从 1 开始）")]
+    [NodeRuntimeState(Description = "运行期计数，复位/重跑会变更，不参与流程配置语义")]
     public int CurrentIndex
     {
         get => _currentIndex;
@@ -115,10 +118,23 @@ public class LoopNode : NodeModel, ILoopControlNode
     }
 
     /// <summary>本轮循环已走 Completed 的标记：用于吞掉多末端回边产生的残留重复调度，防止循环复活。</summary>
+    [NodeRuntimeState(Description = "回边去重标记，运行期内部状态")]
     private bool _completedThisCycle;
 
     /// <inheritdoc />
     public override IReadOnlyList<string>? ControlFlowPorts => new[] { "Body", "Completed" };
+
+    /// <summary>P1：纯计算节点，任意线程可执行。</summary>
+    public override NodeExecutionAffinity Affinity => NodeExecutionAffinity.Any;
+
+    /// <summary>P1：启动前即可发现的配置问题（循环次数非法），无需真正执行。</summary>
+    public override Task<IEnumerable<FlowDiagnostic>> ValidateAsync(NodeValidationContext ctx)
+    {
+        if (Iterations < 1)
+            return Task.FromResult<IEnumerable<FlowDiagnostic>>(
+                [ValidationError("E-LOOP-ITERATIONS", $"循环次数必须 ≥ 1，当前为 {Iterations}。")]);
+        return Task.FromResult<IEnumerable<FlowDiagnostic>>([]);
+    }
 
     /// <summary>将当前循环索引复位为零。</summary>
     [NodeAction("重置计数", Order = 0, IconResource = "Restart")]

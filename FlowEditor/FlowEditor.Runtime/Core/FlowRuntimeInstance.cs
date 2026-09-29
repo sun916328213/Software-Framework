@@ -44,6 +44,26 @@ public sealed class FlowRuntimeInstance<TNode> where TNode : INodeExecutable
     /// <summary>获取节点事件和连线传值追踪器。</summary>
     public ExecutionJournal Journal { get; } = new();
 
+    /// <summary>
+    /// P1：在不执行任何节点的前提下验证活动顶层图（结构 + 各节点自身配置）。
+    /// Workbench 的"验证流程"调用此方法，在真正执行设备动作前列出全部可发现问题。
+    /// </summary>
+    /// <param name="services">受限服务容器（透传给各节点验证上下文，可为空）。</param>
+    /// <param name="variables">流程变量快照（透传，可为空）。</param>
+    /// <param name="ct">取消令牌。</param>
+    public Task<FlowValidationReport> ValidateAsync(
+        IServiceProvider? services = null,
+        IReadOnlyDictionary<string, object?>? variables = null,
+        CancellationToken ct = default)
+    {
+        var activeNodes = Nodes.Where(node => !node.IsExcludedFromExecution).ToList();
+        var activeIds = activeNodes.Select(node => node.Id).ToHashSet();
+        var activeConnections = Connections.Where(connection =>
+                activeIds.Contains(connection.SourceNodeId) && activeIds.Contains(connection.TargetNodeId))
+            .ToList();
+        return FlowNodeValidator.ValidateAsync(activeNodes, activeConnections, services, variables, ct);
+    }
+
     /// <summary>获取或设置可选的断点与单步控制器。</summary>
     public DebugController? Debug { get; set; }
 

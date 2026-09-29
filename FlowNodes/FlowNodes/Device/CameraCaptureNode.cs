@@ -54,13 +54,49 @@ public class CameraCaptureNode : NodeModel
         set => SetProperty(ref _gain, value);
     }
 
-    /// <summary>采集到的图像（可绑定到输出端口）。</summary>
+    /// <summary>采集到的图像（可绑定到输出端口）。运行态输出：由 Runtime 统一管理生命周期，不序列化结果值。</summary>
     [NodeProperty(DisplayName = "图像", Group = "1.采集参数", Order = 3, Description = "采集到的图像", IsOutput = true, IsDisplay = false)]
+    [NodeOutput(Description = "采集到的图像帧")]
+    [NodeRuntimeState(Description = "采集结果，运行期生成，不保存结果值")]
     [JsonIgnore]
     public ImageFrame? Image
     {
         get => _image;
         set => SetProperty(ref _image, value);
+    }
+
+    /// <summary>P1：后台 I/O，同相机串行（不同相机可并行）。</summary>
+    public override NodeExecutionAffinity Affinity => NodeExecutionAffinity.Background;
+
+    /// <summary>P1：同相机互斥，避免多分支并发采集同一设备。</summary>
+    public override NodeConcurrencyMode ConcurrencyMode => NodeConcurrencyMode.ResourceExclusive;
+
+    /// <inheritdoc />
+    public override IEnumerable<string> GetResourceKeys() =>
+        string.IsNullOrWhiteSpace(CameraName) ? [] : [$"Camera:{CameraName}"];
+
+    /// <summary>
+    /// P1：启动前即可发现缺配置、缺设备、参数错误，无需真正执行设备动作。
+    /// </summary>
+    public override Task<IEnumerable<FlowDiagnostic>> ValidateAsync(NodeValidationContext ctx)
+    {
+        var problems = new List<FlowDiagnostic>();
+        if (string.IsNullOrWhiteSpace(CameraName))
+        {
+            problems.Add(ValidationError("E-CAMERA-NAME-EMPTY", "未配置相机名称。"));
+            return Task.FromResult<IEnumerable<FlowDiagnostic>>(problems);
+        }
+        var cameras = ctx.GetService<ICameraProvider>() ?? _cameras;
+        if (cameras == null)
+        {
+            problems.Add(ValidationError("E-CAMERA-PROVIDER-MISSING", "缺少相机服务（ICameraProvider）。"));
+            return Task.FromResult<IEnumerable<FlowDiagnostic>>(problems);
+        }
+        if (!cameras.Names.Contains(CameraName))
+            problems.Add(ValidationError("E-CAMERA-NOTFOUND", $"相机 '{CameraName}' 不存在。"));
+        if (Exposure <= 0)
+            problems.Add(ValidationError("E-CAMERA-PARAM-RANGE", $"曝光时间必须 > 0，当前为 {Exposure}。"));
+        return Task.FromResult<IEnumerable<FlowDiagnostic>>(problems);
     }
 
     public override async Task ExecuteAsync(CancellationToken ct)
