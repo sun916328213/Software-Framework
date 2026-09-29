@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>ScriptEditor</AssemblyName>
+    <RootNamespace>ScriptEditor</RootNamespace>
+    <NoWarn>$(NoWarn);VSTHRD001;VSTHRD003;VSTHRD100;VSTHRD103;VSTHRD110</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+    <PackageReference Include="Prism.Core" Version="8.1.97" />
+    <PackageReference Include="Prism.Wpf" Version="8.1.97" />
+    <PackageReference Include="RoslynPad.Editor.Windows" Version="5.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ScriptEditor.Runtime\ScriptEditor.Runtime.csproj" />
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+    <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
+  </ItemGroup>
+</Project>

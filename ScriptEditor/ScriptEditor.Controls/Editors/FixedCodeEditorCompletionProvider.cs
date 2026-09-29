@@ -30,7 +30,7 @@ public class FixedCodeEditorCompletionProvider : ICodeEditorCompletionProvider
 
         if (result.CompletionData != null && result.CompletionData.Count > 0)
         {
-            bool directiveContext = IsDirectiveContext(editorText, position, triggerChar);
+            bool directiveContext = ScriptCompletionContext.IsDirective(editorText, position, triggerChar);
 
             var wrapped = new List<ICompletionDataEx>(result.CompletionData.Count);
             foreach (var item in result.CompletionData)
@@ -50,33 +50,4 @@ public class FixedCodeEditorCompletionProvider : ICodeEditorCompletionProvider
         return result;
     }
 
-    /// <summary>
-    /// 判断光标是否处于预处理器指令补全上下文：
-    /// 触发字符是 #，或从光标向前取连续单词字符（含 #）组成的单词以 # 开头。
-    /// </summary>
-    private static bool IsDirectiveContext(string? text, int position, char? triggerChar)
-    {
-        if (triggerChar == '#')
-        {
-            return true;
-        }
-
-        if (string.IsNullOrEmpty(text) || position < 0 || position > text.Length)
-        {
-            return false;
-        }
-
-        int start = position;
-        while (start > 0)
-        {
-            char c = text[start - 1];
-            if (c != '#' && c != '_' && !char.IsLetterOrDigit(c))
-            {
-                break;
-            }
-            start--;
-        }
-
-        return start < position && text[start] == '#';
-    }
 }

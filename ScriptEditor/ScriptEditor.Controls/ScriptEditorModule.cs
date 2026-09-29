@@ -53,17 +53,23 @@ public class ScriptEditorModule : IModule
         //// ScriptEditorService：全局引用管理 + RoslynHost，重量级且全局共享，保持单例。
         //// ScriptManagerService：瞬时，Packing 启动/关闭流程各自持有独立脚本状态。
         //// 其余类型（CustomRoslynHost / ScriptEngine / 补全提供器）均在内部 new 创建，无需注册。
-        //containerRegistry.RegisterSingleton<FileService>();
-        //containerRegistry.RegisterSingleton<ScriptEditorService>();
-        //containerRegistry.Register<ScriptManagerService>();
+        if (!containerRegistry.IsRegistered<FileService>())
+            containerRegistry.RegisterSingleton<FileService>();
+        if (!containerRegistry.IsRegistered<ScriptEditorService>())
+            containerRegistry.RegisterSingleton<ScriptEditorService>();
+        if (!containerRegistry.IsRegistered<ScriptManagerService>())
+            containerRegistry.Register<ScriptManagerService>();
 
         //// 注册 ViewModel（瞬时模式，每次 Resolve 创建新实例，供多个 Flow 界面独立使用）
-        //containerRegistry.Register<ScriptManagerViewModel>();
+        if (!containerRegistry.IsRegistered<ScriptManagerViewModel>())
+            containerRegistry.Register<ScriptManagerViewModel>();
 
         //// ScriptManagerView 注册为瞬时，使 Packing 启动/关闭流程各自持有独立的视图实例。
         //// 同时保留 (object, 导航名) 导航注册，EditorDemo 等按导航名 RequestNavigate 时每次解析新实例。
-        //containerRegistry.Register<ScriptManagerView>();
-        //containerRegistry.Register(typeof(object), typeof(ScriptManagerView), nameof(ScriptManagerView));
+        if (!containerRegistry.IsRegistered<ScriptManagerView>())
+            containerRegistry.Register<ScriptManagerView>();
+        if (!containerRegistry.IsRegistered(typeof(object), nameof(ScriptManagerView)))
+            containerRegistry.Register(typeof(object), typeof(ScriptManagerView), nameof(ScriptManagerView));
     }
 
     /// <summary>合并 ScriptEditor 所需的资源字典。</summary>

@@ -9,7 +9,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.CodeAnalysis;
-using Prism.Ioc;
 using RoslynPad.Editor;
 using ScriptEditor.Models;
 using ScriptEditor.Services;
@@ -39,6 +38,28 @@ public partial class ScriptEditorView : UserControl
     /// 脚本编辑器后端服务（前后端分离：不再在构造函数中同步解析，改为 InitializeCoreAsync 时延迟初始化）。
     /// </summary>
     private ScriptEditorService? _editorService;
+
+    /// <summary>Inherited service supplied by a host composition root before editor initialization.</summary>
+    public static readonly DependencyProperty EditorServiceProperty = DependencyProperty.RegisterAttached(
+        "EditorService", typeof(ScriptEditorService), typeof(ScriptEditorView),
+        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits));
+
+    public static void SetEditorService(DependencyObject element, ScriptEditorService service)
+        => element.SetValue(EditorServiceProperty, service);
+
+    public static ScriptEditorService? GetEditorService(DependencyObject element)
+        => (ScriptEditorService?)element.GetValue(EditorServiceProperty);
+
+    public ScriptEditorService? EditorService
+    {
+        get => GetEditorService(this);
+        set
+        {
+            if (_viewModel != null) throw new InvalidOperationException("Editor service cannot change after initialization.");
+            if (value is not null) SetEditorService(this, value);
+            else ClearValue(EditorServiceProperty);
+        }
+    }
     /// <summary>
     /// 脚本编辑器 ViewModel（前后端分离：不再在构造函数中同步创建，改为 InitializeCoreAsync 时延迟初始化）。
     /// </summary>
@@ -503,7 +524,7 @@ public partial class ScriptEditorView : UserControl
         var sw = Stopwatch.StartNew();
         Debug.WriteLine("[ScriptEditor] EnsureBackendInitialized START");
 
-        _editorService = ContainerLocator.Container.Resolve<ScriptEditorService>();
+        _editorService ??= EditorService ?? new ScriptEditorService();
         Debug.WriteLine($"[ScriptEditor] EnsureBackend ScriptEditorService: {sw.ElapsedMilliseconds}ms");
 
         // 应用 ctor 暂存的初始数据：SetInputData 仅依赖 Service 可立即应用；

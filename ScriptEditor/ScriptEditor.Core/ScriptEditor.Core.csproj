@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ScriptEditor</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+</Project>

@@ -5,7 +5,6 @@ using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
-using RoslynPad.Editor;
 using RoslynPad.Roslyn;
 using RoslynPad.Roslyn.Diagnostics;
 
@@ -429,10 +428,12 @@ public class CustomRoslynHost : RoslynHost
     /// </summary>
     private static string? ResolveDesktopFrameworkDirectory(string? coreDir)
     {
-        // 尝试 1：System.Windows.DependencyObject 程序集（WindowsBase.dll）所在目录
+        // 尝试 1：按名称查找 WindowsBase，保持 Runtime 可在无 WPF 环境编译和运行。
         try
         {
-            var desktopDir = Path.GetDirectoryName(typeof(System.Windows.DependencyObject).Assembly.Location);
+            var desktopAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(a => string.Equals(a.GetName().Name, "WindowsBase", StringComparison.OrdinalIgnoreCase));
+            var desktopDir = desktopAssembly is null ? null : Path.GetDirectoryName(desktopAssembly.Location);
             if (desktopDir != null && Directory.Exists(desktopDir))
                 return desktopDir;
         }
@@ -464,7 +465,7 @@ public class CustomRoslynHost : RoslynHost
     /// </summary>
     /// <param name="display">引用的 Display 属性值（通常是文件路径）。</param>
     /// <returns>解析后的绝对路径，或原始 display 值。</returns>
-    internal static string ResolveReferencePath(string display)
+    public static string ResolveReferencePath(string display)
     {
         try { return Path.GetFullPath(display); }
         catch { return display; }
@@ -492,7 +493,7 @@ public class CustomRoslynHost : RoslynHost
     /// </summary>
     /// <param name="references">元数据引用集合。</param>
     /// <returns>大小写不敏感的路径集合。</returns>
-    internal static HashSet<string> CollectReferencePaths(
+    public static HashSet<string> CollectReferencePaths(
         IEnumerable<MetadataReference> references)
     {
         var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

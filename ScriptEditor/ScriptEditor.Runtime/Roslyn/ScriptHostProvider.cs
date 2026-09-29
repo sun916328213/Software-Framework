@@ -15,12 +15,7 @@ public static class ScriptHostProvider
 {
     /// <summary>共享 CustomRoslynHost 实例（延迟到首次使用时创建）。</summary>
     private static readonly Lazy<CustomRoslynHost> SharedLazy = new(() => new CustomRoslynHost(
-        additionalAssemblies: new[]
-        {
-            Assembly.Load("RoslynPad.Roslyn.Windows"),
-            Assembly.Load("RoslynPad.Editor.Windows"),
-            typeof(ScriptHostProvider).Assembly,
-        },
+        additionalAssemblies: GetHostAssemblies(),
         references: RoslynHostReferences.NamespaceDefault.With(
             typeNamespaceImports: new[]
             {
@@ -35,4 +30,19 @@ public static class ScriptHostProvider
 
     /// <summary>获取共享宿主实例。</summary>
     public static CustomRoslynHost Shared => SharedLazy.Value;
+
+    private static IEnumerable<Assembly> GetHostAssemblies()
+    {
+        yield return typeof(ScriptHostProvider).Assembly;
+        foreach (var name in new[] { "RoslynPad.Roslyn.Windows", "RoslynPad.Editor.Windows" })
+        {
+            Assembly? assembly = null;
+            try
+            {
+                assembly = Assembly.Load(name);
+            }
+            catch (System.IO.FileNotFoundException) { }
+            if (assembly != null) yield return assembly;
+        }
+    }
 }
