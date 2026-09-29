@@ -1,0 +1,83 @@
+<UserControl
+    x:Class="Vision.Workbench.ToolBrowserView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+    xmlns:view="clr-namespace:Vision.Controls.View;assembly=Vision.Controls">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <!-- Tool Browser：目录 -->
+        <ListBox
+            ItemsSource="{Binding Browser.ToolEntries, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            DisplayMemberPath="Name"
+            SelectedItem="{Binding Browser.SelectedEntry, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}" />
+        <!-- 参数编辑 + 执行 + 对比 + Benchmark -->
+        <Grid Grid.Column="1" Margin="8,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <view:ToolCardView Card="{Binding Browser.CurrentCard, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+            <xctk:PropertyGrid
+                Grid.Row="1"
+                SelectedObject="{Binding Browser.CurrentParameters, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+            <StackPanel
+                Grid.Row="2"
+                Orientation="Horizontal">
+                <Button
+                    Margin="0,4,4,0"
+                    Command="{Binding Browser.LoadImageCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    Content="加载图像" />
+                <Button
+                    Margin="0,4,4,0"
+                    Command="{Binding Browser.UseDemoImageCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    Content="合成图" />
+                <Button
+                    Margin="0,4,4,0"
+                    Command="{Binding Browser.CompareBlobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    Content="后端对比" />
+                <Button
+                    Margin="0,4,0,0"
+                    Command="{Binding Browser.RunBenchmarkCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    Content="Benchmark" />
+            </StackPanel>
+            <TextBlock
+                Grid.Row="3"
+                Text="{Binding Browser.ImageInfoText, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                TextWrapping="Wrap" />
+            <TextBlock
+                Grid.Row="4"
+                Text="{Binding Browser.CompareText, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                TextWrapping="Wrap" />
+            <TextBlock
+                Grid.Row="5"
+                Text="{Binding Browser.BenchmarkText, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                TextWrapping="Wrap" />
+        </Grid>
+        <!-- ROI 编辑 + AI Provider 选择 -->
+        <Grid Grid.Column="2" Margin="8,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <view:RoiEditorView Editor="{Binding Browser.RoiEditor, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+            <StackPanel Grid.Row="1">
+                <TextBlock Text="AI Provider（三家切换）："
+                    Margin="0,4,0,0" />
+                <ComboBox
+                    ItemsSource="{Binding Browser.ProviderEntries, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    DisplayMemberPath="Name"
+                    SelectedValuePath="Name"
+                    SelectedValue="{Binding Browser.SelectedProviderName, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

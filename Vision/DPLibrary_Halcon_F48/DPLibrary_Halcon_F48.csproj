@@ -5,6 +5,9 @@
        · HALCON AI 迁往 Vision.AI.Halcon（P6）；
        · 不应存在的 OpenCvSharp 直接依赖已在 P4 清理（附录 A；全仓核实零真实调用，仅两处无效 using 一并删除）；
        · 迁移完成后按 P9 退场。
+       · P9（2026-09-29）状态：Vision 模块内迁移完成（Workbench 新 ToolBrowser 为标准入口）；
+         本工程因模块外仍有消费者（FlowNodes / Packing Machine / WPFControl）而保留，
+         仅供其编译通过；各消费方迁完后自行摘除引用，届时删除本工程。
        ⛔ 本工程只作为迁移来源，**不得再新增功能**。 -->
   <PropertyGroup>
     <Platform>AnyCPU</Platform>

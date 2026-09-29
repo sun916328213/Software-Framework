@@ -18,7 +18,7 @@ namespace Vision.Controls.ViewModels
     /// <summary>
     /// 单个 Tool 的展示卡片：校验状态 + 执行 + 结果摘要。
     /// </summary>
-    public sealed partial class ToolCardViewModel : ObservableObject
+    public sealed partial class ToolCardViewModel : ObservableObject, IDisposable
     {
         private readonly IExecutableTool _tool;
         private VisionImage? _image;
@@ -96,5 +96,8 @@ namespace Vision.Controls.ViewModels
                 StatusText = $"执行异常：{ex.Message}";
             }
         }
+
+        /// <summary>释放底层 Tool（P9 切换条目时调用，避免会话/native 泄漏）。</summary>
+        public void Dispose() => _tool.Dispose();
     }
 }

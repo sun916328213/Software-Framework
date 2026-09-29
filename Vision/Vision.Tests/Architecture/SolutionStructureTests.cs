@@ -34,9 +34,9 @@ namespace Vision.Tests.Architecture
         /// <summary>
         /// P1 交付的目标骨架 —— <c>Vision/</c> 下的工程集合（按目录名 / sln 登记名）。
         ///
-        /// 最后两项是**迁移源**，P1 明确不删（计划 §P1）：
-        ///   · <c>DPLibrary_Halcon_F48</c> —— 「暂不一次性删除，作为迁移源逐步拆出」；
-        ///   · <c>Vision</c>             —— §4 命名评审结论「迁移后退场」，P1 只标记 Legacy。
+        /// P9 更新：Legacy 的 <c>Vision</c> 工程已按计划 §P9 退场（sln 除名 + 目录删除）；
+        /// <c>DPLibrary_Halcon_F48</c> 保留——Vision 模块外仍有消费者（见冻结清单），
+        /// 其迁移完成后由各消费方工程自行摘除引用（非本 Vision 阶段范围）。
         /// </summary>
         private static readonly string[] ExpectedVisionProjects =
         [
@@ -50,15 +50,13 @@ namespace Vision.Tests.Architecture
             "Vision.Controls",        // ← Ctr_WPF_F48（P1 改名 Vision.Controls.Wpf；P2 按 v1.2 §4 再收口为 Vision.Controls）
             "Vision.Workbench",       // ← VisionDemo（P1 改名）
             "Vision.Tests",           // 保留
-            "DPLibrary_Halcon_F48",   // 迁移源（P1 不删）
-            "Vision",                 // Legacy（P1 不删）
+            "DPLibrary_Halcon_F48",   // 迁移源（P9 仍保留：外部消费者未迁完）
         ];
 
-        /// <summary>旧项目：只允许作为迁移来源，不得被新目标工程引用（计划 §P1 / §13 检查表）。</summary>
+        /// <summary>旧项目：只允许作为迁移来源，不得被新目标工程引用（计划 §P1 / §13 检查表；P9 剩 DPLibrary 一项）。</summary>
         private static readonly string[] LegacyProjects =
         [
             "DPLibrary_Halcon_F48",
-            "Vision",
         ];
 
         /// <summary>
@@ -93,8 +91,8 @@ namespace Vision.Tests.Architecture
             "WPFControl/WPFControl/WPFControl.csproj",
         ];
 
-        /// <summary>P1 骨架的最小规模，用作「扫描没失效」的下限。</summary>
-        private const int MinimumVisionProjects = 12;
+        /// <summary>P1 骨架的最小规模，用作「扫描没失效」的下限（P9：12-1 退场 = 11）。</summary>
+        private const int MinimumVisionProjects = 11;
 
         // ─────────────────────────────────────────────────────────────────────
         // 1. Vision/ 目录下的工程集合 == P1 目标骨架
@@ -158,7 +156,9 @@ namespace Vision.Tests.Architecture
         // ─────────────────────────────────────────────────────────────────────
 
         /// <summary>
-        /// 迁移源与 Legacy 工程**必须还在**（P1 明确不删），且消费者清单被冻结。
+        /// 迁移源必须还在，且消费者清单被冻结。
+        /// P9 更新：Legacy 的 <c>Vision</c> 工程已删除（本测试不再断言其存在）；
+        /// <c>DPLibrary_Halcon_F48</c> 因外部消费者保留，清单冻结继续有效。
         /// </summary>
         [Fact]
         public void MigrationSource_ConsumerSetIsFrozen()
@@ -167,8 +167,9 @@ namespace Vision.Tests.Architecture
                 VisionDirectory, "DPLibrary_Halcon_F48", "DPLibrary_Halcon_F48.csproj");
             Assert.True(File.Exists(migrationSource), $"迁移源必须保留（计划 §P1）：{migrationSource}");
 
-            var legacy = Path.Combine(VisionDirectory, "Vision", "Vision.csproj");
-            Assert.True(File.Exists(legacy), $"Legacy 工程 P1 只标记不删（计划 §P1）：{legacy}");
+            Assert.False(
+                Directory.Exists(Path.Combine(VisionDirectory, "Vision")),
+                "Legacy 的 Vision 目录按计划 §P9 应已删除。");
 
             var actual = EnumerateProjectFiles(RepoRoot)
                 .Where(path => !string.Equals(
@@ -184,7 +185,7 @@ namespace Vision.Tests.Architecture
         }
 
         /// <summary>
-        /// 新建的目标工程不得引用任何旧项目；Legacy 的 <c>Vision</c> 工程不得被**任何**工程引用。
+        /// 新建的目标工程不得引用任何旧项目（P9：旧项目只剩 DPLibrary 一项）。
         /// </summary>
         [Fact]
         public void NewTargetProjects_DoNotReferenceLegacyProjects()
@@ -205,14 +206,9 @@ namespace Vision.Tests.Architecture
                     if (!ReferencesProject(project, legacyPath))
                         continue;
 
-                    // ① 新目标工程引旧项目 ⇒ 越界（计划 §P1 / §13）
+                    // 新目标工程引旧项目 ⇒ 越界（计划 §P1 / §13）
                     if (NewTargetProjects.Contains(projectName, StringComparer.Ordinal))
                         offenders.Add($"{relative} -> {Path.GetFileName(legacyPath)}（新目标工程不得引用旧项目）");
-
-                    // ② 任何工程引 Legacy 的 Vision 工程 ⇒ 越界（它要退场）
-                    if (string.Equals(
-                            Path.GetFileNameWithoutExtension(legacyPath), "Vision", StringComparison.Ordinal))
-                        offenders.Add($"{relative} -> Vision.csproj（Legacy 工程不得被引用）");
                 }
             }
 
