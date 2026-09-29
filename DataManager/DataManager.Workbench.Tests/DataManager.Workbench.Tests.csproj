@@ -7,6 +7,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- WPF 宿主集成测试线：与无 UI 的 DataManager.Tests 隔离，独占 STA / Dispatcher / Application。
+         与 MotionControl/Communication 两条 Workbench.Tests 线保持一致，显式启用 WPF。 -->
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>

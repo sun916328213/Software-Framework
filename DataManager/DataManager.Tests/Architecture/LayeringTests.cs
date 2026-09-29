@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using DataManager.Excel;
 using DataManager.Log;
@@ -144,6 +145,96 @@ public sealed class LayeringTests
         var path = Path.Combine([RepoRoot(), "DataManager", "DataManager", "DataManager.csproj"]);
         Assert.False(File.Exists(path), $"兼容门面不应重新引入：{path}");
     }
+
+    /// <summary>
+    /// P3 边界审计 G1：Controls 只做表现层，不得直接绑定 ORM / 日志 / Excel Provider。
+    /// 业务逻辑（指纹、实例生命周期、数据操作）若落进 Controls，最直接的表征就是开始 using
+    /// Dapper/EFCore/SqlSugar/EPPlus/日志 Provider。既堵「包直接引用」，也堵「经 Extension 传递
+    /// 带入后直接 using」——后者编译期无人拦得住，只能靠源码级守卫。
+    /// </summary>
+    [Fact]
+    public void Controls_does_not_bind_orm_log_or_excel_providers()
+    {
+        var csproj = LoadCsproj("DataManager", "DataManager.Controls", "DataManager.Controls.csproj");
+        var packages = PackageReferences(csproj);
+        var packageViolations = ProviderPackages.Where(packages.Contains).OrderBy(name => name).ToArray();
+        Assert.Empty(packageViolations);
+
+        var sourceViolations = SourceFiles("DataManager.Controls")
+            .Where(file => ProviderNamespaceUsing.IsMatch(StripComments(File.ReadAllText(file))))
+            .Select(Path.GetFileName)
+            .OrderBy(name => name)
+            .ToArray();
+        Assert.Empty(sourceViolations);
+    }
+
+    /// <summary>
+    /// P3 G2：DataManager.Tests 是「无 WPF」的逻辑测试线——不启 WPF、不引 WPF 风味 Prism 容器包，
+    /// 只直引 Core + Runtime，不借 Controls / Workbench 间接取依赖。
+    /// </summary>
+    [Fact]
+    public void Logic_tests_line_stays_wpf_free_and_directly_references_core_and_runtime()
+    {
+        var csproj = LoadCsproj("DataManager", "DataManager.Tests", "DataManager.Tests.csproj");
+        Assert.False(HasUseWpf(csproj), "DataManager.Tests 是逻辑测试线，不应启用 WPF。");
+
+        var packages = PackageReferences(csproj);
+        Assert.Empty(WpfPrismPackages.Where(packages.Contains).OrderBy(name => name));
+
+        var projects = ProjectReferences(csproj);
+        Assert.Contains(projects, r => r.Contains("DataManager.Core"));    // 直引下限（防假绿）
+        Assert.Contains(projects, r => r.Contains("DataManager.Runtime"));
+        Assert.DoesNotContain(projects, r => r.Contains("DataManager.Controls"));
+        Assert.DoesNotContain(projects, r => r.Contains("DataManager.Workbench"));
+    }
+
+    /// <summary>
+    /// P3 G3：WPF 集成测试线必须显式启用 WPF（与 MotionControl / Communication 两条线对齐），
+    /// 并组合被验证的 Controls 与宿主 Workbench。
+    /// </summary>
+    [Fact]
+    public void Workbench_tests_line_enables_wpf()
+    {
+        var csproj = LoadCsproj("DataManager", "DataManager.Workbench.Tests", "DataManager.Workbench.Tests.csproj");
+        Assert.True(HasUseWpf(csproj), "WPF 集成测试线必须显式 UseWPF=true。");
+
+        var projects = ProjectReferences(csproj);
+        Assert.Contains(projects, r => r.Contains("DataManager.Controls"));
+        Assert.Contains(projects, r => r.Contains("DataManager.Workbench"));
+    }
+
+    /// <summary>Controls 不得直接引用的 Provider 包（运行时实现归 Runtime）。</summary>
+    private static readonly string[] ProviderPackages =
+    {
+        "Dapper", "Dommel", "SqlSugarCore", "EPPlus", "MiniExcel", "Google.Protobuf",
+        "Serilog", "Serilog.Sinks.File", "NLog", "log4net",
+        "Microsoft.EntityFrameworkCore", "Microsoft.EntityFrameworkCore.Sqlite", "Microsoft.EntityFrameworkCore.SqlServer",
+        "MySql.EntityFrameworkCore", "Npgsql.EntityFrameworkCore.PostgreSQL",
+        "Microsoft.Data.SqlClient", "Microsoft.Data.Sqlite", "MySqlConnector",
+    };
+
+    /// <summary>WPF 风味的 Prism 容器包：逻辑测试线不得引用（只需要 Prism.Core 的 IModule 契约）。</summary>
+    private static readonly string[] WpfPrismPackages = { "Prism.DryIoc", "Prism.Wpf", "Prism.Unity" };
+
+    /// <summary>Controls 源码里不得出现的 Provider using（带词边界，避免误伤同名前缀）。</summary>
+    private static readonly Regex ProviderNamespaceUsing = new(
+        @"^\s*using\s+(static\s+)?(Dapper|Dommel|SqlSugar\w*|Microsoft\.EntityFrameworkCore\w*|OfficeOpenXml\w*|MiniExcelLibs\w*|Google\.Protobuf\w*|Serilog\w*|NLog\w*|log4net\w*|Npgsql\w*|MySqlConnector\w*|Microsoft\.Data\.SqlClient\w*|Microsoft\.Data\.Sqlite\w*)\s*(;|=)",
+        RegexOptions.Multiline | RegexOptions.Compiled);
+
+    private static readonly Regex BlockComments = new(@"/\*.*?\*/", RegexOptions.Singleline | RegexOptions.Compiled);
+    private static readonly Regex LineComments = new(@"//[^\n]*", RegexOptions.Compiled);
+
+    /// <summary>剥掉块注释与行注释，避免「注释里写了 using」造成假阳性。</summary>
+    private static string StripComments(string text) =>
+        LineComments.Replace(BlockComments.Replace(text, " "), " ");
+
+    private static bool HasUseWpf(XDocument csproj) =>
+        string.Equals(csproj.Descendants("UseWPF").FirstOrDefault()?.Value.Trim(), "true", StringComparison.OrdinalIgnoreCase);
+
+    private static IEnumerable<string> SourceFiles(string projectFolder) =>
+        Directory.EnumerateFiles(Path.Combine(RepoRoot(), "DataManager", projectFolder), "*.cs", SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")
+                        && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"));
 
     private static bool IsAllowedFrameworkType(Type type)
     {
