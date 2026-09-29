@@ -1,5 +1,5 @@
-using MotionControl.Definition;
-using MotionControl.Vendors.Leadshine;
+﻿using MotionControl.Core.Definitions;
+using MotionControl.Runtime.Vendors.Leadshine;
 using Xunit;
 
 namespace MotionControl.Tests;
@@ -190,3 +190,4 @@ public sealed class LeadshineTransportTests
         public void Dispose() => Close();
     }
 }
+

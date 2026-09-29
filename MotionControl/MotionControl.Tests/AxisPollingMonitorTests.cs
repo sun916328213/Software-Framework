@@ -1,5 +1,5 @@
-using System.Diagnostics;
-using MotionControl.Internal;
+﻿using System.Diagnostics;
+using MotionControl.Runtime.Internal;
 using Xunit;
 
 namespace MotionControl.Tests;
@@ -120,3 +120,4 @@ public sealed class AxisPollingMonitorTests
         Assert.Equal(0, Volatile.Read(ref observations));
     }
 }
+

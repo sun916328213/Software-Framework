@@ -1,5 +1,5 @@
-using MotionControl.Definition;
-using MotionControl.Vendors.Inovance;
+﻿using MotionControl.Core.Definitions;
+using MotionControl.Runtime.Vendors.Inovance;
 using Xunit;
 
 namespace MotionControl.Tests;
@@ -181,3 +181,4 @@ public sealed class MotionResultTests
         public void Dispose() => Disconnect();
     }
 }
+

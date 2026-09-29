@@ -1,7 +1,7 @@
-using MotionControl.Definition;
-using MotionControl.Vendors.Inovance;
-using MotionControl.Vendors.Simulation;
-using MotionControl.Vendors.ZMotion;
+﻿using MotionControl.Core.Definitions;
+using MotionControl.Runtime.Vendors.Inovance;
+using MotionControl.Runtime.Vendors.Simulation;
+using MotionControl.Runtime.Vendors.ZMotion;
 using Xunit;
 
 namespace MotionControl.Tests;
@@ -217,3 +217,4 @@ public sealed class MotionParameterValidationTests
         public void Dispose() { }
     }
 }
+

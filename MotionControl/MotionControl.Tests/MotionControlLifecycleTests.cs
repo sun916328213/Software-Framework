@@ -1,4 +1,5 @@
-using MotionControl.Definition;
+﻿using MotionControl.Core.Definitions;
+using MotionControl.Runtime.Services;
 using Xunit;
 
 namespace MotionControl.Tests;
@@ -103,3 +104,5 @@ public sealed class MotionControlLifecycleTests
         protected override EMotionResult SetOutputRefactor(int index, bool state) => EMotionResult.Success;
     }
 }
+
+

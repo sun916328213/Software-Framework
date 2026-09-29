@@ -1,5 +1,5 @@
-using MotionControl.Definition;
-using MotionControl.Vendors.Simulation;
+﻿using MotionControl.Core.Definitions;
+using MotionControl.Runtime.Vendors.Simulation;
 using Xunit;
 
 namespace MotionControl.Tests;
@@ -149,3 +149,4 @@ public sealed class MotionCommandResultTests
         return card;
     }
 }
+

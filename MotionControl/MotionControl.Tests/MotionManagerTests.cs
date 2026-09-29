@@ -1,5 +1,7 @@
-using MotionControl.Definition;
-using MotionControl.Vendors.Simulation;
+﻿using MotionControl.Core.Abstractions;
+using MotionControl.Core.Definitions;
+using MotionControl.Runtime.Services;
+using MotionControl.Runtime.Vendors.Simulation;
 using Xunit;
 
 namespace MotionControl.Tests;
@@ -270,3 +272,5 @@ public sealed class MotionManagerTests
         MotionResult IMotionCard.ConnectResult() => throw new InvalidOperationException("driver exploded");
     }
 }
+
+

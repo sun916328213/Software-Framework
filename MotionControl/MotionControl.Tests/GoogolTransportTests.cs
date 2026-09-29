@@ -1,5 +1,5 @@
-using MotionControl.Definition;
-using MotionControl.Vendors.Googol;
+﻿using MotionControl.Core.Definitions;
+using MotionControl.Runtime.Vendors.Googol;
 using Xunit;
 
 namespace MotionControl.Tests;
@@ -248,3 +248,4 @@ public sealed class GoogolTransportTests
         public void Dispose() => Close();
     }
 }
+

@@ -1,5 +1,5 @@
-using MotionControl.Definition;
-using MotionControl.Vendors.ADLINK;
+﻿using MotionControl.Core.Definitions;
+using MotionControl.Runtime.Vendors.ADLINK;
 using Xunit;
 
 namespace MotionControl.Tests;
@@ -243,3 +243,4 @@ public sealed class AdlinkTransportTests
         public void Dispose() => Close();
     }
 }
+

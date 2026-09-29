@@ -18,7 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MotionControl\MotionControl.csproj" />
+    <!-- P3：测试直接面向 Core 契约 + Runtime 实现；旧单体不再被引用。 -->
+    <ProjectReference Include="..\MotionControl.Core\MotionControl.Core.csproj" />
+    <ProjectReference Include="..\MotionControl.Runtime\MotionControl.Runtime.csproj" />
   </ItemGroup>
 
 </Project>

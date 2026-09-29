@@ -21,4 +21,8 @@
     <ProjectReference Include="..\MotionControl.Core\MotionControl.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="MotionControl.Tests" />
+  </ItemGroup>
+
 </Project>

@@ -1,5 +1,5 @@
-using MotionControl.Definition;
-using MotionControl.Vendors.ZMotion;
+﻿using MotionControl.Core.Definitions;
+using MotionControl.Runtime.Vendors.ZMotion;
 using Xunit;
 
 namespace MotionControl.Tests;
@@ -180,3 +180,4 @@ public sealed class ZMotionTransportTests
         public void Dispose() => Disconnect();
     }
 }
+

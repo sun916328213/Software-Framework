@@ -1,4 +1,4 @@
-using MotionControl.Vendors.Inovance;
+﻿using MotionControl.Runtime.Vendors.Inovance;
 using Xunit;
 
 namespace MotionControl.Tests;
@@ -121,3 +121,4 @@ public sealed class ModbusTcpClientTests
         public override void SetLength(long value) => throw new NotSupportedException();
     }
 }
+
