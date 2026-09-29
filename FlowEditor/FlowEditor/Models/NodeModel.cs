@@ -11,7 +11,7 @@ namespace FlowEditor.Nodes;
 /// 每个节点提供名称、执行状态、标准流端口和可扩展属性/端口能力。
 /// 支持自定义端口动态增删、底部按钮自动扫描、权限控制。
 /// </summary>
-public abstract partial class NodeModel : ObservableObject, IFlowValidationNode, INodeFaultPolicy, IExecutionScopeRuntimeAware
+public abstract partial class NodeModel : ObservableObject, IFlowValidationNode, INodeFaultPolicy, IExecutionScopeRuntimeAware, INodeContextExecutable
 {
     /// <summary>初始化节点名称并发现声明式节点动作。</summary>
     protected NodeModel()
@@ -266,6 +266,19 @@ public abstract partial class NodeModel : ObservableObject, IFlowValidationNode,
     /// 执行引擎会在之前调用 SyncInputValues()，之后调用 SyncOutputValues()。
     /// </summary>
     public abstract Task ExecuteAsync(CancellationToken ct);
+
+    /// <summary>
+    /// P0 新执行面：默认转调旧 <see cref="ExecuteAsync(CancellationToken)"/>，既有节点零改动兼容。
+    /// 新节点应重写此 overload，只从 <paramref name="ctx"/> 获取取消令牌、日志、变量与服务，
+    /// 不得直接访问全局 Container/Manager.Instance、Application.Current、Dispatcher 或窗口。
+    /// </summary>
+    public virtual Task ExecuteAsync(NodeExecutionContext ctx)
+    {
+        ArgumentNullException.ThrowIfNull(ctx);
+        return ExecuteAsync(ctx.CancellationToken);
+    }
+
+    Task INodeContextExecutable.ExecuteAsync(NodeExecutionContext ctx) => ExecuteAsync(ctx);
 
     // ── 激活边（P1 控制流语义）──
     // 节点在 ExecuteAsync 中调用 ActivateOutput 声明本次实际激活的输出端口，

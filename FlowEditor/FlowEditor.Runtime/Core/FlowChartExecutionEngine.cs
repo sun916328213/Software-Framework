@@ -232,10 +232,20 @@ public class FlowChartExecutionEngine
                 {
                     FillInputPorts(nodeVm, graph, journal);
                     nodeVm.SyncInputValues();
+                    // P0：每次尝试独立资源作用域；取消/失败后统一清理，避免泄漏。
+                    using var resourceScope = new NodeResourceScope();
+                    var effectiveCt = timeoutCts?.Token ?? ct;
+                    var ctx = new NodeExecutionContext(
+                        _logContext.RunId, null, nodeVm.Id, nodeVm.Name, effectiveCt,
+                        new CallbackNodeLogger(nodeLog));
                     // 节点执行作用域：由宿主日志 adapter 按当前节点路由。
                     using (_logContext.EnterNode(nodeVm.Name))
                     {
-                        await nodeVm.ExecuteAsync(timeoutCts?.Token ?? ct);
+                        // P0：优先新契约（Context），旧节点走兼容路径，零改动可运行。
+                        if (nodeVm is INodeContextExecutable contextNode)
+                            await contextNode.ExecuteAsync(ctx);
+                        else
+                            await nodeVm.ExecuteAsync(effectiveCt);
                     }
                     nodeVm.SyncOutputValues();
                     failure = null;
@@ -273,15 +283,20 @@ public class FlowChartExecutionEngine
             nodeVm.LastElapsedMs = (long)ElapsedMs(startTimestamp);
             nodeVm.Status = NodeStatus.Error;
             journal?.RecordNodeFinish(nodeVm.Id, nodeVm.Name, NodeStatus.Error, nodeVm.LastElapsedMs);
+            // P0：不解析异常字符串，按稳定 ErrorCode/Category 表达失败类型。
+            var normalized = FlowNodeException.FromUnknown(failure, nodeVm.Id);
             var prefix = failure is FlowChartTypeMismatchException ? "[类型错误]" : "[错误]";
+            var failureLabel = normalized.Category == NodeErrorCategory.Unknown
+                ? failure.Message
+                : $"[{normalized.ErrorCode}/{normalized.Category}] {failure.Message}";
 
             switch (errorPolicy)
             {
                 case NodeErrorPolicy.RouteToErrorPort:
-                    var errPortId = TryRouteToErrorPort(nodeVm, graph, failure.Message);
+                    var errPortId = TryRouteToErrorPort(nodeVm, graph, failureLabel);
                     if (errPortId != null)
                     {
-                        log($"{prefix} {nodeVm.Name}: {failure.Message}");
+                        log($"{prefix} {nodeVm.Name}: {failureLabel}");
                         log($"[容错] [{nodeVm.Name}] 失败已路由至 Error 端口，仅沿 Error 连线继续");
                         return new NodeRunResult(new HashSet<string> { errPortId }, true, true);
                     }
@@ -289,12 +304,12 @@ public class FlowChartExecutionEngine
                     goto case NodeErrorPolicy.ContinueOnError;
 
                 case NodeErrorPolicy.ContinueOnError:
-                    nodeLog($"{prefix} {failure.Message}");
+                    nodeLog($"{prefix} {failureLabel}");
                     nodeLog("[容错] 策略为继续执行，下游将以上游遗留输入值继续调度");
                     return new NodeRunResult(null, true, true);
 
                 default: // FailFast
-                    nodeLog($"{prefix} {failure.Message}");
+                    nodeLog($"{prefix} {failureLabel}");
                     nodeLog($"[堆栈] {failure.StackTrace}");
                     throw failure;
             }
