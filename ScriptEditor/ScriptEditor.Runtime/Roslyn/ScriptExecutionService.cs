@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using RoslynPad.Roslyn;
+using ScriptEditor.Options;
 
 namespace ScriptEditor.Services;
 
@@ -51,6 +52,13 @@ public static class ScriptExecutionService
     /// 已编译脚本类型的追踪列表。脚本执行时自动注册 typeof(Script)，
     /// 重新编译前用于清理旧脚本的事件订阅和静态字段。
     /// </summary>
+    /// <remarks>
+    /// P5 长期运行评估：Roslyn 脚本程序集加载进默认 AssemblyLoadContext，
+    /// .NET（无 Thread.Abort / 不可卸载默认 ALC）下无法卸载，只能清理其静态字段与事件订阅
+    /// （<see cref="CleanupOldScript"/>）。如需硬隔离（死循环、内存回收、安全），
+    /// 应走独立 ScriptWorker 进程执行——<see cref="Contracts.IScriptRuntime"/>
+    /// 契约已为此保留边界（Controls 只依赖契约，不依赖本静态类）。
+    /// </remarks>
     public static readonly ConcurrentBag<Type> TrackedScriptTypes = new();
 
     /// <summary>调试模式下脚本源文件的临时目录。</summary>
@@ -185,10 +193,11 @@ public static class ScriptExecutionService
     /// <param name="getAdditionalReferences">获取额外元数据引用的委托。</param>
     /// <param name="enableDebug">是否启用调试模式（生成 PDB + 源文件映射）。</param>
     /// <param name="globalsType">globals 的静态类型（用于让脚本源码能引用 globals 变量）。</param>
+    /// <param name="implicitUsings">本次编译的隐式 using；null 时用进程默认选项（P5 任务隔离入口）。</param>
     /// <returns>编译就绪的脚本对象。</returns>
     public static Script<object> BuildScript(string code,
         RoslynHost host, Func<IReadOnlyList<MetadataReference>>? getAdditionalReferences,
-        bool enableDebug = false, Type? globalsType = null)
+        bool enableDebug = false, Type? globalsType = null, IEnumerable<string>? implicitUsings = null)
     {
         // 合并默认引用、框架程序集 + 宿主程序目录引用、用户额外引用
         IEnumerable<MetadataReference> allReferences = host.DefaultReferences;
@@ -203,8 +212,9 @@ public static class ScriptExecutionService
 
         var options = ScriptOptions.Default
             .AddReferences(allReferences)
-            // 默认导入 + 全局隐式 using（实时读取，注册先后与编译顺序无关）
-            .WithImports(host.DefaultImports.Concat(CustomRoslynHost.GlobalImports).Distinct());
+            // 默认导入 + 隐式 using（任务级传入优先，否则进程默认；注册先后与编译顺序无关）
+            .WithImports(host.DefaultImports.Concat(
+                implicitUsings ?? ScriptRuntimeOptions.Default.Snapshot()).Distinct());
 
         if (enableDebug)
         {
@@ -279,9 +289,10 @@ public static class ScriptExecutionService
     public static (Script<object> Script, bool HasResult) CompileAndCheck(
         string code, RoslynHost host,
         Func<IReadOnlyList<MetadataReference>>? getAdditionalReferences,
-        bool enableDebug = false)
+        bool enableDebug = false, IEnumerable<string>? implicitUsings = null)
     {
-        var script = BuildScript(code, host, getAdditionalReferences, enableDebug);
+        var script = BuildScript(code, host, getAdditionalReferences, enableDebug,
+            globalsType: null, implicitUsings: implicitUsings);
         var compilation = script.GetCompilation();
         bool hasResult = HasSubmissionResultMethod.Invoke(compilation, null) as bool? == true;
 
@@ -297,11 +308,11 @@ public static class ScriptExecutionService
     public static async Task<(Script<object> Script, bool HasResult, Diagnostic[] Diagnostics)> CompileAndCheckAsync(
         string code, RoslynHost host,
         Func<IReadOnlyList<MetadataReference>>? getAdditionalReferences,
-        bool enableDebug = false, Type? globalsType = null)
+        bool enableDebug = false, Type? globalsType = null, IEnumerable<string>? implicitUsings = null)
     {
         return await Task.Run(() =>
         {
-            var script = BuildScript(code, host, getAdditionalReferences, enableDebug, globalsType);
+            var script = BuildScript(code, host, getAdditionalReferences, enableDebug, globalsType, implicitUsings);
             var compilation = script.GetCompilation();
             bool hasResult = HasSubmissionResultMethod.Invoke(compilation, null) as bool? == true;
             var diags = script.Compile().ToArray();

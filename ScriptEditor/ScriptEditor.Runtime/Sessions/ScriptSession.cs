@@ -7,6 +7,7 @@ using RoslynPad.Roslyn;
 using ScriptEditor.Contracts;
 using ScriptEditor.Helpers;
 using ScriptEditor.Models;
+using ScriptEditor.Options;
 
 namespace ScriptEditor.Services;
 
@@ -163,6 +164,23 @@ public sealed class ScriptSession : ObservableObject, IScriptSession
 
     /// <summary>最近一次脚本执行的原始返回值（未格式化）。</summary>
     public object? LastResult { get; private set; }
+
+    private ScriptProjectContext? _projectContext;
+
+    /// <summary>
+    /// 所属任务上下文（P5）：编译时只读本任务的隐式 using，任务之间互不污染。
+    /// 设置后编译缓存失效一次，保证下次编译使用新集合。
+    /// </summary>
+    public ScriptProjectContext? ProjectContext
+    {
+        get => _projectContext;
+        set
+        {
+            _projectContext = value;
+            _lastSubmittedCode = null;
+            _lastCompiledScript = null;
+        }
+    }
 
     // ════════════════════════════════════════════════════════════════
     //  引用解析缓存（会话级，避免每次执行重复加载程序集）
@@ -381,11 +399,12 @@ public sealed class ScriptSession : ObservableObject, IScriptSession
 
                 var captureHost = host;
                 var captureGetRefs = GetReferences;
+                var captureUsings = ProjectContext?.ResolveUsings();
 
                 CompilationState = ScriptCompilationState.Compiling;
 
                 var (s, hr, diags) = await ScriptExecutionService.CompileAndCheckAsync(
-                    code, captureHost, captureGetRefs, hasBreakpoints, globalsType);
+                    code, captureHost, captureGetRefs, hasBreakpoints, globalsType, captureUsings);
                 var errors = diags.Where(d => d.Severity == DiagnosticSeverity.Error).ToList();
 
                 if (errors.Count > 0)
@@ -653,9 +672,10 @@ public sealed class ScriptSession : ObservableObject, IScriptSession
             var captureCode = invokeCode;
             var captureHost = host;
             var captureGetRefs = GetReferences;
+            var captureUsings = ProjectContext?.ResolveUsings();
 
             var (script, hasResult, diagnostics) = await ScriptExecutionService.CompileAndCheckAsync(
-                captureCode, captureHost, captureGetRefs, false, typeof(ScriptGlobals));
+                captureCode, captureHost, captureGetRefs, false, typeof(ScriptGlobals), captureUsings);
 
             if (!diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
             {
@@ -713,9 +733,10 @@ public sealed class ScriptSession : ObservableObject, IScriptSession
             var captureCode = invokeCode;
             var captureHost = host;
             var captureGetRefs = GetReferences;
+            var captureUsings = ProjectContext?.ResolveUsings();
 
             var (script, hasResult, diagnostics) = await ScriptExecutionService.CompileAndCheckAsync(
-                captureCode, captureHost, captureGetRefs, false, typeof(ScriptGlobals));
+                captureCode, captureHost, captureGetRefs, false, typeof(ScriptGlobals), captureUsings);
             if (!diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
             {
                 _lastSubmittedCode = captureCode;

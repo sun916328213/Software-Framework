@@ -77,4 +77,10 @@ public interface IScriptSession : INotifyPropertyChanged
 
     /// <summary>编辑器级状态消息写入状态栏。</summary>
     void SetStatus(string statusText);
+
+    /// <summary>
+    /// 所属任务上下文（P5）：本次编译使用的隐式 using 与引用基准目录。
+    /// null 时使用进程默认选项（与 P5 前行为一致）；设置后编译缓存失效一次。
+    /// </summary>
+    ScriptEditor.Options.ScriptProjectContext? ProjectContext { get; set; }
 }

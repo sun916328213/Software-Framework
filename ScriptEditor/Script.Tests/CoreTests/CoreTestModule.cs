@@ -16,6 +16,7 @@ public static class CoreTestModule
     {
         ScriptItemP2Tests.Register(runner);
         ScriptSessionP3Tests.Register(runner);
+        ScriptProjectStoreP5Tests.Register(runner);
         const string cat = "核心功能验证";
         const string perfCat = "性能测试";
 

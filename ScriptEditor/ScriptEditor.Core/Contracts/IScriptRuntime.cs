@@ -14,6 +14,9 @@ public sealed record ScriptExecutionResult(bool Success, string Output, string S
 /// 每个脚本数据对象对应一个会话，由运行时按需创建与释放。</para>
 /// <para>脚本数据对象（<c>ScriptItem</c>）不持有运行时或会话实例，
 /// 关联关系只存在于运行时内部。</para>
+/// <para>P5 长期演进：动态脚本程序集不可卸载（默认 ALC 常驻），
+/// 如需进程级隔离（死循环熔断、内存回收、安全沙箱），应新增独立
+/// ScriptWorker 进程并实现本契约——调用方只依赖本接口，无需重写。</para>
 /// </remarks>
 public interface IScriptRuntime
 {

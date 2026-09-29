@@ -1,10 +1,10 @@
-﻿using Extension.Core.Conversion;
-using Extension.Core.Collections;
+﻿using Extension.Core.Collections;
 using ScriptEditor.Contracts;
 using ScriptEditor.Models;
+using ScriptEditor.Options;
+using ScriptEditor.Persistence;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Text.Json;
 using System.Windows;
 using System.Windows.Threading;
 using WPFCustomControls.Window.Views;
@@ -48,6 +48,15 @@ namespace ScriptEditor.Services
 
         /// <summary>共享脚本运行时：按脚本提供运行会话（运行状态的唯一事实源）。</summary>
         private readonly IScriptRuntime _runtime;
+
+        /// <summary>
+        /// 当前任务的工程上下文（P5）：隐式 using 与引用基准目录按任务隔离。
+        /// 加载/保存/回填时重建或刷新，各脚本会话经它取编译用集合，不再写进程静态状态。
+        /// </summary>
+        private ScriptProjectContext _projectContext = new();
+
+        /// <summary>版本化任务工程存储（V2 写入 / V1→V2 迁移读取，无头可用）。</summary>
+        private readonly ScriptProjectStore _store = new();
 
         #endregion
 
@@ -290,34 +299,34 @@ namespace ScriptEditor.Services
         }
 
         /// <summary>
-        /// 将当前任务序列化并写入指定路径（序列化与磁盘 IO 均在后台线程执行，不阻塞 UI）。
+        /// 将当前任务序列化并写入指定路径（V2 版本化格式；序列化与磁盘 IO 均在后台线程执行，不阻塞 UI）。
         /// </summary>
         /// <param name="path">目标文件路径。</param>
         private async Task SaveToFileAsync(string path)
         {
             try
             {
-                var model = new TaskProjectModel
+                var project = new ScriptProject
                 {
                     Name = Model.TaskName,
-                    Scripts = _items.ToList(),
-                    References = _editorService.AdditionalReferencePaths.ToList()
+                    References = _editorService.AdditionalReferencePaths
+                        .Select(p => new ScriptReference(p, System.IO.Path.GetFileName(p)))
+                        .ToList(),
+                    Scripts = _items.Select(item => item.ToProjectItem()).ToList()
                 };
 
-                // 后台线程执行 JSON 序列化 + 写盘 + 镜像导出，避免大任务时冻结 UI
-                var json = await Task.Run(() => JsonEx.ToJson(model));
+                // 后台线程执行版本化序列化 + 写盘 + 镜像导出，避免大任务时冻结 UI
                 var itemsSnapshot = _items.ToList();
-                await Task.Run(() =>
+                await Task.Run(async () =>
                 {
-                    Extension.IO.Files.FileEx.Write(json, System.IO.Path.GetDirectoryName(path), System.IO.Path.GetFileName(path));
+                    await _store.SaveAsync(path, project).ConfigureAwait(false);
 
-                    // 同步导出各脚本为独立 .cs（供 VSCode 查看/编辑）
+                    // 同步导出各脚本为独立 .cs + 镜像清单（供 VSCode 查看/编辑）
                     try { ExportScriptsCore(itemsSnapshot, path); } catch { /* 镜像导出失败不阻断保存 */ }
-                });
+                }).ConfigureAwait(false);
 
-                // 自动引入：保存时把最新脚本代码的 using 收敛为全局隐式 using（操作 RoslynHost 静态状态，保持 UI 线程）
-                foreach (var item in _items)
-                    CustomRoslynHost.AddGlobalImportsFromSource(item.Code ?? string.Empty);
+                // 任务级收敛：把最新脚本代码的 using 记入本任务上下文（不写进程静态状态）
+                RefreshProjectContext(path, itemsSnapshot);
 
                 Model.StatusText = $"保存成功：{path}";
             }
@@ -325,6 +334,24 @@ namespace ScriptEditor.Services
             {
                 new MessagePrompt("错误", $"保存任务失败:\n{ex.Message}", Visibility.Collapsed).ShowDialog();
                 Model.StatusText = "保存失败";
+            }
+        }
+
+        /// <summary>重建本任务工程上下文并关联各脚本会话（任务之间隐式 using 互不污染）。</summary>
+        private void RefreshProjectContext(string taskprojPath, IReadOnlyList<ScriptItem> items)
+        {
+            var context = new ScriptProjectContext
+            {
+                Name = Model.TaskName,
+                BaseDirectory = System.IO.Path.GetDirectoryName(taskprojPath)
+            };
+            context.AddSources(items.Select(item => item.Code));
+            _projectContext = context;
+            foreach (var item in items)
+            {
+                var session = _runtime.GetSession(item);
+                if (session is IScriptSession contract)
+                    contract.ProjectContext = context;
             }
         }
 
@@ -369,15 +396,11 @@ namespace ScriptEditor.Services
             Exception? loadError = null;
             try
             {
-                // ---- 后台 I/O：读取文件 + JSON 解析 ----
+                // ---- 后台 I/O：版本化存储读取（V2 直读 / V1 迁移），相对引用相对工程目录解析 ----
                 Model.StatusText = "正在解析任务文件...";
-                var model = await Task.Run(() =>
-                {
-                    var json = System.IO.File.ReadAllText(path);
-                    return JsonEx.FromJson<TaskProjectModel>(json);
-                });
+                var project = await Task.Run(() => _store.LoadAsync(path).GetAwaiter().GetResult());
 
-                if (model?.Scripts == null)
+                if (project?.Scripts == null)
                 {
                     new MessagePrompt("错误", "任务文件格式不正确或为空。", Visibility.Collapsed).ShowDialog();
                     Model.StatusText = "加载失败";
@@ -393,27 +416,24 @@ namespace ScriptEditor.Services
                 _items.Clear();
                 // 加载共享 DLL 引用：直接操作 Model 数据层，最后一次性刷新 UI
                 _editorService.ClearReferences();
-                if (model.References != null)
+                if (project.References != null)
                 {
-                    foreach (var refPath in model.References)
-                        _editorService.AddReference(refPath);
+                    foreach (var reference in project.References)
+                        _editorService.AddReference(reference.Path);
                 }
                 _editorService.LoadReferences();
- 
-                var total = model.Scripts.Count;
-                var tempItems = new List<ScriptItem>(total);
- 
-                for (int i = 0; i < total; i++)
-                {
-                    var script = model.Scripts[i];
 
+                var tempItems = new List<ScriptItem>(project.Scripts.Count);
+
+                foreach (var script in project.Scripts)
+                {
                     var item = new ScriptItem
                     {
                         ScriptId = script.ScriptId,
                         Title = script.Title,
                         Code = script.Code
                     };
-                    item.SetReferences(script.References ?? new List<string>());
+                    item.SetReferences(script.References?.Select(r => r.Path));
                     if (script.Breakpoints != null)
                     {
                         foreach (var line in script.Breakpoints)
@@ -424,17 +444,16 @@ namespace ScriptEditor.Services
 
                 // 批量替换集合内容：仅触发一次 Reset 通知
                 _items.ReplaceAll(tempItems);
- 
+
                 if (_items.Count > 0)
                     Model.SelectedItem = _items[0];
-                if (!string.IsNullOrEmpty(model.Name))
-                    Model.TaskName = model.Name;
+                if (!string.IsNullOrEmpty(project.Name))
+                    Model.TaskName = project.Name;
                 Model.CurrentFilePath = path;
 
-                // 自动引入：把本任务所有脚本的 using 收敛为全局隐式 using，
-                // 之后（含本次启动流程执行）所有脚本免写这些指令
-                foreach (var script in model.Scripts)
-                    CustomRoslynHost.AddGlobalImportsFromSource(script.Code);
+                // 任务级收敛：把本任务所有脚本的 using 记入本任务上下文，
+                // 之后（含本次启动流程执行）本任务脚本免写这些指令，不污染其它任务
+                RefreshProjectContext(path, _items.ToList());
 
                 // 纯加载：不在此处导出/回填脚本文件。
                 // 镜像导出与「文件夹较新则回填」的时序由调用方编排——
@@ -475,7 +494,8 @@ namespace ScriptEditor.Services
 
         /// <summary>
         /// 将全部脚本导出为独立 .cs 文件（NN_标题.cs，与 .taskproj 同目录），供 VSCode 打开编辑。
-        /// 覆盖写入（FileEx 自动将旧文件轮换为 .cs.bak）。
+        /// 覆盖写入（FileEx 自动将旧文件轮换为 .cs.bak）；同时写入镜像清单
+        /// （文件名 ↔ ScriptId + 内容哈希），回填时优先按标识匹配。
         /// </summary>
         public void ExportScriptsToFolder(string taskprojPath)
             => ExportScriptsCore(_items.ToList(), taskprojPath);
@@ -483,22 +503,60 @@ namespace ScriptEditor.Services
         /// <summary>导出核心实现（快照 + 无 UI 依赖，可安全在后台线程调用）。</summary>
         private static void ExportScriptsCore(IReadOnlyList<ScriptItem> items, string taskprojPath)
         {
+            var directory = GetScriptFolder(taskprojPath);
+            var manifest = new ScriptFileManifest();
             for (var i = 0; i < items.Count; i++)
             {
                 var item = items[i];
+                var fileName = ScriptFileName(item.Title, i);
                 Extension.IO.Files.FileEx.Write(
                     item.Code ?? string.Empty,
-                    GetScriptFolder(taskprojPath),
-                    ScriptFileName(item.Title, i));
+                    directory,
+                    fileName);
+                manifest.Files.Add(new ScriptFileManifestEntry
+                {
+                    FileName = fileName,
+                    ScriptId = item.ScriptId,
+                    ContentHash = ContentHash.Sha256Short(item.Code ?? string.Empty)
+                });
             }
+            try { manifest.Save(directory); } catch { /* 清单写入失败不阻断保存 */ }
         }
 
-        /// <summary>是否存在比 .taskproj 更新的脚本源文件（仅识别 NN_标题.cs 命名）。</summary>
+        /// <summary>是否存在比清单更新的脚本源文件（有清单按哈希比对，无清单回退时间戳兼容）。</summary>
         public bool FolderHasNewerSources(string taskprojPath)
         {
             var dir = GetScriptFolder(taskprojPath);
             if (!System.IO.Directory.Exists(dir)) return false;
 
+            var manifest = ScriptFileManifest.Load(dir);
+            if (manifest != null && manifest.Files.Count > 0)
+            {
+                var known = new HashSet<string>(
+                    manifest.Files.Select(e => e.FileName), StringComparer.OrdinalIgnoreCase);
+                foreach (var entry in manifest.Files)
+                {
+                    var file = System.IO.Path.Combine(dir, entry.FileName);
+                    if (!System.IO.File.Exists(file)) return true;
+                    try
+                    {
+                        var hash = ContentHash.Sha256Short(System.IO.File.ReadAllText(file));
+                        if (!string.Equals(hash, entry.ContentHash, StringComparison.Ordinal))
+                            return true;
+                    }
+                    catch { return true; }
+                }
+                // 清单外新增的脚本文件同样视为外部更新
+                foreach (var f in System.IO.Directory.GetFiles(dir, "*.cs"))
+                {
+                    var name = System.IO.Path.GetFileName(f);
+                    if (ScriptFileRegex.IsMatch(name) && !known.Contains(name))
+                        return true;
+                }
+                return false;
+            }
+
+            // 旧任务（无清单）：回退时间戳比对
             var projTime = System.IO.File.GetLastWriteTime(taskprojPath);
             foreach (var f in System.IO.Directory.GetFiles(dir, "*.cs"))
             {
@@ -509,11 +567,15 @@ namespace ScriptEditor.Services
             return false;
         }
 
-        /// <summary>按文件名顺序回填脚本代码（仅识别 NN_标题.cs）；返回更新条数。</summary>
+        /// <summary>回填脚本代码（有清单按 ScriptId 匹配，无清单按文件名顺序兼容）；返回更新条数。</summary>
         public int ImportScriptsFromFolder(string taskprojPath)
         {
             var dir = GetScriptFolder(taskprojPath);
             if (!System.IO.Directory.Exists(dir)) return 0;
+
+            var manifest = ScriptFileManifest.Load(dir);
+            if (manifest != null && manifest.Files.Count > 0)
+                return ImportByManifest(dir, manifest);
 
             var files = System.IO.Directory.GetFiles(dir, "*.cs")
                 .Where(f => ScriptFileRegex.IsMatch(System.IO.Path.GetFileName(f)))
@@ -524,23 +586,59 @@ namespace ScriptEditor.Services
             for (var i = 0; i < files.Count && i < _items.Count; i++)
             {
                 _items[i].Code = System.IO.File.ReadAllText(files[i]);
-                // 自动引入：回填的文件夹源码是最新事实源，其 using 一并收敛
-                CustomRoslynHost.AddGlobalImportsFromSource(_items[i].Code);
                 count++;
             }
+            if (count > 0)
+                _projectContext.AddSources(_items.Select(item => item.Code));
+            return count;
+        }
+
+        /// <summary>按清单回填：文件名 → ScriptId → 脚本项（改名/重排后仍能对上）；同步刷新清单哈希。</summary>
+        private int ImportByManifest(string directory, ScriptFileManifest manifest)
+        {
+            var byId = _items.ToDictionary(item => item.ScriptId);
+            var count = 0;
+            foreach (var entry in manifest.Files)
+            {
+                if (entry.ScriptId == Guid.Empty || !byId.TryGetValue(entry.ScriptId, out var item))
+                    continue;
+                var file = System.IO.Path.Combine(directory, entry.FileName);
+                if (!System.IO.File.Exists(file)) continue;
+                string code;
+                try { code = System.IO.File.ReadAllText(file); }
+                catch { continue; }
+                if (!string.Equals(item.Code ?? string.Empty, code, StringComparison.Ordinal))
+                {
+                    item.Code = code;
+                    count++;
+                }
+                entry.ContentHash = ContentHash.Sha256Short(code);
+            }
+            if (count > 0)
+                _projectContext.AddSources(_items.Select(item => item.Code));
+            try { manifest.Save(directory); } catch { /* 清单刷新失败不阻断回填 */ }
             return count;
         }
 
         /// <summary>
-        /// 从 .cs.bak 备份恢复全部脚本代码（按 NN_标题.cs.bak 一一对应）；返回恢复条数。
+        /// 从 .cs.bak 备份恢复全部脚本代码（有清单按清单文件名，无清单按序号命名兼容）；返回恢复条数。
         /// </summary>
         public int RestoreAllFromBackup(string taskprojPath)
         {
             var dir = GetScriptFolder(taskprojPath);
+            var manifest = ScriptFileManifest.Load(dir);
+            var fileNameById = manifest?.Files
+                .Where(e => e.ScriptId != Guid.Empty && !string.IsNullOrWhiteSpace(e.FileName))
+                .GroupBy(e => e.ScriptId)
+                .ToDictionary(g => g.Key, g => g.First().FileName);
             var count = 0;
             for (var i = 0; i < _items.Count; i++)
             {
-                var bak = System.IO.Path.Combine(dir, ScriptFileName(_items[i].Title, i) + ".bak");
+                string bak;
+                if (fileNameById != null && fileNameById.TryGetValue(_items[i].ScriptId, out var mapped))
+                    bak = System.IO.Path.Combine(dir, mapped + ".bak");
+                else
+                    bak = System.IO.Path.Combine(dir, ScriptFileName(_items[i].Title, i) + ".bak");
                 if (!System.IO.File.Exists(bak)) continue;
                 _items[i].Code = System.IO.File.ReadAllText(bak);
                 count++;
