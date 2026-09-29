@@ -1,19 +1,22 @@
 using System.IO;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using ScriptEditor.Persistence;
 
 namespace ScriptEditor.Services;
 
 /// <summary>
-/// 文件操作服务，封装文件对话框和基础读写操作。
+/// 文件操作服务：文件对话框（WPF，保留在 Controls）+ 磁盘读写（委托 Runtime/Persistence）。
 /// </summary>
 /// <remarks>
-/// <para>封装 Win32 文件对话框和同步/异步文件 IO 操作。</para>
+/// <para>P4 边界：对话框属于 Controls；真正的读写由 <see cref="ScriptFileStore"/>
+///（Runtime/Persistence，无头可测）执行。</para>
 /// <para>当前由外部消费者（如 WpfApp1 的 ScriptManager）使用，ScriptEditor 控件本身不依赖此服务。</para>
 /// </remarks>
 /// <author>ScriptEditor Team</author>
-/// <version>1.0</version>
+/// <version>1.1</version>
 public class FileService
 {
+    private readonly ScriptFileStore _store = new();
     /// <summary>打开文件选择对话框。</summary>
     /// <param name="filter">文件类型过滤器，如 "C# 文件 (*.cs)|*.cs"。</param>
     /// <param name="initialDirectory">初始目录路径，可为 null。</param>
@@ -52,17 +55,17 @@ public class FileService
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
-    /// <summary>同步读取文件全部文本。</summary>
-    public string ReadAllText(string path) => File.ReadAllText(path);
+    /// <summary>同步读取文件全部文本（委托 Runtime/Persistence）。</summary>
+    public string ReadAllText(string path) => _store.ReadAllText(path);
 
-    /// <summary>同步写入文件全部文本。</summary>
-    public void WriteAllText(string path, string content) => File.WriteAllText(path, content);
+    /// <summary>同步写入文件全部文本（委托 Runtime/Persistence）。</summary>
+    public void WriteAllText(string path, string content) => _store.WriteAllText(path, content);
 
-    /// <summary>异步读取文件全部文本。</summary>
+    /// <summary>异步读取文件全部文本（委托 Runtime/Persistence）。</summary>
     public async Task<string> ReadAllTextAsync(string path)
-        => await File.ReadAllTextAsync(path).ConfigureAwait(false);
+        => await _store.ReadAllTextAsync(path).ConfigureAwait(false);
 
-    /// <summary>异步写入文件全部文本。</summary>
+    /// <summary>异步写入文件全部文本（委托 Runtime/Persistence）。</summary>
     public async Task WriteAllTextAsync(string path, string content)
-        => await File.WriteAllTextAsync(path, content).ConfigureAwait(false);
+        => await _store.WriteAllTextAsync(path, content).ConfigureAwait(false);
 }

@@ -482,6 +482,26 @@ public partial class ScriptEditorService : ObservableObject
         catch (InvalidOperationException) { }
     }
 
+    /// <summary>
+    /// 带 UI 提示的重命名流程（Controls 层对话框，P4）。
+    /// ViewModel 只调用此方法，不再直接引用 InputBox/Dispatcher。
+    /// </summary>
+    public async Task RenameSymbolWithPromptAsync()
+    {
+        if (!IsInitialized) return;
+
+        var symbolName = await GetCurrentSymbolNameAsync();
+        if (string.IsNullOrEmpty(symbolName))
+        {
+            _model.StatusText = "未找到可重命名的符号";
+            return;
+        }
+
+        var newName = await Dialogs.SymbolRenameDialog.PromptAsync(null, symbolName);
+        if (!string.IsNullOrEmpty(newName))
+            await RenameSymbolAsync(newName);
+    }
+
     private async Task<ISymbol?> ResolveSymbolAtCaretAsync()
     {
         if (!IsInitialized || _host == null || _documentId == null || _editor == null) return null;

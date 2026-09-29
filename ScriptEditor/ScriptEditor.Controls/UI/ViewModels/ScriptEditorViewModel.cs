@@ -440,24 +440,10 @@ public class ScriptEditorViewModel : ObservableObject, IDisposable
 
     #region 编辑器操作
 
-    /// <summary>重命名光标处的符号。</summary>
+    /// <summary>重命名光标处的符号（对话框与重命名逻辑由 Service 承担，VM 只暴露命令）。</summary>
     private async Task RenameSymbolAsync()
     {
-        if (!_editorService.IsInitialized) return;
-
-        var symbolName = await _editorService.GetCurrentSymbolNameAsync();
-        if (string.IsNullOrEmpty(symbolName))
-        {
-            _editorService.Model.StatusText = "未找到可重命名的符号";
-            return;
-        }
-
-        var newName = await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-            Microsoft.VisualBasic.Interaction.InputBox(
-                "请输入新名称:", "重命名符号", symbolName, -1, -1));
-
-        if (!string.IsNullOrEmpty(newName) && newName != symbolName)
-            await _editorService.RenameSymbolAsync(newName);
+        await _editorService.RenameSymbolWithPromptAsync();
     }
 
     #endregion
