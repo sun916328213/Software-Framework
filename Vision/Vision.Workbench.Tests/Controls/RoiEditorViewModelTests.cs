@@ -1,13 +1,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // P8 测试 —— RoiEditorViewModel（增删改 + 跟随 Fixture，纯逻辑）.
+// 原先住在 Vision.Tests；按分层规则「UI 层测试独占 WPF」迁到本工程。
 // ─────────────────────────────────────────────────────────────────────────────
 
 using Vision.Controls.ViewModels;
 using Vision.Core.Geometry;
 using Vision.Core.Roi;
-using Xunit;
 
-namespace Vision.Tests.Controls;
+namespace Vision.Workbench.Tests.Controls;
 
 /// <summary>ROI 编辑器 VM 测试。</summary>
 [Trait("Category", "Unit")]

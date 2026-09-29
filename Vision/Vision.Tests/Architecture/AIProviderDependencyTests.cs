@@ -41,7 +41,7 @@ public sealed class AIProviderDependencyTests
     {
         foreach (var project in ProviderProjects)
         {
-            var csproj = Path.Combine(VisionDirectory, project, project + ".csproj");
+            var csproj = VisionLayout.ProjectFile(VisionDirectory, project);
             Assert.True(File.Exists(csproj), $"工程不存在：{csproj}");
             var text = Regex.Replace(File.ReadAllText(csproj), "<!--.*?-->", " ", RegexOptions.Singleline);
 
@@ -79,7 +79,7 @@ public sealed class AIProviderDependencyTests
         var total = 0;
         foreach (var project in ProviderProjects)
         {
-            var files = EnumerateSourceFiles(Path.Combine(VisionDirectory, project)).ToArray();
+            var files = EnumerateSourceFiles(VisionLayout.ProjectDirectory(VisionDirectory, project)).ToArray();
             total += files.Length;
             var siblings = ProviderProjects
                 .Where(p => p != project)

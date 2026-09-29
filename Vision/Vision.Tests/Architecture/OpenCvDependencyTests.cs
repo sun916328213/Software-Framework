@@ -1,6 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // P4 验收守卫 —— 依赖方向（计划 §P4 / §13 检查表）：
-//   ① 旧 DPLibrary_Halcon_F48 不再直接引用 OpenCvSharp（附录 A 的混合依赖清理完毕）；
+//   ① 旧 DPLibrary_Halcon_F48 不再直接引用 OpenCvSharp —— **已随迁移源删除而作废**
+//      （2026-09-29 P9 收口；「迁移源已退场」由 RetirementAuditTests /
+//      SolutionStructureTests 守卫，此处不再重复断言不存在的工程）。
 //   ② Vision.Tools.OpenCv 可独立部署：只认 Vision.Core + OpenCvSharp，
 //      不碰 HALCON（HalconDotNet / MVTec）与迁移源。
 //
@@ -22,53 +24,12 @@ public sealed class OpenCvDependencyTests
     /// <summary>Vision.Tools.OpenCv 源码文件数下限（当前 ~8），扫描失效判据。</summary>
     private const int MinimumOpenCvSourceFiles = 6;
 
-    /// <summary>迁移源源码文件数下限，扫描失效判据。</summary>
-    private const int MinimumLegacySourceFiles = 20;
-
-    // ── 1. 迁移源不再直接引用 OpenCvSharp ────────────────────────────
-
-    [Fact]
-    public void LegacyHalconProject_HasNoDirectOpenCvSharpReference()
-    {
-        var csproj = Path.Combine(VisionDirectory, "DPLibrary_Halcon_F48", "DPLibrary_Halcon_F48.csproj");
-        Assert.True(File.Exists(csproj), $"迁移源工程不存在：{csproj}");
-
-        // ⛔ 先剥 XML 注释：文件头注释明确记录了 P4 清理历史，不剥会假红。
-        var text = Regex.Replace(File.ReadAllText(csproj), "<!--.*?-->", " ", RegexOptions.Singleline);
-
-        var packages = Regex
-            .Matches(text, "<PackageReference\\s+Include=\"(?<name>[^\"]+)\"")
-            .Select(m => m.Groups["name"].Value)
-            .ToArray();
-        Assert.True(packages.Length > 0, "一个包都没解析到，正则疑似失效。");
-        Assert.DoesNotContain(packages, name => name.StartsWith("OpenCvSharp", StringComparison.OrdinalIgnoreCase));
-
-        var refs = Regex
-            .Matches(text, "<ProjectReference\\s+Include=\"(?<path>[^\"]+)\"")
-            .Select(m => m.Groups["path"].Value)
-            .ToArray();
-        Assert.DoesNotContain(refs, path => path.Contains("Vision.Tools.OpenCv", StringComparison.OrdinalIgnoreCase));
-    }
-
-    [Fact]
-    public void LegacyHalconSources_ContainNoOpenCvSharpToken()
-    {
-        var files = EnumerateSourceFiles(Path.Combine(VisionDirectory, "DPLibrary_Halcon_F48")).ToArray();
-        Assert.True(files.Length >= MinimumLegacySourceFiles, $"只扫到 {files.Length} 个 .cs，扫描疑似失效。");
-
-        var offenders = files
-            .Where(file => StripComments(File.ReadAllText(file)).Contains("OpenCvSharp", StringComparison.Ordinal))
-            .Select(file => Path.GetRelativePath(VisionDirectory, file).Replace('\\', '/'))
-            .ToArray();
-        Assert.Empty(offenders);
-    }
-
-    // ── 2. OpenCV 后端独立：只认 Core + OpenCvSharp ───────────────────
+    // ── 1. OpenCV 后端独立：只认 Core + OpenCvSharp ───────────────────
 
     [Fact]
     public void OpenCvProject_ReferencesOnlyCore_AndOpenCvSharp()
     {
-        var csproj = Path.Combine(VisionDirectory, "Vision.Tools.OpenCv", "Vision.Tools.OpenCv.csproj");
+        var csproj = VisionLayout.ProjectFile(VisionDirectory, "Vision.Tools.OpenCv");
         Assert.True(File.Exists(csproj), $"OpenCV 后端工程不存在：{csproj}");
         var text = Regex.Replace(File.ReadAllText(csproj), "<!--.*?-->", " ", RegexOptions.Singleline);
 
@@ -93,7 +54,8 @@ public sealed class OpenCvDependencyTests
     [Fact]
     public void OpenCvSources_ContainNoHalconOrLegacyTokens()
     {
-        var files = EnumerateSourceFiles(Path.Combine(VisionDirectory, "Vision.Tools.OpenCv")).ToArray();
+        var files = EnumerateSourceFiles(
+            VisionLayout.ProjectDirectory(VisionDirectory, "Vision.Tools.OpenCv")).ToArray();
         Assert.True(files.Length >= MinimumOpenCvSourceFiles, $"只扫到 {files.Length} 个 .cs，扫描疑似失效。");
 
         string[] forbidden = ["HalconDotNet", "MVTec", "DPLibrary_Halcon", "HObject", "HTuple"];

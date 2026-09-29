@@ -1,14 +1,15 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // P8 测试 —— ToolCardViewModel（计划 §P8「关键 ViewModel 逻辑测试」）。
 // 全程无 UI 线程：OpenCV 真实执行（合成图）、HALCON/AI 走无 Runtime 路径.
+// 原先住在 Vision.Tests；按分层规则「UI 层测试独占 WPF」迁到本工程，
+// 合成图工厂与 fake Provider 由 csproj 链接编译复用（见工程文件注释）。
 // ─────────────────────────────────────────────────────────────────────────────
 
 using Vision.Controls.ViewModels;
 using Vision.Tests.Tools;
 using Vision.Tests.Tools.AI;
-using Xunit;
 
-namespace Vision.Tests.Controls;
+namespace Vision.Workbench.Tests.Controls;
 
 /// <summary>Tool 卡片 VM 测试。</summary>
 [Trait("Category", "Unit")]

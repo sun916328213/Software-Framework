@@ -19,7 +19,7 @@ namespace Vision.Tests.Architecture
     /// 生产工程反向引用测试工程，全都编译得过）。只有断言才能拦住。
     ///
     /// 约定（与 <c>WPFControl.Tests/ArchitectureDependencyTests</c>、
-    /// <c>Vision.Tests/Invi/InviRetirementTests</c> 一致）：已知集合写进断言里的字面量清单，
+    /// <c>Vision.Tests/Architecture/RetirementAuditTests</c> 一致）：已知集合写进断言里的字面量清单，
     /// 断言「实际集合 == 登记集合」。骨架新增/退场 ⇒ 测试红，提醒**同步更新登记清单**。
     ///
     /// ⛔ 扫描口径的两条纪律：
@@ -34,89 +34,90 @@ namespace Vision.Tests.Architecture
         /// <summary>
         /// P1 交付的目标骨架 —— <c>Vision/</c> 下的工程集合（按目录名 / sln 登记名）。
         ///
-        /// P9 更新：Legacy 的 <c>Vision</c> 工程已按计划 §P9 退场（sln 除名 + 目录删除）；
-        /// <c>DPLibrary_Halcon_F48</c> 保留——Vision 模块外仍有消费者（见冻结清单），
-        /// 其迁移完成后由各消费方工程自行摘除引用（非本 Vision 阶段范围）。
+        /// 2026-09-29 起改为从 <see cref="VisionLayout"/> 取，本文件不再自持一份清单：
+        /// 分层分组（<c>Tools/</c>、<c>AI/</c>）后「工程名 → 目录」是嵌套的，
+        /// 再在守卫里各写一遍路径只会制造第二份真源。
         /// </summary>
-        private static readonly string[] ExpectedVisionProjects =
-        [
-            "Vision.Core",            // ← DPLibrary_Base_F48（P1 改名）
-            "Vision.Tools.Halcon",    // ← P1 新建空壳
-            "Vision.Tools.OpenCv",    // ← P1 新建空壳
-            "Vision.Tools.AI",        // ← P1 新建空壳
-            "Vision.AI.Halcon",       // ← P1 新建空壳
-            "Vision.AI.Aiditron",     // ← P1 新建空壳
-            "Vision.AI.Invi",         // ← P1 新建空壳
-            "Vision.Controls",        // ← Ctr_WPF_F48（P1 改名 Vision.Controls.Wpf；P2 按 v1.2 §4 再收口为 Vision.Controls）
-            "Vision.Workbench",       // ← VisionDemo（P1 改名）
-            "Vision.Tests",           // 保留
-            "DPLibrary_Halcon_F48",   // 迁移源（P9 仍保留：外部消费者未迁完）
-        ];
-
-        /// <summary>旧项目：只允许作为迁移来源，不得被新目标工程引用（计划 §P1 / §13 检查表；P9 剩 DPLibrary 一项）。</summary>
-        private static readonly string[] LegacyProjects =
-        [
-            "DPLibrary_Halcon_F48",
-        ];
+        private static string[] ExpectedVisionProjects => VisionLayout.ProjectNames;
 
         /// <summary>
-        /// P1 的**新目标工程**（新建的 6 个空壳 + 新公共层 Core）。
-        /// ⛔ 刻意不含 <c>Vision.Controls</c> / <c>Vision.Workbench</c> ——
-        /// 它们是被改名的既有工程，本来就带着指向迁移源的历史引用（见
-        /// <see cref="MigrationSource_ConsumerSetIsFrozen"/> 的冻结清单），
-        /// 那不是 P1 引入的越界。
+        /// P9 退役清单：这些工程**必须保持不存在**（目录、csproj、sln 登记、全仓引用四者皆无）。
+        /// 只作为历史名字登记在这里 —— 谁把它们引回来，<see cref="RetiredProjects_AreGoneFromSolutionDiskAndReferences"/> 就红。
         /// </summary>
-        private static readonly string[] NewTargetProjects =
+        private static readonly string[] RetiredProjects =
         [
-            "Vision.Core",
-            "Vision.Tools.Halcon",
-            "Vision.Tools.OpenCv",
-            "Vision.Tools.AI",
-            "Vision.AI.Halcon",
-            "Vision.AI.Aiditron",
-            "Vision.AI.Invi",
+            "DPLibrary_Halcon_F48",   // 迁移源（2026-09-29：目录与 csproj 已删除，sln 除名）
         ];
 
-        /// <summary>
-        /// 迁移源 <c>DPLibrary_Halcon_F48</c> 的消费者清单 —— **冻结**。
-        /// 新增一个消费者 ⇒ 红（「只作为迁移源」的边界被突破）；
-        /// 迁走一个 ⇒ 红（提醒同步删登记条目，清单不腐烂）。
-        /// </summary>
-        private static readonly string[] MigrationSourceConsumers =
-        [
-            "FlowNodes/FlowNodes/FlowNodes.csproj",
-            "Packing Machine/Packing Machine/Packing Machine.csproj",
-            "Vision/Vision.Controls/Vision.Controls.csproj",
-            "Vision/Vision.Tests/Vision.Tests.csproj",
-            "WPFControl/WPFControl/WPFControl.csproj",
-        ];
-
-        /// <summary>P1 骨架的最小规模，用作「扫描没失效」的下限（P9：12-1 退场 = 11）。</summary>
+        /// <summary>P1 骨架的最小规模，用作「扫描没失效」的下限（P9：12 - 迁移源 1 = 11）。</summary>
         private const int MinimumVisionProjects = 11;
 
         // ─────────────────────────────────────────────────────────────────────
-        // 1. Vision/ 目录下的工程集合 == P1 目标骨架
+        // 1. Vision/ 下的工程集合与物理位置 == 登记的骨架布局
         // ─────────────────────────────────────────────────────────────────────
 
         [Fact]
-        public void VisionDirectory_Projects_MatchExpectedSkeleton()
+        public void VisionProjects_MatchRegisteredLayout()
         {
-            var actual = Directory
-                .EnumerateDirectories(VisionDirectory)
-                .Where(dir => File.Exists(Path.Combine(dir, Path.GetFileName(dir) + ".csproj")))
-                .Select(dir => Path.GetFileName(dir))
-                .OrderBy(name => name, StringComparer.Ordinal)
+            // ① 登记清单自洽：每个工程都能在登记的目录里找到同名 csproj。
+            //    这条把「VisionLayout 写错目录名」的红信息从下面那条的集合差异里摘出来，
+            //    直接指向具体是哪个工程放错了地方。
+            foreach (var (name, directory) in VisionLayout.Projects)
+            {
+                var csproj = VisionLayout.ProjectFile(VisionDirectory, name);
+                Assert.True(
+                    File.Exists(csproj),
+                    $"登记了 {name} → {directory}/，但 {csproj} 不存在。");
+            }
+
+            // ② 磁盘实际布局 == 登记布局：多一个工程、少一个工程、放进错的组目录，三者皆红。
+            var actual = EnumerateVisionProjectFiles(VisionDirectory)
+                .Select(file => $"{Path.GetFileNameWithoutExtension(file)} => "
+                                + Path.GetRelativePath(VisionDirectory, Path.GetDirectoryName(file)!)
+                                    .Replace('\\', '/'))
+                .OrderBy(entry => entry, StringComparer.Ordinal)
                 .ToArray();
 
-            // 防假绿：目录都找不到时，下面的 Equal 会因为「空集 vs 12 项」而红，
+            // 防假绿：目录都找不到时，下面的 Equal 会因为「空集 vs 11 项」而红，
             // 但那条红信息会指向「少登记」，不指向「路径写错」。这条断言把原因说清楚。
             Assert.True(
                 actual.Length >= MinimumVisionProjects,
-                $"Vision/ 下只扫到 {actual.Length} 个工程目录，少于下限 {MinimumVisionProjects} —— 扫描路径疑似失效。");
+                $"Vision/ 下只扫到 {actual.Length} 个工程，少于下限 {MinimumVisionProjects} —— 扫描路径疑似失效。");
 
-            Assert.Equal(
-                ExpectedVisionProjects.OrderBy(name => name, StringComparer.Ordinal).ToArray(),
-                actual);
+            var expected = VisionLayout.Projects
+                .Select(entry => $"{entry.Name} => {entry.Directory}")
+                .OrderBy(entry => entry, StringComparer.Ordinal)
+                .ToArray();
+
+            Assert.Equal(expected, actual);
+        }
+
+        /// <summary>递归遍历 <c>Vision/</c> 下的 csproj，跳过构建产物与 IDE 目录。</summary>
+        /// <param name="root">Vision 模块根目录。</param>
+        /// <returns>csproj 绝对路径序列。</returns>
+        private static IEnumerable<string> EnumerateVisionProjectFiles(string root)
+        {
+            var skipDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "obj", "bin", ".vs", ".git", ".workbuddy-ai",
+            };
+
+            var stack = new Stack<string>();
+            stack.Push(root);
+
+            while (stack.Count > 0)
+            {
+                var dir = stack.Pop();
+
+                foreach (var sub in Directory.GetDirectories(dir))
+                {
+                    if (!skipDirs.Contains(Path.GetFileName(sub)))
+                        stack.Push(sub);
+                }
+
+                foreach (var file in Directory.GetFiles(dir, "*.csproj"))
+                    yield return file;
+            }
         }
 
         // ─────────────────────────────────────────────────────────────────────
@@ -152,63 +153,52 @@ namespace Vision.Tests.Architecture
         }
 
         // ─────────────────────────────────────────────────────────────────────
-        // 3. 旧项目只作为迁移源
+        // 3. 迁移源已完全退场（P9 收口）
         // ─────────────────────────────────────────────────────────────────────
 
         /// <summary>
-        /// 迁移源必须还在，且消费者清单被冻结。
-        /// P9 更新：Legacy 的 <c>Vision</c> 工程已删除（本测试不再断言其存在）；
-        /// <c>DPLibrary_Halcon_F48</c> 因外部消费者保留，清单冻结继续有效。
+        /// P9 收口：迁移源 <c>DPLibrary_Halcon_F48</c>（与 Legacy 的 <c>Vision</c> 工程）已彻底退场 ——
+        /// 目录不存在、csproj 不存在、<c>Vision.sln</c> 未登记、全仓任何工程都不再引用它。
+        ///
+        /// 原先的「消费者清单冻结」随迁移源删除一并作废：冻结的对象已经不存在，
+        /// 继续钉冻结清单只会变成一条恒假的守卫。此处改为从**四**个维度证明它回不来。
         /// </summary>
         [Fact]
-        public void MigrationSource_ConsumerSetIsFrozen()
+        public void RetiredProjects_AreGoneFromSolutionDiskAndReferences()
         {
-            var migrationSource = Path.Combine(
-                VisionDirectory, "DPLibrary_Halcon_F48", "DPLibrary_Halcon_F48.csproj");
-            Assert.True(File.Exists(migrationSource), $"迁移源必须保留（计划 §P1）：{migrationSource}");
-
+            // ① Legacy 的 Vision 工程（计划 §P9 先行退场项）
             Assert.False(
                 Directory.Exists(Path.Combine(VisionDirectory, "Vision")),
                 "Legacy 的 Vision 目录按计划 §P9 应已删除。");
 
-            var actual = EnumerateProjectFiles(RepoRoot)
-                .Where(path => !string.Equals(
-                    Path.GetFullPath(path), Path.GetFullPath(migrationSource), StringComparison.OrdinalIgnoreCase))
-                .Where(path => ReferencesProject(path, migrationSource))
-                .Select(path => Path.GetRelativePath(RepoRoot, path).Replace('\\', '/'))
-                .OrderBy(path => path, StringComparer.Ordinal)
-                .ToArray();
+            // ② 退役清单：目录与 csproj 都不在
+            foreach (var retired in RetiredProjects)
+            {
+                var dir = Path.Combine(VisionDirectory, retired);
+                Assert.False(Directory.Exists(dir), $"{retired} 目录应已删除（P9 收口）。");
+                Assert.False(File.Exists(Path.Combine(dir, retired + ".csproj")), $"{retired}.csproj 应已删除（P9 收口）。");
+            }
 
-            Assert.Equal(
-                MigrationSourceConsumers.OrderBy(path => path, StringComparer.Ordinal).ToArray(),
-                actual);
-        }
+            // ③ Vision.sln 未登记（除名）
+            var solution = File.ReadAllText(VisionSolution);
+            foreach (var retired in RetiredProjects)
+                Assert.DoesNotContain($"\"{retired}\"", solution, StringComparison.Ordinal);
 
-        /// <summary>
-        /// 新建的目标工程不得引用任何旧项目（P9：旧项目只剩 DPLibrary 一项）。
-        /// </summary>
-        [Fact]
-        public void NewTargetProjects_DoNotReferenceLegacyProjects()
-        {
-            var legacyPaths = LegacyProjects
-                .Select(name => Path.Combine(VisionDirectory, name, name + ".csproj"))
-                .ToArray();
+            // ④ 全仓无任何工程引用（含 FlowNodes / Packing Machine / WPFControl 等模块外工程）
+            var projects = EnumerateProjectFiles(RepoRoot).ToArray();
+            Assert.True(projects.Length > 50, $"全仓只扫到 {projects.Length} 个 csproj，扫描疑似失效。");
 
             var offenders = new List<string>();
-
-            foreach (var project in EnumerateProjectFiles(RepoRoot))
+            foreach (var project in projects)
             {
                 var relative = Path.GetRelativePath(RepoRoot, project).Replace('\\', '/');
-                var projectName = Path.GetFileNameWithoutExtension(project);
-
-                foreach (var legacyPath in legacyPaths)
+                foreach (var reference in ReadProjectReferencePaths(project))
                 {
-                    if (!ReferencesProject(project, legacyPath))
-                        continue;
-
-                    // 新目标工程引旧项目 ⇒ 越界（计划 §P1 / §13）
-                    if (NewTargetProjects.Contains(projectName, StringComparer.Ordinal))
-                        offenders.Add($"{relative} -> {Path.GetFileName(legacyPath)}（新目标工程不得引用旧项目）");
+                    foreach (var retired in RetiredProjects)
+                    {
+                        if (reference.Contains(retired, StringComparison.OrdinalIgnoreCase))
+                            offenders.Add($"{relative} -> {reference}");
+                    }
                 }
             }
 
@@ -324,22 +314,6 @@ namespace Vision.Tests.Architecture
 
             return regex.Matches(File.ReadAllText(projectPath))
                 .Select(match => match.Groups["path"].Value);
-        }
-
-        /// <summary>判断某个 csproj 是否引用了目标工程（按绝对路径比较，避免相对路径写法差异）。</summary>
-        /// <param name="projectPath">被检查的 csproj。</param>
-        /// <param name="targetProjectPath">目标工程 csproj。</param>
-        /// <returns>引用时返回 true。</returns>
-        private static bool ReferencesProject(string projectPath, string targetProjectPath)
-        {
-            var directory = Path.GetDirectoryName(projectPath)!;
-            var target = Path.GetFullPath(targetProjectPath);
-
-            return ReadProjectReferencePaths(projectPath).Any(reference =>
-                string.Equals(
-                    Path.GetFullPath(Path.Combine(directory, reference)),
-                    target,
-                    StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>遍历仓库内的 csproj（跳过构建产物、IDE 目录与工具/备份目录）。</summary>

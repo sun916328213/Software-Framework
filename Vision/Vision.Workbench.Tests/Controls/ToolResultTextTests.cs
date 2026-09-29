@@ -1,13 +1,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // P8 测试 —— ToolResultText 摘要（已知类型按域语义，未知回退 ToString）.
+// 原先住在 Vision.Tests；按分层规则「UI 层测试独占 WPF」迁到本工程。
 // ─────────────────────────────────────────────────────────────────────────────
 
 using Vision.Controls.Presentation;
 using Vision.Core.AI;
 using Vision.Core.Geometry;
-using Xunit;
 
-namespace Vision.Tests.Controls;
+namespace Vision.Workbench.Tests.Controls;
 
 /// <summary>结果摘要测试。</summary>
 [Trait("Category", "Unit")]

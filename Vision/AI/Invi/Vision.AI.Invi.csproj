@@ -9,10 +9,10 @@
     <LangVersion>13.0</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Vision.Core\Vision.Core.csproj" />
+    <ProjectReference Include="..\..\Vision.Core\Vision.Core.csproj" />
     <!-- P6（2026-09-28）：业视 Provider。HalconDotNet 经 Extension 唯一入口（仓库硬规则 12）；
          DynamicDllLoaderEx 亦取自 Extension（native DLL 手动加载器）。 -->
-    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+    <ProjectReference Include="..\..\..\Extension\Extension\Extension.csproj" />
   </ItemGroup>
   <!-- P6：IInviNativeApi / InviHelper 是 internal 实现细节，只对 Vision.Tests 开放 fake 注入测试。 -->
   <ItemGroup>

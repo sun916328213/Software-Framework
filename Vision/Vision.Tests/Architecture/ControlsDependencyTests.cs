@@ -47,7 +47,7 @@ public sealed class ControlsDependencyTests
         var scanned = 0;
         foreach (var project in ToolLayerProjects)
         {
-            var csproj = Path.Combine(VisionDirectory, project, project + ".csproj");
+            var csproj = VisionLayout.ProjectFile(VisionDirectory, project);
             Assert.True(File.Exists(csproj), $"工程不存在：{csproj}");
             scanned++;
             var text = Regex.Replace(File.ReadAllText(csproj), "<!--.*?-->", " ", RegexOptions.Singleline);

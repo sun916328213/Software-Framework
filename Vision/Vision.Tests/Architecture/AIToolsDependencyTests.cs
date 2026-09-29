@@ -38,7 +38,7 @@ public sealed class AIToolsDependencyTests
     [Fact]
     public void ToolsAIProject_ReferencesOnlyCore_AndNoVendorPackages()
     {
-        var csproj = Path.Combine(VisionDirectory, "Vision.Tools.AI", "Vision.Tools.AI.csproj");
+        var csproj = VisionLayout.ProjectFile(VisionDirectory, "Vision.Tools.AI");
         Assert.True(File.Exists(csproj), $"统一 AI Tool 工程不存在：{csproj}");
         var text = Regex.Replace(File.ReadAllText(csproj), "<!--.*?-->", " ", RegexOptions.Singleline);
 
@@ -90,7 +90,8 @@ public sealed class AIToolsDependencyTests
     [Fact]
     public void ToolsAISources_ContainNoBrandOrSdkTokens()
     {
-        var files = EnumerateSourceFiles(Path.Combine(VisionDirectory, "Vision.Tools.AI")).ToArray();
+        var files = EnumerateSourceFiles(
+            VisionLayout.ProjectDirectory(VisionDirectory, "Vision.Tools.AI")).ToArray();
         Assert.True(files.Length >= MinimumToolsAISourceFiles, $"只扫到 {files.Length} 个 .cs，扫描疑似失效。");
 
         string[] forbidden = ["HalconDotNet", "MVTec", "OpenCvSharp", "Aiditron", "Vision.AI.", "AIBrand", "HObject", "HTuple"];

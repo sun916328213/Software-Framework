@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Platform>AnyCPU</Platform>
@@ -14,20 +14,20 @@
   <ItemGroup>
     <ProjectReference Include="..\Vision.Controls\Vision.Controls.csproj" />
     <!-- P3（2026-09-28）：Workbench 是新 Tool 的标准研发/验收入口（计划 §11）。
-         引用标准化后的 Vision.Tools.Halcon；旧 DPLibrary_Halcon_F48 的页签保持不动，
-         P9 退场前新旧并存。 -->
-    <ProjectReference Include="..\Vision.Tools.Halcon\Vision.Tools.Halcon.csproj" />
+         引用标准化后的 Vision.Tools.Halcon；旧 DPLibrary_Halcon_F48 页签已于
+         2026-09-29 随迁移源退场删除。 -->
+    <ProjectReference Include="..\Tools\Halcon\Vision.Tools.Halcon.csproj" />
     <!-- P4（2026-09-28）：OpenCV 正式后端同样注册进 Workbench（与 P3 HalconToolCatalog 对等），
          为 P9 的 HALCON vs OpenCV Compare 预留装配点。 -->
-    <ProjectReference Include="..\Vision.Tools.OpenCv\Vision.Tools.OpenCv.csproj" />
+    <ProjectReference Include="..\Tools\OpenCv\Vision.Tools.OpenCv.csproj" />
     <!-- P5（2026-09-28）：统一 AI Tool 层同样注册进 Workbench；Provider 由 P6 三家实现注入，
          P9 做 AI Provider 选择页。 -->
-    <ProjectReference Include="..\Vision.Tools.AI\Vision.Tools.AI.csproj" />
+    <ProjectReference Include="..\AI\Tools\Vision.Tools.AI.csproj" />
     <!-- P6（2026-09-28）：三家 AI Provider 注册进 Workbench；构造不碰 Runtime，
          选择页（P9）按名切换，加载/推理/释放经 IAIProvider 统一入口。 -->
-    <ProjectReference Include="..\Vision.AI.Halcon\Vision.AI.Halcon.csproj" />
-    <ProjectReference Include="..\Vision.AI.Aiditron\Vision.AI.Aiditron.csproj" />
-    <ProjectReference Include="..\Vision.AI.Invi\Vision.AI.Invi.csproj" />
+    <ProjectReference Include="..\AI\Halcon\Vision.AI.Halcon.csproj" />
+    <ProjectReference Include="..\AI\Aiditron\Vision.AI.Aiditron.csproj" />
+    <ProjectReference Include="..\AI\Invi\Vision.AI.Invi.csproj" />
   </ItemGroup>
 
   <ItemGroup>

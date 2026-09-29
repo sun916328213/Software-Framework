@@ -1,4 +1,3 @@
-﻿using DPLibrary_Halcon_F48.Tools.AI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

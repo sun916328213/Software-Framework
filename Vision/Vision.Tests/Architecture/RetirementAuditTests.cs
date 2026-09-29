@@ -2,8 +2,8 @@
 // P9 验收守卫 —— 退场审计（计划 §P9「完成 Vision.csproj 与旧 DPLibrary_*
 // 退场审计和删除」+ 验收「旧项目不再承载新代码」）：
 //   ① Legacy 的 Vision 工程已从 Vision.sln 除名且目录已删除；
-//   ② DPLibrary_Halcon_F48 因模块外消费者保留，但仍钉住「迁移来源、不得新增功能」
-//      标记（消费者集合冻结由 P1 MigrationSource_ConsumerSetIsFrozen 覆盖）。
+//   ② 迁移源 DPLibrary_Halcon_F48 已从 Vision.sln 除名且目录已删除
+//      （2026-09-29 收口：原先因模块外消费者保留，现消费者侧引用已全部摘除）。
 // ─────────────────────────────────────────────────────────────────────────────
 
 using Xunit;
@@ -26,15 +26,19 @@ public sealed class RetirementAuditTests
     }
 
     [Fact]
-    public void MigrationSource_RetainsNoNewCodeMarker()
+    public void MigrationSource_IsRemovedFromSolutionAndDisk()
     {
-        // DPLibrary 因 FlowNodes / Packing Machine / WPFControl 的引用而保留；
-        // 本断言钉住它的「只读迁移源」身份：标记注释还在 = 没人把它当新功能库改用途。
-        var csproj = Path.Combine(VisionDirectory, "DPLibrary_Halcon_F48", "DPLibrary_Halcon_F48.csproj");
-        Assert.True(File.Exists(csproj), $"迁移源工程不存在：{csproj}");
-        var text = File.ReadAllText(csproj);
-        Assert.Contains("不得再新增功能", text);
-        Assert.Contains("P9", text);
+        var sln = Path.Combine(VisionDirectory, "Vision.sln");
+        Assert.True(File.Exists(sln), $"解决方案不存在：{sln}");
+        var text = File.ReadAllText(sln);
+        Assert.DoesNotContain("\"DPLibrary_Halcon_F48\"", text);
+        Assert.False(
+            Directory.Exists(Path.Combine(VisionDirectory, "DPLibrary_Halcon_F48")),
+            "迁移源目录应已删除（P9 收口）。");
+        Assert.False(
+            File.Exists(Path.Combine(
+                VisionDirectory, "DPLibrary_Halcon_F48", "DPLibrary_Halcon_F48.csproj")),
+            "迁移源工程文件应已删除（P9 收口）。");
     }
 
     private static string VisionDirectory => Path.Combine(RepoRoot, "Vision");

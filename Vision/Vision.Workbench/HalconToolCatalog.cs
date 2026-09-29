@@ -4,7 +4,8 @@
 //
 // 本文件只做“可实例化 + 可 Validate”的注册（无 HALCON Runtime 也能跑），
 // 完整的 Tool Browser / 参数编辑 / Result Viewer 是 P9 的范围。
-// 旧 MainWindow 页签（绑定 DPLibrary_Halcon_F48 的 HTool_*）保持不动，新旧并存到 P9。
+// 旧 MainWindow 页签（绑定 DPLibrary_Halcon_F48 的 HTool_*）已于 2026-09-29 随
+// 迁移源退场删除（见 MainWindow.xaml），Tool Browser 现为主窗口唯一入口。
 // ─────────────────────────────────────────────────────────────────────────────
 
 using Vision.Tools.Halcon.Acquisition;

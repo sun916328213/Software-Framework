@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13.0</LangVersion>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- 宿主集成测试线：与无 WPF 的 Vision.Tests 隔离，独占 STA / Dispatcher / Application。
+         分层规则：Host / Workbench 是 WPF 宿主，其测试必须启用 WPF；
+         Vision.Tests 只跑 Core / Tools / AI 的纯逻辑。 -->
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 显式声明实际用到的工程，不靠传递依赖（与 Vision.Tests 同一口径）：
+         Controls 提供被迁入的 ViewModel/Presentation，Workbench 提供宿主装配入口，
+         Tools.* 提供 VM 测试里真实执行的算子实现。 -->
+    <ProjectReference Include="..\Vision.Core\Vision.Core.csproj" />
+    <ProjectReference Include="..\Vision.Controls\Vision.Controls.csproj" />
+    <ProjectReference Include="..\Vision.Workbench\Vision.Workbench.csproj" />
+    <ProjectReference Include="..\Tools\Halcon\Vision.Tools.Halcon.csproj" />
+    <ProjectReference Include="..\Tools\OpenCv\Vision.Tools.OpenCv.csproj" />
+    <ProjectReference Include="..\AI\Tools\Vision.Tools.AI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 共享测试夹具（合成图工厂 / fake AI Provider）仍由 Vision.Tests 拥有，
+         这里用**链接编译**复用而不是复制、也不做成测试工程互相引用 ——
+         两条测试线必须能各自独立构建，CI 分组才有意义。
+         ⛔ 因此这两个文件里的 namespace 仍是 Vision.Tests.Tools*：它们是链接进来的源代码，
+            不是 Vision.Tests 程序集的引用。 -->
+    <Compile Include="..\Vision.Tests\Tools\SyntheticImages.cs" Link="Shared\SyntheticImages.cs" />
+    <Compile Include="..\Vision.Tests\Tools\AI\Fakes.cs" Link="Shared\Fakes.cs" />
+  </ItemGroup>
+
+</Project>

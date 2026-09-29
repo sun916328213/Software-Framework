@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Platform>AnyCPU</Platform>
     <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
@@ -26,21 +26,22 @@
     <ProjectReference Include="..\Vision.Core\Vision.Core.csproj" />
     <!-- P3（2026-09-28）：HALCON Tool Contract Tests 引用标准化后的 Vision.Tools.Halcon。
          只测 Validate/Parameters/Result/纯 helper，无 HALCON Runtime 也能跑（计划 §9.1）。 -->
-    <ProjectReference Include="..\Vision.Tools.Halcon\Vision.Tools.Halcon.csproj" />
+    <ProjectReference Include="..\Tools\Halcon\Vision.Tools.Halcon.csproj" />
     <!-- P4（2026-09-28）：OpenCV Tool 首批能力 + HALCON/OpenCV 对比测试。
          OpenCvSharp4.runtime.win 随 Vision.Tools.OpenCv 传递，测试可真实执行 Cv2 算子。 -->
-    <ProjectReference Include="..\Vision.Tools.OpenCv\Vision.Tools.OpenCv.csproj" />
+    <ProjectReference Include="..\Tools\OpenCv\Vision.Tools.OpenCv.csproj" />
     <!-- P5（2026-09-28）：统一 AI Tool 层使用 fake Provider 完整测试，无真实 SDK 也能跑。 -->
-    <ProjectReference Include="..\Vision.Tools.AI\Vision.Tools.AI.csproj" />
+    <ProjectReference Include="..\AI\Tools\Vision.Tools.AI.csproj" />
     <!-- P6（2026-09-28）：三家 Provider 生命周期独立验证；Invi 用 fake native API，
          Aiditron/Halcon 走“无 SDK 时行为”断言，真实推理留 RequiresRuntime。 -->
-    <ProjectReference Include="..\Vision.AI.Invi\Vision.AI.Invi.csproj" />
-    <ProjectReference Include="..\Vision.AI.Aiditron\Vision.AI.Aiditron.csproj" />
-    <ProjectReference Include="..\Vision.AI.Halcon\Vision.AI.Halcon.csproj" />
-    <!-- P8（2026-09-28）：新控件 VM/展示逻辑测试（无 UI 线程依赖）+ Controls 反向引用守卫。 -->
-    <ProjectReference Include="..\Vision.Controls\Vision.Controls.csproj" />
-    <!-- P10（2026-09-29）：WorkbenchSmoke 装配测试（测试→生产引用，计划 §9 允许；
-         只碰 VM 装配与命令，不实例化任何可视化控件/窗口）。 -->
-    <ProjectReference Include="..\Vision.Workbench\Vision.Workbench.csproj" />
+    <ProjectReference Include="..\AI\Invi\Vision.AI.Invi.csproj" />
+    <ProjectReference Include="..\AI\Aiditron\Vision.AI.Aiditron.csproj" />
+    <ProjectReference Include="..\AI\Halcon\Vision.AI.Halcon.csproj" />
+    <!-- ⛔ 本工程是**纯逻辑测试线**：不得引用任何 WPF 工程（Vision.Controls / Vision.Workbench）。
+         2026-09-29 分层收口：原先挂在下面的 P8（Controls VM）与 P10（WorkbenchSmoke）测试
+         已迁到 Vision.Workbench.Tests（UseWPF + STA 宿主）；两者各自独占一种运行环境，
+         本工程保持无 UseWPF，可独立构建。
+         Controls 的**反向引用守卫**（ControlsDependencyTests）仍在 Architecture/ 下：
+         它只做文件/csproj 扫描，不需要引用被守卫的程序集。 -->
   </ItemGroup>
 </Project>

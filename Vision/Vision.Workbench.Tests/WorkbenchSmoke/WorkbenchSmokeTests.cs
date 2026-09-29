@@ -3,13 +3,11 @@
 // 「Workbench 成为所有新 Tool 的标准研发/验收入口」）。
 //
 // 只装配 VM（ToolBrowserViewModel），不实例化任何可视化控件/窗口，
-// 因此无 UI 线程依赖，在普通 CI 可跑：目录完整、条目可建卡、
-// Provider 列表可用、合成图→对比→Benchmark 全链路走通。
+// 因此无 UI 线程依赖。原先住在 Vision.Tests（无 WPF），
+// 按分层规则「宿主层测试独占 WPF」迁到本工程。
 // ─────────────────────────────────────────────────────────────────────────────
 
-using Xunit;
-
-namespace Vision.Tests.WorkbenchSmoke;
+namespace Vision.Workbench.Tests.WorkbenchSmoke;
 
 /// <summary>Workbench 装配冒烟测试。</summary>
 [Trait("Category", "Unit")]
