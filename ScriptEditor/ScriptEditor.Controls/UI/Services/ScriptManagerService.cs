@@ -62,11 +62,6 @@ namespace ScriptEditor.Services
 
         #region 构造函数
 
-        public ScriptManagerService(FileService fileService, ScriptEditorService editorService)
-            : this(fileService, editorService, RoslynScriptRuntime.Shared)
-        {
-        }
-
         public ScriptManagerService(FileService fileService, ScriptEditorService editorService, IScriptRuntime runtime)
         {
             _itemsReadOnly = new ReadOnlyObservableCollection<ScriptItem>(_items);

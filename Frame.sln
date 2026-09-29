@@ -163,7 +163,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptEditor.Controls", "Sc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptEditor.Workbench", "ScriptEditor\ScriptEditor.Workbench\ScriptEditor.Workbench.csproj", "{8788115D-EEF8-4838-B5DE-0A43FD9DA467}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptEditor.Tests", "ScriptEditor\ScriptEditor.Tests\ScriptEditor.Tests.csproj", "{574C977B-62AE-44A9-9BC6-0374CADA7B8A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptEditor.AutoTests", "ScriptEditor\ScriptEditor.Tests\ScriptEditor.Tests.csproj", "{574C977B-62AE-44A9-9BC6-0374CADA7B8A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

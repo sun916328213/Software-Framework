@@ -63,7 +63,9 @@ public partial class ScriptEditorService : ObservableObject
     // ════════════════════════════════════════════════════════════════
 
     /// <summary>共享脚本运行时（进程内单例，负责会话的创建与释放）。</summary>
-    private readonly RoslynScriptRuntime _runtime = RoslynScriptRuntime.Shared;
+    /// <remarks>P7：字段类型为 <see cref="IScriptRuntime"/> 契约（默认实现仍为共享实例），
+    /// 第二脚本后端或 ScriptWorker 进程实现可经构造注入替换，无需改 Controls 公共契约。</remarks>
+    private readonly IScriptRuntime _runtime;
 
     /// <summary>当前编辑器对应的会话（附加脚本项会话，或独立编辑器文档会话）。</summary>
     private IScriptSession _session = null!;
@@ -114,11 +116,13 @@ public partial class ScriptEditorService : ObservableObject
     /// 创建脚本编辑器服务。
     /// </summary>
     /// <param name="fileService">文件服务，缺省时新建默认实例。传入 null 则不依赖 Prism 容器。</param>
-    public ScriptEditorService(FileService? fileService = null)
+    /// <param name="runtime">脚本运行时，缺省为进程共享实例；测试或第二后端可注入。</param>
+    public ScriptEditorService(FileService? fileService = null, IScriptRuntime? runtime = null)
     {
         var sw = System.Diagnostics.Stopwatch.StartNew();
         _model = new ScriptEditorModel();
         _fileService = fileService ?? new FileService();
+        _runtime = runtime ?? RoslynScriptRuntime.Shared;
         System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor model+fileService: {sw.ElapsedMilliseconds}ms");
 
         // 中继 Model 事件（跨线程时封送到 UI 线程，已在 UI 线程则同步通知避免绑定延迟）

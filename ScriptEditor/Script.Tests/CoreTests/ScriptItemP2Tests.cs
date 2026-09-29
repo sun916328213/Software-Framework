@@ -91,7 +91,7 @@ public static class ScriptItemP2Tests
             try
             {
                 await File.WriteAllTextAsync(path, legacyJson);
-                var manager = new ScriptManagerService(new FileService(), new ScriptEditorService());
+                var manager = new ScriptManagerService(new FileService(), new ScriptEditorService(), RoslynScriptRuntime.Shared);
                 await manager.LoadTaskFromPathAsync(path);
                 ctx.Assert(manager.Items.Count == 1, $"旧任务应加载一项，实际 {manager.Items.Count}");
                 if (manager.Items.Count != 1) return;
@@ -115,7 +115,7 @@ public static class ScriptItemP2Tests
             try
             {
                 await File.WriteAllTextAsync(path, project.ToJson());
-                var manager = new ScriptManagerService(new FileService(), new ScriptEditorService());
+                var manager = new ScriptManagerService(new FileService(), new ScriptEditorService(), RoslynScriptRuntime.Shared);
                 await manager.LoadTaskFromPathAsync(path);
                 ctx.Assert(manager.Items.Count == 1, "保存的任务应加载一项");
                 if (manager.Items.Count != 1) return;
@@ -127,7 +127,7 @@ public static class ScriptItemP2Tests
 
         runner.Register("P2 数据模型", "复制脚本保留内容但生成新标识", ctx =>
         {
-            var manager = new ScriptManagerService(new FileService(), new ScriptEditorService());
+            var manager = new ScriptManagerService(new FileService(), new ScriptEditorService(), RoslynScriptRuntime.Shared);
             var original = manager.AddScriptItem("source");
             original.Code = "Console.WriteLine(42);";
             original.SetReferences(new[] { "missing-driver.dll" });

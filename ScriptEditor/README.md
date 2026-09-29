@@ -8,8 +8,8 @@ WPF 工业自动化脚本平台：编辑 + 执行的可复用控件库。按 P1�
 | `ScriptEditor.Runtime` (`net9.0`) | Roslyn 编译/执行、Session、引用解析与缓存、持久化实现 | WPF 控件、Dialog、ViewModel |
 | `ScriptEditor.Controls` (`net9.0-windows`) | 可复用 WPF 编辑器、View/ViewModel、RoslynPad 适配 | 编译/执行核心算法、进程级全局状态、业务持久化细节 |
 | `ScriptEditor.Workbench` (`net9.0-windows`, WinExe) | 独立演示、集成验证、性能观察、人工回归 | 承载可复用业务实现 |
-| `ScriptEditor.Tests` (`net9.0`) | Core/Runtime 自动化测试（xUnit，`dotnet test` 可运行） | WPF、人工测试宿主 |
-| `Script.Tests`（sln 显示名 `Script.Tests.Host`） | 旧 WPF 测试宿主：core/ui/performance 手工验证与性能报告 | 新增自动测试请进 `ScriptEditor.Tests` |
+| `ScriptEditor.Tests`（sln 显示名 `ScriptEditor.AutoTests`） | Core/Runtime 自动化测试（xUnit，`dotnet test` 可运行） | WPF、人工测试宿主 |
+| `Script.Tests`（sln 显示名 `ScriptEditor.Tests`，已冻结） | 旧 WPF 测试宿主：core/ui/performance 手工验证与性能报告 | 新增自动测试请进 `ScriptEditor.Tests`；本宿主不再新增用例 |
 
 核心对象：`ScriptItem`（纯数据，随工程持久化）→ `IScriptSession`（唯一运行状态源，每活动脚本一个）
 → `IScriptRuntime`（通常为单例 `RoslynScriptRuntime.Shared`，未来 ScriptWorker 进程实现同一契约）。

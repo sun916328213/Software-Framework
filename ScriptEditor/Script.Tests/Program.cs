@@ -95,9 +95,7 @@ public static class Program
     }
 
     /// <summary>
-    /// 初始化 Prism 容器：ScriptEditorView 初始化链路中会
-    /// ContainerLocator.Container.Resolve&lt;ScriptEditorService&gt;()，
-    /// 无宿主 PrismApplication 时必须手动注入容器实例，否则 Resolve 会抛空引用。
+    /// 初始化 Prism 容器（P7：View/ViewModel 改由组合根显式装配，此处仅为旧宿主保留容器）。
     /// </summary>
     private static void InitializePrismContainer()
     {

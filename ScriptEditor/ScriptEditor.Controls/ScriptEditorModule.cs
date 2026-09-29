@@ -1,6 +1,7 @@
 ﻿using Extension.Integration.Prism;
 using Prism.Ioc;
 using Prism.Modularity;
+using ScriptEditor.Contracts;
 using ScriptEditor.Services;
 using ScriptEditor.ViewModels;
 using ScriptEditor.Views;
@@ -57,6 +58,10 @@ public class ScriptEditorModule : IModule
             containerRegistry.RegisterSingleton<FileService>();
         if (!containerRegistry.IsRegistered<ScriptEditorService>())
             containerRegistry.RegisterSingleton<ScriptEditorService>();
+        // 共享运行时必须注册 Shared 实例（而非新建）：编辑器服务与管理器
+        // 经同一运行时取会话，否则同一脚本的运行状态会被拆到两个运行时。
+        if (!containerRegistry.IsRegistered<IScriptRuntime>())
+            containerRegistry.RegisterInstance<IScriptRuntime>(RoslynScriptRuntime.Shared);
         if (!containerRegistry.IsRegistered<ScriptManagerService>())
             containerRegistry.Register<ScriptManagerService>();
 

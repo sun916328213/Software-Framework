@@ -172,7 +172,7 @@ public static class ScriptProjectStoreP5Tests
             var taskPath = Path.Combine(dir, "job.taskproj");
             try
             {
-                var manager = new ScriptManagerService(new FileService(), new ScriptEditorService());
+                var manager = new ScriptManagerService(new FileService(), new ScriptEditorService(), RoslynScriptRuntime.Shared);
                 var item = manager.AddScriptItem("alpha");
                 item.Code = "Console.WriteLine(1);";
                 await manager.SaveToPathAsync(taskPath);
