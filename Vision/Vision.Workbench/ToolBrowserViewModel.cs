@@ -31,7 +31,7 @@ namespace Vision.Workbench
     public sealed record ProviderEntry(string Name, bool IsAvailable);
 
     /// <summary>新 Tool 标准研发/验收入口 VM。</summary>
-    public sealed partial class ToolBrowserViewModel : ObservableObject
+    public sealed partial class ToolBrowserViewModel : ObservableObject, IDisposable
     {
         private VisionImage? _image;
 
@@ -119,6 +119,7 @@ namespace Vision.Workbench
         private void SelectEntry(ToolEntry entry)
         {
             CurrentCard?.Dispose();
+            CurrentCard = null;
             var (card, parameters, setProvider) = entry.Create();
             _providerSetter = setProvider;
             CurrentParameters = parameters;
@@ -128,6 +129,9 @@ namespace Vision.Workbench
             CurrentCard.RefreshValidationCommand.Execute(null);
             ApplyProvider();
         }
+
+        /// <summary>释放当前卡片（P10 Smoke 用 using 模式）。</summary>
+        public void Dispose() => CurrentCard?.Dispose();
 
         private Action<IAIProvider>? _providerSetter;
 
