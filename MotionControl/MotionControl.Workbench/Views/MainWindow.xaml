@@ -1,0 +1,9 @@
+<Window x:Class="MotionControl.Workbench.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MotionControl Workbench (P0 骨架)" Height="240" Width="480">
+  <Grid>
+    <TextBlock Text="P0 骨架：阶段 6 接 Simulation 后在此验证 Runtime + Controls。"
+               TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Center" />
+  </Grid>
+</Window>
