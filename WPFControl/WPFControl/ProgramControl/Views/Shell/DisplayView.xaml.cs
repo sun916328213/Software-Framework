@@ -38,13 +38,13 @@ namespace WPFControl.ProgramControl.Views
             int index = MainGrid.ItemContainerGenerator.IndexFromContainer(container);
             if (index < 0 || _viewModel == null) return;
 
-            // 绑定 HTool
-            var binding = new Binding($"VisionTools[{index}]")
+            // 绑定显示图像
+            var binding = new Binding($"DisplayImages[{index}]")
             {
                 Source = _viewModel,
                 Mode = BindingMode.TwoWay
             };
-            display.SetBinding(DisplaySingleView_DP.HToolProperty, binding);
+            display.SetBinding(DisplaySingleView_DP.DisplayImageProperty, binding);
 
             // 设置 Padding
             int columnCount = _viewModel.ColumnCount > 0 ? _viewModel.ColumnCount : 1;

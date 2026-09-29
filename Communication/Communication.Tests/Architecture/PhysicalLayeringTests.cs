@@ -96,21 +96,13 @@ public sealed class PhysicalLayeringTests
     }
 
     [Fact]
-    public void Facade_keeps_package_identity_and_references_new_layers()
+    public void Compat_facade_project_is_removed()
     {
-        var csproj = LoadCsproj("Communication", "Communication", "Communication.csproj");
-        Assert.Equal("CommunicationNew", csproj.Descendants("AssemblyName").FirstOrDefault()?.Value);
-        Assert.Equal("CommunicationNew", csproj.Descendants("PackageId").FirstOrDefault()?.Value);
-
-        var projects = ProjectReferences(csproj);
-        Assert.Contains(projects, r => r.Contains("Communication.Core"));
-        Assert.Contains(projects, r => r.Contains("Communication.Runtime"));
-
-        var packages = PackageReferences(csproj);
-        Assert.DoesNotContain("FluentModbus", packages);
-        Assert.DoesNotContain("OPCFoundation.NetStandard.Opc.Ua", packages);
-        Assert.DoesNotContain("Mitsubishi.MxComponent.Interop", packages);
-        Assert.DoesNotContain("Prism.Core", packages);
+        // 2026-09-29：兼容门面 Communication/Communication（AssemblyName/PackageId=CommunicationNew）
+        // 已删除；消费者改为直接引用 Communication.Core / Communication.Runtime。
+        // 保留此断言防止门面被重新引入（架构清晰前不再考虑兼容层）。
+        var path = Path.Combine([RepoRoot(), "Communication", "Communication", "Communication.csproj"]);
+        Assert.False(File.Exists(path), $"兼容门面不应重新引入：{path}");
     }
 
     [Fact]

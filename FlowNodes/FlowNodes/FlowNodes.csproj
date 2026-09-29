@@ -19,14 +19,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- 2026-09-29：FlowNodes 源码直接使用 CommunicationNew.*（Abstractions/Core/Protocols），
+         但 P11 四层拆分后传递闭包里已无任何 Communication 工程，这里显式声明。 -->
+    <ProjectReference Include="..\..\Communication\Communication.Runtime\Communication.Runtime.csproj" />
     <ProjectReference Include="..\..\Device\Device.Core\Device.Core.csproj" />
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
-    <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />
-    <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />
+    <ProjectReference Include="..\..\FlowEditor\FlowEditor.Controls\FlowEditor.Controls.csproj" />
     <ProjectReference Include="..\..\Secs\SecsGem.Core\SecsGem.Core.csproj" />
+    <ProjectReference Include="..\..\Secs\SecsGem.Runtime\SecsGem.Runtime.csproj" />
     <ProjectReference Include="..\..\Vision\Vision.Controls\Vision.Controls.csproj" />
-    <ProjectReference Include="..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj" />
+    <ProjectReference Include="..\..\Vision\Vision.Core\Vision.Core.csproj" />
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Vision\CompositeTool\WaferInspection\" />
   </ItemGroup>
 
 </Project>

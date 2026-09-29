@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DPLibrary_Halcon_F48.Tools;
+using HalconDotNet;
 using System.Collections.ObjectModel;
 using WPFControl.ProgramControl.Services;
 
@@ -19,8 +19,8 @@ namespace WPFControl.ProgramControl.ViewModels
         // 显示标题集合（纯数据绑定驱动 UI 创建，线程安全）
         public ObservableCollection<string> DisplayTitles => _service.Model.DisplayTitles;
 
-        // VisionTools集合
-        public ObservableCollection<HVisionTool> VisionTools => _service.Model.VisionTools;
+        // 显示图像集合（与显示标题按索引对齐）
+        public ObservableCollection<HObject> DisplayImages => _service.Model.DisplayImages;
 
         // 构造函数
         public DisplayViewModel(DisplayService service)
@@ -48,14 +48,14 @@ namespace WPFControl.ProgramControl.ViewModels
         {
             _service.Clear();
             OnPropertyChanged(nameof(DisplayTitles));
-            OnPropertyChanged(nameof(VisionTools));
+            OnPropertyChanged(nameof(DisplayImages));
         });
 
         // 显示图像命令
-        public IRelayCommand<(int index, HVisionTool visionTool)> ShowImageCommand => new RelayCommand<(int index, HVisionTool visionTool)>(param =>
+        public IRelayCommand<(int index, HObject image)> ShowImageCommand => new RelayCommand<(int index, HObject image)>(param =>
         {
-            _service.ShowImage(param.index, param.visionTool);
-            OnPropertyChanged(nameof(VisionTools));
+            _service.ShowImage(param.index, param.image);
+            OnPropertyChanged(nameof(DisplayImages));
         });
 
         // 通知布局更新命令（供View调用）

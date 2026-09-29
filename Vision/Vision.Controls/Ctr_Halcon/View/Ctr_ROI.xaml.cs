@@ -1,5 +1,4 @@
 using Vision.Core.Vision;
-using DPLibrary_Halcon_F48;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;

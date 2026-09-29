@@ -10,6 +10,6 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <ProjectReference Include="..\FlowEditor.Core\FlowEditor.Core.csproj" />
   </ItemGroup>
 </Project>

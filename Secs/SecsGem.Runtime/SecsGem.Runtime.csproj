@@ -9,7 +9,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\SecsGem.Core\SecsGem.Core.csproj" />
-    <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
+    <!-- 2026-09-29：兼容门面 DataManager/DataManager 已删除，改为直连 Core + Runtime。 -->
+    <ProjectReference Include="..\..\DataManager\DataManager.Core\DataManager.Core.csproj" />
+    <ProjectReference Include="..\..\DataManager\DataManager.Runtime\DataManager.Runtime.csproj" />
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
     <ProjectReference Include="..\secs4net-base\src\Secs4Net.Sml\Secs4Net.Sml.csproj" />
     <ProjectReference Include="..\secs4net-base\src\Secs4Net.Json\Secs4Net.Json.csproj" />

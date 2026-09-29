@@ -1,8 +1,11 @@
 using System.Text.Json;
+using System.IO;
+using System.Security.Cryptography;
 using FlowEditor.Core;
 using FlowEditor.Models;
 using FlowEditor.Nodes;
 using FlowEditor.Nodes.FlowControl;
+using FlowEditor.Services.Storage;
 using Xunit;
 
 namespace FlowEditorTest;
@@ -84,6 +87,57 @@ public sealed class FlowDocumentMapperTests
         Assert.Contains("SysError", json, StringComparison.Ordinal);
         var restored = Assert.IsType<LogNode>(mapper.ToNode(Assert.Single(restoredDocument!.Nodes)));
         Assert.Equal(FlowLogLevel.SysError, restored.Level);
+    }
+
+    /// <summary>验证真实旧流程中的缺失节点、配置及连线端口在加载和回写后仍可保留。</summary>
+    [Fact]
+    public void HistoricalFlow_PreservesMissingNodesAndConnectionPorts()
+    {
+        var fixturePath = Path.Combine(
+            AppContext.BaseDirectory,
+            "CompatibilityFixtures",
+            "InitializeFlow.legacy.flow");
+        Assert.True(File.Exists(fixturePath), $"历史流程夹具不存在: {fixturePath}");
+        Assert.Equal(
+            "20D0BEBF9604E20E6100FF4103C09B04AA2C1E21B6BEDBE3D7546A94BDB3BAD1",
+            Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(fixturePath))));
+
+        var original = new JsonFlowDocumentStore().Load<FlowChartDocumentModel>(fixturePath);
+        var factory = new ReflectionNodeFactory { AllowMissingNodes = true };
+        var mapper = new FlowDocumentMapper(factory);
+        var nodes = original.Nodes.Select(mapper.ToNode).ToList();
+        var nodesById = nodes.ToDictionary(node => node.Id);
+
+        Assert.Equal(8, nodes.Count);
+        Assert.Equal(5, nodes.OfType<MissingNode>().Count());
+        Assert.Equal(7, original.Connections.Count);
+        foreach (var connection in original.Connections)
+        {
+            Assert.Contains(nodesById[connection.SourceNodeId].OutputPorts,
+                port => port.Id == connection.SourcePortId);
+            Assert.Contains(nodesById[connection.TargetNodeId].InputPorts,
+                port => port.Id == connection.TargetPortId);
+        }
+
+        var roundTripped = mapper.ToDocument(
+            original.Name,
+            nodes,
+            original.Connections.Select(mapper.ToConnection),
+            new FlowChartModel { ZoomLevel = original.ZoomLevel });
+        Assert.Equal(original.Nodes.Select((node, index) => nodes[index] is MissingNode
+                ? node.TypeName
+                : nodes[index].GetType().AssemblyQualifiedName),
+            roundTripped.Nodes.Select(node => node.TypeName));
+        Assert.Equal(original.Connections.Select(connection => connection.Id),
+            roundTripped.Connections.Select(connection => connection.Id));
+
+        foreach (var oldNode in original.Nodes.Where(node => node.TypeName.Contains(".Communication.MC.")))
+        {
+            var savedNode = Assert.Single(roundTripped.Nodes, node => node.Id == oldNode.Id);
+            Assert.Equal(JsonSerializer.Serialize(oldNode.Properties),
+                JsonSerializer.Serialize(savedNode.Properties));
+            Assert.Equal(oldNode.PortIdMap, savedNode.PortIdMap);
+        }
     }
 
     /// <summary>记录节点描述符并返回预设节点的测试 factory。</summary>

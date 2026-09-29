@@ -1,5 +1,6 @@
 using FlowEditor.Core;
 using FlowEditor.Models;
+using FlowEditor.Nodes;
 using FlowEditor.ViewModels;
 using System.IO;
 using System.Reflection;
@@ -30,8 +31,12 @@ public sealed class ArchitectureDependencyTests
             .Select(match => match.Groups["path"].Value)
             .ToList();
 
-        Assert.Equal(7, projectPaths.Count);
-        Assert.Contains("FlowEditor\\FlowEditor.csproj", projectPaths);
+        Assert.Equal(8, projectPaths.Count);
+        Assert.Contains("FlowEditor.Core\\FlowEditor.Core.csproj", projectPaths);
+        Assert.Contains("FlowEditor.Controls\\FlowEditor.Controls.csproj", projectPaths);
+        Assert.DoesNotContain("FlowEditor\\FlowEditor.csproj", projectPaths);
+        Assert.Equal("FlowEditor.Controls", typeof(NodeModel).Assembly.GetName().Name);
+        Assert.False(File.Exists(Path.Combine(SolutionDirectory, "FlowEditor", "FlowEditor.csproj")));
         Assert.Contains("FlowEditor.Runtime\\FlowEditor.Runtime.csproj", projectPaths);
         Assert.Contains("FlowEditor.Runtime.Smoke\\FlowEditor.Runtime.Smoke.csproj", projectPaths);
         Assert.Contains("FlowEditor.PluginContractFixture\\FlowEditor.PluginContractFixture.csproj", projectPaths);
@@ -96,7 +101,7 @@ public sealed class ArchitectureDependencyTests
     [Fact]
     public void EditorLogging_DoesNotDependDirectlyOnExtension()
     {
-        var projectSource = File.ReadAllText(Path.Combine(ProjectDirectory, "FlowEditor.csproj"));
+        var projectSource = File.ReadAllText(Path.Combine(ProjectDirectory, "FlowEditor.Controls.csproj"));
         var extensionReferences = Directory.EnumerateFiles(
                 ProjectDirectory,
                 "*.cs",
@@ -107,8 +112,8 @@ public sealed class ArchitectureDependencyTests
             .ToList();
         var logLevelSource = File.ReadAllText(Path.Combine(
             SolutionDirectory,
-            "FlowEditor.Runtime",
-            "Core",
+            "FlowEditor.Core",
+            "Logging",
             "FlowLogLevel.cs"));
 
         Assert.DoesNotContain("Extension.csproj", projectSource, StringComparison.Ordinal);
@@ -132,8 +137,8 @@ public sealed class ArchitectureDependencyTests
             "FlowChartService.cs"));
         var sinkSource = File.ReadAllText(Path.Combine(
             SolutionDirectory,
-            "FlowEditor.Runtime",
-            "Core",
+            "FlowEditor.Core",
+            "Logging",
             "IFlowLogSink.cs"));
         var contextSource = File.ReadAllText(Path.Combine(
             ProjectDirectory,
@@ -196,14 +201,16 @@ public sealed class ArchitectureDependencyTests
         Assert.False(File.Exists(Path.Combine(ProjectDirectory, "Interfaces", "IFlowTabFactory.cs")));
     }
 
-    /// <summary>确保 P5 Runtime 可独立运行，并已拥有执行契约、引擎和容器 runner。</summary>
+    /// <summary>确保 Core 与 Runtime 均保持无界面，且 Runtime 只向 Core 依赖。</summary>
     [Fact]
     public void RuntimeProject_IsPlatformNeutralAndOwnsExecutionContracts()
     {
         var solutionDirectory = Directory.GetParent(ProjectDirectory)?.FullName
             ?? throw new DirectoryNotFoundException("无法定位 FlowEditor 解决方案目录。");
         var runtimeDirectory = Path.Combine(solutionDirectory, "FlowEditor.Runtime");
+        var coreDirectory = Path.Combine(solutionDirectory, "FlowEditor.Core");
         var smokeDirectory = Path.Combine(solutionDirectory, "FlowEditor.Runtime.Smoke");
+        var coreProject = File.ReadAllText(Path.Combine(coreDirectory, "FlowEditor.Core.csproj"));
         var project = File.ReadAllText(Path.Combine(runtimeDirectory, "FlowEditor.Runtime.csproj"));
         var smokeProject = File.ReadAllText(Path.Combine(
             smokeDirectory, "FlowEditor.Runtime.Smoke.csproj"));
@@ -211,6 +218,14 @@ public sealed class ArchitectureDependencyTests
             .Where(path =>
             {
                 var relative = Path.GetRelativePath(runtimeDirectory, path).Replace('\\', '/');
+                return !relative.StartsWith("bin/", StringComparison.OrdinalIgnoreCase) &&
+                       !relative.StartsWith("obj/", StringComparison.OrdinalIgnoreCase);
+            })
+            .ToArray();
+        var coreSourceFiles = Directory.EnumerateFiles(coreDirectory, "*.cs", SearchOption.AllDirectories)
+            .Where(path =>
+            {
+                var relative = Path.GetRelativePath(coreDirectory, path).Replace('\\', '/');
                 return !relative.StartsWith("bin/", StringComparison.OrdinalIgnoreCase) &&
                        !relative.StartsWith("obj/", StringComparison.OrdinalIgnoreCase);
             })
@@ -225,17 +240,23 @@ public sealed class ArchitectureDependencyTests
             "Extension."
         };
 
+        Assert.Contains("<TargetFramework>net9.0</TargetFramework>", coreProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("<UseWPF>", coreProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("<ProjectReference", coreProject, StringComparison.Ordinal);
+        Assert.DoesNotContain(coreSourceFiles, path => forbidden.Any(pattern =>
+            File.ReadAllText(path).Contains(pattern, StringComparison.Ordinal)));
         Assert.Contains("<TargetFramework>net9.0</TargetFramework>", project, StringComparison.Ordinal);
         Assert.DoesNotContain("<UseWPF>", project, StringComparison.Ordinal);
-        Assert.DoesNotContain("<ProjectReference", project, StringComparison.Ordinal);
+        Assert.Contains("FlowEditor.Core.csproj", project, StringComparison.Ordinal);
+        Assert.Single(Regex.Matches(project, "<ProjectReference").Cast<Match>());
         Assert.Contains("<TargetFramework>net9.0</TargetFramework>", smokeProject, StringComparison.Ordinal);
         Assert.DoesNotContain("<UseWPF>", smokeProject, StringComparison.Ordinal);
         Assert.Contains("FlowEditor.Runtime.csproj", smokeProject, StringComparison.Ordinal);
         Assert.DoesNotContain(sourceFiles, path => forbidden.Any(pattern =>
             File.ReadAllText(path).Contains(pattern, StringComparison.Ordinal)));
-        Assert.Equal("FlowEditor.Runtime", typeof(INodeExecutable).Assembly.GetName().Name);
-        Assert.Equal("FlowEditor.Runtime", typeof(ConnectionModel).Assembly.GetName().Name);
-        Assert.Equal("FlowEditor.Runtime", typeof(PortModel).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Core", typeof(INodeExecutable).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Core", typeof(ConnectionModel).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Core", typeof(PortModel).Assembly.GetName().Name);
         Assert.Equal("FlowEditor.Runtime", typeof(FlowChartExecutionEngine).Assembly.GetName().Name);
         Assert.Equal("FlowEditor.Runtime", typeof(ParallelFlowRunner).Assembly.GetName().Name);
         Assert.Equal("FlowEditor.Runtime", typeof(LoopFlowRunner).Assembly.GetName().Name);
@@ -244,7 +265,7 @@ public sealed class ArchitectureDependencyTests
         Assert.Equal("FlowEditor.Runtime", typeof(FlowValidator).Assembly.GetName().Name);
         Assert.Equal("FlowEditor.Runtime", typeof(FlowProgram).Assembly.GetName().Name);
         Assert.Equal("FlowEditor.Runtime", typeof(FlowRuntimeInstance<>).Assembly.GetName().Name);
-        Assert.Equal("FlowEditor.Runtime", typeof(FlowChartDocumentModel).Assembly.GetName().Name);
+        Assert.Equal("FlowEditor.Core", typeof(FlowChartDocumentModel).Assembly.GetName().Name);
     }
 
     /// <summary>确保表现层节点不再充当运行时执行适配器。</summary>
@@ -729,7 +750,7 @@ public sealed class ArchitectureDependencyTests
         var coreSource = File.ReadAllText(Path.Combine(modelDirectory, "NodeModel.cs"));
         var lifecycleSource = File.ReadAllText(Path.Combine(modelDirectory, "NodeModel.DataBindings.cs"));
         var propertyGridSource = File.ReadAllText(Path.Combine(modelDirectory, "NodeModel.PropertyGrid.cs"));
-        var projectSource = File.ReadAllText(Path.Combine(ProjectDirectory, "FlowEditor.csproj"));
+        var projectSource = File.ReadAllText(Path.Combine(ProjectDirectory, "FlowEditor.Controls.csproj"));
 
         Assert.Contains(
             "partial class NodeModel : IPortConfigurable, IPortManageable, IDataBindingProvider",
@@ -923,9 +944,9 @@ public sealed class ArchitectureDependencyTests
                relativePath.StartsWith("obj/", StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>从测试输出目录向上查找 FlowEditor 模块目录。</summary>
-    /// <returns>FlowEditor.csproj 所在目录。</returns>
-    /// <exception cref="DirectoryNotFoundException">无法定位 FlowEditor.sln 或 FlowEditor.csproj 时抛出。</exception>
+    /// <summary>从测试输出目录向上查找 Controls 项目目录。</summary>
+    /// <returns>FlowEditor.Controls.csproj 所在目录。</returns>
+    /// <exception cref="DirectoryNotFoundException">无法定位 FlowEditor.sln 或 FlowEditor.Controls.csproj 时抛出。</exception>
     private static string FindProjectDirectory()
     {
         for (var current = new DirectoryInfo(AppContext.BaseDirectory); current != null; current = current.Parent)
@@ -934,8 +955,8 @@ public sealed class ArchitectureDependencyTests
             if (!File.Exists(Path.Combine(current.FullName, "FlowEditor.sln")))
                 continue;
 
-            var projectDirectory = Path.Combine(current.FullName, "FlowEditor");
-            if (File.Exists(Path.Combine(projectDirectory, "FlowEditor.csproj")))
+            var projectDirectory = Path.Combine(current.FullName, "FlowEditor.Controls");
+            if (File.Exists(Path.Combine(projectDirectory, "FlowEditor.Controls.csproj")))
                 return projectDirectory;
         }
 

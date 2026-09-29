@@ -35,7 +35,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Vision.Core\Vision.Core.csproj" />
-    <ProjectReference Include="..\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj" />
     <!-- P8（2026-09-28）：新控件/VM 面向标准化 Tool（P3/P4/P5），UI 根据 Tool/Result 展示。
          旧视图仍绑迁移源（P9 退场前新旧并存）；Tools 一律不得反向引用 Controls（守卫见 Tests）。 -->
     <ProjectReference Include="..\Vision.Tools.Halcon\Vision.Tools.Halcon.csproj" />

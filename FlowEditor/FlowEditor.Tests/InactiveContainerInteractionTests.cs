@@ -47,9 +47,9 @@ public class InactiveContainerInteractionTests
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
         var containerXaml = File.ReadAllText(Path.Combine(root,
-            "FlowEditor", "Views", "InactiveNodeContainerView.xaml"));
+            "FlowEditor.Controls", "Views", "InactiveNodeContainerView.xaml"));
         var chartXaml = File.ReadAllText(Path.Combine(root,
-            "FlowEditor", "Views", "FlowChartView.xaml"));
+            "FlowEditor.Controls", "Views", "FlowChartView.xaml"));
 
         Assert.Contains("x:Name=\"SelectionIndicator\"", containerXaml);
         Assert.Contains("Visibility=\"{Binding IsSelected", containerXaml);

@@ -18,9 +18,14 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FlowEditor.Core\FlowEditor.Core.csproj" />
     <ProjectReference Include="..\FlowEditor.Runtime\FlowEditor.Runtime.csproj" />
-    <ProjectReference Include="..\FlowEditor\FlowEditor.csproj" />
+    <ProjectReference Include="..\FlowEditor.Controls\FlowEditor.Controls.csproj" />
     <ProjectReference Include="..\FlowEditor.PluginContractFixture\FlowEditor.PluginContractFixture.csproj"
                       ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CompatibilityFixtures\InitializeFlow.legacy.flow"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

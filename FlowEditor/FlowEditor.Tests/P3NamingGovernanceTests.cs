@@ -1,6 +1,7 @@
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using FlowEditor.Core;
 using Xunit;
 
@@ -10,6 +11,7 @@ namespace FlowEditorTest;
 /// P3 验收：命名与目录治理。锁定已统一的命名（Tests/Smoke），并阻止新的分层违规
 /// （Infrastructure 大杂烩、Controls 反向依赖、样板节点丢稳定标识）。
 /// </summary>
+[Collection("NodeTypeRegistry")]
 public sealed class P3NamingGovernanceTests
 {
     private static string FlowEditorDirectory()
@@ -45,6 +47,25 @@ public sealed class P3NamingGovernanceTests
         Assert.False(File.Exists(Path.Combine(solutionDirectory, "FlowEditor.Runtime.Smoke", "FlowEditor.Runtime.Test.csproj")));
     }
 
+    /// <summary>模块级架构文档应归属解决方案，而非 Controls 控件项目。</summary>
+    [Fact]
+    public void ArchitectureDocuments_LiveAtSolutionRoot()
+    {
+        var solutionDirectory = FlowEditorDirectory();
+        var solution = File.ReadAllText(Path.Combine(solutionDirectory, "FlowEditor.sln"));
+        foreach (var name in new[]
+                 {
+                     "ARCHITECTURE.md",
+                     "ARCHITECTURE_OPTIMIZATION_PLAN.md",
+                     "ARCHITECTURE_MAINTENANCE_AUDIT.md"
+                 })
+        {
+            Assert.True(File.Exists(Path.Combine(solutionDirectory, name)), $"模块架构文档未在解决方案根目录: {name}");
+            Assert.False(File.Exists(Path.Combine(solutionDirectory, "FlowEditor.Controls", name)));
+            Assert.Contains($"\t\t{name} = {name}", solution, StringComparison.Ordinal);
+        }
+    }
+
     [Fact]
     public void Solutions_ReferenceExistingProjects_AfterRename()
     {
@@ -61,6 +82,20 @@ public sealed class P3NamingGovernanceTests
             Assert.DoesNotContain("FlowEditor.Test\\", source, StringComparison.Ordinal);
             Assert.DoesNotContain("FlowEditor.Runtime.Test.csproj", source, StringComparison.Ordinal);
         }
+    }
+
+    /// <summary>WPFControl 直接使用脚本控件时必须引用现存的 Controls 项目。</summary>
+    [Fact]
+    public void WpfHost_ReferencesCurrentScriptEditorControlsProject()
+    {
+        var expected = @"..\..\ScriptEditor\ScriptEditor.Controls\ScriptEditor.Controls.csproj";
+        var project = Path.Combine(WorkspaceDirectory(), "WPFControl", "WPFControl", "WPFControl.csproj");
+        var references = XDocument.Load(project)
+            .Descendants("ProjectReference")
+            .Select(element => (string?)element.Attribute("Include"))
+            .ToList();
+        Assert.Contains(expected, references);
+        Assert.True(File.Exists(Path.GetFullPath(expected, Path.GetDirectoryName(project)!)));
     }
 
     [Fact]
@@ -82,10 +117,10 @@ public sealed class P3NamingGovernanceTests
     {
         // 分层红线：Controls/Editor 可以依赖 Runtime；Runtime 不能反向依赖 Controls。
         var solutionDirectory = FlowEditorDirectory();
-        var wpfProject = File.ReadAllText(Path.Combine(solutionDirectory, "FlowEditor", "FlowEditor.csproj"));
+        var wpfProject = File.ReadAllText(Path.Combine(solutionDirectory, "FlowEditor.Controls", "FlowEditor.Controls.csproj"));
         var runtimeProject = File.ReadAllText(Path.Combine(solutionDirectory, "FlowEditor.Runtime", "FlowEditor.Runtime.csproj"));
         Assert.Contains("FlowEditor.Runtime.csproj", wpfProject, StringComparison.Ordinal);
-        Assert.DoesNotContain("FlowEditor.csproj", runtimeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("FlowEditor.Controls.csproj", runtimeProject, StringComparison.Ordinal);
         Assert.DoesNotContain("UseWPF", runtimeProject, StringComparison.Ordinal);
     }
 

@@ -15,8 +15,6 @@ public sealed class LayeringTests
     private static readonly Assembly CoreAssembly = typeof(ISQL).Assembly;
     private static readonly Assembly RuntimeAssembly = typeof(SQLManager).Assembly;
 
-    private static Assembly FacadeAssembly => Assembly.Load("DataManager");
-
     [Fact]
     public void Core_assembly_does_not_reference_runtime_or_provider_packages()
     {
@@ -25,6 +23,7 @@ public sealed class LayeringTests
             .ToHashSet(StringComparer.Ordinal);
 
         Assert.DoesNotContain("DataManager.Runtime", references);
+        // 兼容门面（程序集名 DataManager）已于 2026-09-29 删除；保留此断言防止 Core 反向依赖门面。
         Assert.DoesNotContain("DataManager", references);
         Assert.DoesNotContain("Dapper", references);
         Assert.DoesNotContain("Dommel", references);
@@ -103,28 +102,13 @@ public sealed class LayeringTests
     }
 
     [Fact]
-    public void Facade_preserves_identity_and_defines_no_implementation()
+    public void Legacy_manager_apis_remain_reachable_after_facade_removal()
     {
-        var facade = FacadeAssembly;
-        Assert.Equal("DataManager", facade.GetName().Name);
-
-        var definedPublic = facade.DefinedTypes
-            .Where(type => type.IsPublic)
-            .Select(type => type.FullName)
-            .OrderBy(name => name)
-            .ToArray();
-
-        // 兼容门面只做类型转发，不再承载 Provider 实现。
-        Assert.Empty(definedPublic);
-    }
-
-    [Fact]
-    public void Facade_forwards_representative_legacy_apis()
-    {
-        // 旧调用经门面仍可加载、创建、调用（类型身份由转发承接）。
-        var sqlManagerType = FacadeAssembly.GetType("DataManager.SQL.SQLManager", throwOnError: true)!;
-        var logManagerType = FacadeAssembly.GetType("DataManager.Log.LogManager", throwOnError: true)!;
-        var excelManagerType = FacadeAssembly.GetType("DataManager.Excel.ExcelManager", throwOnError: true)!;
+        // 2026-09-29：兼容门面（程序集 DataManager）已删除。原先由「门面转发」承接的旧 API，
+        // 现在直接由 Runtime 承载；这里守住三个代表性入口仍然可加载、类型身份不变。
+        var sqlManagerType = RuntimeAssembly.GetType("DataManager.SQL.SQLManager", throwOnError: true)!;
+        var logManagerType = RuntimeAssembly.GetType("DataManager.Log.LogManager", throwOnError: true)!;
+        var excelManagerType = RuntimeAssembly.GetType("DataManager.Excel.ExcelManager", throwOnError: true)!;
 
         Assert.Equal(typeof(SQLManager), sqlManagerType);
         Assert.Equal(typeof(LogManager), logManagerType);
@@ -152,24 +136,13 @@ public sealed class LayeringTests
     }
 
     [Fact]
-    public void Facade_references_new_layers_and_contains_no_provider_packages()
+    public void Compat_facade_project_is_removed()
     {
-        var csproj = LoadCsproj("DataManager", "DataManager", "DataManager.csproj");
-        Assert.Equal("DataManager", csproj.Descendants("AssemblyName").FirstOrDefault()?.Value);
-
-        var projects = ProjectReferences(csproj);
-        Assert.Contains(projects, r => r.Contains("DataManager.Core"));
-        Assert.Contains(projects, r => r.Contains("DataManager.Runtime"));
-
-        var packages = PackageReferences(csproj);
-        Assert.DoesNotContain("Dapper", packages);
-        Assert.DoesNotContain("SqlSugarCore", packages);
-        Assert.DoesNotContain("Microsoft.EntityFrameworkCore.SqlServer", packages);
-        Assert.DoesNotContain("EPPlus", packages);
-        Assert.DoesNotContain("MiniExcel", packages);
-        Assert.DoesNotContain("Serilog", packages);
-        Assert.DoesNotContain("NLog", packages);
-        Assert.DoesNotContain("log4net", packages);
+        // 2026-09-29：兼容门面 DataManager/DataManager（AssemblyName=DataManager）已删除；
+        // 消费者改为直接引用 DataManager.Core / DataManager.Runtime。
+        // 保留此断言防止门面被重新引入（架构清晰前不再考虑兼容层）。
+        var path = Path.Combine([RepoRoot(), "DataManager", "DataManager", "DataManager.csproj"]);
+        Assert.False(File.Exists(path), $"兼容门面不应重新引入：{path}");
     }
 
     private static bool IsAllowedFrameworkType(Type type)

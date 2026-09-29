@@ -1,5 +1,4 @@
-﻿using DPLibrary_Halcon_F48.Tools;
-using Extension.UI.Controls;
+﻿using Extension.UI.Controls;
 using HalconDotNet;
 using System.Windows;
 using WPFControl.CustomControl.Views.Display;
@@ -60,7 +59,7 @@ namespace WPFControl.ProgramControl.Services
         private void ClearCore()
         {
             Model.DisplayTitles.Clear();
-            Model.VisionTools.Clear();
+            Model.DisplayImages.Clear();
         }
 
         /// <summary>
@@ -73,10 +72,10 @@ namespace WPFControl.ProgramControl.Services
             {
                 Model.DisplayTitles.Add(title);
 
-                // 确保VisionTools集合中有相应数量的元素
-                while (Model.VisionTools.Count < Model.DisplayTitles.Count)
+                // 确保显示图像集合中有相应数量的元素
+                while (Model.DisplayImages.Count < Model.DisplayTitles.Count)
                 {
-                    Model.VisionTools.Add(null);
+                    Model.DisplayImages.Add(null);
                 }
             });
         }
@@ -85,44 +84,28 @@ namespace WPFControl.ProgramControl.Services
         /// 显示图像
         /// </summary>
         /// <param name="index"></param>
-        /// <param name="visionTool"></param>
-        public void ShowImage(int index, HVisionTool visionTool)
+        /// <param name="image"></param>
+        public void ShowImage(int index, HObject image)
         {
             TryCatchHelper.TryExecute(() =>
             {
                 OnUiThread(() =>
                 {
-                    // 确保VisionTools集合中有足够数量的元素
-                    while (Model.VisionTools.Count <= index)
+                    // 确保显示图像集合中有足够数量的元素
+                    while (Model.DisplayImages.Count <= index)
                     {
-                        Model.VisionTools.Add(null);
+                        Model.DisplayImages.Add(null);
                     }
-                    // 设置指定索引的VisionTool
-                    Model.VisionTools[index] = visionTool;
+                    // 设置指定索引的图像
+                    Model.DisplayImages[index] = image;
 
                     // 触发通知确保UI更新
-                    Model.NotifyVisionToolsChanged();
+                    Model.NotifyDisplayImagesChanged();
                 });
 
                 // 保持在工作线程延时，避免阻塞 UI
                 DelayEx.Delay(200);
             });
-        }
-
-        public void ShowImage(int index, HObject image)
-        {
-            HTool_NPoints hTool_NPoints = new HTool_NPoints();
-            hTool_NPoints.Image=image;
-            OnUiThread(() =>
-            {
-                // 设置指定索引的VisionTool
-                Model.VisionTools[index] = hTool_NPoints;
-                // 触发通知确保UI更新
-                Model.NotifyVisionToolsChanged();
-            });
-
-            // 保持在工作线程延时，避免阻塞 UI
-            DelayEx.Delay(200);
         }
 
     }

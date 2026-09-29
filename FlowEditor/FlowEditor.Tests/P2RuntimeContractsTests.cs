@@ -7,6 +7,7 @@ using Xunit;
 namespace FlowEditorTest;
 
 /// <summary>P2 验收：稳定标识/缺失兼容、重试边界、Telemetry 自动采集。</summary>
+[Collection("NodeTypeRegistry")]
 public class P2RuntimeContractsTests
 {
     private static void ClearRegistries()

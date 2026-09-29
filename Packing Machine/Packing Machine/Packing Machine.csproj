@@ -36,14 +36,13 @@
          ⛔ 包引用一条都不补：HalconDotNet 仍只在 Extension.csproj 一处锁 23110.0.0（项目约定）。 -->
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
     <ProjectReference Include="..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj" />
-    <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
-    <ProjectReference Include="..\..\Device\Device\Device.csproj" />
+    <!-- 2026-09-29：兼容门面 DataManager/DataManager 已删除，改为直连 Core + Runtime。 -->
+    <ProjectReference Include="..\..\DataManager\DataManager.Core\DataManager.Core.csproj" />
+    <ProjectReference Include="..\..\DataManager\DataManager.Runtime\DataManager.Runtime.csproj" />
     <ProjectReference Include="..\..\Secs\SecsGem.Core\SecsGem.Core.csproj" />
     <ProjectReference Include="..\..\Secs\SecsGem.Runtime\SecsGem.Runtime.csproj" />
-    <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />
-    <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />
+    <ProjectReference Include="..\..\FlowEditor\FlowEditor.Controls\FlowEditor.Controls.csproj" />
     <ProjectReference Include="..\..\Vision\Vision.Core\Vision.Core.csproj" />
-    <ProjectReference Include="..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj" />
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
     <!-- 2026-09-23（运行时补漏）：这条与前 11 条不同 —— 不是编译需要，而是**运行时**需要。
          App.xaml.cs:269 有 `System.Reflection.Assembly.Load("FlowNodes");`

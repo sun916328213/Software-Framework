@@ -10,5 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\FlowEditor.Runtime\FlowEditor.Runtime.csproj" />
+    <ProjectReference Include="..\..\DataManager\DataManager.Runtime\DataManager.Runtime.csproj" />
   </ItemGroup>
 </Project>

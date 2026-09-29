@@ -38,8 +38,8 @@ namespace WPFControl.Tests
 
             Assert.Equal(
                 [
-                    // 3.11：Model 直接 using 了 View，依赖方向整个倒过来（尚未偿还）
-                    "ProgramControl/Models/Shell/DisplayModel.cs :: WPFControl.CustomControl.Views"
+                    // 2026-09-29：Display 显示链改用 HObject 直显（DPLibrary 删除），
+                    // DisplayModel 不再 using Views，3.11 债务偿还，登记清零。
                 ],
                 actual);
         }
@@ -78,11 +78,13 @@ namespace WPFControl.Tests
                          @"..\..\Extension\Extension\Extension.csproj",
                          @"..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj",
                          @"..\..\Secs\SecsGem.Core\SecsGem.Core.csproj",
-                         @"..\..\DataManager\DataManager\DataManager.csproj",
+                         // 2026-09-29：兼容门面 DataManager/DataManager 已删除，改为直连 Core + Runtime。
+                         @"..\..\DataManager\DataManager.Core\DataManager.Core.csproj",
+                         @"..\..\DataManager\DataManager.Runtime\DataManager.Runtime.csproj",
                          @"..\..\Device\Device\Device.csproj",
                          @"..\..\Vision\Vision.Controls\Vision.Controls.csproj",
                          @"..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj",
-                         @"..\..\FlowEditor\FlowEditor\FlowEditor.csproj",
+                         @"..\..\FlowEditor\FlowEditor.Controls\FlowEditor.Controls.csproj",
                          @"..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj"
                      })
             {
@@ -170,13 +172,15 @@ namespace WPFControl.Tests
             var references = new[]
             {
                 @"..\..\Extension\Extension\Extension.csproj",
-                @"..\..\DataManager\DataManager\DataManager.csproj",
+                // 2026-09-29：兼容门面 DataManager/DataManager 已删除，改为直连 Core + Runtime。
+                @"..\..\DataManager\DataManager.Core\DataManager.Core.csproj",
+                @"..\..\DataManager\DataManager.Runtime\DataManager.Runtime.csproj",
                 @"..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj",
                 @"..\..\Device\Device\Device.csproj",
                 @"..\..\Secs\SecsGem.Core\SecsGem.Core.csproj",
                 @"..\..\Secs\SecsGem.Runtime\SecsGem.Runtime.csproj",
                 @"..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj",
-                @"..\..\FlowEditor\FlowEditor\FlowEditor.csproj",
+                @"..\..\FlowEditor\FlowEditor.Controls\FlowEditor.Controls.csproj",
                 @"..\..\Vision\Vision.Core\Vision.Core.csproj",
                 @"..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj",
                 @"..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj",

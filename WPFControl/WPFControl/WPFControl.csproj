@@ -63,17 +63,18 @@
          就可能静默打断 WPFControl 的编译。显式声明让依赖图可读；构建闭包不变。
          ⛔ Halcon 包仍只在 Extension.csproj 一处锁版本（项目约定），此处不重复声明。 -->
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
-    <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />
     <ProjectReference Include="..\..\Secs\SecsGem.Core\SecsGem.Core.csproj" />
-    <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
-    <ProjectReference Include="..\..\Device\Device\Device.csproj" />
+    <!-- 2026-09-29：兼容门面 DataManager/DataManager 已删除，改为直连 Core + Runtime。 -->
+    <ProjectReference Include="..\..\DataManager\DataManager.Core\DataManager.Core.csproj" />
+    <ProjectReference Include="..\..\DataManager\DataManager.Runtime\DataManager.Runtime.csproj" />
     <ProjectReference Include="..\..\Vision\Vision.Controls\Vision.Controls.csproj" />
-    <ProjectReference Include="..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj" />
     <!-- 2026-09-23（审计补漏）：这两个工程此前同样只靠传递闭包（经 FlowNodes）拿到 ——
          上一轮补 6 个时漏了它们，是全仓「声明≠使用」审计扫出来的。
          · FlowEditor        —— FlowEditor.Core(1 文件) / FlowEditor.ViewModels(4 文件)
          · WPFCustomControls —— WPFCustomControls.Controls(15 文件) / WPFCustomControls.Window.Views(9 文件) -->
-    <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />
+    <ProjectReference Include="..\..\FlowEditor\FlowEditor.Controls\FlowEditor.Controls.csproj" />
+    <!-- ScriptEditor.Views/Services are used directly by the host. -->
+    <ProjectReference Include="..\..\ScriptEditor\ScriptEditor.Controls\ScriptEditor.Controls.csproj" />
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
     <!-- 2026-09-24（P8-1）：接入新 Device 栈，取代旧 Device/Device 的相机/光源/RFID/扫码/标签打印能力。
          · Device.Core     —— 契约 / Options / Result（Controls 与 Runtime 都只面向它）

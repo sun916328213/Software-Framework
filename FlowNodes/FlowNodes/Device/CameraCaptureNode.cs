@@ -124,7 +124,9 @@ public class CameraCaptureNode : NodeModel
         if (cameras == null)
             throw FlowNodeException.Config("E-CAMERA-PROVIDER-MISSING", $"节点 [{Name}] 缺少相机服务（ICameraProvider）。", nodeId: Id);
 
-        Device.Core.Cameras.ICamera camera;
+        // 本文件位于 namespace FlowNodes.Device，裸写 Device.Core.* 会先绑定到 FlowNodes.Device.Core
+        // （不存在）⇒ CS0234；用 global:: 显式从根解析。
+        global::Device.Core.Cameras.ICamera camera;
         try
         {
             camera = cameras.Get(CameraName);
@@ -136,7 +138,7 @@ public class CameraCaptureNode : NodeModel
 
         if (camera.State != DeviceState.Connected)
         {
-            Device.Core.Devices.OperationResult connect;
+            global::Device.Core.Devices.OperationResult connect;
             try
             {
                 connect = await camera.ConnectAsync(ctx.CancellationToken);

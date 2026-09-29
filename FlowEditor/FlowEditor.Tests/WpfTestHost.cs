@@ -49,7 +49,7 @@ internal static class WpfTestHost
         });
         application.Resources.MergedDictionaries.Add(new ResourceDictionary
         {
-            Source = new Uri("pack://application:,,,/FlowEditor;component/Resources/Resources.xaml")
+            Source = new Uri("pack://application:,,,/FlowEditor.Controls;component/Resources/Resources.xaml")
         });
     }
 }

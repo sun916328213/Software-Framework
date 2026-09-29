@@ -24,7 +24,6 @@
          原先只是**借** DPLibrary_Halcon_F48 传递拿到 Vision.Core；显式声明后，
          将来 P9 摘掉下面那条迁移源引用时，Core 的纯度守卫不会被顺带打断。 -->
     <ProjectReference Include="..\Vision.Core\Vision.Core.csproj" />
-    <ProjectReference Include="..\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj" />
     <!-- P3（2026-09-28）：HALCON Tool Contract Tests 引用标准化后的 Vision.Tools.Halcon。
          只测 Validate/Parameters/Result/纯 helper，无 HALCON Runtime 也能跑（计划 §9.1）。 -->
     <ProjectReference Include="..\Vision.Tools.Halcon\Vision.Tools.Halcon.csproj" />

@@ -14,7 +14,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
   <ItemGroup>
-    <!-- P12：测试直接引用 Core + Runtime；兼容门面用于旧 API 兼容测试。 -->
+    <!-- P12：测试直接引用 Core + Runtime。兼容门面已于 2026-09-29 删除，旧 API 由 Runtime 直接承载。 -->
     <ProjectReference Include="..\DataManager.Core\DataManager.Core.csproj" />
     <ProjectReference Include="..\DataManager.Runtime\DataManager.Runtime.csproj" />
   </ItemGroup>

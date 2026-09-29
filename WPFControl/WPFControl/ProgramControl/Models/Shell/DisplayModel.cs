@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using DPLibrary_Halcon_F48.Tools;
+using HalconDotNet;
 using System.Collections.ObjectModel;
-using WPFControl.CustomControl.Views.Display;
 
 namespace WPFControl.ProgramControl.Models
 {
@@ -33,42 +32,44 @@ namespace WPFControl.ProgramControl.Models
             set => SetProperty(ref _columnCount, value);
         }
 
-        ObservableCollection<HVisionTool> _VisionTools=new ObservableCollection<HVisionTool>();
+        ObservableCollection<HObject> _DisplayImages = new ObservableCollection<HObject>();
         /// <summary>
-        /// 用于多个显示控件的VisionTool集合
+        /// 用于多个显示控件的图像集合（与 DisplayTitles 按索引对齐）。
+        /// 2026-09-29：旧 HVisionTool 工具模型随 DPLibrary 删除，显示链改为直接显示 HObject，
+        /// 上游（脚本/站点）把要显示的图像传进来即可。
         /// </summary>
-        public ObservableCollection<HVisionTool> VisionTools
+        public ObservableCollection<HObject> DisplayImages
         {
-            get => _VisionTools;
-            set => SetProperty(ref _VisionTools, value);
-        }
-        
-        /// <summary>
-        /// 设置指定索引的VisionTool并触发通知
-        /// </summary>
-        /// <param name="index">索引</param>
-        /// <param name="tool">VisionTool实例</param>
-        public void SetVisionTool(int index, HVisionTool tool)
-        {
-            // 确保集合中有足够数量的元素
-            while (VisionTools.Count <= index)
-            {
-                VisionTools.Add(null);
-            }
-            
-            // 设置指定索引的元素
-            VisionTools[index] = tool;
-            
-            // 触发集合更改通知
-            OnPropertyChanged(nameof(VisionTools));
+            get => _DisplayImages;
+            set => SetProperty(ref _DisplayImages, value);
         }
 
         /// <summary>
-        /// 触发VisionTools属性更改通知
+        /// 设置指定索引的显示图像并触发通知
         /// </summary>
-        public void NotifyVisionToolsChanged()
+        /// <param name="index">索引</param>
+        /// <param name="image">图像实例</param>
+        public void SetDisplayImage(int index, HObject image)
         {
-            OnPropertyChanged(nameof(VisionTools));
+            // 确保集合中有足够数量的元素
+            while (DisplayImages.Count <= index)
+            {
+                DisplayImages.Add(null);
+            }
+
+            // 设置指定索引的元素
+            DisplayImages[index] = image;
+
+            // 触发集合更改通知
+            OnPropertyChanged(nameof(DisplayImages));
+        }
+
+        /// <summary>
+        /// 触发显示图像集合属性更改通知
+        /// </summary>
+        public void NotifyDisplayImagesChanged()
+        {
+            OnPropertyChanged(nameof(DisplayImages));
         }
     }
 }

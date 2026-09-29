@@ -1,7 +1,4 @@
-﻿using FlowEditor.Nodes;
-using DPLibrary_Halcon_F48.Tools;
-using FlowEditor.Core;
-using System.Threading.Tasks;
+﻿using FlowEditor.Core;
 using FlowNodes.Vision.SingleTool.Definition;
 
 namespace FlowNodes.Vision.SingleTool.CodeReader

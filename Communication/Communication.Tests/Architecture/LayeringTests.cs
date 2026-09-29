@@ -14,8 +14,6 @@ public sealed class LayeringTests
     private static readonly Assembly CoreAssembly = typeof(IConnection).Assembly;
     private static readonly Assembly RuntimeAssembly = typeof(CommunicationManager).Assembly;
 
-    private static Assembly FacadeAssembly => Assembly.Load("CommunicationNew");
-
     [Theory]
     [InlineData("core", "CommunicationNew.Abstractions", "CommunicationNew.Abstractions")]
     [InlineData("core", "CommunicationNew.Core", "CommunicationNew.Abstractions", "CommunicationNew.Core")]
@@ -311,6 +309,7 @@ public sealed class LayeringTests
             .ToHashSet(StringComparer.Ordinal);
 
         Assert.DoesNotContain("Communication.Runtime", references);
+        // 兼容门面（程序集名 CommunicationNew）已于 2026-09-29 删除；保留此断言防止 Core 反向依赖门面。
         Assert.DoesNotContain("CommunicationNew", references);
         Assert.DoesNotContain("FluentModbus", references);
         Assert.DoesNotContain("Opc.Ua.Client", references);
@@ -349,22 +348,6 @@ public sealed class LayeringTests
                 "CommunicationNew.Core.Services.DataPointAutoReader",
             },
             hosted);
-    }
-
-    [Fact]
-    public void Facade_preserves_identity_and_defines_no_implementation()
-    {
-        var facade = FacadeAssembly;
-        Assert.Equal("CommunicationNew", facade.GetName().Name);
-
-        var definedPublic = facade.DefinedTypes
-            .Where(type => type.IsPublic)
-            .Select(type => type.FullName)
-            .OrderBy(name => name)
-            .ToArray();
-
-        // 兼容门面只做类型转发与必要 shim，不再承载协议实现。
-        Assert.Empty(definedPublic);
     }
 
     [Fact]

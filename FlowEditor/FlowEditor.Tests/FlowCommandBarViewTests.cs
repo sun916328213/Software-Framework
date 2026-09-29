@@ -62,7 +62,7 @@ public class FlowCommandBarViewTests
     public void CtrlSaveAndOpen_TargetCurrentSingleFlowCommands()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
-        var document = XDocument.Load(Path.Combine(root, "FlowEditor", "Views", "FlowChartContainerView.xaml"));
+        var document = XDocument.Load(Path.Combine(root, "FlowEditor.Controls", "Views", "FlowChartContainerView.xaml"));
         XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
         var bindings = document.Descendants(presentation + "KeyBinding").ToList();
 
@@ -78,7 +78,7 @@ public class FlowCommandBarViewTests
     public void OutputPane_ProvidesClearCurrentOutputCommand()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
-        var document = XDocument.Load(Path.Combine(root, "FlowEditor", "Views", "FlowOutputPaneView.xaml"));
+        var document = XDocument.Load(Path.Combine(root, "FlowEditor.Controls", "Views", "FlowOutputPaneView.xaml"));
         XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
 
         var button = Assert.Single(document.Descendants(presentation + "Button"),

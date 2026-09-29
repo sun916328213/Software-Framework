@@ -10,7 +10,7 @@ using Xunit;
 namespace FlowEditorTest;
 
 /// <summary>
-/// 从独立编译产物验证第三方节点插件的公开兼容契约。
+/// 从独立编译产物验证当前第三方节点插件的公开契约。
 /// 测试代码不引用夹具节点类型，防止退化为同程序集内的普通单元测试。
 /// </summary>
 public sealed class PluginContractTests

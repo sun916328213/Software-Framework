@@ -26,8 +26,7 @@
     <ProjectReference Include="..\..\Device\Device.Core\Device.Core.csproj" />
     <ProjectReference Include="..\..\Device\Device.Runtime\Device.Runtime.csproj" />
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
-    <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />
-    <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />
+    <ProjectReference Include="..\..\FlowEditor\FlowEditor.Controls\FlowEditor.Controls.csproj" />
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
     <ProjectReference Include="..\FlowNodes\FlowNodes.csproj" />
   </ItemGroup>
