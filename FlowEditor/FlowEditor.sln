@@ -8,9 +8,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor", "FlowEditor\Fl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.PluginContractFixture", "FlowEditor.PluginContractFixture\FlowEditor.PluginContractFixture.csproj", "{E6FC10C2-4713-4D97-A9D5-2A047FC9E2FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Tests", "FlowEditor.Test\FlowEditor.Tests.csproj", "{FCB1C333-FE57-48B3-A705-AD1E068E32EE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Tests", "FlowEditor.Tests\FlowEditor.Tests.csproj", "{FCB1C333-FE57-48B3-A705-AD1E068E32EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Runtime.Smoke", "FlowEditor.Runtime.Smoke\FlowEditor.Runtime.Test.csproj", "{7D87F19C-D8CF-4D0B-AE61-4661A1D7F94F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Runtime.Smoke", "FlowEditor.Runtime.Smoke\FlowEditor.Runtime.Smoke.csproj", "{7D87F19C-D8CF-4D0B-AE61-4661A1D7F94F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFControl.Host.Tests", "WPFControl.Host.Tests\WPFControl.Host.Tests.csproj", "{80D35D4A-120C-4ED2-817D-A4256CFEB19A}"
 EndProject
