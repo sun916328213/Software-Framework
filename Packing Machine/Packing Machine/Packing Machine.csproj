@@ -29,14 +29,16 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\WPFControl\WPFControl\WPFControl.csproj" />
-    <!-- 2026-09-23：按架构分析文档 6.4 补全直接引用。本工程 47 个 .cs 实际在用这 11 个工程的
+    <!-- 2026-09-23：按架构分析文档 6.4 补全直接引用。本工程源文件实际使用下列工程的
          命名空间（Extension 16 处、DataManager.Log.Definition 15 处、Secs 11 处 …），但此前
          只声明了 WPFControl，全靠传递闭包（WPFControl → FlowNodes）送来 ⇒ 上游一清理就会
          静默打断本工程的编译。显式声明让依赖图可读；构建闭包不变。
          ⛔ 包引用一条都不补：HalconDotNet 仍只在 Extension.csproj 一处锁 23110.0.0（项目约定）。 -->
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
     <ProjectReference Include="..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj" />
+    <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
     <ProjectReference Include="..\..\Device\Device\Device.csproj" />
+    <ProjectReference Include="..\..\Secs\SecsGem.Core\SecsGem.Core.csproj" />
     <ProjectReference Include="..\..\Secs\SecsGem.Runtime\SecsGem.Runtime.csproj" />
     <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />
     <ProjectReference Include="..\..\FlowEditor\FlowEditor\FlowEditor.csproj" />

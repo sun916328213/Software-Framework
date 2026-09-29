@@ -6,7 +6,6 @@ using Packing_Machine.Business.Station;
 using Packing_Machine.Infra.Tool;
 using Packing_Machine.Business.Order;
 using Prism.Ioc;
-using Secs4Net;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -159,15 +158,7 @@ namespace Packing_Machine.Business.Flow
         public async Task RecipeReport()
         {
             var data = ReadRecipe();
-            Item[] items = new Item[1] { Item.A(data.ToJson()) };
-
-
-            Item SecsItem = Item.L(
-                    Item.U2(1),//DataID
-                    Item.U2(1),//EventID
-                    Item.L(items)
-                   );
-            await _SecsMethod.SendS6F11(SecsItem);
+            await _SecsMethod.SendRecipeReport(data.ToJson());
         }
 
         /// <summary>
@@ -180,14 +171,7 @@ namespace Packing_Machine.Business.Flow
             {
                 _PLCMethod.TriggerReply(StationName, pLCOrder);
                 var data = ReadRecipe();
-                Item[] items = new Item[1] { Item.A(data.ToJson()) };
-
-                Item SecsItem = Item.L(
-                        Item.U2(1),//DataID
-                        Item.U2(1),//EventID
-                        Item.L(items)
-                       );
-                await _SecsMethod.SendS6F11(SecsItem);
+                await _SecsMethod.SendRecipeReport(data.ToJson());
 
 
                 //等待S2F41指令 确认配方信息

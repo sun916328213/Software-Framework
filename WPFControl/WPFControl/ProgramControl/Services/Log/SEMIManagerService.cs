@@ -1,12 +1,7 @@
 ﻿using Prism.Ioc;
-using Secs;
-using Secs.Variable;
+using SecsGem.Core;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using WPFControl.ProgramControl.Models;
 
 namespace WPFControl.ProgramControl.Services
@@ -15,30 +10,22 @@ namespace WPFControl.ProgramControl.Services
     {
         public SEMIManagerModel Model { get; set; } = new SEMIManagerModel();
 
-        private SecsControl SecsControl;
+        private readonly ISecsGemConfiguration _configuration;
 
-        public SEMIManagerService(IContainerProvider container)
-        {
-            SecsControl = container.Resolve<SecsControl>();
-
-         
-         
-        }
+        public SEMIManagerService(ISecsGemConfiguration configuration) => _configuration = configuration;
 
         public void ReportLoad()
         {
-            SecsControl._VIDManager.ReportID.Load();
-            Model.Reports = new ObservableCollection<ReportInfo>(SecsControl._VIDManager.ReportID.GetDatas());
+            Model.Reports = new ObservableCollection<SecsGemReportDefinition>(_configuration.LoadReports());
         }
 
         public void EventLoad()
         {
-            SecsControl._VIDManager.CEID.Load();
-            Model.Events = new ObservableCollection<CEIDInfo>(SecsControl._VIDManager.CEID.GetDatas());
+            Model.Events = new ObservableCollection<SecsGemEventDefinition>(_configuration.LoadEvents());
         }
 
-        public void ReportSave() => SecsControl._VIDManager.ReportID.Save();
-        public void EventSave() => SecsControl._VIDManager.CEID.Save();
+        public void ReportSave() => _configuration.SaveReports();
+        public void EventSave() => _configuration.SaveEvents();
 
     }
 }

@@ -5,8 +5,8 @@ using Extension.Automation.Device;
 using Extension.Automation.Secs;
 using Packing_Machine.Business.Order;
 using Secs;
-using Secs.Order.S6;
 using Secs4Net;
+using SecsGem.Core;
 using System;
 using System.Threading.Tasks;
 using WPFControl.Helper;
@@ -15,11 +15,19 @@ namespace Packing_Machine.Infra.Tool
 {
     public class SecsTool  
     {
-        internal SecsControl _SecsControl;
-
-        public SecsTool(SecsControl secsControl)
+        private readonly SecsControl _secsControl;
+        private readonly ISecsGemRuntime _runtime;
+        public ESecsMode CurrentMode => _runtime.GetState().Mode switch
         {
-            _SecsControl= secsControl;
+            SecsGemMode.OnlineLocal => ESecsMode.Online_Local,
+            SecsGemMode.OnlineRemote => ESecsMode.Online_Remote,
+            _ => ESecsMode.Offline
+        };
+
+        public SecsTool(ISecsGemRuntime runtime, SecsControl secsControl)
+        {
+            _runtime = runtime;
+            _secsControl = secsControl;
         }
  
         /// <summary>
@@ -32,7 +40,7 @@ namespace Packing_Machine.Infra.Tool
         {
            TryCatchHelper.TryExecute(() =>
             {
-                _SecsControl._VIDManager.UpdateVID(pName, pValue);
+                _runtime.SetVariable(pName, pValue);
             });
         }
 
@@ -45,7 +53,7 @@ namespace Packing_Machine.Infra.Tool
         {
             TryCatchHelper.TryExecute(() =>
             {
-                _SecsControl._VIDManager.AppendVID(pName, pValue);
+                _runtime.AppendVariable(pName, pValue);
             });
         }
 
@@ -63,7 +71,7 @@ namespace Packing_Machine.Infra.Tool
 
                 Func<Task> func = null;
 
-                switch (_SecsControl.GetDeviceMode())
+                switch (CurrentMode)
                 {
                     case ESecsMode.Offline:
                         func = action_Offline;
@@ -94,9 +102,8 @@ namespace Packing_Machine.Infra.Tool
             try
             {
               
-                var data = _SecsControl._VIDManager.CEID[pSEMIOrder];
-                //告诉EAP数据失败
-                await _SecsControl.SendItem("S6F11", true, new S6F11Info() { CEID = data });
+                if (!await _runtime.ReportEventAsync(pSEMIOrder))
+                    throw new InvalidOperationException("S6F11 event report failed");
             }
             catch (Exception ex)
             {
@@ -112,7 +119,13 @@ namespace Packing_Machine.Infra.Tool
         /// <returns></returns>
         public async Task SendS6F11(Item item)
         {
-            await _SecsControl.Send("S6F11", item, true);
+            await _secsControl.Send("S6F11", item, true);
+        }
+
+        public Task SendRecipeReport(string recipeJson)
+        {
+            var body = Item.L(Item.U2(1), Item.U2(1), Item.L(Item.A(recipeJson)));
+            return SendS6F11(body);
         }
 
 
@@ -132,7 +145,7 @@ namespace Packing_Machine.Infra.Tool
                 await EventHelper.WaitForEventAsync("S2F41");
 
                 //获取数据
-                var d3 = _SecsControl._VIDManager.ActiveReceive.GetandRemoveData("S2F41", pS2F42Order);
+                var d3 = _secsControl._VIDManager.ActiveReceive.GetandRemoveData("S2F41", pS2F42Order);
                 //告诉EAP数据成功
                 int i1 = d3.CommandParam.IndexOf(S2F42Order.Check_Result) + 1;
                 int i2 = d3.CommandParam.IndexOf(S2F42Order.FOSBID) + 1;
@@ -161,7 +174,7 @@ namespace Packing_Machine.Infra.Tool
                 await EventHelper.WaitForEventAsync("S2F41");
 
                 //获取数据
-                var d3 = _SecsControl._VIDManager.ActiveReceive.GetandRemoveData("S2F41", pS2F42Order);
+                var d3 = _secsControl._VIDManager.ActiveReceive.GetandRemoveData("S2F41", pS2F42Order);
 
                 int i1 = d3.CommandParam.IndexOf(S2F42Order.Recipe_ID) + 1;
                 int i2 = d3.CommandParam.IndexOf(S2F42Order.FOSBID) + 1;

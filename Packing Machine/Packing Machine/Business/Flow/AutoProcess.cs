@@ -15,7 +15,7 @@ using Packing_Machine.Business.Order;
 using Packing_Machine.Business.Station;
 using Packing_Machine.Infra.Tool;
 using Prism.Ioc;
-using Secs;
+using SecsGem.Core;
 using WPFControl.Helper;
 using WPFControl.ProgramControl.Models;
 using WPFControl.ProgramControl.Services;
@@ -32,7 +32,7 @@ namespace Packing_Machine.Business.Flow
 
         readonly PLCTool _PLCMethod;
         readonly SecsTool _SecsMethod;
-        readonly SecsControl _SecsControl;
+        readonly ISecsGemRuntime _secsRuntime;
 
         private ScanManager _ScanManager;
 
@@ -58,9 +58,10 @@ namespace Packing_Machine.Business.Flow
         private readonly IContainerProvider _container;
      
 
-        public AutoProcess(IContainerProvider container)
+        public AutoProcess(IContainerProvider container, ISecsGemRuntime secsRuntime)
         {
             _container = container;
+            _secsRuntime = secsRuntime;
             _Model_UserInfo = container.Resolve<UserInfoModel>();
             _Model_StatusBar = container.Resolve<StatusBarModel>();
             _StatisticService = container.Resolve<StatisticService>();
@@ -68,7 +69,6 @@ namespace Packing_Machine.Business.Flow
 
             _PLCMethod = container.Resolve<PLCTool>();
             _SecsMethod = container.Resolve<SecsTool>();
-            _SecsControl = container.Resolve<SecsControl>();
             _ScanManager = container.Resolve<ScanManager>();
 
             _Load = container.Resolve<Load>();
@@ -176,9 +176,9 @@ namespace Packing_Machine.Business.Flow
 
                     _StatisticService.UpdateCount(10, 200);
                     _StatisticService.UpdateRunTime(_AlarmInfoService.TotalAlarmTime == 0 ? 100 : 500, 800);
-                    _StatisticService.UpdateSecsMode(_SecsControl._StatusManager.CurrentMode);
+                    _StatisticService.UpdateSecsMode(_SecsMethod.CurrentMode);
                     _StatisticService.UpdatePLC(plcstatus);
-                    _StatisticService.UpdateSecsStatus(_SecsControl.IsConnected ? ELinkStatus.Online : ELinkStatus.Offline);
+                    _StatisticService.UpdateSecsStatus(_secsRuntime.GetState().IsConnected ? ELinkStatus.Online : ELinkStatus.Offline);
                     _StatisticService.UpdateTime();
 
 
@@ -261,13 +261,15 @@ namespace Packing_Machine.Business.Flow
                 if (Mode != CurMode && Mode == ESecsMode.Offline.ToString())
                 {
                     CurMode = Mode;
-                    await _SecsControl._ConnectManager.Offline_EtoH().ConfigureAwait(false);
+                    if (!await _secsRuntime.GoOfflineAsync().ConfigureAwait(false))
+                        throw new InvalidOperationException("SECS/GEM offline request failed");
                     _StatisticService.UpdateSecsMode(EnumEx.GetEnum<ESecsMode>(CurMode));
                 }
                 else if (Mode != CurMode && Mode != ESecsMode.Offline.ToString())
                 {
                     CurMode = Mode;
-                    await _SecsControl._ConnectManager.Online_EtoH().ConfigureAwait(false);
+                    if (!await _secsRuntime.GoOnlineRemoteAsync().ConfigureAwait(false))
+                        throw new InvalidOperationException("SECS/GEM online request failed");
                     _StatisticService.UpdateSecsMode(EnumEx.GetEnum<ESecsMode>(CurMode));
                 }
 

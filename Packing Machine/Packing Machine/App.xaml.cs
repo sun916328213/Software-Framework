@@ -17,7 +17,7 @@ using Prism.Modularity;
 using Prism.Regions;
 using ScriptEditor;
 using ScriptEditor.Services;
-using Secs;
+using SecsGem.Runtime;
 using System.Windows;
 using System.Windows.Threading;
 using WPFControl;
@@ -155,7 +155,7 @@ namespace Packing_Machine
         {
             // 添加WPFControl模块到模块目录
             moduleCatalog.AddModule<DataManagerModule>();
-            moduleCatalog.AddModule<SecsToolModule>();
+            moduleCatalog.AddModule<SecsGemModule>();
             moduleCatalog.AddModule<DeviceModule>();
             moduleCatalog.AddModule<WPFControlModule>();
             moduleCatalog.AddModule<WPFCustomControlsModule>();

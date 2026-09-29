@@ -51,6 +51,7 @@ namespace SecsGem.Runtime.Tests.Integration
             new SecsGemModule().RegisterTypes(container);
             var control = (SecsControl)container.Resolve(typeof(SecsControl));
             Assert.Same(control, container.Resolve(typeof(ISecsGemRuntime)));
+            Assert.Same(control, container.Resolve(typeof(ISecsGemConfiguration)));
             return control;
         }
 

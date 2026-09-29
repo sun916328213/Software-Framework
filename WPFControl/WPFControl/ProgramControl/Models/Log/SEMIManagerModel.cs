@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Secs.Variable;
+using SecsGem.Core;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,15 +11,15 @@ namespace WPFControl.ProgramControl.Models
 {
     internal class SEMIManagerModel:ObservableObject
     {
-        private ObservableCollection<ReportInfo> iReports;
-        public ObservableCollection<ReportInfo> Reports
+        private ObservableCollection<SecsGemReportDefinition> iReports;
+        public ObservableCollection<SecsGemReportDefinition> Reports
         {
             get => iReports;
             set => SetProperty(ref iReports, value);
         }
 
-        private ObservableCollection<CEIDInfo> iEvents;
-        public ObservableCollection<CEIDInfo> Events
+        private ObservableCollection<SecsGemEventDefinition> iEvents;
+        public ObservableCollection<SecsGemEventDefinition> Events
         {
             get => iEvents;
             set => SetProperty(ref iEvents, value);

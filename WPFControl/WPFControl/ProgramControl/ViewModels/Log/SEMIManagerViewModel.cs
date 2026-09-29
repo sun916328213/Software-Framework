@@ -2,8 +2,6 @@
 using CommunityToolkit.Mvvm.Input;
 using Extension.Core.Conversion;
 using Prism.Ioc;
-using Secs;
-using Secs.Variable;
 using System;
 using System.Collections.ObjectModel;
 using WPFControl.ProgramControl.Models;

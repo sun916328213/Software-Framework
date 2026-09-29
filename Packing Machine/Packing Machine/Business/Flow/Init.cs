@@ -7,7 +7,7 @@ using Packing_Machine.Data;
 using Packing_Machine.Infra.Core;
 using Prism.Regions;
 using Prism.Services.Dialogs;
-using Secs;
+using SecsGem.Core;
 using System.Collections.ObjectModel;
 using WPFControl.CustomControl.Models;
 using WPFControl.ProgramControl.Models;
@@ -25,10 +25,11 @@ namespace Packing_Machine.Business.Flow
         private static IRegionManager _IRegionManager;
         private static DialogService _DialogService;
 
-        private static SecsControl _SecsControl;
+        private static ISecsGemRuntime _secsRuntime;
 
-        public Init()
+        public Init(ISecsGemRuntime secsRuntime)
         {
+            _secsRuntime = secsRuntime;
             // 初始化逻辑
             _ControlService = ContainerManager.Resolve<ControlService>();
             _StatisticService = ContainerManager.Resolve<StatisticService>();
@@ -38,7 +39,6 @@ namespace Packing_Machine.Business.Flow
             _IRegionManager = ContainerManager.Resolve<IRegionManager>();
             _DialogService = ContainerManager.Resolve<DialogService>();
 
-            _SecsControl = ContainerManager.Resolve<SecsControl>();
         }
 
         public void InitControl()
@@ -58,12 +58,12 @@ namespace Packing_Machine.Business.Flow
                  {
              
                      //_StatisticService.UpdateDeviceStatus(EDeviceStatus.Ready);
-                     //_ = _SecsControl._ConnectManager.Online_EtoH();
+                     //_ = _secsRuntime.GoOnlineRemoteAsync();
                  },
                  () =>
                      {
                          _StatisticService.UpdateDeviceStatus(EDeviceStatus.Running);
-                         _ = _SecsControl._ConnectManager.Offline_EtoH();
+                         _ = _secsRuntime.GoOfflineAsync();
                      },
                  () =>
                      {

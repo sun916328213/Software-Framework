@@ -64,7 +64,7 @@ namespace WPFControl.Tests
         }
 
         /// <summary>
-        /// csproj 必须显式声明源码真正用到的 8 个工程（架构文档 3.1 / 6.6）。
+        /// csproj 必须显式声明源码真正用到的项目；SECS/GEM 只依赖 Core 契约。
         /// 此前它们只存在于传递闭包里（经 FlowNodes / Extension / DataManager），
         /// 上游一动就可能静默打断 WPFControl 的编译。本测试防止这条修复被回退。
         /// </summary>
@@ -77,7 +77,8 @@ namespace WPFControl.Tests
                      {
                          @"..\..\Extension\Extension\Extension.csproj",
                          @"..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj",
-                         @"..\..\Secs\SecsGem.Runtime\SecsGem.Runtime.csproj",
+                         @"..\..\Secs\SecsGem.Core\SecsGem.Core.csproj",
+                         @"..\..\DataManager\DataManager\DataManager.csproj",
                          @"..\..\Device\Device\Device.csproj",
                          @"..\..\Vision\Vision.Controls\Vision.Controls.csproj",
                          @"..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj",
@@ -88,8 +89,29 @@ namespace WPFControl.Tests
                 Assert.Contains(reference, project, StringComparison.Ordinal);
             }
 
+            Assert.DoesNotContain(@"..\..\Secs\SecsGem.Runtime\SecsGem.Runtime.csproj", project, StringComparison.Ordinal);
+
             // 3.10：LogR 三个目录已不存在，不应再有指向它们的 Remove 死配置
             Assert.DoesNotMatch(@"Remove=""[^""]*LogR", project);
+        }
+
+        [Fact]
+        public void FlowNodes_And_Application_Business_Use_Core_Instead_Of_Runtime_Types()
+        {
+            var root = Directory.GetParent(ProjectDirectory)?.Parent?.FullName
+                ?? throw new DirectoryNotFoundException("无法定位仓库根目录。");
+            var flowNodes = File.ReadAllText(Path.Combine(root, "FlowNodes", "FlowNodes", "FlowNodes.csproj"));
+            Assert.Contains(@"..\..\Secs\SecsGem.Core\SecsGem.Core.csproj", flowNodes, StringComparison.Ordinal);
+            Assert.DoesNotContain(@"..\..\Secs\SecsGem.Runtime\SecsGem.Runtime.csproj", flowNodes, StringComparison.Ordinal);
+
+            var businessDirectory = Path.Combine(root, "Packing Machine", "Packing Machine", "Business");
+            foreach (var file in Directory.EnumerateFiles(businessDirectory, "*.cs", SearchOption.AllDirectories))
+            {
+                var source = File.ReadAllText(file);
+                Assert.DoesNotContain("SecsControl", source, StringComparison.Ordinal);
+                Assert.DoesNotContain("Secs4Net", source, StringComparison.Ordinal);
+                Assert.DoesNotContain("SecsGem.Runtime", source, StringComparison.Ordinal);
+            }
         }
 
         /// <summary>
@@ -117,8 +139,8 @@ namespace WPFControl.Tests
         }
 
         /// <summary>
-        /// WPFControl 的下游宿主 <c>Packing Machine.csproj</c> 必须显式声明它实际使用的 11 个工程
-        /// （架构文档 6.4）。它此前只声明 WPFControl，其余 11 个全靠传递闭包
+        /// WPFControl 的下游宿主 <c>Packing Machine.csproj</c> 必须显式声明它实际使用的工程
+        /// （架构文档 6.4）。它此前只声明 WPFControl，其余工程全靠传递闭包
         /// （WPFControl → FlowNodes）送来 ⇒ 上游一清理就会静默打断宿主的编译。
         /// 本测试防止这条修复被回退。
         /// ⚠️ 2026-09-23：`..\..\Communication\Communication\Communication.csproj` 登记条目**已删除** ——
@@ -151,6 +173,7 @@ namespace WPFControl.Tests
                 @"..\..\DataManager\DataManager\DataManager.csproj",
                 @"..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj",
                 @"..\..\Device\Device\Device.csproj",
+                @"..\..\Secs\SecsGem.Core\SecsGem.Core.csproj",
                 @"..\..\Secs\SecsGem.Runtime\SecsGem.Runtime.csproj",
                 @"..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj",
                 @"..\..\FlowEditor\FlowEditor\FlowEditor.csproj",

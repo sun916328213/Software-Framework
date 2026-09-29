@@ -57,6 +57,9 @@ public partial class SecsGemRuntime : ISecsGemRuntime
     public Task<bool> ReportAlarmAsync(SecsGemAlarm alarm)
     {
         ArgumentNullException.ThrowIfNull(alarm);
+        var configured = _vidManager.Alarm.GetDatas().FirstOrDefault(x => x.ID == alarm.Id);
+        if (configured != null)
+            configured.Code = alarm.Code;
         return S5F1AlarmReportSendAsync(new AlarmInfo
         {
             ID = alarm.Id,

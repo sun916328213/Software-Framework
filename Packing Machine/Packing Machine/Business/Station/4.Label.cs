@@ -141,7 +141,7 @@ namespace Packing_Machine.Business.Station
         /// </summary>
         private async Task  Print(string LotID, int labelindex,string labeltype)
         {
-            var mode = _SecsMethod._SecsControl.GetDeviceMode();
+            var mode = _SecsMethod.CurrentMode;
             _LogInfoService.AddRunInfo(StationName + Message.打印标签.GetMessage());
             switch (mode)
             {

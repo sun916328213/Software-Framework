@@ -1,5 +1,7 @@
 ﻿using Extension.UI.Controls;
 using WPFControl.Resources;
+using SecsGem.Core;
+using Extension.Automation.Secs;
 
 public class Script
 {
@@ -7,7 +9,7 @@ public class Script
     BulletinBoardService _BulletinBoardService;
     StatisticService _StatisticService;
     AlarmInfoManagerService _AlarmInfoService;
-    SecsControl _SecsControl;
+    ISecsGemRuntime _secsRuntime;
 
     public void Initialize()
     {
@@ -16,7 +18,7 @@ public class Script
         _BulletinBoardService = ContainerManager.Resolve<BulletinBoardService>();
         _StatisticService = ContainerManager.Resolve<StatisticService>();
         _AlarmInfoService = ContainerManager.Resolve<AlarmInfoManagerService>();
-        _SecsControl = ContainerManager.Resolve<SecsControl>();
+        _secsRuntime = ContainerManager.Resolve<ISecsGemRuntime>();
     }
 
     public void Run()
@@ -89,9 +91,15 @@ public class Script
 
         _StatisticService.UpdateCount(10, 200);
         _StatisticService.UpdateRunTime(_AlarmInfoService.TotalAlarmTime == 0 ? 100 : 500, 800);
-        _StatisticService.UpdateSecsMode(_SecsControl._StatusManager.CurrentMode);
+        var secsState = _secsRuntime.GetState();
+        _StatisticService.UpdateSecsMode(secsState.Mode switch
+        {
+            SecsGemMode.OnlineLocal => ESecsMode.Online_Local,
+            SecsGemMode.OnlineRemote => ESecsMode.Online_Remote,
+            _ => ESecsMode.Offline
+        });
         _StatisticService.UpdatePLC(plcstatus);
-        _StatisticService.UpdateSecsStatus(_SecsControl.IsConnected ? ELinkStatus.Online : ELinkStatus.Offline);
+        _StatisticService.UpdateSecsStatus(secsState.IsConnected ? ELinkStatus.Online : ELinkStatus.Offline);
         _StatisticService.UpdateTime();
 
 

@@ -5,7 +5,7 @@ using Device.Scan;
 using Packing_Machine.Data;
 using Packing_Machine.Infra.Tool;
 using Prism.Ioc;
-using Secs;
+using SecsGem.Core;
 using WPFControl.Helper;
 using WPFControl.ProgramControl.Services;
 
@@ -14,10 +14,12 @@ namespace Packing_Machine.Business.Flow
     internal class Close
     {
         readonly IContainerProvider _container;
+        readonly ISecsGemRuntime _secsRuntime;
 
-        public Close(IContainerProvider   container)
+        public Close(IContainerProvider container, ISecsGemRuntime secsRuntime)
         {
-            _container=container;
+            _container = container;
+            _secsRuntime = secsRuntime;
         }
         
         /// <summary>
@@ -31,7 +33,7 @@ namespace Packing_Machine.Business.Flow
                 _container.Resolve<PrintManagerService>().Close();
 
                 _container.Resolve<PLCTool>().StopRefresh();
-                _container.Resolve<SecsControl>().Close ();
+                _secsRuntime.DisconnectAsync().ConfigureAwait(false).GetAwaiter().GetResult();
 
                 _container.Resolve<CamManager>().Dispose();
                 _container.Resolve<ScanManager>().Dispose();

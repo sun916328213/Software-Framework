@@ -33,6 +33,7 @@ namespace SecsGem.Runtime
             containerRegistry.RegisterSingleton<SecsControl>();
             containerRegistry.RegisterSingleton<SecsGemRuntime>(provider => provider.Resolve<SecsControl>());
             containerRegistry.RegisterSingleton<ISecsGemRuntime>(provider => provider.Resolve<SecsControl>());
+            containerRegistry.RegisterSingleton<ISecsGemConfiguration>(provider => provider.Resolve<SecsControl>());
         }
         /// <summary>
         /// 模块初始化完成后的回调

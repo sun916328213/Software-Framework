@@ -257,7 +257,7 @@ namespace Packing_Machine.Business.Flow
                     var d2 = Convert.ToInt32(_PLCMethod.ReadData(stationname, PLCProcess.EVAProcess_Pressure, 0));
                     var d3 = Convert.ToInt32(_PLCMethod.ReadData(stationname, PLCProcess.EVAProcess_Time, 0));
 
-                    if (_SecsMethod._SecsControl.GetDeviceMode() != ESecsMode.Offline)
+                    if (_SecsMethod.CurrentMode != ESecsMode.Offline)
                     {
                         //更新VID
                         _SecsMethod.Append(VIDOrder.VacuumFlowRate, d1);
@@ -288,7 +288,7 @@ namespace Packing_Machine.Business.Flow
                     var d2 = Convert.ToInt32(_PLCMethod.ReadData(stationname, PLCProcess.NitProcess_Pressure, 0));
                     var d3 = Convert.ToInt32(_PLCMethod.ReadData(stationname, PLCProcess.NitProcess_Time, 0));
 
-                    if (_SecsMethod._SecsControl.GetDeviceMode() != ESecsMode.Offline)
+                    if (_SecsMethod.CurrentMode != ESecsMode.Offline)
                     {
                         //更新VID
                         _SecsMethod.Append(VIDOrder.NitrogenFlowRate, d1);
@@ -317,7 +317,7 @@ namespace Packing_Machine.Business.Flow
                     var d1 = Convert.ToInt32(_PLCMethod.ReadData(stationname, PLCProcess.HeatProcess_Temp, 0));
                     var d2 = Convert.ToInt32(_PLCMethod.ReadData(stationname, PLCProcess.HeatProcess_Time, 0));
 
-                    if (_SecsMethod._SecsControl.GetDeviceMode() != ESecsMode.Offline)
+                    if (_SecsMethod.CurrentMode != ESecsMode.Offline)
                     {
                         //更新VID
                         _SecsMethod.Append(VIDOrder.HeatSealTemp, d1);

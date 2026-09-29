@@ -8,7 +8,7 @@ using Extension.Integration.Cloning;
 using Extension.IO.Csv;
 using Mapster;
 using Prism.Ioc;
-using Secs;
+using SecsGem.Core;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -28,7 +28,7 @@ namespace WPFControl.ProgramControl.Services
         internal AlarmInfoManagerModel Model { get; set; } = new AlarmInfoManagerModel();
 
         internal LogInfoService _LogInfoService;
-        internal SecsControl _SecsControl;
+        internal ISecsGemRuntime _secsRuntime;
         internal IExcel _ExcelManager;
 
         private string TotalAlarmTimeName = "总报警时间";
@@ -58,7 +58,7 @@ namespace WPFControl.ProgramControl.Services
         public AlarmInfoManagerService(IContainerProvider container)
         {
             _LogInfoService = container.Resolve<LogInfoService>();
-            _SecsControl = container.Resolve<SecsControl>();
+            _secsRuntime = container.Resolve<ISecsGemRuntime>();
 
             _ExcelManager = container.Resolve< EPPlusHelper>();
             _ExcelManager.ExcelParam = new ExcelParam()
@@ -165,13 +165,8 @@ namespace WPFControl.ProgramControl.Services
                 if (alarmInfo.Enable)
                 {
                     //发送EAP
-                    Secs.Variable.AlarmInfo alarmInfo1 = new Secs.Variable.AlarmInfo()
-                    {
-                        ID = alarmInfo.ID.ToString(),
-                        Description = alarmInfo.Info_EN,
-                        Code = 1,
-                    };
-                    _SecsControl._VIDManager.UpdateAlarm(alarmInfo1);
+                    _ = _secsRuntime.ReportAlarmAsync(new SecsGemAlarm(
+                        alarmInfo.ID.ToString(), alarmInfo.Info_EN, 1));
                 }
             }
         }
@@ -211,13 +206,8 @@ namespace WPFControl.ProgramControl.Services
                 if (alarmInfo.Enable)
                 {
                     //发送EAP
-                    Secs.Variable.AlarmInfo alarmInfo1 = new Secs.Variable.AlarmInfo()
-                    {
-                        ID = alarmInfo.ID.ToString(),
-                        Description = alarmInfo.Info_EN,
-                        Code = 0,
-                    };
-                    _SecsControl._VIDManager.UpdateAlarm(alarmInfo1);
+                    _ = _secsRuntime.ReportAlarmAsync(new SecsGemAlarm(
+                        alarmInfo.ID.ToString(), alarmInfo.Info_EN, 0));
                 }
             }
         }
@@ -225,4 +215,3 @@ namespace WPFControl.ProgramControl.Services
 
     }
 }
-

@@ -90,7 +90,7 @@ namespace Packing_Machine.Business.Station
 
         private async Task<bool> Load_Request()
         {
-            if (_SecsMethod._SecsControl.GetDeviceMode() == ESecsMode.Offline)
+            if (_SecsMethod.CurrentMode == ESecsMode.Offline)
                 return false;
 
             _SecsMethod.Update(VIDOrder.LoadPortID, 1);//更新LoadPortID

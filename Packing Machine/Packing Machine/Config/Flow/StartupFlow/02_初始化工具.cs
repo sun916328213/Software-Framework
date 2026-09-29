@@ -6,7 +6,6 @@ using Packing_Machine.Data;
 using Packing_Machine.Infra.Core;
 using Packing_Machine.Infra.Tool;
 using Packing_Machine.UI.Model;
-using Secs;
 using WPFControl.ProgramControl.Models;
 using WPFControl.ProgramControl.Services;
 
@@ -14,7 +13,6 @@ public class Script
 {
 
     private static PLCTool _PLCMethod;
-    private static SecsControl _SecsControl;
 
 
     private static AlarmInfoManagerService _AlarmInfoService;
@@ -28,7 +26,6 @@ public class Script
         // 初始化逻辑
         _PLCMethod = ContainerManager.Resolve<PLCTool>();
 
-        _SecsControl = ContainerManager.Resolve<SecsControl>();
 
 
         _AlarmInfoService = ContainerManager.Resolve<AlarmInfoManagerService>();

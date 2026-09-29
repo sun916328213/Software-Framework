@@ -64,7 +64,8 @@
          ⛔ Halcon 包仍只在 Extension.csproj 一处锁版本（项目约定），此处不重复声明。 -->
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
     <ProjectReference Include="..\..\ScriptEditor\ScriptEditor\ScriptEditor.csproj" />
-    <ProjectReference Include="..\..\Secs\SecsGem.Runtime\SecsGem.Runtime.csproj" />
+    <ProjectReference Include="..\..\Secs\SecsGem.Core\SecsGem.Core.csproj" />
+    <ProjectReference Include="..\..\DataManager\DataManager\DataManager.csproj" />
     <ProjectReference Include="..\..\Device\Device\Device.csproj" />
     <ProjectReference Include="..\..\Vision\Vision.Controls\Vision.Controls.csproj" />
     <ProjectReference Include="..\..\Vision\DPLibrary_Halcon_F48\DPLibrary_Halcon_F48.csproj" />

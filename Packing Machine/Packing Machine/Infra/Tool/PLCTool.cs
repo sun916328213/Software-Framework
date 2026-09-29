@@ -6,7 +6,6 @@ using Packing_Machine.Business.Station;
 using Packing_Machine.Data;
 using Packing_Machine.Infra.Plc;
 using Prism.Ioc;
-using Secs;
 using WPFControl.CustomControl.Models;
 using WPFControl.ProgramControl.Services;
 
@@ -42,14 +41,12 @@ namespace Packing_Machine.Infra.Tool
         readonly PlcService _plc;
         readonly PlcTagCatalog _catalog;
         LogInfoService _LogInfoService => _container.Resolve<LogInfoService>();
-        readonly SecsControl _SecsControl;
 
         public PLCTool(IContainerProvider container, PlcService plc, PlcTagCatalog catalog)
         {
             _container = container;
             _plc = plc;
             _catalog = catalog;
-            _SecsControl = container.Resolve<SecsControl>();
             _plc.ConnectionChanged += online =>
             {
                 try
