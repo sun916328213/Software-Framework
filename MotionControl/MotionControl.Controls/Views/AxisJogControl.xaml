@@ -1,0 +1,39 @@
+<UserControl
+    x:Class="MotionControl.Controls.Views.AxisJogControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="170"
+    d:DesignWidth="300"
+    mc:Ignorable="d">
+    <GroupBox Header="点动">
+        <Grid Margin="6">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="速度：" VerticalAlignment="Center" />
+            <TextBox Grid.Row="0" Grid.Column="1" x:Name="SpeedBox" Text="10" Margin="0,0,6,0" />
+            <Button Grid.Row="0" Grid.Column="2" Content="应用" Padding="12,2" Click="OnApplySpeed" />
+
+            <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Content="Jog+（按住）" Margin="0,8,0,0" Padding="0,6"
+                    PreviewMouseLeftButtonDown="OnJogDown" PreviewMouseLeftButtonUp="OnJogUp"
+                    MouseLeave="OnJogUp" Tag="Positive" />
+            <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Content="Jog-（按住）" Margin="0,6,0,0" Padding="0,6"
+                    PreviewMouseLeftButtonDown="OnJogDown" PreviewMouseLeftButtonUp="OnJogUp"
+                    MouseLeave="OnJogUp" Tag="Negative" />
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,6,0,0"
+                       Text="{Binding ViewModel.LastMessage}" Foreground="Red" TextWrapping="Wrap" />
+        </Grid>
+    </GroupBox>
+</UserControl>
