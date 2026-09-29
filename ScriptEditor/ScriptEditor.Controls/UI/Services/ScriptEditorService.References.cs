@@ -15,14 +15,15 @@ public partial class ScriptEditorService
     //  引用管理（Roslyn 工作区同步）
     // ════════════════════════════════════════════════════════════════
 
-    private void InitializeRoslynHost()
-    {
-        _model.RoslynHost = ScriptHostProvider.Shared;
-    }
-
     public bool AddReference(string dllPath)
     {
+        if (string.IsNullOrWhiteSpace(dllPath) || !System.IO.File.Exists(dllPath) ||
+            _model.AdditionalReferencePaths.Contains(dllPath, StringComparer.OrdinalIgnoreCase)) return false;
+        MetadataReference reference;
+        try { reference = MetadataReference.CreateFromFile(dllPath); }
+        catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException or BadImageFormatException) { return false; }
         if (!_model.AddReferenceData(dllPath)) return false;
+        _additionalReferences.Add(reference);
         SyncWorkspaceReferences();
         SyncAttachedItemReferences();
         return true;
@@ -30,7 +31,11 @@ public partial class ScriptEditorService
 
     public bool RemoveReference(string dllPath)
     {
+        var index = _model.AdditionalReferencePaths.FindIndex(path =>
+            string.Equals(path, dllPath, StringComparison.OrdinalIgnoreCase));
+        if (index < 0) return false;
         if (!_model.RemoveReferenceData(dllPath)) return false;
+        _additionalReferences.RemoveAt(index);
         _localInjectedReferencePaths.Remove(dllPath);
         SyncWorkspaceReferences();
         SyncAttachedItemReferences();
@@ -40,12 +45,13 @@ public partial class ScriptEditorService
     public void ClearReferences()
     {
         _model.ClearReferenceData();
+        _additionalReferences.Clear();
         _localInjectedReferencePaths.Clear();
         SyncWorkspaceReferences();
         SyncAttachedItemReferences();
     }
 
-    public IReadOnlyList<MetadataReference> GetAdditionalReferences() => _model.AdditionalReferences;
+    public IReadOnlyList<MetadataReference> GetAdditionalReferences() => _additionalReferences;
 
     private void SyncWorkspaceReferences()
     {
@@ -55,9 +61,9 @@ public partial class ScriptEditorService
             var document = _host.GetDocument(_documentId);
             if (document == null) return;
             var project = RemoveInjectedReferences(document.Project, _localInjectedReferencePaths);
-            project = AddUserReferencesToProject(project, _model.AdditionalReferences);
+            project = AddUserReferencesToProject(project, _additionalReferences);
             _localInjectedReferencePaths.Clear();
-            foreach (var path in CustomRoslynHost.CollectReferencePaths(_model.AdditionalReferences))
+            foreach (var path in CustomRoslynHost.CollectReferencePaths(_additionalReferences))
                 _localInjectedReferencePaths.Add(path);
             CommitWorkspaceChanges(project);
         }
@@ -111,7 +117,18 @@ public partial class ScriptEditorService
     // ════════════════════════════════════════════════════════════════
 
     /// <summary>从服务加载引用到 ObservableCollection。</summary>
-    public void LoadReferences() => _model.RefreshReferenceUI();
+    public void LoadReferences()
+    {
+        var names = RoslynHost?.DefaultReferences
+            .Concat(CustomRoslynHost.GetAdditionalDefaultReferences())
+            .Select(reference => reference.Display)
+            .Where(display => !string.IsNullOrWhiteSpace(display))
+            .Select(display => display!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(display => display, StringComparer.OrdinalIgnoreCase)
+            .ToArray() ?? Array.Empty<string>();
+        _model.RefreshReferenceUI(names);
+    }
 
     /// <summary>添加 DLL 引用（传入文件路径）。</summary>
     public void AddReferenceItem(string path)

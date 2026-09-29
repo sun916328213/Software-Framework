@@ -914,6 +914,7 @@ public partial class ScriptEditorView : UserControl
         {
             Debug.WriteLine($"[ScriptEditor] Setting IsEditorInitialized=true for '{_attachedItem.Title}'");
             _attachedItem.IsEditorInitialized = true;
+            ScriptLoadingWindowRegistry.Close(_attachedItem);
         }
         else
         {

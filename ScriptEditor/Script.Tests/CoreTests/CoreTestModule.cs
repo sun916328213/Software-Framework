@@ -14,6 +14,7 @@ public static class CoreTestModule
     /// <summary>向调度器注册全部核心测试用例。</summary>
     public static void Register(TestRunner runner)
     {
+        ScriptItemP2Tests.Register(runner);
         const string cat = "核心功能验证";
         const string perfCat = "性能测试";
 

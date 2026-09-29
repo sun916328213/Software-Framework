@@ -137,6 +137,9 @@ namespace ScriptEditor.Services
                 Title = $"{item.Title} - 副本",
                 Code = item.Code
             };
+            clone.SetReferences(item.ReferencePaths);
+            foreach (var line in item.Breakpoints)
+                clone.Breakpoints.Add(line);
             _items.Insert(oldIndex + 1, clone);
             Model.SelectedItem = clone;
             Model.StatusText = $"已复制脚本：{clone.Title}";
@@ -157,7 +160,7 @@ namespace ScriptEditor.Services
 
             // 在独立 UI 线程上创建 FileLoading 窗口，主线程阻塞时动画不受影响。
             // 带超时与异常保护：窗口创建失败时降级为 null（ScriptItem 对 null 已容忍），绝不阻塞调用方
-            item.LoadingWindow = TryCreateLoadingWindow("正在加载编辑器...");
+            ScriptLoadingWindowRegistry.Set(item, TryCreateLoadingWindow("正在加载编辑器..."));
 
             _items.Add(item);
             System.Diagnostics.Debug.WriteLine($"[ScriptManager] AddScript: added '{item.Title}', _items.Count={_items.Count}");
@@ -197,7 +200,8 @@ namespace ScriptEditor.Services
             var prompt = new MessagePrompt("确认删除", $"确定要删除\"{item.Title}\"吗？此操作不可撤销。", Visibility.Visible);
             if (prompt.ShowDialog() != true) return false;
 
-            item.Terminate();
+            item.DisposeExecution();
+            ScriptLoadingWindowRegistry.Close(item);
             var title = item.Title;
             _items.Remove(item);
             Model.StatusText = $"已删除脚本：{title}";
@@ -215,7 +219,10 @@ namespace ScriptEditor.Services
             if (prompt.ShowDialog() != true) return;
 
             foreach (var item in _items)
-                item.Terminate();
+            {
+                item.DisposeExecution();
+                ScriptLoadingWindowRegistry.Close(item);
+            }
             // 批量清空：仅触发一次 Reset 通知，避免逐条 Remove 引发 N 次布局重算
             _items.Clear();
             Model.StatusText = "已删除全部脚本";
@@ -263,7 +270,7 @@ namespace ScriptEditor.Services
             var path = _fileService.ShowSaveDialog(
                 "任务文件 (*.taskproj)|*.taskproj|所有文件 (*.*)|*.*",
                 "MyTask.taskproj",
-                _editorService.Model.ScriptsDirectoryPath);
+                _editorService.ScriptsDirectoryPath);
             if (string.IsNullOrEmpty(path)) return;
 
             await SaveToFileAsync(path);
@@ -367,16 +374,19 @@ namespace ScriptEditor.Services
 
                 // ---- UI 线程：清除旧脚本（批量：先终止再一次性 Clear，仅触发一次 Reset）----
                 foreach (var item in _items)
-                    item.Terminate();
+                {
+                    item.DisposeExecution();
+                    ScriptLoadingWindowRegistry.Close(item);
+                }
                 _items.Clear();
                 // 加载共享 DLL 引用：直接操作 Model 数据层，最后一次性刷新 UI
-                _editorService.Model.ClearReferenceData();
+                _editorService.ClearReferences();
                 if (model.References != null)
                 {
                     foreach (var refPath in model.References)
-                        _editorService.Model.AddReferenceData(refPath);
+                        _editorService.AddReference(refPath);
                 }
-                _editorService.Model.RefreshReferenceUI();
+                _editorService.LoadReferences();
  
                 var total = model.Scripts.Count;
                 var tempItems = new List<ScriptItem>(total);
@@ -385,8 +395,18 @@ namespace ScriptEditor.Services
                 {
                     var script = model.Scripts[i];
 
-                    var item = new ScriptItem { Title = script.Title, Code = script.Code };
+                    var item = new ScriptItem
+                    {
+                        ScriptId = script.ScriptId,
+                        Title = script.Title,
+                        Code = script.Code
+                    };
                     item.SetReferences(script.References ?? new List<string>());
+                    if (script.Breakpoints != null)
+                    {
+                        foreach (var line in script.Breakpoints)
+                            item.Breakpoints.Add(line);
+                    }
                     tempItems.Add(item);
                 }
 

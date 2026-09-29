@@ -67,6 +67,9 @@ public partial class ScriptEditorService : ObservableObject
     private readonly HashSet<string> _localInjectedReferencePaths = new(StringComparer.OrdinalIgnoreCase);
     private readonly FileService _fileService;
     private readonly ScriptEditorModel _model;
+    private readonly List<MetadataReference> _additionalReferences = new();
+    private CustomRoslynHost? _roslynHost;
+    private Exception? _initError;
     private static readonly SymbolRenameOptions RenameOptions = new();
 
     /// <summary>
@@ -123,10 +126,10 @@ public partial class ScriptEditorService : ObservableObject
             // ScriptHostProvider.Shared 应在 App 预热阶段已由后台线程完成初始化，
             // 此处访问 Lazy.Value 应瞬时返回（若未预热则 UI 线程阻塞 ~500ms）。
             var hostSw = System.Diagnostics.Stopwatch.StartNew();
-            _model.RoslynHost = ScriptHostProvider.Shared;
+            _roslynHost = ScriptHostProvider.Shared;
             System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor ScriptHostProvider.Shared: {hostSw.ElapsedMilliseconds}ms");
 
-            _engine = new ScriptEngine(GetText, () => _model.AdditionalReferences, () => _model.Breakpoints);
+            _engine = new ScriptEngine(GetText, () => _additionalReferences, () => _model.Breakpoints);
             _engine.PropertyChanged += OnEnginePropertyChanged;
             System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor ScriptEngine: {hostSw.ElapsedMilliseconds}ms");
 
@@ -141,7 +144,7 @@ public partial class ScriptEditorService : ObservableObject
         }
         catch (Exception ex)
         {
-            _model.InitError = ex;
+            _initError = ex;
         }
 
         System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor TOTAL: {sw.ElapsedMilliseconds}ms");
@@ -157,11 +160,14 @@ public partial class ScriptEditorService : ObservableObject
     /// <summary>用户添加的 DLL 引用路径列表（只读）。</summary>
     public IReadOnlyList<string> AdditionalReferencePaths => _model.AdditionalReferencePaths;
 
+    public string ScriptsDirectoryPath { get; } = Path.Combine(
+        Path.GetDirectoryName(typeof(ScriptEditorService).Assembly.Location) ?? ".", "Config");
+
     /// <summary>当前 Roslyn 宿主实例（CustomRoslynHost）。</summary>
-    public CustomRoslynHost? RoslynHost => _model.RoslynHost as CustomRoslynHost;
+    public CustomRoslynHost? RoslynHost => _roslynHost;
 
     /// <summary>初始化阶段的异常（null 表示成功）。</summary>
-    public Exception? InitError => _model.InitError;
+    public Exception? InitError => _initError;
 
     /// <summary>编辑器是否已完成初始化（View 已关联）。</summary>
     public bool IsInitialized => _editor != null && _host != null && _documentId != null;

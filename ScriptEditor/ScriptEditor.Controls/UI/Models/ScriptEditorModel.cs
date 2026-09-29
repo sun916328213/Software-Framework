@@ -3,16 +3,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.CodeAnalysis;
-using RoslynPad.Roslyn;
-using ScriptEditor.Services;
 
 namespace ScriptEditor.Models;
 
 /// <summary>
-/// 脚本编辑器运行时状态模型，承载 Roslyn 引擎和所有 UI 状态。
+/// 脚本编辑器可绑定状态，不持有 Roslyn 宿主或已加载的程序集引用。
 /// </summary>
 /// <remarks>
 /// 此模型遵循与 <see cref="ScriptManagerModel"/> 一致的设计模式：继承
@@ -24,22 +20,8 @@ public class ScriptEditorModel : ScriptStateBase
     //  原有属性
     // ════════════════════════════════════════════════════════════════
 
-    /// <summary>Roslyn 编译/执行宿主实例（CustomRoslynHost）。</summary>
-    public RoslynHost? RoslynHost { get; set; }
-
-    /// <summary>初始化过程中发生的异常，null 表示初始化成功。</summary>
-    public Exception? InitError { get; set; }
-
-    /// <summary>用户添加的额外元数据引用列表（MetadataReference 对象）。</summary>
-    public List<MetadataReference> AdditionalReferences { get; } = new();
-
     /// <summary>用户添加的额外引用文件路径列表。</summary>
     public List<string> AdditionalReferencePaths { get; } = new();
-
-    /// <summary>脚本存储目录路径（指向输出目录下的 Config 文件夹）。</summary>
-    public string ScriptsDirectoryPath { get; set; } =
-        Path.Combine(
-            Path.GetDirectoryName(typeof(ScriptEditorModel).Assembly.Location) ?? ".", "Config");
 
     // ════════════════════════════════════════════════════════════════
     //  新增：执行引擎状态
@@ -102,25 +84,16 @@ public class ScriptEditorModel : ScriptStateBase
     /// <summary>清空所有用户添加的引用数据（不影响 ObservableCollection UI）。</summary>
     public void ClearReferenceData()
     {
-        AdditionalReferences.Clear();
         AdditionalReferencePaths.Clear();
     }
 
     /// <summary>添加一条 DLL 引用数据。返回 true 表示成功添加。</summary>
     public bool AddReferenceData(string dllPath)
     {
-        if (string.IsNullOrWhiteSpace(dllPath) || !File.Exists(dllPath)) return false;
+        if (string.IsNullOrWhiteSpace(dllPath)) return false;
         if (AdditionalReferencePaths.Contains(dllPath, StringComparer.OrdinalIgnoreCase)) return false;
-        try
-        {
-            AdditionalReferences.Add(MetadataReference.CreateFromFile(dllPath));
-            AdditionalReferencePaths.Add(dllPath);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
+        AdditionalReferencePaths.Add(dllPath);
+        return true;
     }
 
     /// <summary>移除一条 DLL 引用数据。返回 true 表示成功移除。</summary>
@@ -130,36 +103,20 @@ public class ScriptEditorModel : ScriptStateBase
             p => string.Equals(p, dllPath, StringComparison.OrdinalIgnoreCase));
         if (index < 0) return false;
         AdditionalReferencePaths.RemoveAt(index);
-        AdditionalReferences.RemoveAt(index);
         return true;
     }
 
     /// <summary>刷新 UI 引用列表（从内部数据重新加载 ObservableCollection）。</summary>
-    public void RefreshReferenceUI()
+    public void RefreshReferenceUI(IEnumerable<string> defaultReferenceNames)
     {
         DefaultReferences.Clear();
         References.Clear();
-        foreach (var name in GetDefaultReferenceNames())
+        foreach (var name in defaultReferenceNames)
             DefaultReferences.Add(ReferenceItem.FromDisplay(name));
         foreach (var filePath in AdditionalReferencePaths)
             References.Add(ReferenceItem.FromPath(filePath));
     }
 
-    private IReadOnlyList<string> GetDefaultReferenceNames()
-    {
-        if (RoslynHost == null) return Array.Empty<string>();
-        IEnumerable<MetadataReference> references = RoslynHost.DefaultReferences;
-        if (RoslynHost is CustomRoslynHost customHost)
-            references = references.Concat(CustomRoslynHost.GetAdditionalDefaultReferences());
-        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var reference in references)
-        {
-            var display = reference.Display;
-            if (string.IsNullOrWhiteSpace(display)) continue;
-            names.Add(display);
-        }
-        return names.OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
-    }
 }
 
 /// <summary>

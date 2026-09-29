@@ -128,13 +128,13 @@ public class Script
                 SetText(state.Code);
 
                 // 加载 DLL 引用：直接操作 Model 数据层，最后一次性同步工作区
-                _model.ClearReferenceData();
+                ClearReferences();
                 foreach (var refPath in state.References)
-                    _model.AddReferenceData(refPath);
+                    AddReference(refPath);
                 _localInjectedReferencePaths.Clear();
                 SyncWorkspaceReferences();
                 SyncAttachedItemReferences();
-                _model.RefreshReferenceUI();
+                LoadReferences();
             }
             else
             {
