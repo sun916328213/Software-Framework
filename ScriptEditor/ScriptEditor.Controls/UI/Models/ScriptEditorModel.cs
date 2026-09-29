@@ -11,10 +11,13 @@ namespace ScriptEditor.Models;
 /// 脚本编辑器可绑定状态，不持有 Roslyn 宿主或已加载的程序集引用。
 /// </summary>
 /// <remarks>
-/// 此模型遵循与 <see cref="ScriptManagerModel"/> 一致的设计模式：继承
-/// ObservableObject，所有可绑定属性通过 SetProperty 触发通知。
+/// <para>此模型遵循与 <see cref="ScriptManagerModel"/> 一致的设计模式：继承
+/// ObservableObject，所有可绑定属性通过 SetProperty 触发通知。</para>
+/// <para>P3 起本模型**不再保存运行状态**（IsRunning / IsLooping / Output / ExecutionTime 等）——
+/// 运行状态由 <see cref="Contracts.IScriptSession"/> 独占持有，UI 直接绑定当前会话。
+/// 这里只保留编辑器自身状态：文档标题、文件路径、修改标记、引用列表、断点与状态提示。</para>
 /// </remarks>
-public class ScriptEditorModel : ScriptStateBase
+public class ScriptEditorModel : ObservableObject
 {
     // ════════════════════════════════════════════════════════════════
     //  原有属性
@@ -23,8 +26,16 @@ public class ScriptEditorModel : ScriptStateBase
     /// <summary>用户添加的额外引用文件路径列表。</summary>
     public List<string> AdditionalReferencePaths { get; } = new();
 
+    private string _statusText = "就绪";
+    /// <summary>编辑器级状态提示（保存/打开/引用操作结果），与脚本运行状态无关。</summary>
+    public string StatusText
+    {
+        get => _statusText;
+        set => SetProperty(ref _statusText, value);
+    }
+
     // ════════════════════════════════════════════════════════════════
-    //  新增：执行引擎状态
+    //  编辑器状态
     // ════════════════════════════════════════════════════════════════
 
     private string _documentTitle = "无标题";

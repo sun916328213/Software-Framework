@@ -82,6 +82,8 @@ public partial class ScriptEditorView : UserControl
     private bool _suppressAutoScroll;
     /// <summary>抑制断点集合变更同步到 ScriptItem 的标志（切页保存/恢复期间使用）。</summary>
     private bool _suppressBreakpointSync;
+    /// <summary>抑制 LoopInterval 依赖属性回写会话的标志（从会话同步到 DP 时使用）。</summary>
+    private bool _suppressLoopIntervalChange;
     /// <summary>异步等待初始化完成的 TaskCompletionSource。</summary>
     private TaskCompletionSource<bool>? _initTcs;
     /// <summary>
@@ -94,6 +96,11 @@ public partial class ScriptEditorView : UserControl
     private DateTime _lastAutoScrollTime = DateTime.MinValue;
     /// <summary>当前绑定的脚本项（ScriptManager 标签页场景）。</summary>
     private ScriptItem? _attachedItem;
+    /// <summary>
+    /// 当前已订阅的脚本会话（运行状态唯一事实源）。
+    /// 视图只从会话读取输出/状态/运行标志，不再把这些状态写回脚本项。
+    /// </summary>
+    private ScriptEditor.Contracts.IScriptSession? _session;
     /// <summary>OnLoaded 是否已处理（防止重复挂接）。</summary>
     private bool _onLoadedHandled;
     /// <summary>初始化延迟挂接是否已完成。</summary>
@@ -180,17 +187,16 @@ public partial class ScriptEditorView : UserControl
                 OnOutputTextChanged));
 
     /// <summary>
-    /// 外部（脚本项宿主绑定）设置 OutputText 时，同步到 ViewModel/Service 与当前脚本项，
-    /// 使输出面板展示外部引擎（如启动流程无头执行）产生的输出。
+    /// 外部（宿主绑定）设置 OutputText 时，转发给当前会话（输出面板的事实源在会话）。
+    /// 视图自身从会话同步时用 <c>_suppressOutputChange</c> 抑制，避免回环。
     /// </summary>
     private static void OnOutputTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var view = (ScriptEditorView)d;
-        if (view._suppressOutputChange || view._viewModel == null) return;
-        view._viewModel.OutputText = e.NewValue as string ?? string.Empty;
-        // 模板绑定为 OneWay，此处显式镜像到当前脚本项，保证切页后数据不丢
-        if (ReferenceEquals(view._attachedItem, view.DataContext))
-            view._attachedItem.OutputText = view._viewModel.OutputText;
+        if (view._suppressOutputChange || view._editorService == null) return;
+        var text = e.NewValue as string ?? string.Empty;
+        if (!string.Equals(view._editorService.Session.Output, text, StringComparison.Ordinal))
+            view._editorService.Session.SetOutput(text);
     }
 
     /// <summary>脚本是否正在执行中。</summary>
@@ -227,13 +233,13 @@ public partial class ScriptEditorView : UserControl
             new FrameworkPropertyMetadata(1000, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
                 OnLoopIntervalChanged));
 
-    /// <summary>外部（脚本项宿主绑定）设置循环间隔时，同步到 ViewModel/Service（再转发到后端引擎）。</summary>
+    /// <summary>外部（宿主绑定）设置循环间隔时，写入当前会话。</summary>
     private static void OnLoopIntervalChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var view = (ScriptEditorView)d;
-        if (view._viewModel == null) return;
+        if (view._suppressLoopIntervalChange || view._editorService == null) return;
         if (e.NewValue is int interval)
-            view._viewModel.LoopInterval = interval;
+            view._editorService.LoopInterval = interval;
     }
 
     #endregion
@@ -421,14 +427,8 @@ public partial class ScriptEditorView : UserControl
         References = GetReferencePaths().ToList()
     };
 
-    /// <summary>清空输出面板。</summary>
-    public void ClearOutput()
-    {
-        if (_viewModel != null) _viewModel.OutputText = string.Empty;
-        // 模板绑定为 OneWay，需显式清空当前脚本项
-        if (ReferenceEquals(_attachedItem, DataContext))
-            _attachedItem!.OutputText = string.Empty;
-    }
+    /// <summary>清空输出面板（写当前会话，视图经订阅同步显示）。</summary>
+    public void ClearOutput() => _editorService?.Session.SetOutput(string.Empty);
 
     /// <summary>保存当前脚本到关联文件。尚未关联文件路径时弹出另存为对话框。</summary>
     public void Save() => TryExecuteCommand(_viewModel?.SaveCommand);
@@ -539,18 +539,11 @@ public partial class ScriptEditorView : UserControl
         if (_initialDocument != null)
             SetReferences(_initialDocument.References);
 
-        // 用当前脚本项的既有输出（如启动加载流程的无头执行结果）为 ViewModel 做种子，
-        // 保证打开界面即可看到历史输出，且编辑器路径的后续输出在此基础上衔接。
-        // 注意：只写数据源侧，依赖属性由模板单向绑定自动跟随；播种期间抑制自动滚动。
+        // 运行状态不再播种：输出/状态/运行标志由当前会话持有，
+        // 订阅会话即可拿到最新事实（含启动加载流程的无头执行结果）。
         if (_attachedItem != null)
         {
-            _suppressAutoScroll = true;
-            _viewModel.OutputText = _attachedItem.OutputText;
-            _suppressAutoScroll = false;
-
-            SeedSharedStateFromItem(_attachedItem);
-
-            // 播种断点：首次创建 ViewModel 时从 ScriptItem 恢复断点
+            // 播种断点：首次创建 ViewModel 时从 ScriptItem 恢复断点（编辑器状态，仍按脚本记忆）
             _suppressBreakpointSync = true;
             foreach (var bp in _attachedItem.Breakpoints)
                 _viewModel.Breakpoints.Add(bp);
@@ -587,67 +580,113 @@ public partial class ScriptEditorView : UserControl
         ReferencePanelHost.Content = refPanel;
         Debug.WriteLine($"[ScriptEditor] EnsureBackend CreateReferencePanel: {sw.ElapsedMilliseconds}ms");
 
-        // 同步 ViewModel <-> View 的循环状态 + 输出文本
+        // 订阅当前脚本会话：输出 / 状态 / 运行标志 / 循环间隔 一律从会话同步到依赖属性。
+        // 不再经过 ViewModel 中继，也不再写回脚本项——会话是唯一事实源。
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        SubscribeSession();
 
-        // ScriptNode 宿主窗口场景：_attachedItem 为 null，无运行时的 ScriptItem 输出可镜像。
-        // 必须放在 PropertyChanged 注册之后播种，写 VM.OutputText 才会触发上方回调
-        // 镜像到 OutputText DP，TextBox 才能显示 ctor 传入的最近一次执行输出。
+        // ScriptNode 宿主窗口场景：_attachedItem 为 null，用 ctor 传入的最近一次执行输出
+        // 初始化文档会话的输出（此后以会话实时状态为准）。
         if (_attachedItem == null && !string.IsNullOrEmpty(_initialOutput))
         {
-            _suppressAutoScroll = true;
-            try { _viewModel.OutputText = _initialOutput; }
-            finally { _suppressAutoScroll = false; }
-            _initialOutput = null; // 播种一次即清，后续以 ViewModel 实时状态为准
+            _editorService.Session.SetOutput(_initialOutput);
+            _initialOutput = null; // 播种一次即清
         }
 
         Debug.WriteLine($"[ScriptEditor] EnsureBackend TOTAL: {sw.ElapsedMilliseconds}ms");
     }
 
+    // ════════════════════════════════════════════════════════════════
+    //  会话订阅（运行状态唯一事实源 → 视图依赖属性）
+    // ════════════════════════════════════════════════════════════════
+
+    /// <summary>订阅当前脚本会话；会话切换（切页）时自动迁移订阅并做一次全量同步。</summary>
+    private void SubscribeSession()
+    {
+        var session = _editorService?.Session;
+        if (ReferenceEquals(session, _session)) return;
+
+        if (_session != null) _session.PropertyChanged -= OnSessionPropertyChanged;
+        _session = session;
+        if (_session != null) _session.PropertyChanged += OnSessionPropertyChanged;
+
+        SyncStateFromSession();
+    }
+
+    /// <summary>把会话当前状态一次性同步到视图依赖属性（首次初始化 / 切页时调用）。</summary>
+    private void SyncStateFromSession()
+    {
+        if (_session == null) return;
+
+        _suppressAutoScroll = true;
+        _suppressOutputChange = true;
+        _suppressLoopIntervalChange = true;
+        try
+        {
+            OutputText = _session.Output;
+            ItemStatus = _session.StatusText;
+            IsRunning = _session.IsRunning;
+            IsLooping = _session.IsLooping;
+            LoopInterval = _session.LoopInterval;
+        }
+        finally
+        {
+            _suppressOutputChange = false;
+            _suppressLoopIntervalChange = false;
+            _suppressAutoScroll = false;
+        }
+    }
+
     /// <summary>
-    /// ViewModel 属性变更镜像到 View 依赖属性（EnsureBackendInitialized 中订阅）。
-    /// VM 生命周期与 View 一致，无需退订；改为具名方法以便调试与后续维护。
+    /// 会话属性变更 → 同步到视图依赖属性。
+    /// 输出面板绑定的是 UserControl.OutputText 依赖属性（不是 ViewModel 属性），
+    /// 因此必须由视图把会话输出写入该依赖属性；写入期间用 _suppressOutputChange 防回环。
     /// </summary>
+    private void OnSessionPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(ScriptEditor.Contracts.IScriptSession.Output):
+                _suppressOutputChange = true;
+                try { OutputText = _session?.Output ?? string.Empty; }
+                finally { _suppressOutputChange = false; }
+                AutoScrollOutputToEnd();
+                break;
+            case nameof(ScriptEditor.Contracts.IScriptSession.StatusText):
+                ItemStatus = _session?.StatusText ?? "就绪";
+                break;
+            case nameof(ScriptEditor.Contracts.IScriptSession.IsRunning):
+                IsRunning = _session?.IsRunning == true;
+                break;
+            case nameof(ScriptEditor.Contracts.IScriptSession.IsLooping):
+                IsLooping = _session?.IsLooping == true;
+                break;
+            case nameof(ScriptEditor.Contracts.IScriptSession.LoopInterval):
+                _suppressLoopIntervalChange = true;
+                try { LoopInterval = _session?.LoopInterval ?? LoopInterval; }
+                finally { _suppressLoopIntervalChange = false; }
+                break;
+        }
+    }
+
+    /// <summary>输出面板自动滚到底部（50ms 防抖；切页同步期间抑制，避免新脚本被强制滚到底）。</summary>
+    private void AutoScrollOutputToEnd()
+    {
+        var now = DateTime.Now;
+        if (_suppressAutoScroll || (now - _lastAutoScrollTime).TotalMilliseconds < 50) return;
+        _lastAutoScrollTime = now;
+        OutputTextBox.Dispatcher.InvokeAsync(() =>
+        {
+            OutputTextBox.CaretIndex = OutputTextBox.Text.Length;
+            OutputTextBox.ScrollToEnd();
+        });
+    }
+
+    /// <summary>ViewModel 属性变更：会话切换（Session 属性变化）后重新绑定会话订阅。</summary>
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ScriptEditorViewModel.IsLooping))
-            IsLooping = _viewModel!.IsLooping;
-        else if (e.PropertyName == nameof(ScriptEditorViewModel.LoopInterval))
-            LoopInterval = _viewModel!.LoopInterval;
-        else if (e.PropertyName == nameof(ScriptEditorViewModel.OutputText))
-        {
-            var vm = _viewModel!;
-            // 关键:TextBox 模板绑定的是 UserControl.OutputText DP(不是 VM.OutputText),
-            // 必须把 VM 输出镜像到该 DP 才能显示;否则 TextBox 永远是空。
-            // 注意用 _suppressOutputChange 防止 OnOutputTextChanged 反向再写 VM 形成回环。
-            _suppressOutputChange = true;
-            try { OutputText = vm.OutputText; }
-            finally { _suppressOutputChange = false; }
-
-            // ScriptManager 标签页场景:同时镜像到 _attachedItem,保证切页后输出不丢。
-            // ScriptNode 宿主窗口场景:_attachedItem 为 null,跳过此步即可。
-            // 用 ReferenceEquals 守卫避免切页瞬间旧 VM 输出串到新脚本项。
-            var item = _attachedItem;
-            if (item != null && ReferenceEquals(item, DataContext))
-                item.OutputText = vm.OutputText;
-
-            // 防抖:每 50ms 最多滚动一次,避免大量输出时频繁滚动卡顿;
-            // 切页播种期间抑制滚动,防止新脚本被强制滚到底部
-            var now = DateTime.Now;
-            if (!_suppressAutoScroll && (now - _lastAutoScrollTime).TotalMilliseconds >= 50)
-            {
-                _lastAutoScrollTime = now;
-                var scrollItemTitle = item?.Title;
-                OutputTextBox.Dispatcher.InvokeAsync(() =>
-                {
-                    // 跨线程排队后 _attachedItem 可能已被切到新脚本,
-                    // 此处不再校验 item(其可能为 null),只滚动当前 TextBox 即可
-                    Debug.WriteLine($"[ScriptEditor] AutoScrollToEnd fired for '{scrollItemTitle ?? "(no item)"}', current='{(_attachedItem?.Title ?? "null")}'");
-                    OutputTextBox.CaretIndex = OutputTextBox.Text.Length;
-                    OutputTextBox.ScrollToEnd();
-                });
-            }
-        }
+        if (e.PropertyName == nameof(ScriptEditorViewModel.Session))
+            SubscribeSession();
     }
 
     /// <summary>
@@ -728,11 +767,8 @@ public partial class ScriptEditorView : UserControl
             {
                 _editorService!.SetText(_attachedItem.Code);
                 _editorService!.AttachedItem = _attachedItem;
-                // 仅同步 ViewModel；依赖属性由模板单向绑定自动跟随脚本项，
-                // 直接 SetValue 会破坏绑定导致后续输出不再刷新
-                _suppressAutoScroll = true;
-                _viewModel!.OutputText = _attachedItem.OutputText;
-                _suppressAutoScroll = false;
+                // 输出/状态由会话订阅同步（会话即事实源），此处只需迁移订阅
+                SubscribeSession();
                 RestoreEditorScrollState(_attachedItem);
                 RestoreOutputScrollState(_attachedItem);
             }
@@ -815,7 +851,7 @@ public partial class ScriptEditorView : UserControl
 
             _viewModel!.OnEditorInitialized();
 
-            // 编辑器文本变化同步到 ScriptCode 依赖属性，并实时写回 ScriptItem
+            // 编辑器文本变化同步到 ScriptCode 依赖属性，并实时写回 ScriptItem（纯数据）
             scriptEditor.Document.TextChanged += (_, _) =>
             {
                 _suppressScriptCodeChange = true;
@@ -823,13 +859,11 @@ public partial class ScriptEditorView : UserControl
                 ScriptCode = code;
                 _suppressScriptCodeChange = false;
 
-                // 实时写回当前 ScriptItem，确保 Tab 切换时数据始终最新；
-                // 守卫防止切页瞬间旧脚本文本写入新脚本项
+                // 实时写回当前 ScriptItem 的代码，确保 Tab 切换与无头执行读到最新内容；
+                // 守卫防止切页瞬间旧脚本文本写入新脚本项。
+                // 输出/状态不再写回脚本项——它们由会话独占持有。
                 if (_attachedItem != null && ReferenceEquals(_attachedItem, DataContext))
-                {
                     _attachedItem.Code = code;
-                    _attachedItem.OutputText = _viewModel!.OutputText;
-                }
             };
 
             // 首次初始化后，将模板代码立即写回 ScriptItem（此时 TextChanged 尚未触发）
@@ -1070,8 +1104,9 @@ public partial class ScriptEditorView : UserControl
     /// <summary>
     /// 将本编辑器与脚本项关联：引用面板加载脚本项的 DLL 引用，并让服务把
     /// 后续引用增删同步回脚本项（保证"运行全部/保存任务"使用同一份引用）。
-    /// 同时刷新输出面板，确保切换脚本时输出栏显示正确的脚本输出。
-    /// 断点也在此处按脚本独立保存/恢复（与代码、光标、滚动位置同理）。
+    /// 运行状态（输出/状态/运行标志/循环间隔）不再从脚本项播种——服务切换会话后，
+    /// 视图订阅新会话即可读到该脚本自己的运行事实。
+    /// 断点仍在此处按脚本独立保存/恢复（编辑器状态，与代码、光标、滚动位置同理）。
     /// </summary>
     private void AttachToItem(ScriptItem item)
     {
@@ -1088,21 +1123,18 @@ public partial class ScriptEditorView : UserControl
         _attachedItem = item;
 
         // 后端可能尚未初始化（OnLoaded 在 InitializeCoreAsync 之前触发），
-        // 暂存关联关系，待 EnsureBackendInitialized 时再同步 AttachedItem 和输出文本
+        // 暂存关联关系，待 EnsureBackendInitialized 时再订阅会话。
+        // 设置 AttachedItem 会让服务把当前会话切到该脚本的会话。
         if (_editorService != null)
+        {
             _editorService.AttachedItem = item;
+            SubscribeSession();
+        }
 
         SetReferences(item.ReferencePaths);
 
         if (_viewModel != null)
         {
-            // 切页播种：抑制自动滚动，避免新脚本的输出被强制滚到底部
-            _suppressAutoScroll = true;
-            _viewModel.OutputText = item.OutputText;
-            _suppressAutoScroll = false;
-
-            SeedSharedStateFromItem(item);
-
             // 恢复新脚本项的断点（抑制同步回调，避免回环写入）
             _suppressBreakpointSync = true;
             _viewModel.Breakpoints.Clear();
@@ -1110,26 +1142,6 @@ public partial class ScriptEditorView : UserControl
                 _viewModel.Breakpoints.Add(bp);
             _suppressBreakpointSync = false;
         }
-    }
-
-    /// <summary>
-    /// 把共享 Model 的运行状态播种成指定脚本项自己的状态（StatusText / ExecutionTime）。
-    /// </summary>
-    /// <remarks>
-    /// <para>ScriptEditorService 是单例，其 Model 与 ScriptEngine 被**所有标签页共享**，
-    /// 切页只换 ScriptItem。不播种的话 Model 里留的是上一个脚本的「编译完成 / 12.34 ms」，
-    /// 而引擎侧 SetProperty「值未变化不广播」，下一次同值结果可能推不动当前页。</para>
-    /// <para>方向固定为 **item → 共享 Model**（把共享侧拉回当前页），
-    /// 反过来（Model → item）会把上一个脚本的状态写进新脚本项，正是 XAML 里注释掉的
-    /// TwoWay 串扰问题，绝不能做。</para>
-    /// <para>状态栏读的是 <c>AttachedItem.StatusText/ExecutionTime</c>（每脚本独立），
-    /// 本方法只是让共享侧与当前页对齐，不影响状态栏的正确性。</para>
-    /// </remarks>
-    private void SeedSharedStateFromItem(ScriptItem item)
-    {
-        if (_viewModel == null) return;
-        _viewModel.StatusText = item.StatusText;
-        _viewModel.ExecutionTime = item.ExecutionTime;
     }
 
     /// <summary>

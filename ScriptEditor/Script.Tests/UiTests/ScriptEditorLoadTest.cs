@@ -43,8 +43,7 @@ Console.WriteLine(message);
 var items = Enumerable.Range(1, 100).ToList();
 var result = items.Where(x => x % 2 == 0).Sum();
 Console.WriteLine($""Sum of even numbers: {result}"");
-",
-            LoopInterval = 200
+"
         };
         mockItem.References.Add(typeof(System.Xml.Linq.XDocument).Assembly.Location);
         mockItem.References.Add(typeof(System.Text.Json.JsonSerializer).Assembly.Location);

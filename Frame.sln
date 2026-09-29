@@ -113,13 +113,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.PluginContractFi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Runtime", "FlowEditor\FlowEditor.Runtime\FlowEditor.Runtime.csproj", "{0A3307AB-31B7-C941-4D91-422925F9090F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Runtime.Test", "FlowEditor\FlowEditor.Runtime.Smoke\FlowEditor.Runtime.Test.csproj", "{74BEA8E0-322B-D25E-6E08-63C02E203B94}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Runtime.Smoke", "FlowEditor\FlowEditor.Runtime.Smoke\FlowEditor.Runtime.Smoke.csproj", "{74BEA8E0-322B-D25E-6E08-63C02E203B94}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFControl.Tests", "WPFControl\WPFControl.Tests\WPFControl.Tests.csproj", "{67D52A66-DB3C-D006-8798-2A3309674091}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication.Controls", "Communication\Communication.Controls\Communication.Controls.csproj", "{574690E7-DEF9-4A32-A662-87BCA2FDD677}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Tests", "FlowEditor\FlowEditor.Test\FlowEditor.Tests.csproj", "{9B567E1C-916C-3BC1-7FB3-E9A2DFFA22AF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowEditor.Tests", "FlowEditor\FlowEditor.Tests\FlowEditor.Tests.csproj", "{9B567E1C-916C-3BC1-7FB3-E9A2DFFA22AF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Device.Core", "Device\Device.Core\Device.Core.csproj", "{21DD5D98-4A15-6572-4B49-DF6E4319020A}"
 EndProject

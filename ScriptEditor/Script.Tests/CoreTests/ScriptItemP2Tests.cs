@@ -65,15 +65,19 @@ public static class ScriptItemP2Tests
         runner.Register("P2 数据模型", "旧执行调用由运行服务完成", async ctx =>
         {
             var item = new ScriptItem { Code = "Console.WriteLine(\"p2-item-run\");" };
+            var runtime = RoslynScriptRuntime.Shared;
             try
             {
-                var succeeded = await item.ExecuteAsync();
+                var session = runtime.GetSession(item);
+                var succeeded = await session.RunAsync();
                 await Dispatcher.Yield(DispatcherPriority.Background);
-                ctx.Assert(succeeded, $"兼容执行调用失败: {item.StatusText}");
-                ctx.Assert(item.OutputText.Contains("p2-item-run", StringComparison.Ordinal),
-                    $"执行输出未同步到绑定状态: {item.OutputText}");
+                ctx.Assert(succeeded, $"脚本执行失败: {session.StatusText}");
+                ctx.Assert(session.Output.Contains("p2-item-run", StringComparison.Ordinal),
+                    $"执行输出未进入会话: {session.Output}");
+                ctx.Assert(ReferenceEquals(runtime.GetSession(item), session),
+                    "同一脚本对象应始终复用同一会话");
             }
-            finally { item.DisposeExecution(); }
+            finally { runtime.ReleaseSession(item); }
         });
 
         runner.Register("P2 数据模型", "管理器加载旧任务后可执行", async ctx =>
@@ -94,8 +98,9 @@ public static class ScriptItemP2Tests
                 ctx.Assert(manager.Items[0].ScriptId != Guid.Empty, "加载后应获得永久 ScriptId");
                 await manager.RunAllAsync();
                 await Dispatcher.Yield(DispatcherPriority.Background);
-                ctx.Assert(manager.Items[0].OutputText.Contains("loaded-p2", StringComparison.Ordinal),
-                    $"加载后执行输出不正确: {manager.Items[0].OutputText}");
+                var output = RoslynScriptRuntime.Shared.GetSession(manager.Items[0]).Output;
+                ctx.Assert(output.Contains("loaded-p2", StringComparison.Ordinal),
+                    $"加载后执行输出不正确: {output}");
                 manager.StopAll();
             }
             finally { File.Delete(path); }

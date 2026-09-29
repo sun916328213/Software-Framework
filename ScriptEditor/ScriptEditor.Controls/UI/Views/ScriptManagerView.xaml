@@ -38,22 +38,15 @@
                 <Setter Property="Height" Value="22" />
             </Style>
 <!--
-    标签内容模板：ScriptEditorView 直接绑定到 ScriptItem（VM 层数据）。
+    标签内容模板：ScriptEditorView 直接绑定到 ScriptItem（纯数据）。
     TabControl 只 realized 选中的标签内容，因此非选中的脚本不会创建
     重量级 RoslynPad 编辑器（启动加载只构造 ScriptItem，完全错开编辑器构建）。
-    注意：除 LoopInterval 外全部使用 OneWay——EditTabControl 复用同一
-    ScriptEditorView 实例切页，TwoWay 会在 DataContext 切换瞬间把旧脚本的
-    输出/状态经依赖属性回写进新 ScriptItem，造成多脚本输出串扰。
-    输出等状态由视图代码在确认 _attachedItem 与 DataContext 一致后显式写回。
+    运行状态（IsRunning / IsLooping / Output / StatusText / LoopInterval）不再由
+    ScriptItem 承载，也不再经依赖属性回写——它们由每个脚本自己的 ScriptSession 持有，
+    视图在附加脚本项时订阅该会话。因此切页只切换订阅，不会改变任何运行事实。
 -->
 <DataTemplate x:Key="ScriptEditorContentTemplate">
-    <local:ScriptEditorView
-        IsLooping="{Binding IsLooping, Mode=OneWay}"
-        IsRunning="{Binding IsRunning, Mode=OneWay}"
-        ItemStatus="{Binding ItemStatus, Mode=OneWay}"
-        LoopInterval="{Binding LoopInterval, Mode=TwoWay}"
-        OutputText="{Binding OutputText, Mode=OneWay}"
-        ScriptCode="{Binding Code, Mode=OneWay}" />
+    <local:ScriptEditorView ScriptCode="{Binding Code, Mode=OneWay}" />
 </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>

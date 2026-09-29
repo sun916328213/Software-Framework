@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Text;
@@ -15,14 +16,14 @@ using Microsoft.CodeAnalysis.Rename;
 using Microsoft.CodeAnalysis.Scripting;
 using RoslynPad.Editor;
 using RoslynPad.Roslyn;
+using ScriptEditor.Contracts;
 using ScriptEditor.Models;
 using Extension.Core.Conversion;
 
 namespace ScriptEditor.Services;
 
 /// <summary>
-/// 脚本编辑器核心服务，负责 Roslyn 引擎生命周期、编辑器操作、脚本执行/编译、
-/// 文件操作、引用管理等全部业务逻辑。
+/// 脚本编辑器核心服务，负责编辑器操作、脚本执行/编译、文件操作、引用管理等业务逻辑。
 /// </summary>
 /// <remarks>
 /// <para>核心职责：</para>
@@ -30,14 +31,17 @@ namespace ScriptEditor.Services;
 ///   <item>管理共享的 CustomRoslynHost 实例</item>
 ///   <item>DLL 引用的增删改查</item>
 ///   <item>编辑器文本操作、格式化、注释、重命名</item>
-///   <item>脚本编译、执行、循环执行、终止（委托给无头 <see cref="ScriptEngine"/>）</item>
+///   <item>脚本编译、执行、循环执行、终止（委托给当前 <see cref="IScriptSession"/>）</item>
 ///   <item>输出缓冲与实时刷新</item>
 ///   <item>文件新建/打开/保存/另存为</item>
 /// </list>
-/// <para>运行时状态委托给 <see cref="ScriptEditorModel"/>。</para>
+/// <para>运行状态归属（P3）：本服务**不再持有执行引擎**。运行状态由
+/// <see cref="IScriptSession"/> 独占持有，本服务只负责把「当前编辑器对应哪个会话」
+/// 解析出来并转发操作。会话生命周期由共享的 <see cref="RoslynScriptRuntime"/> 管理：
+/// 附加到脚本项时使用该脚本的会话；未附加（独立编辑器窗口）时使用一个文档会话。</para>
 /// <para>架构：按职责拆分为 partial 模块 ——</para>
 /// <list type="bullet">
-///   <item><c>ScriptEditorService.cs</c>：核心状态、事件中继、编辑器生命周期、执行引擎</item>
+///   <item><c>ScriptEditorService.cs</c>：核心状态、事件中继、编辑器生命周期、会话转发</item>
 ///   <item><c>ScriptEditorService.References.cs</c>：引用管理与 Roslyn 工作区同步</item>
 ///   <item><c>ScriptEditorService.Files.cs</c>：文件操作与脚本模板</item>
 /// </list>
@@ -55,14 +59,17 @@ public partial class ScriptEditorService : ObservableObject
     #endregion
 
     // ════════════════════════════════════════════════════════════════
-    //  原有：RoslynHost / 编辑器 / 引用管理
+    //  会话（运行状态唯一事实源）
     // ════════════════════════════════════════════════════════════════
 
-    /// <summary>
-    /// 无头执行引擎（前端/后端分离）：编译、运行、循环、终止逻辑全部委托给它。
-    /// 本服务仅负责编辑器（RoslynPad）关联、引用管理、文件操作与 UI 线程封送。
-    /// </summary>
-    private ScriptEngine _engine = null!;
+    /// <summary>共享脚本运行时（进程内单例，负责会话的创建与释放）。</summary>
+    private readonly RoslynScriptRuntime _runtime = RoslynScriptRuntime.Shared;
+
+    /// <summary>当前编辑器对应的会话（附加脚本项会话，或独立编辑器文档会话）。</summary>
+    private IScriptSession _session = null!;
+
+    /// <summary>未附加脚本项时使用的文档会话（惰性创建）。</summary>
+    private IScriptSession? _documentSession;
 
     private readonly HashSet<string> _localInjectedReferencePaths = new(StringComparer.OrdinalIgnoreCase);
     private readonly FileService _fileService;
@@ -73,9 +80,8 @@ public partial class ScriptEditorService : ObservableObject
     private static readonly SymbolRenameOptions RenameOptions = new();
 
     /// <summary>
-    /// 当前关联的脚本项（ScriptManager 标签页场景）。非 null 时，引用增删改会
-    /// 同步回 ScriptItem（其无头引擎/持久化读取同一份引用），保证编辑器面板
-    /// 修改的 DLL 引用在"运行全部/重启加载"时依然生效。
+    /// 当前关联的脚本项（ScriptManager 标签页场景）。非 null 时：
+    /// 引用增删改会同步回 ScriptItem，且脚本运行状态取自该脚本自己的会话。
     /// </summary>
     private Models.ScriptItem? _attachedItem;
     internal ScriptItem? AttachedItem
@@ -83,7 +89,9 @@ public partial class ScriptEditorService : ObservableObject
         get => _attachedItem;
         set
         {
+            if (ReferenceEquals(_attachedItem, value)) return;
             _attachedItem = value;
+            SwitchSession();
             OnPropertyChanged(nameof(AttachedItem));
         }
     }
@@ -116,29 +124,29 @@ public partial class ScriptEditorService : ObservableObject
         // 中继 Model 事件（跨线程时封送到 UI 线程，已在 UI 线程则同步通知避免绑定延迟）
         // 注：Model 与本 Service 同生命周期（构造函数内创建），订阅无泄漏风险
         _model.PropertyChanged += OnModelPropertyChanged;
-        _model.StateChanged += OnModelStateChanged;
 
         System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor events: {sw.ElapsedMilliseconds}ms");
 
         try
         {
-            // 后端：共享 CustomRoslynHost + 无头执行引擎（状态事件封送到 UI 线程）
+            // 后端：共享 CustomRoslynHost + 当前会话（状态事件封送到 UI 线程）
             // ScriptHostProvider.Shared 应在 App 预热阶段已由后台线程完成初始化，
             // 此处访问 Lazy.Value 应瞬时返回（若未预热则 UI 线程阻塞 ~500ms）。
             var hostSw = System.Diagnostics.Stopwatch.StartNew();
             _roslynHost = ScriptHostProvider.Shared;
             System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor ScriptHostProvider.Shared: {hostSw.ElapsedMilliseconds}ms");
 
-            _engine = new ScriptEngine(GetText, () => _additionalReferences, () => _model.Breakpoints);
-            _engine.PropertyChanged += OnEnginePropertyChanged;
-            System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor ScriptEngine: {hostSw.ElapsedMilliseconds}ms");
+            // 会话：未附加脚本项时为独立文档会话，附加后切换到该脚本的会话
+            _session = ResolveSession();
+            SubscribeSession(_session);
+            System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor Session: {hostSw.ElapsedMilliseconds}ms");
 
-            // 初始化执行相关状态（输出冲刷定时器，冲刷 ScriptEngine 的输出队列到 UI）
-            // 必须在 _engine 创建之后且在 try 块内初始化，避免 _engine 为 null 时访问
+            // 初始化执行相关状态（输出冲刷定时器，冲刷当前会话的输出队列到 UI）
+            // 必须在 _session 就绪之后且在 try 块内初始化，避免会话为 null 时访问
             _outputFlushTimer = new DispatcherTimer(
                 TimeSpan.FromMilliseconds(100),
                 DispatcherPriority.Background,
-                (_, _) => _engine.FlushOutput(),
+                (_, _) => _session.FlushOutput(),
                 System.Windows.Application.Current.Dispatcher)
             { IsEnabled = false };
         }
@@ -150,12 +158,56 @@ public partial class ScriptEditorService : ObservableObject
         System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor TOTAL: {sw.ElapsedMilliseconds}ms");
     }
 
+    /// <summary>解析当前应使用的会话：附加了脚本项则用该脚本的会话，否则用编辑器文档会话。</summary>
+    private IScriptSession ResolveSession()
+        => _attachedItem != null
+            ? _runtime.GetSession(_attachedItem)
+            : _documentSession ??= _runtime.CreateDetachedSession(
+                _model.DocumentTitle,
+                GetText,
+                () => _model.AdditionalReferencePaths
+                    .Select(path => new ScriptReference(path, Path.GetFileName(path)))
+                    .ToList(),
+                () => _model.Breakpoints);
+
+    /// <summary>切换当前会话（脚本项变化时调用），并迁移事件订阅。</summary>
+    private void SwitchSession()
+    {
+        var previous = _session;
+        if (previous != null) UnsubscribeSession(previous);
+
+        _session = ResolveSession();
+        SubscribeSession(_session);
+        OnPropertyChanged(nameof(Session));
+    }
+
+    private void SubscribeSession(IScriptSession session)
+    {
+        session.PropertyChanged += OnSessionPropertyChanged;
+        session.StateChanged += OnSessionStateChanged;
+    }
+
+    private void UnsubscribeSession(IScriptSession session)
+    {
+        session.PropertyChanged -= OnSessionPropertyChanged;
+        session.StateChanged -= OnSessionStateChanged;
+    }
+
     // ════════════════════════════════════════════════════════════════
     //  Model 暴露（供 ViewModel 直接绑定，消除代理层）
     // ════════════════════════════════════════════════════════════════
 
-    /// <summary>获取运行时状态模型（供 ViewModel 直接绑定）。</summary>
+    /// <summary>获取编辑器自身状态模型（文档标题、路径、引用列表、断点；不含运行状态）。</summary>
     public ScriptEditorModel Model => _model;
+
+    /// <summary>
+    /// 当前编辑器对应的脚本会话：脚本运行状态（IsRunning / IsLooping / Output /
+    /// StatusText / ExecutionTime / CompilationState）的唯一事实源。
+    /// </summary>
+    public IScriptSession Session => _session;
+
+    /// <summary>当前会话输出文本（转发自 <see cref="Session"/>，供绑定与中继使用）。</summary>
+    public string OutputText => _session.Output;
 
     /// <summary>用户添加的 DLL 引用路径列表（只读）。</summary>
     public IReadOnlyList<string> AdditionalReferencePaths => _model.AdditionalReferencePaths;
@@ -173,21 +225,13 @@ public partial class ScriptEditorService : ObservableObject
     public bool IsInitialized => _editor != null && _host != null && _documentId != null;
 
     /// <summary>最近一次脚本执行的原始返回值。</summary>
-    public object? LastScriptResult => _engine.LastScriptResult;
+    public object? LastScriptResult => _session.LastResult;
 
-    /// <summary>
-    /// 最近一次脚本执行的输出文本（引擎直读，无 UI 封送延迟）。
-    /// RunAsync 返回后引擎已在 finally 中同步 FlushOutput，此值即时完整；
-    /// Model.OutputText 的镜像经 Dispatcher.InvokeAsync 封送，可能尚未执行，
-    /// 无 UI 参与的调用方（如 ScriptNode 流程执行）必须读此属性。
-    /// </summary>
-    public string EngineOutputText => _engine.OutputText;
-
-    // 内部使用的便利属性（LoopInterval 需要同步到 Engine）
+    /// <summary>循环执行间隔（毫秒），直接读写当前会话。</summary>
     internal int LoopInterval
     {
-        get => _model.LoopInterval;
-        set { _model.LoopInterval = value; _engine.LoopInterval = value; }
+        get => _session.LoopInterval;
+        set => _session.LoopInterval = value;
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -200,23 +244,45 @@ public partial class ScriptEditorService : ObservableObject
         var dispatcher = System.Windows.Application.Current?.Dispatcher;
         if (dispatcher != null && !dispatcher.CheckAccess())
         {
-            dispatcher.InvokeAsync(() =>
-            {
-                OnPropertyChanged(e.PropertyName);
-                if (e.PropertyName == nameof(ScriptEditorModel.OutputText))
-                    OutputTextChanged?.Invoke();
-            }, DispatcherPriority.Background);
+            dispatcher.InvokeAsync(() => OnPropertyChanged(e.PropertyName), DispatcherPriority.Background);
         }
         else
         {
             OnPropertyChanged(e.PropertyName);
-            if (e.PropertyName == nameof(ScriptEditorModel.OutputText))
-                OutputTextChanged?.Invoke();
         }
     }
 
-    /// <summary>Model 综合状态变更 → 跨线程封送后转发。</summary>
-    private void OnModelStateChanged()
+    /// <summary>会话属性变更 → 跨线程封送后中继为 Service 属性变更（驱动绑定与命令 CanExecute）。</summary>
+    /// <remarks>
+    /// 会话属性名与 UI 绑定名存在一处映射：会话的 <c>Output</c> 对外仍以
+    /// <c>OutputText</c> 暴露（ViewModel / View 依赖属性沿用该名称）。
+    /// </remarks>
+    private void OnSessionPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        var name = e.PropertyName switch
+        {
+            nameof(IScriptSession.Output) => nameof(OutputText),
+            _ => e.PropertyName
+        };
+
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+        {
+            dispatcher.InvokeAsync(() =>
+            {
+                OnPropertyChanged(name);
+                if (name == nameof(OutputText)) OutputTextChanged?.Invoke();
+            }, DispatcherPriority.Background);
+        }
+        else
+        {
+            OnPropertyChanged(name);
+            if (name == nameof(OutputText)) OutputTextChanged?.Invoke();
+        }
+    }
+
+    /// <summary>会话综合状态变更 → 跨线程封送后转发。</summary>
+    private void OnSessionStateChanged()
     {
         var dispatcher = System.Windows.Application.Current?.Dispatcher;
         if (dispatcher != null && !dispatcher.CheckAccess())
@@ -438,54 +504,16 @@ public partial class ScriptEditorService : ObservableObject
     // ════════════════════════════════════════════════════════════════
 
     // ════════════════════════════════════════════════════════════════
-    //  执行引擎（委托给无头 ScriptEngine）
+    //  执行（转发给当前会话）
     // ════════════════════════════════════════════════════════════════
 
-    #region 执行引擎
+    #region 执行
 
-    /// <summary>设置脚本执行时的输入数据（委托给无头引擎）。</summary>
-    public void SetInputData(object? data) => _engine.SetInputData(data);
-
-    /// <summary>
-    /// 引擎状态变化 → 镜像到 Model（驱动 WPF 绑定与命令 CanExecute）。
-    /// 事件可能在后台线程触发，统一封送到 UI 线程。
-    /// </summary>
-    private void OnEnginePropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        var dispatcher = System.Windows.Application.Current?.Dispatcher;
-        if (dispatcher != null && !dispatcher.CheckAccess())
-        {
-            dispatcher.InvokeAsync(() => OnEnginePropertyChanged(sender, e));
-            return;
-        }
-
-        switch (e.PropertyName)
-        {
-            case nameof(ScriptEngine.OutputText):
-                _model.OutputText = _engine.OutputText;
-                if (AttachedItem != null) AttachedItem.OutputText = _engine.OutputText;
-                break;
-            case nameof(ScriptEngine.StatusText):
-                _model.StatusText = _engine.StatusText;
-                if (AttachedItem != null) AttachedItem.StatusText = _engine.StatusText;
-                break;
-            case nameof(ScriptEngine.IsRunning):
-                _model.IsRunning = _engine.IsRunning;
-                if (AttachedItem != null) AttachedItem.IsRunning = _engine.IsRunning;
-                break;
-            case nameof(ScriptEngine.IsLooping):
-                _model.IsLooping = _engine.IsLooping;
-                if (AttachedItem != null) AttachedItem.IsLooping = _engine.IsLooping;
-                break;
-            case nameof(ScriptEngine.ExecutionTime):
-                _model.ExecutionTime = _engine.ExecutionTime;
-                if (AttachedItem != null) AttachedItem.ExecutionTime = _engine.ExecutionTime;
-                break;
-        }
-    }
+    /// <summary>设置脚本执行时的输入数据（转发给当前会话）。</summary>
+    public void SetInputData(object? data) => _session.SetInputData(data);
 
     // ════════════════════════════════════════════════════════════════
-    //  输出缓冲（冲刷 ScriptEngine 输出队列到 UI）
+    //  输出缓冲（冲刷当前会话的输出队列到 UI）
     // ════════════════════════════════════════════════════════════════
 
     #region 输出缓冲
@@ -506,17 +534,17 @@ public partial class ScriptEditorService : ObservableObject
 
     /// <summary>
     /// 异步执行当前脚本。返回 true 表示执行成功，false 表示出错。
-    /// 执行逻辑在无头 <see cref="ScriptEngine"/> 中完成（编译/运行不依赖 RoslynPad 编辑器）。
+    /// 执行逻辑在无头 <see cref="ScriptSession"/> 中完成（编译/运行不依赖 RoslynPad 编辑器）。
     /// </summary>
     public async Task<bool> RunAsync()
     {
-        var isLoop = _model.IsLooping;
+        var isLoop = _session.IsLooping;
         if (!isLoop)
             StartOutputFlushTimer();
 
         try
         {
-            return await _engine.RunAsync();
+            return await _session.RunAsync();
         }
         finally
         {
@@ -526,7 +554,7 @@ public partial class ScriptEditorService : ObservableObject
     }
 
     /// <summary>终止当前执行。</summary>
-    public void Terminate() => _engine.Terminate();
+    public void Terminate() => _session.Terminate();
 
     /// <summary>异步循环执行当前脚本。</summary>
     public async Task LoopRunAsync()
@@ -534,7 +562,7 @@ public partial class ScriptEditorService : ObservableObject
         StartOutputFlushTimer();
         try
         {
-            await _engine.LoopRunAsync();
+            await _session.LoopRunAsync();
         }
         finally
         {
@@ -544,15 +572,15 @@ public partial class ScriptEditorService : ObservableObject
     }
 
     /// <summary>停止循环执行。</summary>
-    public void StopLoop() => _engine.StopLoop();
+    public void StopLoop() => _session.StopLoop();
 
     /// <summary>仅编译当前脚本，不执行。</summary>
     public async Task CompileAsync()
     {
         var wasModified = _model.HasModified;
-        await _engine.CompileAsync();
+        await _session.CompileAsync();
         // 编辑器已初始化时刷新诊断（RoslynPad 工作区文档）
-        var wasLooping = _model.IsLooping;
+        var wasLooping = _session.IsLooping;
         if (IsInitialized && !wasLooping)
             RefreshDiagnostics();
         _model.HasModified = wasModified;
@@ -561,7 +589,7 @@ public partial class ScriptEditorService : ObservableObject
     /// <summary>预编译脚本（后台静默编译，加速首次执行）。</summary>
     public async Task PreCompileScriptAsync(string code)
     {
-        await _engine.PreCompileAsync(code);
+        await _session.PreCompileAsync(code);
     }
 
     #endregion
@@ -732,12 +760,12 @@ public partial class ScriptEditorService : ObservableObject
         System.Diagnostics.Debug.WriteLine("[ScriptEditorService] ====== WarmupAsync COMPLETE ======");
     }
 
-    /// <summary>释放执行相关资源。</summary>
+    /// <summary>释放执行相关资源（停止循环并终止当前会话的执行）。</summary>
     public void DisposeExecution()
     {
         StopOutputFlushTimer();
-        _engine.StopLoop();
-        _engine.Terminate();
+        _session.StopLoop();
+        _session.Terminate();
     }
 
     #endregion

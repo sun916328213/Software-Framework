@@ -4,42 +4,34 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting;
 using RoslynPad.Roslyn;
+using ScriptEditor.Contracts;
 using ScriptEditor.Helpers;
+using ScriptEditor.Models;
 
 namespace ScriptEditor.Services;
 
 /// <summary>
-/// 脚本全局对象。Roslyn 脚本里可直接访问 <c>Inputs</c> 字段（dynamic），支持任意类型：
-/// <list type="bullet">
-///   <item><see cref="System.Collections.Generic.IDictionary{TKey,TValue}"/>：保留旧写法 <c>Inputs["key"]</c></item>
-///   <item>任意 class：<c>Inputs.PropertyName</c>、<c>Inputs.Method()</c>，通过 dynamic 调度</item>
-/// </list>
-/// 静态 globalsType 保证缓存 key 稳定（始终是本类型），不会因运行时 inputData 类型变化而重新编译。
-/// </summary>
-public sealed class ScriptGlobals
-{
-    /// <summary>脚本输入参数。支持任意类型：IDictionary 走索引器，class 走 dynamic 成员访问。
-    /// 实例形式 Script 的 suffix 注入代码（EnsureScriptRunInvoked）也通过本字段给实例 Inputs 赋值。</summary>
-    public dynamic? Inputs { get; set; }
-}
-
-/// <summary>
-/// 无头脚本执行引擎（前端/后端分离后的后端核心）。
+/// 一次脚本运行/编辑会话：脚本运行状态的**唯一事实源**。
 /// </summary>
 /// <remarks>
-/// <para>职责：脚本编译缓存、单次执行、循环执行、终止、预编译，
-/// 以及对应的运行时状态（IsRunning / IsLooping / OutputText / StatusText 等）。</para>
+/// <para>职责：脚本编译缓存、单次执行、循环执行、终止、预编译，以及对应的运行状态
+/// （<see cref="IsRunning"/> / <see cref="IsLooping"/> / <see cref="Output"/> /
+/// <see cref="StatusText"/> / <see cref="ExecutionTime"/> / <see cref="CompilationState"/>）、
+/// 取消令牌（执行 + 循环）与已解析引用缓存。</para>
 /// <para>UI-free：不引用任何 WPF 控件，不创建 DispatcherTimer，不绑定线程。
 /// 状态变更通过 <see cref="PropertyChanged"/> / <see cref="StateChanged"/> 广播，
-/// 由调用方（编辑器服务或 ScriptItem）负责封送到 UI 线程。</para>
-/// <para>与旧 ScriptEditorService 中的执行逻辑行为一致（Inputs 注入、断点插桩、
-/// EnsureScriptRunInvoked、编译缓存等均已迁移至此）。</para>
+/// 由调用方（编辑器服务 / 视图）负责封送到 UI 线程。</para>
+/// <para>会话与脚本数据的关联由 <see cref="RoslynScriptRuntime"/> 维护：
+/// 会话通过构造函数注入的委托**实时读取**脚本数据（代码 / 引用 / 断点），
+/// 因此脚本数据对象不需要保存任何运行状态，也不持有本会话实例。</para>
+/// <para>与旧 ScriptEngine 的执行行为一致（Inputs 注入、断点插桩、
+/// EnsureScriptRunInvoked、编译缓存等均已保留）。</para>
 /// </remarks>
-public sealed class ScriptEngine : ObservableObject
+public sealed class ScriptSession : ObservableObject, IScriptSession
 {
     #region 事件
 
-    /// <summary>IsRunning / IsLooping / StatusText 等状态变化时触发。</summary>
+    /// <summary>IsRunning / IsLooping / StatusText / CompilationState 等状态变化时触发。</summary>
     public event Action? StateChanged;
 
     private void NotifyStateChanged()
@@ -58,38 +50,59 @@ public sealed class ScriptEngine : ObservableObject
     /// <summary>获取当前脚本源代码。</summary>
     private readonly Func<string> _getCode;
 
-    /// <summary>获取执行时额外注入的元数据引用（宿主程序集 + 用户引用等）。</summary>
-    private readonly Func<IReadOnlyList<MetadataReference>> _getAdditionalReferences;
+    /// <summary>获取执行时额外注入的用户引用描述（由会话解析为元数据引用并缓存）。</summary>
+    private readonly Func<IReadOnlyList<ScriptReference>> _getReferences;
 
     /// <summary>获取断点行号集合（1-based）。</summary>
     private readonly Func<IEnumerable<int>> _getBreakpoints;
 
-    public ScriptEngine(
+    /// <summary>获取会话显示名（脚本标题）；未提供时使用 <see cref="Title"/> 的静态值。</summary>
+    private readonly Func<string>? _getTitle;
+
+    public ScriptSession(
         Func<string> getCode,
-        Func<IReadOnlyList<MetadataReference>>? getAdditionalReferences = null,
-        Func<IEnumerable<int>>? getBreakpoints = null)
+        Func<IReadOnlyList<ScriptReference>>? getReferences = null,
+        Func<IEnumerable<int>>? getBreakpoints = null,
+        Func<string>? getTitle = null)
     {
         _getCode = getCode ?? (() => string.Empty);
-        _getAdditionalReferences = getAdditionalReferences ?? (() => Array.Empty<MetadataReference>());
+        _getReferences = getReferences ?? (() => Array.Empty<ScriptReference>());
         _getBreakpoints = getBreakpoints ?? (() => Array.Empty<int>());
+        _getTitle = getTitle;
     }
 
     /// <summary>宿主实例（供调试/诊断外部使用）。</summary>
     public CustomRoslynHost Host => _host;
 
     // ════════════════════════════════════════════════════════════════
+    //  会话标识
+    // ════════════════════════════════════════════════════════════════
+
+    /// <summary>会话对应的脚本永久标识（独立会话为运行时分配的新标识）。</summary>
+    public Guid ScriptId { get; init; } = Guid.NewGuid();
+
+    private string _title = "脚本";
+    /// <summary>会话显示名（脚本标题）。</summary>
+    public string Title
+    {
+        get => _getTitle?.Invoke() ?? _title;
+        set => SetProperty(ref _title, value);
+    }
+
+    // ════════════════════════════════════════════════════════════════
     //  运行时状态（INPC）
     // ════════════════════════════════════════════════════════════════
 
-    private string _outputText = string.Empty;
+    private string _output = string.Empty;
     /// <summary>输出面板文本（自动截断超长内容，保留最多 200 行）。</summary>
-    public string OutputText
+    public string Output
     {
-        get => _outputText;
-        private set => SetProperty(ref _outputText, OutputTruncator.Truncate(value));
+        get => _output;
+        private set => SetProperty(ref _output, OutputTruncator.Truncate(value));
     }
 
     private string _statusText = "就绪";
+    /// <summary>状态栏文本。</summary>
     public string StatusText
     {
         get => _statusText;
@@ -97,6 +110,7 @@ public sealed class ScriptEngine : ObservableObject
     }
 
     private bool _isRunning;
+    /// <summary>是否正在执行。</summary>
     public bool IsRunning
     {
         get => _isRunning;
@@ -108,6 +122,7 @@ public sealed class ScriptEngine : ObservableObject
     }
 
     private bool _isLooping;
+    /// <summary>是否正在循环执行。</summary>
     public bool IsLooping
     {
         get => _isLooping;
@@ -127,14 +142,54 @@ public sealed class ScriptEngine : ObservableObject
     }
 
     private string _executionTime = string.Empty;
+    /// <summary>最近一次执行耗时。</summary>
     public string ExecutionTime
     {
         get => _executionTime;
         private set => SetProperty(ref _executionTime, value);
     }
 
+    private ScriptCompilationState _compilationState = ScriptCompilationState.NotCompiled;
+    /// <summary>编译阶段状态。</summary>
+    public ScriptCompilationState CompilationState
+    {
+        get => _compilationState;
+        private set
+        {
+            if (SetProperty(ref _compilationState, value))
+                NotifyStateChanged();
+        }
+    }
+
     /// <summary>最近一次脚本执行的原始返回值（未格式化）。</summary>
-    public object? LastScriptResult { get; private set; }
+    public object? LastResult { get; private set; }
+
+    // ════════════════════════════════════════════════════════════════
+    //  引用解析缓存（会话级，避免每次执行重复加载程序集）
+    // ════════════════════════════════════════════════════════════════
+
+    private readonly RoslynScriptReferenceResolver _resolver = new();
+    private readonly object _referenceGate = new();
+    private IReadOnlyList<MetadataReference> _references = Array.Empty<MetadataReference>();
+    private string[] _referencePaths = Array.Empty<string>();
+    private bool _referencesLoaded;
+
+    /// <summary>解析并缓存用户引用（路径集合变化时重新加载）。</summary>
+    private IReadOnlyList<MetadataReference> GetReferences()
+    {
+        var descriptions = _getReferences();
+        var paths = descriptions.Select(reference => reference.Path).ToArray();
+        lock (_referenceGate)
+        {
+            if (!_referencesLoaded || !paths.SequenceEqual(_referencePaths, StringComparer.OrdinalIgnoreCase))
+            {
+                _references = _resolver.LoadMetadataReferences(descriptions);
+                _referencePaths = paths;
+                _referencesLoaded = true;
+            }
+            return _references;
+        }
+    }
 
     // ════════════════════════════════════════════════════════════════
     //  执行字段
@@ -161,11 +216,23 @@ public sealed class ScriptEngine : ObservableObject
         _inputData = data;
     }
 
+    /// <summary>编辑器级消息写入输出面板（替换当前输出）。</summary>
+    public void SetOutput(string output)
+    {
+        lock (_sync)
+        {
+            Output = output;
+        }
+    }
+
+    /// <summary>编辑器级状态消息写入状态栏。</summary>
+    public void SetStatus(string statusText) => StatusText = statusText;
+
     // ════════════════════════════════════════════════════════════════
     //  输出缓冲
     // ════════════════════════════════════════════════════════════════
 
-    /// <summary>将输出队列中的全部内容冲刷进 OutputText（供调用方定时器或运行结束时调用）。</summary>
+    /// <summary>将输出队列中的全部内容冲刷进 <see cref="Output"/>（供调用方定时器或运行结束时调用）。</summary>
     public void FlushOutput()
     {
         _lastFlushTicks = Environment.TickCount64;
@@ -180,7 +247,7 @@ public sealed class ScriptEngine : ObservableObject
         {
             lock (_sync)
             {
-                OutputText = OutputText + sb.ToString();
+                Output = Output + sb.ToString();
             }
         }
     }
@@ -243,7 +310,7 @@ public sealed class ScriptEngine : ObservableObject
     /// </summary>
     /// <remarks>
     /// 并发安全：编译完成后将 <c>Script</c> 实例捕获到局部变量再执行，
-    /// 调用与自己的编译结果强绑定。并行"全部执行"时各引擎编译完成先后不定，
+    /// 调用与自己的编译结果强绑定。并行"全部执行"时各会话编译完成先后不定，
     /// 即使共享缓存字段被其他调用交错覆盖，也不会执行到别的脚本的代码。
     /// </remarks>
     public async Task<bool> RunAsync()
@@ -258,7 +325,7 @@ public sealed class ScriptEngine : ObservableObject
             StatusText = "执行中...";
             ExecutionTime = string.Empty;
             IsRunning = true;
-            OutputText = string.Empty;
+            Output = string.Empty;
         }
 
         // globals 的静态类型：固定为 ScriptGlobals，使脚本里可访问 Inputs（dynamic）字段，
@@ -313,7 +380,9 @@ public sealed class ScriptEngine : ObservableObject
                 ScriptExecutionService.CleanupOldScript();
 
                 var captureHost = host;
-                var captureGetRefs = _getAdditionalReferences;
+                var captureGetRefs = GetReferences;
+
+                CompilationState = ScriptCompilationState.Compiling;
 
                 var (s, hr, diags) = await ScriptExecutionService.CompileAndCheckAsync(
                     code, captureHost, captureGetRefs, hasBreakpoints, globalsType);
@@ -321,6 +390,7 @@ public sealed class ScriptEngine : ObservableObject
 
                 if (errors.Count > 0)
                 {
+                    CompilationState = ScriptCompilationState.Failed;
                     finalOutput = string.Join(Environment.NewLine, errors.Select(ScriptExecutionService.FormatObject));
                     finalStatus = "编译失败";
                     return false;
@@ -332,6 +402,7 @@ public sealed class ScriptEngine : ObservableObject
                 _lastSubmittedCode = code;
                 _lastCompiledScript = s;
                 _lastHasResult = hr;
+                CompilationState = ScriptCompilationState.Compiled;
 
                 scriptToRun = s;
                 hasResultToRun = hr;
@@ -361,7 +432,7 @@ public sealed class ScriptEngine : ObservableObject
                     Inputs = globalsInput
                 });
 
-            LastScriptResult = returnValue;
+            LastResult = returnValue;
 
             var elapsed = DateTime.Now - startTime;
             finalStatus = hasError ? "执行失败" : "执行成功";
@@ -382,6 +453,7 @@ public sealed class ScriptEngine : ObservableObject
         catch (OperationCanceledException)
         {
             ClearOutputQueue();
+            CompilationState = ScriptCompilationState.Cancelled;
             finalOutput = "执行已取消";
             finalStatus = "已取消";
         }
@@ -402,7 +474,7 @@ public sealed class ScriptEngine : ObservableObject
                     ClearOutputQueue();
                     lock (_sync)
                     {
-                        OutputText = finalOutput;
+                        Output = finalOutput;
                     }
                 }
                 else
@@ -470,7 +542,7 @@ public sealed class ScriptEngine : ObservableObject
 
         IsLooping = true;
         StatusText = "循环执行中...";
-        OutputText = string.Empty;
+        Output = string.Empty;
         _iterationCount = 0;
 
         IsRunning = true;
@@ -531,32 +603,31 @@ public sealed class ScriptEngine : ObservableObject
     /// 写入输出文本并**强制**广播变更（无论新旧文本是否相同）。
     /// </summary>
     /// <remarks>
-    /// 多个标签页共享同一个 <see cref="ScriptEngine"/>（ScriptEditorService 为单例，
-    /// 其引擎随服务唯一，切页只换 ScriptItem）。若上一次编译留下的结果文本与本次完全相同，
+    /// 会话在编辑器中可被反复复用（同一标签页多次编译）。若上一次编译留下的结果文本与本次完全相同，
     /// 普通 setter 会因"值未变化"而不广播 PropertyChanged，
     /// 当前标签页的输出面板就停留在切换前的旧内容——表现为"点了编译，输出栏没被覆盖"。
     /// </remarks>
-    private void SetOutputTextForced(string text)
+    private void SetOutputForced(string text)
     {
         lock (_sync)
         {
-            _outputText = OutputTruncator.Truncate(text);
+            _output = OutputTruncator.Truncate(text);
         }
-        OnPropertyChanged(nameof(OutputText));
+        OnPropertyChanged(nameof(Output));
     }
 
-    /// <summary>写入耗时文本并**强制**广播变更（原因同 <see cref="SetOutputTextForced"/>）。</summary>
+    /// <summary>写入耗时文本并**强制**广播变更（原因同 <see cref="SetOutputForced"/>）。</summary>
     private void SetExecutionTimeForced(string text)
     {
         _executionTime = text;
         OnPropertyChanged(nameof(ExecutionTime));
     }
 
-    /// <summary>仅编译当前脚本，不执行。无输入输出回调。</summary>
-    public async Task CompileAsync()
+    /// <summary>仅编译当前脚本，不执行。无输入输出回调。返回是否编译成功。</summary>
+    public async Task<bool> CompileAsync()
     {
         var host = _host;
-        if (host == null) return;
+        if (host == null) return false;
 
         if (IsLooping) StopLoop();
 
@@ -564,8 +635,9 @@ public sealed class ScriptEngine : ObservableObject
 
         // 与 RunAsync 对齐：编译开始前先清空输出与耗时，
         // 保证本次编译结果一定会覆盖输出面板中的旧内容（含上一次编译/执行的残留）。
-        SetOutputTextForced(string.Empty);
+        SetOutputForced(string.Empty);
         SetExecutionTimeForced(string.Empty);
+        CompilationState = ScriptCompilationState.Compiling;
 
         var startTime = DateTime.Now;
 
@@ -580,7 +652,7 @@ public sealed class ScriptEngine : ObservableObject
 
             var captureCode = invokeCode;
             var captureHost = host;
-            var captureGetRefs = _getAdditionalReferences;
+            var captureGetRefs = GetReferences;
 
             var (script, hasResult, diagnostics) = await ScriptExecutionService.CompileAndCheckAsync(
                 captureCode, captureHost, captureGetRefs, false, typeof(ScriptGlobals));
@@ -590,29 +662,34 @@ public sealed class ScriptEngine : ObservableObject
                 _lastSubmittedCode = captureCode;
                 _lastCompiledScript = script;
                 _lastHasResult = hasResult;
-                SetOutputTextForced("✓ 编译成功");
+                CompilationState = ScriptCompilationState.Compiled;
+                SetOutputForced("✓ 编译成功");
                 StatusText = "编译完成";
                 SetExecutionTimeForced(FormatElapsed(DateTime.Now - startTime));
-                return;
+                return true;
             }
 
             _lastSubmittedCode = null;
             _lastCompiledScript = null;
             _lastHasResult = false;
+            CompilationState = ScriptCompilationState.Failed;
 
-            SetOutputTextForced(string.Join(Environment.NewLine,
+            SetOutputForced(string.Join(Environment.NewLine,
                 diagnostics.Select(d => $"{(d.Severity == DiagnosticSeverity.Error ? "✗" : "⚠")} 第{d.Location.GetLineSpan().StartLinePosition.Line + 1}行: {d.GetMessage()}")));
             StatusText = "编译失败";
             SetExecutionTimeForced(FormatElapsed(DateTime.Now - startTime));
+            return false;
         }
         catch (Exception ex)
         {
             _lastSubmittedCode = null;
             _lastCompiledScript = null;
             _lastHasResult = false;
-            SetOutputTextForced($"编译异常: {ex.Message}");
+            CompilationState = ScriptCompilationState.Failed;
+            SetOutputForced($"编译异常: {ex.Message}");
             StatusText = "编译异常";
             SetExecutionTimeForced(FormatElapsed(DateTime.Now - startTime));
+            return false;
         }
     }
 
@@ -635,7 +712,7 @@ public sealed class ScriptEngine : ObservableObject
         {
             var captureCode = invokeCode;
             var captureHost = host;
-            var captureGetRefs = _getAdditionalReferences;
+            var captureGetRefs = GetReferences;
 
             var (script, hasResult, diagnostics) = await ScriptExecutionService.CompileAndCheckAsync(
                 captureCode, captureHost, captureGetRefs, false, typeof(ScriptGlobals));
@@ -644,6 +721,7 @@ public sealed class ScriptEngine : ObservableObject
                 _lastSubmittedCode = captureCode;
                 _lastCompiledScript = script;
                 _lastHasResult = hasResult;
+                CompilationState = ScriptCompilationState.Compiled;
             }
         }
         catch (Exception) { }

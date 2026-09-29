@@ -1,12 +1,12 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using ScriptEditor.Services;
 
 namespace Script.Tests.CoreTests;
 
 /// <summary>
-/// ScriptEngine globals 注入路径测试：
+/// ScriptSession globals 注入路径测试：
 /// 覆盖 Dictionary 索引、class 成员访问、List 集合、嵌套成员、静态/实例 Run 形式。
-/// 直接调用 ScriptEngine（无头引擎），不启动 WPF UI。
+/// 直接调用 ScriptSession（无头引擎），不启动 WPF UI。
 /// </summary>
 public static class ScriptEngineGlobalsTest
 {
@@ -29,10 +29,10 @@ public static class ScriptEngineGlobalsTest
     /// </summary>
     private static async Task RunAndVerify(string name, object? input, string code, params string[] expectedContains)
     {
-        var engine = new ScriptEngine(() => code);
+        var engine = new ScriptSession(() => code);
         engine.SetInputData(input);
         var ok = await engine.RunAsync();
-        var output = engine.OutputText ?? "";
+        var output = engine.Output ?? "";
         if (!ok)
             throw new Exception($"[{name}] 执行失败: StatusText='{engine.StatusText}', Output='{output}'");
         foreach (var exp in expectedContains)

@@ -270,7 +270,19 @@ namespace Packing_Machine
                 foreach (ScriptEditor.Models.ScriptItem item in items)
                 {
                     var scriptItem = item;
-                    RunStep(scriptItem.Title, async () => await scriptItem.ExecuteAsync());
+                    RunStep(scriptItem.Title, async () =>
+                    {
+                        // P3：运行状态由会话独占持有。启动脚本与编辑器共用同一会话
+                        // （同一 ScriptItem → 同一 ScriptSession），因此这里执行的输出/状态
+                        // 在用户打开编辑器时依然可见；不再通过 ScriptItem 上的状态镜像传递。
+                        var session = ScriptEditor.Services.RoslynScriptRuntime.Shared.GetSession(scriptItem);
+                        var succeeded = await session.RunAsync();
+                        if (!succeeded)
+                        {
+                            throw new InvalidOperationException(
+                                $"脚本执行失败：{session.StatusText}{Environment.NewLine}{session.Output}");
+                        }
+                    });
                 }
 
                 RunStep("预热脚本编辑器", async () =>

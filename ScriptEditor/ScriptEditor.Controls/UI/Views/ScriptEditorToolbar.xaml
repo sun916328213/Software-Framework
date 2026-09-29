@@ -192,7 +192,7 @@
                     VerticalContentAlignment="Center"
                     DataObject.Pasting="LoopInterval_Pasting"
                     PreviewTextInput="LoopInterval_PreviewTextInput"
-                    Text="{Binding LoopInterval, UpdateSourceTrigger=PropertyChanged}"
+                    Text="{Binding Session.LoopInterval, UpdateSourceTrigger=PropertyChanged}"
                     ToolTip="循环执行的间隔时间（毫秒）" />
                 <TextBlock
                     Margin="0,0,4,0"
@@ -202,7 +202,7 @@
                     Text="ms" />
             </StackPanel>
 
-            <!--  执行中进度条  -->
+            <!--  执行中进度条（读当前脚本会话）  -->
             <ProgressBar
                 Width="80"
                 Height="4"
@@ -210,8 +210,8 @@
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
                 DockPanel.Dock="Right"
-                IsIndeterminate="{Binding IsRunning}"
-                Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                IsIndeterminate="{Binding Session.IsRunning}"
+                Visibility="{Binding Session.IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}" />
         </DockPanel>
     </Border>
 </UserControl>

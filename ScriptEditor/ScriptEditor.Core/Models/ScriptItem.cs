@@ -1,15 +1,25 @@
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace ScriptEditor.Models;
 
-/// <summary>Script data and temporarily retained bindable state for the P3 session migration.</summary>
-public class ScriptItem : ScriptStateBase
+/// <summary>
+/// 脚本数据对象：只描述「脚本是什么」，可独立序列化。
+/// </summary>
+/// <remarks>
+/// <para>P3 起本类型**不再持有任何运行状态**（IsRunning / Output / StatusText / ExecutionTime 等），
+/// 这些状态由 <see cref="Contracts.IScriptSession"/> 独占持有，关联关系由
+/// <see cref="Contracts.IScriptRuntime"/> 维护。</para>
+/// <para>此处保留的 CaretOffset / EditorScrollOffset / ScrollOffset / IsEditorInitialized
+/// 是**编辑器视图状态**（按标签页记忆光标与滚动位置），属于 Controls 层关注点，
+/// 均标注 <see cref="JsonIgnoreAttribute"/>，不参与持久化。</para>
+/// </remarks>
+public class ScriptItem : ObservableObject
 {
     private Guid _scriptId = Guid.NewGuid();
     private string _title = "新脚本";
     private string _code = string.Empty;
-    private string _itemStatus = "就绪";
     private int _caretOffset;
     private double _editorScrollOffset;
     private double _scrollOffset;
@@ -52,13 +62,7 @@ public class ScriptItem : ScriptStateBase
 
     public ObservableCollection<int> Breakpoints { get; set; } = new();
 
-    [JsonIgnore]
-    public string ItemStatus
-    {
-        get => _itemStatus;
-        set => SetProperty(ref _itemStatus, value);
-    }
-
+    /// <summary>编辑器视图状态：光标偏移（按脚本记忆，不持久化）。</summary>
     [JsonIgnore]
     public int CaretOffset
     {
@@ -66,6 +70,7 @@ public class ScriptItem : ScriptStateBase
         set => SetProperty(ref _caretOffset, value);
     }
 
+    /// <summary>编辑器视图状态：代码编辑器垂直滚动偏移（不持久化）。</summary>
     [JsonIgnore]
     public double EditorScrollOffset
     {
@@ -73,6 +78,7 @@ public class ScriptItem : ScriptStateBase
         set => SetProperty(ref _editorScrollOffset, value);
     }
 
+    /// <summary>编辑器视图状态：输出面板垂直滚动偏移（不持久化）。</summary>
     [JsonIgnore]
     public double ScrollOffset
     {
@@ -80,6 +86,7 @@ public class ScriptItem : ScriptStateBase
         set => SetProperty(ref _scrollOffset, value);
     }
 
+    /// <summary>编辑器视图状态：该脚本的编辑器是否已初始化（不持久化）。</summary>
     [JsonIgnore]
     public bool IsEditorInitialized
     {

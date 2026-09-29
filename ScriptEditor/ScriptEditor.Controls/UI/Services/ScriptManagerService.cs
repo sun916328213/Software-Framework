@@ -1,5 +1,6 @@
 ﻿using Extension.Core.Conversion;
 using Extension.Core.Collections;
+using ScriptEditor.Contracts;
 using ScriptEditor.Models;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -17,16 +18,18 @@ namespace ScriptEditor.Services
     /// <para>核心职责：</para>
     /// <list type="bullet">
     ///   <item>脚本 CRUD（添加/删除/初始化）——集合元素为轻量 <see cref="ScriptItem"/>（纯数据），
-    ///         不包含任何 WPF 控件。重量级 RoslynPad 编辑器由 ScriptEditorView 在
+    ///         不包含任何 WPF 控件，也不保存运行状态。重量级 RoslynPad 编辑器由 ScriptEditorView 在
     ///         所属标签页被选中时按需初始化。</item>
-    ///   <item>执行调度（单次执行、循环执行、全部终止）——通过 ScriptItem 内部无头
-    ///         <see cref="ScriptEngine"/> 完成，不依赖编辑器控件。</item>
+    ///   <item>执行调度（单次执行、循环执行、全部终止）——统一经
+    ///         <see cref="IScriptRuntime"/> 取到每个脚本的 <see cref="IScriptSession"/> 后操作会话，
+    ///         不直接调用脚本数据对象上的执行方法，也不依赖编辑器控件。</item>
     ///   <item>任务持久化（.taskproj JSON 格式保存/加载）</item>
     /// </list>
-    /// <para>依赖服务：FileService（文件对话框）、ScriptEditorService（全局引用管理）。</para>
+    /// <para>依赖服务：FileService（文件对话框）、ScriptEditorService（全局引用管理）、
+    /// RoslynScriptRuntime（会话创建与释放）。</para>
     /// </remarks>
     /// <author>ScriptEditor Team</author>
-    /// <version>1.1</version>
+    /// <version>1.2</version>
     public class ScriptManagerService
     {
         #region 常量/字段
@@ -43,15 +46,24 @@ namespace ScriptEditor.Services
         /// <summary>脚本编辑器服务（全局引用管理、脚本目录）。</summary>
         private readonly ScriptEditorService _editorService;
 
+        /// <summary>共享脚本运行时：按脚本提供运行会话（运行状态的唯一事实源）。</summary>
+        private readonly IScriptRuntime _runtime;
+
         #endregion
 
         #region 构造函数
 
         public ScriptManagerService(FileService fileService, ScriptEditorService editorService)
+            : this(fileService, editorService, RoslynScriptRuntime.Shared)
+        {
+        }
+
+        public ScriptManagerService(FileService fileService, ScriptEditorService editorService, IScriptRuntime runtime)
         {
             _itemsReadOnly = new ReadOnlyObservableCollection<ScriptItem>(_items);
             _fileService = fileService;
             _editorService = editorService;
+            _runtime = runtime;
             _items.CollectionChanged += OnItemsCollectionChanged;
         }
 
@@ -200,7 +212,7 @@ namespace ScriptEditor.Services
             var prompt = new MessagePrompt("确认删除", $"确定要删除\"{item.Title}\"吗？此操作不可撤销。", Visibility.Visible);
             if (prompt.ShowDialog() != true) return false;
 
-            item.DisposeExecution();
+            _runtime.ReleaseSession(item);
             ScriptLoadingWindowRegistry.Close(item);
             var title = item.Title;
             _items.Remove(item);
@@ -220,7 +232,7 @@ namespace ScriptEditor.Services
 
             foreach (var item in _items)
             {
-                item.DisposeExecution();
+                _runtime.ReleaseSession(item);
                 ScriptLoadingWindowRegistry.Close(item);
             }
             // 批量清空：仅触发一次 Reset 通知，避免逐条 Remove 引发 N 次布局重算
@@ -230,15 +242,15 @@ namespace ScriptEditor.Services
 
         /// <summary>
         /// 预编译所有脚本（无头后台编译，加速首次执行）。编辑器不再在启动时创建，
-        /// 因此此处不再初始化 RoslynPad，仅预热编译缓存。
+        /// 因此此处不再初始化 RoslynPad，仅预热各脚本会话的编译缓存。
         /// </summary>
         /// <remarks>
-        /// 各脚本拥有独立 <see cref="ScriptEngine"/> 实例，编译相互独立，可安全并行；
+        /// 各脚本拥有独立 <see cref="ScriptSession"/>，编译相互独立，可安全并行；
         /// 相比逐个 await 的串行版本，总耗时约等于最慢单个脚本的耗时。
         /// </remarks>
         public async Task LoadAsync()
         {
-            var tasks = _items.Select(item => item.PreCompileAsync()).ToList();
+            var tasks = _items.Select(item => _runtime.GetSession(item).PreCompileAsync(item.Code)).ToList();
             if (tasks.Count > 0)
                 await Task.WhenAll(tasks);
         }
@@ -375,7 +387,7 @@ namespace ScriptEditor.Services
                 // ---- UI 线程：清除旧脚本（批量：先终止再一次性 Clear，仅触发一次 Reset）----
                 foreach (var item in _items)
                 {
-                    item.DisposeExecution();
+                    _runtime.ReleaseSession(item);
                     ScriptLoadingWindowRegistry.Close(item);
                 }
                 _items.Clear();
@@ -543,23 +555,23 @@ namespace ScriptEditor.Services
         #region 执行调度
 
         /// <summary>
-        /// 全部终止执行（停止循环 + 终止所有脚本）。
+        /// 全部终止执行（停止循环 + 终止所有脚本会话）。
         /// </summary>
         public void StopAll()
         {
             StopLoop();
             foreach (var item in _items)
-                item.Terminate();
+                _runtime.FindSession(item)?.Terminate();
             Model.StatusText = "已全部终止";
         }
 
         /// <summary>
-        /// 并行执行所有脚本（通过每个 ScriptItem 的无头引擎执行，无需编辑器控件）。
+        /// 并行执行所有脚本（经运行时取各脚本会话执行，无需编辑器控件）。
         /// </summary>
         /// <remarks>
-        /// 并行安全：各脚本使用独立 <see cref="ScriptEngine"/> 实例，且引擎的
+        /// 并行安全：各脚本使用独立 <see cref="ScriptSession"/>，且会话的
         /// <c>RunAsync</c> 将编译结果捕获到局部变量后再执行，编译完成先后不定
-        /// 不会导致"脚本1执行了脚本2代码"的时序错乱。
+        /// 不会导致"脚本1执行了脚本2代码"的时序错乱；各会话的运行状态彼此隔离。
         /// </remarks>
         public async Task RunAllAsync()
         {
@@ -573,10 +585,7 @@ namespace ScriptEditor.Services
                 // 预设容量避免扩容
                 var runningTasks = new List<Task>(_items.Count);
                 foreach (var item in _items)
-                {
-                    item.ItemStatus = "执行中...";
-                    runningTasks.Add(item.ExecuteAsync());
-                }
+                    runningTasks.Add(_runtime.GetSession(item).RunAsync());
 
                 if (runningTasks.Count > 0)
                     await Task.WhenAll(runningTasks);
@@ -589,9 +598,6 @@ namespace ScriptEditor.Services
             }
             finally
             {
-                foreach (var item in _items)
-                    item.ItemStatus = "就绪";
-
                 Model.IsRunning = false;
                 Model.StatusText = failed ? "所有脚本执行完成（部分脚本异常）" : "所有脚本执行完成";
                 Model.NotifyStateChanged();
@@ -600,7 +606,7 @@ namespace ScriptEditor.Services
 
         /// <summary>
         /// 开始循环执行。
-        /// 直接委托给每个 ScriptItem 的无头引擎自身的循环逻辑。
+        /// 每个脚本的会话自行管理循环线程与生命周期。
         /// </summary>
         public async Task LoopRunAsync()
         {
@@ -617,9 +623,9 @@ namespace ScriptEditor.Services
                 // 快照脚本列表
                 var itemsSnapshot = _items.ToList();
 
-                // 并行启动所有脚本的循环，LoopRunAsync 内部自行管理线程和生命周期
+                // 并行启动所有脚本会话的循环，LoopRunAsync 内部自行管理线程和生命周期
                 var tasks = itemsSnapshot
-                    .Select(item => item.LoopRunAsync())
+                    .Select(item => _runtime.GetSession(item).LoopRunAsync())
                     .ToList();
 
                 if (tasks.Count > 0)
@@ -635,8 +641,6 @@ namespace ScriptEditor.Services
             {
                 Model.IsLooping = false;
                 await Dispatcher.Yield(DispatcherPriority.Background);
-                foreach (var item in _items)
-                    item.ItemStatus = "就绪";
                 Model.StatusText = failed ? "循环执行异常终止" : "循环执行已停止";
                 Model.NotifyStateChanged();
             }
@@ -648,7 +652,7 @@ namespace ScriptEditor.Services
         public void StopLoop()
         {
             foreach (var item in _items)
-                item.StopLoop();
+                _runtime.FindSession(item)?.StopLoop();
             Model.StatusText = "正在停止循环...";
         }
 

@@ -35,7 +35,7 @@ public class ScriptNode : NodeModel
   
     /// <summary>
     /// 执行脚本。将自定义输入端口的值收集为 Dictionary，
-    /// 通过 ScriptEditorService.SetInputData() 注入脚本运行时上下文。
+    /// 通过会话 SetInputData() 注入脚本运行时上下文。
     /// 效果等同于脚本内预定义变量 Inputs["key"]。
     /// 失败语义：编译/运行失败抛出异常（携带脚本输出尾部详情），走容错路径。
     /// </summary>
@@ -48,22 +48,33 @@ public class ScriptNode : NodeModel
             return;
         }
 
-        var service = new ScriptEditor.Services.ScriptEditorService();
-        service.SetText(EditorState.Code);
-        service.SetInputData(_BuildInputs());
-        foreach (var path in EditorState.References)
-            service.AddReference(path);
-        var success = await service.RunAsync();
-        ScriptResult = service.LastScriptResult;
-        // 无论成败都保留最近一次输出，供打开编辑器时回显（不随流程图序列化）。
-        // 必须读 EngineOutputText（引擎同步 Flush，值即时完整）；
-        // Model.OutputText 经 Dispatcher.InvokeAsync 封送，RunAsync 刚返回时可能还是空。
-        _lastOutput = service.EngineOutputText;
-
-        if (!success)
+        // P3：运行状态由会话独占持有。节点无编辑器实例，使用一次性独立会话，
+        // 运行完即释放，不在运行时上留下长期关联。
+        var runtime = ScriptEditor.Services.RoslynScriptRuntime.Shared;
+        var session = runtime.CreateDetachedSession(
+            Name,
+            () => EditorState.Code,
+            () => EditorState.References
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Select(path => new ScriptEditor.Models.ScriptReference(path, System.IO.Path.GetFileName(path)))
+                .ToList());
+        try
         {
-            throw new InvalidOperationException(
-                $"脚本执行失败 [{Name}]：{Truncate(service.Model.OutputText, 500)}");
+            session.SetInputData(_BuildInputs());
+            var success = await session.RunAsync();
+            ScriptResult = session.LastResult;
+            // 会话的 Output 由执行线程同步冲刷，RunAsync 返回时值即时完整。
+            _lastOutput = session.Output;
+
+            if (!success)
+            {
+                throw new InvalidOperationException(
+                    $"脚本执行失败 [{Name}]：{Truncate(session.Output, 500)}");
+            }
+        }
+        finally
+        {
+            runtime.ReleaseSession(session);
         }
     }
 

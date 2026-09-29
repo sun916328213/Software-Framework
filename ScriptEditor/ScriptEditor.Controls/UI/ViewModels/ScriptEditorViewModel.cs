@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ScriptEditor.Contracts;
 using ScriptEditor.Models;
 using ScriptEditor.Services;
 
@@ -32,10 +33,11 @@ public class ScriptEditorViewModel : ObservableObject, IDisposable
 
         #region 初始化命令
 
-        RunCommand = new AsyncRelayCommand(_editorService.RunAsync, () => !_editorService.Model.IsRunning);
-        TerminateCommand = new RelayCommand(_editorService.Terminate, () => _editorService.Model.IsRunning);
-        StartLoopCommand = new AsyncRelayCommand(_editorService.LoopRunAsync, () => !_editorService.Model.IsLooping && !_editorService.Model.IsRunning);
-        StopLoopCommand = new RelayCommand(_editorService.StopLoop, () => _editorService.Model.IsLooping);
+        // 命令可用性直接读当前会话（运行状态的唯一事实源），不再读共享 Model 的镜像。
+        RunCommand = new AsyncRelayCommand(_editorService.RunAsync, () => !Session.IsRunning);
+        TerminateCommand = new RelayCommand(_editorService.Terminate, () => Session.IsRunning);
+        StartLoopCommand = new AsyncRelayCommand(_editorService.LoopRunAsync, () => !Session.IsLooping && !Session.IsRunning);
+        StopLoopCommand = new RelayCommand(_editorService.StopLoop, () => Session.IsLooping);
         CompileCommand = new AsyncRelayCommand(_editorService.CompileAsync);
         NewDocumentCommand = new RelayCommand(_editorService.NewDocument);
         OpenDocumentCommand = new RelayCommand(_editorService.OpenDocument);
@@ -122,10 +124,16 @@ public class ScriptEditorViewModel : ObservableObject, IDisposable
     //  Model 暴露（View 直接绑定 {Binding Model.XXX}）
     // ════════════════════════════════════════════════════════════════
 
-    /// <summary>运行时状态模型，View 直接绑定。</summary>
+    /// <summary>获取编辑器自身状态模型（文档标题、路径、引用、断点；不含运行状态）。</summary>
     public ScriptEditorModel Model => _editorService.Model;
 
-    /// <summary>当前关联的脚本项（ScriptManager 标签页场景），View 绑定其 StatusText/ExecutionTime 等每脚本独立状态。</summary>
+    /// <summary>
+    /// 当前脚本会话：脚本运行状态的唯一事实源。
+    /// View 直接绑定 <c>{Binding Session.IsRunning}</c> / <c>{Binding Session.Output}</c> 等。
+    /// </summary>
+    public IScriptSession Session => _editorService.Session;
+
+    /// <summary>当前关联的脚本项（ScriptManager 标签页场景），供宿主查询标题等脚本数据。</summary>
     public ScriptItem? AttachedItem => _editorService.AttachedItem;
 
     #region 引用搜索过滤
@@ -327,44 +335,38 @@ public class ScriptEditorViewModel : ObservableObject, IDisposable
     /// <summary>编辑器服务实例（供 View 层初始化时使用）。</summary>
     public ScriptEditorService EditorService => _editorService;
 
-    /// <summary>输出面板文本。</summary>
+    /// <summary>输出面板文本（转发当前会话；写入即作为编辑器级消息替换输出）。</summary>
     public string OutputText
     {
-        get => _editorService.Model.OutputText;
-        set => _editorService.Model.OutputText = value;
+        get => Session.Output;
+        set => Session.SetOutput(value);
     }
 
-    /// <summary>状态栏文本。</summary>
+    /// <summary>状态栏文本（转发当前会话）。</summary>
     public string StatusText
     {
-        get => _editorService.Model.StatusText;
-        set => _editorService.Model.StatusText = value;
+        get => Session.StatusText;
+        set => Session.SetStatus(value);
     }
 
     /// <summary>文档标题。</summary>
     public string DocumentTitle => _editorService.Model.DocumentTitle;
 
-    /// <summary>脚本是否正在执行。</summary>
-    public bool IsRunning => _editorService.Model.IsRunning;
+    /// <summary>脚本是否正在执行（转发当前会话）。</summary>
+    public bool IsRunning => Session.IsRunning;
 
-    /// <summary>脚本是否正在循环执行。</summary>
-    public bool IsLooping => _editorService.Model.IsLooping;
+    /// <summary>脚本是否正在循环执行（转发当前会话）。</summary>
+    public bool IsLooping => Session.IsLooping;
 
-    /// <summary>循环执行间隔（毫秒）。</summary>
+    /// <summary>循环执行间隔（毫秒，读写当前会话）。</summary>
     public int LoopInterval
     {
         get => _editorService.LoopInterval;
         set => _editorService.LoopInterval = value;
     }
 
-    /// <summary>最近一次执行/编译耗时。</summary>
-    /// <remarks>与 <see cref="OutputText"/> / <see cref="StatusText"/> 同为 Model 代理，
-    /// 保留 setter 以便切页时把共享 Model 播种成当前脚本项自己的状态。</remarks>
-    public string ExecutionTime
-    {
-        get => _editorService.Model.ExecutionTime;
-        set => _editorService.Model.ExecutionTime = value;
-    }
+    /// <summary>最近一次执行/编译耗时（转发当前会话）。</summary>
+    public string ExecutionTime => Session.ExecutionTime;
 
     /// <summary>引用管理面板是否展开。</summary>
     public bool IsReferencePanelOpen => _editorService.Model.IsReferencePanelOpen;

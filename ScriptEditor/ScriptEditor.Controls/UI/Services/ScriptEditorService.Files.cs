@@ -45,7 +45,7 @@ public class Script
         _model.CurrentFilePath = null;
         SetText(GetDefaultTemplate());
         _model.DocumentTitle = "无标题";
-        _model.OutputText = string.Empty;
+        _session.SetOutput(string.Empty);
         _model.StatusText = "已创建新文档";
         _model.HasModified = false;
     }
@@ -103,7 +103,7 @@ public class Script
         }
         catch (Exception ex)
         {
-            _model.OutputText = $"保存文件失败: {ex.Message}";
+            _session.SetOutput($"保存文件失败: {ex.Message}");
             _model.StatusText = "保存失败";
         }
     }
@@ -144,7 +144,7 @@ public class Script
 
             _model.CurrentFilePath = path;
             _model.DocumentTitle = Path.GetFileName(path);
-            _model.OutputText = string.Empty;
+            _session.SetOutput(string.Empty);
             _model.StatusText = $"已打开: {path}";
             _model.HasModified = false;
 
@@ -153,7 +153,7 @@ public class Script
         }
         catch (Exception ex)
         {
-            _model.OutputText = $"打开文件失败: {ex.Message}";
+            _session.SetOutput($"打开文件失败: {ex.Message}");
             _model.StatusText = "打开失败";
         }
     }
