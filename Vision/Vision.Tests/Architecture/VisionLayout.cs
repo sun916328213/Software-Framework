@@ -3,8 +3,8 @@
 //
 // Vision/ 下的工程按层分组：Core / Controls / Workbench / Tests 留在 Vision/ 根，
 // Runtime 层拆成两组目录 ——
-//   Tools/ 视觉工具后端：Halcon、OpenCv
-//   AI/    AI 相关：AI 工具层 + 三家 Provider
+//   Tools/ 视觉工具：Halcon、OpenCv、AI
+//   AI/    厂商 AI Provider：Halcon、Aiditron、Invi
 //
 // ⛔ 工程名、命名空间、AssemblyName 一律不变，变的只有目录。
 //    所以任何一个 `using Vision.Tools.Halcon.*` 都不会因为这次分组而失效。
@@ -27,7 +27,7 @@ internal static class VisionLayout
         ("Vision.Core", "Vision.Core"),                       // ← DPLibrary_Base_F48（P1 改名）
         ("Vision.Tools.Halcon", "Tools/Halcon"),              // ← P1 新建空壳；2026-09-29 归入 Tools/
         ("Vision.Tools.OpenCv", "Tools/OpenCv"),              // ← P1 新建空壳；2026-09-29 归入 Tools/
-        ("Vision.Tools.AI", "AI/Tools"),                      // ← P1 新建空壳；2026-09-29 归入 AI/（AI 工具层）
+        ("Vision.Tools.AI", "Tools/AI"),                     // ← AI 工具层；与其他 Vision.Tools.* 同组
         ("Vision.AI.Halcon", "AI/Halcon"),                    // ← P1 新建空壳；2026-09-29 归入 AI/
         ("Vision.AI.Aiditron", "AI/Aiditron"),                // ← P1 新建空壳；2026-09-29 归入 AI/
         ("Vision.AI.Invi", "AI/Invi"),                        // ← P1 新建空壳；2026-09-29 归入 AI/

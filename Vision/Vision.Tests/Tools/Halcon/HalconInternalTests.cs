@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 using Vision.Core.Geometry;
+using Vision.Core.Imaging;
 using Vision.Tools.Halcon.Coordinate;
 using Vision.Tools.Halcon.Internal;
 using Xunit;
@@ -14,6 +15,14 @@ namespace Vision.Tests.Tools.Halcon;
 [Trait("Category", "Unit")]
 public sealed class HalconInternalTests
 {
+    [Fact]
+    public void ImageConverter_RejectsPaddedRowsBeforeNativeCall()
+    {
+        var image = VisionImage.FromBuffer(2, 2, PixelFormat.Mono8, [1, 2, 0, 3, 4, 0], stride: 3);
+
+        Assert.Throws<NotSupportedException>(() => HalconImageConverter.FromVisionImage(image));
+    }
+
     [Fact]
     public void MatrixString_RoundTrip()
     {

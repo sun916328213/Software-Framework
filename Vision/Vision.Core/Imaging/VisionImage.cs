@@ -143,7 +143,15 @@ namespace Vision.Core.Imaging
                 _ => 0,
             };
 
-            var effectiveStride = stride > 0 ? stride : width * bpp;
+            if (bpp == 0)
+                throw new ArgumentOutOfRangeException(nameof(format), format, "不支持的像素格式。");
+
+            var minimumStride = checked(width * bpp);
+            if (stride > 0 && stride < minimumStride)
+                throw new ArgumentOutOfRangeException(nameof(stride), stride,
+                    $"行字节数不能小于一行像素所需的 {minimumStride} 字节。");
+
+            var effectiveStride = stride > 0 ? stride : minimumStride;
             var required = (long)effectiveStride * height;
             if (pixels.LongLength < required)
                 throw new ArgumentException(

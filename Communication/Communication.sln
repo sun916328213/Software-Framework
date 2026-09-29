@@ -1,4 +1,4 @@
-﻿﻿
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36717.8
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication.Workbench", "Communication.Workbench\Communication.Workbench.csproj", "{E201BB1D-C854-47AB-9A9F-59CAD57694B8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication.Tests", "Communication.Tests\Communication.Tests.csproj", "{A5CB59E2-C44E-47E6-84DB-AD1C4BBC6C28}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication.Workbench.Tests", "Communication.Workbench.Tests\Communication.Workbench.Tests.csproj", "{3F6D2A18-9C4B-4E7A-B1D5-8A2C6E4F9013}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication.Controls", "Communication.Controls\Communication.Controls.csproj", "{6C6729C7-4C45-4FF8-B583-6FBD1E0FC4A4}"
 EndProject
@@ -41,6 +43,10 @@ Global
 		{A5CB59E2-C44E-47E6-84DB-AD1C4BBC6C28}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5CB59E2-C44E-47E6-84DB-AD1C4BBC6C28}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5CB59E2-C44E-47E6-84DB-AD1C4BBC6C28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F6D2A18-9C4B-4E7A-B1D5-8A2C6E4F9013}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F6D2A18-9C4B-4E7A-B1D5-8A2C6E4F9013}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F6D2A18-9C4B-4E7A-B1D5-8A2C6E4F9013}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F6D2A18-9C4B-4E7A-B1D5-8A2C6E4F9013}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6C6729C7-4C45-4FF8-B583-6FBD1E0FC4A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6C6729C7-4C45-4FF8-B583-6FBD1E0FC4A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C6729C7-4C45-4FF8-B583-6FBD1E0FC4A4}.Release|Any CPU.ActiveCfg = Release|Any CPU

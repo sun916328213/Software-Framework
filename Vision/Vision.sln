@@ -17,7 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vision.Tools.Halcon", "Tool
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vision.Tools.OpenCv", "Tools\OpenCv\Vision.Tools.OpenCv.csproj", "{A1000002-0000-4000-8000-000000000002}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vision.Tools.AI", "AI\Tools\Vision.Tools.AI.csproj", "{A1000003-0000-4000-8000-000000000003}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vision.Tools.AI", "Tools\AI\Vision.Tools.AI.csproj", "{A1000003-0000-4000-8000-000000000003}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vision.AI.Halcon", "AI\Halcon\Vision.AI.Halcon.csproj", "{A1000004-0000-4000-8000-000000000004}"
 EndProject

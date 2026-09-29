@@ -32,8 +32,13 @@ public static class MatConverter
         if (image.Stride != 0 && image.Stride != image.ExpectedStride)
             throw new NotSupportedException($"P4 仅支持紧凑排布，实际 stride={image.Stride}（期望 {image.ExpectedStride}）。");
 
+        var pixelCount = checked(image.Width * image.Height);
+        if (image.Pixels.Length < pixelCount)
+            throw new ArgumentException($"像素缓冲长度 {image.Pixels.Length} 小于图像所需的 {pixelCount} 字节。", nameof(image));
+
         var mat = new Mat(image.Height, image.Width, MatType.CV_8UC1);
-        System.Runtime.InteropServices.Marshal.Copy(image.Pixels, 0, mat.Data, image.Pixels.Length);
+        // VisionImage 允许缓冲区包含尾部数据；Mat 只能接收宽×高个像素。
+        System.Runtime.InteropServices.Marshal.Copy(image.Pixels, 0, mat.Data, pixelCount);
         return mat;
     }
 

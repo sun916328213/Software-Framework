@@ -30,6 +30,11 @@ public static class HalconImageConverter
             throw new NotSupportedException($"P3 仅支持 Mono8，实际 {image.Format}（其他格式 P4 按需扩充）。");
         if (image.Pixels == null || image.Pixels.Length == 0)
             throw new ArgumentException("像素缓冲为空。", nameof(image));
+        if (image.Stride != 0 && image.Stride != image.ExpectedStride)
+            throw new NotSupportedException($"P3 仅支持紧凑排布，实际 stride={image.Stride}（期望 {image.ExpectedStride}）。");
+        var pixelCount = checked(image.Width * image.Height);
+        if (image.Pixels.Length < pixelCount)
+            throw new ArgumentException($"像素缓冲长度 {image.Pixels.Length} 小于图像所需的 {pixelCount} 字节。", nameof(image));
 
         var handle = GCHandle.Alloc(image.Pixels, GCHandleType.Pinned);
         try
