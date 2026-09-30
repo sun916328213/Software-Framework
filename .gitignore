@@ -364,8 +364,3 @@ FodyWeavers.xsd
 /.tmp-pdf
 *.ps1
 /.trae/documents
-
-# Third-party native runtime dependencies (CUDA / cuDNN / onnxruntime / opencv).
-# These are 100MB+ each and are rejected by GitHub; obtain them via their
-# redistributable/installer, do NOT commit them.
-Dll/Vision/INVI/依赖库/
