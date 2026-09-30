@@ -1,0 +1,25 @@
+<UserControl
+    x:Class="SecsGem.Controls.Views.SecsOverviewView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Name="View">
+    <Grid Margin="8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0">
+            <TextBlock Text="HSMS 连接" />
+            <TextBlock FontSize="18" FontWeight="SemiBold" Text="{Binding ConnectionStatus, ElementName=View}" />
+        </StackPanel>
+        <StackPanel Grid.Column="1">
+            <TextBlock Text="GEM 模式" />
+            <TextBlock FontSize="18" FontWeight="SemiBold" Text="{Binding ModeStatus, ElementName=View}" />
+        </StackPanel>
+        <StackPanel Grid.Column="2">
+            <TextBlock Text="设备状态" />
+            <TextBlock FontSize="18" FontWeight="SemiBold" Text="{Binding DeviceStatus, ElementName=View}" />
+        </StackPanel>
+    </Grid>
+</UserControl>
