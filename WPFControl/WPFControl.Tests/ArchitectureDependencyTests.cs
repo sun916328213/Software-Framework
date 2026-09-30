@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,7 +13,7 @@ namespace WPFControl.Tests
     /// 背景（见仓库根 <c>WPFControl-架构分析与优化方向.md</c> 3.1 / 3.7 / 3.10 / 3.11）：
     /// WPFControl 是**单个程序集**，分层越界**不会编译报错**，也没有任何守卫拦着 ⇒ 只能靠测试钉住。
     ///
-    /// 约定（与 FlowEditor.Tests/ArchitectureDependencyTests 一致）：已知债务写进断言里的字面量清单，
+    /// 约定（与 FlowEditor.Workbench.Tests/ArchitectureDependencyTests 一致）：已知债务写进断言里的字面量清单，
     /// 断言「实际集合 == 登记集合」。新增一处越界 → 测试红（这是本类存在的意义）；
     /// 偿还一处债务 → 测试同样红，提醒**同步删掉登记条目**，让清单不腐烂。
     ///

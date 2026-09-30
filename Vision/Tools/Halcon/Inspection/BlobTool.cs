@@ -94,9 +94,17 @@ public sealed class BlobTool : HalconToolBase<BlobParameters, BlobResult>
         if (!HalconHelper.IsValidThresholdRange(parameters.MinGray, parameters.MaxGray, out var error))
             result.AddError("THRESHOLD_RANGE", error, nameof(BlobParameters.MinGray));
 
+        if (parameters.Features == null)
+            return result.AddError("FEATURES_MISSING", "特征列表不能为 null；不筛选时请使用空列表。", nameof(BlobParameters.Features));
+
         for (var i = 0; i < parameters.Features.Count; i++)
         {
             var feature = parameters.Features[i];
+            if (feature == null)
+            {
+                result.AddError("FEATURE_MISSING", $"第 {i + 1} 个特征配置为空。", $"{nameof(BlobParameters.Features)}[{i}]");
+                continue;
+            }
             if (string.IsNullOrWhiteSpace(feature.Feature))
                 result.AddError("FEATURE_EMPTY", $"第 {i + 1} 个特征名为空。", $"{nameof(BlobParameters.Features)}[{i}]");
             if (feature.Min > feature.Max)

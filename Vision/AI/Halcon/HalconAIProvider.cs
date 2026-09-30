@@ -3,7 +3,7 @@
 // 推理和结果转换」；§3「Vision.Tools.Halcon 与 Vision.AI.Halcon 不互相依赖」——
 // 本工程自带图像转换，不引用 Tools.Halcon）。
 //
-// 推理走 DL 字典链：模型输入几何（GetDlModelParam）→ 通道适配 + 缩放 →
+// 推理走 DL 字典链：模型输入几何（GetDlModelParam）→ 通道、尺寸、灰度范围适配 →
 // 字典样本 → ApplyDlModel → 按任务取字典键转 Core 结果。
 // 注：23.11 绑定无 DL 预处理算子，手动样本制备只做整图通道/尺寸适配，
 // domain 感知预处理随后续 HALCON 版本补齐。
@@ -53,6 +53,8 @@ namespace Vision.AI.Halcon
             try
             {
                 HOperatorSet.ReadDlModel(request.ModelPath, out model);
+                if (string.Equals(request.DeviceId, "cpu", StringComparison.OrdinalIgnoreCase))
+                    HOperatorSet.SetDlModelParam(model, "runtime", "cpu");
             }
             catch (Exception ex)
             {
@@ -152,7 +154,7 @@ namespace Vision.AI.Halcon
                 var output = ModelType switch
                 {
                     AIModelType.Classification => (ToolResult)ReadClassification(model, result),
-                    AIModelType.Detection => ReadDetection(model, result),
+                    AIModelType.Detection => ReadDetection(model, result, request.Image.Width, request.Image.Height),
                     AIModelType.Segmentation => ReadSegmentation(result),
                     _ => ReadAnomaly(result, request.ScoreThreshold),
                 };
@@ -176,8 +178,8 @@ namespace Vision.AI.Halcon
         }
 
         /// <summary>
-        /// 手动样本制备（23.11 绑定无 DL 预处理算子）：按模型输入几何做通道适配 +
-        /// 缩放。整图推理（domain 处理随后续 HALCON 版本/预处理算子补齐，见文件头）。
+        /// 手动样本制备（23.11 绑定无 DL 预处理算子）：按模型输入要求做通道、
+        /// 尺寸和灰度范围适配。整图推理（domain 处理随后续版本补齐）。
         /// </summary>
         /// <param name="model">DL 模型句柄（调用方持有）。</param>
         /// <param name="image">输入图（调用方持有）。</param>
@@ -186,39 +188,51 @@ namespace Vision.AI.Halcon
         private static HObject BuildModelInput(HTuple model, HObject image, out HObject? adapted)
         {
             adapted = null;
-            HOperatorSet.GetDlModelParam(model, "image_width", out var width);
-            HOperatorSet.GetDlModelParam(model, "image_height", out var height);
-            HOperatorSet.GetDlModelParam(model, "image_channels", out var channels);
+            HTuple? width = null;
+            HTuple? height = null;
+            HTuple? channels = null;
+            HTuple? rangeMin = null;
+            HTuple? rangeMax = null;
+            HTuple? imageChannels = null;
+            HObject? zoomed = null;
+            HObject? real = null;
             try
             {
-                HOperatorSet.CountChannels(image, out var imageChannels);
-                try
-                {
-                    HObject source = image;
-                    if (channels.I == 1 && imageChannels.I > 1)
-                    {
-                        HOperatorSet.Rgb1ToGray(image, out adapted);
-                        source = adapted;
-                    }
-                    else if (channels.I == 3 && imageChannels.I == 1)
-                    {
-                        HOperatorSet.Compose3(image, image, image, out adapted);
-                        source = adapted;
-                    }
+                HOperatorSet.GetDlModelParam(model, "image_width", out width);
+                HOperatorSet.GetDlModelParam(model, "image_height", out height);
+                HOperatorSet.GetDlModelParam(model, "image_num_channels", out channels);
+                HOperatorSet.GetDlModelParam(model, "image_range_min", out rangeMin);
+                HOperatorSet.GetDlModelParam(model, "image_range_max", out rangeMax);
+                HOperatorSet.CountChannels(image, out imageChannels);
 
-                    HOperatorSet.ZoomImageSize(source, out var zoomed, width, height, "constant");
-                    return zoomed;
-                }
-                finally
+                HObject source = image;
+                if (channels.I == 1 && imageChannels.I > 1)
                 {
-                    imageChannels.Dispose();
+                    HOperatorSet.Rgb1ToGray(image, out adapted);
+                    source = adapted;
                 }
+                else if (channels.I == 3 && imageChannels.I == 1)
+                {
+                    HOperatorSet.Compose3(image, image, image, out adapted);
+                    source = adapted;
+                }
+
+                HOperatorSet.ZoomImageSize(source, out zoomed, width, height, "constant");
+                HOperatorSet.ConvertImageType(zoomed, out real, "real");
+                HOperatorSet.ScaleImage(real, out var scaled,
+                    (rangeMax.D - rangeMin.D) / 255.0, rangeMin.D);
+                return scaled;
             }
             finally
             {
-                width.Dispose();
-                height.Dispose();
-                channels.Dispose();
+                real?.Dispose();
+                zoomed?.Dispose();
+                imageChannels?.Dispose();
+                rangeMax?.Dispose();
+                rangeMin?.Dispose();
+                channels?.Dispose();
+                height?.Dispose();
+                width?.Dispose();
             }
         }
 
@@ -277,22 +291,40 @@ namespace Vision.AI.Halcon
             }
         }
 
-        private AIDetectionResult ReadDetection(HTuple model, HTuple result)
+        private AIDetectionResult ReadDetection(HTuple model, HTuple result, int inputWidth, int inputHeight)
         {
-            HOperatorSet.GetDictTuple(result, "bbox_row1", out var r1);
-            HOperatorSet.GetDictTuple(result, "bbox_col1", out var c1);
-            HOperatorSet.GetDictTuple(result, "bbox_row2", out var r2);
-            HOperatorSet.GetDictTuple(result, "bbox_col2", out var c2);
-            HOperatorSet.GetDictTuple(result, "detection_class_ids", out var ids);
-            HOperatorSet.GetDictTuple(result, "detection_confidences", out var confs);
+            HTuple? r1 = null;
+            HTuple? c1 = null;
+            HTuple? r2 = null;
+            HTuple? c2 = null;
+            HTuple? ids = null;
+            HTuple? confs = null;
+            HTuple? modelWidth = null;
+            HTuple? modelHeight = null;
             try
             {
+                HOperatorSet.GetDictTuple(result, "bbox_row1", out r1);
+                HOperatorSet.GetDictTuple(result, "bbox_col1", out c1);
+                HOperatorSet.GetDictTuple(result, "bbox_row2", out r2);
+                HOperatorSet.GetDictTuple(result, "bbox_col2", out c2);
+                HOperatorSet.GetDictTuple(result, "bbox_class_id", out ids);
+                HOperatorSet.GetDictTuple(result, "bbox_confidence", out confs);
+                HOperatorSet.GetDlModelParam(model, "image_width", out modelWidth);
+                HOperatorSet.GetDlModelParam(model, "image_height", out modelHeight);
                 string[]? names = TryGetClassNames(model);
-                return HalconResultMapper.MapDetection(r1.DArr, c1.DArr, r2.DArr, c2.DArr, ids.LArr, confs.DArr, names);
+                var output = HalconResultMapper.MapDetection(r1.DArr, c1.DArr, r2.DArr, c2.DArr,
+                    ids.LArr, confs.DArr, names);
+                var scaleX = (double)inputWidth / modelWidth.I;
+                var scaleY = (double)inputHeight / modelHeight.I;
+                foreach (var box in output.Boxes)
+                    box.Box = new Rect2D(box.Box.X * scaleX, box.Box.Y * scaleY,
+                        box.Box.Width * scaleX, box.Box.Height * scaleY);
+                return output;
             }
             finally
             {
-                r1.Dispose(); c1.Dispose(); r2.Dispose(); c2.Dispose(); ids.Dispose(); confs.Dispose();
+                r1?.Dispose(); c1?.Dispose(); r2?.Dispose(); c2?.Dispose(); ids?.Dispose(); confs?.Dispose();
+                modelWidth?.Dispose(); modelHeight?.Dispose();
             }
         }
 

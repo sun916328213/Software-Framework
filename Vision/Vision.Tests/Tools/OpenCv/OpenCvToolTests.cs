@@ -96,6 +96,21 @@ public sealed class OpenCvToolTests
         Assert.NotNull(result.Validation);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Blob_MissingFeatureConfig_ReturnsFailedResult(bool missingList)
+    {
+        using var tool = new BlobTool();
+        tool.Parameters.Features = missingList ? null! : [null!];
+
+        var result = tool.Run(null);
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Validation!.Issues,
+            issue => issue.Code == (missingList ? "FEATURES_MISSING" : "FEATURE_MISSING"));
+    }
+
     // ── 真实执行：合成图 + 解析期望 ────────────────────────────────────
 
     [Fact]

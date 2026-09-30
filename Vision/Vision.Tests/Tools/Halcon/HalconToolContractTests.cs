@@ -2,13 +2,13 @@
 // P3 验收测试 —— HALCON Tool Contract Tests（计划 §9.2「P3 | HALCON Tool Contract
 // Tests；Parameters/Validate/Run/Result；资源释放与历史工具行为回归」）。
 //
-// 执行边界（计划 §9.1）：本文件全部是普通 CI 用例 —— 只碰 Validate / Parameters /
-// Result / 纯 helper，不调用任何 HOperatorSet，不需要 HALCON Runtime / License /
-// GPU。真实图像执行是集成测试（RequiresRuntime），见底部的 Skip 用例占位。
+// 执行边界（计划 §9.1）：普通 CI 用例只碰 Validate / Parameters / Result / 纯 helper，
+// 不需要 HALCON Runtime / License。文件末尾的真实图像集成测试须显式设置环境变量启用。
 // ─────────────────────────────────────────────────────────────────────────────
 
 using System.Reflection;
 using System.Text.Json;
+using Vision.Core.Imaging;
 using Vision.Core.Results;
 using Vision.Tools.Halcon.Acquisition;
 using Vision.Tools.Halcon.Calibration;
@@ -100,6 +100,21 @@ public sealed class HalconToolContractTests
         Assert.Contains(validation.Issues, i => i.Code == "THRESHOLD_RANGE");
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Blob_MissingFeatureConfig_ReturnsFailedResult(bool missingList)
+    {
+        using var tool = new BlobTool();
+        tool.Parameters.Features = missingList ? null! : [null!];
+
+        var result = tool.Run(null);
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Validation!.Issues,
+            issue => issue.Code == (missingList ? "FEATURES_MISSING" : "FEATURE_MISSING"));
+    }
+
     [Fact]
     public void FindLine_DegenerateLine_IsInvalid()
     {
@@ -143,6 +158,34 @@ public sealed class HalconToolContractTests
         Assert.NotNull(result.Validation);
         Assert.False(result.Validation!.IsValid);
         Assert.IsType<BlobResult>(result);
+    }
+
+    [Fact]
+    public void RunImage_WhenInvalid_ValidatesBeforeConverting()
+    {
+        using var tool = new BlobTool();
+        tool.Parameters.MinGray = 200;
+        tool.Parameters.MaxGray = 100;
+        var unsupportedImage = VisionImage.FromBuffer(1, 1, PixelFormat.Mono16, new byte[2]);
+
+        var result = tool.RunImage(unsupportedImage);
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Validation!.Issues, issue => issue.Code == "THRESHOLD_RANGE");
+        Assert.Contains("THRESHOLD_RANGE", result.Message);
+    }
+
+    [Fact]
+    public void RunImage_WhenFormatIsUnsupported_ReturnsFailedResult()
+    {
+        using var tool = new BlobTool();
+        var unsupportedImage = VisionImage.FromBuffer(1, 1, PixelFormat.Mono16, new byte[2]);
+
+        var result = tool.RunImage(unsupportedImage);
+
+        Assert.False(result.Success);
+        Assert.True(result.Validation!.IsValid);
+        Assert.Contains("Mono8", result.Message);
     }
 
     // ── Result：稳定类型，不暴露 SDK 原生类型 ────────────────────────────
@@ -214,15 +257,56 @@ public sealed class HalconToolContractTests
         Assert.Throws<ObjectDisposedException>(() => tool.Validate());
     }
 
-    // ── 集成测试占位（RequiresRuntime，不进普通 CI） ─────────────────────
+    // ── 真实 Runtime 集成测试（显式启用，不进普通 CI） ───────────────────
 
-    [Fact(Skip = "需要真实 HALCON Runtime / License（计划 §9.1 Integration，有环境时执行）。")]
+    [HalconRuntimeFact]
     [Trait("Category", "RequiresRuntime")]
-    public void Run_OnRealImage_RequiresHalconRuntime()
+    public void RunImage_OnRealMono8Image_FindsBlob()
     {
+        using var tool = new BlobTool();
+        tool.Parameters.MinGray = 200;
+        tool.Parameters.Features.Clear();
+        var image = Mono8BlobImage();
+
+        var result = tool.RunImage(image);
+
+        Assert.True(result.Success, result.Message);
+        var blob = Assert.Single(result.Items);
+        Assert.Equal(4, blob.Area);
+        Assert.Equal(new Vision.Core.Geometry.Point2D(1.5, 1.5), blob.Center);
+    }
+
+    [HalconRuntimeFact]
+    [Trait("Category", "RequiresRuntime")]
+    public void RunImage_RepeatedCalls_KeepStableResults()
+    {
+        using var tool = new BlobTool();
+        tool.Parameters.MinGray = 200;
+        tool.Parameters.Features.Clear();
+        var image = Mono8BlobImage();
+        var originalPixels = (byte[])image.Pixels.Clone();
+
+        for (var run = 0; run < 100; run++)
+        {
+            var result = tool.RunImage(image);
+            Assert.True(result.Success, $"第 {run + 1} 次运行失败：{result.Message}");
+            var blob = Assert.Single(result.Items);
+            Assert.Equal(4, blob.Area);
+            Assert.Equal(new Vision.Core.Geometry.Point2D(1.5, 1.5), blob.Center);
+        }
+
+        Assert.Equal(originalPixels, image.Pixels);
     }
 
     // ── 工具 ────────────────────────────────────────────────────────────
+
+    private static VisionImage Mono8BlobImage() => VisionImage.FromBuffer(4, 4, PixelFormat.Mono8,
+    [
+        0, 0, 0, 0,
+        0, 255, 255, 0,
+        0, 255, 255, 0,
+        0, 0, 0, 0,
+    ]);
 
     private static IEnumerable<Type> ExposedTypes(Type type)
     {
@@ -248,5 +332,14 @@ public sealed class HalconToolContractTests
 
             return t;
         }
+    }
+}
+
+public sealed class HalconRuntimeFactAttribute : FactAttribute
+{
+    public HalconRuntimeFactAttribute()
+    {
+        if (Environment.GetEnvironmentVariable("VISION_RUN_HALCON_INTEGRATION") != "1")
+            Skip = "设置 VISION_RUN_HALCON_INTEGRATION=1 并准备 HALCON Runtime/License 后运行。";
     }
 }

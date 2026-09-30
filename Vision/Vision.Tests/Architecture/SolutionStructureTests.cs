@@ -116,7 +116,11 @@ namespace Vision.Tests.Architecture
                 }
 
                 foreach (var file in Directory.GetFiles(dir, "*.csproj"))
-                    yield return file;
+                {
+                    // WPF 构建可能在工程目录短暂生成此临时项目；它不属于解决方案布局。
+                    if (!Path.GetFileName(file).EndsWith("_wpftmp.csproj", StringComparison.OrdinalIgnoreCase))
+                        yield return file;
+                }
             }
         }
 

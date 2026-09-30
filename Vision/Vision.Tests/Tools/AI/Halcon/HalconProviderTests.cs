@@ -5,9 +5,15 @@
 // 真实模型推理留 RequiresRuntime。
 // ─────────────────────────────────────────────────────────────────────────────
 
+using OpenCvSharp;
 using Vision.AI.Halcon;
 using Vision.Core.AI;
 using Vision.Core.Geometry;
+using Vision.Core.Imaging;
+using Vision.Core.Roi;
+using Vision.Tools.AI.Classification;
+using Vision.Tools.AI.Detection;
+using Vision.Tools.OpenCv.Internal;
 using Xunit;
 
 namespace Vision.Tests.Tools.AI.Halcon;
@@ -106,9 +112,79 @@ public sealed class HalconProviderTests
         Assert.Equal(new Rect2D(5, 5, 8, 8), anomaly.AnomalyBounds);
     }
 
-    [Fact(Skip = "需要真实 HALCON Runtime、License 与 .hdl 模型（计划 §9.1 Integration）。")]
+    [HalconAIModelFact]
     [Trait("Category", "RequiresRuntime")]
-    public void Run_AgainstRealRuntime_RequiresRuntime()
+    public void Classification_WithRoi_RunsAgainstRealModel()
     {
+        using var tool = new ClassificationTool
+        {
+            Provider = new HalconAIProvider(),
+            Roi = Roi.Rectangle(32, 32, 32, 32),
+        };
+        tool.Parameters.ModelPath = Environment.GetEnvironmentVariable("VISION_HALCON_CLASSIFICATION_MODEL")!;
+        tool.Parameters.DeviceId = "cpu";
+        tool.LoadModel();
+        var image = VisionImage.FromBuffer(64, 64, PixelFormat.Mono8, new byte[64 * 64]);
+
+        var result = tool.Run(image);
+
+        Assert.True(result.Success, result.Message);
+        Assert.NotEmpty(result.Scores);
+        Assert.True(double.IsFinite(result.TopScore));
+    }
+
+    [HalconDetectionModelFact]
+    [Trait("Category", "RequiresRuntime")]
+    public void Detection_WithRoi_ReturnsBoxesInOriginalImageCoordinates()
+    {
+        var imagePath = Environment.GetEnvironmentVariable("VISION_HALCON_DETECTION_IMAGE")!;
+        using var mat = Cv2.ImRead(imagePath, ImreadModes.Grayscale);
+        var image = MatConverter.ToVisionImage(mat, imagePath);
+        var left = image.Width / 4;
+        var top = image.Height / 4;
+        var width = image.Width / 2;
+        var height = image.Height / 2;
+        using var tool = new DetectionTool
+        {
+            Provider = new HalconAIProvider(),
+            Roi = Roi.Rectangle(left + width / 2.0, top + height / 2.0, width, height),
+        };
+        tool.Parameters.ModelPath = Environment.GetEnvironmentVariable("VISION_HALCON_DETECTION_MODEL")!;
+        tool.Parameters.DeviceId = "cpu";
+        tool.LoadModel();
+
+        var result = tool.Run(image);
+
+        Assert.True(result.Success, result.Message);
+        Assert.NotEmpty(result.Boxes);
+        Assert.All(result.Boxes, box =>
+        {
+            Assert.InRange(box.Box.X, left, left + width);
+            Assert.InRange(box.Box.Y, top, top + height);
+            Assert.True(box.Box.X + box.Box.Width <= left + width);
+            Assert.True(box.Box.Y + box.Box.Height <= top + height);
+        });
+    }
+}
+
+public sealed class HalconAIModelFactAttribute : FactAttribute
+{
+    public HalconAIModelFactAttribute()
+    {
+        var path = Environment.GetEnvironmentVariable("VISION_HALCON_CLASSIFICATION_MODEL");
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            Skip = "设置 VISION_HALCON_CLASSIFICATION_MODEL 为可用的 HALCON 分类 .hdl 模型路径后运行。";
+    }
+}
+
+public sealed class HalconDetectionModelFactAttribute : FactAttribute
+{
+    public HalconDetectionModelFactAttribute()
+    {
+        var model = Environment.GetEnvironmentVariable("VISION_HALCON_DETECTION_MODEL");
+        var image = Environment.GetEnvironmentVariable("VISION_HALCON_DETECTION_IMAGE");
+        if (string.IsNullOrWhiteSpace(model) || !File.Exists(model) ||
+            string.IsNullOrWhiteSpace(image) || !File.Exists(image))
+            Skip = "设置 VISION_HALCON_DETECTION_MODEL 和 VISION_HALCON_DETECTION_IMAGE 后运行。";
     }
 }

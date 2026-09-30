@@ -17,6 +17,7 @@ using System.Diagnostics;
 using Vision.Core.AI;
 using Vision.Core.Imaging;
 using Vision.Core.Results;
+using Vision.Core.Roi;
 
 namespace Vision.Tools.AI.Internal;
 
@@ -32,6 +33,8 @@ public abstract class AIToolBase<TParameters, TResult> : IDisposable
     private bool _disposed;
     private IAIModelSession? _session;
     private IAIProvider? _sessionOwner;
+    private string? _loadedModelPath;
+    private string? _loadedDeviceId;
 
     /// <summary>工具名称（Workbench Tool Browser 显示用）。</summary>
     public abstract string Name { get; }
@@ -45,6 +48,9 @@ public abstract class AIToolBase<TParameters, TResult> : IDisposable
     /// <summary>运行参数。</summary>
     public TParameters Parameters { get; set; } = new();
 
+    /// <summary>可选的图像 ROI；当前支持轴对齐的整数像素矩形，null 表示整图。</summary>
+    public IRoi? Roi { get; set; }
+
     /// <summary>
     /// 注入的 Provider（Workbench / 正式应用装配；测试注入 fake）。
     /// 只决定下一次 <see cref="LoadModel"/> 用谁，已加载会话归属不变
@@ -56,7 +62,11 @@ public abstract class AIToolBase<TParameters, TResult> : IDisposable
     public IAIModelSession? Session => _session;
 
     /// <summary>模型当前是否已加载且可用。</summary>
-    public bool IsModelLoaded => _session?.IsLoaded == true;
+    public bool IsModelLoaded =>
+        _session?.IsLoaded == true &&
+        ReferenceEquals(_sessionOwner, Provider) &&
+        string.Equals(_loadedModelPath, Parameters?.ModelPath, StringComparison.Ordinal) &&
+        string.Equals(_loadedDeviceId, Parameters?.DeviceId ?? string.Empty, StringComparison.Ordinal);
 
     /// <summary>上次推理耗时（毫秒，取会话结果自带值）。</summary>
     public long LastElapsedMs { get; private set; }
@@ -108,7 +118,7 @@ public abstract class AIToolBase<TParameters, TResult> : IDisposable
 
     /// <summary>
     /// 加载模型（打开会话）。先校验，不通过抛 <see cref="InvalidOperationException"/>；
-    /// 打开失败（抛异常 / 返回 null / 类型不符）时不留半加载会话，调用方可直接重试。
+    /// 打开失败（抛异常 / 返回 null / 类型不符 / 未加载）时不留半加载会话，调用方可直接重试。
     /// 已加载时先释放旧会话再打开（替换语义，与旧 AITool.Config 一致）。
     /// </summary>
     /// <exception cref="InvalidOperationException">校验不通过或打开失败。</exception>
@@ -129,26 +139,34 @@ public abstract class AIToolBase<TParameters, TResult> : IDisposable
             DeviceId = parameters.DeviceId ?? string.Empty,
         };
 
+        var provider = Provider!;
         IAIModelSession? session;
         try
         {
-            session = Provider!.OpenSession(request);
+            session = provider.OpenSession(request);
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"提供方 {Provider!.Name} 打开会话失败：{ex.Message}", ex);
+            throw new InvalidOperationException($"提供方 {provider.Name} 打开会话失败：{ex.Message}", ex);
         }
 
         if (session == null)
-            throw new InvalidOperationException($"提供方 {Provider!.Name} 返回了空会话。");
+            throw new InvalidOperationException($"提供方 {provider.Name} 返回了空会话。");
         if (session.ModelType != ModelType)
         {
-            TryCloseQuietly(Provider, session);
+            TryCloseQuietly(provider, session);
             throw new InvalidOperationException($"会话类型为 {session.ModelType}，本工具要求 {ModelType}。");
+        }
+        if (!session.IsLoaded)
+        {
+            TryCloseQuietly(provider, session);
+            throw new InvalidOperationException($"提供方 {provider.Name} 返回了未加载的会话。");
         }
 
         _session = session;
-        _sessionOwner = Provider;
+        _sessionOwner = provider;
+        _loadedModelPath = request.ModelPath;
+        _loadedDeviceId = request.DeviceId;
     }
 
     /// <summary>
@@ -175,6 +193,8 @@ public abstract class AIToolBase<TParameters, TResult> : IDisposable
 
         _session = null;
         _sessionOwner = null;
+        _loadedModelPath = null;
+        _loadedDeviceId = null;
     }
 
     /// <summary>
@@ -184,6 +204,7 @@ public abstract class AIToolBase<TParameters, TResult> : IDisposable
     public TResult Run(VisionImage? image)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        LastElapsedMs = 0;
         var validation = Validate();
         if (!validation.IsValid)
             return Failed(validation, validation.ToMessage(), 0);
@@ -191,6 +212,10 @@ public abstract class AIToolBase<TParameters, TResult> : IDisposable
         var session = _session;
         if (session == null || !session.IsLoaded)
             return Failed(validation, "模型尚未加载，请先调用 LoadModel。", 0);
+        if (!ReferenceEquals(_sessionOwner, Provider))
+            return Failed(validation, "Provider 已切换；请先卸载旧会话并重新加载模型。", 0);
+        if (!IsModelLoaded)
+            return Failed(validation, "模型路径或设备参数已更改；请重新加载模型。", 0);
         if (session.ModelType != ModelType)
             return Failed(validation, $"会话类型为 {session.ModelType}，本工具要求 {ModelType}。", 0);
 
@@ -199,10 +224,11 @@ public abstract class AIToolBase<TParameters, TResult> : IDisposable
         try
         {
             ArgumentNullException.ThrowIfNull(image);
+            var prepared = Roi == null ? (AIRoiImageAdapter.PreparedImage?)null : AIRoiImageAdapter.Crop(image, Roi);
             var request = new AIInferenceRequest
             {
-                Image = image,
-                Roi = null, // P7（ROI / 坐标统一）之前一律整图推理。
+                Image = prepared?.Image ?? image,
+                Roi = null, // 已在 Tool 层裁剪，Provider 只接收整张输入图。
                 ScoreThreshold = parameters.ScoreThreshold,
                 MaxResults = parameters.MaxResults,
             };
@@ -211,12 +237,15 @@ public abstract class AIToolBase<TParameters, TResult> : IDisposable
             sw.Stop();
             if (raw is not TResult typed)
             {
+                LastElapsedMs = sw.ElapsedMilliseconds;
                 return Failed(validation,
                     $"会话返回了 {raw?.GetType().Name ?? "null"}，本工具要求 {typeof(TResult).Name}（Provider 结果转换错误，归 P6）。",
-                    sw.ElapsedMilliseconds);
+                    LastElapsedMs);
             }
 
             typed.Validation = validation;
+            if (typed.Success && prepared is { } cropped)
+                AIRoiImageAdapter.RestoreCoordinates(typed, cropped);
             FilterResult(typed, parameters);
             LastElapsedMs = typed.ElapsedMs;
             return typed;
@@ -250,6 +279,8 @@ public abstract class AIToolBase<TParameters, TResult> : IDisposable
             _session = null;
             var owner = _sessionOwner;
             _sessionOwner = null;
+            _loadedModelPath = null;
+            _loadedDeviceId = null;
             if (session != null)
             {
                 if (owner != null)

@@ -97,9 +97,17 @@ public sealed class BlobTool : OpenCvToolBase<BlobParameters, BlobResult>
         if (parameters.MinGray > parameters.MaxGray)
             result.AddError("THRESHOLD_RANGE", $"最小灰度 {parameters.MinGray} 大于最大灰度 {parameters.MaxGray}。", nameof(BlobParameters.MinGray));
 
+        if (parameters.Features == null)
+            return result.AddError("FEATURES_MISSING", "特征列表不能为 null；不筛选时请使用空列表。", nameof(BlobParameters.Features));
+
         for (var i = 0; i < parameters.Features.Count; i++)
         {
             var feature = parameters.Features[i];
+            if (feature == null)
+            {
+                result.AddError("FEATURE_MISSING", $"第 {i + 1} 个特征配置为空。", $"{nameof(BlobParameters.Features)}[{i}]");
+                continue;
+            }
             if (!SupportedFeatures.Contains(feature.Feature))
                 result.AddError("FEATURE_UNSUPPORTED", $"不支持的特征 {feature.Feature}（P4 仅支持 area/width/height）。", $"{nameof(BlobParameters.Features)}[{i}]");
             if (feature.Min > feature.Max)

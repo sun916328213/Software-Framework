@@ -12,6 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 using System.Diagnostics;
+using Vision.Core.Imaging;
 using Vision.Core.Results;
 
 namespace Vision.Tools.Halcon.Internal;
@@ -54,9 +55,19 @@ public abstract class HalconToolBase<TParameters, TResult> : IDisposable
     /// 通过则计时执行 <see cref="RunCore"/>，异常转为失败结果（不抛）。
     /// </summary>
     /// <param name="image">HALCON 图像（调用方持有所有权，本方法不释放）。</param>
-    public TResult Run(HalconDotNet.HObject? image)
+    public TResult Run(HalconDotNet.HObject? image) => RunWithImage(() => image, ownsImage: false);
+
+    /// <summary>
+    /// 使用公共图像类型执行。转换后的 HALCON 图像由工具在本次运行结束时释放。
+    /// 当前转换器支持紧凑排布的 Mono8；不支持的格式以失败结果返回。
+    /// </summary>
+    public TResult RunImage(VisionImage? image) =>
+        RunWithImage(() => image is null ? null : HalconImageConverter.FromVisionImage(image), ownsImage: true);
+
+    private TResult RunWithImage(Func<HalconDotNet.HObject?> imageFactory, bool ownsImage)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        LastElapsedMs = 0;
         var validation = Validate();
         if (!validation.IsValid)
         {
@@ -72,9 +83,10 @@ public abstract class HalconToolBase<TParameters, TResult> : IDisposable
         var sw = Stopwatch.StartNew();
         try
         {
+            var image = imageFactory();
+            using var ownedImage = ownsImage ? image : null;
             var result = RunCore(image, Parameters ?? new TParameters());
             sw.Stop();
-            result.Success = true;
             result.ElapsedMs = sw.ElapsedMilliseconds;
             result.Validation = validation;
             LastElapsedMs = result.ElapsedMs;

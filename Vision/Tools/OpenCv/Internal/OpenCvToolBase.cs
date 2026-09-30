@@ -52,6 +52,7 @@ public abstract class OpenCvToolBase<TParameters, TResult> : IDisposable
     public TResult Run(VisionImage? image)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        LastElapsedMs = 0;
         var validation = Validate();
         if (!validation.IsValid)
         {
@@ -70,7 +71,6 @@ public abstract class OpenCvToolBase<TParameters, TResult> : IDisposable
             ArgumentNullException.ThrowIfNull(image);
             var result = RunCore(image, Parameters ?? new TParameters());
             sw.Stop();
-            result.Success = true;
             result.ElapsedMs = sw.ElapsedMilliseconds;
             result.Validation = validation;
             LastElapsedMs = result.ElapsedMs;

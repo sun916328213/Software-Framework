@@ -9,6 +9,7 @@
 
 using System.Reflection;
 using System.Text.Json;
+using System.Threading;
 using Vision.Core.AI;
 using Vision.Tools.AI.AnomalyDetection;
 using Vision.Tools.AI.Classification;
@@ -46,6 +47,29 @@ public sealed class AIToolTests
         Assert.Equal("OK", typed.TopLabel);
         Assert.Equal(0.9, typed.TopScore);
         Assert.NotNull(typed.Validation);
+    }
+
+    [Fact]
+    public void Run_WhenValidationFails_ResetsLastElapsedMs()
+    {
+        var provider = Provider();
+        provider.OpenSessionFunc = request => new FakeAIModelSession(
+            request.ModelPath, request.ModelType, provider.Capabilities)
+        {
+            RunFunc = _ => new AIClassificationResult { ElapsedMs = 37 },
+        };
+        using var tool = new ClassificationTool { Provider = provider };
+        tool.Parameters.ModelPath = "cls.model";
+        tool.LoadModel();
+        Assert.True(tool.Run(TestImage()).Success);
+        Assert.Equal(37, tool.LastElapsedMs);
+
+        tool.Parameters.ModelPath = string.Empty;
+        var result = tool.Run(TestImage());
+
+        Assert.False(result.Success);
+        Assert.Equal(0, result.ElapsedMs);
+        Assert.Equal(0, tool.LastElapsedMs);
     }
 
     [Fact]
@@ -266,6 +290,31 @@ public sealed class AIToolTests
     }
 
     [Fact]
+    public void LoadModel_WhenProviderReturnsUnloadedSession_ClosesItAndAllowsRetry()
+    {
+        var provider = Provider();
+        provider.OpenSessionFunc = request =>
+        {
+            var session = new FakeAIModelSession(request.ModelPath, request.ModelType, provider.Capabilities);
+            session.MarkClosed();
+            return session;
+        };
+
+        using var tool = new DetectionTool();
+        tool.Provider = provider;
+        tool.Parameters.ModelPath = "det.model";
+
+        Assert.Throws<InvalidOperationException>(() => tool.LoadModel());
+        Assert.Null(tool.Session);
+        Assert.False(tool.IsModelLoaded);
+        Assert.Equal(1, provider.CloseSessionCalls);
+
+        provider.OpenSessionFunc = null;
+        tool.LoadModel();
+        Assert.True(tool.IsModelLoaded);
+    }
+
+    [Fact]
     public void LoadModel_WhenInvalid_ThrowsWithoutTouchingProvider()
     {
         var provider = Provider();
@@ -306,13 +355,56 @@ public sealed class AIToolTests
     }
 
     [Fact]
+    public void Run_AfterProviderSwitch_DoesNotUseOldSession()
+    {
+        var original = Provider("Original");
+        using var tool = new DetectionTool();
+        tool.Provider = original;
+        tool.Parameters.ModelPath = "det.model";
+        tool.LoadModel();
+
+        tool.Provider = Provider("Replacement");
+        Assert.False(tool.IsModelLoaded);
+        var result = tool.Run(TestImage());
+
+        Assert.False(result.Success);
+        Assert.Contains("Provider 已切换", result.Message);
+        Assert.Equal(0, original.CloseSessionCalls);
+    }
+
+    [Fact]
+    public void Run_AfterModelPathChange_RequiresReloadAndThenUsesNewModel()
+    {
+        var provider = Provider();
+        using var tool = new DetectionTool();
+        tool.Provider = provider;
+        tool.Parameters.ModelPath = "old.model";
+        tool.LoadModel();
+
+        tool.Parameters.ModelPath = "new.model";
+        Assert.False(tool.IsModelLoaded);
+        var staleResult = tool.Run(TestImage());
+        Assert.False(staleResult.Success);
+        Assert.Contains("重新加载", staleResult.Message);
+
+        tool.LoadModel();
+        Assert.True(tool.IsModelLoaded);
+        Assert.Equal("new.model", provider.LastRequest?.ModelPath);
+        Assert.Equal(1, provider.CloseSessionCalls);
+    }
+
+    [Fact]
     public void Run_WhenSessionReturnsWrongType_ReportsMismatch()
     {
         var provider = Provider();
         provider.OpenSessionFunc = request =>
         {
             var session = new FakeAIModelSession(request.ModelPath, request.ModelType, provider.Capabilities);
-            session.RunFunc = _ => new AIClassificationResult(); // 检测会话吐出分类结果。
+            session.RunFunc = _ =>
+            {
+                Thread.Sleep(20);
+                return new AIClassificationResult(); // 检测会话吐出分类结果。
+            };
             return session;
         };
 
@@ -324,6 +416,8 @@ public sealed class AIToolTests
         var result = tool.Run(TestImage());
         Assert.False(result.Success);
         Assert.Contains("AIClassificationResult", result.Message);
+        Assert.True(result.ElapsedMs > 0);
+        Assert.Equal(result.ElapsedMs, tool.LastElapsedMs);
     }
 
     // ── 品牌无关：同一 Tool 可换 Provider，无品牌分支 ─────────────────
