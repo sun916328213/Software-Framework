@@ -1,9 +1,10 @@
-﻿<!--
+<!--
     ScriptEditorView.xaml - 脚本编辑器控件视图
     职责：纯 UI 布局 Shell（前后端分离：工具栏、引用面板、编辑器在代码中延迟创建）
     快捷键：Ctrl+N(新建) / Ctrl+O(打开) / Ctrl+S(保存) / Ctrl+Shift+S(另存为)
     Ctrl+B(构建) / F5(执行) / Shift+F5(终止)
     Ctrl+D(格式化) / Ctrl+K(注释) / Ctrl+U(取消注释) / F2(重命名)
+    配色：一律走 MaterialDesign 原生动态键（跟随明暗主题），根节点设 Foreground 由属性继承下发。
 -->
 <UserControl
     x:Class="ScriptEditor.Views.ScriptEditorView"
@@ -14,14 +15,11 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignHeight="600"
     d:DesignWidth="800"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
 
     <UserControl.Resources>
         <ResourceDictionary>
-            <!--<ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/WPFCustomControls;component/Resources/Resources.xaml" />
-            </ResourceDictionary.MergedDictionaries>-->
-
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
             <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
@@ -77,21 +75,23 @@
             <Border
                 Grid.Row="1"
                 Padding="12,2"
-                Background="#F0F0F0"
-                BorderBrush="#E8E8E8"
+                Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Card.Border}"
                 BorderThickness="0,1,0,0">
                 <StackPanel Orientation="Horizontal">
                     <Rectangle
                         Width="1"
                         Margin="14,0"
-                        Fill="#CCCCCC" />
-                    <TextBlock Foreground="#888" Text="Ln " />
-                    <TextBlock Foreground="#555" Text="{Binding CaretLine}" />
+                        Fill="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+                    <TextBlock
+                        Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                        Text="Ln " />
+                    <TextBlock Text="{Binding CaretLine}" />
                     <TextBlock
                         Margin="14,0,0,0"
-                        Foreground="#888"
+                        Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
                         Text="Col " />
-                    <TextBlock Foreground="#555" Text="{Binding CaretColumn}" />
+                    <TextBlock Text="{Binding CaretColumn}" />
                 </StackPanel>
             </Border>
         </Grid>
@@ -101,14 +101,14 @@
             Grid.Row="2"
             Height="4"
             HorizontalAlignment="Stretch"
-            Background="#E0E0E0"
+            Background="{DynamicResource MaterialDesign.Brush.Card.Border}"
             Cursor="SizeNS" />
 
         <!--  ═══════════════════ 输出面板 ═══════════════════  -->
         <Border
             Grid.Row="3"
             Padding="0,0,0,0"
-            BorderBrush="#AAAAAA"
+            BorderBrush="{DynamicResource MaterialDesign.Brush.Card.Border}"
             BorderThickness="0,1,0,0">
             <Grid>
                 <Grid.RowDefinitions>
@@ -119,14 +119,13 @@
 
                 <Border
                     Padding="12,4"
-                    Background="#F0F0F0"
-                    BorderBrush="#E0E0E0"
+                    Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Card.Border}"
                     BorderThickness="0,0,0,1">
                     <DockPanel>
                         <TextBlock
                             VerticalAlignment="Center"
                             FontWeight="SemiBold"
-                            Foreground="#555"
                             Text="输出" />
                     </DockPanel>
                 </Border>
@@ -135,9 +134,8 @@
                     x:Name="OutputTextBox"
                     Grid.Row="1"
                     Padding="10,2"
-                    Background="#FAFAFA"
+                    Background="{DynamicResource MaterialDesign.Brush.Background}"
                     BorderThickness="0"
-                    Foreground="#333"
                     IsReadOnly="True"
                     Text="{Binding OutputText, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=OneWay}"
                     TextWrapping="Wrap"
@@ -147,15 +145,15 @@
                 <Border
                     Grid.Row="2"
                     Padding="12,4"
-                    Background="#E8E8E8"
-                    BorderBrush="#D0D0D0">
+                    Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Card.Border}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center" Text="{Binding Session.StatusText, FallbackValue=就绪}" />
                         <Separator
                             Width="1"
                             Height="14"
                             Margin="12,0"
-                            Background="#CCC" />
+                            Background="{DynamicResource MaterialDesign.Brush.Card.Border}" />
                         <TextBlock VerticalAlignment="Center" Text="{Binding Session.ExecutionTime}" />
                     </StackPanel>
                 </Border>

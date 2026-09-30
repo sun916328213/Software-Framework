@@ -20,6 +20,8 @@
     <PackageReference Include="RoslynPad.Editor.Windows" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <!-- 显式声明实际用到的工程，不靠传递依赖：Core 提供 Models/Contracts 契约。 -->
+    <ProjectReference Include="..\ScriptEditor.Core\ScriptEditor.Core.csproj" />
     <ProjectReference Include="..\ScriptEditor.Runtime\ScriptEditor.Runtime.csproj" />
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
     <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />

@@ -22,8 +22,8 @@
                     <Border
                         HorizontalAlignment="Right"
                         VerticalAlignment="Top"
-                        Background="#F2F2F2"
-                        BorderBrush="#C8C8C8"
+                        Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                        BorderBrush="{DynamicResource MaterialDesign.Brush.Card.Border}"
                         BorderThickness="1"
                         CornerRadius="5"
                         Cursor="Arrow"

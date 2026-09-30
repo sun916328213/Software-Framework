@@ -8,7 +8,14 @@ namespace ScriptEditor.Tests.Performance;
 /// <summary>
 /// 性能回归阈值（P6）：重复编译、预编译加速、输出洪泛、批量任务、长期循环、内存稳定。
 /// 阈值为 CI 回归线（留足余量），非精密基准；Workbench 负责人工性能观察。
+/// <para>
+/// Category 隔离：本类用例耗时远高于纯逻辑用例（循环 2s、批量预编译以分钟计），
+/// 按 <c>ARCHITECTURE.md §2</c>「长时间运行测试用 Category 隔离，不混入快速单元测试」归类为
+/// <c>Performance</c>。快速线用 <c>--filter "Category!=Performance"</c> 排除；
+/// 与 Vision 的 <c>Performance</c>（只记录、不设阈值）口径不同：此处保留 CI 回归阈值。
+/// </para>
 /// </summary>
+[Trait("Category", "Performance")]
 public sealed class PerformanceThresholds : IDisposable
 {
     private readonly ITestOutputHelper _output;

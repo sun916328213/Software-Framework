@@ -1,5 +1,6 @@
 <!--
     ScriptEditorToolbar.xaml - 脚本编辑器工具栏（前后端分离：从 ScriptEditorView 中独立出来，延迟创建）
+    配色：一律走 MaterialDesign 原生动态键（跟随明暗主题），根节点设 Foreground 由属性继承下发。
 -->
 <UserControl
     x:Class="ScriptEditor.Views.ScriptEditorToolbar"
@@ -7,8 +8,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:viewmodels="clr-namespace:ScriptEditor.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:ScriptEditorViewModel}"
-    mc:Ignorable="d">
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="clr-namespace:ScriptEditor.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:ScriptEditorViewModel}"
+    mc:Ignorable="d"
+    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -31,7 +35,7 @@
         </Style>
     </UserControl.Resources>
 
-    <Border Padding="4,2" Background="#F5F5F5">
+    <Border Padding="4,2" Background="{DynamicResource MaterialDesign.Brush.Card.Background}">
         <DockPanel>
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
                 <!--  文件操作：新建 / 打开 / 保存 / 另存为  -->
@@ -62,7 +66,7 @@
                 <Rectangle
                     Width="1"
                     Margin="4,4"
-                    Fill="#CCCCCC" />
+                    Fill="{DynamicResource MaterialDesign.Brush.Card.Border}" />
 
                 <!--  构建 / 执行 / 终止  -->
                 <Button
@@ -87,7 +91,7 @@
                 <Rectangle
                     Width="1"
                     Margin="4,4"
-                    Fill="#CCCCCC" />
+                    Fill="{DynamicResource MaterialDesign.Brush.Card.Border}" />
 
                 <!--  格式化 / 注释  -->
                 <Button
@@ -117,7 +121,7 @@
                 <Rectangle
                     Width="1"
                     Margin="4,4"
-                    Fill="#CCCCCC" />
+                    Fill="{DynamicResource MaterialDesign.Brush.Card.Border}" />
 
                 <!--  引用管理  -->
                 <Button
@@ -129,7 +133,7 @@
                 <Rectangle
                     Width="1"
                     Margin="4,4"
-                    Fill="#CCCCCC" />
+                    Fill="{DynamicResource MaterialDesign.Brush.Card.Border}" />
 
                 <!--  模板  -->
                 <Button
@@ -141,7 +145,7 @@
                 <Rectangle
                     Width="1"
                     Margin="4,4"
-                    Fill="#CCCCCC" />
+                    Fill="{DynamicResource MaterialDesign.Brush.Card.Border}" />
 
                 <!--  调试模式  -->
                 <Button
@@ -160,7 +164,7 @@
                 <Rectangle
                     Width="1"
                     Margin="4,4"
-                    Fill="#CCCCCC" />
+                    Fill="{DynamicResource MaterialDesign.Brush.Card.Border}" />
 
                 <!--  循环执行  -->
                 <Button
@@ -179,7 +183,7 @@
                     Margin="4,0,0,0"
                     VerticalAlignment="Center"
                     FontSize="12"
-                    Foreground="#888"
+                    Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
                     Text="循环间隔:" />
                 <TextBox
                     x:Name="LoopIntervalBox"
@@ -198,7 +202,7 @@
                     Margin="0,0,4,0"
                     VerticalAlignment="Center"
                     FontSize="12"
-                    Foreground="#888"
+                    Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
                     Text="ms" />
             </StackPanel>
 
