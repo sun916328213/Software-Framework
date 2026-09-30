@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Device.Tests</AssemblyName>
+    <RootNamespace>Device.Tests</RootNamespace>
+    <!-- 逻辑测试线：直引 Core + Runtime，不启用 WPF。
+         Runtime 因厂商 DLL 必须为 windows7.0，故整条线取 net9.0-windows7.0；
+         控件与宿主装配测试另见 Device.Workbench.Tests。 -->
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- 与被测类库平台策略一致：测试进程保持 AnyCPU，不强制 x64。 -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Device.Core\Device.Core.csproj" />
+    <ProjectReference Include="..\Device.Runtime\Device.Runtime.csproj" />
+  </ItemGroup>
+</Project>
