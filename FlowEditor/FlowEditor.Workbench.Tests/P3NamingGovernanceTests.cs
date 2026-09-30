@@ -35,16 +35,18 @@ public sealed class P3NamingGovernanceTests
     }
 
     [Fact]
-    public void TestAndSmoke_Naming_Matches_RepoConvention()
+    public void TestProjects_Naming_Matches_RepoConvention()
     {
         var solutionDirectory = FlowEditorDirectory();
-        var testCsproj = Path.Combine(solutionDirectory, "FlowEditor.Tests", "FlowEditor.Tests.csproj");
-        var smokeCsproj = Path.Combine(solutionDirectory, "FlowEditor.Runtime.Smoke", "FlowEditor.Runtime.Smoke.csproj");
-        Assert.True(File.Exists(testCsproj), $"测试项目路径不存在: {testCsproj}");
-        Assert.True(File.Exists(smokeCsproj), $"冒烟项目路径不存在: {smokeCsproj}");
-        // 旧的不一致命名不得回潮。
+        var workbenchTestsCsproj = Path.Combine(solutionDirectory, "FlowEditor.Workbench.Tests", "FlowEditor.Workbench.Tests.csproj");
+        var logicTestsCsproj = Path.Combine(solutionDirectory, "FlowEditor.Tests", "FlowEditor.Tests.csproj");
+        Assert.True(File.Exists(workbenchTestsCsproj), $"测试项目路径不存在: {workbenchTestsCsproj}");
+        Assert.True(File.Exists(logicTestsCsproj), $"逻辑测试项目路径不存在: {logicTestsCsproj}");
+        // 架构只认两条线（Xxx.Tests + Xxx.Workbench.Tests）：碎片工程与旧命名不得回潮。
         Assert.False(Directory.Exists(Path.Combine(solutionDirectory, "FlowEditor.Test")));
-        Assert.False(File.Exists(Path.Combine(solutionDirectory, "FlowEditor.Runtime.Smoke", "FlowEditor.Runtime.Test.csproj")));
+        Assert.False(Directory.Exists(Path.Combine(solutionDirectory, "FlowEditor.Runtime.Tests")));
+        Assert.False(Directory.Exists(Path.Combine(solutionDirectory, "FlowEditor.Runtime.Smoke")));
+        Assert.False(File.Exists(Path.Combine(solutionDirectory, "FlowEditor.Tests", "FlowEditor.Test.csproj")));
     }
 
     /// <summary>模块级架构文档应归属解决方案，而非 Controls 控件项目。</summary>

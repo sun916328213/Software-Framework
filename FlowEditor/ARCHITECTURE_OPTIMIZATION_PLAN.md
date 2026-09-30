@@ -483,7 +483,7 @@ IFlowDocumentStore       Save/Load 文档
 
 每一批必须满足：
 
-1. `dotnet test FlowEditorTest/FlowEditor.Tests.csproj --no-restore` 全部通过。
+1. `dotnet test FlowEditor.Workbench.Tests/FlowEditor.Workbench.Tests.csproj --no-restore` 全部通过。
 2. 不新增编译警告。
 3. 不改变 `.flow` / `.flows` 输出结构，除非有显式迁移测试。
 4. 性能测试不得明显退化。
@@ -627,7 +627,7 @@ IFlowDocumentStore       Save/Load 文档
 
 自动化验收：
 
-- [x] `FlowEditor.Runtime.Smoke` 已由一次性控制台程序改为纯 `net9.0` xUnit 测试项目；完整 `dotnet test` 会执行三节点流程并断言未加载 WPF 程序集。
+- [x] `FlowEditor.Runtime.Tests` 已由一次性控制台程序改为纯 `net9.0` xUnit 测试项目；完整 `dotnet test` 会执行三节点流程并断言未加载 WPF 程序集。
 - [x] 在 STA 测试宿主中组合完整 `FlowChartContainerView`、真实容器 ViewModel、默认标签页、活动画布及命令栏/工具箱/输出栏/属性栏资源。
 - [x] 完整解决方案回归保持 FlowEditor 核心测试和宿主日志集成测试分离运行。
 - [x] 完整构建 `FlowNodes.Workbench` 桌面宿主，确认 FlowEditor、FlowNodes 及其通信/设备/视觉依赖可共同生成且无编译错误；既有原生库位数和可空性告警单独治理。
@@ -715,7 +715,7 @@ IFlowDocumentStore       Save/Load 文档
 本阶段先建立清晰的项目职责与构建入口，保留产品程序集名称；插件公开类型跨程序集迁移时允许源代码迁移和重新编译，不承诺旧插件 DLL 的二进制兼容。具体边界见 [ARCHITECTURE.md](ARCHITECTURE.md)。
 
 - [x] `FlowEditor.sln` 将现有项目组织为独立 Core、Runtime、Controls、Workbench、Adapters、Tests/Fixtures；Workbench 以相邻项目文件链接展示，仍由自身项目或仓库级解决方案构建，不进入 FlowEditor 独立解决方案的构建图。
-- [x] `FlowEditor.Runtime.Smoke` 保持原项目路径以兼容仓库级 `Frame.sln`，改为由 `dotnet test` 自动执行的纯 `net9.0` xUnit 验收。
+- [x] `FlowEditor.Runtime.Tests` 改为由 `dotnet test` 自动执行的纯 `net9.0` xUnit 验收；原为兼容仓库级 `Frame.sln` 固定在 `FlowEditor.Runtime.Smoke` 路径，已于 §18 统一重命名。
 - [x] `FlowEditor.DataManagerLogging` 显式引用定义 `LogManager` 的 `DataManager.Runtime`，修复原有缺失项目引用造成的宿主日志项目编译失败。
 - [x] 整合后运行 `dotnet test FlowEditor.sln -c Debug --no-restore`：Runtime 1/1、FlowEditor 378/378、宿主日志 4/4。
 - [x] 保留三个独立测试项目及现有路径；不进行统一目录迁移。
@@ -731,9 +731,13 @@ IFlowDocumentStore       Save/Load 文档
 - [x] 第五批迁入 Flow 端口特性、元数据读取器，以及资源所有权、租约和作用域；Runtime 保留资源清理时机。完整解决方案测试：Runtime 2/2、FlowEditor 379/379、宿主日志 4/4。
 - [x] 第六批迁入结构化执行容器的调度类型、泳道定义与描述接口；完整执行图感知接口仍留 Runtime。完整解决方案测试：Runtime 2/2、FlowEditor 379/379、宿主日志 4/4。
 - [x] 复核 `NodeModel` 全部 partial：PropertyGrid 命令、`IFlowChartService` 画布生命周期和旧端口属性回退属于 Controls 适配职责；Core 的 `INodeExecutable` 已是无头节点 seam，不把整个 `NodeModel` 迁入 Core 当作目标。
+- [x] 统一重命名 `FlowEditor.Runtime.Smoke` 为 `FlowEditor.Runtime.Tests`（`Smoke` → `Tests`）：与 `Device.Runtime.Tests`、`SecsGem.Runtime.Tests` 同构（该命名后已被仓库「只认两条线」约定取代，见本节末条）；已同步更新仓库级 `Frame.sln`、`FlowEditor.sln`、项目路径门禁与模块/根文档。测试线与设施的角色映射固定为：逻辑线 = 无 WPF（其他模块的 `Xxx.Tests` 角色，现名 `FlowEditor.Tests`），`FlowEditor.Workbench.Tests` = WPF 集成线（`Xxx.Workbench.Tests` 角色，命名与角色已对齐），`WPFControl.Host.Tests` = 跨模块宿主日志 adapter 集成线；`FlowEditor.PluginContractFixture`（无 xUnit 的夹具 DLL）和 `FlowEditor.DataManagerLogging`（生产 adapter）不计入测试线。
+- [x] 统一重命名 `FlowEditor.Tests` 为 `FlowEditor.Workbench.Tests`（`Tests` → `Workbench.Tests`）：与 `MotionControl.Workbench.Tests`、`Communication.Workbench.Tests`、`DataManager.Workbench.Tests`、`ScriptEditor.Workbench.Tests` 同构，消除「WPF 集成线命名与角色不一致」的已知偏离；已同步更新仓库级 `Frame.sln`、`FlowEditor.sln`、`FlowEditor.Controls` 的 `InternalsVisibleTo`、P3 命名门禁与 P4 边界守卫（F1 更名为 `WorkbenchTests_StaysWpfFlavouredWithKnownWpfTestFileAllowlist`）以及模块/根文档。
+- [x] 新建 `FlowEditor.Workbench` 自有宿主（Prism 可运行宿主，`WinExe` + `App.xaml`/`App.xaml.cs` + 自建 `Views/MainWindow` 外壳含 `FlowEditorRegion` 区域）：只加载 `FlowEditorModule` 并经区域导航装载 `FlowChartContainerView`，不注册 DataManager/Communication/ScriptEditor 模块与宿主 `IFlowLogSink`，也不引用 `FlowNodes`（工具箱只含本程序集内建 FlowControl/Common 节点）。项目显式引用 `FlowEditor.Controls` 与 `WPFCustomControls`（后者为 App 层合并公共控件资源所需），并显式引用 `Prism.Wpf` 以解析壳 XAML 的区域附加属性。已登记到 `FlowEditor.sln`（4 条 Any CPU 配置 + 归入 Workbench 文件夹，保留原有指向 `FlowNodes.Workbench` 的 SolutionItems 链接）与仓库级 `Frame.sln`（12 条配置 + 归入 `10 FlowEditor` 文件夹）。守卫同步：`FlowEditorSolution_ReferencesExistingProjects` 的项目计数 8→9 并新增路径断言；`FlowEditor.Workbench.Tests` 增加对新宿主的显式 `ProjectReference` 与 6 条不启 WPF 的静态装配断言（`WorkbenchHostCompositionTests`），锁定「经模块 + 区域导航装载、不重复合并 FlowEditor 资源、壳不内嵌编辑视图、不引 FlowNodes/测试工程」。验证：`dotnet test FlowEditor.sln -c Debug -p:Platform="Any CPU"` 全绿 —— Runtime.Tests 2/2、Workbench.Tests 390/390、宿主日志 4/4。
+- [x] 统一重命名 `FlowEditor.Runtime.Tests` 为 `FlowEditor.Tests`（去 `Runtime` 段）：仓库约定只认两条线——逻辑线 `Xxx.Tests` + WPF 线 `Xxx.Workbench.Tests`；`ScriptEditor.Tests`、`Device.Tests`、`SecsGem.Tests` 的 `LayeringTests` 均显式禁止 `Xxx.Runtime.Tests` 这类碎片工程名并禁止其回潮，FlowEditor 是最后一处偏离。已 `git mv` 目录与 csproj、源文件命名空间改为 `FlowEditor.Tests`、清理旧 `obj`/`bin`、同步 `FlowEditor.sln`（GUID 保留）与仓库级 `Frame.sln`。守卫同步：F2 更名为 `LogicTestsLine_StaysWpfFreeAndDirectlyReferencesCoreAndRuntime` 并改用新路径、`FlowEditorSolution_ReferencesExistingProjects` 的路径断言更新、P3 命名门禁由「禁止 `FlowEditor.Tests` 存在」反转为「`FlowEditor.Tests` 必须存在，且 `FlowEditor.Runtime.Tests`/`FlowEditor.Runtime.Smoke` 不得回潮」。
 - [ ] 相邻 `FlowNodes` 的构建仍需单独复核；本轮直接构建该项目出现 122 个错误，其中包括 `CommunicationManager`、`DeviceRole`、`ProtocolType` 等通信类型缺失，未把它们并入本次 FlowEditor 改动。
 - [ ] 后续若需让现有 `NodeModel` 派生插件无头运行，先按实际插件调用方拆离 PropertyGrid、画布生命周期与旧端口属性回退，再决定是否引入新的纯逻辑基类；旧插件以源码重编迁移，旧 `.flow` 文档仍按持久化类型规则验收。
-- [ ] 若以后统一重命名 `FlowEditor.Runtime.Smoke` 的项目目录，应同时更新仓库级 `Frame.sln` 和全部项目路径门禁；当前已具备测试行为，无需为命名立即破坏外部入口。
+- [x] 已消解（原改名后记录的无关红项）：`FlowEditor.Workbench.Tests` 守卫 `Solutions_ReferenceExistingProjects_AfterRename` 曾因仓库级 `Frame.sln` 中 **Device 模块**的悬空条目 `Device\Device.Runtime.Tests\Device.Runtime.Tests.csproj` 报红。当前该目录已不存在且 `Frame.sln` 不再引用它，守卫在新建宿主后的完整回归中为绿，无需在 FlowEditor 侧做任何补偿。
 
 ## 17. Controls 项目与程序集命名迁移（2026-09-29）
 

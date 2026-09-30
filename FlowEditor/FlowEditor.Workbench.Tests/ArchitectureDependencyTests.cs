@@ -5,6 +5,7 @@ using FlowEditor.ViewModels;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Xunit;
 
 namespace FlowEditorTest;
@@ -31,16 +32,17 @@ public sealed class ArchitectureDependencyTests
             .Select(match => match.Groups["path"].Value)
             .ToList();
 
-        Assert.Equal(8, projectPaths.Count);
+        Assert.Equal(9, projectPaths.Count);
         Assert.Contains("FlowEditor.Core\\FlowEditor.Core.csproj", projectPaths);
         Assert.Contains("FlowEditor.Controls\\FlowEditor.Controls.csproj", projectPaths);
         Assert.DoesNotContain("FlowEditor\\FlowEditor.csproj", projectPaths);
         Assert.Equal("FlowEditor.Controls", typeof(NodeModel).Assembly.GetName().Name);
         Assert.False(File.Exists(Path.Combine(SolutionDirectory, "FlowEditor", "FlowEditor.csproj")));
         Assert.Contains("FlowEditor.Runtime\\FlowEditor.Runtime.csproj", projectPaths);
-        Assert.Contains("FlowEditor.Runtime.Smoke\\FlowEditor.Runtime.Smoke.csproj", projectPaths);
-        Assert.Contains("FlowEditor.PluginContractFixture\\FlowEditor.PluginContractFixture.csproj", projectPaths);
         Assert.Contains("FlowEditor.Tests\\FlowEditor.Tests.csproj", projectPaths);
+        Assert.Contains("FlowEditor.PluginContractFixture\\FlowEditor.PluginContractFixture.csproj", projectPaths);
+        Assert.Contains("FlowEditor.Workbench.Tests\\FlowEditor.Workbench.Tests.csproj", projectPaths);
+        Assert.Contains("FlowEditor.Workbench\\FlowEditor.Workbench.csproj", projectPaths);
         Assert.Contains("WPFControl.Host.Tests\\WPFControl.Host.Tests.csproj", projectPaths);
         Assert.Contains("FlowEditor.DataManagerLogging\\FlowEditor.DataManagerLogging.csproj", projectPaths);
         Assert.All(projectPaths, relativePath =>
@@ -66,6 +68,130 @@ public sealed class ArchitectureDependencyTests
         Assert.DoesNotContain("WPFControl.csproj", hostTestProject, StringComparison.Ordinal);
         Assert.DoesNotContain("WPFControl.csproj", adapterProject, StringComparison.Ordinal);
     }
+
+    /// <summary>
+    /// P4 FlowEditor 边界审计 F2：逻辑测试线保持无界面——<c>FlowEditor.Tests</c> 是
+    /// FlowEditor 的「无 WPF」逻辑测试线（TFM 为 <c>net9.0</c>、不启用 WPF），且只直引
+    /// Core + Runtime，不经 Controls 间接取依赖。
+    /// </summary>
+    [Fact]
+    public void LogicTestsLine_StaysWpfFreeAndDirectlyReferencesCoreAndRuntime()
+    {
+        var csproj = LoadCsproj("FlowEditor.Tests", "FlowEditor.Tests.csproj");
+
+        Assert.False(HasUseWpf(csproj), "FlowEditor.Tests 是逻辑测试线，不应启用 WPF。");
+
+        var projects = ProjectReferences(csproj);
+        Assert.Contains(projects, r => r.EndsWith("FlowEditor.Core.csproj", StringComparison.Ordinal));
+        Assert.Contains(projects, r => r.EndsWith("FlowEditor.Runtime.csproj", StringComparison.Ordinal));
+        Assert.DoesNotContain(projects, r => r.Contains("FlowEditor.Controls"));
+    }
+
+    /// <summary>
+    /// P4 FlowEditor 边界审计 F1：把「Workbench 测试线混装 WPF 编辑测试」这一既定决策固化为显式
+    /// 声明——<c>FlowEditor.Workbench.Tests</c> 保持 UseWPF + 引用 Controls，并用 allowlist 钉住当前
+    /// WPF 风味测试文件。新增 WPF 测试必须进宿主集成线而非继续堆进本线，allowlist 外出现新的 WPF
+    /// 文件即视为架构回退。
+    /// </summary>
+    [Fact]
+    public void WorkbenchTests_StaysWpfFlavouredWithKnownWpfTestFileAllowlist()
+    {
+        var csproj = LoadCsproj("FlowEditor.Workbench.Tests", "FlowEditor.Workbench.Tests.csproj");
+        Assert.True(HasUseWpf(csproj), "FlowEditor.Workbench.Tests 是 FlowEditor 的 WPF 编辑测试线，应保持 UseWPF=true。");
+        Assert.Contains(
+            ProjectReferences(csproj),
+            r => r.EndsWith("FlowEditor.Controls.csproj", StringComparison.Ordinal));
+
+        var wpfFlavoured = Directory
+            .EnumerateFiles(Path.Combine(SolutionDirectory, "FlowEditor.Workbench.Tests"), "*.cs", SearchOption.TopDirectoryOnly)
+            .Where(path => WpfUsageMarker.IsMatch(File.ReadAllText(path)))
+            .Select(Path.GetFileName)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
+        // 下限断言防止守卫假绿：至少核心辅助与若干真实 WPF 用例仍被识别为 WPF 风味。
+        Assert.Contains("WpfTestHost.cs", wpfFlavoured);
+        Assert.Contains("FlowCommandBarViewTests.cs", wpfFlavoured);
+
+        var unexpected = wpfFlavoured.Except(WpfFlavouredTestFiles, StringComparer.Ordinal)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+        Assert.Empty(unexpected);
+    }
+
+    /// <summary>
+    /// P4 FlowEditor 边界审计 F3：<c>WPFControl.Host.Tests</c> 名含 WPF 但实为宿主日志 adapter 集成线，
+    /// 保持无 WPF、只引 adapter + Runtime，不把完整 WPFControl 或控件层重新带入。
+    /// </summary>
+    [Fact]
+    public void HostTestsLine_StaysAdapterOnlyWithoutWpf()
+    {
+        var csproj = LoadCsproj("WPFControl.Host.Tests", "WPFControl.Host.Tests.csproj");
+
+        Assert.False(HasUseWpf(csproj), "WPFControl.Host.Tests 是宿主日志 adapter 集成线，当前不应启用 WPF。");
+
+        var projects = ProjectReferences(csproj);
+        Assert.Contains(projects, r => r.EndsWith("FlowEditor.DataManagerLogging.csproj", StringComparison.Ordinal));
+        Assert.Contains(projects, r => r.EndsWith("FlowEditor.Runtime.csproj", StringComparison.Ordinal));
+        Assert.DoesNotContain(projects, r => r.Contains("FlowEditor.Controls"));
+        Assert.DoesNotContain(projects, r => r.Contains("WPFControl.csproj"));
+
+        var wpfSources = Directory
+            .EnumerateFiles(
+                Path.Combine(SolutionDirectory, "WPFControl.Host.Tests"),
+                "*.cs",
+                SearchOption.TopDirectoryOnly)
+            .Where(path => WpfUsageMarker.IsMatch(File.ReadAllText(path)))
+            .Select(Path.GetFileName)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+        Assert.Empty(wpfSources);
+    }
+
+    /// <summary>识别 WPF 风味测试文件的源码标记（导入 WPF 命名空间）。</summary>
+    private static readonly Regex WpfUsageMarker =
+        new(@"(?m)^\s*using\s+System\.Windows", RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// 已知 WPF 风味测试文件 allowlist。改动此清单须同步 FlowEditor 架构文档；新增条目意味着继续
+    /// 把 WPF 测试留在 FlowEditor.Workbench.Tests 而非宿主集成线。
+    /// </summary>
+    private static readonly string[] WpfFlavouredTestFiles =
+    {
+        "FlowChartContainerAcceptanceTests.cs",
+        "FlowChartInteractionPerformanceTests.cs",
+        "FlowCommandBarViewTests.cs",
+        "InactiveContainerInteractionTests.cs",
+        "NodeDragTests.cs",
+        "NodeInteractionSeamTests.cs",
+        "PngExportTests.cs",
+        "PortColorConverterTests.cs",
+        "PortDisplayNameTests.cs",
+        "StructuredExecutionContainerTests.cs",
+        "TestFlowEditorFactory.cs",
+        "WpfTestHost.cs"
+    };
+
+    /// <summary>读取解决方案下指定项目的 csproj 文档。</summary>
+    /// <param name="relativeSegments">相对于解决方案目录的路径片段。</param>
+    /// <returns>解析后的 csproj 文档。</returns>
+    private static XDocument LoadCsproj(params string[] relativeSegments)
+        => XDocument.Parse(File.ReadAllText(Path.Combine([SolutionDirectory, .. relativeSegments])));
+
+    /// <summary>返回 csproj 声明的项目引用路径（统一为正斜杠）。</summary>
+    /// <param name="csproj">已解析的 csproj 文档。</param>
+    /// <returns>项目引用路径数组。</returns>
+    private static string[] ProjectReferences(XDocument csproj)
+        => csproj.Descendants("ProjectReference")
+            .Select(element => ((string?)element.Attribute("Include") ?? string.Empty).Replace('\\', '/'))
+            .ToArray();
+
+    /// <summary>判断 csproj 是否显式启用 WPF（<c>&lt;UseWPF&gt;true&lt;/UseWPF&gt;</c>）。</summary>
+    /// <param name="csproj">已解析的 csproj 文档。</param>
+    /// <returns>启用 WPF 时返回 true。</returns>
+    private static bool HasUseWpf(XDocument csproj)
+        => csproj.Descendants("UseWPF")
+            .Any(element => string.Equals(element.Value.Trim(), "true", StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
     /// 确保宿主只把流程日志 adapter 装到共享 LogManager 上，不解析具体日志配置服务。
@@ -209,11 +335,11 @@ public sealed class ArchitectureDependencyTests
             ?? throw new DirectoryNotFoundException("无法定位 FlowEditor 解决方案目录。");
         var runtimeDirectory = Path.Combine(solutionDirectory, "FlowEditor.Runtime");
         var coreDirectory = Path.Combine(solutionDirectory, "FlowEditor.Core");
-        var smokeDirectory = Path.Combine(solutionDirectory, "FlowEditor.Runtime.Smoke");
+        var testsDirectory = Path.Combine(solutionDirectory, "FlowEditor.Tests");
         var coreProject = File.ReadAllText(Path.Combine(coreDirectory, "FlowEditor.Core.csproj"));
         var project = File.ReadAllText(Path.Combine(runtimeDirectory, "FlowEditor.Runtime.csproj"));
-        var smokeProject = File.ReadAllText(Path.Combine(
-            smokeDirectory, "FlowEditor.Runtime.Smoke.csproj"));
+        var testsProject = File.ReadAllText(Path.Combine(
+            testsDirectory, "FlowEditor.Tests.csproj"));
         var sourceFiles = Directory.EnumerateFiles(runtimeDirectory, "*.cs", SearchOption.AllDirectories)
             .Where(path =>
             {
@@ -249,9 +375,9 @@ public sealed class ArchitectureDependencyTests
         Assert.DoesNotContain("<UseWPF>", project, StringComparison.Ordinal);
         Assert.Contains("FlowEditor.Core.csproj", project, StringComparison.Ordinal);
         Assert.Single(Regex.Matches(project, "<ProjectReference").Cast<Match>());
-        Assert.Contains("<TargetFramework>net9.0</TargetFramework>", smokeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain("<UseWPF>", smokeProject, StringComparison.Ordinal);
-        Assert.Contains("FlowEditor.Runtime.csproj", smokeProject, StringComparison.Ordinal);
+        Assert.Contains("<TargetFramework>net9.0</TargetFramework>", testsProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("<UseWPF>", testsProject, StringComparison.Ordinal);
+        Assert.Contains("FlowEditor.Runtime.csproj", testsProject, StringComparison.Ordinal);
         Assert.DoesNotContain(sourceFiles, path => forbidden.Any(pattern =>
             File.ReadAllText(path).Contains(pattern, StringComparison.Ordinal)));
         Assert.Equal("FlowEditor.Core", typeof(INodeExecutable).Assembly.GetName().Name);
@@ -803,11 +929,11 @@ public sealed class ArchitectureDependencyTests
                                 ?? throw new InvalidOperationException("无法定位解决方案目录。");
         var testProject = File.ReadAllText(Path.Combine(
             solutionDirectory,
-            "FlowEditor.Tests",
-            "FlowEditor.Tests.csproj"));
+            "FlowEditor.Workbench.Tests",
+            "FlowEditor.Workbench.Tests.csproj"));
         var contractTests = File.ReadAllText(Path.Combine(
             solutionDirectory,
-            "FlowEditor.Tests",
+            "FlowEditor.Workbench.Tests",
             "PluginContractTests.cs"));
 
         Assert.Contains("FlowEditor.PluginContractFixture.csproj", testProject, StringComparison.Ordinal);
@@ -821,8 +947,8 @@ public sealed class ArchitectureDependencyTests
     public void TestSources_NullForgivingDependencies_AreAbsent()
     {
         var testDirectory = Directory.GetParent(ProjectDirectory)?.FullName is { } solutionDirectory
-            ? Path.Combine(solutionDirectory, "FlowEditor.Tests")
-            : throw new DirectoryNotFoundException("无法定位 FlowEditor.Tests 目录。");
+            ? Path.Combine(solutionDirectory, "FlowEditor.Workbench.Tests")
+            : throw new DirectoryNotFoundException("无法定位 FlowEditor.Workbench.Tests 目录。");
         var nullForgivingToken = string.Concat("null", "!");
         var offenders = Directory.EnumerateFiles(testDirectory, "*.cs", SearchOption.TopDirectoryOnly)
             .Where(path => File.ReadAllText(path).Contains(nullForgivingToken, StringComparison.Ordinal))

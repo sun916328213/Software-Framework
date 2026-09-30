@@ -5,7 +5,7 @@
 
 ## 当前状态
 
-FlowEditor 当前由 `FlowEditor.Core`（纯 `net9.0` 图模型与元数据契约）、`FlowEditor.Runtime`（纯 `net9.0` 执行实现）、`FlowEditor.Runtime.Smoke`（纯 `net9.0` 的 xUnit 无界面验收项目）和 `FlowEditor.Controls`（`net9.0-windows` WPF 控件程序集）组成。P5 已把运行节点与结构化作用域契约、程序定义、图编译、校验、调试控制、执行追踪、运行实例、执行引擎及循环/并行 runner 迁入 Runtime；本轮进一步抽出独立 Core，Runtime 单向引用 Core。
+FlowEditor 当前由 `FlowEditor.Core`（纯 `net9.0` 图模型与元数据契约）、`FlowEditor.Runtime`（纯 `net9.0` 执行实现）、`FlowEditor.Tests`（纯 `net9.0` 的 xUnit 无界面逻辑测试项目）、`FlowEditor.Controls`（`net9.0-windows` WPF 控件程序集）和 `FlowEditor.Workbench`（`net9.0-windows` Prism 可运行宿主）组成。P5 已把运行节点与结构化作用域契约、程序定义、图编译、校验、调试控制、执行追踪、运行实例、执行引擎及循环/并行 runner 迁入 Runtime；本轮进一步抽出独立 Core，Runtime 单向引用 Core。
 
 ### Core / Runtime / Controls / Workbench 整合方向
 
@@ -14,7 +14,7 @@ FlowEditor 当前由 `FlowEditor.Core`（纯 `net9.0` 图模型与元数据契�
 | Core | `FlowEditor.Core` 内的图数据、节点身份与执行接口、端口元数据、执行上下文、资源租约与作用域、错误/日志/诊断/验证契约及插件元数据 | 定义平台无关的公共模型与契约，不依赖 Runtime、WPF、Prism 或具体宿主 |
 | Runtime | `FlowEditor.Runtime` 内的图编译、校验实现、调度、执行、循环、并行、重试和恢复 | 单向引用 Core，保持无界面运行 |
 | Controls | `FlowEditor.Controls` WPF 程序集 | 提供可嵌入的编辑器视图、ViewModel、命令、交互和 Prism 注册；依赖 Runtime |
-| Workbench | 相邻 `FlowNodes/FlowNodes.Workbench` 项目 | 独立应用宿主，组合 Controls、FlowNodes 插件以及设备和脚本模块 |
+| Workbench | `FlowEditor.Workbench` Prism 可运行宿主（`WinExe` + `App.xaml`/`App.xaml.cs` + 自有 `Views/MainWindow` 含区域） | 独立应用宿主：只加载 `FlowEditorModule`，经区域导航装载 `FlowChartContainerView`；不引 FlowNodes，内建节点为 FlowControl/Common。`FlowNodes/FlowNodes.Workbench` 作为跨模块聚合宿主仍由 `Frame.sln` 构建 |
 
 `FlowEditor.Core.dll` 现已独立：端口、连线、文档 DTO、节点状态/权限/失败策略、节点身份注册、最小执行与循环控制接口、端口元数据及读取器、节点执行上下文、资源所有权/租约/作用域、并发能力、结构化日志、诊断报告、节点验证、错误分类和结构化容器描述契约位于其中；它仅引用纯 .NET 依赖。Runtime 只向 Core 依赖，WPF 控件与测试通过显式项目引用使用 Core。Runtime 保留执行引擎、调度、重试决策、资源清理时机和完整执行图上下文等实现。按当前约定，不兼容旧插件二进制接口：旧插件须针对新程序集引用重新编译，不提供类型转发。
 
@@ -22,9 +22,9 @@ FlowEditor 当前由 `FlowEditor.Core`（纯 `net9.0` 图模型与元数据契�
 
 WPF 项目目录和程序集现均为 `FlowEditor.Controls`；现有 C# 命名空间仍是 `FlowEditor.*`，避免无关的源码级重命名。XAML 程序集限定名和资源 URI 使用新程序集名。历史 `.flow` 中缺失节点保留原始类型字符串；能解析的节点在再次保存时写入当前程序集限定名。旧插件二进制文件不兼容，须重新编译。
 
-`FlowEditor.DataManagerLogging` 属于宿主日志 adapter，测试项目与 `FlowEditor.PluginContractFixture` 属于验收设施；它们按职责留在 Adapters 和 Tests/Fixtures，而不混入四个产品方向。解决方案中的 Workbench 为相邻项目的入口链接，不参与 `FlowEditor.sln` 默认构建；完整桌面宿主由其自身项目或仓库级 `Frame.sln` 构建。
+`FlowEditor.DataManagerLogging` 属于宿主日志 adapter，测试项目与 `FlowEditor.PluginContractFixture` 属于验收设施；它们按职责留在 Adapters 和 Tests/Fixtures，而不混入四个产品方向。`FlowEditor.sln` 现含自有 Prism 宿主 `FlowEditor.Workbench`（参与该独立解决方案的构建），并另保留一条指向相邻 `FlowNodes/FlowNodes.Workbench` 的 SolutionItems 链接——该链接只是跨模块入口提示，不参与构建；完整聚合桌面宿主仍由 `FlowNodes.Workbench` 自身项目或仓库级 `Frame.sln` 构建。
 
-`FlowEditor.Runtime.Smoke`、`FlowEditor.Tests` 和 `WPFControl.Host.Tests` 保持独立项目和原有物理目录：分别约束纯 Runtime、WPF 编辑器和宿主日志集成，不统一项目或迁移目录。
+`FlowEditor.Tests`、`FlowEditor.Workbench.Tests` 和 `WPFControl.Host.Tests` 保持独立项目和各自物理目录：分别约束纯 Runtime 逻辑、WPF 编辑器和宿主日志集成，不统一项目或迁移目录。`FlowEditor.Workbench.Tests` 显式引用生产宿主 `FlowEditor.Workbench`，并用 `WorkbenchHostCompositionTests` 的静态装配断言（不开 WPF）锁定宿主契约：经模块 + 区域导航装载编辑器、不重复合并 FlowEditor 资源、壳不内嵌编辑视图、不引 FlowNodes 或测试工程。测试线与设施的角色映射：`FlowEditor.Tests` 即其他模块的 `Xxx.Tests`（无 WPF 逻辑线；原名 `FlowEditor.Runtime.Tests`，已按仓库「只认两条线」约定改名，碎片工程名不得回潮），`FlowEditor.Workbench.Tests` 对应 `Xxx.Workbench.Tests`（WPF 集成线，命名与角色已对齐），`WPFControl.Host.Tests` 是跨模块的宿主日志 adapter 集成线；`FlowEditor.PluginContractFixture` 是无 xUnit 的被测夹具 DLL、`FlowEditor.DataManagerLogging` 是生产 adapter，两者都不计入测试线。
 
 历史 `.flow` 兼容验收使用 2026-08 的真实流程文件快照：旧 MC 类型在当前编辑器中以 `MissingNode` 占位，加载和重新映射后保留原始类型、属性、端口标识及连线；这只证明文档可无损保留，不表示缺失的设备节点可执行。
 

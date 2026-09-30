@@ -3,7 +3,7 @@ using FlowEditor.Models;
 using FlowEditor.Nodes;
 using Xunit;
 
-namespace FlowEditor.Runtime.Tests;
+namespace FlowEditor.Tests;
 
 /// <summary>验证纯 net9.0 测试进程可独立执行 Runtime 流程而不加载 WPF。</summary>
 public sealed class RuntimeIsolationTests

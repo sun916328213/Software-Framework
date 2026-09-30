@@ -1,3 +1,3 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("FlowEditor.Tests")]
+[assembly: InternalsVisibleTo("FlowEditor.Workbench.Tests")]

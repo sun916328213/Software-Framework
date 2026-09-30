@@ -1,7 +1,7 @@
 # Brooks-Lint Review
 
 **Mode:** Architecture Audit  
-**Scope:** `FlowEditor`、`FlowEditor.Runtime`、`FlowEditor.Runtime.Smoke`、`FlowEditor.PluginContractFixture` 与 `FlowEditorTest`（117 个生产 C# 文件；全项目复审）  
+**Scope:** `FlowEditor`、`FlowEditor.Runtime`、`FlowEditor.Tests`、`FlowEditor.PluginContractFixture` 与 `FlowEditorTest`（117 个生产 C# 文件；全项目复审）  
 **Health Score:** 70/100  
 **Trend:** 75 → 70（-5；本次范围从 P5 Runtime 扩展为整个 FlowEditor，不能直接解释为质量下降）
 

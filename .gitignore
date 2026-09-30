@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /.tmp-pdf
 *.ps1
+/.trae/documents
