@@ -11,11 +11,11 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>LicenseTool</RootNamespace>
     <AssemblyName>LicenseTool</AssemblyName>
-    <Description>软件授权签发与验证工具（配套 Extension.Distribution.Security）</Description>
+    <Description>软件授权签发与验证工具（配套 Extension.Security）</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Extension\Extension.csproj" />
+    <ProjectReference Include="..\..\Extension\Extension.csproj" />
   </ItemGroup>
 
 </Project>

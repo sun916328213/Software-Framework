@@ -11,7 +11,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extension.Tests", "Extensio
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DesignPattern.Samples", "samples\DesignPattern.Samples\DesignPattern.Samples.csproj", "{8518B74E-B518-43C7-BA88-0048F9CBF778}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LicenseTool", "LicenseTool\LicenseTool.csproj", "{32F0593D-8E85-42D6-AFBC-B862BA706B82}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LicenseTool", "Tools\LicenseTool\LicenseTool.csproj", "{32F0593D-8E85-42D6-AFBC-B862BA706B82}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{A8F3C2D1-6B7E-4A90-9C12-3456789ABCDE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +44,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{32F0593D-8E85-42D6-AFBC-B862BA706B82} = {A8F3C2D1-6B7E-4A90-9C12-3456789ABCDE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E3D9E6B7-59CB-444E-9A5B-3D8876FE66D6}
