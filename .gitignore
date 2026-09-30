@@ -364,3 +364,8 @@ FodyWeavers.xsd
 /.tmp-pdf
 *.ps1
 /.trae/documents
+
+# Packing Machine is a standalone project; it lives at the repository's parent
+# directory, NOT inside Software Frame. It was historically committed here by
+# mistake, so it is intentionally excluded from this repository.
+Packing Machine/
