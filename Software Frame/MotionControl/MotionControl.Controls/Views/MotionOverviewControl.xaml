@@ -1,0 +1,67 @@
+<!--
+中文阅读说明：界面与资源声明。
+MotionControl 模块：运动契约、控制卡适配和验证界面；实际轴状态、命令结果及释放顺序遵守设备实现。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl x:Class="MotionControl.Controls.Views.MotionOverviewControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/MotionControl.Controls;component/Themes/PageStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <Style x:Key="OverviewHeader" TargetType="GridViewColumnHeader">
+                <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary.Foreground}" />
+                <Setter Property="HorizontalContentAlignment" Value="Left" />
+                <Setter Property="Padding" Value="8,6" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <md:Card Style="{StaticResource MotionCard}">
+        <DockPanel LastChildFill="True">
+            <TextBlock DockPanel.Dock="Top" Text="多轴总览" Style="{StaticResource MotionSectionTitle}" />
+            <Grid>
+                <ListView x:Name="AxisTable" ItemsSource="{Binding Axes, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                          SizeChanged="OnTableSizeChanged"
+                         MinHeight="180" ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                          Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                          Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling">
+                    <ListView.View>
+                        <GridView ColumnHeaderContainerStyle="{StaticResource OverviewHeader}" AllowsColumnReorder="False">
+                            <GridViewColumn Header="轴" Width="60" DisplayMemberBinding="{Binding Model.Axis}" />
+                            <GridViewColumn Header="指令位置" Width="140" DisplayMemberBinding="{Binding Model.CommandPosition, StringFormat=F3, TargetNullValue=—}" />
+                            <GridViewColumn Header="编码器位置" Width="140" DisplayMemberBinding="{Binding Model.EncoderPosition, StringFormat=F3, TargetNullValue=—}" />
+                            <GridViewColumn Header="运行状态" Width="240">
+                                <GridViewColumn.CellTemplate><DataTemplate>
+                                    <TextBlock Text="{Binding Model.StatusSummary}" TextWrapping="Wrap" MaxWidth="224" ToolTip="{Binding Model.StatusSummary}" />
+                                </DataTemplate></GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="操作反馈" Width="220">
+                                <GridViewColumn.CellTemplate><DataTemplate>
+                                    <TextBlock Text="{Binding Model.LastMessage}" TextWrapping="Wrap" MaxWidth="204" ToolTip="{Binding Model.LastMessage}" />
+                                </DataTemplate></GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+                <TextBlock Text="连接设备后显示各轴的位置、状态与操作反馈。" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Margin="16,48,16,16" TextWrapping="Wrap" Opacity="0.7" IsHitTestVisible="False">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Axes.Count, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+        </DockPanel>
+    </md:Card>
+</UserControl>

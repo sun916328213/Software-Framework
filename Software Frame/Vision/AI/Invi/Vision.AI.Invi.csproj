@@ -1,0 +1,27 @@
+<!--
+中文阅读说明：项目构建声明。
+Vision 模块：视觉工具模型、算法适配和编辑展示；厂商能力与界面转换应在对应边界内协作。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13.0</LangVersion>
+    <RootNamespace>Vision.AI.Invi</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Vision.Core\Vision.Core.csproj" />
+    <!-- P6（2026-09-28）：业视 Provider。HalconDotNet 经 Extension 唯一入口（仓库硬规则 12）；
+         DynamicDllLoaderEx 亦取自 Extension（native DLL 手动加载器）。 -->
+    <ProjectReference Include="..\..\..\Extension\Extension.Core\Extension.Core.csproj" />
+  </ItemGroup>
+  <!-- P6：IInviNativeApi / InviHelper 是 internal 实现细节，只对 Vision.Tests 开放 fake 注入测试。 -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Vision.Tests" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,132 @@
+<!--
+中文阅读说明：界面与资源声明。
+WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:HelpTool="clr-namespace:Extension.UI.Controls;assembly=Extension"
+    xmlns:System="clr-namespace:System;assembly=mscorlib"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:WPFControls.Controls.Views.User"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Class="WPFControls.Controls.Views.User.LoginView"
+    x:Name="userControl"
+    d:DesignHeight="500"
+    d:DesignWidth="400"
+    UseLayoutRounding="True"
+    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+    FontFamily="Microsoft YaHei UI"
+    PreviewKeyDown="LoginView_PreviewKeyDown"
+    mc:Ignorable="d">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/WPFControls;component/Shared/Views/User/UserFormStyles.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+  <ScrollViewer
+      VerticalScrollBarVisibility="Auto"
+      HorizontalScrollBarVisibility="Disabled"
+      Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+      CanContentScroll="False"
+      Focusable="False">
+    <StackPanel Margin="12">
+      <Grid Margin="0,0,0,12">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Button
+            Grid.Column="0"
+            x:Name="btn_Return"
+            Command="{Binding ElementName=userControl, Path=ExitCommand}"
+            Cursor="Hand"
+            ToolTip="关闭登录"
+            AutomationProperties.Name="关闭登录"
+            Style="{StaticResource UserFormBackButton}">
+          <materialDesign:PackIcon
+              x:Name="packIcon"
+              Width="20"
+              Height="{Binding Width, ElementName=packIcon}"
+              Kind="Close"/>
+        </Button>
+        <StackPanel Grid.Column="1" Margin="12,0,0,0">
+          <TextBlock
+              Text="用户登录"
+              FontSize="22"
+              FontWeight="SemiBold"
+              TextWrapping="Wrap"/>
+          <TextBlock
+              Text="登录后可使用对应权限的功能"
+              Margin="0,4,0,0"
+              FontSize="12"
+              Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+              TextWrapping="Wrap"/>
+        </StackPanel>
+      </Grid>
+      <TextBox
+          x:Name="cmb_Name"
+          Style="{StaticResource UserFormTextBox}"
+          Text="{Binding ElementName=userControl, Path=UserName, Mode=TwoWay}"
+          materialDesign:HintAssist.Hint="用户名"
+          AutomationProperties.Name="用户名"/>
+      <PasswordBox
+          x:Name="txt_Password"
+          HelpTool:PasswordBoxEx.Attach="True"
+          HelpTool:PasswordBoxEx.Password="{Binding ElementName=userControl, Path=Password, Mode=TwoWay}"
+          Style="{StaticResource UserFormPasswordBox}"
+          materialDesign:HintAssist.Hint="密码"
+          AutomationProperties.Name="密码"/>
+      <Label x:Name="lbl_ShowInfo" Content="{Binding ElementName=userControl, Path=ErrorMessage, Mode=TwoWay}" Style="{StaticResource UserFormError}" />
+      <Button
+          x:Name="btn_Login"
+          Command="{Binding ElementName=userControl, Path=LoginCommand}"
+          Content="登录"
+          Cursor="Hand"
+          Style="{StaticResource UserFormPrimaryButton}"/>
+      <UniformGrid Columns="2" Margin="-4,16,-4,0">
+        <Button
+            Margin="4"
+            x:Name="btn_AddInfo"
+            Command="{Binding ElementName=userControl, Path=AddCommand}"
+            Content="新增用户信息">
+          <Button.Style>
+            <Style BasedOn="{StaticResource UserFormSecondaryButton}" TargetType="Button">
+              <Setter Property="IsEnabled" Value="False" />
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding ElementName=userControl, Path=UserLevel}" Value="Admin">
+                  <Setter Property="IsEnabled" Value="True" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ElementName=userControl, Path=UserLevel}" Value="SuperAdmin">
+                  <Setter Property="IsEnabled" Value="True" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </Button.Style>
+        </Button>
+        <Button
+            Margin="4"
+            x:Name="btn_ModInfo"
+            Command="{Binding ElementName=userControl, Path=ModifyCommand}"
+            Content="修改用户信息"
+            Style="{StaticResource UserFormSecondaryButton}"/>
+        <Button
+            Margin="4"
+            x:Name="btn_ManageInfo"
+            Command="{Binding ElementName=userControl, Path=DeleteCommand}"
+            Content="删除用户信息"
+            Style="{StaticResource UserFormSecondaryButton}"/>
+        <Button
+            Margin="4"
+            x:Name="btn_DeletInfo"
+            Command="{Binding ElementName=userControl, Path=LogoutCommand}"
+            Content="注销用户信息"
+            Style="{StaticResource UserFormSecondaryButton}"/>
+      </UniformGrid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

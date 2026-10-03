@@ -1,0 +1,120 @@
+<!--
+中文阅读说明：界面与资源声明。
+WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl
+    x:Class="WPFControls.ProgramControl.Views.StatisticsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:cust="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:WPFControls.ProgramControl.Views"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    xmlns:valueconvert="clr-namespace:WPFControls.ValueConvert"
+    xmlns:viewmodel="clr-namespace:WPFControls.ProgramControl.ViewModels"
+    x:Name="UserControl"
+    d:DataContext="{d:DesignInstance Type=viewmodel:StatisticsViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="400"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    mc:Ignorable="d">
+
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <!--<ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/WPFControls;component/Shared/Resources/Resources.xaml" />
+            </ResourceDictionary.MergedDictionaries>-->
+            <valueconvert:LinkStatusToColorConvert x:Key="LinkColorConvert" />
+            <valueconvert:SecsStatusToColorConvert x:Key="SecsColorConvert" />
+            <valueconvert:DeviceStatusToColorConvert x:Key="DeviceColorConvert" />
+
+            <Style TargetType="cust:TitleTextBlockView">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Style="{StaticResource Border_Style}">
+        <DockPanel>
+            <cust:TitleSeparatorView Title="运行信息" DockPanel.Dock="Top" />
+
+
+            <UniformGrid
+                x:Name="info"
+                Margin="8"
+                Columns="1"
+                Rows="6">
+
+                <UniformGrid Columns="1">
+                    <cust:TitleTextBlockView Title="ID:" Value="{Binding Statistics.ID}" />
+                </UniformGrid>
+
+                <UniformGrid Columns="1">
+                    <cust:TitleTextBlockView Title="Time:" Value="{Binding Statistics.DateTime}" />
+                </UniformGrid>
+
+                <UniformGrid Columns="2">
+                    <cust:TitleTextBlockView
+                        Title="SEMI Link:"
+                        Foreground="{Binding Statistics.SecsStatus, Converter={StaticResource LinkColorConvert}}"
+                        Value="{Binding Statistics.SecsStatus}" />
+
+                    <cust:TitleTextBlockView
+                        Title="SEMI Mode:"
+                        Foreground="{Binding Statistics.SecsMode, Converter={StaticResource SecsColorConvert}}"
+                        Value="{Binding Statistics.SecsMode}" />
+                </UniformGrid>
+
+                <UniformGrid Columns="2">
+                    <cust:TitleTextBlockView
+                        Title="PLC Link:"
+                        Foreground="{Binding Statistics.PLCLinkStatus, Converter={StaticResource LinkColorConvert}}"
+                        Value="{Binding Statistics.PLCLinkStatus}" />
+
+                    <cust:TitleTextBlockView
+                        Title="Device Status:"
+                        Foreground="{Binding Statistics.DeviceStatus, Converter={StaticResource DeviceColorConvert}}"
+                        Value="{Binding Statistics.DeviceStatus}" />
+                </UniformGrid>
+
+
+
+                <UniformGrid Columns="2">
+                    <cust:TitleTextBlockView
+                        Title="Total:"
+                        Unit="PCS"
+                        Value="{Binding Statistics.Total}" />
+
+                    <cust:TitleTextBlockView
+                        Title="OK:"
+                        Unit="PCS"
+                        Value="{Binding Statistics.OK}" />
+
+                </UniformGrid>
+
+                <UniformGrid Columns="2">
+
+                    <cust:TitleTextBlockView Title="Pass Rate:" Value="{Binding Statistics.Rate}" />
+
+                    <Button
+                        MinWidth="88" MinHeight="32"
+                        HorizontalAlignment="Left"
+                        Command="{Binding ClearCountCommand}"
+                        Content="清零"
+                        FontSize="{Binding ElementName=UserControl, Path=FontSize}"
+                        Style="{StaticResource CompactOutlinedButton}" />
+                </UniformGrid>
+
+
+
+            </UniformGrid>
+        </DockPanel>
+
+    </Border>
+
+</UserControl>

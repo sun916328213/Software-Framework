@@ -1,0 +1,27 @@
+<!--
+中文阅读说明：界面与资源声明。
+Communication 模块：连接、协议适配及通信界面；主动请求应答与被动数据接收需遵守所用连接的实际契约。 本文件属于验证宿主，模块组合与人工验证流程应与生产机型业务区分。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<prism:PrismApplication
+    x:Class="Communication.Workbench.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:prism="http://prismlibrary.com/">
+    <prism:PrismApplication.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!--  MaterialDesign：浅色 + Teal 主色 + Amber 辅色（与 DataManager.Workbench 同一套壳）  -->
+                <materialDesign:BundledTheme
+                    BaseTheme="Light"
+                    PrimaryColor="Teal"
+                    SecondaryColor="Amber" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/WPFCustomControls;component/Resources/Resources.xaml" />
+                <ResourceDictionary Source="Styles/Theme.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/WPFCustomControls;component/Resources/WorkbenchStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </prism:PrismApplication.Resources>
+</prism:PrismApplication>

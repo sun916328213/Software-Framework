@@ -1,0 +1,92 @@
+<!--
+中文阅读说明：界面与资源声明。
+WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，供业务界面与工作台复用。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Button.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.TextBox.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.ComboBox.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.PasswordBox.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+    <!-- Named variants keep navigation, canvas and motion controls independent. -->
+    <Style x:Key="CompactOutlinedButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="12,4" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="md:ButtonAssist.CornerRadius" Value="8" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+    </Style>
+    <Style x:Key="CompactPrimaryButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="12,4" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="md:ButtonAssist.CornerRadius" Value="8" />
+    </Style>
+    <Style x:Key="CompactFlatButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="12,4" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="md:ButtonAssist.CornerRadius" Value="8" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+    </Style>
+    <Style x:Key="CompactTextBox" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="CompactComboBox" TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignComboBox}">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="CompactOutlinedTextBox" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="md:TextFieldAssist.TextFieldCornerRadius" Value="8" />
+    </Style>
+    <Style x:Key="CompactOutlinedComboBox" TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="md:TextFieldAssist.TextFieldCornerRadius" Value="8" />
+    </Style>
+    <!-- Multiline documents follow the viewport rather than the single-line action height. -->
+    <Style x:Key="CompactMultilineTextBox" TargetType="TextBox" BasedOn="{StaticResource CompactOutlinedTextBox}">
+        <Setter Property="Height" Value="Auto" />
+        <Setter Property="MinHeight" Value="96" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+    </Style>
+    <!-- Floating labels need a separate, consistent two-line field height. -->
+    <Style x:Key="CompactFormTextBox" TargetType="TextBox" BasedOn="{StaticResource CompactOutlinedTextBox}">
+        <Setter Property="Height" Value="48" />
+        <Setter Property="MinHeight" Value="48" />
+        <Setter Property="md:HintAssist.IsFloating" Value="True" />
+    </Style>
+    <Style x:Key="CompactFormPasswordBox" TargetType="PasswordBox" BasedOn="{StaticResource MaterialDesignOutlinedPasswordBox}">
+        <Setter Property="Height" Value="48" />
+        <Setter Property="MinHeight" Value="48" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="md:HintAssist.IsFloating" Value="True" />
+        <Setter Property="md:TextFieldAssist.TextFieldCornerRadius" Value="8" />
+    </Style>
+    <Style x:Key="CompactFormComboBox" TargetType="ComboBox" BasedOn="{StaticResource CompactOutlinedComboBox}">
+        <Setter Property="Height" Value="48" />
+        <Setter Property="MinHeight" Value="48" />
+        <Setter Property="md:HintAssist.IsFloating" Value="True" />
+    </Style>
+</ResourceDictionary>

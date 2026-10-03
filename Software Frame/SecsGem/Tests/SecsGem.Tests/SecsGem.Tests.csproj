@@ -1,0 +1,38 @@
+<!--
+中文阅读说明：项目构建声明。
+SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>SecsGem.Tests</AssemblyName>
+    <RootNamespace>SecsGem.Tests</RootNamespace>
+    <!-- 逻辑测试线：直引 Core + Runtime，不启用 WPF。
+         Runtime 依赖 windows 目标（DataManager / Extension / Secs4Net），故整条线取 net9.0-windows7.0；
+         控件与宿主装配测试另见 SecsGem.Workbench.Tests。 -->
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <LangVersion>13.0</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\SecsGem.Core\SecsGem.Core.csproj" />
+    <ProjectReference Include="..\..\SecsGem.Runtime\SecsGem.Runtime.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Compile the exact registration source into the non-WPF fixture; real Controls assembly is exercised by Workbench.Tests. -->
+    <Compile Include="..\..\SecsGem.Controls\SecsGemModule.cs" Link="Fixtures\SecsGemModule.cs" />
+  </ItemGroup>
+  <ItemGroup><ProjectReference Include="..\..\..\Extension\Extension.Core\Extension.Core.csproj" /></ItemGroup>
+</Project>

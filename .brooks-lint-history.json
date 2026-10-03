@@ -1,0 +1,46 @@
+[
+  {
+    "date": "2026-10-01",
+    "mode": "Architecture Audit",
+    "score": 69,
+    "findings": {
+      "critical": 0,
+      "suggestion": 1,
+      "warning": 6
+    },
+    "scope": "Whole repository structure; detailed FlowNodes and WPFControl; namespace and assembly boundaries"
+  },
+  {
+    "date": "2026-10-01",
+    "mode": "Architecture Audit",
+    "score": 74,
+    "findings": {
+      "critical": 0,
+      "suggestion": 1,
+      "warning": 5
+    },
+    "scope": "Post S0-S7 closure review: current project dependencies and selected FlowNodes, WPFControl, Extension, SecsGem.Runtime and host boundaries; report only"
+  },
+  {
+    "date": "2026-10-02",
+    "mode": "Architecture Audit",
+    "score": 89,
+    "findings": {
+      "critical": 0,
+      "suggestion": 1,
+      "warning": 2
+    },
+    "scope": "Current project boundaries and remaining WPFControls service injection, namespaces and solution baseline; sampled source review"
+  },
+  {
+    "date": "2026-10-02",
+    "mode": "Architecture Audit",
+    "score": 80,
+    "findings": {
+      "critical": 0,
+      "warning": 4,
+      "suggestion": 0
+    },
+    "scope": "MotionControl.Controls and Workbench MVVM compared with Device.Controls; current source audit only"
+  }
+]

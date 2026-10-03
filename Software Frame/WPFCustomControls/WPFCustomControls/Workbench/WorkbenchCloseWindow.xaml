@@ -1,0 +1,27 @@
+<!--
+中文阅读说明：界面与资源声明。
+WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，供业务界面与工作台复用。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<Window x:Class="WPFCustomControls.Workbench.WorkbenchCloseWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="正在关闭工作台" Width="460" SizeToContent="Height"
+        ResizeMode="NoResize" WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource MaterialDesign.Brush.Background}" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanVisibility" />
+    </Window.Resources>
+    <StackPanel Margin="24">
+        <TextBlock Text="正在关闭工作台" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16" />
+        <ProgressBar IsIndeterminate="True" Height="4" Margin="0,0,0,16" />
+        <TextBlock Text="{Binding Status}" TextWrapping="Wrap" Margin="0,0,0,20" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                    Visibility="{Binding IsTimedOut, Converter={StaticResource BooleanVisibility}}">
+            <Button Content="继续等待" Command="{Binding ContinueWaitingCommand}"
+                    Style="{DynamicResource MaterialDesignRaisedButton}" Margin="0,0,12,0" />
+            <Button Content="仍然关闭" Command="{Binding CloseWithoutWaitingCommand}"
+                    Style="{DynamicResource MaterialDesignOutlinedButton}" />
+        </StackPanel>
+    </StackPanel>
+</Window>

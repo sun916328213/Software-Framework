@@ -1,0 +1,30 @@
+﻿<!--
+中文阅读说明：项目构建声明。
+Communication 模块：连接、协议适配及通信界面；主动请求应答与被动数据接收需遵守所用连接的实际契约。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>13.0</LangVersion>
+    <RootNamespace>Communication.Core</RootNamespace>
+    <AssemblyName>Communication.Core</AssemblyName>
+    <!-- P11: Core 只描述通信能力，不做真实 IO；暂不打包，避免与 CommunicationNew 兼容包混淆。 -->
+    <IsPackable>false</IsPackable>
+    <Platforms>AnyCPU</Platforms>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 参数 DTO 使用串口枚举（StopBits/Parity/Handshake）；框架 BCL 包，非具体传输实现。 -->
+    <PackageReference Include="System.IO.Ports" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,21 @@
+﻿<!--
+中文阅读说明：项目构建声明。
+WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，供业务界面与工作台复用。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>13.0</LangVersion>
+    <RootNamespace>WPFCustomControls.PropertyGrid.Core</RootNamespace>
+    <AssemblyName>WPFCustomControls.PropertyGrid.Core</AssemblyName>
+    <!-- 不引用 WPF,纯托管类库,供 WPFCustomControls 与单元测试共用。 -->
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+</Project>

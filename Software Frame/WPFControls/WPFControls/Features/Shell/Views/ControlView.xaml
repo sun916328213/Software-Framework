@@ -1,0 +1,73 @@
+﻿<!--
+中文阅读说明：界面与资源声明。
+WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl
+    x:Class="WPFControls.ProgramControl.Views.ControlView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:local="clr-namespace:WPFControls.ProgramControl.Views"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="clr-namespace:WPFControls.ProgramControl.Models"
+    xmlns:viewmodel="clr-namespace:WPFControls.ProgramControl.ViewModels.Shell"
+    d:DataContext="{d:DesignInstance Type=viewmodel:ControlViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <!--<ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/WPFControls;component/Shared/Resources/Resources.xaml" />
+                <ResourceDictionary Source="/WPFControls;component/Resources/NavigationStyle.xaml" />
+            </ResourceDictionary.MergedDictionaries>-->
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Style="{StaticResource Border_Style}">
+        <ListBox
+            x:Name="listBox"
+            Margin="3"
+            Padding="0"
+            ItemsSource="{Binding NavigationItems}"
+            SelectedIndex="-1"
+            SelectedItem="{Binding SelectNavigationItems}"
+            Style="{StaticResource MaterialDesign3.NavigationBarListBox}">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="PreviewMouseLeftButtonUp">
+                    <i:InvokeCommandAction Command="{Binding SelectCommand}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+            <ListBox.ItemContainerStyle>
+                <Style BasedOn="{StaticResource NavigationBarListBoxItem}" TargetType="ListBoxItem">
+                    <Setter Property="materialDesign:NavigationBarAssist.CornerRadius" Value="12" />
+                    <Setter Property="materialDesign:NavigationBarAssist.SelectionCornerRadius" Value="12" />
+                    <Setter Property="materialDesign:NavigationBarAssist.SelectionWidth" Value="80" />
+                    <Setter Property="materialDesign:NavigationBarAssist.SelectionHeight" Value="50" />
+                    <Setter Property="materialDesign:NavigationBarAssist.IconSize" Value="45" />
+                    <Setter Property="materialDesign:NavigationBarAssist.IsTextVisible" Value="True" />
+                    <Setter Property="materialDesign:NavigationBarAssist.SelectedIcon" Value="{Binding Icon}" />
+                    <Setter Property="materialDesign:NavigationBarAssist.UnselectedIcon" Value="{Binding Icon}" />
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.Resources>
+                <DataTemplate DataType="{x:Type model:CControlItem}">
+
+                    <TextBlock
+                        Grid.Row="1"
+                        Margin="0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Text="{Binding Title}" />
+
+                </DataTemplate>
+            </ListBox.Resources>
+        </ListBox>
+    </Border>
+</UserControl>

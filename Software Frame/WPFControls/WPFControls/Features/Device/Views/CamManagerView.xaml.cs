@@ -1,0 +1,28 @@
+﻿// 【中文阅读说明】
+// WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
+// 本文件定义：CamManagerView。成员说明可结合下方具体实现阅读。
+// 直接导入的协作命名空间包括：WPFControls、System.Windows.Controls、Device.Controls.Services、Device.Controls.ViewModels。导入不代表所有类型都会在运行时加载。
+using WPFControls;
+using System.Windows.Controls;
+using Device.Controls.Services;
+using Device.Controls.ViewModels;
+
+namespace WPFControls.ProgramControl.Views;
+
+// Preserve the host's navigation name while delegating all device behavior to the new Controls.
+/// <summary>
+/// CamManagerView 的类型定义。WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
+/// 继承或实现的契约：UserControl。具体约束按这些契约及各成员实现解释。
+/// </summary>
+public partial class CamManagerView : UserControl
+{
+    /// <summary>
+    /// 初始化 CamManagerView 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
+    /// 正文中的关键协作调用包括 InitializeComponent；具体条件和先后次序见方法体。
+    /// </summary>
+    public CamManagerView(CameraWorkspace workspace)
+    {
+        InitializeComponent();
+        DevicePage.DataContext = new CameraViewModel(workspace);
+    }
+}

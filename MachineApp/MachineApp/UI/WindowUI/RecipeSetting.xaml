@@ -1,0 +1,197 @@
+<!--
+中文阅读说明：界面与资源声明。
+MachineApp 模块：具体机型的应用宿主，负责机型业务、导航选择、数据库实体和生产设备生命周期。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<Window
+    x:Class="MachineApp.UI.WindowUI.RecipeSetting"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:local="clr-namespace:MachineApp.UI.WindowUI"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodel="clr-namespace:MachineApp.UI.ViewModel"
+    Title="配方设置"
+    Style="{StaticResource MaterialDesignWindow}"
+    MinWidth="380"
+    MinHeight="420"
+    Width="400"
+    Height="450"
+    d:DataContext="{d:DesignInstance Type=viewmodel:RecipeViewModel}"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+
+    <!--<i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding LoadCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>-->
+
+
+
+
+    <Window.Resources>
+        <Style
+            x:Key="LabelStyle"
+            BasedOn="{StaticResource MaterialDesignLabel}"
+            TargetType="Label">
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+
+            <Setter Property="Width" Value="100" />
+        </Style>
+    </Window.Resources>
+    <Grid Margin="12">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="0" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <WrapPanel
+            Grid.Row="0"
+            Grid.Column="1"
+            Margin="0,0,0,6" Orientation="Horizontal">
+            <Label Content="ID:" Style="{StaticResource LabelStyle}" />
+            <TextBox Style="{StaticResource CompactTextBox}"
+                x:Name="txt_ID"
+                Width="140"
+                Height="32"
+                VerticalContentAlignment="Center"
+                AutomationProperties.Name="配方 ID"
+                Text="{Binding CurRecipe.ID, Mode=TwoWay}" />
+        </WrapPanel>
+        <WrapPanel
+            Grid.Row="1"
+            Grid.Column="1"
+            Margin="0,0,0,6" Orientation="Horizontal">
+            <Label Content="FOSB名称:" Style="{StaticResource LabelStyle}" />
+            <ComboBox Style="{StaticResource CompactComboBox}"
+                Width="{Binding ElementName=txt_ID, Path=Width}"
+                Height="32"
+                VerticalAlignment="Center"
+                ItemsSource="{Binding FOSBType}"
+                SelectedItem="{Binding CurRecipe.FOSBType}" />
+        </WrapPanel>
+        <WrapPanel
+            Grid.Row="2"
+            Grid.Column="1"
+            Margin="0,0,0,6" Orientation="Horizontal">
+            <Label Content="FOSB标签方向:" Style="{StaticResource LabelStyle}" />
+            <ComboBox Style="{StaticResource CompactComboBox}"
+                x:Name="cmb_Fosb"
+                Width="{Binding ElementName=txt_ID, Path=Width}"
+                Height="32"
+                VerticalAlignment="Center"
+                ItemsSource="{Binding CurRecipeLabelDir_First}"
+                SelectedIndex="0" />
+            <Button
+                Width="32"
+                Height="32"
+                Margin="4,2"
+                Style="{StaticResource CompactFlatButton}"
+                Padding="0"
+                ToolTip="添加标签方向"
+                AutomationProperties.Name="添加标签方向"
+                Command="{Binding LabelManger_Add}"
+                CommandParameter="1">
+                <Button.Content>
+                    <materialDesign:PackIcon
+                        Width="30"
+                        Height="30"
+                        Kind="Plus" />
+                </Button.Content>
+            </Button>
+            <Button
+                Width="32"
+                Height="32"
+                Margin="4,2"
+                Style="{StaticResource CompactFlatButton}"
+                Padding="0"
+                ToolTip="移除标签方向"
+                AutomationProperties.Name="移除标签方向">
+                <Button.Content>
+                    <materialDesign:PackIcon
+                        Width="30"
+                        Height="30"
+                        Kind="Minus" />
+                </Button.Content>
+            </Button>
+        </WrapPanel>
+     
+        <WrapPanel
+            Grid.Row="4"
+            Grid.Column="1"
+            Margin="0,0,0,6" Orientation="Horizontal">
+            <Label Content="AL标签方向:" Style="{StaticResource LabelStyle}" />
+            <ComboBox Style="{StaticResource CompactComboBox}"
+                x:Name="cmb_AL"
+                Width="{Binding ElementName=txt_ID, Path=Width}"
+                Height="32"
+                VerticalAlignment="Center"
+                ItemsSource="{Binding CurRecipeLabelDir_Second}"
+                SelectedIndex="0" />
+            <Button
+                Width="32"
+                Height="32"
+                Margin="4,2"
+                Style="{StaticResource CompactFlatButton}"
+                Padding="0"
+                ToolTip="添加标签方向"
+                AutomationProperties.Name="添加标签方向"
+                Command="{Binding LabelManger_Add}"
+                CommandParameter="2">
+                <Button.Content>
+                    <materialDesign:PackIcon
+                        Width="30"
+                        Height="30"
+                        Kind="Plus" />
+                </Button.Content>
+            </Button>
+            <Button
+                Width="32"
+                Height="32"
+                Margin="4,2"
+                Style="{StaticResource CompactFlatButton}"
+                Padding="0"
+                ToolTip="移除标签方向"
+                AutomationProperties.Name="移除标签方向">
+                <Button.Content>
+                    <materialDesign:PackIcon
+                        Width="30"
+                        Height="30"
+                        Kind="Minus" />
+                </Button.Content>
+            </Button>
+        </WrapPanel>
+     
+        <Grid Grid.Row="6" Grid.Column="1" Margin="0,6,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button
+                Grid.Column="0"
+                Margin="3,3,10,3"
+                Click="Button_Click"
+                Content="确认" />
+            <Button
+                Grid.Column="1"
+                Margin="10,3,3,3"
+                Click="Button_Click_1"
+                Content="取消" />
+        </Grid>
+
+    </Grid>
+</Window>

@@ -1,0 +1,228 @@
+<!--
+中文阅读说明：界面与资源声明。
+ScriptEditor 模块：脚本持久化模型、运行时编译执行和编辑器协作；脚本 ID、引用及断点属于需要保留的状态。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<!--
+    ScriptEditorToolbar.xaml - 脚本编辑器工具栏（前后端分离：从 ScriptEditorView 中独立出来，延迟创建）
+    配色：一律走 MaterialDesign 原生动态键（跟随明暗主题），根节点设 Foreground 由属性继承下发。
+-->
+<UserControl
+    x:Class="ScriptEditor.Controls.Views.ScriptEditorToolbar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="clr-namespace:ScriptEditor.Controls.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:ScriptEditorViewModel}"
+    mc:Ignorable="d"
+    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+
+    <UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="/ScriptEditor;component/Themes/PageStyles.xaml"/></ResourceDictionary.MergedDictionaries>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+
+
+
+    </ResourceDictionary></UserControl.Resources>
+
+    <Border Padding="4,2" BorderBrush="{DynamicResource MaterialDesign.Brush.Card.Border}" BorderThickness="0,0,0,1" Background="{DynamicResource MaterialDesign.Brush.Card.Background}">
+        <WrapPanel>
+                <!--  文件操作：新建 / 打开 / 保存 / 另存为  -->
+                <Button
+                    Command="{Binding NewDocumentCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="新建 (Ctrl+N)"
+                    ToolTip="新建 (Ctrl+N)">
+                    <materialDesign:PackIcon Kind="FileDocument" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding OpenDocumentCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="打开 (Ctrl+O)"
+                    ToolTip="打开 (Ctrl+O)">
+                    <materialDesign:PackIcon Kind="FolderOpen" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding SaveCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="保存 (Ctrl+S)"
+                    ToolTip="保存 (Ctrl+S)">
+                    <materialDesign:PackIcon Kind="ContentSave" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding SaveAsCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="另存为 (Ctrl+Shift+S)"
+                    ToolTip="另存为 (Ctrl+Shift+S)">
+                    <materialDesign:PackIcon Kind="ContentSaveAll" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Rectangle
+                    Width="1"
+                    Margin="4,4"
+                    Fill="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+
+                <!--  构建 / 执行 / 终止  -->
+                <Button
+                    Command="{Binding CompileCommand}"
+                    Cursor="Hand"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="构建 (Ctrl+B)"
+                    ToolTip="构建 (Ctrl+B)">
+                    <materialDesign:PackIcon Kind="HammerWrench" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding RunCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="执行 (F5)"
+                    ToolTip="执行 (F5)">
+                    <materialDesign:PackIcon Kind="PlayArrow" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding TerminateCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="终止 (Shift+F5)"
+                    ToolTip="终止 (Shift+F5)">
+                    <materialDesign:PackIcon Kind="Stop" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Rectangle
+                    Width="1"
+                    Margin="4,4"
+                    Fill="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+
+                <!--  格式化 / 注释  -->
+                <Button
+                    Command="{Binding FormatDocumentCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="格式化文档 (Ctrl+D)"
+                    ToolTip="格式化文档 (Ctrl+D)">
+                    <materialDesign:PackIcon Kind="CodeBraces" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding CommentSelectionCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="注释选中行 (Ctrl+K)"
+                    ToolTip="注释选中行 (Ctrl+K)">
+                    <materialDesign:PackIcon Kind="Comment" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding UncommentSelectionCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="取消注释 (Ctrl+U)"
+                    ToolTip="取消注释 (Ctrl+U)">
+                    <materialDesign:PackIcon Kind="CommentRemove" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding RenameSymbolCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="重命名符号 (F2)"
+                    ToolTip="重命名符号 (F2)">
+                    <materialDesign:PackIcon Kind="Pencil" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Rectangle
+                    Width="1"
+                    Margin="4,4"
+                    Fill="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+
+                <!--  引用管理  -->
+                <Button
+                    Command="{Binding ToggleReferencePanelCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="引用管理"
+                    ToolTip="引用管理">
+                    <materialDesign:PackIcon Kind="Bookshelf" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Rectangle
+                    Width="1"
+                    Margin="4,4"
+                    Fill="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+
+                <!--  模板  -->
+                <Button
+                    Command="{Binding LoadTemplateCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="加载模板"
+                    ToolTip="加载模板">
+                    <materialDesign:PackIcon Kind="ClipboardText" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Rectangle
+                    Width="1"
+                    Margin="4,4"
+                    Fill="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+
+                <!--  调试模式  -->
+                <Button
+                    Command="{Binding ToggleDebugModeCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="切换调试模式（启用后可设断点调试）"
+                    ToolTip="切换调试模式（启用后可设断点调试）">
+                    <materialDesign:PackIcon Kind="BugOutline" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <!--  清除所有断点  -->
+                <Button
+                    Command="{Binding ClearAllBreakpointsCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="清除所有断点"
+                    ToolTip="清除所有断点">
+                    <materialDesign:PackIcon Kind="DeleteOff" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Rectangle
+                    Width="1"
+                    Margin="4,4"
+                    Fill="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+
+                <!--  循环执行  -->
+                <Button
+                    Command="{Binding StartLoopCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="循环执行"
+                    ToolTip="循环执行">
+                    <materialDesign:PackIcon Kind="Repeat" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <Button
+                    Command="{Binding StopLoopCommand}"
+                    Style="{StaticResource ToolBarButtonStyle}"
+                    AutomationProperties.Name="停止循环"
+                    ToolTip="停止循环">
+                    <materialDesign:PackIcon Kind="StopCircleOutline" Style="{StaticResource ToolBarPackIconStyle}" />
+                </Button>
+                <TextBlock
+                    Margin="4,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                    Text="循环间隔:" />
+                <TextBox Style="{StaticResource CompactTextBox}"
+                    x:Name="LoopIntervalBox"
+                    Width="64"
+                    Height="32"
+                    AutomationProperties.Name="循环执行间隔（毫秒）"
+                    Margin="4,0"
+                    Padding="2,0"
+                    VerticalAlignment="Center"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    DataObject.Pasting="LoopInterval_Pasting"
+                    PreviewTextInput="LoopInterval_PreviewTextInput"
+                    Text="{Binding Session.LoopInterval, UpdateSourceTrigger=PropertyChanged}"
+                    ToolTip="循环执行的间隔时间（毫秒）" />
+                <TextBlock
+                    Margin="0,0,4,0"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                    Text="ms" />
+
+            <!--  执行中进度条（读当前脚本会话）  -->
+            <ProgressBar
+                Width="80"
+                Height="4"
+                Margin="8,0,4,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                IsIndeterminate="{Binding Session.IsRunning}"
+                Visibility="{Binding Session.IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        </WrapPanel>
+    </Border>
+</UserControl>

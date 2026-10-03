@@ -1,0 +1,39 @@
+<!--
+中文阅读说明：界面与资源声明。
+FlowEditor 模块：流程模型、执行和编辑器协作；Core、Runtime 与 Controls 分别承担模型契约、执行能力和界面职责。 本文件属于验证宿主，模块组合与人工验证流程应与生产机型业务区分。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<Window x:Class="FlowEditor.Workbench.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:prism="http://prismlibrary.com/"
+    xmlns:controls="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    Title="FlowEditor 测试工作台" Style="{StaticResource WorkbenchWindow}" WindowStartupLocation="CenterScreen">
+    <Grid Background="{DynamicResource MaterialDesign.Brush.Card.Background}">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <Border Background="{DynamicResource MaterialDesign.Brush.Card.Background}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Margin="20,28,20,24">
+                    <md:PackIcon Kind="GraphOutline" Width="36" Height="36" Foreground="{DynamicResource MaterialDesign.Brush.Primary}" HorizontalAlignment="Left"/>
+                    <TextBlock Text="FlowEditor" FontSize="18" FontWeight="SemiBold" Margin="0,12,0,4"/>
+                    <TextBlock Text="测试工作台" Opacity="0.7"/>
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Bottom" Margin="16">
+                    <controls:ThemePickerView Theme="{Binding Theme}" FieldBackground="{DynamicResource MaterialDesign.Brush.Card.Background}" FieldForeground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                    <TextBlock Text="{Binding NavigationError}" TextWrapping="Wrap" Margin="0,8,0,0"
+                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+                        <TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers>
+                            <Trigger Property="Text" Value=""><Setter Property="Visibility" Value="Collapsed"/></Trigger>
+                        </Style.Triggers></Style></TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+                <ListBox ItemsSource="{Binding NavItems}" IsEnabled="{Binding CanSelectNavigation}" SelectedItem="{Binding SelectedNav, Mode=TwoWay}"
+                    Style="{StaticResource MaterialDesignListBox}" Margin="12,0" VerticalAlignment="Top">
+                    <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Title}" Margin="8,6" FontWeight="SemiBold"/></DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+        <ContentControl Grid.Column="1" Margin="16" prism:RegionManager.RegionName="FlowEditorRegion"/>
+    </Grid>
+</Window>

@@ -1,0 +1,31 @@
+<!--
+中文阅读说明：项目构建声明。
+Vision 模块：视觉工具模型、算法适配和编辑展示；厂商能力与界面转换应在对应边界内协作。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>13.0</LangVersion>
+    <RootNamespace>Vision.Core</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="10.0.8" />
+  </ItemGroup>
+  <!-- P2（2026-09-28）删除：<ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+       实测 Vision.Core 的 .cs 里**零处**引用 Extension 的任何类型（grep "Extension" 命中 0），
+       这条引用纯粹是「借来的依赖」—— .NET 里 ProjectReference 默认传递，
+       以前靠它顺带拿到 WPF 框架引用。摘掉后 Core 的输出目录不再出现 Extension.dll。
+       ⛔ 不要再加回来：P3 的 Vision.Tools.Halcon 需要 HALCON 时自己去引 Extension
+          （HalconDotNet 的唯一入口，见仓库硬规则 12）。 -->
+  <PropertyGroup><DefineConstants>$(DefineConstants);VISION_TYPE_RESOLVER</DefineConstants></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\Extension\Extension.Core\Core\Reflection\FrameworkTypeResolver.cs" Link="Compatibility\FrameworkTypeResolver.cs" />
+    <EmbeddedResource Include="..\..\Extension\Extension.Core\Core\Reflection\FrameworkTypeAliases.json" LogicalName="Framework.TypeAliases.json" />
+  </ItemGroup>
+</Project>

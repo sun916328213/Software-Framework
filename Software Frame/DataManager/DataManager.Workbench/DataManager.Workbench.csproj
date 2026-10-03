@@ -1,0 +1,32 @@
+<!--
+中文阅读说明：项目构建声明。
+DataManager 模块：数据访问契约、SQL/日志/Excel 运行能力及配置界面；具体数据库配置和实体由使用方决定。 本文件属于验证宿主，模块组合与人工验证流程应与生产机型业务区分。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <RootNamespace>DataManager.Workbench</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+    <PackageReference Include="Prism.DryIoc" Version="8.1.97" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
+    <!-- P12: Workbench 直接组合 Core + Runtime + Controls。 -->
+    <ProjectReference Include="..\DataManager.Core\DataManager.Core.csproj" />
+    <ProjectReference Include="..\DataManager.Runtime\DataManager.Runtime.csproj" />
+    <ProjectReference Include="..\DataManager.Controls\DataManager.Controls.csproj" />
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+  </ItemGroup>
+  <ItemGroup><ProjectReference Include="..\..\Extension\Extension.Core\Extension.Core.csproj" /></ItemGroup>
+</Project>

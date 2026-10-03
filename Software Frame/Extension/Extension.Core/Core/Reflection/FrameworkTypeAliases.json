@@ -1,0 +1,3454 @@
+{
+  "CommunicationNew.Abstractions.ConnectionState": {
+    "Type": "Communication.Core.Abstractions.ConnectionState",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Abstractions.DataFormat": {
+    "Type": "Communication.Core.Abstractions.DataFormat",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Abstractions.IAddressReader": {
+    "Type": "Communication.Core.Abstractions.IAddressReader",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Abstractions.IAddressWriter": {
+    "Type": "Communication.Core.Abstractions.IAddressWriter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Abstractions.IConnection": {
+    "Type": "Communication.Core.Abstractions.IConnection",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Abstractions.IPeerConnectionInfo": {
+    "Type": "Communication.Core.Abstractions.IPeerConnectionInfo",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Abstractions.IPeerConnectionSource": {
+    "Type": "Communication.Core.Abstractions.IPeerConnectionSource",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Abstractions.IRawSender": {
+    "Type": "Communication.Core.Abstractions.IRawSender",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Abstractions.IReceiveSource": {
+    "Type": "Communication.Core.Abstractions.IReceiveSource",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Abstractions.IRequestClient": {
+    "Type": "Communication.Core.Abstractions.IRequestClient",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Abstractions.IRequestCodec": {
+    "Type": "Communication.Core.Abstractions.IRequestCodec",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Abstractions.IRequestReplyClient": {
+    "Type": "Communication.Core.Abstractions.IRequestReplyClient",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Abstractions.PeerConnectionChangedEventArgs": {
+    "Type": "Communication.Core.Abstractions.PeerConnectionChangedEventArgs",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Abstractions.ReceivedPacket": {
+    "Type": "Communication.Core.Abstractions.ReceivedPacket",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Composition.CommunicationDefaults": {
+    "Type": "Communication.Runtime.Composition.CommunicationDefaults",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Composition.CommunicationDeviceRegistry": {
+    "Type": "Communication.Runtime.Composition.CommunicationDeviceRegistry",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Composition.CommunicationServiceCollectionExtensions": {
+    "Type": "Communication.Runtime.Composition.CommunicationServiceCollectionExtensions",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Composition.ICommunicationDeviceFactory": {
+    "Type": "Communication.Core.ICommunicationDeviceFactory",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.CommunicationDeviceBase": {
+    "Type": "Communication.Runtime.Core.CommunicationDeviceBase",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Core.CommunicationManager": {
+    "Type": "Communication.Runtime.Core.CommunicationManager",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Core.CommunicationParam": {
+    "Type": "Communication.Core.CommunicationParam",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.CommunicationParamFactory": {
+    "Type": "Communication.Core.CommunicationParamFactory",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Converters.BoolConverter": {
+    "Type": "Communication.Core.Converters.BoolConverter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Converters.ByteArrayConverter": {
+    "Type": "Communication.Core.Converters.ByteArrayConverter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Converters.ByteConverter": {
+    "Type": "Communication.Core.Converters.ByteConverter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Converters.DataFormatCodec": {
+    "Type": "Communication.Core.Converters.DataFormatCodec",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Converters.DoubleConverter": {
+    "Type": "Communication.Core.Converters.DoubleConverter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Converters.FloatConverter": {
+    "Type": "Communication.Core.Converters.FloatConverter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Converters.Format64": {
+    "Type": "Communication.Core.Converters.Format64",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Converters.Int16Converter": {
+    "Type": "Communication.Core.Converters.Int16Converter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Converters.Int32Converter": {
+    "Type": "Communication.Core.Converters.Int32Converter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Converters.Int64Converter": {
+    "Type": "Communication.Core.Converters.Int64Converter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Converters.StringConverter": {
+    "Type": "Communication.Core.Converters.StringConverter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Converters.UInt16Converter": {
+    "Type": "Communication.Core.Converters.UInt16Converter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Converters.UInt32Converter": {
+    "Type": "Communication.Core.Converters.UInt32Converter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Converters.ValueConverterFactory": {
+    "Type": "Communication.Core.Converters.ValueConverterFactory",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.DeviceRole": {
+    "Type": "Communication.Core.DeviceRole",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.EventArgs.CommunicationErrorEventArgs": {
+    "Type": "Communication.Core.EventArgs.CommunicationErrorEventArgs",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.EventArgs.ConnectionStateChangedEventArgs": {
+    "Type": "Communication.Core.EventArgs.ConnectionStateChangedEventArgs",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.EventArgs.DataPointChangedEventArgs": {
+    "Type": "Communication.Core.EventArgs.DataPointChangedEventArgs",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.EventArgs.DataReceivedEventArgs": {
+    "Type": "Communication.Core.EventArgs.DataReceivedEventArgs",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Frames.Crc16": {
+    "Type": "Communication.Core.Frames.Crc16",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Frames.DelimiterFrameSplitter": {
+    "Type": "Communication.Core.Frames.DelimiterFrameSplitter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Frames.FixedLengthFrameSplitter": {
+    "Type": "Communication.Core.Frames.FixedLengthFrameSplitter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Frames.FrameBuilder": {
+    "Type": "Communication.Core.Frames.FrameBuilder",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Frames.LengthPrefixedFrameSplitter": {
+    "Type": "Communication.Core.Frames.LengthPrefixedFrameSplitter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.ICommunicationDevice": {
+    "Type": "Communication.Core.ICommunicationDevice",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.ICommunicationDeviceFactory": {
+    "Type": "Communication.Core.ICommunicationDeviceFactory",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.ICommunicationManager": {
+    "Type": "Communication.Core.ICommunicationManager",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.ICommunicationParameterSource": {
+    "Type": "Communication.Core.ICommunicationParameterSource",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Interfaces.DataPointType": {
+    "Type": "Communication.Core.Interfaces.DataPointType",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Interfaces.DataQuality": {
+    "Type": "Communication.Core.Interfaces.DataQuality",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Interfaces.IAddressConverter": {
+    "Type": "Communication.Core.Interfaces.IAddressConverter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Interfaces.IAutoReader": {
+    "Type": "Communication.Core.Interfaces.IAutoReader",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Interfaces.IDataPoint": {
+    "Type": "Communication.Core.Interfaces.IDataPoint",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Interfaces.IDataPointBatchReader": {
+    "Type": "Communication.Core.Interfaces.IDataPointBatchReader",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Interfaces.IFrameBuilder": {
+    "Type": "Communication.Core.Interfaces.IFrameBuilder",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Interfaces.IFrameSplitter": {
+    "Type": "Communication.Core.Interfaces.IFrameSplitter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Interfaces.IValueConverter": {
+    "Type": "Communication.Core.Interfaces.IValueConverter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Models.DataPoint": {
+    "Type": "Communication.Core.Models.DataPoint",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Models.DataPointAccess": {
+    "Type": "Communication.Core.Models.DataPointAccess",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Models.DataPointCollection": {
+    "Type": "Communication.Core.Models.DataPointCollection",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Models.DataPointDefinition": {
+    "Type": "Communication.Core.Models.DataPointDefinition",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Models.DataPointReadResult": {
+    "Type": "Communication.Core.Models.DataPointReadResult",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Models.DeviceConfig": {
+    "Type": "Communication.Core.Models.DeviceConfig",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Models.DeviceValue": {
+    "Type": "Communication.Core.Models.DeviceValue",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Models.ValueUpdate": {
+    "Type": "Communication.Core.Models.ValueUpdate",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.ProtocolCapabilities": {
+    "Type": "Communication.Core.ProtocolCapabilities",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.ProtocolType": {
+    "Type": "Communication.Core.ProtocolType",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Services.AddressDataPointReaderAdapter": {
+    "Type": "Communication.Core.Services.AddressDataPointReaderAdapter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Services.DataPointAutoReader": {
+    "Type": "Communication.Runtime.Core.Services.DataPointAutoReader",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Core.Services.DataPointScanPlan": {
+    "Type": "Communication.Core.Services.DataPointScanPlan",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Services.DataPointScanPlanner": {
+    "Type": "Communication.Core.Services.DataPointScanPlanner",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Core.Services.LegacyAddressReaderAdapter": {
+    "Type": "Communication.Core.Services.LegacyAddressReaderAdapter",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Protocols.Http.HttpClientDevice": {
+    "Type": "Communication.Runtime.Protocols.Http.HttpClientDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Http.HttpParam": {
+    "Type": "Communication.Core.Protocols.Http.HttpParam",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Protocols.Http.HttpRoute": {
+    "Type": "Communication.Core.Protocols.Http.HttpRoute",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Protocols.Http.HttpServerDevice": {
+    "Type": "Communication.Runtime.Protocols.Http.HttpServerDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Http.IHttpServerListener": {
+    "Type": "Communication.Runtime.Protocols.Http.IHttpServerListener",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Http.SystemHttpServerListener": {
+    "Type": "Communication.Runtime.Protocols.Http.SystemHttpServerListener",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.IMcClientAdapter": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.IMcClientAdapter",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.McAddressValue": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.McAddressValue",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.McBinaryCodec": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.McBinaryCodec",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.McClientBackend": {
+    "Type": "Communication.Core.Protocols.Mitsubishi.McClientBackend",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.McClientDevice": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.McClientDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.McCodecOptions": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.McCodecOptions",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.McCommand": {
+    "Type": "Communication.Core.Protocols.Mitsubishi.McCommand",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.McDeviceAddressFormatter": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.McDeviceAddressFormatter",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.McDeviceType": {
+    "Type": "Communication.Core.Protocols.Mitsubishi.McDeviceType",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.McFrameFormat": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.McFrameFormat",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.McParam": {
+    "Type": "Communication.Core.Protocols.Mitsubishi.McParam",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.McProtocolException": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.McProtocolException",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.McRequest": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.McRequest",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.McResponse": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.McResponse",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.MxComponentBitCodec": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.MxComponentBitCodec",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.MxComponentException": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.MxComponentException",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.MxComponentMcClientAdapter": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.MxComponentMcClientAdapter",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.MxComponentWordCodec": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.MxComponentWordCodec",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Mitsubishi.SlmpMcClientAdapter": {
+    "Type": "Communication.Runtime.Protocols.Mitsubishi.SlmpMcClientAdapter",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.FluentModbusServerDataAccessor": {
+    "Type": "Communication.Runtime.Protocols.Modbus.FluentModbusServerDataAccessor",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusAddress": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusAddress",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusAddressValue": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusAddressValue",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusDataPointBatchReader": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusDataPointBatchReader",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusProtocolException": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusProtocolException",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusReadBatch": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusReadBatch",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusReadBatchPlanner": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusReadBatchPlanner",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusReadSlice": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusReadSlice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusRegion": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusRegion",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusRtu.FluentModbusRtuServerAdapter": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusRtu.FluentModbusRtuServerAdapter",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusRtu.IModbusRtuServerAdapter": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusRtu.IModbusRtuServerAdapter",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusRtu.ModbusRtuClientDevice": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusRtu.ModbusRtuClientDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusRtu.ModbusRtuParam": {
+    "Type": "Communication.Core.Protocols.Modbus.ModbusRtu.ModbusRtuParam",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusRtu.ModbusRtuServerDevice": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusRtu.ModbusRtuServerDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusRtuCodec": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusRtuCodec",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusRtuRequest": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusRtuRequest",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusRtuResponse": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusRtuResponse",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusServerDataCodec": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusServerDataCodec",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusTcp.FluentModbusTcpServerAdapter": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusTcp.FluentModbusTcpServerAdapter",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusTcp.IModbusTcpServerAdapter": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusTcp.IModbusTcpServerAdapter",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusTcp.ModbusTcpClientDevice": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusTcp.ModbusTcpClientDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusTcp.ModbusTcpParam": {
+    "Type": "Communication.Core.Protocols.Modbus.ModbusTcp.ModbusTcpParam",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusTcp.ModbusTcpServerDevice": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusTcp.ModbusTcpServerDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusTcpCodec": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusTcpCodec",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusTcpRequest": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusTcpRequest",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Modbus.ModbusTcpResponse": {
+    "Type": "Communication.Runtime.Protocols.Modbus.ModbusTcpResponse",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.OpcUa.IOpcUaClientAdapter": {
+    "Type": "Communication.Runtime.Protocols.OpcUa.IOpcUaClientAdapter",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.OpcUa.IOpcUaServerAdapter": {
+    "Type": "Communication.Runtime.Protocols.OpcUa.IOpcUaServerAdapter",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.OpcUa.OpcFoundationClientAdapter": {
+    "Type": "Communication.Runtime.Protocols.OpcUa.OpcFoundationClientAdapter",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.OpcUa.OpcFoundationServerAdapter": {
+    "Type": "Communication.Runtime.Protocols.OpcUa.OpcFoundationServerAdapter",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.OpcUa.OpcUaClientDevice": {
+    "Type": "Communication.Runtime.Protocols.OpcUa.OpcUaClientDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.OpcUa.OpcUaParam": {
+    "Type": "Communication.Core.Protocols.OpcUa.OpcUaParam",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Protocols.OpcUa.OpcUaSecurityProfile": {
+    "Type": "Communication.Runtime.Protocols.OpcUa.OpcUaSecurityProfile",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.OpcUa.OpcUaServerDevice": {
+    "Type": "Communication.Runtime.Protocols.OpcUa.OpcUaServerDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Serial.SerialParam": {
+    "Type": "Communication.Core.Protocols.Serial.SerialParam",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Protocols.Serial.SerialPortDevice": {
+    "Type": "Communication.Runtime.Protocols.Serial.SerialPortDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Socket.ITcpServerListener": {
+    "Type": "Communication.Runtime.Protocols.Socket.ITcpServerListener",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Socket.SocketParam": {
+    "Type": "Communication.Core.Protocols.Socket.SocketParam",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Protocols.Socket.SystemTcpServerListener": {
+    "Type": "Communication.Runtime.Protocols.Socket.SystemTcpServerListener",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Socket.TcpClientDevice": {
+    "Type": "Communication.Runtime.Protocols.Socket.TcpClientDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Socket.TcpServerDevice": {
+    "Type": "Communication.Runtime.Protocols.Socket.TcpServerDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Socket.UdpClientDevice": {
+    "Type": "Communication.Runtime.Protocols.Socket.UdpClientDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.Socket.UdpServerDevice": {
+    "Type": "Communication.Runtime.Protocols.Socket.UdpServerDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.WebApi.WebApiClientDevice": {
+    "Type": "Communication.Runtime.Protocols.WebApi.WebApiClientDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.WebApi.WebApiParam": {
+    "Type": "Communication.Core.Protocols.WebApi.WebApiParam",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Protocols.WebApi.WebApiRequest": {
+    "Type": "Communication.Runtime.Protocols.WebApi.WebApiRequest",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.WebApi.WebApiRoute": {
+    "Type": "Communication.Core.Protocols.WebApi.WebApiRoute",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Protocols.WebApi.WebApiServerDevice": {
+    "Type": "Communication.Runtime.Protocols.WebApi.WebApiServerDevice",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Protocols.WebApi.WebResponse": {
+    "Type": "Communication.Runtime.Protocols.WebApi.WebResponse",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Runtime.BoundedEventDispatcher": {
+    "Type": "Communication.Runtime.BoundedEventDispatcher",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Runtime.BoundedOperationTracker": {
+    "Type": "Communication.Runtime.BoundedOperationTracker",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Runtime.BoundedReceiveInbox": {
+    "Type": "Communication.Runtime.BoundedReceiveInbox",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Runtime.CommunicationDiagnosticContext": {
+    "Type": "Communication.Runtime.CommunicationDiagnosticContext",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Runtime.CommunicationDiagnostics": {
+    "Type": "Communication.Runtime.CommunicationDiagnostics",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Runtime.ConnectionReconnectOptions": {
+    "Type": "Communication.Runtime.ConnectionReconnectOptions",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Runtime.ConnectionSession": {
+    "Type": "Communication.Runtime.ConnectionSession",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Runtime.Conversion.DataFormatCodec": {
+    "Type": "Communication.Core.Converters.DataFormatCodec",
+    "Assembly": "Communication.Core"
+  },
+  "CommunicationNew.Runtime.LatestValueDispatcher": {
+    "Type": "Communication.Runtime.LatestValueDispatcher",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Runtime.ReceiveOverflowPolicy": {
+    "Type": "Communication.Runtime.ReceiveOverflowPolicy",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Runtime.ReceiveQueueFullException": {
+    "Type": "Communication.Runtime.ReceiveQueueFullException",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Runtime.ReconnectSupervisor": {
+    "Type": "Communication.Runtime.ReconnectSupervisor",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Runtime.RequestQueueFullException": {
+    "Type": "Communication.Runtime.RequestQueueFullException",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Transports.AsyncDisposeOnce": {
+    "Type": "Communication.Runtime.Transports.AsyncDisposeOnce",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Transports.Datagram": {
+    "Type": "Communication.Runtime.Transports.Datagram",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Transports.IByteStreamTransport": {
+    "Type": "Communication.Runtime.Transports.IByteStreamTransport",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Transports.IDatagramTransport": {
+    "Type": "Communication.Runtime.Transports.IDatagramTransport",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Transports.ISerialPortConnection": {
+    "Type": "Communication.Runtime.Transports.ISerialPortConnection",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Transports.SerialByteStreamTransport": {
+    "Type": "Communication.Runtime.Transports.SerialByteStreamTransport",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Transports.SerialTransportOptions": {
+    "Type": "Communication.Runtime.Transports.SerialTransportOptions",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Transports.SystemSerialPortConnection": {
+    "Type": "Communication.Runtime.Transports.SystemSerialPortConnection",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Transports.TcpByteStreamTransport": {
+    "Type": "Communication.Runtime.Transports.TcpByteStreamTransport",
+    "Assembly": "Communication.Runtime"
+  },
+  "CommunicationNew.Transports.UdpDatagramTransport": {
+    "Type": "Communication.Runtime.Transports.UdpDatagramTransport",
+    "Assembly": "Communication.Runtime"
+  },
+  "DataManager.Excel.Definition.ExcelParam": {
+    "Type": "DataManager.Core.Excel.Definition.ExcelParam",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Excel.Definition.ExcelType": {
+    "Type": "DataManager.Core.Excel.Definition.ExcelType",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Excel.EPPlus.EPPlusHelper": {
+    "Type": "DataManager.Runtime.Excel.EPPlus.EPPlusHelper",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.Excel.ExcelBase": {
+    "Type": "DataManager.Core.Excel.ExcelBase",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Excel.ExcelManager": {
+    "Type": "DataManager.Runtime.Excel.ExcelManager",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.Excel.ExcelProviderFactory": {
+    "Type": "DataManager.Runtime.Excel.ExcelProviderFactory",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.Excel.IExcel": {
+    "Type": "DataManager.Core.Excel.IExcel",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Excel.IExcelManager": {
+    "Type": "DataManager.Core.Excel.IExcelManager",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Excel.IExcelProviderFactory": {
+    "Type": "DataManager.Core.Excel.IExcelProviderFactory",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Excel.IExcelReader": {
+    "Type": "DataManager.Core.Excel.IExcelReader",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Excel.IExcelWriter": {
+    "Type": "DataManager.Core.Excel.IExcelWriter",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Excel.MiniExcel.MiniExcelHelper": {
+    "Type": "DataManager.Runtime.Excel.MiniExcel.MiniExcelHelper",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.IManager": {
+    "Type": "DataManager.Core.IManager",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Log.Definition.ELogLevel": {
+    "Type": "DataManager.Core.Log.Definition.ELogLevel",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Log.Definition.ELogType": {
+    "Type": "DataManager.Core.Log.Definition.ELogType",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Log.Definition.LogInfo": {
+    "Type": "DataManager.Core.Log.Definition.LogInfo",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Log.Definition.LogParam": {
+    "Type": "DataManager.Core.Log.Definition.LogParam",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Log.ILog": {
+    "Type": "DataManager.Core.Log.ILog",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Log.ILogManager": {
+    "Type": "DataManager.Core.Log.ILogManager",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Log.ILogProviderFactory": {
+    "Type": "DataManager.Core.Log.ILogProviderFactory",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Log.Log4Net.Log4NetHelper": {
+    "Type": "DataManager.Runtime.Log.Log4Net.Log4NetHelper",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.Log.LogBase": {
+    "Type": "DataManager.Core.Log.LogBase",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.Log.LogManager": {
+    "Type": "DataManager.Runtime.Log.LogManager",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.Log.LogProviderFactory": {
+    "Type": "DataManager.Runtime.Log.LogProviderFactory",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.Log.NLog.NLogHelper": {
+    "Type": "DataManager.Runtime.Log.NLog.NLogHelper",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.Log.SeriLog.SerilogHelper": {
+    "Type": "DataManager.Runtime.Log.SeriLog.SerilogHelper",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.ManagerBase": {
+    "Type": "DataManager.Core.ManagerBase",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.SQL.Dapper.DapperBase": {
+    "Type": "DataManager.Runtime.SQL.Dapper.DapperBase",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Dapper.DapperCommandFactory": {
+    "Type": "DataManager.Runtime.SQL.Dapper.DapperCommandFactory",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Dapper.DapperConnectionFactory": {
+    "Type": "DataManager.Runtime.SQL.Dapper.DapperConnectionFactory",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Dapper.DapperDommelSetup": {
+    "Type": "DataManager.Runtime.SQL.Dapper.DapperDommelSetup",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Dapper.DapperHelper": {
+    "Type": "DataManager.Runtime.SQL.Dapper.DapperHelper",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Dapper.DapperPredicateTranslator": {
+    "Type": "DataManager.Runtime.SQL.Dapper.DapperPredicateTranslator",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Dapper.DapperSplitFieldAttribute": {
+    "Type": "DataManager.Runtime.SQL.Dapper.DapperSplitFieldAttribute",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Dapper.DapperSplitRouter": {
+    "Type": "DataManager.Runtime.SQL.Dapper.DapperSplitRouter",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Dapper.DapperSplitTableAttribute": {
+    "Type": "DataManager.Runtime.SQL.Dapper.DapperSplitTableAttribute",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Dapper.DapperSqlBuilder": {
+    "Type": "DataManager.Runtime.SQL.Dapper.DapperSqlBuilder",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Dapper.LowerColumnNameResolver": {
+    "Type": "DataManager.Runtime.SQL.Dapper.LowerColumnNameResolver",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Dapper.LowerTableNameResolver": {
+    "Type": "DataManager.Runtime.SQL.Dapper.LowerTableNameResolver",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Dapper.SplitType": {
+    "Type": "DataManager.Runtime.SQL.Dapper.SplitType",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Definition.DbSplitFieldAttribute": {
+    "Type": "DataManager.Core.SQL.Definition.DbSplitFieldAttribute",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.SQL.Definition.DbSplitPeriod": {
+    "Type": "DataManager.Runtime.SQL.Definition.DbSplitPeriod",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Definition.DbSplitTableAttribute": {
+    "Type": "DataManager.Core.SQL.Definition.DbSplitTableAttribute",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.SQL.Definition.DialectShared": {
+    "Type": "DataManager.Runtime.SQL.Definition.DialectShared",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Definition.ESQLToolType": {
+    "Type": "DataManager.Core.SQL.Definition.ESQLToolType",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.SQL.Definition.ESQLType": {
+    "Type": "DataManager.Core.SQL.Definition.ESQLType",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.SQL.Definition.ISqlDialect": {
+    "Type": "DataManager.Core.SQL.Definition.ISqlDialect",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.SQL.Definition.MySqlDialect": {
+    "Type": "DataManager.Runtime.SQL.Definition.MySqlDialect",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Definition.PostgresDialect": {
+    "Type": "DataManager.Runtime.SQL.Definition.PostgresDialect",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Definition.SplitDatePruner": {
+    "Type": "DataManager.Runtime.SQL.Definition.SplitDatePruner",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Definition.SplitPeriod": {
+    "Type": "DataManager.Core.SQL.Definition.SplitPeriod",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.SQL.Definition.SqlDialectHelper": {
+    "Type": "DataManager.Runtime.SQL.Definition.SqlDialectHelper",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Definition.SqlDialectRegistry": {
+    "Type": "DataManager.Runtime.SQL.Definition.SqlDialectRegistry",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Definition.SqliteDialect": {
+    "Type": "DataManager.Runtime.SQL.Definition.SqliteDialect",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Definition.SqlNamingHelper": {
+    "Type": "DataManager.Runtime.SQL.Definition.SqlNamingHelper",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.Definition.SQLParam": {
+    "Type": "DataManager.Core.SQL.Definition.SQLParam",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.SQL.Definition.SqlServerDialect": {
+    "Type": "DataManager.Runtime.SQL.Definition.SqlServerDialect",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.EFCore.EFCoreBase": {
+    "Type": "DataManager.Runtime.SQL.EFCore.EFCoreBase",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.EFCore.EFCoreHelper": {
+    "Type": "DataManager.Runtime.SQL.EFCore.EFCoreHelper",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.EFCore.EFCoreSplitNaming": {
+    "Type": "DataManager.Runtime.SQL.EFCore.EFCoreSplitNaming",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.EFCore.ISplitTableModel": {
+    "Type": "DataManager.Runtime.SQL.EFCore.ISplitTableModel",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.EFCore.SplitModelCacheKeyFactory": {
+    "Type": "DataManager.Runtime.SQL.EFCore.SplitModelCacheKeyFactory",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.ISplitTableNameProvider": {
+    "Type": "DataManager.Core.SQL.ISplitTableNameProvider",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.SQL.ISQL": {
+    "Type": "DataManager.Core.SQL.ISQL",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.SQL.ISQLManager": {
+    "Type": "DataManager.Core.SQL.ISQLManager",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.SQL.ISqlProviderFactory": {
+    "Type": "DataManager.Core.SQL.ISqlProviderFactory",
+    "Assembly": "DataManager.Core"
+  },
+  "DataManager.SQL.SQLManager": {
+    "Type": "DataManager.Runtime.SQL.SQLManager",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.SqlProviderFactory": {
+    "Type": "DataManager.Runtime.SQL.SqlProviderFactory",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.SqlSugar.SqlSugarHelper": {
+    "Type": "DataManager.Runtime.SQL.SqlSugar.SqlSugarHelper",
+    "Assembly": "DataManager.Runtime"
+  },
+  "DataManager.SQL.SqlSugarSQL.SqlSugarBase": {
+    "Type": "DataManager.Runtime.SQL.SqlSugarSQL.SqlSugarBase",
+    "Assembly": "DataManager.Runtime"
+  },
+  "Extension.DesignPattern.FactoryPattern.Examples.AdvancedFactoryPatternExample": {
+    "Type": "DesignPattern.Samples.DesignPattern.FactoryPattern.Examples.AdvancedFactoryPatternExample",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.FactoryPattern.Examples.SampleFactoryA": {
+    "Type": "DesignPattern.Samples.DesignPattern.FactoryPattern.Examples.SampleFactoryA",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.FactoryPattern.Examples.SampleFactoryB": {
+    "Type": "DesignPattern.Samples.DesignPattern.FactoryPattern.Examples.SampleFactoryB",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.FactoryPattern.Examples.SampleProductA": {
+    "Type": "DesignPattern.Samples.DesignPattern.FactoryPattern.Examples.SampleProductA",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.FactoryPattern.Examples.SampleProductB": {
+    "Type": "DesignPattern.Samples.DesignPattern.FactoryPattern.Examples.SampleProductB",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.MediatorPattern.Examples.AdvancedMediatorPatternExample": {
+    "Type": "DesignPattern.Samples.DesignPattern.MediatorPattern.Examples.AdvancedMediatorPatternExample",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.MediatorPattern.Examples.ChatMessage": {
+    "Type": "DesignPattern.Samples.DesignPattern.MediatorPattern.Examples.ChatMessage",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.MediatorPattern.Examples.ChatRoomColleague": {
+    "Type": "DesignPattern.Samples.DesignPattern.MediatorPattern.Examples.ChatRoomColleague",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.MediatorPattern.Examples.EventTypeFilter": {
+    "Type": "DesignPattern.Samples.DesignPattern.MediatorPattern.Examples.EventTypeFilter",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.MediatorPattern.Examples.LoggingColleague": {
+    "Type": "DesignPattern.Samples.DesignPattern.MediatorPattern.Examples.LoggingColleague",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.MediatorPattern.Examples.MediatorPatternExample": {
+    "Type": "DesignPattern.Samples.DesignPattern.MediatorPattern.Examples.MediatorPatternExample",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.MediatorPattern.Examples.NotificationColleague": {
+    "Type": "DesignPattern.Samples.DesignPattern.MediatorPattern.Examples.NotificationColleague",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.MediatorPattern.Examples.SystemEvent": {
+    "Type": "DesignPattern.Samples.DesignPattern.MediatorPattern.Examples.SystemEvent",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.MediatorPattern.Examples.SystemMonitorColleague": {
+    "Type": "DesignPattern.Samples.DesignPattern.MediatorPattern.Examples.SystemMonitorColleague",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.MediatorPattern.Examples.UserData": {
+    "Type": "DesignPattern.Samples.DesignPattern.MediatorPattern.Examples.UserData",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.MediatorPattern.Examples.UserManagerColleague": {
+    "Type": "DesignPattern.Samples.DesignPattern.MediatorPattern.Examples.UserManagerColleague",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ObserverPattern.Examples.AdvancedObserverPatternExample": {
+    "Type": "DesignPattern.Samples.DesignPattern.ObserverPattern.Examples.AdvancedObserverPatternExample",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ObserverPattern.Examples.ConsoleSubscriber": {
+    "Type": "DesignPattern.Samples.DesignPattern.ObserverPattern.Examples.ConsoleSubscriber",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ObserverPattern.Examples.EmailServiceObserver": {
+    "Type": "DesignPattern.Samples.DesignPattern.ObserverPattern.Examples.EmailServiceObserver",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ObserverPattern.Examples.EmailSubscriber": {
+    "Type": "DesignPattern.Samples.DesignPattern.ObserverPattern.Examples.EmailSubscriber",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ObserverPattern.Examples.LoggingServiceObserver": {
+    "Type": "DesignPattern.Samples.DesignPattern.ObserverPattern.Examples.LoggingServiceObserver",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ObserverPattern.Examples.NewsData": {
+    "Type": "DesignPattern.Samples.DesignPattern.ObserverPattern.Examples.NewsData",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ObserverPattern.Examples.NewsPublisher": {
+    "Type": "DesignPattern.Samples.DesignPattern.ObserverPattern.Examples.NewsPublisher",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ObserverPattern.Examples.NotificationServiceObserver": {
+    "Type": "DesignPattern.Samples.DesignPattern.ObserverPattern.Examples.NotificationServiceObserver",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ObserverPattern.Examples.ObserverPatternExample": {
+    "Type": "DesignPattern.Samples.DesignPattern.ObserverPattern.Examples.ObserverPatternExample",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ObserverPattern.Examples.SMSSubscriber": {
+    "Type": "DesignPattern.Samples.DesignPattern.ObserverPattern.Examples.SMSSubscriber",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ObserverPattern.Examples.UserData": {
+    "Type": "DesignPattern.Samples.DesignPattern.ObserverPattern.Examples.UserData",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ObserverPattern.Examples.UserService": {
+    "Type": "DesignPattern.Samples.DesignPattern.ObserverPattern.Examples.UserService",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ObserverPattern.Examples.UserServiceEventArgs": {
+    "Type": "DesignPattern.Samples.DesignPattern.ObserverPattern.Examples.UserServiceEventArgs",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ProducerConsumerPattern.Examples.AdvancedProducerConsumerPatternExample": {
+    "Type": "DesignPattern.Samples.DesignPattern.ProducerConsumerPattern.Examples.AdvancedProducerConsumerPatternExample",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ProducerConsumerPattern.Examples.MessageData": {
+    "Type": "DesignPattern.Samples.DesignPattern.ProducerConsumerPattern.Examples.MessageData",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ProducerConsumerPattern.Examples.OrderData": {
+    "Type": "DesignPattern.Samples.DesignPattern.ProducerConsumerPattern.Examples.OrderData",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.ProducerConsumerPattern.Examples.ProducerConsumerPatternExample": {
+    "Type": "DesignPattern.Samples.DesignPattern.ProducerConsumerPattern.Examples.ProducerConsumerPatternExample",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.PublishSubscribePattern.Examples.AdvancedPublishSubscribePatternExample": {
+    "Type": "DesignPattern.Samples.DesignPattern.PublishSubscribePattern.Examples.AdvancedPublishSubscribePatternExample",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.PublishSubscribePattern.Examples.EmailServiceSubscriber": {
+    "Type": "DesignPattern.Samples.DesignPattern.PublishSubscribePattern.Examples.EmailServiceSubscriber",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.PublishSubscribePattern.Examples.EventTypeFilter": {
+    "Type": "DesignPattern.Samples.DesignPattern.PublishSubscribePattern.Examples.EventTypeFilter",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.PublishSubscribePattern.Examples.LoggingServiceSubscriber": {
+    "Type": "DesignPattern.Samples.DesignPattern.PublishSubscribePattern.Examples.LoggingServiceSubscriber",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.PublishSubscribePattern.Examples.MessageData": {
+    "Type": "DesignPattern.Samples.DesignPattern.PublishSubscribePattern.Examples.MessageData",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.PublishSubscribePattern.Examples.PrioritySystemMonitorSubscriber": {
+    "Type": "DesignPattern.Samples.DesignPattern.PublishSubscribePattern.Examples.PrioritySystemMonitorSubscriber",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.PublishSubscribePattern.Examples.PublishSubscribePatternExample": {
+    "Type": "DesignPattern.Samples.DesignPattern.PublishSubscribePattern.Examples.PublishSubscribePatternExample",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.PublishSubscribePattern.Examples.SMSServiceSubscriber": {
+    "Type": "DesignPattern.Samples.DesignPattern.PublishSubscribePattern.Examples.SMSServiceSubscriber",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.PublishSubscribePattern.Examples.SystemEventData": {
+    "Type": "DesignPattern.Samples.DesignPattern.PublishSubscribePattern.Examples.SystemEventData",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.PublishSubscribePattern.Examples.SystemMonitorSubscriber": {
+    "Type": "DesignPattern.Samples.DesignPattern.PublishSubscribePattern.Examples.SystemMonitorSubscriber",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.SingletonPattern.Examples.ConfigService": {
+    "Type": "DesignPattern.Samples.DesignPattern.SingletonPattern.Examples.ConfigService",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.SingletonPattern.Examples.ExampleService": {
+    "Type": "DesignPattern.Samples.DesignPattern.SingletonPattern.Examples.ExampleService",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.SingletonPattern.Examples.LoggerService": {
+    "Type": "DesignPattern.Samples.DesignPattern.SingletonPattern.Examples.LoggerService",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.DesignPattern.SingletonPattern.Examples.SingletonPatternExample": {
+    "Type": "DesignPattern.Samples.DesignPattern.SingletonPattern.Examples.SingletonPatternExample",
+    "Assembly": "DesignPattern.Samples"
+  },
+  "Extension.Imaging.Halcon.Cognex.CogImageEx": {
+    "Type": "Extension.Vision.Cognex.Imaging.Halcon.Cognex.CogImageEx",
+    "Assembly": "Extension.Vision.Cognex"
+  },
+  "Extension.Imaging.Halcon.Cognex.IntPtrExCognex": {
+    "Type": "Extension.Vision.Cognex.Imaging.Halcon.Cognex.IntPtrExCognex",
+    "Assembly": "Extension.Vision.Cognex"
+  },
+  "FlowEditor.Behaviors.TextBoxAutoScrollBehavior": {
+    "Type": "FlowEditor.Controls.Behaviors.TextBoxAutoScrollBehavior",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Converters.NodeStatusToBrushConverter": {
+    "Type": "FlowEditor.Controls.Converters.NodeStatusToBrushConverter",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Converters.PermissionToOpacityConverter": {
+    "Type": "FlowEditor.Controls.Converters.PermissionToOpacityConverter",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Converters.PortColorConverter": {
+    "Type": "FlowEditor.Controls.Converters.PortColorConverter",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Core.CompiledFlowGraph": {
+    "Type": "FlowEditor.Runtime.CompiledFlowGraph",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.DebugController": {
+    "Type": "FlowEditor.Runtime.DebugController",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.ExecutionGraphScope": {
+    "Type": "FlowEditor.Runtime.ExecutionGraphScope",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.ExecutionJournal": {
+    "Type": "FlowEditor.Runtime.ExecutionJournal",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.ExecutionScopeRuntime": {
+    "Type": "FlowEditor.Runtime.ExecutionScopeRuntime",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.FlowChartExecutionEngine": {
+    "Type": "FlowEditor.Runtime.FlowChartExecutionEngine",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.FlowChartTypeMismatchException": {
+    "Type": "FlowEditor.Runtime.FlowChartTypeMismatchException",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.FlowDocumentJson": {
+    "Type": "FlowEditor.Controls.Core.FlowDocumentJson",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Core.FlowDocumentMapper": {
+    "Type": "FlowEditor.Controls.Core.FlowDocumentMapper",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Core.FlowInstance": {
+    "Type": "FlowEditor.Controls.Core.FlowInstance",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Core.FlowLogContext": {
+    "Type": "FlowEditor.Controls.Core.FlowLogContext",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Core.FlowLogExecutionContextAdapter": {
+    "Type": "FlowEditor.Controls.Core.FlowLogExecutionContextAdapter",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Core.FlowNodeValidator": {
+    "Type": "FlowEditor.Runtime.FlowNodeValidator",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.FlowProgram": {
+    "Type": "FlowEditor.Runtime.FlowProgram",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.FlowRecursionGuard": {
+    "Type": "FlowEditor.Runtime.FlowRecursionGuard",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.FlowRuntimeInstance": {
+    "Type": "FlowEditor.Runtime.FlowRuntimeInstance",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.FlowToolDiscoveryService": {
+    "Type": "FlowEditor.Controls.Core.FlowToolDiscoveryService",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Core.FlowValidator": {
+    "Type": "FlowEditor.Runtime.FlowValidator",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.IExecutionLogContext": {
+    "Type": "FlowEditor.Runtime.IExecutionLogContext",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.IExecutionScopeContainer": {
+    "Type": "FlowEditor.Controls.Core.IExecutionScopeContainer",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Core.IExecutionScopeRuntimeAware": {
+    "Type": "FlowEditor.Runtime.IExecutionScopeRuntimeAware",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.InMemoryNodeTelemetry": {
+    "Type": "FlowEditor.Runtime.InMemoryNodeTelemetry",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.INodeFactory": {
+    "Type": "FlowEditor.Controls.Core.INodeFactory",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Core.JournalEntry": {
+    "Type": "FlowEditor.Runtime.JournalEntry",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.JournalKind": {
+    "Type": "FlowEditor.Runtime.JournalKind",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.LoopFlowRunner": {
+    "Type": "FlowEditor.Runtime.LoopFlowRunner",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.LoopNormalizer": {
+    "Type": "FlowEditor.Runtime.LoopNormalizer",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.NodeExecutionRecord": {
+    "Type": "FlowEditor.Runtime.NodeExecutionRecord",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.NodeResourceWaitRecord": {
+    "Type": "FlowEditor.Runtime.NodeResourceWaitRecord",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.NodeRetryRecord": {
+    "Type": "FlowEditor.Runtime.NodeRetryRecord",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.NullExecutionLogContext": {
+    "Type": "FlowEditor.Runtime.NullExecutionLogContext",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.ParallelFlowLane": {
+    "Type": "FlowEditor.Runtime.ParallelFlowLane",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.ParallelFlowRunner": {
+    "Type": "FlowEditor.Runtime.ParallelFlowRunner",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.PortValueTransfer": {
+    "Type": "FlowEditor.Runtime.PortValueTransfer",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.ReflectionNodeFactory": {
+    "Type": "FlowEditor.Controls.Core.ReflectionNodeFactory",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Core.RetryBoundary": {
+    "Type": "FlowEditor.Runtime.RetryBoundary",
+    "Assembly": "FlowEditor.Runtime"
+  },
+  "FlowEditor.Core.ToolMetadata": {
+    "Type": "FlowEditor.Controls.Core.ToolMetadata",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.FlowEditorModule": {
+    "Type": "FlowEditor.Controls.FlowEditorModule",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Interfaces.IDialogService": {
+    "Type": "FlowEditor.Controls.Interfaces.IDialogService",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Interfaces.IExportService": {
+    "Type": "FlowEditor.Controls.Interfaces.IExportService",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Interfaces.IFlowChartService": {
+    "Type": "FlowEditor.Controls.Interfaces.IFlowChartService",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Interfaces.IFlowDocumentStore": {
+    "Type": "FlowEditor.Controls.Interfaces.IFlowDocumentStore",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Interfaces.IFlowToolDiscoveryService": {
+    "Type": "FlowEditor.Controls.Interfaces.IFlowToolDiscoveryService",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Interfaces.INodeEditorLauncher": {
+    "Type": "FlowEditor.Controls.Interfaces.INodeEditorLauncher",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Interfaces.INodeNotificationSink": {
+    "Type": "FlowEditor.Controls.Interfaces.INodeNotificationSink",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Interfaces.IUiDispatcher": {
+    "Type": "FlowEditor.Controls.Interfaces.IUiDispatcher",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Interfaces.IUndoRedoService": {
+    "Type": "FlowEditor.Controls.Interfaces.IUndoRedoService",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Models.ConnectionDocumentModel": {
+    "Type": "FlowEditor.Core.Models.ConnectionDocumentModel",
+    "Assembly": "FlowEditor.Core"
+  },
+  "FlowEditor.Models.ConnectionModel": {
+    "Type": "FlowEditor.Core.Models.ConnectionModel",
+    "Assembly": "FlowEditor.Core"
+  },
+  "FlowEditor.Models.CustomPortDocument": {
+    "Type": "FlowEditor.Core.Models.CustomPortDocument",
+    "Assembly": "FlowEditor.Core"
+  },
+  "FlowEditor.Models.FlowChartContainerDocumentModel": {
+    "Type": "FlowEditor.Controls.Models.FlowChartContainerDocumentModel",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Models.FlowChartDocumentModel": {
+    "Type": "FlowEditor.Core.Models.FlowChartDocumentModel",
+    "Assembly": "FlowEditor.Core"
+  },
+  "FlowEditor.Models.FlowChartModel": {
+    "Type": "FlowEditor.Controls.Models.FlowChartModel",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Models.NodeDocumentModel": {
+    "Type": "FlowEditor.Core.Models.NodeDocumentModel",
+    "Assembly": "FlowEditor.Core"
+  },
+  "FlowEditor.Models.NodePermission": {
+    "Type": "FlowEditor.Core.Models.NodePermission",
+    "Assembly": "FlowEditor.Core"
+  },
+  "FlowEditor.Models.PortCategory": {
+    "Type": "FlowEditor.Core.Models.PortCategory",
+    "Assembly": "FlowEditor.Core"
+  },
+  "FlowEditor.Models.PortDirection": {
+    "Type": "FlowEditor.Core.Models.PortDirection",
+    "Assembly": "FlowEditor.Core"
+  },
+  "FlowEditor.Models.PortModel": {
+    "Type": "FlowEditor.Core.Models.PortModel",
+    "Assembly": "FlowEditor.Core"
+  },
+  "FlowEditor.Models.PortType": {
+    "Type": "FlowEditor.Core.Models.PortType",
+    "Assembly": "FlowEditor.Core"
+  },
+  "FlowEditor.Models.PortTypeClassifier": {
+    "Type": "FlowEditor.Controls.Models.PortTypeClassifier",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Models.UndoRedoAction": {
+    "Type": "FlowEditor.Controls.Models.UndoRedoAction",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Models.UndoRedoActionType": {
+    "Type": "FlowEditor.Controls.Models.UndoRedoActionType",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.BranchMergeNode": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.BranchMergeNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.BranchMergeOperator": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.BranchMergeOperator",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.ConditionNode": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.ConditionNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.DelayNode": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.DelayNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.EndNode": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.EndNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.IInternalFlowContainerNode": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.IInternalFlowContainerNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.InactiveNodeContainerNode": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.InactiveNodeContainerNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.LogNode": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.LogNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.LoopContainerNode": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.LoopContainerNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.LoopNode": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.LoopNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.ParallelContainerNode": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.ParallelContainerNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.ParallelForkNode": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.ParallelForkNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.StartNode": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.StartNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.SwitchNode": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.SwitchNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.FlowControl.ToolBlockNode": {
+    "Type": "FlowEditor.Controls.Nodes.FlowControl.ToolBlockNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.MissingNode": {
+    "Type": "FlowEditor.Controls.Nodes.MissingNode",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.NodeModel": {
+    "Type": "FlowEditor.Controls.Nodes.NodeModel",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Nodes.NodeStatus": {
+    "Type": "FlowEditor.Core.Nodes.NodeStatus",
+    "Assembly": "FlowEditor.Core"
+  },
+  "FlowEditor.Presentation.Converters.FlowOutputTextFilterConverter": {
+    "Type": "FlowEditor.Controls.Presentation.Converters.FlowOutputTextFilterConverter",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Presentation.Factories.PrismFlowTabFactory": {
+    "Type": "FlowEditor.Controls.Presentation.Factories.PrismFlowTabFactory",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Presentation.Factories.PrismNodeFactory": {
+    "Type": "FlowEditor.Controls.Presentation.Factories.PrismNodeFactory",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Presentation.NodeEditing.WpfNodeEditorLauncher": {
+    "Type": "FlowEditor.Controls.Presentation.NodeEditing.WpfNodeEditorLauncher",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Presentation.Notifications.DialogNodeNotificationSink": {
+    "Type": "FlowEditor.Controls.Presentation.Notifications.DialogNodeNotificationSink",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Presentation.Threading.WpfUiDispatcher": {
+    "Type": "FlowEditor.Controls.Presentation.Threading.WpfUiDispatcher",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.ConnectionPlan": {
+    "Type": "FlowEditor.Controls.Services.ConnectionPlan",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.ConnectionService": {
+    "Type": "FlowEditor.Controls.Services.ConnectionService",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.ConsoleOutputRouter": {
+    "Type": "FlowEditor.Controls.Services.ConsoleOutputRouter",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.DialogService": {
+    "Type": "FlowEditor.Controls.Services.DialogService",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.Documents.FlowDocumentSession": {
+    "Type": "FlowEditor.Controls.Services.Documents.FlowDocumentSession",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.Editing.FlowCanvasSession": {
+    "Type": "FlowEditor.Controls.Services.Editing.FlowCanvasSession",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.Execution.FlowExecutionCoordinator": {
+    "Type": "FlowEditor.Controls.Services.Execution.FlowExecutionCoordinator",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.ExportService": {
+    "Type": "FlowEditor.Controls.Services.ExportService",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.FlowChartContainerDocumentService": {
+    "Type": "FlowEditor.Controls.Services.FlowChartContainerDocumentService",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.FlowChartService": {
+    "Type": "FlowEditor.Controls.Services.FlowChartService",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.FlowOutputBuffer": {
+    "Type": "FlowEditor.Controls.Services.FlowOutputBuffer",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.ImmediateUiDispatcher": {
+    "Type": "FlowEditor.Controls.Services.ImmediateUiDispatcher",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.NullNodeInteraction": {
+    "Type": "FlowEditor.Controls.Services.NullNodeInteraction",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.Storage.InMemoryFlowDocumentStore": {
+    "Type": "FlowEditor.Controls.Services.Storage.InMemoryFlowDocumentStore",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.Storage.JsonFlowDocumentStore": {
+    "Type": "FlowEditor.Controls.Services.Storage.JsonFlowDocumentStore",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.ToolboxService": {
+    "Type": "FlowEditor.Controls.Services.ToolboxService",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Services.UndoRedoService": {
+    "Type": "FlowEditor.Controls.Services.UndoRedoService",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.ViewModels.FlowCanvasViewModelAdapter": {
+    "Type": "FlowEditor.Controls.ViewModels.FlowCanvasViewModelAdapter",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.ViewModels.FlowChartContainerViewModel": {
+    "Type": "FlowEditor.Controls.ViewModels.FlowChartContainerViewModel",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.ViewModels.FlowChartViewModel": {
+    "Type": "FlowEditor.Controls.ViewModels.FlowChartViewModel",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.ViewModels.IFlowTabFactory": {
+    "Type": "FlowEditor.Controls.ViewModels.IFlowTabFactory",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.ViewModels.NodeActionViewModel": {
+    "Type": "FlowEditor.Controls.ViewModels.NodeActionViewModel",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.ViewModels.NodePaletteItem": {
+    "Type": "FlowEditor.Controls.ViewModels.NodePaletteItem",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.ViewModels.NodeViewModel": {
+    "Type": "FlowEditor.Controls.ViewModels.NodeViewModel",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.ViewModels.ToolboxCategory": {
+    "Type": "FlowEditor.Controls.ViewModels.ToolboxCategory",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.ViewModels.ToolboxSubGroup": {
+    "Type": "FlowEditor.Controls.ViewModels.ToolboxSubGroup",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.ConnectionRenderer": {
+    "Type": "FlowEditor.Controls.Views.ConnectionRenderer",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.DispatchRuleEditorWindow": {
+    "Type": "FlowEditor.Controls.Views.DispatchRuleEditorWindow",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.DispatchRuleRow": {
+    "Type": "FlowEditor.Controls.Views.DispatchRuleRow",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.ExecutionContainerView": {
+    "Type": "FlowEditor.Controls.Views.ExecutionContainerView",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.FlowChartContainerView": {
+    "Type": "FlowEditor.Controls.Views.FlowChartContainerView",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.FlowChartView": {
+    "Type": "FlowEditor.Controls.Views.FlowChartView",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.FlowCommandBarView": {
+    "Type": "FlowEditor.Controls.Views.FlowCommandBarView",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.FlowOutputPaneView": {
+    "Type": "FlowEditor.Controls.Views.FlowOutputPaneView",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.FlowToolboxView": {
+    "Type": "FlowEditor.Controls.Views.FlowToolboxView",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.InactiveNodeContainerView": {
+    "Type": "FlowEditor.Controls.Views.InactiveNodeContainerView",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.Interaction.FlowConnectionDragController": {
+    "Type": "FlowEditor.Controls.Views.Interaction.FlowConnectionDragController",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.Interaction.FlowSelectionController": {
+    "Type": "FlowEditor.Controls.Views.Interaction.FlowSelectionController",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.Interaction.FlowViewportController": {
+    "Type": "FlowEditor.Controls.Views.Interaction.FlowViewportController",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.NodeContextMenuContext": {
+    "Type": "FlowEditor.Controls.Views.NodeContextMenuContext",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.NodeView": {
+    "Type": "FlowEditor.Controls.Views.NodeView",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.PortConnectorLocator": {
+    "Type": "FlowEditor.Controls.Views.PortConnectorLocator",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.PortConnectorView": {
+    "Type": "FlowEditor.Controls.Views.PortConnectorView",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "FlowEditor.Views.ToolBlockFlowWindow": {
+    "Type": "FlowEditor.Controls.Views.ToolBlockFlowWindow",
+    "Assembly": "FlowEditor.Controls"
+  },
+  "ScriptEditor.Behaviors.SearchOptionsBehavior": {
+    "Type": "ScriptEditor.Controls.Behaviors.SearchOptionsBehavior",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Contracts.IScriptProjectStore": {
+    "Type": "ScriptEditor.Core.Contracts.IScriptProjectStore",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Contracts.IScriptReferenceResolver": {
+    "Type": "ScriptEditor.Core.Contracts.IScriptReferenceResolver",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Contracts.IScriptRuntime": {
+    "Type": "ScriptEditor.Core.Contracts.IScriptRuntime",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Contracts.IScriptSession": {
+    "Type": "ScriptEditor.Core.Contracts.IScriptSession",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Contracts.ScriptCompilationState": {
+    "Type": "ScriptEditor.Core.Contracts.ScriptCompilationState",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Contracts.ScriptExecutionResult": {
+    "Type": "ScriptEditor.Core.Contracts.ScriptExecutionResult",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Dialogs.SymbolRenameDialog": {
+    "Type": "ScriptEditor.Controls.Dialogs.SymbolRenameDialog",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Editors.RoslynEditorAdapter": {
+    "Type": "ScriptEditor.Controls.Editors.RoslynEditorAdapter",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Helpers.OutputTruncator": {
+    "Type": "ScriptEditor.Core.Helpers.OutputTruncator",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Lifecycle.EditorLifecycleController": {
+    "Type": "ScriptEditor.Controls.Lifecycle.EditorLifecycleController",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Lifecycle.ScriptSessionBinder": {
+    "Type": "ScriptEditor.Controls.Lifecycle.ScriptSessionBinder",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Models.ReferenceItem": {
+    "Type": "ScriptEditor.Controls.Models.ReferenceItem",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Models.ScriptEditorModel": {
+    "Type": "ScriptEditor.Controls.Models.ScriptEditorModel",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Models.ScriptEditorState": {
+    "Type": "ScriptEditor.Core.Models.ScriptEditorState",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Models.ScriptItem": {
+    "Type": "ScriptEditor.Core.Models.ScriptItem",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Models.ScriptItemDto": {
+    "Type": "ScriptEditor.Core.Models.ScriptItemDto",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Models.ScriptManagerModel": {
+    "Type": "ScriptEditor.Controls.Models.ScriptManagerModel",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Models.ScriptProject": {
+    "Type": "ScriptEditor.Core.Models.ScriptProject",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Models.ScriptProjectDto": {
+    "Type": "ScriptEditor.Core.Models.ScriptProjectDto",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Models.ScriptProjectItem": {
+    "Type": "ScriptEditor.Core.Models.ScriptProjectItem",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Models.ScriptProjectMigration": {
+    "Type": "ScriptEditor.Core.Models.ScriptProjectMigration",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Models.ScriptReference": {
+    "Type": "ScriptEditor.Core.Models.ScriptReference",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Models.ScriptReferenceDto": {
+    "Type": "ScriptEditor.Core.Models.ScriptReferenceDto",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Models.ScriptReferenceKind": {
+    "Type": "ScriptEditor.Core.Models.ScriptReferenceKind",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Models.ScriptReferencePath": {
+    "Type": "ScriptEditor.Core.Models.ScriptReferencePath",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Models.TaskProjectModel": {
+    "Type": "ScriptEditor.Controls.Models.TaskProjectModel",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Options.ScriptProjectContext": {
+    "Type": "ScriptEditor.Core.Options.ScriptProjectContext",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Options.ScriptRuntimeOptions": {
+    "Type": "ScriptEditor.Core.Options.ScriptRuntimeOptions",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Options.UsingDirectives": {
+    "Type": "ScriptEditor.Core.Options.UsingDirectives",
+    "Assembly": "ScriptEditor.Core"
+  },
+  "ScriptEditor.Persistence.ContentHash": {
+    "Type": "ScriptEditor.Runtime.Persistence.ContentHash",
+    "Assembly": "ScriptEditor.Runtime"
+  },
+  "ScriptEditor.Persistence.ScriptFileManifest": {
+    "Type": "ScriptEditor.Runtime.Persistence.ScriptFileManifest",
+    "Assembly": "ScriptEditor.Runtime"
+  },
+  "ScriptEditor.Persistence.ScriptFileManifestEntry": {
+    "Type": "ScriptEditor.Runtime.Persistence.ScriptFileManifestEntry",
+    "Assembly": "ScriptEditor.Runtime"
+  },
+  "ScriptEditor.Persistence.ScriptFileStore": {
+    "Type": "ScriptEditor.Runtime.Persistence.ScriptFileStore",
+    "Assembly": "ScriptEditor.Runtime"
+  },
+  "ScriptEditor.Persistence.ScriptProjectStore": {
+    "Type": "ScriptEditor.Runtime.Persistence.ScriptProjectStore",
+    "Assembly": "ScriptEditor.Runtime"
+  },
+  "ScriptEditor.ScriptEditorModule": {
+    "Type": "ScriptEditor.Controls.ScriptEditorModule",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Services.BreakpointController": {
+    "Type": "ScriptEditor.Controls.Services.BreakpointController",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Services.CustomRoslynHost": {
+    "Type": "ScriptEditor.Runtime.Services.CustomRoslynHost",
+    "Assembly": "ScriptEditor.Runtime"
+  },
+  "ScriptEditor.Services.FileService": {
+    "Type": "ScriptEditor.Controls.Services.FileService",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Services.FixedCodeEditorCompletionProvider": {
+    "Type": "ScriptEditor.Controls.Services.FixedCodeEditorCompletionProvider",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Services.FixedCompletionData": {
+    "Type": "ScriptEditor.Controls.Services.FixedCompletionData",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Services.RoslynScriptReferenceResolver": {
+    "Type": "ScriptEditor.Runtime.Services.RoslynScriptReferenceResolver",
+    "Assembly": "ScriptEditor.Runtime"
+  },
+  "ScriptEditor.Services.RoslynScriptRuntime": {
+    "Type": "ScriptEditor.Runtime.Services.RoslynScriptRuntime",
+    "Assembly": "ScriptEditor.Runtime"
+  },
+  "ScriptEditor.Services.RuntimeReferenceCache": {
+    "Type": "ScriptEditor.Runtime.Services.RuntimeReferenceCache",
+    "Assembly": "ScriptEditor.Runtime"
+  },
+  "ScriptEditor.Services.ScriptCompletionContext": {
+    "Type": "ScriptEditor.Runtime.Services.ScriptCompletionContext",
+    "Assembly": "ScriptEditor.Runtime"
+  },
+  "ScriptEditor.Services.ScriptEditorService": {
+    "Type": "ScriptEditor.Controls.Services.ScriptEditorService",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Services.ScriptExecutionService": {
+    "Type": "ScriptEditor.Runtime.Services.ScriptExecutionService",
+    "Assembly": "ScriptEditor.Runtime"
+  },
+  "ScriptEditor.Services.ScriptGlobals": {
+    "Type": "ScriptEditor.Runtime.Services.ScriptGlobals",
+    "Assembly": "ScriptEditor.Runtime"
+  },
+  "ScriptEditor.Services.ScriptHostProvider": {
+    "Type": "ScriptEditor.Runtime.Services.ScriptHostProvider",
+    "Assembly": "ScriptEditor.Runtime"
+  },
+  "ScriptEditor.Services.ScriptLoadingWindowRegistry": {
+    "Type": "ScriptEditor.Controls.Services.ScriptLoadingWindowRegistry",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Services.ScriptManagerService": {
+    "Type": "ScriptEditor.Controls.Services.ScriptManagerService",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Services.ScriptSession": {
+    "Type": "ScriptEditor.Runtime.Services.ScriptSession",
+    "Assembly": "ScriptEditor.Runtime"
+  },
+  "ScriptEditor.ViewModels.ScriptEditorViewModel": {
+    "Type": "ScriptEditor.Controls.ViewModels.ScriptEditorViewModel",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.ViewModels.ScriptManagerViewModel": {
+    "Type": "ScriptEditor.Controls.ViewModels.ScriptManagerViewModel",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Views.BreakpointGutter": {
+    "Type": "ScriptEditor.Controls.Views.BreakpointGutter",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Views.RoslynCodeEditorView": {
+    "Type": "ScriptEditor.Controls.Views.RoslynCodeEditorView",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Views.ScriptEditorReferencePanel": {
+    "Type": "ScriptEditor.Controls.Views.ScriptEditorReferencePanel",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Views.ScriptEditorToolbar": {
+    "Type": "ScriptEditor.Controls.Views.ScriptEditorToolbar",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Views.ScriptEditorView": {
+    "Type": "ScriptEditor.Controls.Views.ScriptEditorView",
+    "Assembly": "ScriptEditor"
+  },
+  "ScriptEditor.Views.ScriptManagerView": {
+    "Type": "ScriptEditor.Controls.Views.ScriptManagerView",
+    "Assembly": "ScriptEditor"
+  },
+  "Secs.ISecsControlEvents": {
+    "Type": "SecsGem.Core.ISecsControlEvents",
+    "Assembly": "SecsGem.Core"
+  },
+  "Secs.ITerminalDisplay": {
+    "Type": "SecsGem.Core.ITerminalDisplay",
+    "Assembly": "SecsGem.Core"
+  },
+  "Secs.Manager.ConnectManager": {
+    "Type": "SecsGem.Runtime.Manager.ConnectManager",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Manager.DeviceManager": {
+    "Type": "SecsGem.Runtime.Manager.DeviceManager",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Manager.ManagerBase": {
+    "Type": "SecsGem.Runtime.Manager.ManagerBase",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Manager.StatusManager": {
+    "Type": "SecsGem.Runtime.Manager.StatusManager",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Manager.TraceManager": {
+    "Type": "SecsGem.Runtime.Manager.TraceManager",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Manager.VIDManager": {
+    "Type": "SecsGem.Runtime.Manager.VIDManager",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S1.EOfflineResult": {
+    "Type": "SecsGem.Runtime.Order.S1.EOfflineResult",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S1.EOnflineResult": {
+    "Type": "SecsGem.Runtime.Order.S1.EOnflineResult",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S1.S1F1": {
+    "Type": "SecsGem.Runtime.Order.S1.S1F1",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S1.S1F11": {
+    "Type": "SecsGem.Runtime.Order.S1.S1F11",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S1.S1F13": {
+    "Type": "SecsGem.Runtime.Order.S1.S1F13",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S1.S1F15": {
+    "Type": "SecsGem.Runtime.Order.S1.S1F15",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S1.S1F17": {
+    "Type": "SecsGem.Runtime.Order.S1.S1F17",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S1.S1F3": {
+    "Type": "SecsGem.Runtime.Order.S1.S1F3",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S10.S10F3": {
+    "Type": "SecsGem.Runtime.Order.S10.S10F3",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S10.S10F5": {
+    "Type": "SecsGem.Runtime.Order.S10.S10F5",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S10.S10TerminalMessageProcessor": {
+    "Type": "SecsGem.Runtime.Order.S10.S10TerminalMessageProcessor",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S2.S2F23": {
+    "Type": "SecsGem.Runtime.Order.S2.S2F23",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S2.S2F23Info": {
+    "Type": "SecsGem.Runtime.Order.S2.S2F23Info",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S2.S2F33": {
+    "Type": "SecsGem.Runtime.Order.S2.S2F33",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S2.S2F35": {
+    "Type": "SecsGem.Runtime.Order.S2.S2F35",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S2.S2F37": {
+    "Type": "SecsGem.Runtime.Order.S2.S2F37",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S2.S2F41": {
+    "Type": "SecsGem.Runtime.Order.S2.S2F41",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S5.S5F1": {
+    "Type": "SecsGem.Runtime.Order.S5.S5F1",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S5.S5F3": {
+    "Type": "SecsGem.Runtime.Order.S5.S5F3",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S5.S5F5": {
+    "Type": "SecsGem.Runtime.Order.S5.S5F5",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S5.S5F7": {
+    "Type": "SecsGem.Runtime.Order.S5.S5F7",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S6.S6F1": {
+    "Type": "SecsGem.Runtime.Order.S6.S6F1",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S6.S6F11": {
+    "Type": "SecsGem.Runtime.Order.S6.S6F11",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S6.S6F11Info": {
+    "Type": "SecsGem.Runtime.Order.S6.S6F11Info",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S6.SS6F1": {
+    "Type": "SecsGem.Runtime.Order.S6.SS6F1",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S7.ProcessProgramData": {
+    "Type": "SecsGem.Runtime.Order.S7.ProcessProgramData",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S7.ProcessProgramInfo": {
+    "Type": "SecsGem.Runtime.Order.S7.ProcessProgramInfo",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S7.S7F19": {
+    "Type": "SecsGem.Runtime.Order.S7.S7F19",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S7.S7F23": {
+    "Type": "SecsGem.Runtime.Order.S7.S7F23",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S7.S7F25": {
+    "Type": "SecsGem.Runtime.Order.S7.S7F25",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S9.S9F13": {
+    "Type": "SecsGem.Runtime.Order.S9.S9F13",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S9.S9F9": {
+    "Type": "SecsGem.Runtime.Order.S9.S9F9",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S9.SS9F13": {
+    "Type": "SecsGem.Runtime.Order.S9.SS9F13",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.S9.SS9F9": {
+    "Type": "SecsGem.Runtime.Order.S9.SS9F9",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Order.SecsOrderAttribute": {
+    "Type": "SecsGem.Core.Order.SecsOrderAttribute",
+    "Assembly": "SecsGem.Core"
+  },
+  "Secs.Order.SecsOrderBase": {
+    "Type": "SecsGem.Runtime.Order.SecsOrderBase",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.RemoteCommandArgs": {
+    "Type": "SecsGem.Core.RemoteCommandArgs",
+    "Assembly": "SecsGem.Core"
+  },
+  "Secs.SecsControl": {
+    "Type": "SecsGem.Runtime.SecsGemRuntime",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.SecsHandle": {
+    "Type": "SecsGem.Runtime.SecsHandle",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.SecsInfo": {
+    "Type": "SecsGem.Runtime.SecsInfo",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.SecsLevelHandle": {
+    "Type": "SecsGem.Runtime.SecsLevelHandle",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.SecsToolModule": {
+    "Type": "SecsGem.Controls.SecsGemModule",
+    "Assembly": "SecsGem.Controls"
+  },
+  "Secs.Variable.Alarm": {
+    "Type": "SecsGem.Runtime.Variable.Alarm",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.AlarmInfo": {
+    "Type": "SecsGem.Runtime.Variable.AlarmInfo",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.CEID": {
+    "Type": "SecsGem.Runtime.Variable.CEID",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.CEIDInfo": {
+    "Type": "SecsGem.Runtime.Variable.CEIDInfo",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.CSecsParam": {
+    "Type": "SecsGem.Core.SecsGemOptions",
+    "Assembly": "SecsGem.Core"
+  },
+  "Secs.Variable.Data.ActiveReceive": {
+    "Type": "SecsGem.Runtime.Variable.Data.ActiveReceive",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.Data.ActiveReceiveInfo": {
+    "Type": "SecsGem.Runtime.Variable.Data.ActiveReceiveInfo",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.DataBase": {
+    "Type": "SecsGem.Runtime.Variable.DataBase",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.DVID": {
+    "Type": "SecsGem.Runtime.Variable.DVID",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.ECID": {
+    "Type": "SecsGem.Runtime.Variable.ECID",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.IData": {
+    "Type": "SecsGem.Runtime.Variable.IData",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.ReportID": {
+    "Type": "SecsGem.Runtime.Variable.ReportID",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.ReportInfo": {
+    "Type": "SecsGem.Runtime.Variable.ReportInfo",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.SecsParam": {
+    "Type": "SecsGem.Runtime.Variable.SecsParam",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.SVID": {
+    "Type": "SecsGem.Runtime.Variable.SVID",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.VIDBase": {
+    "Type": "SecsGem.Runtime.Variable.VIDBase",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "Secs.Variable.VIDInfo": {
+    "Type": "SecsGem.Runtime.Variable.VIDInfo",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "SemiTool.Tool.FactoryCollection": {
+    "Type": "SecsGem.Runtime.Protocol.Registry.SecsMessageRegistry",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "SemiTool.Tool.SecsMessageRegistry": {
+    "Type": "SecsGem.Runtime.Protocol.Registry.SecsMessageRegistry",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "SemiTool.Tool.SecsOrderAdapter": {
+    "Type": "SecsGem.Runtime.SemiTool.Tool.SecsOrderAdapter",
+    "Assembly": "SecsGem.Runtime"
+  },
+  "TeDemo.TeArrLen": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeArrLen",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeColor": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeColor",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeImage": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeImage",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeNodeNames": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeNodeNames",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeNodeParamInfo": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeNodeParamInfo",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeNodeRst": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeNodeRst",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeNodeRstDyn": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeNodeRstDyn",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeObjectInSrc": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeObjectInSrc",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TePoint": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TePoint",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TePredictParam": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TePredictParam",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.teProjsAdmin": {
+    "Type": "Vision.AI.Aiditron.TeDemo.teProjsAdmin",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeRect": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeRect",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeRotatedRect": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeRotatedRect",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeSize": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeSize",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeSizeForNode": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeSizeForNode",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeStatus": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeStatus",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeString": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeString",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeToolType": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeToolType",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "TeDemo.TeTree": {
+    "Type": "Vision.AI.Aiditron.TeDemo.TeTree",
+    "Assembly": "Vision.AI.Aiditron"
+  },
+  "WPFControl.ApplicationLayer.Alarms.AlarmHistoryQueryService": {
+    "Type": "WPFControls.Queries.Alarms.AlarmHistoryQueryService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ApplicationLayer.Alarms.AlarmHistoryResult": {
+    "Type": "WPFControls.Queries.Alarms.AlarmHistoryResult",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ApplicationLayer.Alarms.AlarmHistoryRow": {
+    "Type": "WPFControls.Queries.Alarms.AlarmHistoryRow",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ApplicationLayer.Alarms.AlarmHistorySummary": {
+    "Type": "WPFControls.Queries.Alarms.AlarmHistorySummary",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ApplicationLayer.Alarms.IAlarmHistoryQueryService": {
+    "Type": "WPFControls.Queries.Alarms.IAlarmHistoryQueryService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ApplicationLayer.Alarms.IAlarmHistoryReader": {
+    "Type": "WPFControls.Queries.Alarms.IAlarmHistoryReader",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Models.Charts.ChartsLineModel": {
+    "Type": "WPFControls.Controls.Models.Charts.ChartsLineModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Models.Charts.ChartsPieModel": {
+    "Type": "WPFControls.Controls.Models.Charts.ChartsPieModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Models.Charts.LineSeries": {
+    "Type": "WPFControls.Controls.Models.Charts.LineSeries",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Models.Charts.PieData": {
+    "Type": "WPFControls.Controls.Models.Charts.PieData",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Models.EUserLevel": {
+    "Type": "WPFControls.Controls.Models.EUserLevel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Models.PrintInfo": {
+    "Type": "WPFControls.Controls.Models.PrintInfo",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Models.PrintModel": {
+    "Type": "WPFControls.Controls.Models.PrintModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Models.UserInfo": {
+    "Type": "WPFControls.Controls.Models.UserInfo",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Services.Charts.ChartsLineService": {
+    "Type": "WPFControls.Controls.Services.Charts.ChartsLineService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Services.Charts.ChartsLineType": {
+    "Type": "WPFControls.Controls.Services.Charts.ChartsLineType",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Services.Charts.ChartsPieService": {
+    "Type": "WPFControls.Controls.Services.Charts.ChartsPieService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Services.Charts.ChartsPieType": {
+    "Type": "WPFControls.Controls.Services.Charts.ChartsPieType",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Services.PrintService": {
+    "Type": "WPFControls.ProgramControl.Services.Printer.PrintService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Services.UserManagerService": {
+    "Type": "WPFControls.ProgramControl.Services.User.UserManagerService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Services.UserMessage": {
+    "Type": "WPFControls.ProgramControl.Presentation.User.UserMessage",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.ViewModels.PrintViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.Printer.PrintViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.BulletinBoard.ProductionCapacityView": {
+    "Type": "WPFControls.Controls.Views.BulletinBoard.ProductionCapacityView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.BulletinBoard.YieldStatisticsView": {
+    "Type": "WPFControls.Controls.Views.BulletinBoard.YieldStatisticsView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.Charts.ChartsLineView": {
+    "Type": "WPFControls.Controls.Views.Charts.ChartsLineView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.Charts.ChartsMultipleGaugeView": {
+    "Type": "WPFControls.Controls.Views.Charts.ChartsMultipleGaugeView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.Charts.ChartsPieView": {
+    "Type": "WPFControls.Controls.Views.Charts.ChartsPieView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.Display.DisplayQueryView": {
+    "Type": "WPFControls.ProgramControl.Views.Display.DisplayQueryView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.Display.DisplaySingleGroupView": {
+    "Type": "WPFControls.ProgramControl.Views.Display.DisplaySingleGroupView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.Display.DisplaySingleView": {
+    "Type": "WPFControls.ProgramControl.Views.Display.DisplaySingleView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.Display.DisplaySingleView_DP": {
+    "Type": "WPFControls.ProgramControl.Views.Display.DisplaySingleView_DP",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.LightControlView": {
+    "Type": "WPFControls.ProgramControl.Views.LightControlView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.PaginationView": {
+    "Type": "WPFControls.Controls.Views.PaginationView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.PrintView": {
+    "Type": "WPFControls.ProgramControl.Views.PrintView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.QueryView": {
+    "Type": "WPFControls.Controls.Views.QueryView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.User.AddUserView": {
+    "Type": "WPFControls.Controls.Views.User.AddUserView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.User.DeletUserView": {
+    "Type": "WPFControls.Controls.Views.User.DeletUserView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.User.LoginView": {
+    "Type": "WPFControls.Controls.Views.User.LoginView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.CustomControl.Views.User.ModifyUserView": {
+    "Type": "WPFControls.Controls.Views.User.ModifyUserView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Helper.TryCatchHelper": {
+    "Type": "WPFControls.Controls.Diagnostics.TryCatchHelper",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Resources.ColorHelper": {
+    "Type": "WPFControls.Controls.Resources.ColorHelper",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ValueConvert.BooleanToGridLengthConverter": {
+    "Type": "WPFControls.Controls.Converters.BooleanToGridLengthConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ValueConvert.EqualsConverter": {
+    "Type": "WPFControls.Controls.Converters.EqualsConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ValueConvert.GridLengthArrayConverter": {
+    "Type": "WPFControls.Controls.Converters.GridLengthArrayConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ValueConvert.GridLengthArrayTypeConverter": {
+    "Type": "WPFControls.Controls.Converters.GridLengthArrayTypeConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ValueConvert.HelpToolLanguageConverter": {
+    "Type": "WPFControls.Controls.Converters.HelpToolLanguageConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ValueConvert.InverseBooleanToVisibilityConverter": {
+    "Type": "WPFControls.Controls.Converters.InverseBooleanToVisibilityConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ValueConvert.LanguageConverter": {
+    "Type": "WPFControls.Controls.Converters.LanguageConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ValueConvert.MathConverter": {
+    "Type": "WPFControls.Controls.Converters.MathConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFCustomControls.PropertyGrid.Composition.IUiDispatcher": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Composition.IUiDispatcher",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Composition.NullUiDispatcher": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Composition.NullUiDispatcher",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Composition.UiDispatcher": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Composition.UiDispatcher",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Internal.PortBindingCoordinator": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Internal.PortBindingCoordinator",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Internal.PortRowSession": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Internal.PortRowSession",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Internal.PropertyValueAccessor": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Internal.PropertyValueAccessor",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Models.DataBindingInfo": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Models.DataBindingInfo",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Models.EnumOption": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Models.EnumOption",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Models.IDataBindingProvider": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Models.IDataBindingProvider",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Models.IPortConfigurable": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Models.IPortConfigurable",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Models.IPortDialogService": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Models.IPortDialogService",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Models.IPortManageable": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Models.IPortManageable",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Models.NodePropertyAttribute": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Models.NodePropertyAttribute",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Models.PortDialogRequest": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Models.PortDialogRequest",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Models.PortDialogResult": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Models.PortDialogResult",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Models.PropertyGridActionAttribute": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Models.PropertyGridActionAttribute",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Models.PropertyGridActionItem": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Models.PropertyGridActionItem",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Models.UpstreamNodeInfo": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Models.UpstreamNodeInfo",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Services.IPropertyGridBuilderService": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Services.IPropertyGridBuilderService",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.Services.PropertyGridBuilderService": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.Services.PropertyGridBuilderService",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.ViewModels.InputPortEditViewModel": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.ViewModels.InputPortEditViewModel",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.ViewModels.OutputPortEditViewModel": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.ViewModels.OutputPortEditViewModel",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.ViewModels.PortManagementViewModel": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.ViewModels.PortManagementViewModel",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.ViewModels.PortRowViewModel": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.ViewModels.PortRowViewModel",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.ViewModels.PropertyGridHostViewModel": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.ViewModels.PropertyGridHostViewModel",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.ViewModels.PropertyGroupViewModel": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.ViewModels.PropertyGroupViewModel",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "WPFCustomControls.PropertyGrid.ViewModels.PropertyItemViewModel": {
+    "Type": "WPFCustomControls.PropertyGrid.Core.ViewModels.PropertyItemViewModel",
+    "Assembly": "WPFCustomControls.PropertyGrid.Core"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetConnectNodeBase": {
+    "Type": "FlowNodes.Communication.NetConnectNodeBase",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetDeviceHelper": {
+    "Type": "FlowNodes.Communication.NetDeviceHelper",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetDeviceNodeBase": {
+    "Type": "FlowNodes.Communication.NetDeviceNodeBase",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetDisconnectNode": {
+    "Type": "FlowNodes.Communication.NetDisconnectNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetMcConnectNode": {
+    "Type": "FlowNodes.Communication.NetMcConnectNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetSerialConnectNode": {
+    "Type": "FlowNodes.Communication.NetSerialConnectNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetModbusTcpConnectNode": {
+    "Type": "FlowNodes.Communication.NetModbusTcpConnectNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetModbusRtuConnectNode": {
+    "Type": "FlowNodes.Communication.NetModbusRtuConnectNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetOpcUaConnectNode": {
+    "Type": "FlowNodes.Communication.NetOpcUaConnectNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetHttpConnectNode": {
+    "Type": "FlowNodes.Communication.NetHttpConnectNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetWebApiConnectNode": {
+    "Type": "FlowNodes.Communication.NetWebApiConnectNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetReadNode": {
+    "Type": "FlowNodes.Communication.NetReadNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetReceiveInbox": {
+    "Type": "FlowNodes.Communication.NetReceiveInbox",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetReceiveNode": {
+    "Type": "FlowNodes.Communication.NetReceiveNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetRequestNode": {
+    "Type": "FlowNodes.Communication.NetRequestNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetSendNode": {
+    "Type": "FlowNodes.Communication.NetSendNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetTcpConnectNode": {
+    "Type": "FlowNodes.Communication.NetTcpConnectNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetUdpConnectNode": {
+    "Type": "FlowNodes.Communication.NetUdpConnectNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetStatusNode": {
+    "Type": "FlowNodes.Communication.NetStatusNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetWaitNode": {
+    "Type": "FlowNodes.Communication.NetWaitNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Communication.CommunicationNew.NetWriteNode": {
+    "Type": "FlowNodes.Communication.NetWriteNode",
+    "Assembly": "FlowNodes"
+  },
+  "FlowNodes.Vision.SingleTool.Fixtrue.FixtrueNode": {
+    "Type": "FlowNodes.Vision.SingleTool.Fixture.FixtureNode",
+    "Assembly": "FlowNodes"
+  },
+  "WPFControl.ProgramControl.Services.LogQueryService": {
+    "Type": "WPFControls.ProgramControl.Services.Log.LogQueryService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.SEMILogQueryService": {
+    "Type": "WPFControls.ProgramControl.Services.Log.SEMILogQueryService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.SEMIManagerService": {
+    "Type": "WPFControls.ProgramControl.Services.Log.SEMIManagerService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.PrintService": {
+    "Type": "WPFControls.ProgramControl.Services.Printer.PrintService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.UserManagerService": {
+    "Type": "WPFControls.ProgramControl.Services.User.UserManagerService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.AlarmInfoManagerViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.Alarm.AlarmInfoManagerViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.AlarmInfoQueryViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.Alarm.AlarmInfoQueryViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.ImageQueryViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.Data.ImageQueryViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.LogQueryViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.Log.LogQueryViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.SEMILogQueryViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.Log.SEMILogQueryViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.SEMIManagerViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.Log.SEMIManagerViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.PrintManagerViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.Printer.PrintManagerViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.PrintViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.Printer.PrintViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.ControlViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.Shell.ControlViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.UserInfoManagerViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.User.UserInfoManagerViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Presentation.CapacityStatisticsPresentation": {
+    "Type": "WPFControls.ProgramControl.Presentation.Data.CapacityStatisticsPresentation",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Presentation.DataQueryPresentation": {
+    "Type": "WPFControls.ProgramControl.Presentation.Data.DataQueryPresentation",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Presentation.LogQueryPresentation": {
+    "Type": "WPFControls.ProgramControl.Presentation.Log.LogQueryPresentation",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Presentation.SemiLogQueryPresentation": {
+    "Type": "WPFControls.ProgramControl.Presentation.Log.SemiLogQueryPresentation",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Integration.Device.LegacyDeviceConfigImporter": {
+    "Type": "WPFControls.Integration.Device.LegacyDeviceConfigImporter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Integration.Device.LegacyDeviceConfigImportResult": {
+    "Type": "WPFControls.Integration.Device.LegacyDeviceConfigImportResult",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Method.QuerySave": {
+    "Type": "WPFControls.Method.QuerySave",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.AlarmInfo": {
+    "Type": "WPFControls.ProgramControl.Models.AlarmInfo",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.AlarmInfoDTO": {
+    "Type": "WPFControls.ProgramControl.Models.AlarmInfoDTO",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.AlarmInfoManager": {
+    "Type": "WPFControls.ProgramControl.Models.AlarmInfoManager",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.AlarmInfoMessage": {
+    "Type": "WPFControls.ProgramControl.Models.AlarmInfoMessage",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.AlarmInfoPie": {
+    "Type": "WPFControls.ProgramControl.Models.AlarmInfoPie",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.AutoFlowModel": {
+    "Type": "WPFControls.ProgramControl.Models.AutoFlowModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.BulletinBoardModel": {
+    "Type": "WPFControls.ProgramControl.Models.BulletinBoardModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.CapacityStatisticsData": {
+    "Type": "WPFControls.ProgramControl.Models.CapacityStatisticsData",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.CapacityStatisticsInfo": {
+    "Type": "MachineApp.Infra.Persistence.Entities.CapacityStatisticsInfo",
+    "Assembly": "MachineApp"
+  },
+  "WPFControl.ProgramControl.Models.CapacityStatisticsModel": {
+    "Type": "WPFControls.ProgramControl.Models.CapacityStatisticsModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.CControlItem": {
+    "Type": "WPFControls.ProgramControl.Models.CControlItem",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.CNavigationItem": {
+    "Type": "WPFControls.ProgramControl.Models.CNavigationItem",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.ControlModel": {
+    "Type": "WPFControls.ProgramControl.Models.ControlModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.CStatusBar": {
+    "Type": "WPFControls.ProgramControl.Models.CStatusBar",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.DataQueryModel`2": {
+    "Type": "WPFControls.ProgramControl.Models.DataQueryModel`2",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.DisplayModel": {
+    "Type": "WPFControls.ProgramControl.Models.DisplayModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.ELinkStatus": {
+    "Type": "WPFControls.ProgramControl.Models.ELinkStatus",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.ImageQueryModel": {
+    "Type": "WPFControls.ProgramControl.Models.ImageQueryModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.InitializeFlowModel": {
+    "Type": "WPFControls.ProgramControl.Models.InitializeFlowModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.ISQLDataBase": {
+    "Type": "WPFControls.ProgramControl.Models.ISQLDataBase",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.LightItem": {
+    "Type": "WPFControls.ProgramControl.Models.LightItem",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.LogAlarmInfoModel": {
+    "Type": "WPFControls.ProgramControl.Models.LogAlarmInfoModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.LogConfigModel": {
+    "Type": "WPFControls.ProgramControl.Models.LogConfigModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.LogInfoModel": {
+    "Type": "WPFControls.ProgramControl.Models.LogInfoModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.MenuModel": {
+    "Type": "WPFControls.ProgramControl.Models.MenuModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.NavigationItemType": {
+    "Type": "WPFControls.ProgramControl.Models.NavigationItemType",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.PrintInfoManager": {
+    "Type": "WPFControls.ProgramControl.Models.PrintInfoManager",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.PrintManagerModel": {
+    "Type": "WPFControls.ProgramControl.Models.PrintManagerModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.ResourceMonitorModel": {
+    "Type": "WPFControls.ProgramControl.Models.ResourceMonitorModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.SEMILogModel": {
+    "Type": "WPFControls.ProgramControl.Models.SEMILogModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.SEMILogQueryModel": {
+    "Type": "WPFControls.ProgramControl.Models.SEMILogQueryModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.ShutdownFlowModel": {
+    "Type": "WPFControls.ProgramControl.Models.ShutdownFlowModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.StartupFlowModel": {
+    "Type": "WPFControls.ProgramControl.Models.StartupFlowModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.StatisicsModel": {
+    "Type": "WPFControls.ProgramControl.Models.StatisicsModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.StatusBarModel": {
+    "Type": "WPFControls.ProgramControl.Models.StatusBarModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.UserInfoModel": {
+    "Type": "WPFControls.ProgramControl.Models.UserInfoModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.VisionInspectionItem": {
+    "Type": "WPFControls.ProgramControl.Models.VisionInspectionItem",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.VisionInspectionItemModel": {
+    "Type": "WPFControls.ProgramControl.Models.VisionInspectionItemModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.VisionInspectionItemModelMessage": {
+    "Type": "WPFControls.ProgramControl.Models.VisionInspectionItemModelMessage",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.WindowMenuModel": {
+    "Type": "WPFControls.ProgramControl.Models.WindowMenuModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.AlarmInfoManagerService": {
+    "Type": "WPFControls.ProgramControl.Services.AlarmInfoManagerService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.AutoFlowService": {
+    "Type": "WPFControls.ProgramControl.Services.AutoFlowService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.BulletinBoardService": {
+    "Type": "WPFControls.ProgramControl.Services.BulletinBoardService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.CapacityStatisticsService": {
+    "Type": "WPFControls.ProgramControl.Services.CapacityStatisticsService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.ControlService": {
+    "Type": "WPFControls.ProgramControl.Services.ControlService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.DataQueryService`2": {
+    "Type": "WPFControls.ProgramControl.Services.DataQueryService`2",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.DisplayService": {
+    "Type": "WPFControls.ProgramControl.Services.DisplayService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.ImageQueryService": {
+    "Type": "WPFControls.ProgramControl.Services.ImageQueryService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.InitializeFlowService": {
+    "Type": "WPFControls.ProgramControl.Services.InitializeFlowService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.LogAlarmInfoService": {
+    "Type": "WPFControls.ProgramControl.Services.LogAlarmInfoService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.LogConfigService": {
+    "Type": "WPFControls.ProgramControl.Services.LogConfigService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.LogInfoService": {
+    "Type": "WPFControls.ProgramControl.Services.LogInfoService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.MenuService": {
+    "Type": "WPFControls.ProgramControl.Services.MenuService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.PrintManagerService": {
+    "Type": "WPFControls.ProgramControl.Services.PrintManagerService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.ResourceMonitorService": {
+    "Type": "WPFControls.ProgramControl.Services.ResourceMonitorService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.SEMILogService": {
+    "Type": "WPFControls.ProgramControl.Services.SEMILogService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.ShutdownFlowService": {
+    "Type": "WPFControls.ProgramControl.Services.ShutdownFlowService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.StartupFlowService": {
+    "Type": "WPFControls.ProgramControl.Services.StartupFlowService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.StatisticService": {
+    "Type": "WPFControls.ProgramControl.Services.StatisticService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.StatusBarService": {
+    "Type": "WPFControls.ProgramControl.Services.StatusBarService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.UserInfoService": {
+    "Type": "WPFControls.ProgramControl.Services.UserInfoService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.UserMessage": {
+    "Type": "WPFControls.ProgramControl.Presentation.User.UserMessage",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.VisionInspectionItemService": {
+    "Type": "WPFControls.ProgramControl.Services.VisionInspectionItemService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.WindowMenuService": {
+    "Type": "WPFControls.ProgramControl.Services.WindowMenuService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.AutoFlowViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.AutoFlowViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.BulletinBoardViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.BulletinBoardViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.CapacityStatisticsViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.CapacityStatisticsViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.DataQueryViewModel`2": {
+    "Type": "WPFControls.ProgramControl.ViewModels.DataQueryViewModel`2",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.DisplayViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.DisplayViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.InitializeFlowViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.InitializeFlowViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.LogAlarmInfoViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.LogAlarmInfoViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.LogConfigViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.LogConfigViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.LogInfoViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.LogInfoViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.MenuViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.MenuViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.MessageType": {
+    "Type": "WPFControls.ProgramControl.ViewModels.MessageType",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.ResourceMonitorViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.ResourceMonitorViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.SEMILogViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.SEMILogViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.ShutdownFlowViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.ShutdownFlowViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.StartupFlowViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.StartupFlowViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.StatisticsViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.StatisticsViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.StatusBarViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.StatusBarViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.UserInfoViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.UserInfoViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.VisionInspectionItemViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.VisionInspectionItemViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.WindowMenuViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.WindowMenuViewModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.AlarmInfoManagerView": {
+    "Type": "WPFControls.ProgramControl.Views.AlarmInfoManagerView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.AlarmInfoQueryView": {
+    "Type": "WPFControls.ProgramControl.Views.AlarmInfoQueryView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.AutoFlowView": {
+    "Type": "WPFControls.ProgramControl.Views.AutoFlowView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.BulletinBoardView": {
+    "Type": "WPFControls.ProgramControl.Views.BulletinBoardView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.CamManagerView": {
+    "Type": "WPFControls.ProgramControl.Views.CamManagerView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.CapacityStatisticsView": {
+    "Type": "WPFControls.ProgramControl.Views.CapacityStatisticsView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.ControlView": {
+    "Type": "WPFControls.ProgramControl.Views.ControlView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.DataQueryView": {
+    "Type": "WPFControls.ProgramControl.Views.DataQueryView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.Display.DisplayQueryView": {
+    "Type": "WPFControls.ProgramControl.Views.Display.DisplayQueryView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.Display.DisplaySingleGroupView": {
+    "Type": "WPFControls.ProgramControl.Views.Display.DisplaySingleGroupView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.Display.DisplaySingleView": {
+    "Type": "WPFControls.ProgramControl.Views.Display.DisplaySingleView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.Display.DisplaySingleView_DP": {
+    "Type": "WPFControls.ProgramControl.Views.Display.DisplaySingleView_DP",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.DisplayView": {
+    "Type": "WPFControls.ProgramControl.Views.DisplayView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.IconView": {
+    "Type": "WPFControls.ProgramControl.Views.IconView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.ImageQueryView": {
+    "Type": "WPFControls.ProgramControl.Views.ImageQueryView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.InitializeFlowView": {
+    "Type": "WPFControls.ProgramControl.Views.InitializeFlowView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.LightControlManagerView": {
+    "Type": "WPFControls.ProgramControl.Views.LightControlManagerView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.LightControlView": {
+    "Type": "WPFControls.ProgramControl.Views.LightControlView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.LogAlarmInfoView": {
+    "Type": "WPFControls.ProgramControl.Views.LogAlarmInfoView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.LogConfigView": {
+    "Type": "WPFControls.ProgramControl.Views.LogConfigView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.LogInfoView": {
+    "Type": "WPFControls.ProgramControl.Views.LogInfoView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.LogQueryView": {
+    "Type": "WPFControls.ProgramControl.Views.LogQueryView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.MenuView": {
+    "Type": "WPFControls.ProgramControl.Views.MenuView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.PrintManagerView": {
+    "Type": "WPFControls.ProgramControl.Views.PrintManagerView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.PrintView": {
+    "Type": "WPFControls.ProgramControl.Views.PrintView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.ResourceMonitorView": {
+    "Type": "WPFControls.ProgramControl.Views.ResourceMonitorView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.RFIDManagerView": {
+    "Type": "WPFControls.ProgramControl.Views.RFIDManagerView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.ScanManagerView": {
+    "Type": "WPFControls.ProgramControl.Views.ScanManagerView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.SEMILogQueryView": {
+    "Type": "WPFControls.ProgramControl.Views.SEMILogQueryView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.SEMILogView": {
+    "Type": "WPFControls.ProgramControl.Views.SEMILogView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.SEMIManagerView": {
+    "Type": "WPFControls.ProgramControl.Views.SEMIManagerView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.ShutdownFlowView": {
+    "Type": "WPFControls.ProgramControl.Views.ShutdownFlowView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.StartupFlowView": {
+    "Type": "WPFControls.ProgramControl.Views.StartupFlowView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.StatisticsView": {
+    "Type": "WPFControls.ProgramControl.Views.StatisticsView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.StatusBarView": {
+    "Type": "WPFControls.ProgramControl.Views.StatusBarView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.UserInfoManagerView": {
+    "Type": "WPFControls.ProgramControl.Views.UserInfoManagerView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.UserInfoView": {
+    "Type": "WPFControls.ProgramControl.Views.UserInfoView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.VisionInspectionItemView": {
+    "Type": "WPFControls.ProgramControl.Views.VisionInspectionItemView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Views.WindowMenuView": {
+    "Type": "WPFControls.ProgramControl.Views.WindowMenuView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ValueConvert.DeviceStatusToColorConvert": {
+    "Type": "WPFControls.ValueConvert.DeviceStatusToColorConvert",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ValueConvert.LinkStatusToColorConvert": {
+    "Type": "WPFControls.ValueConvert.LinkStatusToColorConvert",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ValueConvert.SecsStatusToColorConvert": {
+    "Type": "WPFControls.ValueConvert.SecsStatusToColorConvert",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.WindowUI.BaseMainWindow": {
+    "Type": "WPFControls.WindowUI.BaseMainWindow",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.WindowUI.MainWindow": {
+    "Type": "WPFControls.WindowUI.MainWindow",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Converters.BooleanToGridLengthConverter": {
+    "Type": "WPFControls.Controls.Converters.BooleanToGridLengthConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Converters.EqualsConverter": {
+    "Type": "WPFControls.Controls.Converters.EqualsConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Converters.GridLengthArrayConverter": {
+    "Type": "WPFControls.Controls.Converters.GridLengthArrayConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Converters.GridLengthArrayTypeConverter": {
+    "Type": "WPFControls.Controls.Converters.GridLengthArrayTypeConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Converters.HelpToolLanguageConverter": {
+    "Type": "WPFControls.Controls.Converters.HelpToolLanguageConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Converters.InverseBooleanToVisibilityConverter": {
+    "Type": "WPFControls.Controls.Converters.InverseBooleanToVisibilityConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Converters.LanguageConverter": {
+    "Type": "WPFControls.Controls.Converters.LanguageConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Converters.MathConverter": {
+    "Type": "WPFControls.Controls.Converters.MathConverter",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Diagnostics.TryCatchHelper": {
+    "Type": "WPFControls.Controls.Diagnostics.TryCatchHelper",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Models.Charts.ChartsLineModel": {
+    "Type": "WPFControls.Controls.Models.Charts.ChartsLineModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Models.Charts.ChartsPieModel": {
+    "Type": "WPFControls.Controls.Models.Charts.ChartsPieModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Models.Charts.LineSeries": {
+    "Type": "WPFControls.Controls.Models.Charts.LineSeries",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Models.Charts.PieData": {
+    "Type": "WPFControls.Controls.Models.Charts.PieData",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Models.EUserLevel": {
+    "Type": "WPFControls.Controls.Models.EUserLevel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Models.PrintInfo": {
+    "Type": "WPFControls.Controls.Models.PrintInfo",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Models.PrintModel": {
+    "Type": "WPFControls.Controls.Models.PrintModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Models.UserInfo": {
+    "Type": "WPFControls.Controls.Models.UserInfo",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Resources.ColorHelper": {
+    "Type": "WPFControls.Controls.Resources.ColorHelper",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Services.Charts.ChartsLineService": {
+    "Type": "WPFControls.Controls.Services.Charts.ChartsLineService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Services.Charts.ChartsLineType": {
+    "Type": "WPFControls.Controls.Services.Charts.ChartsLineType",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Services.Charts.ChartsPieService": {
+    "Type": "WPFControls.Controls.Services.Charts.ChartsPieService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Services.Charts.ChartsPieType": {
+    "Type": "WPFControls.Controls.Services.Charts.ChartsPieType",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Views.BulletinBoard.ProductionCapacityView": {
+    "Type": "WPFControls.Controls.Views.BulletinBoard.ProductionCapacityView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Views.BulletinBoard.YieldStatisticsView": {
+    "Type": "WPFControls.Controls.Views.BulletinBoard.YieldStatisticsView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Views.Charts.ChartsLineView": {
+    "Type": "WPFControls.Controls.Views.Charts.ChartsLineView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Views.Charts.ChartsMultipleGaugeView": {
+    "Type": "WPFControls.Controls.Views.Charts.ChartsMultipleGaugeView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Views.Charts.ChartsPieView": {
+    "Type": "WPFControls.Controls.Views.Charts.ChartsPieView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Views.PaginationView": {
+    "Type": "WPFControls.Controls.Views.PaginationView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Views.QueryView": {
+    "Type": "WPFControls.Controls.Views.QueryView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Views.User.AddUserView": {
+    "Type": "WPFControls.Controls.Views.User.AddUserView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Views.User.DeletUserView": {
+    "Type": "WPFControls.Controls.Views.User.DeletUserView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Views.User.LoginView": {
+    "Type": "WPFControls.Controls.Views.User.LoginView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.Controls.Views.User.ModifyUserView": {
+    "Type": "WPFControls.Controls.Views.User.ModifyUserView",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Models.DataQueryModel": {
+    "Type": "WPFControls.ProgramControl.Models.DataQueryModel",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.Services.DataQueryService": {
+    "Type": "WPFControls.ProgramControl.Services.DataQueryService",
+    "Assembly": "WPFControls"
+  },
+  "WPFControl.ProgramControl.ViewModels.DataQueryViewModel": {
+    "Type": "WPFControls.ProgramControl.ViewModels.DataQueryViewModel",
+    "Assembly": "WPFControls"
+  },
+  "Packing_Machine.UI.Model.CSQLData": {
+    "Type": "MachineApp.Infra.Persistence.Entities.CSQLData",
+    "Assembly": "MachineApp"
+  },
+  "Packing_Machine.UI.Model.CStation": {
+    "Type": "MachineApp.Infra.Persistence.Entities.CStation",
+    "Assembly": "MachineApp"
+  },
+  "Packing_Machine.UI.Model.SqlConfigEntity": {
+    "Type": "MachineApp.Infra.Persistence.Entities.SqlConfigEntity",
+    "Assembly": "MachineApp"
+  },
+  "Packing_Machine.UI.Model.ExcelConfigEntity": {
+    "Type": "MachineApp.Infra.Persistence.Entities.ExcelConfigEntity",
+    "Assembly": "MachineApp"
+  },
+  "Packing_Machine.UI.Model.CSQLDataDTO": {
+    "Type": "MachineApp.UI.Model.CSQLDataDTO",
+    "Assembly": "MachineApp"
+  },
+  "Packing_Machine.UI.Model.CSQLDataMapping": {
+    "Type": "MachineApp.Infra.Persistence.Mapping.CSQLDataMapping",
+    "Assembly": "MachineApp"
+  }
+}

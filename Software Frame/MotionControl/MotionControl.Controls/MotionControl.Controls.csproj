@@ -1,0 +1,33 @@
+﻿<!--
+中文阅读说明：项目构建声明。
+MotionControl 模块：运动契约、控制卡适配和验证界面；实际轴状态、命令结果及释放顺序遵守设备实现。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <LangVersion>13.0</LangVersion>
+    <RootNamespace>MotionControl.Controls</RootNamespace>
+    <AssemblyName>MotionControl.Controls</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <Platforms>AnyCPU</Platforms>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Prism.Wpf" Version="8.1.97" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+    <ProjectReference Include="..\MotionControl.Core\MotionControl.Core.csproj" />
+    <ProjectReference Include="..\MotionControl.Runtime\MotionControl.Runtime.csproj" />
+    <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
+  </ItemGroup>
+
+</Project>

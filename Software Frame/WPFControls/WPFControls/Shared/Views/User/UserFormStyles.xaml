@@ -1,0 +1,84 @@
+<!--
+中文阅读说明：界面与资源声明。
+WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="pack://application:,,,/WPFCustomControls;component/Resources/CompactControlStyles.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+    <!-- Scoped to account forms; retain the host's Material Design theme and focus feedback. -->
+    <Style x:Key="UserFormPrimaryButton" TargetType="Button" BasedOn="{StaticResource CompactPrimaryButton}">
+        <Setter Property="FontSize" Value="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="12,4" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8" />
+    </Style>
+    <Style x:Key="UserFormSecondaryButton" TargetType="Button" BasedOn="{StaticResource CompactFlatButton}">
+        <Setter Property="FontSize" Value="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="12,4" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8" />
+    </Style>
+    <Style x:Key="UserFormBackButton" TargetType="Button" BasedOn="{StaticResource CompactFlatButton}">
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        <Setter Property="Width" Value="32" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8" />
+    </Style>
+    <Style x:Key="UserFormTextBox" TargetType="TextBox" BasedOn="{StaticResource CompactFormTextBox}">
+        <Setter Property="MinHeight" Value="48" />
+        <Setter Property="Margin" Value="0,0,0,12" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="materialDesign:HintAssist.IsFloating" Value="True" />
+    </Style>
+    <Style x:Key="UserFormPasswordBox" TargetType="PasswordBox" BasedOn="{StaticResource CompactFormPasswordBox}">
+        <Setter Property="MinHeight" Value="48" />
+        <Setter Property="Margin" Value="0,0,0,12" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="materialDesign:HintAssist.IsFloating" Value="True" />
+    </Style>
+    <Style x:Key="UserFormComboBox" TargetType="ComboBox" BasedOn="{StaticResource CompactFormComboBox}">
+        <Setter Property="MinHeight" Value="48" />
+        <Setter Property="Margin" Value="0,0,0,12" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="materialDesign:HintAssist.IsFloating" Value="True" />
+    </Style>
+    <Style x:Key="UserFormError" TargetType="Label">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MinHeight" Value="24" />
+        <Setter Property="Margin" Value="0,0,0,8" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Border BorderThickness="3,0,0,0" Padding="8,0,0,0"
+                            BorderBrush="{DynamicResource MaterialDesign.Brush.ValidationError}">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                    </Border>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

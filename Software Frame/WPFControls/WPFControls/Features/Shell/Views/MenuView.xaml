@@ -1,0 +1,638 @@
+﻿<!--
+中文阅读说明：界面与资源声明。
+WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl
+    x:Class="WPFControls.ProgramControl.Views.MenuView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sharedConverters="clr-namespace:WPFControls.Controls.Converters"
+    xmlns:converters="clr-namespace:WPFControls.ValueConvert"
+    xmlns:custom="clr-namespace:WPFControls.Controls.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:local="clr-namespace:WPFControls.ProgramControl.Views"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="clr-namespace:WPFControls.ProgramControl.Models"
+    xmlns:viewmodel="clr-namespace:WPFControls.ProgramControl.ViewModels"
+    x:Name="UserControl"
+    d:DataContext="{d:DesignInstance Type=viewmodel:MenuViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="80"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <!--<ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/WPFControls;component/Shared/Resources/Resources.xaml" />
+            </ResourceDictionary.MergedDictionaries>-->
+
+            <!--  转换器：用于控制有无子菜单的显示  -->
+            <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+            <sharedConverters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
+
+            <!--  数学运算转换器  -->
+            <sharedConverters:MathConverter x:Key="MathConverter" />
+
+            <!--  相等比较转换器  -->
+            <sharedConverters:EqualsConverter x:Key="EqualsConverter" />
+
+            <!--  菜单按钮样式（带 ToolTip）  -->
+            <Style
+                x:Key="MenuButtonStyle"
+                BasedOn="{StaticResource MaterialDesignFlatButton}"
+                TargetType="Button">
+
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Margin" Value="2" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="VerticalAlignment" Value="Stretch" />
+                <Setter Property="ToolTip" Value="{Binding Title}" />
+                <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
+                <Setter Property="ToolTipService.Placement" Value="Right" />
+                <Setter Property="ToolTipService.HorizontalOffset" Value="4" />
+                <Setter Property="ToolTipService.VerticalOffset" Value="10" />
+                <Setter Property="ToolTipService.BetweenShowDelay" Value="100" />
+                <Setter Property="ToolTipService.InitialShowDelay" Value="100" />
+                <Setter Property="Height" Value="50" />
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+
+            <Style
+                x:Key="ExpanderStyle"
+                BasedOn="{StaticResource MaterialDesignExpander}"
+                TargetType="Expander">
+                <Setter Property="ToolTip" Value="{Binding Title}" />
+                <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
+                <Setter Property="ToolTipService.Placement" Value="Right" />
+                <Setter Property="ToolTipService.HorizontalOffset" Value="2" />
+                <Setter Property="ToolTipService.VerticalOffset" Value="10" />
+                <Setter Property="ToolTipService.BetweenShowDelay" Value="100" />
+                <Setter Property="ToolTipService.InitialShowDelay" Value="100" />
+            </Style>
+
+            <Style
+                x:Key="SwitchButtonStyle"
+                BasedOn="{StaticResource MaterialDesignFlatButton}"
+                TargetType="Button">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                <Setter Property="Margin" Value="2,20,0,0" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Width" Value="50" />
+                <Setter Property="Height" Value="50" />
+                <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8" />
+            </Style>
+
+            <Style TargetType="materialDesign:PackIcon">
+                <Setter Property="Width" Value="40" />
+                <Setter Property="Height" Value="40" />
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar">
+                <Setter Property="materialDesign:ScrollBarAssist.ButtonsVisibility" Value="Collapsed" />
+                <Setter Property="materialDesign:ScrollBarAssist.ThumbCornerRadius" Value="2" />
+                <Setter Property="materialDesign:ScrollBarAssist.ThumbHeight" Value="8" />
+                <Setter Property="materialDesign:ScrollBarAssist.ThumbWidth" Value="5" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border
+        x:Name="Border"
+        CornerRadius="8"
+        Style="{StaticResource Border_Style}">
+        <DockPanel x:Name="DockPanel">
+            <Grid DockPanel.Dock="Top">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Button
+                    AutomationProperties.Name="切换导航菜单" ToolTip="切换导航菜单" Click="ToggleButton_Click"
+                    Style="{StaticResource SwitchButtonStyle}"
+                    Visibility="{Binding ElementName=DrawerHost, Path=IsLeftDrawerOpen, Converter={StaticResource InverseBooleanToVisibilityConverter}, Mode=OneWay}">
+                    <materialDesign:PackIcon Kind="Menu" />
+                </Button>
+
+                <Button
+                    Grid.Column="0"
+                    AutomationProperties.Name="切换导航菜单" ToolTip="切换导航菜单" Click="ToggleButton_Click"
+                    Style="{StaticResource SwitchButtonStyle}"
+                    Visibility="{Binding ElementName=DrawerHost, Path=IsLeftDrawerOpen, Converter={StaticResource BoolToVisConverter}, Mode=OneWay}">
+                    <materialDesign:PackIcon Kind="MenuOpen" />
+                </Button>
+
+                <Grid
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2">
+
+                    <TextBox
+                        x:Name="SearchTextBox" AutomationProperties.Name="搜索菜单"
+                        Margin="5,2"
+                        VerticalAlignment="Center"
+                        materialDesign:HintAssist.FloatingOffset="0,-15"
+                        materialDesign:HintAssist.Hint="Search"
+                        FontSize="12"
+                        Opacity="1"
+                        Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                        TextChanged="SearchTextBox_TextChanged" />
+                    <materialDesign:PackIcon
+                        Width="25"
+                        Margin="0,0,5,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Kind="Search"
+                        Opacity="0.6" />
+
+                </Grid>
+            </Grid>
+
+            <Separator
+                Margin="0,5"
+                DockPanel.Dock="Top"
+                Opacity="0" />
+
+            <materialDesign:DrawerHost
+                Name="DrawerHost"
+                Grid.Row="2"
+                Margin="0"
+                Padding="0"
+                HorizontalAlignment="Left"
+                LeftDrawerBackground="{Binding ElementName=DockPanel, Path=Background}"
+                OpenMode="Standard">
+
+                <!--  右侧抽屉菜单  图标  -->
+                <ScrollViewer
+                    x:Name="MenuTreeView"
+                    Grid.Row="2"
+                    Width="80"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Datas.NavigationItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type model:CNavigationItem}">
+                                <Grid Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisConverter}}">
+                                    <!--  有子菜单：使用 Expander  -->
+                                    <Expander
+                                        Margin="0"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        Header="{Binding}"
+                                        IsExpanded="{Binding IsExpanded}"
+                                        Visibility="{Binding IsParent, Converter={StaticResource BoolToVisConverter}}">
+                                        <Expander.Style>
+                                            <Style BasedOn="{StaticResource ExpanderStyle}" TargetType="Expander">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Expander">
+                                                            <DockPanel>
+                                                                <ContentPresenter
+                                                                    x:Name="ExpanderContent"
+                                                                    ContentSource="Header"
+                                                                    DockPanel.Dock="Top" />
+                                                                <ContentPresenter
+                                                                    x:Name="Content"
+                                                                    Margin="{TemplateBinding Padding}"
+                                                                    ContentSource="Content"
+                                                                    Visibility="Collapsed" />
+                                                            </DockPanel>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsExpanded" Value="True">
+                                                                    <Setter TargetName="Content" Property="Visibility" Value="Visible" />
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Expander.Style>
+                                        <Expander.HeaderTemplate>
+                                            <DataTemplate>
+                                                <Button
+                                                    x:Name="MenuButton"
+                                                    Margin="5,2"
+                                                    HorizontalAlignment="Stretch"
+                                                    materialDesign:ButtonAssist.CornerRadius="8"
+                                                    Click="MenuButton_Click"
+                                                    Tag="{Binding}">
+                                                    <Button.Style>
+                                                        <Style BasedOn="{StaticResource MenuButtonStyle}" TargetType="Button">
+                                                            <Style.Triggers>
+                                                                <!--  选中时显示灰色背景  -->
+                                                                <DataTrigger Value="True">
+                                                                    <DataTrigger.Binding>
+                                                                        <MultiBinding Converter="{StaticResource EqualsConverter}">
+                                                                            <Binding Path="." />
+                                                                            <Binding Path="DataContext.Datas.SelectNavigationItems" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                                                        </MultiBinding>
+                                                                    </DataTrigger.Binding>
+                                                                    <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="0" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="15" />
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <!--  左侧图标  -->
+                                                        <materialDesign:PackIcon Grid.Column="1" Kind="{Binding DataContext.Icon, RelativeSource={RelativeSource AncestorType=Expander}}" />
+
+                                                        <!--  右侧展开箭头  -->
+                                                        <materialDesign:PackIcon
+                                                            Grid.Column="2"
+                                                            Width="20"
+                                                            Height="20"
+                                                            Margin="-4"
+                                                            HorizontalAlignment="Left"
+                                                            VerticalAlignment="Center"
+                                                            Kind="ChevronDown">
+                                                            <materialDesign:PackIcon.Style>
+                                                                <Style TargetType="materialDesign:PackIcon">
+                                                                    <Setter Property="RenderTransform">
+                                                                        <Setter.Value>
+                                                                            <RotateTransform Angle="0" CenterX="10" CenterY="10" />
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding DataContext.IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" Value="True">
+                                                                            <Setter Property="RenderTransform">
+                                                                                <Setter.Value>
+                                                                                    <RotateTransform Angle="180" CenterX="10" CenterY="10" />
+                                                                                </Setter.Value>
+                                                                            </Setter>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </materialDesign:PackIcon.Style>
+                                                        </materialDesign:PackIcon>
+                                                    </Grid>
+
+                                                </Button>
+                                            </DataTemplate>
+                                        </Expander.HeaderTemplate>
+                                        <ListBox
+                                            Margin="5,0,0,0"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            ItemsSource="{Binding Children}"
+                                            ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                            <ListBox.ItemContainerStyle>
+                                                <Style TargetType="ListBoxItem">
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                    <Setter Property="Padding" Value="0" />
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ListBoxItem">
+                                                                <Border
+                                                                    x:Name="Border"
+                                                                    Padding="{TemplateBinding Padding}"
+                                                                    Background="{TemplateBinding Background}"
+                                                                    CornerRadius="8">
+                                                                    <ContentPresenter />
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="Border" Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </ListBox.ItemContainerStyle>
+
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type model:CNavigationItem}">
+                                                    <Button
+                                                        materialDesign:ButtonAssist.CornerRadius="8"
+                                                        Click="SubMenuButton_Click"
+                                                        Tag="{Binding}"
+                                                        Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisConverter}}">
+                                                        <Button.Style>
+                                                            <Style BasedOn="{StaticResource MenuButtonStyle}" TargetType="Button">
+                                                                <Style.Triggers>
+                                                                    <!--  选中时显示灰色背景  -->
+                                                                    <DataTrigger Value="True">
+                                                                        <DataTrigger.Binding>
+                                                                            <MultiBinding Converter="{StaticResource EqualsConverter}">
+                                                                                <Binding Path="." />
+                                                                                <Binding Path="DataContext.Datas.SelectNavigationItems" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                                                            </MultiBinding>
+                                                                        </DataTrigger.Binding>
+                                                                        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                        <materialDesign:PackIcon Kind="{Binding Icon}" />
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </Expander>
+
+                                    <!--  无子菜单：直接显示按钮  -->
+                                    <Button
+                                        Margin="5,2"
+                                        Click="MenuButton_Click"
+                                        Tag="{Binding}">
+                                        <Button.Style>
+                                            <Style BasedOn="{StaticResource MenuButtonStyle}" TargetType="Button">
+                                                <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8" />
+                                                <Style.Triggers>
+                                                    <!--  隐藏父级菜单按钮  -->
+                                                    <DataTrigger Binding="{Binding IsParent}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                    <!--  选中时显示灰色背景  -->
+                                                    <DataTrigger Value="True">
+                                                        <DataTrigger.Binding>
+                                                            <MultiBinding Converter="{StaticResource EqualsConverter}">
+                                                                <Binding Path="." />
+                                                                <Binding Path="DataContext.Datas.SelectNavigationItems" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                                            </MultiBinding>
+                                                        </DataTrigger.Binding>
+                                                        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+
+
+                                        <materialDesign:PackIcon Margin="-15,0,0,0" Kind="{Binding Icon}" />
+
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!--  左侧抽屉菜单  图标+文字  -->
+                <materialDesign:DrawerHost.LeftDrawerContent>
+
+                    <ScrollViewer
+                        x:Name="MenuTreeView_Left"
+                        Grid.Row="2"
+                        Width="180"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Datas.NavigationItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type model:CNavigationItem}">
+                                    <Grid Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisConverter}}">
+                                        <!--  有子菜单：使用 Expander  -->
+                                        <Expander
+                                            Margin="0"
+                                            Padding="0"
+                                            Background="Transparent"
+                                            Header="{Binding}"
+                                            IsExpanded="{Binding IsExpanded}"
+                                            Visibility="{Binding IsParent, Converter={StaticResource BoolToVisConverter}}">
+                                            <Expander.Style>
+                                                <Style BasedOn="{StaticResource ExpanderStyle}" TargetType="Expander">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Expander">
+                                                                <DockPanel>
+                                                                    <ContentPresenter
+                                                                        x:Name="ExpanderContent"
+                                                                        ContentSource="Header"
+                                                                        DockPanel.Dock="Top" />
+                                                                    <ContentPresenter
+                                                                        x:Name="Content"
+                                                                        Margin="{TemplateBinding Padding}"
+                                                                        ContentSource="Content"
+                                                                        Visibility="Collapsed" />
+                                                                </DockPanel>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsExpanded" Value="True">
+                                                                        <Setter TargetName="Content" Property="Visibility" Value="Visible" />
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </Expander.Style>
+                                            <Expander.HeaderTemplate>
+                                                <DataTemplate>
+                                                    <Button
+                                                        x:Name="MenuButton"
+                                                        Margin="4,2,0,2"
+                                                        materialDesign:ButtonAssist.CornerRadius="8"
+                                                        Click="MenuButton_Click"
+                                                        Tag="{Binding}">
+                                                        <Button.Style>
+                                                            <Style BasedOn="{StaticResource MenuButtonStyle}" TargetType="Button">
+                                                                <Style.Triggers>
+                                                                    <!--  选中时显示灰色背景  -->
+                                                                    <DataTrigger Value="True">
+                                                                        <DataTrigger.Binding>
+                                                                            <MultiBinding Converter="{StaticResource EqualsConverter}">
+                                                                                <Binding Path="." />
+                                                                                <Binding Path="DataContext.Datas.SelectNavigationItems" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                                                            </MultiBinding>
+                                                                        </DataTrigger.Binding>
+                                                                        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                        <Grid>
+                                                            <Grid.Width>
+                                                                <MultiBinding Converter="{StaticResource MathConverter}">
+                                                                    <Binding ElementName="MenuTreeView_Left" Path="Width" />
+                                                                    <Binding Source="-10" />
+                                                                </MultiBinding>
+                                                            </Grid.Width>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="5" />
+                                                                <ColumnDefinition Width="50" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="25" />
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <!--  左侧图标  -->
+                                                            <materialDesign:PackIcon Grid.Column="1" Kind="{Binding DataContext.Icon, RelativeSource={RelativeSource AncestorType=Expander}}" />
+
+                                                            <TextBlock
+                                                                Grid.Column="2"
+                                                                VerticalAlignment="Center"
+                                                                Text="{Binding DataContext.Title, RelativeSource={RelativeSource AncestorType=Expander}}" />
+
+                                                            <!--  右侧展开箭头  -->
+                                                            <materialDesign:PackIcon
+                                                                Grid.Column="3"
+                                                                Width="30"
+                                                                Height="30"
+                                                                Margin="-15,0,0,0"
+                                                                HorizontalAlignment="Left"
+                                                                VerticalAlignment="Center"
+                                                                Kind="ChevronDown">
+                                                                <materialDesign:PackIcon.Style>
+                                                                    <Style TargetType="materialDesign:PackIcon">
+                                                                        <Setter Property="RenderTransform">
+                                                                            <Setter.Value>
+                                                                                <RotateTransform Angle="0" CenterX="15" CenterY="15" />
+                                                                            </Setter.Value>
+                                                                        </Setter>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding DataContext.IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" Value="True">
+                                                                                <Setter Property="RenderTransform">
+                                                                                    <Setter.Value>
+                                                                                        <RotateTransform Angle="180" CenterX="15" CenterY="15" />
+                                                                                    </Setter.Value>
+                                                                                </Setter>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </materialDesign:PackIcon.Style>
+                                                            </materialDesign:PackIcon>
+                                                        </Grid>
+
+                                                    </Button>
+                                                </DataTemplate>
+                                            </Expander.HeaderTemplate>
+                                            <ListBox
+                                                Margin="20,0,0,0"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                ItemsSource="{Binding Children}"
+                                                ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                                <ListBox.ItemContainerStyle>
+                                                    <Style TargetType="ListBoxItem">
+                                                        <Setter Property="Background" Value="Transparent" />
+                                                        <Setter Property="Padding" Value="0" />
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="ListBoxItem">
+                                                                    <Border
+                                                                        x:Name="Border"
+                                                                        Padding="{TemplateBinding Padding}"
+                                                                        Background="{TemplateBinding Background}"
+                                                                        CornerRadius="4">
+                                                                        <ContentPresenter />
+                                                                    </Border>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </ListBox.ItemContainerStyle>
+
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate DataType="{x:Type model:CNavigationItem}">
+                                                        <Button
+                                                            HorizontalContentAlignment="Left"
+                                                            materialDesign:ButtonAssist.CornerRadius="8"
+                                                            Click="SubMenuButton_Click"
+                                                            Tag="{Binding}"
+                                                            Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisConverter}}">
+                                                            <Button.Style>
+                                                                <Style BasedOn="{StaticResource MenuButtonStyle}" TargetType="Button">
+                                                                    <Style.Triggers>
+                                                                        <!--  选中时显示灰色背景  -->
+                                                                        <DataTrigger Value="True">
+                                                                            <DataTrigger.Binding>
+                                                                                <MultiBinding Converter="{StaticResource EqualsConverter}">
+                                                                                    <Binding Path="." />
+                                                                                    <Binding Path="DataContext.Datas.SelectNavigationItems" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                                                                </MultiBinding>
+                                                                            </DataTrigger.Binding>
+                                                                            <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
+                                                            <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                                                                <materialDesign:PackIcon Kind="{Binding Icon}" />
+                                                                <TextBlock VerticalAlignment="Center" Text="{Binding Title}" />
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                        </Expander>
+
+                                        <!--  无子菜单：直接显示按钮  -->
+                                        <Button
+                                            Margin="4,2,0,2"
+                                            HorizontalContentAlignment="Left"
+                                            Click="MenuButton_Click"
+                                            Tag="{Binding}">
+                                            <Button.Style>
+                                                <Style BasedOn="{StaticResource MenuButtonStyle}" TargetType="Button">
+                                                    <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8" />
+                                                    <Style.Triggers>
+                                                        <!--  隐藏父级菜单按钮  -->
+                                                        <DataTrigger Binding="{Binding IsParent}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                        <!--  选中时显示灰色背景  -->
+                                                        <DataTrigger Value="True">
+                                                            <DataTrigger.Binding>
+                                                                <MultiBinding Converter="{StaticResource EqualsConverter}">
+                                                                    <Binding Path="." />
+                                                                    <Binding Path="DataContext.Datas.SelectNavigationItems" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                                                </MultiBinding>
+                                                            </DataTrigger.Binding>
+                                                            <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+
+                                            <Grid>
+                                                <Grid.Width>
+                                                    <MultiBinding Converter="{StaticResource MathConverter}">
+                                                        <Binding ElementName="MenuTreeView_Left" Path="Width" />
+                                                        <Binding Source="-10" />
+                                                    </MultiBinding>
+                                                </Grid.Width>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="5" />
+                                                    <ColumnDefinition Width="50" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="25" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <materialDesign:PackIcon Grid.Column="1" Kind="{Binding Icon}" />
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    VerticalAlignment="Center"
+                                                    Text="{Binding Title}" />
+                                            </Grid>
+
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </materialDesign:DrawerHost.LeftDrawerContent>
+
+            </materialDesign:DrawerHost>
+        </DockPanel>
+    </Border>
+</UserControl>

@@ -1,0 +1,61 @@
+﻿<!--
+中文阅读说明：项目构建声明。
+Device 模块：设备契约、驱动适配、工作区及界面；真实连接和释放顺序由设备生命周期约定决定。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Compile Include="..\..\..\..\MachineApp\MachineApp\Business\Ports\IProductionDevices.cs" Link="Host/IProductionDevices.cs" />
+  </ItemGroup>
+  <PropertyGroup>
+    <AssemblyName>Device.Workbench.Tests</AssemblyName>
+    <RootNamespace>Device.Workbench.Tests</RootNamespace>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- WPF 集成线：真实拉起宿主 App.xaml，覆盖资源合并 / Prism DI 装配 / Shell 解析 / 区域导航。 -->
+    <UseWPF>true</UseWPF>
+    <!-- WPF 夹具必须显式 Dispatcher.Invoke，抑制 VS 线程分析器的误报。 -->
+    <NoWarn>$(NoWarn);VSTHRD001;VSTHRD110</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Device.Controls\Device.Controls.csproj" />
+    <ProjectReference Include="..\..\Device.Workbench\Device.Workbench.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\..\..\MachineApp\MachineApp\Infra\Device\ProductionDeviceSession.cs" Link="Host\ProductionDeviceSession.cs" />
+    <Compile Include="..\..\..\..\MachineApp\MachineApp\Config\Flow\StartupFlow\04_初始化硬件.cs" Link="Host\InitializeDevicesScript.cs" />
+    <Compile Include="..\..\..\..\MachineApp\MachineApp\Infra\Core\ContainerManager.cs" Link="Host\ContainerManager.cs" />
+    <!-- Exercise the exact legacy bridge and its existing fixtures while the WPFControls build is blocked upstream. -->
+    <Compile Include="..\..\..\WPFControls\WPFControls\Integration\Device\LegacyDeviceConfigImporter.cs" Link="Compatibility\LegacyDeviceConfigImporter.cs" />
+    <Compile Include="..\..\..\WPFControls\Tests\WPFControls.Tests\LegacyDeviceConfigMigrationTests.cs" Link="Compatibility\LegacyDeviceConfigMigrationTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="..\..\..\WPFControls\WPFControls\Features\Device\Views\CamManagerView.xaml" Link="Compatibility\CamManagerView.xaml" />
+    <Compile Include="..\..\..\WPFControls\WPFControls\Features\Device\Views\CamManagerView.xaml.cs" Link="Compatibility\CamManagerView.xaml.cs" />
+    <Page Include="..\..\..\WPFControls\WPFControls\Features\Device\Views\LightControlManagerView.xaml" Link="Compatibility\LightControlManagerView.xaml" />
+    <Compile Include="..\..\..\WPFControls\WPFControls\Features\Device\Views\LightControlManagerView.xaml.cs" Link="Compatibility\LightControlManagerView.xaml.cs" />
+    <Page Include="..\..\..\WPFControls\WPFControls\Features\Device\Views\RFIDManagerView.xaml" Link="Compatibility\RFIDManagerView.xaml" />
+    <Compile Include="..\..\..\WPFControls\WPFControls\Features\Device\Views\RFIDManagerView.xaml.cs" Link="Compatibility\RFIDManagerView.xaml.cs" />
+    <Page Include="..\..\..\WPFControls\WPFControls\Features\Device\Views\ScanManagerView.xaml" Link="Compatibility\ScanManagerView.xaml" />
+    <Compile Include="..\..\..\WPFControls\WPFControls\Features\Device\Views\ScanManagerView.xaml.cs" Link="Compatibility\ScanManagerView.xaml.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\MachineApp\MachineApp\Config\Flow\StartupFlow\StartupFlow.taskproj" Link="StartupFlow.taskproj" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\..\..\MachineApp\MachineApp\Config\Flow\StartupFlow\04_初始化硬件.cs" Link="InitializeDevicesScript.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup><ProjectReference Include="..\..\..\Extension\Extension.Core\Extension.Core.csproj" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../../Build/TestSupport/WorkbenchTestLifetime.cs" Link="TestSupport/WorkbenchTestLifetime.cs" />
+  </ItemGroup>
+</Project>

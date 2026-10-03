@@ -1,0 +1,90 @@
+<!--
+中文阅读说明：界面与资源声明。
+Communication 模块：连接、协议适配及通信界面；主动请求应答与被动数据接收需遵守所用连接的实际契约。 本文件属于验证宿主，模块组合与人工验证流程应与生产机型业务区分。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<Window
+    x:Class="Communication.Workbench.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    xmlns:wpfcc="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    Title="Communication 测试工作台"
+    Width="1440"
+    Height="900"
+    MinWidth="1100"
+   MinHeight="700"
+    UseLayoutRounding="True"
+    Style="{StaticResource WorkbenchWindow}"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+
+    <Grid Background="{DynamicResource MaterialDesign.Brush.Background}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!--  侧栏：跟随主题（浅色浅底深字，深色深底浅字）  -->
+        <Border Grid.Column="0" Background="{DynamicResource MaterialDesign.Brush.Card.Background}">
+            <DockPanel>
+                <StackPanel Margin="12,16,12,12" DockPanel.Dock="Top">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon
+                            Width="40"
+                            Height="40"
+                            Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                            Kind="Network" />
+                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                Text="Communication" />
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                Opacity="0.7"
+                                Text="测试工作台 · Material" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+
+                <!--
+                    ThemePickerView 用的是宿主 DI 里那一份 ThemeService 单例，改的就是全应用在用的主题；
+                    FieldBackground / FieldForeground 必须显式传：控件默认值是给「固定深色侧栏」用的，
+                    压在跟随主题的浅底侧栏上会看不清。
+                -->
+                <StackPanel Margin="16,0,16,16" DockPanel.Dock="Bottom">
+                    <wpfcc:ThemePickerView
+                        FieldBackground="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                        FieldForeground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        Theme="{Binding Theme}" />
+                    <TextBlock Text="{Binding NavigationError}" TextWrapping="Wrap" Margin="0,8,0,0"
+                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+                        <TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers>
+                            <Trigger Property="Text" Value=""><Setter Property="Visibility" Value="Collapsed"/></Trigger>
+                        </Style.Triggers></Style></TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock
+                        Margin="8,4,0,0"
+                        FontSize="12"
+                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        Opacity="0.7"
+                        Text="CommunicationNew · Prism · .NET 9"
+                       TextWrapping="Wrap" />
+                </StackPanel>
+
+                <ListBox
+                    ItemsSource="{Binding NavItems}" IsEnabled="{Binding CanSelectNavigation}"
+                    SelectedItem="{Binding SelectedNav, Mode=TwoWay}"
+                    Style="{StaticResource NavListBox}" />
+            </DockPanel>
+        </Border>
+
+        <ContentControl Grid.Column="1" prism:RegionManager.RegionName="MainRegion" />
+    </Grid>
+</Window>

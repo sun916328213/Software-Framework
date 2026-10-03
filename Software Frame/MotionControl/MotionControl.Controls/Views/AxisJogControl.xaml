@@ -1,0 +1,55 @@
+<!--
+中文阅读说明：界面与资源声明。
+MotionControl 模块：运动契约、控制卡适配和验证界面；实际轴状态、命令结果及释放顺序遵守设备实现。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl
+    x:Class="MotionControl.Controls.Views.AxisJogControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="170"
+    d:DesignWidth="300"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary><ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary Source="/MotionControl.Controls;component/Themes/PageStyles.xaml" />
+        </ResourceDictionary.MergedDictionaries></ResourceDictionary>
+    </UserControl.Resources>
+    <md:Card Style="{StaticResource MotionCard}">
+        <DockPanel LastChildFill="True">
+            <TextBlock DockPanel.Dock="Top" Text="点动" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8"/>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="速度：" VerticalAlignment="Center" />
+            <TextBox Style="{StaticResource MotionInput}" Grid.Row="0" Grid.Column="1" x:Name="SpeedBox" Text="{Binding ViewModel.Model.SpeedInput, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="0,0,8,0" />
+            <Button Style="{StaticResource MotionAction}" Height="32" MinHeight="32" Grid.Row="0" Grid.Column="2" Content="应用" Width="64" Padding="12,2" Command="{Binding ViewModel.ApplySpeedCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" AutomationProperties.Name="应用" />
+
+            <Button Style="{StaticResource MotionHoldAction}" Height="32" MinHeight="32" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Content="Jog+（按住）" Margin="0,6,0,0" Padding="8,4"
+                    PreviewMouseLeftButtonDown="OnJogDown" PreviewMouseLeftButtonUp="OnJogUp"
+                    MouseLeave="OnJogUp" LostMouseCapture="OnJogUp" Tag="Positive"
+                    IsEnabled="{Binding ViewModel.IsOperable, RelativeSource={RelativeSource AncestorType=UserControl}}" AutomationProperties.Name="Jog+（按住）" />
+            <Button Style="{StaticResource MotionHoldAction}" Height="32" MinHeight="32" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Content="Jog-（按住）" Margin="0,6,0,0" Padding="8,4"
+                    PreviewMouseLeftButtonDown="OnJogDown" PreviewMouseLeftButtonUp="OnJogUp"
+                    MouseLeave="OnJogUp" LostMouseCapture="OnJogUp" Tag="Negative"
+                    IsEnabled="{Binding ViewModel.IsOperable, RelativeSource={RelativeSource AncestorType=UserControl}}" AutomationProperties.Name="Jog-（按住）" />
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,6,0,0"
+                       Text="{Binding ViewModel.Model.LastMessage, RelativeSource={RelativeSource AncestorType=UserControl}}" Foreground="{DynamicResource MaterialDesign.Brush.Primary}" TextWrapping="Wrap" />
+        </Grid>
+    </DockPanel>
+    </md:Card>
+</UserControl>

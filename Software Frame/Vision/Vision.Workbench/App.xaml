@@ -1,0 +1,18 @@
+<!--
+中文阅读说明：界面与资源声明。
+Vision 模块：视觉工具模型、算法适配和编辑展示；厂商能力与界面转换应在对应边界内协作。 本文件属于验证宿主，模块组合与人工验证流程应与生产机型业务区分。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<prism:PrismApplication x:Class="Vision.Workbench.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:prism="http://prismlibrary.com/">
+    <prism:PrismApplication.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="pack://application:,,,/Vision.Controls;component/Ctr_Halcon/View/ResourceDic .xaml" />
+        <md:BundledTheme BaseTheme="Light" PrimaryColor="Teal" SecondaryColor="Amber" />
+        <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/WPFCustomControls;component/Resources/Resources.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/WPFCustomControls;component/Resources/WorkbenchStyles.xaml" />
+    </ResourceDictionary.MergedDictionaries></ResourceDictionary></prism:PrismApplication.Resources>
+</prism:PrismApplication>

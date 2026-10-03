@@ -1,0 +1,860 @@
+﻿// 【中文阅读说明】
+// ScriptEditor 模块：脚本持久化模型、运行时编译执行和编辑器协作；脚本 ID、引用及断点属于需要保留的状态。
+// 本文件定义：ScriptEditorService。成员说明可结合下方具体实现阅读。
+// 直接导入的协作命名空间包括：ScriptEditor.Controls、ScriptEditor.Runtime.Services、System.Collections.Concurrent、System.Collections.ObjectModel、System.ComponentModel、System.IO。导入不代表所有类型都会在运行时加载。
+using ScriptEditor.Controls;
+using ScriptEditor.Runtime.Services;
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text.Json;
+using System.Text;
+using System.Windows.Threading;
+
+using CommunityToolkit.Mvvm.ComponentModel;
+using ICSharpCode.AvalonEdit.Document;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Rename;
+using Microsoft.CodeAnalysis.Scripting;
+using RoslynPad.Editor;
+using RoslynPad.Roslyn;
+using ScriptEditor.Core.Contracts;
+using ScriptEditor.Controls.Models;
+using ScriptEditor.Core.Models;
+using Extension.Core.Conversion;
+
+namespace ScriptEditor.Controls.Services;
+
+/// <summary>
+/// 脚本编辑器核心服务，负责编辑器操作、脚本执行/编译、文件操作、引用管理等业务逻辑。
+/// </summary>
+/// <remarks>
+/// <para>核心职责：</para>
+/// <list type="bullet">
+///   <item>管理共享的 CustomRoslynHost 实例</item>
+///   <item>DLL 引用的增删改查</item>
+///   <item>编辑器文本操作、格式化、注释、重命名</item>
+///   <item>脚本编译、执行、循环执行、终止（委托给当前 <see cref="IScriptSession"/>）</item>
+///   <item>输出缓冲与实时刷新</item>
+///   <item>文件新建/打开/保存/另存为</item>
+/// </list>
+/// <para>运行状态归属（P3）：本服务**不再持有执行引擎**。运行状态由
+/// <see cref="IScriptSession"/> 独占持有，本服务只负责把「当前编辑器对应哪个会话」
+/// 解析出来并转发操作。会话生命周期由共享的 <see cref="RoslynScriptRuntime"/> 管理：
+/// 附加到脚本项时使用该脚本的会话；未附加（独立编辑器窗口）时使用一个文档会话。</para>
+/// <para>架构：按职责拆分为 partial 模块 ——</para>
+/// <list type="bullet">
+///   <item><c>ScriptEditorService.cs</c>：核心状态、事件中继、编辑器生命周期、会话转发</item>
+///   <item><c>ScriptEditorService.References.cs</c>：引用管理与 Roslyn 工作区同步</item>
+///   <item><c>ScriptEditorService.Files.cs</c>：文件操作与脚本模板</item>
+/// </list>
+/// </remarks>
+public partial class ScriptEditorService : ObservableObject
+{
+    #region 事件
+
+    /// <summary>综合状态变更通知（IsRunning / IsLooping / StatusText 等任意状态变化时触发）。</summary>
+    public event Action? StateChanged;
+
+    /// <summary>输出文本变更通知。</summary>
+    public event Action? OutputTextChanged;
+
+    #endregion
+
+    // ════════════════════════════════════════════════════════════════
+    //  会话（运行状态唯一事实源）
+    // ════════════════════════════════════════════════════════════════
+
+    /// <summary>共享脚本运行时（进程内单例，负责会话的创建与释放）。</summary>
+    /// <remarks>P7：字段类型为 <see cref="IScriptRuntime"/> 契约（默认实现仍为共享实例），
+    /// 第二脚本后端或 ScriptWorker 进程实现可经构造注入替换，无需改 Controls 公共契约。</remarks>
+    private readonly IScriptRuntime _runtime;
+
+    /// <summary>当前编辑器对应的会话（附加脚本项会话，或独立编辑器文档会话）。</summary>
+    private IScriptSession _session = null!;
+
+    /// <summary>未附加脚本项时使用的文档会话（惰性创建）。</summary>
+    private IScriptSession? _documentSession;
+
+    private readonly HashSet<string> _localInjectedReferencePaths = new(StringComparer.OrdinalIgnoreCase);
+    private readonly FileService _fileService;
+    private readonly ScriptEditorModel _model;
+    private readonly List<MetadataReference> _additionalReferences = new();
+    private CustomRoslynHost? _roslynHost;
+    private Exception? _initError;
+    private static readonly SymbolRenameOptions RenameOptions = new();
+
+    /// <summary>
+    /// 当前关联的脚本项（ScriptManager 标签页场景）。非 null 时：
+    /// 引用增删改会同步回 ScriptItem，且脚本运行状态取自该脚本自己的会话。
+    /// </summary>
+    private global::ScriptEditor.Core.Models.ScriptItem? _attachedItem;
+    internal ScriptItem? AttachedItem
+    {
+        get => _attachedItem;
+        set
+        {
+            if (ReferenceEquals(_attachedItem, value)) return;
+            _attachedItem = value;
+            SwitchSession();
+            OnPropertyChanged(nameof(AttachedItem));
+        }
+    }
+
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 SyncAttachedItemReferences。
+    /// 正文中的关键协作调用包括 SetReferences；具体条件和先后次序见方法体。
+    /// </summary>
+    private void SyncAttachedItemReferences()
+    {
+        if (AttachedItem == null) return;
+        AttachedItem.SetReferences(_model.AdditionalReferencePaths);
+    }
+
+    private RoslynCodeEditor? _editor;
+    private RoslynHost? _host;
+    private DocumentId? _documentId;
+    private string? _pendingText;
+
+    /// <summary>编辑器文本变更处理程序（保存为字段以便重复 Initialize 时先退订，防止订阅叠加）。</summary>
+    private EventHandler? _editorTextChanged;
+
+    /// <summary>
+    /// 创建脚本编辑器服务。
+    /// </summary>
+    /// <param name="fileService">文件服务，缺省时新建默认实例。传入 null 则不依赖 Prism 容器。</param>
+    /// <param name="runtime">脚本运行时，缺省为进程共享实例；测试或第二后端可注入。</param>
+    public ScriptEditorService(FileService? fileService = null, IScriptRuntime? runtime = null)
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        _model = new ScriptEditorModel();
+        _fileService = fileService ?? new FileService();
+        _runtime = runtime ?? RoslynScriptRuntime.Shared;
+        System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor model+fileService: {sw.ElapsedMilliseconds}ms");
+
+        // 中继 Model 事件（跨线程时封送到 UI 线程，已在 UI 线程则同步通知避免绑定延迟）
+        // 注：Model 与本 Service 同生命周期（构造函数内创建），订阅无泄漏风险
+        _model.PropertyChanged += OnModelPropertyChanged;
+
+        System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor events: {sw.ElapsedMilliseconds}ms");
+
+        try
+        {
+            // 后端：共享 CustomRoslynHost + 当前会话（状态事件封送到 UI 线程）
+            // ScriptHostProvider.Shared 应在 App 预热阶段已由后台线程完成初始化，
+            // 此处访问 Lazy.Value 应瞬时返回（若未预热则 UI 线程阻塞 ~500ms）。
+            var hostSw = System.Diagnostics.Stopwatch.StartNew();
+            _roslynHost = ScriptHostProvider.Shared;
+            System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor ScriptHostProvider.Shared: {hostSw.ElapsedMilliseconds}ms");
+
+            // 会话：未附加脚本项时为独立文档会话，附加后切换到该脚本的会话
+            _session = ResolveSession();
+            SubscribeSession(_session);
+            System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor Session: {hostSw.ElapsedMilliseconds}ms");
+
+            // 初始化执行相关状态（输出冲刷定时器，冲刷当前会话的输出队列到 UI）
+            // 必须在 _session 就绪之后且在 try 块内初始化，避免会话为 null 时访问
+            _outputFlushTimer = new DispatcherTimer(
+                TimeSpan.FromMilliseconds(100),
+                DispatcherPriority.Background,
+                (_, _) => _session.FlushOutput(),
+                System.Windows.Application.Current.Dispatcher)
+            { IsEnabled = false };
+        }
+        catch (Exception ex)
+        {
+            _initError = ex;
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Ctor TOTAL: {sw.ElapsedMilliseconds}ms");
+    }
+
+    /// <summary>解析当前应使用的会话：附加了脚本项则用该脚本的会话，否则用编辑器文档会话。</summary>
+    private IScriptSession ResolveSession()
+        => _attachedItem != null
+            ? _runtime.GetSession(_attachedItem)
+            : _documentSession ??= _runtime.CreateDetachedSession(
+                _model.DocumentTitle,
+                GetText,
+                () => _model.AdditionalReferencePaths
+                    .Select(path => new ScriptReference(path, Path.GetFileName(path)))
+                    .ToList(),
+                () => _model.Breakpoints);
+
+    /// <summary>切换当前会话（脚本项变化时调用），并迁移事件订阅。</summary>
+    private void SwitchSession()
+    {
+        var previous = _session;
+        if (previous != null) UnsubscribeSession(previous);
+
+        _session = ResolveSession();
+        SubscribeSession(_session);
+        OnPropertyChanged(nameof(Session));
+    }
+
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 SubscribeSession。
+    /// </summary>
+    private void SubscribeSession(IScriptSession session)
+    {
+        session.PropertyChanged += OnSessionPropertyChanged;
+        session.StateChanged += OnSessionStateChanged;
+    }
+
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 UnsubscribeSession。
+    /// </summary>
+    private void UnsubscribeSession(IScriptSession session)
+    {
+        session.PropertyChanged -= OnSessionPropertyChanged;
+        session.StateChanged -= OnSessionStateChanged;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  Model 暴露（供 ViewModel 直接绑定，消除代理层）
+    // ════════════════════════════════════════════════════════════════
+
+    /// <summary>获取编辑器自身状态模型（文档标题、路径、引用列表、断点；不含运行状态）。</summary>
+    public ScriptEditorModel Model => _model;
+
+    /// <summary>
+    /// 当前编辑器对应的脚本会话：脚本运行状态（IsRunning / IsLooping / Output /
+    /// StatusText / ExecutionTime / CompilationState）的唯一事实源。
+    /// </summary>
+    public IScriptSession Session => _session;
+
+    /// <summary>当前会话输出文本（转发自 <see cref="Session"/>，供绑定与中继使用）。</summary>
+    public string OutputText => _session.Output;
+
+    /// <summary>用户添加的 DLL 引用路径列表（只读）。</summary>
+    public IReadOnlyList<string> AdditionalReferencePaths => _model.AdditionalReferencePaths;
+
+    public string ScriptsDirectoryPath { get; } = Path.Combine(
+        Path.GetDirectoryName(typeof(ScriptEditorService).Assembly.Location) ?? ".", "Config");
+
+    /// <summary>当前 Roslyn 宿主实例（CustomRoslynHost）。</summary>
+    public CustomRoslynHost? RoslynHost => _roslynHost;
+
+    /// <summary>初始化阶段的异常（null 表示成功）。</summary>
+    public Exception? InitError => _initError;
+
+    /// <summary>编辑器是否已完成初始化（View 已关联）。</summary>
+    public bool IsInitialized => _editor != null && _host != null && _documentId != null;
+
+    /// <summary>最近一次脚本执行的原始返回值。</summary>
+    public object? LastScriptResult => _session.LastResult;
+
+    /// <summary>循环执行间隔（毫秒），直接读写当前会话。</summary>
+    internal int LoopInterval
+    {
+        get => _session.LoopInterval;
+        set => _session.LoopInterval = value;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  原有：编辑器生命周期
+    // ════════════════════════════════════════════════════════════════
+
+    /// <summary>Model 属性变更 → 跨线程封送后中继为 Service 属性变更。</summary>
+    private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+        {
+            dispatcher.InvokeAsync(() => OnPropertyChanged(e.PropertyName), DispatcherPriority.Background);
+        }
+        else
+        {
+            OnPropertyChanged(e.PropertyName);
+        }
+    }
+
+    /// <summary>会话属性变更 → 跨线程封送后中继为 Service 属性变更（驱动绑定与命令 CanExecute）。</summary>
+    /// <remarks>
+    /// 会话属性名与 UI 绑定名存在一处映射：会话的 <c>Output</c> 对外仍以
+    /// <c>OutputText</c> 暴露（ViewModel / View 依赖属性沿用该名称）。
+    /// </remarks>
+    private void OnSessionPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        var name = e.PropertyName switch
+        {
+            nameof(IScriptSession.Output) => nameof(OutputText),
+            _ => e.PropertyName
+        };
+
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+        {
+            dispatcher.InvokeAsync(() =>
+            {
+                OnPropertyChanged(name);
+                if (name == nameof(OutputText)) OutputTextChanged?.Invoke();
+            }, DispatcherPriority.Background);
+        }
+        else
+        {
+            OnPropertyChanged(name);
+            if (name == nameof(OutputText)) OutputTextChanged?.Invoke();
+        }
+    }
+
+    /// <summary>会话综合状态变更 → 跨线程封送后转发。</summary>
+    private void OnSessionStateChanged()
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+            dispatcher.InvokeAsync(() => StateChanged?.Invoke(), DispatcherPriority.Background);
+        else
+            StateChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// 关联 RoslynCodeEditor 实例。由 View 层在 OnLoaded 中调用。
+    /// </summary>
+    public void Initialize(RoslynCodeEditor editor, RoslynHost host, DocumentId documentId)
+    {
+        // 防止重复 Initialize（View 多次 Loaded）时订阅叠加：先退订旧编辑器上的处理程序
+        if (_editor != null && _editorTextChanged != null)
+            _editor.Document.TextChanged -= _editorTextChanged;
+
+        _editor = editor;
+        _host = host;
+        _documentId = documentId;
+
+        _editorTextChanged = OnEditorTextChanged;
+        editor.Document.TextChanged += _editorTextChanged;
+
+        if (_pendingText != null)
+            editor.Text = _pendingText;
+        else
+            _pendingText = editor.Text;
+    }
+
+    /// <summary>
+    /// 处理对应通知、事件或生命周期回调；对应入口为 OnEditorTextChanged。
+    /// </summary>
+    private void OnEditorTextChanged(object? sender, EventArgs e)
+    {
+        if (_editor == null) return;
+        _pendingText = _editor.Text;
+        _model.HasModified = true;
+    }
+
+    /// <summary>获取编辑器当前完整文本（线程安全，始终返回缓存文本）。</summary>
+    public string GetText() => _pendingText ?? string.Empty;
+
+    /// <summary>设置编辑器文本内容（未初始化时暂存，初始化后自动应用）。</summary>
+    public void SetText(string text)
+    {
+        _pendingText = text;
+        if (_editor != null)
+            _editor.Text = text;
+    }
+
+    /// <summary>获取编辑器当前选中文本。</summary>
+    public string GetSelectedText()
+    {
+        if (_editor == null) return string.Empty;
+        var textArea = _editor.TextArea;
+        if (textArea == null || textArea.Selection.IsEmpty) return string.Empty;
+        return textArea.Selection.GetText();
+    }
+
+    /// <summary>获取光标行列位置（1-based）。</summary>
+    public (int Line, int Column) GetCaretPosition()
+    {
+        if (_editor == null) return (1, 1);
+        var caret = _editor.TextArea.Caret;
+        return (caret.Line, caret.Column);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  原有：编辑器操作
+    // ════════════════════════════════════════════════════════════════
+
+    public void RefreshDiagnostics()
+    {
+        if (!IsInitialized || _editor == null) return;
+        try
+        {
+            var text = _editor.Text;
+            // 文本未变化时跳过整篇 Replace：避免产生冗余撤销记录与不必要的重分析
+            if (string.Equals(text, _editor.Document.Text, StringComparison.Ordinal)) return;
+            _editor.Document.Replace(0, _editor.Document.TextLength, text);
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 FormatDocumentAsync。
+    /// 正文中的关键协作调用包括 GetDocument、FormatAsync、GetTextAsync、ToString、Equals；具体条件和先后次序见方法体。
+    /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
+    /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
+    /// </summary>
+    public async Task FormatDocumentAsync()
+    {
+        if (!IsInitialized || _host == null || _documentId == null || _editor == null) return;
+        try
+        {
+            var document = _host.GetDocument(_documentId);
+            if (document == null) return;
+            var formattedDoc = await Formatter.FormatAsync(document) ;
+            var formattedText = await formattedDoc.GetTextAsync() ;
+            var newText = formattedText.ToString();
+            // 内容未变化时跳过 Replace，避免破坏撤销栈
+            if (!string.Equals(newText, _editor.Document.Text, StringComparison.Ordinal))
+                _editor.Document.Replace(0, _editor.Document.TextLength, newText);
+            _host.UpdateDocument(formattedDoc);
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 CommentSelection。
+    /// 正文中的关键协作调用包括 ToggleLineComment；具体条件和先后次序见方法体。
+    /// </summary>
+    public void CommentSelection()
+    {
+        if (_editor == null) return;
+        ToggleLineComment(addComment: true);
+    }
+
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 UncommentSelection。
+    /// 正文中的关键协作调用包括 ToggleLineComment；具体条件和先后次序见方法体。
+    /// </summary>
+    public void UncommentSelection()
+    {
+        if (_editor == null) return;
+        ToggleLineComment(addComment: false);
+    }
+
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 ToggleLineComment。
+    /// 正文中的关键协作调用包括 GetLineRange、BeginChange、GetText、IsNullOrWhiteSpace、Insert；具体条件和先后次序见方法体。
+    /// </summary>
+    private void ToggleLineComment(bool addComment)
+    {
+        if (_editor == null) return;
+        var document = _editor.Document;
+        var textArea = _editor.TextArea;
+        if (textArea == null) return;
+        var range = GetLineRange(document, textArea);
+        if (range.StartLine == null || range.EndLine == null) return;
+
+        _editor.BeginChange();
+        try
+        {
+            var line = range.StartLine;
+            while (line != null)
+            {
+                var lineText = document.GetText(line.Offset, line.Length);
+                if (addComment)
+                {
+                    if (!string.IsNullOrWhiteSpace(lineText))
+                        document.Insert(line.Offset, "//");
+                }
+                else
+                {
+                    var trimmed = lineText.TrimStart();
+                    if (trimmed.StartsWith("//"))
+                    {
+                        var commentIndex = lineText.IndexOf("//", StringComparison.Ordinal);
+                        document.Remove(line.Offset + commentIndex, 2);
+                    }
+                }
+                if (line.LineNumber >= range.EndLine.LineNumber) break;
+                line = line.NextLine;
+                if (addComment)
+                    range = range with { EndLine = document.GetLineByOffset(range.EndLine.Offset) };
+            }
+        }
+        finally { _editor.EndChange(); }
+    }
+
+    /// <summary>
+    /// 获取当前实现提供的值或对象；对应入口为 GetLineRange。
+    /// 正文中的关键协作调用包括 GetLineByOffset、GetOffset；具体条件和先后次序见方法体。
+    /// </summary>
+    private static (IDocumentLine StartLine, IDocumentLine EndLine) GetLineRange(
+        IDocument document, ICSharpCode.AvalonEdit.Editing.TextArea textArea)
+    {
+        int startOffset, endOffset;
+        if (textArea.Selection.IsEmpty)
+        {
+            var caretLine = document.GetLineByOffset(textArea.Caret.Offset);
+            startOffset = caretLine.Offset;
+            endOffset = caretLine.EndOffset;
+        }
+        else
+        {
+            startOffset = document.GetOffset(textArea.Selection.StartPosition.Line, textArea.Selection.StartPosition.Column);
+            endOffset = document.GetOffset(textArea.Selection.EndPosition.Line, textArea.Selection.EndPosition.Column);
+        }
+        var startLine = document.GetLineByOffset(startOffset);
+        var endLine = document.GetLineByOffset(endOffset);
+        return (startLine, endLine);
+    }
+
+    /// <summary>
+    /// 获取当前实现提供的值或对象；对应入口为 GetCurrentSymbolNameAsync。
+    /// 正文中的关键协作调用包括 ResolveSymbolAtCaretAsync；具体条件和先后次序见方法体。
+    /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
+    /// </summary>
+    public async Task<string?> GetCurrentSymbolNameAsync()
+    {
+        var symbol = await ResolveSymbolAtCaretAsync();
+        return symbol?.Name;
+    }
+
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 RenameSymbolAsync。
+    /// 正文中的关键协作调用包括 IsNullOrWhiteSpace、ResolveSymbolAtCaretAsync、GetDocument、RenameSymbolAsync、GetTextAsync；具体条件和先后次序见方法体。
+    /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
+    /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
+    /// </summary>
+    public async Task RenameSymbolAsync(string newName)
+    {
+        if (!IsInitialized || _host == null || _documentId == null || _editor == null) return;
+        if (string.IsNullOrWhiteSpace(newName)) return;
+
+        try
+        {
+            var symbol = await ResolveSymbolAtCaretAsync();
+            if (symbol == null) return;
+            var document = _host.GetDocument(_documentId);
+            if (document == null) return;
+            var newSolution = await Renamer.RenameSymbolAsync(
+                document.Project.Solution, symbol, RenameOptions, newName) ;
+            var newDocument = newSolution.GetDocument(_documentId);
+            if (newDocument == null) return;
+            var newText = await newDocument.GetTextAsync();
+            _editor.Document.Replace(0, _editor.Document.TextLength, newText.ToString());
+            _host.UpdateDocument(newDocument);
+        }
+        catch (InvalidOperationException) { }
+    }
+
+    /// <summary>
+    /// 带 UI 提示的重命名流程（Controls 层对话框，P4）。
+    /// ViewModel 只调用此方法，不再直接引用 InputBox/Dispatcher。
+    /// </summary>
+    public async Task RenameSymbolWithPromptAsync()
+    {
+        if (!IsInitialized) return;
+
+        var symbolName = await GetCurrentSymbolNameAsync();
+        if (string.IsNullOrEmpty(symbolName))
+        {
+            _model.StatusText = "未找到可重命名的符号";
+            return;
+        }
+
+        var newName = await Dialogs.SymbolRenameDialog.PromptAsync(null, symbolName);
+        if (!string.IsNullOrEmpty(newName))
+            await RenameSymbolAsync(newName);
+    }
+
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 ResolveSymbolAtCaretAsync。
+    /// 正文中的关键协作调用包括 GetDocument、GetSemanticModelAsync、GetSyntaxTreeAsync、GetRootAsync、FindToken；具体条件和先后次序见方法体。
+    /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
+    /// </summary>
+    private async Task<ISymbol?> ResolveSymbolAtCaretAsync()
+    {
+        if (!IsInitialized || _host == null || _documentId == null || _editor == null) return null;
+        var document = _host.GetDocument(_documentId);
+        if (document == null) return null;
+        var semanticModel = await document.GetSemanticModelAsync();
+        if (semanticModel == null) return null;
+        var syntaxTree = await document.GetSyntaxTreeAsync();
+        if (syntaxTree == null) return null;
+        var root = await syntaxTree.GetRootAsync();
+        var token = root.FindToken(_editor.CaretOffset);
+        var node = token.Parent;
+        if (node == null) return null;
+        return semanticModel.GetSymbolInfo(node).Symbol ?? semanticModel.GetDeclaredSymbol(node);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  引用管理与文件操作：见 partial 模块
+    //  ScriptEditorService.References.cs / ScriptEditorService.Files.cs
+    // ════════════════════════════════════════════════════════════════
+
+    // ════════════════════════════════════════════════════════════════
+    //  执行（转发给当前会话）
+    // ════════════════════════════════════════════════════════════════
+
+    #region 执行
+
+    /// <summary>设置脚本执行时的输入数据（转发给当前会话）。</summary>
+    public void SetInputData(object? data) => _session.SetInputData(data);
+
+    // ════════════════════════════════════════════════════════════════
+    //  输出缓冲（冲刷当前会话的输出队列到 UI）
+    // ════════════════════════════════════════════════════════════════
+
+    #region 输出缓冲
+
+    private readonly DispatcherTimer _outputFlushTimer;
+
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 StartOutputFlushTimer。
+    /// </summary>
+    private void StartOutputFlushTimer()
+    {
+        _outputFlushTimer.IsEnabled = true;
+    }
+
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 StopOutputFlushTimer。
+    /// </summary>
+    private void StopOutputFlushTimer()
+    {
+        _outputFlushTimer.IsEnabled = false;
+    }
+
+    #endregion
+
+    /// <summary>
+    /// 异步执行当前脚本。返回 true 表示执行成功，false 表示出错。
+    /// 执行逻辑在无头 <see cref="ScriptSession"/> 中完成（编译/运行不依赖 RoslynPad 编辑器）。
+    /// </summary>
+    public async Task<bool> RunAsync()
+    {
+        var isLoop = _session.IsLooping;
+        if (!isLoop)
+            StartOutputFlushTimer();
+
+        try
+        {
+            return await _session.RunAsync();
+        }
+        finally
+        {
+            if (!isLoop)
+                StopOutputFlushTimer();
+        }
+    }
+
+    /// <summary>终止当前执行。</summary>
+    public void Terminate() => _session.Terminate();
+
+    /// <summary>异步循环执行当前脚本。</summary>
+    public async Task LoopRunAsync()
+    {
+        StartOutputFlushTimer();
+        try
+        {
+            await _session.LoopRunAsync();
+        }
+        finally
+        {
+            StopOutputFlushTimer();
+            System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+        }
+    }
+
+    /// <summary>停止循环执行。</summary>
+    public void StopLoop() => _session.StopLoop();
+
+    /// <summary>仅编译当前脚本，不执行。</summary>
+    public async Task CompileAsync()
+    {
+        var wasModified = _model.HasModified;
+        await _session.CompileAsync();
+        // 编辑器已初始化时刷新诊断（RoslynPad 工作区文档）
+        var wasLooping = _session.IsLooping;
+        if (IsInitialized && !wasLooping)
+            RefreshDiagnostics();
+        _model.HasModified = wasModified;
+    }
+
+    /// <summary>预编译脚本（后台静默编译，加速首次执行）。</summary>
+    public async Task PreCompileScriptAsync(string code)
+    {
+        await _session.PreCompileAsync(code);
+    }
+
+    #endregion
+
+    // 引用管理操作 → 见 ScriptEditorService.References.cs
+
+    #region 编辑器操作委托
+
+    /// <summary>格式化当前文档。</summary>
+    public async Task FormatDocumentWrapperAsync()
+    {
+        await FormatDocumentAsync();
+        _model.StatusText = "已格式化";
+    }
+
+    /// <summary>加载默认脚本模板。</summary>
+    public void LoadTemplate()
+    {
+        var currentCode = GetText();
+        var template = GetDefaultTemplate();
+
+        // 当前代码为空或与模板相同，直接加载
+        if (string.IsNullOrWhiteSpace(currentCode) || currentCode == template)
+        {
+            SetText(template);
+            _model.StatusText = "已加载模板";
+            return;
+        }
+
+        // 当前有非模板代码，提示用户确认替换
+        var prompt = new WPFCustomControls.Window.Views.MessagePrompt(
+            "确认替换",
+            "当前编辑器中有代码，加载模板将替换现有内容，是否继续？",
+            System.Windows.Visibility.Visible);
+        if (prompt.ShowDialog() != true)
+        {
+            _model.StatusText = "已取消加载模板";
+            return;
+        }
+
+        SetText(template);
+        // 显式更新 AttachedItem.Code，确保 ScriptItem 数据同步（共享 Service 场景下 _editor 可能指向其他视图）
+        if (AttachedItem != null)
+            AttachedItem.Code = template;
+        _model.StatusText = "已加载模板";
+    }
+
+    #endregion
+
+    // ════════════════════════════════════════════════════════════════
+    //  新增：资源释放
+    // ════════════════════════════════════════════════════════════════
+
+    #region 资源释放
+
+    /// <summary>
+    /// 预热 RoslynPad 编辑器：创建隐藏的 RoslynCodeEditor 并调用 InitializeAsync，
+    /// 预初始化 RoslynWorkspace + CompletionService + 语法高亮。
+    /// 首次调用 ~1.5s，后续 Tab 切换时 InitializeAsync 仅需 &lt; 100ms。
+    /// 应在 loading 窗口阶段调用，不阻塞主窗口显示。
+    /// 注意：内部涉及 UI 操作（Window / RoslynCodeEditor 均为 DispatcherObject），
+    /// 若从后台线程调用会先投递到 UI 线程再执行，任何线程 await 均安全。
+    /// </summary>
+    public async Task WarmupRoslynPadAsync()
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher == null)
+            return;
+
+        if (dispatcher.CheckAccess())
+        {
+            await WarmupRoslynPadCoreAsync();
+        }
+        else
+        {
+            // 后台线程调用：投递到 UI 线程执行核心逻辑（含 UI 创建与 async 初始化）。
+            // InvokeAsync(Func<Task>) 返回 DispatcherOperation<Task>，双重 await 展开内层任务。
+            await await dispatcher.InvokeAsync(WarmupRoslynPadCoreAsync);
+        }
+    }
+
+    /// <summary>
+    /// 预热核心逻辑，必须在 UI 线程执行（创建隐藏窗口 + RoslynCodeEditor）。
+    /// </summary>
+    private async Task WarmupRoslynPadCoreAsync()
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var roslynHost = RoslynHost;
+        if (roslynHost == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[ScriptEditorService] Warmup skipped: RoslynHost is null");
+            return;
+        }
+
+        var highlightColors = new RoslynPad.Editor.ClassificationHighlightColors();
+        var workingDir = System.IO.Path.GetDirectoryName(typeof(ScriptEditorService).Assembly.Location) ?? ".";
+        var template = GetDefaultTemplate();
+
+        var window = new System.Windows.Window
+        {
+            Width = 0, Height = 0,
+            ShowInTaskbar = false,
+            WindowStyle = System.Windows.WindowStyle.None,
+            AllowsTransparency = true,
+            Background = System.Windows.Media.Brushes.Transparent,
+            Left = -10000, Top = -10000
+        };
+        var editor = new RoslynCodeEditor();
+        window.Content = editor;
+        window.Show();
+
+        try
+        {
+            await editor.InitializeAsync(roslynHost, highlightColors, workingDir, template, SourceCodeKind.Script);
+            System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] RoslynPad warmup completed: {sw.ElapsedMilliseconds}ms");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] RoslynPad warmup failed: {ex.Message}");
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    /// <summary>
+    /// 预热 UI 控件：预创建工具栏和引用面板，让 BAML 和 MaterialDesign 模板在 loading 阶段解析。
+    /// 后续 EnsureBackendInitialized 中 new 时命中 CLR 缓存，从 ~170ms 降至 < 10ms。
+    /// </summary>
+    public static void WarmupUI()
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        new Views.ScriptEditorToolbar();
+        System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] UI warmup Toolbar: {sw.ElapsedMilliseconds}ms");
+        sw.Restart();
+        new Views.ScriptEditorReferencePanel();
+        System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] UI warmup ReferencePanel: {sw.ElapsedMilliseconds}ms");
+    }
+
+    /// <summary>
+    /// 统一预热入口：loading 阶段调用，一次性完成所有 ScriptEditor 后端+UI 预热。
+    /// 包含：RoslynHost 初始化 → ScriptEditorService 预解析 → RoslynPad 预热 → UI 控件预热。
+    /// </summary>
+    /// <param name="container">Prism DI 容器，用于预解析 ScriptEditorService 单例。</param>
+    public   async Task WarmupAsync(Prism.Ioc.IContainerProvider container)
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        System.Diagnostics.Debug.WriteLine("[ScriptEditorService] ====== WarmupAsync START ======");
+
+        // 1. 等待 RoslynHost 后台线程完成初始化（ScriptEditorModule.WarmupTask）
+        if (ScriptEditorModule.WarmupTask != null)
+        {
+            await ScriptEditorModule.WarmupTask;
+            System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Warmup Step1 RoslynHost: {sw.ElapsedMilliseconds}ms");
+        }
+ 
+        // 3. 预热 RoslynPad 编辑器（隐藏窗口 + InitializeAsync，预初始化 CompletionService）
+        sw.Restart();
+        await WarmupRoslynPadAsync();
+        System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Warmup Step3 RoslynPad: {sw.ElapsedMilliseconds}ms");
+
+        // 4. 预热工具栏和引用面板 BAML + MaterialDesign 模板
+        sw.Restart();
+        WarmupUI();
+        System.Diagnostics.Debug.WriteLine($"[ScriptEditorService] Warmup Step4 UI: {sw.ElapsedMilliseconds}ms");
+
+        System.Diagnostics.Debug.WriteLine("[ScriptEditorService] ====== WarmupAsync COMPLETE ======");
+    }
+
+    /// <summary>释放执行相关资源（停止循环并终止当前会话的执行）。</summary>
+    public void DisposeExecution()
+    {
+        StopOutputFlushTimer();
+        _session.StopLoop();
+        _session.Terminate();
+    }
+
+    #endregion
+}

@@ -1,0 +1,95 @@
+<!--
+中文阅读说明：界面与资源声明。
+WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，供业务界面与工作台复用。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl
+    x:Class="WPFCustomControls.Controls.BorderRippleView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:WPFCustomControls.ValueConvert"
+    xmlns:converters1="clr-namespace:MaterialDesignThemes.Wpf.Converters;assembly=MaterialDesignThemes.Wpf"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:WPFCustomControls.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:BorderClipConverter x:Key="BorderClipConverter" />
+    </UserControl.Resources>
+    <Grid>
+        <!--  使用Border模拟FlatButton的点击效果  -->
+        <Border
+            x:Name="MainBorder"
+            Background="Transparent"
+            ClipToBounds="True"
+            CornerRadius="20"
+            Cursor="Hand" />
+
+        <!--  添加ProgressBar用于加载指示器  -->
+        <ProgressBar
+            x:Name="LoadingProgressBar"
+            Width="{Binding ElementName=MainBorder, Path=ActualWidth}"
+            Height="{Binding ElementName=MainBorder, Path=ActualHeight}"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Background="Transparent"
+            BorderBrush="Transparent"
+            Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+            IsIndeterminate="True"
+            Opacity="0"
+            Style="{DynamicResource MaterialDesignCircularProgressBar}">
+            <ProgressBar.Clip>
+                <MultiBinding Converter="{StaticResource BorderClipConverter}">
+                    <Binding ElementName="MainBorder" Path="ActualWidth" />
+                    <Binding ElementName="MainBorder" Path="ActualHeight" />
+                    <Binding ElementName="MainBorder" Path="CornerRadius" />
+                    <Binding ElementName="MainBorder" Path="BorderThickness" />
+                </MultiBinding>
+            </ProgressBar.Clip>
+        </ProgressBar>
+
+        <materialDesign:Ripple
+            x:Name="MainRipple"
+            Margin="0"
+            Padding="0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch"
+            ClipToBounds="True"
+            Feedback="{DynamicResource MaterialDesign.Brush.Primary}"
+            RecognizesAccessKey="True"
+            SnapsToDevicePixels="True">
+            <materialDesign:Ripple.Clip>
+                <MultiBinding Converter="{StaticResource BorderClipConverter}">
+                    <Binding ElementName="MainBorder" Path="ActualWidth" />
+                    <Binding ElementName="MainBorder" Path="ActualHeight" />
+                    <Binding ElementName="MainBorder" Path="CornerRadius" />
+                    <Binding ElementName="MainBorder" Path="BorderThickness" />
+                </MultiBinding>
+            </materialDesign:Ripple.Clip>
+            <DockPanel
+                Margin="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+                <materialDesign:PackIcon
+                    x:Name="IconDisplay"
+                    Width="35"
+                    Height="35"
+                    Margin="8,0,0,0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    DockPanel.Dock="Left" />
+                <TextBlock
+                    x:Name="TextDisplay"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    DockPanel.Dock="Left" />
+            </DockPanel>
+        </materialDesign:Ripple>
+    </Grid>
+</UserControl>

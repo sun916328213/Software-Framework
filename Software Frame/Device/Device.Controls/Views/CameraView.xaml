@@ -1,0 +1,377 @@
+<!--
+中文阅读说明：界面与资源声明。
+Device 模块：设备契约、驱动适配、工作区及界面；真实连接和释放顺序由设备生命周期约定决定。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl
+    x:Class="Device.Controls.Views.CameraView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:common="clr-namespace:Device.Controls.Common"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:Device.Controls.Models"
+    xmlns:wpfcc="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    d:DesignHeight="900"
+    d:DesignWidth="1000"
+    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <!--  页面样式归 Device.Controls 自己所有，由本页自行合并（宿主不替页面合并）  -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Device.Controls;component/Themes/PageStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!--  列对象不在可视树里：借代理把页面 VM 递进 DataGridComboBoxColumn.ItemsSource  -->
+            <common:BindingProxy x:Key="PageProxy" Data="{Binding}" />
+
+            <!--  下拉弹层背景走 ComboBox 模板里的 ColorZone（见 CamComboElementStyle/EditingElementStyle 的 PrimaryLight），此处沿用原有两行  -->
+            <DynamicResource x:Key="MaterialDesign.Brush.ComboBox.Popup.LightBackground" ResourceKey="MaterialDesign.Brush.Primary.Light" />
+            <DynamicResource x:Key="MaterialDesign.Brush.DataGrid.PopupBorder" ResourceKey="MaterialDesign.Brush.Primary.Light" />
+
+            <Style BasedOn="{StaticResource ScrollViewer_Style}" TargetType="ScrollViewer" />
+
+            <Style TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+            </Style>
+
+            <!--  以下三个样式移植自旧 CamManagerView：标签 120 居中、按钮 130 抬起  -->
+            <Style
+                x:Key="Label_style"
+                BasedOn="{StaticResource MaterialDesignLabel}"
+                TargetType="Label">
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="Margin" Value="8,4" />
+            </Style>
+
+
+
+            <!--  拉满单元格用：已并入 PageStyles 的 PanelButton（同值），此处不再重复定义  -->
+            <!--  连接切换单键已改双键（与其他页一致），此样式删除；VM 的 ConnectToggleAsync 如无他用可一并删  -->
+
+            <Style
+                x:Key="CamHeader"
+                BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}"
+                TargetType="DataGridColumnHeader">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+            </Style>
+
+
+            <Style
+                x:Key="Combox_style"
+                BasedOn="{StaticResource DmCombo}"
+                TargetType="ComboBox">
+                <Setter Property="Margin" Value="8,0" />
+                <Setter Property="Padding" Value="8,4" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+            </Style>
+
+
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!--  版式：上部整宽相机列表 + 下部「左 400 测试/输出列 / 右图像显示」  -->
+    <!--  页面级滚动归本页：窗口高度不足时整页出垂直滚动条；MinHeight 绑视口，窗口足够大时星号行撑满  -->
+    <!--  横向不滚动：页面宽度不足时由表格自己出横向滚动条，避免整页（含图像区）被拖出视口  -->
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <Grid MinHeight="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="2.5*" />
+            </Grid.RowDefinitions>
+
+            <wpfcc:PageHeaderView
+                Title="相机测试"
+                Grid.Row="0"
+                Margin="0,0,0,8"
+                IconKind="Camera"
+                SubTitle="通过 Device.Core 的 ICameraFactory 与 ICamera 管理相机列表、测试连接与抓图；曝光/增益等参数由检测项下发" />
+
+            <!--
+                相机列表：整宽，列与回调全 XAML 声明，零 code-behind。
+                Height=330：ConfigManagerView 右侧按钮列 5 按钮（选择/解锁/增加/删除/保存）× 48 + 外框；
+                SelectedCallback 对标旧页 SetCurCam（切行停实时）。
+            -->
+            <wpfcc:ConfigManagerView
+                x:Name="CameraManager"
+                Title="相机列表"
+                Grid.Row="1"
+                Margin="0,0,0,8"
+                AddCallback="{Binding ProfileAddedAction}"
+                DeletedCallback="{Binding ProfileDeletedAction}"
+                FileName="{Binding Model.FileName}"
+                FilePath="{Binding Model.FilePath}"
+                ItemsSource="{Binding Model.DataCollection}"
+                SaveCallback="{Binding ProfilesSavedAction}"
+                SelectItem="{Binding Model.SelectedProfile, Mode=TwoWay}"
+                SelectedCallback="{Binding SelectCallbackAction}" MaxHeight="320">
+                <wpfcc:ConfigManagerView.DataGridColumns>
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="96"
+                        Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                        ElementStyle="{StaticResource DmTextElementStyle}"
+                        Header="相机名称"
+                        HeaderStyle="{StaticResource CamHeader}" />
+                    <!--  驱动列 = DriverId 一套名（展示与下拉同源）；下拉数据是运行时目录，经 PageProxy 递进来  -->
+                    <DataGridComboBoxColumn
+                        Width="*"
+                        MinWidth="150"
+                        EditingElementStyle="{StaticResource DmComboEditingStyle}"
+                        ElementStyle="{StaticResource DmComboElementStyle}"
+                        Header="驱动"
+                        HeaderStyle="{StaticResource CamHeader}"
+                        ItemsSource="{Binding Data.Model.Drivers, Source={StaticResource PageProxy}}"
+                        SelectedItemBinding="{Binding DriverId}" />
+                    <!--  类型 = CameraScanType 枚举名直出（AreaScan/LineScan），与驱动列同一定案：不做中文映射；静态列表用 x:Static 取  -->
+                    <DataGridComboBoxColumn
+                        Width="*"
+                        MinWidth="120"
+                        EditingElementStyle="{StaticResource DmComboEditingStyle}"
+                        ElementStyle="{StaticResource DmComboElementStyle}"
+                        Header="类型"
+                        HeaderStyle="{StaticResource CamHeader}"
+                        ItemsSource="{x:Static models:CameraPageModel.ScanTypes}"
+                        SelectedItemBinding="{Binding ScanType}" />
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="120"
+                        Binding="{Binding IpAddress, UpdateSourceTrigger=PropertyChanged}"
+                        ElementStyle="{StaticResource DmTextElementStyle}"
+                        Header="IP 地址"
+                        HeaderStyle="{StaticResource CamHeader}" />
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="70"
+                        Binding="{Binding ExposureMilliseconds, UpdateSourceTrigger=PropertyChanged}"
+                        ElementStyle="{StaticResource DmTextElementStyle}"
+                        Header="曝光ms"
+                        HeaderStyle="{StaticResource CamHeader}" />
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="70"
+                        Binding="{Binding Gain, UpdateSourceTrigger=PropertyChanged}"
+                        ElementStyle="{StaticResource DmTextElementStyle}"
+                        Header="增益"
+                        HeaderStyle="{StaticResource CamHeader}" />
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="70"
+                        Binding="{Binding TimeoutMilliseconds, UpdateSourceTrigger=PropertyChanged}"
+                        ElementStyle="{StaticResource DmTextElementStyle}"
+                        Header="超时ms"
+                        HeaderStyle="{StaticResource CamHeader}" />
+                    <!--  触发 = CameraOptions.FrameTrigger / LineTrigger（设备层已支持，此前页面无处可配）  -->
+                    <!--  模式关/开、源为常用 GenICam 符号；型号专有触发源请写进厂商参数文件  -->
+                    <!--
+                        表头故意用 2~3 个字的短名：DataGridColumnHeader 需要「字数 * 13.5 + 26」宽，
+                        「触发模式」要 80px，会把 12 列的总额顶出窗口宽度（默认 1440 下表格只有 1062px）。
+                        MinWidth 取「表头需要」与「常见取值需要」的较大者（Software 约 96、Line1 约 61）。
+                    -->
+                    <DataGridComboBoxColumn
+                        Width="*"
+                        MinWidth="100"
+                        EditingElementStyle="{StaticResource DmComboEditingStyle}"
+                        ElementStyle="{StaticResource DmComboElementStyle}"
+                        Header="帧触发"
+                        HeaderStyle="{StaticResource CamHeader}"
+                        ItemsSource="{x:Static models:CameraPageModel.TriggerModes}"
+                        SelectedItemBinding="{Binding FrameTriggerMode}" />
+                    <DataGridComboBoxColumn
+                        Width="*"
+                        MinWidth="100"
+                        EditingElementStyle="{StaticResource DmComboEditingStyle}"
+                        ElementStyle="{StaticResource DmComboElementStyle}"
+                        Header="帧源"
+                        HeaderStyle="{StaticResource CamHeader}"
+                        ItemsSource="{x:Static models:CameraPageModel.TriggerSources}"
+                        SelectedItemBinding="{Binding FrameTriggerSource}" />
+                    <!--  行触发只有线扫相机下发（面阵忽略），故放在帧触发之后  -->
+                    <DataGridComboBoxColumn
+                        Width="*"
+                        MinWidth="100"
+                        EditingElementStyle="{StaticResource DmComboEditingStyle}"
+                        ElementStyle="{StaticResource DmComboElementStyle}"
+                        Header="行触发"
+                        HeaderStyle="{StaticResource CamHeader}"
+                        ItemsSource="{x:Static models:CameraPageModel.TriggerModes}"
+                        SelectedItemBinding="{Binding LineTriggerMode}" />
+                    <DataGridComboBoxColumn
+                        Width="*"
+                        MinWidth="100"
+                        EditingElementStyle="{StaticResource DmComboEditingStyle}"
+                        ElementStyle="{StaticResource DmComboElementStyle}"
+                        Header="行源"
+                        HeaderStyle="{StaticResource CamHeader}"
+                        ItemsSource="{x:Static models:CameraPageModel.TriggerSources}"
+                        SelectedItemBinding="{Binding LineTriggerSource}" />
+                    <!--  参数文件 = CameraOptions.ParameterFilePath，厂商参数文件路径，连接后先加载再应用公共参数  -->
+                    <DataGridTextColumn
+                        Width="1.5*"
+                        MinWidth="150"
+                        Binding="{Binding ParameterFilePath, UpdateSourceTrigger=PropertyChanged}"
+                        ElementStyle="{StaticResource DmTextElementStyle}"
+                        Header="参数文件"
+                        HeaderStyle="{StaticResource CamHeader}" />
+
+                </wpfcc:ConfigManagerView.DataGridColumns>
+            </wpfcc:ConfigManagerView>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*" MinWidth="420" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="4*" MinWidth="280" />
+                </Grid.ColumnDefinitions>
+
+                <!--  左列：紧凑相机测试卡 + 运行输出；`*` 行让输出卡吃满剩余高度，与右侧图像卡底部对齐  -->
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <materialDesign:Card
+                        Grid.Row="0"
+                        Padding="12"
+                        UniformCornerRadius="12">
+                        <GroupBox>
+                            <GroupBox.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="相机测试:" />
+                                    <TextBlock Width="8" />
+                                    <TextBlock Text="{Binding Model.SelectedProfile.Name}" />
+                                </StackPanel>
+                            </GroupBox.Header>
+                            <!--  本页只做「列表 + 连接 + 图像」验证；曝光/增益等参数由检测项负责下发  -->
+                            <!--
+                                测试卡版式（方案 C'，用户拍板：C + 把「下发触发」移到第三列）：
+                                整卡一个 UniformGrid Columns=3 Rows=5，四行「标签 / 值或控件 / 动作」，
+                                最后一行把「下发触发」放进第三列（动作列），与上方「断开」、两个「源」下拉同列对齐。
+                                第一行第三列的「连接」与最后一行第三列的「下发触发」共用同一条右缘。
+                            -->
+
+
+                            <UniformGrid Columns="3" Rows="5">
+                                <Label Content="连接状态:" Style="{StaticResource Label_style}" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Text="{Binding Model.StatusText}"
+                                    TextAlignment="Center" TextWrapping="Wrap"  HorizontalAlignment="Stretch" />
+                                <Button
+                                    Command="{Binding ConnectCommand}"
+                                    Content="连接"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="连接" />
+                                <Button
+                                    Command="{Binding CaptureCommand}"
+                                    Content="图像采集"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="图像采集" />
+                                <Button
+                                    Command="{Binding LiveCommand}"
+                                    Content="{Binding Model.LiveButtonText}"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="实时采集" />
+                                <Button
+                                    Command="{Binding DisconnectCommand}"
+                                    Content="断开"
+                                    Style="{StaticResource DangerButton}" AutomationProperties.Name="断开" />
+                                <Label Content="帧触发:" Style="{StaticResource Label_style}" />
+                                <ComboBox
+                                    ItemsSource="{x:Static models:CameraPageModel.TriggerModes}"
+                                    SelectedItem="{Binding Model.RuntimeFrameTriggerMode, Mode=TwoWay}"
+                                    Style="{StaticResource Combox_style}" />
+                                <ComboBox
+                                    ItemsSource="{x:Static models:CameraPageModel.TriggerSources}"
+                                    SelectedItem="{Binding Model.RuntimeFrameTriggerSource, Mode=TwoWay}"
+                                    Style="{StaticResource Combox_style}" />
+                                <!--
+                                    行触发只有线扫相机会下发，面阵时整行禁用，避免「改了没反应」的误判；
+                                    禁用态要连标签一起绑，否则只有下拉变灰、标签还亮着
+                                -->
+                                <Label
+                                    Content="行触发:"
+                                    IsEnabled="{Binding Model.IsLineTriggerEnabled}"
+                                    Style="{StaticResource Label_style}" />
+                                <ComboBox
+                                    IsEnabled="{Binding Model.IsLineTriggerEnabled}"
+                                    ItemsSource="{x:Static models:CameraPageModel.TriggerModes}"
+                                    SelectedItem="{Binding Model.RuntimeLineTriggerMode, Mode=TwoWay}"
+                                    Style="{StaticResource Combox_style}" />
+                                <ComboBox
+                                    IsEnabled="{Binding Model.IsLineTriggerEnabled}"
+                                    ItemsSource="{x:Static models:CameraPageModel.TriggerSources}"
+                                    SelectedItem="{Binding Model.RuntimeLineTriggerSource, Mode=TwoWay}"
+                                    Style="{StaticResource Combox_style}" />
+
+                                <TextBlock
+                                    Margin="12,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    Opacity="0.7"
+                                    Text="改动即时生效"
+                                   TextWrapping="Wrap" />
+                                <!--  占位：让「下发触发」落在第三列（动作列），与上方「断开 / 源」对齐  -->
+                                <Border />
+                                <Button
+                                    Command="{Binding ApplyTriggerCommand}"
+                                    Content="下发触发"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="下发触发" />
+                            </UniformGrid>
+                        </GroupBox>
+                    </materialDesign:Card>
+
+                    <wpfcc:RunOutputView
+                        Grid.Row="1"
+                        Margin="0,8,0,0"
+                        ClearCommand="{Binding ClearOutputCommand}"
+                        Elapsed="{Binding LastElapsed}"
+                        Text="{Binding OutputText}" />
+                </Grid>
+
+                <!--  右：图像显示（对标旧页 DisplaySingleGroupView；十字线一类的显示叠加归检测项显示层）  -->
+                <materialDesign:Card
+                    Grid.Column="2"
+                    Padding="12"
+                    UniformCornerRadius="12">
+                    <DockPanel>
+                        <Grid Margin="4,0,4,8" DockPanel.Dock="Top">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Style="{StaticResource SectionTitle}"
+                                Text="图像" />
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Opacity="0.7"
+                                Text="{Binding Model.FrameInfo}" />
+                        </Grid>
+                        <!--  深色底让灰度图有对比；无图时只留空底与右上角规格说明  -->
+                        <!--  ImageFrame：ScrollViewer 以 ∞ 测量时 Image 无约束会撑到源图像素；绑 Actual* 让它只吃布局槽位  -->
+                        <Border
+                            x:Name="ImageFrame"
+                            Background="#101418"
+                            ClipToBounds="True"
+                            CornerRadius="8">
+                            <Grid>
+                                <Image
+                                    MaxWidth="{Binding ActualWidth, ElementName=ImageFrame}"
+                                    MaxHeight="{Binding ActualHeight, ElementName=ImageFrame}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    ClipToBounds="True"
+                                    Source="{Binding Model.Preview}"
+                                    Stretch="Uniform"
+                                    StretchDirection="DownOnly" />
+                            </Grid>
+                        </Border>
+                    </DockPanel>
+                </materialDesign:Card>
+            </Grid>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

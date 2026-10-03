@@ -1,0 +1,73 @@
+<!--
+中文阅读说明：界面与资源声明。
+MotionControl 模块：运动契约、控制卡适配和验证界面；实际轴状态、命令结果及释放顺序遵守设备实现。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl
+    x:Class="MotionControl.Controls.Views.AxisStatusControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:converters="clr-namespace:MotionControl.Controls.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="220"
+    d:DesignWidth="300"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/MotionControl.Controls;component/Themes/PageStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        <converters:BoolToBrushConverter x:Key="StateBrush" />
+        <converters:BoolToBrushConverter x:Key="AlarmBrush" TrueBrush="Red" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <md:Card Style="{StaticResource MotionCard}">
+        <DockPanel LastChildFill="True">
+            <TextBlock DockPanel.Dock="Top" Text="{Binding AxisTitle, RelativeSource={RelativeSource AncestorType=UserControl}}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8"/>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="指令：" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ViewModel.Model.CommandPosition, StringFormat=F3, TargetNullValue=—, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="编码器：" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding ViewModel.Model.EncoderPosition, StringFormat=F3, TargetNullValue=—, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+
+            <WrapPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" Margin="0,8,0,0">
+                <StackPanel Orientation="Horizontal" Margin="0,0,8,4"><Ellipse Width="12" Height="12" Fill="{Binding ViewModel.Model.Enabled, Converter={StaticResource StateBrush}, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <TextBlock Text="Servo" Margin="4,0,0,0" VerticalAlignment="Center" /></StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,8,4"><Ellipse Width="12" Height="12" Fill="{Binding ViewModel.Model.Moving, Converter={StaticResource StateBrush}, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <TextBlock Text="运动" Margin="4,0,0,0" VerticalAlignment="Center" /></StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,8,4"><Ellipse Width="12" Height="12" Fill="{Binding ViewModel.Model.InPosition, Converter={StaticResource StateBrush}, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <TextBlock Text="到位" Margin="4,0,0,0" VerticalAlignment="Center" /></StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,8,4"><Ellipse Width="12" Height="12" Fill="{Binding ViewModel.Model.Homed, Converter={StaticResource StateBrush}, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <TextBlock Text="回零" Margin="4,0,0,0" VerticalAlignment="Center" /></StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,8,4"><Ellipse Width="12" Height="12" Fill="{Binding ViewModel.Model.Alarm, Converter={StaticResource AlarmBrush}, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <TextBlock Text="报警" Margin="4,0,0,0" VerticalAlignment="Center" /></StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,8,4"><Ellipse Width="12" Height="12" Fill="{Binding ViewModel.Model.PositiveLimit, Converter={StaticResource AlarmBrush}, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <TextBlock Text="正限位" Margin="4,0,0,0" VerticalAlignment="Center" /></StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,8,4"><Ellipse Width="12" Height="12" Fill="{Binding ViewModel.Model.NegativeLimit, Converter={StaticResource AlarmBrush}, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <TextBlock Text="负限位" Margin="4,0,0,0" VerticalAlignment="Center" /></StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,8,4"><Ellipse Width="12" Height="12" Fill="{Binding ViewModel.Model.EmergencyStop, Converter={StaticResource AlarmBrush}, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <TextBlock Text="急停" Margin="4,0,0,0" VerticalAlignment="Center" /></StackPanel>
+            </WrapPanel>
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4" Margin="0,6,0,0"
+                       Text="{Binding ViewModel.Model.StatusSummary, RelativeSource={RelativeSource AncestorType=UserControl}}" TextWrapping="Wrap" />
+        </Grid>
+    </DockPanel>
+    </md:Card>
+</UserControl>

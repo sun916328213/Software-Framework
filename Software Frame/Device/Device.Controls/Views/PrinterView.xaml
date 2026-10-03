@@ -1,0 +1,198 @@
+<!--
+中文阅读说明：界面与资源声明。
+Device 模块：设备契约、驱动适配、工作区及界面；真实连接和释放顺序由设备生命周期约定决定。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl
+    x:Class="Device.Controls.Views.PrinterView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:common="clr-namespace:Device.Controls.Common"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wpfcc="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    d:DesignWidth="1360"
+    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Device.Controls;component/Themes/PageStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <!--  列对象不在可视树里：借代理把页面 VM 递进 DataGridComboBoxColumn.ItemsSource  -->
+            <common:BindingProxy x:Key="PageProxy" Data="{Binding}" />
+            <!--  下拉弹层背景：ComboBox 模板 Popup 吃这两个资源键，页面级覆盖成主色浅调  -->
+            <DynamicResource x:Key="MaterialDesign.Brush.ComboBox.Popup.LightBackground" ResourceKey="MaterialDesign.Brush.Primary.Light" />
+            <DynamicResource x:Key="MaterialDesign.Brush.DataGrid.PopupBorder" ResourceKey="MaterialDesign.Brush.Primary.Light" />
+            <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
+            <Style TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!--  页面级滚动归本页：窗口高度不足时整页出垂直滚动条；MinHeight 绑视口，窗口足够大时星号行撑满  -->
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <Grid MinHeight="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="2.5*" />
+            </Grid.RowDefinitions>
+
+            <wpfcc:PageHeaderView
+                Title="打印机测试"
+                Grid.Row="0"
+                Margin="0,0,0,8"
+                IconKind="Printer"
+                SubTitle="通过 Device.Core 的 IPrinterFactory 与 IPrinter 测试网络打印机档案、状态查询与原始指令直发" />
+
+            <wpfcc:ConfigManagerView
+                Title="打印机档案"
+                Grid.Row="1"
+                Margin="0,0,0,8"
+                AddCallback="{Binding ProfileAddedAction}"
+                DeletedCallback="{Binding ProfileDeletedAction}"
+                FileName="{Binding Model.FileName}"
+                FilePath="{Binding Model.FilePath}"
+                ItemsSource="{Binding Model.DataCollection}"
+                SaveCallback="{Binding ProfilesSavedAction}"
+                SelectItem="{Binding Model.SelectedProfile, Mode=TwoWay}"
+                SelectedCallback="{Binding SelectCallbackAction}" MaxHeight="320">
+                <wpfcc:ConfigManagerView.DataGridColumns>
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="100"
+                        Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                        Header="档案名"
+                        HeaderStyle="{StaticResource DmHeader}" />
+                    <DataGridComboBoxColumn
+                        Width="*"
+                        MinWidth="180"
+                        EditingElementStyle="{StaticResource DmComboEditingStyle}"
+                        ElementStyle="{StaticResource DmComboElementStyle}"
+                        Header="驱动"
+                        HeaderStyle="{StaticResource DmHeader}"
+                        ItemsSource="{Binding Data.Model.Drivers, Source={StaticResource PageProxy}}"
+                        SelectedItemBinding="{Binding DriverId}" />
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="96"
+                        Binding="{Binding IpAddress, UpdateSourceTrigger=PropertyChanged}"
+                        Header="IP 地址"
+                        HeaderStyle="{StaticResource DmHeader}" />
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="100"
+                        Binding="{Binding Port, UpdateSourceTrigger=PropertyChanged}"
+                        Header="端口"
+                        HeaderStyle="{StaticResource DmHeader}" />
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="100"
+                        Binding="{Binding MaximumReadTimeoutMilliseconds, UpdateSourceTrigger=PropertyChanged}"
+                        Header="超时ms"
+                        HeaderStyle="{StaticResource DmHeader}" />
+                </wpfcc:ConfigManagerView.DataGridColumns>
+            </wpfcc:ConfigManagerView>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*" MinWidth="420" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="4*" MinWidth="280" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <materialDesign:Card
+                        Grid.Row="0"
+                        Padding="12"
+                        UniformCornerRadius="12">
+                        <GroupBox>
+                            <GroupBox.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="打印机测试:" />
+                                    <TextBlock Width="8" />
+                                    <TextBlock Text="{Binding Model.SelectedProfile.Name}" />
+                                </StackPanel>
+                            </GroupBox.Header>
+                            <UniformGrid Columns="3" Rows="4">
+                                <Label Content="连接状态:" Style="{StaticResource PanelLabel}" />
+                                <TextBlock
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Center"
+                                    Text="{Binding Model.StatusText}"
+                                    TextAlignment="Center" TextWrapping="Wrap" />
+                                <Button
+                                    Command="{Binding ConnectCommand}"
+                                    Content="连接"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="连接" />
+
+                                <Label Content="打印机状态:" Style="{StaticResource PanelLabel}" />
+                                <TextBlock
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Center"
+                                    Text="{Binding Model.StatusSummary}"
+                                    TextAlignment="Center"
+                                    TextTrimming="CharacterEllipsis" TextWrapping="Wrap" />
+                                <Button
+                                    Command="{Binding QueryStatusCommand}"
+                                    Content="查询状态"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="查询状态" />
+
+                                <Label Content="指令编辑:" Style="{StaticResource PanelLabel}" />
+                                <Label Content="在右侧编辑" Style="{StaticResource PanelLabel}" />
+                                <Button
+                                    Command="{Binding PrintRawCommand}"
+                                    Content="发送打印"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="发送打印" />
+                                <Border />
+                                <Border />
+                                <Button
+                                    Command="{Binding DisconnectCommand}"
+                                    Content="断开"
+                                    Style="{StaticResource DangerButton}" AutomationProperties.Name="断开" />
+                            </UniformGrid>
+                        </GroupBox>
+                    </materialDesign:Card>
+
+                    <wpfcc:RunOutputView
+                        Grid.Row="1"
+                        Margin="0,8,0,0"
+                        ClearCommand="{Binding ClearOutputCommand}"
+                        Elapsed="{Binding LastElapsed}"
+                        Text="{Binding OutputText}" />
+                </Grid>
+
+                <materialDesign:Card
+                    Grid.Column="2"
+                    Padding="12"
+                    UniformCornerRadius="12">
+                    <DockPanel>
+                        <TextBlock
+                            Margin="4,0,4,8"
+                            DockPanel.Dock="Top"
+                            Style="{StaticResource SectionTitle}"
+                            Text="原始打印指令" />
+                        <TextBox
+                            AcceptsReturn="True"
+                            FontFamily="Consolas"
+                            FontSize="13"
+                            HorizontalScrollBarVisibility="Auto"
+                            Style="{StaticResource DmInput}"
+                            Text="{Binding Model.RawData, UpdateSourceTrigger=PropertyChanged}"
+                           TextWrapping="NoWrap"
+                            VerticalScrollBarVisibility="Auto" />
+                    </DockPanel>
+                </materialDesign:Card>
+            </Grid>
+
+        </Grid>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,36 @@
+<!--
+中文阅读说明：项目构建声明。
+WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，供业务界面与工作台复用。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <DefaultItemExcludes>$(DefaultItemExcludes);WPFCustomControls.Tests\**;WPFCustomControls.PropertyGrid.Core\**</DefaultItemExcludes>
+    <RootNamespace>WPFCustomControls</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Page Remove="Resources\Theme.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+    <PackageReference Include="Prism.Core" Version="8.1.97" />
+    <PackageReference Include="Prism.Wpf" Version="8.1.97" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Window\Models\" />
+    <Folder Include="Window\Services\" />
+    <Folder Include="Window\ViewModels\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+    <ProjectReference Include="..\WPFCustomControls.PropertyGrid.Core\WPFCustomControls.PropertyGrid.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup><ProjectReference Include="..\..\Extension\Extension.Core\Extension.Core.csproj" /></ItemGroup>
+</Project>

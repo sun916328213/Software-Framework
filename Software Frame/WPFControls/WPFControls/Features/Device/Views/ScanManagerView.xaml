@@ -1,0 +1,11 @@
+﻿<!--
+中文阅读说明：界面与资源声明。
+WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl x:Class="WPFControls.ProgramControl.Views.ScanManagerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:device="clr-namespace:Device.Controls.Views;assembly=Device.Controls">
+    <device:ScannerView x:Name="DevicePage" />
+</UserControl>

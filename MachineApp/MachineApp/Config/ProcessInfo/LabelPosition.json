@@ -1,0 +1,26 @@
+[
+  {
+    "LabelDir": "Front",
+    "ID": 1
+  },
+  {
+    "LabelDir": "Front5.3",
+    "ID": 2
+  },
+  {
+    "LabelDir": "Rear",
+    "ID": 3
+  },
+  {
+    "LabelDir": "Left",
+    "ID": 4
+  },
+  {
+    "LabelDir": "Right",
+    "ID": 5
+  },
+  {
+    "LabelDir": "Top",
+    "ID": 6
+  }
+]

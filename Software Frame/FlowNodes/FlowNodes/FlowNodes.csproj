@@ -1,0 +1,47 @@
+﻿<!--
+中文阅读说明：项目构建声明。
+FlowNodes 模块：WPF 流程节点与执行、编辑协作的集成；新增或迁移节点需同时核对节点目录、执行契约和持久化类型身份。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>13.0</LangVersion>
+    <RootNamespace>FlowNodes</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="Communication\Socket\**" />
+    <None Remove="Communication\Socket\**" />
+    <Page Remove="Communication\Socket\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 2026-09-29：FlowNodes 源码直接使用 CommunicationNew.*（Abstractions/Core/Protocols），
+         但 P11 四层拆分后传递闭包里已无任何 Communication 工程，这里显式声明。 -->
+    <ProjectReference Include="..\..\Communication\Communication.Runtime\Communication.Runtime.csproj" />
+    <ProjectReference Include="..\..\Device\Device.Core\Device.Core.csproj" />
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+    <ProjectReference Include="..\..\ScriptEditor\ScriptEditor.Core\ScriptEditor.Core.csproj" />
+    <ProjectReference Include="..\..\ScriptEditor\ScriptEditor.Runtime\ScriptEditor.Runtime.csproj" />
+    <ProjectReference Include="..\..\ScriptEditor\ScriptEditor.Controls\ScriptEditor.Controls.csproj" />
+    <ProjectReference Include="..\..\FlowEditor\FlowEditor.Controls\FlowEditor.Controls.csproj" />
+    <ProjectReference Include="..\..\SecsGem\SecsGem.Core\SecsGem.Core.csproj" />
+    <ProjectReference Include="..\..\Vision\Vision.Controls\Vision.Controls.csproj" />
+    <ProjectReference Include="..\..\Vision\Vision.Core\Vision.Core.csproj" />
+    <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Vision\CompositeTool\WaferInspection\" />
+  </ItemGroup>
+
+  <ItemGroup><ProjectReference Include="..\..\Vision\Tools\Halcon\Vision.Tools.Halcon.csproj" /></ItemGroup>
+</Project>

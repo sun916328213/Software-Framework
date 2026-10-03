@@ -1,0 +1,96 @@
+﻿<!--
+中文阅读说明：项目构建声明。
+MachineApp 模块：具体机型的应用宿主，负责机型业务、导航选择、数据库实体和生产设备生命周期。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <OutputType>WinExe</OutputType>
+    <IsIntegrationHost>true</IsIntegrationHost>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon>Resources\图标.ico</ApplicationIcon>
+    <LangVersion>13.0</LangVersion>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>MachineApp</AssemblyName>
+    <RootNamespace>MachineApp</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Config\Flow\StartupFlow\01_初始化控件.cs" />
+    <Compile Remove="Config\Flow\StartupFlow\02_初始化工具.cs" />
+    <Compile Remove="Config\Flow\StartupFlow\04_初始化硬件.cs" />
+    <Compile Remove="Config\Flow\StartupFlow\05_初始化后台.cs" />
+  </ItemGroup>
+  <ItemGroup> 
+    <None Remove="Config\Flow\StartupFlow\01_初始化控件.cs.bak" />
+    <None Remove="Config\Flow\StartupFlow\02_初始化工具.cs.bak" />
+    <None Remove="Config\Flow\StartupFlow\04_初始化硬件.cs.bak" />
+    <None Remove="Config\Flow\StartupFlow\05_初始化后台.cs.bak" />
+    <None Remove="Config\Flow\StartupFlow\StartupFlow.taskproj.bak" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\图标.ico" />
+    <Resource Include="Resources\secote.jpeg" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Prism.Core" Version="8.1.97" />
+    <PackageReference Include="Prism.DryIoc" Version="8.1.97" />
+    <PackageReference Include="Prism.Wpf" Version="8.1.97" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Config\Alarm.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\Flow\ShutdownFlow\ShutdownFlow.taskproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\Flow\StartupFlow\StartupFlow.taskproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\PLCIO.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\PLC.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\SecsJson\CEID\CEID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\SecsJson\ReportID\ReportID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\SecsJson\VID\DVID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\SecsJson\VID\ECID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\SecsJson\VID\SVID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Config\LogConfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\Flow\AutoFlow.flow">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\Flow\InitializeFlow.flow">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\ProcessInfo\BagType.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\ProcessInfo\FOSBName.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\ProcessInfo\LabelPosition.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup><ProjectReference Include="..\..\Software Frame\WPFControls\WPFControls\WPFControls.csproj" /></ItemGroup>
+</Project>

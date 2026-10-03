@@ -1,0 +1,33 @@
+<!--
+中文阅读说明：项目构建声明。
+SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13.0</LangVersion>
+    <RootNamespace>SecsGem.Runtime</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SecsGem.Core\SecsGem.Core.csproj" />
+    <!-- 2026-09-29：兼容门面 DataManager/DataManager 已删除，改为直连 Core + Runtime。 -->
+    <ProjectReference Include="..\..\DataManager\DataManager.Core\DataManager.Core.csproj" />
+    <ProjectReference Include="..\..\DataManager\DataManager.Runtime\DataManager.Runtime.csproj" />
+    <ProjectReference Include="..\secs4net-base\src\Secs4Net.Sml\Secs4Net.Sml.csproj" />
+    <ProjectReference Include="..\secs4net-base\src\Secs4Net.Json\Secs4Net.Json.csproj" />
+    <ProjectReference Include="..\secs4net-base\src\Secs4Net\Secs4Net.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Prism.Core" Version="8.1.97" />
+    <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Protocol\Messages\S9\ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup><ProjectReference Include="..\..\Extension\Extension.Core\Extension.Core.csproj" /></ItemGroup>
+</Project>

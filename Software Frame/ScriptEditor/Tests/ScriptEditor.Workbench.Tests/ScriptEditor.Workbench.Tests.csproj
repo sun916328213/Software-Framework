@@ -1,0 +1,45 @@
+﻿<!--
+中文阅读说明：项目构建声明。
+ScriptEditor 模块：脚本持久化模型、运行时编译执行和编辑器协作；脚本 ID、引用及断点属于需要保留的状态。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13.0</LangVersion>
+    <!-- 夹具必须显式封送到 Dispatcher（VSTHRD001 的建议在此处不适用）。 -->
+    <NoWarn>$(NoWarn);VSTHRD001;VSTHRD110</NoWarn>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- 宿主集成测试线：与无 WPF 的 ScriptEditor.Tests 隔离，独占 STA / Dispatcher / Application。
+         分层规则：Workbench 是 WPF 宿主，其测试必须启用 WPF；
+         ScriptEditor.Tests 只跑 Core / Runtime 的纯逻辑。 -->
+    <UseWPF>true</UseWPF>
+    <RootNamespace>ScriptEditor.Workbench.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 显式声明实际用到的工程，不靠传递依赖：
+         Controls 提供被验证的 View / ViewModel，Workbench 提供宿主装配入口（Prism / DI / 主窗）。 -->
+    <ProjectReference Include="..\..\ScriptEditor.Controls\ScriptEditor.Controls.csproj" />
+    <ProjectReference Include="..\..\ScriptEditor.Workbench\ScriptEditor.Workbench.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../../../../Build/TestSupport/WorkbenchTestLifetime.cs" Link="TestSupport/WorkbenchTestLifetime.cs" />
+  </ItemGroup>
+</Project>

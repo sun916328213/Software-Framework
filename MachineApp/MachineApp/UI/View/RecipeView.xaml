@@ -1,0 +1,158 @@
+<!--
+中文阅读说明：界面与资源声明。
+MachineApp 模块：具体机型的应用宿主，负责机型业务、导航选择、数据库实体和生产设备生命周期。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl
+    x:Class="MachineApp.UI.View.Recipe"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:MachineApp.UI.View"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:view="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    xmlns:viewmodel="clr-namespace:MachineApp.UI.ViewModel" d:DataContext="{d:DesignInstance Type=viewmodel:RecipeViewModel}"
+    x:Name="UserControl"
+    d:DesignHeight="950"
+    d:DesignWidth="1200"
+    Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+    mc:Ignorable="d">
+
+
+    <UserControl.Resources>
+
+        <Style
+            x:Key="LabelStyle"
+            BasedOn="{StaticResource MaterialDesignLabel}"
+            TargetType="Label">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style
+            x:Key="ButtonStyle"
+            BasedOn="{StaticResource CompactPrimaryButton}"
+            TargetType="Button">
+            <Setter Property="Width" Value="150" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="FontSize" Value="{Binding ElementName=UserControl, Path=FontSize}" />
+        </Style>
+
+        <Style
+            x:Key="DatePickerStyle"
+            BasedOn="{StaticResource MaterialDesignFloatingHintDatePicker}"
+            TargetType="DatePicker">
+            <Setter Property="Width" Value="180" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="SelectedDateFormat" Value="Long" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+    </UserControl.Resources>
+
+
+    <DockPanel Margin="8">
+
+        <Border
+            Margin="0,0,0,4"
+            HorizontalAlignment="Stretch"
+            DockPanel.Dock="Top"
+            Style="{StaticResource Border_Style}">
+            <WrapPanel Margin="8">
+
+                <Button
+                    Width="120"
+                    Command="{Binding AddCommand}"
+                    Content="Add"
+                    Style="{StaticResource ButtonStyle}" />
+
+                <Button
+                    Width="120"
+                    Command="{Binding ModifyCommand}"
+                    Content="Modify"
+                    Style="{StaticResource ButtonStyle}" />
+                <Button
+                    Width="120"
+                    Command="{Binding SaveCommand}"
+                    Content=" Save"
+                    Style="{StaticResource ButtonStyle}" />
+
+                <StackPanel
+                    MinWidth="120"
+                    Margin="8,2"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <Label Content="ID:" Style="{StaticResource LabelStyle}" />
+                    <Label Content="{Binding CurRecipe.ID}" Style="{StaticResource LabelStyle}" />
+                </StackPanel>
+
+                <Button
+                    Width="120"
+                    Command="{Binding SettingCommand}"
+                    Content=" 设置"
+                    Style="{StaticResource ButtonStyle}" />
+                <Button
+                    Width="120"
+                    Command="{Binding UpdateCommand}"
+                    Content=" 更新"
+                    Style="{StaticResource ButtonStyle}" />
+            </WrapPanel>
+        </Border>
+
+
+        <Border Style="{StaticResource Border_Style}">
+            <view:DataGridView
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                AutoGenerateColumns="False"
+                Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Card.Border}"
+                FontSize="{Binding ElementName=UserControl, Path=FontSize}"
+                IsReadOnly="True"
+                ItemsSource="{Binding Datas}"
+                SelectedIndex="{Binding SelectIndex}"
+                SelectedItem="{Binding CurRecipe}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Binding="{Binding ID}" Header="ID" />
+                    <DataGridTextColumn Binding="{Binding FOSBType}" Header="FOSBName" />
+                    <DataGridTemplateColumn Header="FOSB LabelInfo">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ItemsControl Margin="10,0,0,0" ItemsSource="{Binding LabelInfoCollection.LabelInfo_First}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Width="60" Text="{Binding LabelDir, StringFormat={}{0}}" />
+                                                <TextBlock Text="{Binding LabelNum}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="AL LabelInfo">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ItemsControl Margin="10,0,0,0" ItemsSource="{Binding LabelInfoCollection.LabelInfo_Second}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Width="60" Text="{Binding LabelDir, StringFormat={}{0}}" />
+                                                <TextBlock Text="{Binding LabelNum}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </view:DataGridView>
+        </Border>
+    </DockPanel>
+
+</UserControl>

@@ -1,0 +1,30 @@
+<!--
+中文阅读说明：界面与资源声明。
+SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl
+    x:Class="SecsGem.Controls.Views.SecsOverviewView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Name="View">
+    <Grid Margin="0,4,0,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0">
+            <TextBlock Text="HSMS 连接"  Opacity="0.75"  Margin="0,0,0,4" />
+            <TextBlock FontSize="18" FontWeight="SemiBold" Text="{Binding ConnectionStatus, ElementName=View}" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Grid.Column="1">
+            <TextBlock Text="GEM 模式"  Opacity="0.75"  Margin="0,0,0,4" />
+            <TextBlock FontSize="18" FontWeight="SemiBold" Text="{Binding ModeStatus, ElementName=View}" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Grid.Column="2">
+            <TextBlock Text="设备状态"  Opacity="0.75"  Margin="0,0,0,4" />
+            <TextBlock FontSize="18" FontWeight="SemiBold" Text="{Binding DeviceStatus, ElementName=View}" TextWrapping="Wrap" />
+        </StackPanel>
+    </Grid>
+</UserControl>

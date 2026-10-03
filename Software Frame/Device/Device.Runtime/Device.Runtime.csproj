@@ -1,0 +1,52 @@
+﻿<!--
+中文阅读说明：项目构建声明。
+Device 模块：设备契约、驱动适配、工作区及界面；真实连接和释放顺序由设备生命周期约定决定。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Device.Runtime</AssemblyName>
+    <RootNamespace>Device.Runtime</RootNamespace>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- 类库不决定最终进程架构，由引用 Device.Runtime 的应用选择 AnyCPU 或 x64。 -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <!-- 部分厂商只提供 64 位程序集；该差异由最终应用的平台选择负责，类库构建时不重复报告 MSB3270。 -->
+    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Device.Core\Device.Core.csproj" />
+    <!-- P11：Device.Runtime 为 Runtime 层，直接引用 Communication.Runtime；旧兼容路径经门面保留。 -->
+    <ProjectReference Include="..\..\Communication\Communication.Runtime\Communication.Runtime.csproj"
+                      AdditionalProperties="ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch=None" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Basler.Pylon">
+      <HintPath>..\..\..\Dll\Camera\Basler\x64\Basler.Pylon.dll</HintPath>
+    </Reference>
+    <Reference Include="MvCamCtrl.Net">
+      <HintPath>..\..\..\Dll\Camera\Hik\win64\MvCamCtrl.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="MVSDK_Net">
+      <HintPath>..\..\..\Dll\Camera\Dahua\x64\MVSDK_Net.dll</HintPath>
+    </Reference>
+    <Reference Include="IKapC.NET">
+      <HintPath>..\..\..\Dll\Camera\I-Tek\IKapC.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="SdkApi_Core">
+      <HintPath>..\..\..\Dll\Print\Zebra\SdkApi_Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Matrox.MatroxImagingLibrary">
+      <HintPath>..\..\..\Dll\CamlinkCard\Matrox\Matrox.MatroxImagingLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="Seagull.BarTender.Print">
+      <HintPath>..\..\..\Dll\Print\Bartender\Seagull.BarTender.Print.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="native\CSTControllerDll.dll" CopyToOutputDirectory="PreserveNewest" TargetPath="CSTControllerDll.dll" />
+    <None Update="native\OPTController.dll" CopyToOutputDirectory="PreserveNewest" TargetPath="OPTController.dll" />
+  </ItemGroup>
+</Project>

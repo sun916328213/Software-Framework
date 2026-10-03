@@ -1,0 +1,29 @@
+﻿<!--
+中文阅读说明：项目构建声明。
+DataManager 模块：数据访问契约、SQL/日志/Excel 运行能力及配置界面；具体数据库配置和实体由使用方决定。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>DataManager.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <!-- P3：逻辑测试线只用到 Prism 的 IModule 契约（Prism.Core）；不用 WPF 风味的 Prism.DryIoc 容器包。 -->
+    <PackageReference Include="Prism.Core" Version="8.1.97" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Extension\Extension.Core\Extension.Core.csproj" />
+    <!-- P12：测试直接引用 Core + Runtime。兼容门面已于 2026-09-29 删除，旧 API 由 Runtime 直接承载。 -->
+    <ProjectReference Include="..\..\DataManager.Core\DataManager.Core.csproj" />
+    <ProjectReference Include="..\..\DataManager.Runtime\DataManager.Runtime.csproj" />
+  </ItemGroup>
+</Project>

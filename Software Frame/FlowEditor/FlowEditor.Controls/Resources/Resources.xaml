@@ -1,0 +1,126 @@
+<!--
+中文阅读说明：界面与资源声明。
+FlowEditor 模块：流程模型、执行和编辑器协作；Core、Runtime 与 Controls 分别承担模型契约、执行能力和界面职责。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="pack://application:,,,/WPFCustomControls;component/Resources/Resources.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!--  ═══════════════ FlowEditor 语义色板 ═══════════════  -->
+    <!--  通过 Color_GrayX 创建语义化 Brush 别名。  -->
+
+    <!--  背景色  -->
+    <SolidColorBrush x:Key="Flow_Bg_Category" Color="{Binding Color, Source={StaticResource Color_Gray1}}" />
+    <SolidColorBrush x:Key="Flow_Bg_Badge" Color="{Binding Color, Source={StaticResource Color_Gray4}}" />
+    <SolidColorBrush x:Key="Flow_Bg_EditorPanel" Color="{Binding Color, Source={StaticResource Color_Gray1}}" />
+    <SolidColorBrush x:Key="Flow_Bg_NodeTitle" Color="#E3F2FD" />
+
+    <!--  独有  -->
+
+    <!--  边框色  -->
+    <SolidColorBrush x:Key="Flow_Border_Default" Color="{Binding Color, Source={StaticResource Color_Gray9}}" />
+    <SolidColorBrush x:Key="Flow_Border_Light" Color="{Binding Color, Source={StaticResource Color_Gray7}}" />
+    <SolidColorBrush x:Key="Flow_Border_Search" Color="{Binding Color, Source={StaticResource Color_Gray8}}" />
+    <SolidColorBrush x:Key="Flow_Border_Divider" Color="{Binding Color, Source={StaticResource Color_Gray8}}" />
+    <SolidColorBrush x:Key="Flow_Border_Port" Color="{Binding Color, Source={StaticResource Color_Gray10}}" />
+    <SolidColorBrush x:Key="Flow_Border_Grid" Color="#C8D8E8" />
+    <!--  独有  -->
+
+    <!--  文字色（Gray8~11 为深灰系列）  -->
+    <SolidColorBrush x:Key="Flow_Text_Primary" Color="{Binding Color, Source={StaticResource Color_Gray11}}" />
+    <SolidColorBrush x:Key="Flow_Text_Secondary" Color="{Binding Color, Source={StaticResource Color_Gray10}}" />
+    <SolidColorBrush x:Key="Flow_Text_Tertiary" Color="{Binding Color, Source={StaticResource Color_Gray9}}" />
+    <SolidColorBrush x:Key="Flow_Text_Hint" Color="{Binding Color, Source={StaticResource Color_Gray8}}" />
+    <SolidColorBrush x:Key="Flow_Text_Muted" Color="{Binding Color, Source={StaticResource Color_Gray8}}" />
+    <SolidColorBrush x:Key="Flow_Text_Placeholder" Color="{Binding Color, Source={StaticResource Color_Gray8}}" />
+
+    <!--  功能色  -->
+    <SolidColorBrush x:Key="Flow_Indicator_Active" Color="{Binding Color, Source={StaticResource Color_Green}}" />
+
+    <!--  端口数据类型色：参考 Blender / Unreal / Godot 的节点编辑器语义。  -->
+    <!--  输入/输出方向由形状表达；颜色只表达数据类型，避免一个视觉通道承担两种含义。  -->
+    <SolidColorBrush x:Key="Flow_Port_Flow" Color="#8B5CF6" />
+    <SolidColorBrush x:Key="Flow_Port_Boolean" Color="#E85D8E" />
+    <SolidColorBrush x:Key="Flow_Port_Integer" Color="#71B84B" />
+    <SolidColorBrush x:Key="Flow_Port_Double" Color="#B8C0C8" />
+    <SolidColorBrush x:Key="Flow_Port_String" Color="#58A9DE" />
+    <SolidColorBrush x:Key="Flow_Port_Image" Color="#F59E0B" />
+    <SolidColorBrush x:Key="Flow_Port_Object" Color="#4F67C7" />
+    <SolidColorBrush x:Key="Flow_Port_Any" Color="#7B8794" />
+
+    <!--  阴影色（Color 资源，适配 DropShadowEffect.Color）  -->
+    <Color x:Key="Flow_Shadow">#000000</Color>
+
+    <!--  ═══════════════ 连线颜色 ═══════════════  -->
+    <SolidColorBrush x:Key="Connection_Normal" Color="#546E7A" />
+    <SolidColorBrush x:Key="Connection_Flow" Color="#546E7A" />
+    <SolidColorBrush x:Key="Connection_Pending" Color="#546E7A" />
+    <SolidColorBrush x:Key="Connection_Active" Color="#78909C" />
+    <SolidColorBrush x:Key="Connection_Selected" Color="#FFA500" />
+
+    <!--  ═══════════════ 连线粗细 ═══════════════  -->
+    <sys:Double x:Key="Connection_Normal_Thickness">2.0</sys:Double>
+    <sys:Double x:Key="Connection_Flow_Thickness">2.0</sys:Double>
+    <sys:Double x:Key="Connection_Active_Thickness">2.5</sys:Double>
+    <sys:Double x:Key="Connection_Selected_Thickness">3.5</sys:Double>
+    <sys:Double x:Key="Connection_Pending_Thickness">2.0</sys:Double>
+
+    <!--  ═══════════════ 连线 Path 样式 ═══════════════  -->
+    <Style x:Key="ConnectionPathStyle" TargetType="Path">
+        <Setter Property="StrokeEndLineCap" Value="Triangle" />
+        <Setter Property="StrokeStartLineCap" Value="Round" />
+        <Setter Property="IsHitTestVisible" Value="True" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Opacity" Value="0.8" />
+    </Style>
+
+    <!--  普通  -->
+    <Style
+        x:Key="ConnectionPathStyle_Normal"
+        BasedOn="{StaticResource ConnectionPathStyle}"
+        TargetType="Path">
+        <Setter Property="Stroke" Value="{StaticResource Connection_Normal}" />
+        <Setter Property="StrokeThickness" Value="{StaticResource Connection_Normal_Thickness}" />
+    </Style>
+    <!--  流程  -->
+    <Style
+        x:Key="ConnectionPathStyle_Flow"
+        BasedOn="{StaticResource ConnectionPathStyle}"
+        TargetType="Path">
+        <Setter Property="Stroke" Value="{StaticResource Connection_Flow}" />
+        <Setter Property="StrokeThickness" Value="{StaticResource Connection_Flow_Thickness}" />
+    </Style>
+    <!--  激活（运行中）  -->
+    <Style
+        x:Key="ConnectionPathStyle_Active"
+        BasedOn="{StaticResource ConnectionPathStyle}"
+        TargetType="Path">
+        <Setter Property="Stroke" Value="{StaticResource Connection_Active}" />
+        <Setter Property="StrokeThickness" Value="{StaticResource Connection_Active_Thickness}" />
+    </Style>
+    <!--  选中  -->
+    <Style
+        x:Key="ConnectionPathStyle_Selected"
+        BasedOn="{StaticResource ConnectionPathStyle}"
+        TargetType="Path">
+        <Setter Property="Stroke" Value="{StaticResource Connection_Selected}" />
+        <Setter Property="StrokeThickness" Value="{StaticResource Connection_Selected_Thickness}" />
+    </Style>
+    <!--  临时连线（绘制中，虚线、不可交互）  -->
+    <Style
+        x:Key="ConnectionPathStyle_Pending"
+        BasedOn="{StaticResource ConnectionPathStyle}"
+        TargetType="Path">
+        <Setter Property="Stroke" Value="{StaticResource Connection_Pending}" />
+        <Setter Property="StrokeThickness" Value="{StaticResource Connection_Pending_Thickness}" />
+        <Setter Property="StrokeDashArray" Value="4,3" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
+
+</ResourceDictionary>

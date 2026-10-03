@@ -1,0 +1,172 @@
+<!--
+中文阅读说明：界面与资源声明。
+ScriptEditor 模块：脚本持久化模型、运行时编译执行和编辑器协作；脚本 ID、引用及断点属于需要保留的状态。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<!--
+    ScriptEditorView.xaml - 脚本编辑器控件视图
+    职责：纯 UI 布局 Shell（前后端分离：工具栏、引用面板、编辑器在代码中延迟创建）
+    快捷键：Ctrl+N(新建) / Ctrl+O(打开) / Ctrl+S(保存) / Ctrl+Shift+S(另存为)
+    Ctrl+B(构建) / F5(执行) / Shift+F5(终止)
+    Ctrl+D(格式化) / Ctrl+K(注释) / Ctrl+U(取消注释) / F2(重命名)
+    配色：一律走 MaterialDesign 原生动态键（跟随明暗主题），根节点设 Foreground 由属性继承下发。
+-->
+<UserControl
+    x:Class="ScriptEditor.Controls.Views.ScriptEditorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+            <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!--
+        快捷键绑定：InputBinding 不属于视觉树，ElementName 绑定无法解析，
+        故不在 XAML 声明，改为 EnsureBackendInitialized 中用代码显式绑定到 ViewModel 命令。
+    -->
+
+    <Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="3*" MinHeight="100" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="2*" MinHeight="80" />
+        </Grid.RowDefinitions>
+
+        <!--  ═══════════════════ 工具栏（前后端分离：在 EnsureBackendInitialized 中动态创建） ═══════════════════  -->
+        <ContentControl x:Name="ToolbarHost" Grid.Row="0" />
+
+        <!--  ═══════════════════ 编辑区（含状态栏 + 引用面板） ══════════════════  -->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!--  编辑器 + 引用面板  -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!--  代码编辑区：断点边栏和 RoslynCodeEditorView 在 InitializeCoreAsync 中动态创建  -->
+                <Border Grid.Column="0" BorderThickness="2,0">
+
+                    <Grid x:Name="editorRoot">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </Border>
+
+                <!--  引用管理侧边栏（前后端分离：在 EnsureBackendInitialized 中动态创建）  -->
+                <ContentControl x:Name="ReferencePanelHost" Grid.Column="1" />
+            </Grid>
+
+            <!--  文档状态栏  -->
+            <Border
+                Grid.Row="1"
+                Padding="8,2"
+                Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Card.Border}"
+                BorderThickness="0,1,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle
+                        Width="1"
+                        Margin="14,0"
+                        Fill="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+                    <TextBlock
+                        Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                        Text="Ln " />
+                    <TextBlock Text="{Binding CaretLine}" />
+                    <TextBlock
+                        Margin="14,0,0,0"
+                        Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                        Text="Col " />
+                    <TextBlock Text="{Binding CaretColumn}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!--  ═══════════════════ 分隔条 ═══════════════════  -->
+        <GridSplitter
+            Grid.Row="2"
+            Height="4"
+            HorizontalAlignment="Stretch"
+            Background="{DynamicResource MaterialDesign.Brush.Card.Border}"
+            Cursor="SizeNS" />
+
+        <!--  ═══════════════════ 输出面板 ═══════════════════  -->
+        <Border
+            Grid.Row="3"
+            Padding="0,0,0,0"
+            BorderBrush="{DynamicResource MaterialDesign.Brush.Card.Border}"
+            BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Border
+                    Padding="8,2"
+                    Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Card.Border}"
+                    BorderThickness="0,0,0,1">
+                    <DockPanel>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontWeight="SemiBold"
+                            Text="输出" />
+                    </DockPanel>
+                </Border>
+
+                <TextBox
+                    x:Name="OutputTextBox"
+                    Grid.Row="1"
+                    Padding="8,4"
+                    FontFamily="Consolas"
+                    FontSize="12"
+                    AutomationProperties.Name="脚本执行输出"
+                    Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                    BorderThickness="0"
+                    IsReadOnly="True"
+                    Text="{Binding OutputText, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=OneWay}"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Auto" />
+
+                <!--  状态栏：直接绑定当前脚本会话（运行状态的唯一事实源）  -->
+                <Border
+                    Grid.Row="2"
+                    Padding="8,2"
+                    Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Card.Border}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center" Text="{Binding Session.StatusText, FallbackValue=就绪}" />
+                        <Separator
+                            Width="1"
+                            Height="14"
+                            Margin="12,0"
+                            Background="{DynamicResource MaterialDesign.Brush.Card.Border}" />
+                        <TextBlock VerticalAlignment="Center" Text="{Binding Session.ExecutionTime}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

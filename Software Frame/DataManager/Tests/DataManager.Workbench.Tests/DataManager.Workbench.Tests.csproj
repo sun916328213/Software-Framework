@@ -1,0 +1,39 @@
+<!--
+中文阅读说明：项目构建声明。
+DataManager 模块：数据访问契约、SQL/日志/Excel 运行能力及配置界面；具体数据库配置和实体由使用方决定。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- WPF 宿主集成测试线：与无 UI 的 DataManager.Tests 隔离，独占 STA / Dispatcher / Application。
+         与 MotionControl/Communication 两条 Workbench.Tests 线保持一致，显式启用 WPF。 -->
+    <UseWPF>true</UseWPF>
+    <RootNamespace>DataManager.Workbench.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="Prism.DryIoc" Version="8.1.97" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\DataManager.Controls\DataManager.Controls.csproj" />
+    <ProjectReference Include="..\..\DataManager.Runtime\DataManager.Runtime.csproj" />
+    <ProjectReference Include="..\..\DataManager.Workbench\DataManager.Workbench.csproj" />
+  </ItemGroup>
+
+  <ItemGroup><ProjectReference Include="..\..\..\Extension\Extension.Core\Extension.Core.csproj" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../../Build/TestSupport/WorkbenchTestLifetime.cs" Link="TestSupport/WorkbenchTestLifetime.cs" />
+  </ItemGroup>
+</Project>

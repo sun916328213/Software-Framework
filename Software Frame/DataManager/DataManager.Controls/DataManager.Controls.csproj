@@ -1,0 +1,34 @@
+<!--
+中文阅读说明：项目构建声明。
+DataManager 模块：数据访问契约、SQL/日志/Excel 运行能力及配置界面；具体数据库配置和实体由使用方决定。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>DataManager.Controls</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+    <!-- P9：模块直接实现 Prism IModule，直接引用契约包（不靠传递）。 -->
+    <PackageReference Include="Prism.Core" Version="8.1.97" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+    <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls\WPFCustomControls.csproj" />
+    <!-- Framework-Refactoring §4.4：Controls 统一注册本模块通用实现，允许依赖 Runtime（Runtime 不反向依赖 Controls）。 -->
+    <ProjectReference Include="..\DataManager.Runtime\DataManager.Runtime.csproj" />
+    <ProjectReference Include="..\DataManager.Core\DataManager.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup><ProjectReference Include="..\..\Extension\Extension.Core\Extension.Core.csproj" /></ItemGroup>
+</Project>

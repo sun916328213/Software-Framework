@@ -1,0 +1,63 @@
+<!--
+中文阅读说明：界面与资源声明。
+WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，供业务界面与工作台复用。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        存根字典:为 WindowControlsTests 提供 Window 构造期所需的 MD 资源占位。
+
+        主项目窗口 XAML 引用了 MaterialDesignThemes 5.x 的 brush / style 键,
+        生产环境由消费方应用合并 Resources.xaml 后由 BAML 加载器解析。
+        测试 exe 不是 ApplicationDefinition,无法启动 pack:// BAML 解析,
+        因此用 StaticResource 形式提供最小占位 —— 测试只验证 DP / 属性,
+        不渲染样式,所以占位 SolidColorBrush / 空 Style 已足够。
+    -->
+
+    <!-- Brushes -->
+    <SolidColorBrush x:Key="MaterialDesign.Brush.Primary" Color="#FF1976D2" />
+    <SolidColorBrush x:Key="MaterialDesign.Brush.Primary.Light" Color="#FF63A4FF" />
+    <SolidColorBrush x:Key="MaterialDesign.Brush.Primary.Dark" Color="#FF004BA0" />
+    <SolidColorBrush x:Key="MaterialDesign.Brush.Primary.Dark.Foreground" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="MaterialDesign.Brush.Foreground" Color="#DD000000" />
+
+    <!-- TextBlock 隐式样式:Window XAML 里引用了 MaterialDesignHeadline5/6 -->
+    <Style x:Key="MaterialDesignHeadline5TextBlock" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="Medium" />
+    </Style>
+    <Style x:Key="MaterialDesignHeadline6TextBlock" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="Medium" />
+    </Style>
+
+    <!-- Separator / Button / ProgressBar 占位样式 -->
+    <Style x:Key="MaterialDesignSeparator" TargetType="Separator">
+        <Setter Property="Background" Value="#1F000000" />
+        <Setter Property="Height" Value="1" />
+    </Style>
+    <Style x:Key="MaterialDesignOutlinedButton" TargetType="Button">
+        <Setter Property="Padding" Value="8,4" />
+    </Style>
+    <Style x:Key="CompactOutlinedButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="MinHeight" Value="32" />
+    </Style>
+    <Style x:Key="CompactTextBox" TargetType="TextBox">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="MinHeight" Value="32" />
+    </Style>
+    <Style x:Key="MaterialDesignCircularProgressBar" TargetType="ProgressBar">
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="40" />
+    </Style>
+
+    <!-- DialogWindowStyle 占位 -->
+    <Style x:Key="DialogWindowStyle" TargetType="Window">
+        <Setter Property="WindowStyle" Value="None" />
+        <Setter Property="ResizeMode" Value="NoResize" />
+    </Style>
+</ResourceDictionary>

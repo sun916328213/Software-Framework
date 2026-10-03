@@ -1,0 +1,49 @@
+<!--
+中文阅读说明：界面与资源声明。
+Vision 模块：视觉工具模型、算法适配和编辑展示；厂商能力与界面转换应在对应边界内协作。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl
+    x:Class="Vision.Controls.View.RoiEditorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock FontSize="16" FontWeight="SemiBold" Margin="0,0,0,4" Text="{Binding Editor.Count, RelativeSource={RelativeSource AncestorType=UserControl}, StringFormat=ROI（{0}）}" />
+        <ListBox
+            Grid.Row="1"
+            Style="{StaticResource MaterialDesignListBox}"
+            AutomationProperties.Name="ROI 列表"
+            ItemsSource="{Binding Editor.Rois, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            SelectedItem="{Binding Editor.Selected, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Margin="4,3" Text="{Binding Kind}" ToolTip="{Binding}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <WrapPanel Grid.Row="2" Margin="0,4,0,0">
+            <Button
+                Margin="0,4,8,0"
+                Command="{Binding Editor.AddDefaultRectangleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Content="添加矩形" />
+            <Button
+                Margin="0,4,8,0"
+                Command="{Binding Editor.AddDefaultCircleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Content="添加圆" />
+            <Button
+                Margin="0,4,8,0"
+                Command="{Binding Editor.RemoveSelectedCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Content="删除" />
+            <Button
+                Margin="0,4,0,0"
+                Command="{Binding Editor.ClearCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Content="清空" />
+        </WrapPanel>
+    </Grid>
+</UserControl>

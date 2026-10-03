@@ -1,0 +1,282 @@
+<!--
+中文阅读说明：界面与资源声明。
+Device 模块：设备契约、驱动适配、工作区及界面；真实连接和释放顺序由设备生命周期约定决定。
+绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+-->
+<UserControl
+    x:Class="Device.Controls.Views.LabelPrintView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:common="clr-namespace:Device.Controls.Common"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wpfcc="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    d:DesignWidth="1360"
+    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Device.Controls;component/Themes/PageStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <!--  列对象不在可视树里：借代理把页面 VM 递进 DataGridComboBoxColumn.ItemsSource  -->
+            <common:BindingProxy x:Key="PageProxy" Data="{Binding}" />
+            <!--  下拉弹层背景：ComboBox 模板 Popup 吃这两个资源键，页面级覆盖成主色浅调  -->
+            <DynamicResource x:Key="MaterialDesign.Brush.ComboBox.Popup.LightBackground" ResourceKey="MaterialDesign.Brush.Primary.Light" />
+            <DynamicResource x:Key="MaterialDesign.Brush.DataGrid.PopupBorder" ResourceKey="MaterialDesign.Brush.Primary.Light" />
+            <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
+            <Style TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!--  页面级滚动归本页：窗口高度不足时整页出垂直滚动条；MinHeight 绑视口，窗口足够大时星号行撑满  -->
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <Grid MinHeight="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="2.5*" />
+            </Grid.RowDefinitions>
+
+            <wpfcc:PageHeaderView
+                Title="标签打印测试"
+                Grid.Row="0"
+                Margin="0,0,0,8"
+                IconKind="Label"
+                SubTitle="通过 Device.Core 的 ILabelPrintEngineFactory 与 ILabelPrintEngine 测试标签模板：打开 / 字段 / 预览 / 打印" />
+
+            <wpfcc:ConfigManagerView
+                Title="标签打印引擎档案"
+                Grid.Row="1"
+                Margin="0,0,0,8"
+                AddCallback="{Binding ProfileAddedAction}"
+                DeletedCallback="{Binding ProfileDeletedAction}"
+                FileName="{Binding Model.FileName}"
+                FilePath="{Binding Model.FilePath}"
+                ItemsSource="{Binding Model.DataCollection}"
+                SaveCallback="{Binding ProfilesSavedAction}"
+                SelectItem="{Binding Model.SelectedProfile, Mode=TwoWay}"
+                SelectedCallback="{Binding SelectCallbackAction}" MaxHeight="320">
+                <wpfcc:ConfigManagerView.DataGridColumns>
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="100"
+                        Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                        Header="档案名"
+                        HeaderStyle="{StaticResource DmHeader}" />
+                    <DataGridComboBoxColumn
+                        Width="*"
+                        MinWidth="220"
+                        EditingElementStyle="{StaticResource DmComboEditingStyle}"
+                        ElementStyle="{StaticResource DmComboElementStyle}"
+                        Header="驱动"
+                        HeaderStyle="{StaticResource DmHeader}"
+                        ItemsSource="{Binding Data.Model.Drivers, Source={StaticResource PageProxy}}"
+                        SelectedItemBinding="{Binding DriverId}" />
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="200"
+                        Binding="{Binding DefaultPrinterName, UpdateSourceTrigger=PropertyChanged}"
+                        Header="默认打印机"
+                        HeaderStyle="{StaticResource DmHeader}" />
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="100"
+                        Binding="{Binding PrintTimeoutMilliseconds, UpdateSourceTrigger=PropertyChanged}"
+                        Header="打印超时ms"
+                        HeaderStyle="{StaticResource DmHeader}" />
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="100"
+                        Binding="{Binding PreviewDpi, UpdateSourceTrigger=PropertyChanged}"
+                        Header="预览DPI"
+                        HeaderStyle="{StaticResource DmHeader}" />
+                </wpfcc:ConfigManagerView.DataGridColumns>
+            </wpfcc:ConfigManagerView>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*" MinWidth="420" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="4*" MinWidth="280" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <materialDesign:Card
+                        Grid.Row="0"
+                        Padding="12"
+                        UniformCornerRadius="12">
+                        <GroupBox>
+                            <GroupBox.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="标签打印测试:" />
+                                    <TextBlock Width="8" />
+                                    <TextBlock Text="{Binding Model.SelectedProfile.Name}" />
+                                </StackPanel>
+                            </GroupBox.Header>
+                            <UniformGrid Columns="3" Rows="6">
+                                <Label Content="连接状态:" Style="{StaticResource PanelLabel}" />
+                                <TextBlock
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Center"
+                                    Text="{Binding Model.StatusText}"
+                                    TextAlignment="Center" TextWrapping="Wrap" />
+                                <Button
+                                    Command="{Binding ConnectCommand}"
+                                    Content="连接"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="连接" />
+
+                                <Label Content="打印机:" Style="{StaticResource PanelLabel}" />
+                                <ComboBox
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Center"
+                                    ItemsSource="{Binding Model.Printers}"
+                                    SelectedItem="{Binding Model.SelectedPrinter}"
+                                    Style="{StaticResource DmCombo}"  Margin="8,0" />
+                                <Button
+                                    Command="{Binding LoadPrintersCommand}"
+                                    Content="读取列表"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="读取列表" />
+
+                                <Label Content="模板路径:" Style="{StaticResource PanelLabel}" />
+                                <TextBox
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource DmInput}"
+                                    Text="{Binding Model.TemplatePath, UpdateSourceTrigger=PropertyChanged}"
+                                    ToolTip="如 C:\Labels\tag.btw"  Margin="8,0" />
+                                <Button
+                                    Command="{Binding OpenTemplateCommand}"
+                                    Content="打开模板"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="打开模板" />
+
+                                <Button
+                                    Command="{Binding ReloadFieldsCommand}"
+                                    Content="读取字段"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="读取字段" />
+                                <Button
+                                    Command="{Binding ApplyFieldsCommand}"
+                                    Content="下发字段"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="下发字段" />
+                                <Button
+                                    Command="{Binding PreviewCommand}"
+                                    Content="渲染预览"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="渲染预览" />
+
+                                <Label Content="份数:" Style="{StaticResource PanelLabel}" />
+                                <materialDesign:NumericUpDown
+                                    Width="90"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Maximum="999"
+                                    Minimum="1"
+                                    Value="{Binding Model.Copies}" />
+                                <Button
+                                    Command="{Binding PrintCommand}"
+                                    Content="打印"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="打印" />
+
+                                <Label
+                                    Grid.ColumnSpan="2"
+                                    Content="断开即关闭模板"
+                                    Style="{StaticResource PanelLabel}" />
+                                <Button
+                                    Command="{Binding CloseTemplateCommand}"
+                                    Content="关闭模板"
+                                    Style="{StaticResource PanelButton}" AutomationProperties.Name="关闭模板" />
+                                <Button
+                                    Command="{Binding DisconnectCommand}"
+                                    Content="断开"
+                                    Style="{StaticResource DangerButton}" AutomationProperties.Name="断开" />
+                            </UniformGrid>
+                        </GroupBox>
+                    </materialDesign:Card>
+
+                    <wpfcc:RunOutputView
+                        Grid.Row="1"
+                        Margin="0,8,0,0"
+                        ClearCommand="{Binding ClearOutputCommand}"
+                        Elapsed="{Binding LastElapsed}"
+                        Text="{Binding OutputText}" />
+                </Grid>
+
+                <materialDesign:Card
+                    Grid.Column="2"
+                    Padding="12"
+                    UniformCornerRadius="12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="1.6*" />
+                            <RowDefinition Height="12" />
+                            <RowDefinition Height="*" MinHeight="120" />
+                        </Grid.RowDefinitions>
+
+                        <DockPanel Grid.Row="0">
+                            <Grid Margin="4,0,4,8" DockPanel.Dock="Top">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource SectionTitle}"
+                                    Text="模板预览" />
+                                <TextBlock
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    Opacity="0.7"
+                                    Text="{Binding Model.TemplatePath}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </Grid>
+                            <Border
+                                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                ClipToBounds="True"
+                                CornerRadius="8">
+                                <Image
+                                    Margin="8"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Source="{Binding Model.Preview}"
+                                    Stretch="Uniform" />
+                            </Border>
+                        </DockPanel>
+
+                        <DockPanel Grid.Row="2">
+                            <TextBlock
+                                Margin="4,0,4,8"
+                                DockPanel.Dock="Top"
+                                Style="{StaticResource SectionTitle}"
+                                Text="模板字段（值可编辑）" />
+                            <DataGrid
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                HeadersVisibility="Column"
+                                ItemsSource="{Binding Model.Fields}"
+                                Style="{StaticResource DmGrid}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn
+                                        Width="*"
+                                        Binding="{Binding Name}"
+                                        Header="字段名"
+                                        HeaderStyle="{StaticResource DmHeader}"
+                                        IsReadOnly="True" />
+                                    <DataGridTextColumn
+                                        Width="2*"
+                                        Binding="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                        Header="值"
+                                        HeaderStyle="{StaticResource DmHeader}" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Grid>
+                </materialDesign:Card>
+            </Grid>
+
+        </Grid>
+    </ScrollViewer>
+</UserControl>

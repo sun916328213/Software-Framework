@@ -1,0 +1,42 @@
+﻿<!--
+中文阅读说明：项目构建声明。
+SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>SecsGem.Workbench.Tests</AssemblyName>
+    <RootNamespace>SecsGem.Workbench.Tests</RootNamespace>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <!-- WPF 集成线：真实拉起宿主 App.xaml，覆盖资源合并 / Prism DI 装配 / Shell 解析 / 跨程序集 BAML。 -->
+    <UseWPF>true</UseWPF>
+    <!-- WPF 夹具必须显式 Dispatcher.Invoke，抑制 VS 线程分析器的误报。 -->
+    <NoWarn>$(NoWarn);VSTHRD001;VSTHRD110</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 显式声明实际用到的工程，不靠传递依赖：
+         Controls 提供被验证的 View / BAML 资源，Workbench 提供宿主装配入口（App / DI / 主窗）。 -->
+    <ProjectReference Include="..\..\SecsGem.Controls\SecsGem.Controls.csproj" />
+    <ProjectReference Include="..\..\SecsGem.Workbench\SecsGem.Workbench.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../../../../Build/TestSupport/WorkbenchTestLifetime.cs" Link="TestSupport/WorkbenchTestLifetime.cs" />
+  </ItemGroup>
+</Project>

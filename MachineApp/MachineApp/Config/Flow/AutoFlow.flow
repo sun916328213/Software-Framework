@@ -1,0 +1,231 @@
+{
+  "name": "\u6D41\u7A0B\u56FE1",
+  "version": "1.0",
+  "zoomLevel": 1,
+  "offsetX": 0,
+  "offsetY": 0,
+  "nodes": [
+    {
+      "id": "3798e18078e042c490fbb83db7864b3d",
+      "typeName": "FlowEditor.Nodes.Communication.MC.MCWriteNode, FlowEditor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "name": "MC\u5199\u5165_1",
+      "x": 369,
+      "y": 103,
+      "isInEnabled": true,
+      "isOutEnabled": true,
+      "permission": "Normal",
+      "customInputPorts": [],
+      "customOutputPorts": [],
+      "properties": {
+        "RegisterName": "PLC_SysTrigger",
+        "RegisterValue": "1",
+        "WriteResult": true
+      },
+      "portIdMap": {
+        "IN:Next_IN": "3798e18078e042c490fbb83db7864b3d_Next_IN",
+        "OUT:Next_Out": "3798e18078e042c490fbb83db7864b3d_Next_Out"
+      }
+    },
+    {
+      "id": "be0c79f0106f4a15a74e5fff49cadfa4",
+      "typeName": "FlowEditor.Nodes.FlowControl.StartNode, FlowEditor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "name": "\u5F00\u59CB_1",
+      "x": 28,
+      "y": 236,
+      "isInEnabled": false,
+      "isOutEnabled": true,
+      "permission": "Normal",
+      "customInputPorts": [],
+      "customOutputPorts": [],
+      "properties": {},
+      "portIdMap": {
+        "OUT:Next_Out": "be0c79f0106f4a15a74e5fff49cadfa4_Next_Out"
+      }
+    },
+    {
+      "id": "43550cd52727493ab92f18071df0841f",
+      "typeName": "FlowEditor.Nodes.Communication.MC.MCReadNode, FlowEditor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "name": "MC\u8BFB\u53D6_1",
+      "x": 653,
+      "y": 164,
+      "isInEnabled": true,
+      "isOutEnabled": true,
+      "permission": "Normal",
+      "customInputPorts": [],
+      "customOutputPorts": [
+        {
+          "name": "ReadValue",
+          "id": "43550cd52727493ab92f18071df0841f_CustomOut_86d5d5baec914cf1b3496c43d8f2f14f",
+          "boundProperty": "ReadValue"
+        }
+      ],
+      "properties": {
+        "RegisterName": "PLC_SysTrigger",
+        "ReadValue": 0
+      },
+      "portIdMap": {
+        "IN:Next_IN": "43550cd52727493ab92f18071df0841f_Next_IN",
+        "OUT:Next_Out": "43550cd52727493ab92f18071df0841f_Next_Out",
+        "OUT:ReadValue": "43550cd52727493ab92f18071df0841f_CustomOut_86d5d5baec914cf1b3496c43d8f2f14f"
+      }
+    },
+    {
+      "id": "5141f900a97543f78003c25665ba4f49",
+      "typeName": "FlowEditor.Nodes.Communication.MC.MCWaitNode, FlowEditor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "name": "MC\u89E6\u53D1_1",
+      "x": 312,
+      "y": 233,
+      "isInEnabled": true,
+      "isOutEnabled": true,
+      "permission": "Normal",
+      "customInputPorts": [],
+      "customOutputPorts": [],
+      "properties": {
+        "RegisterName": "PLC_SysTrigger",
+        "ComparePolarity": "RisingEdge"
+      },
+      "portIdMap": {
+        "IN:Next_IN": "5141f900a97543f78003c25665ba4f49_Next_IN",
+        "OUT:Next_Out": "5141f900a97543f78003c25665ba4f49_Next_Out"
+      }
+    },
+    {
+      "id": "0d46ebdfabac4e3dbfaa5d9ea8520340",
+      "typeName": "FlowEditor.Nodes.Communication.MC.MCWriteNode, FlowEditor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "name": "MC\u5199\u5165_2",
+      "x": 448,
+      "y": 341,
+      "isInEnabled": true,
+      "isOutEnabled": true,
+      "permission": "Normal",
+      "customInputPorts": [],
+      "customOutputPorts": [],
+      "properties": {
+        "RegisterName": "PLC_SysTrigger",
+        "RegisterValue": "111",
+        "WriteResult": true
+      },
+      "portIdMap": {
+        "IN:Next_IN": "0d46ebdfabac4e3dbfaa5d9ea8520340_Next_IN",
+        "OUT:Next_Out": "0d46ebdfabac4e3dbfaa5d9ea8520340_Next_Out"
+      }
+    },
+    {
+      "id": "0d2216883acc40cb8f8237114726d0fb",
+      "typeName": "FlowEditor.Nodes.FlowControl.DelayNode, FlowEditor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "name": "\u5EF6\u65F6_1",
+      "x": 160,
+      "y": 88,
+      "isInEnabled": true,
+      "isOutEnabled": true,
+      "permission": "Normal",
+      "customInputPorts": [],
+      "customOutputPorts": [],
+      "properties": {
+        "DelayMs": 1000
+      },
+      "portIdMap": {
+        "IN:Next_IN": "0d2216883acc40cb8f8237114726d0fb_Next_IN",
+        "OUT:Next_Out": "0d2216883acc40cb8f8237114726d0fb_Next_Out"
+      }
+    },
+    {
+      "id": "3ef59b6cf3784cb09664e820c767e57d",
+      "typeName": "FlowEditor.Nodes.Communication.MC.MCWriteNode, FlowEditor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "name": "MC\u5199\u5165_3",
+      "x": 106,
+      "y": 369,
+      "isInEnabled": true,
+      "isOutEnabled": true,
+      "permission": "Normal",
+      "customInputPorts": [],
+      "customOutputPorts": [],
+      "properties": {
+        "RegisterName": "PLC_SysTrigger",
+        "RegisterValue": "0",
+        "WriteResult": true
+      },
+      "portIdMap": {
+        "IN:Next_IN": "3ef59b6cf3784cb09664e820c767e57d_Next_IN",
+        "OUT:Next_Out": "3ef59b6cf3784cb09664e820c767e57d_Next_Out"
+      }
+    },
+    {
+      "id": "6c62206b6a6f4fd2aa3ae9bda9eba1ef",
+      "typeName": "FlowEditor.Nodes.FlowControl.DelayNode, FlowEditor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "name": "\u5EF6\u65F6_2",
+      "x": 607,
+      "y": 411,
+      "isInEnabled": true,
+      "isOutEnabled": true,
+      "permission": "Normal",
+      "customInputPorts": [],
+      "customOutputPorts": [],
+      "properties": {
+        "DelayMs": 1000
+      },
+      "portIdMap": {
+        "IN:Next_IN": "6c62206b6a6f4fd2aa3ae9bda9eba1ef_Next_IN",
+        "OUT:Next_Out": "6c62206b6a6f4fd2aa3ae9bda9eba1ef_Next_Out"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "b0618958340644068e114d0895638144",
+      "sourceNodeId": "3798e18078e042c490fbb83db7864b3d",
+      "sourcePortId": "3798e18078e042c490fbb83db7864b3d_Next_Out",
+      "targetNodeId": "43550cd52727493ab92f18071df0841f",
+      "targetPortId": "43550cd52727493ab92f18071df0841f_Next_IN"
+    },
+    {
+      "id": "dca2f24fb2514821843575e9f5c5641a",
+      "sourceNodeId": "5141f900a97543f78003c25665ba4f49",
+      "sourcePortId": "5141f900a97543f78003c25665ba4f49_Next_Out",
+      "targetNodeId": "0d46ebdfabac4e3dbfaa5d9ea8520340",
+      "targetPortId": "0d46ebdfabac4e3dbfaa5d9ea8520340_Next_IN"
+    },
+    {
+      "id": "a69834d1a038448f92c109b55457e73a",
+      "sourceNodeId": "0d2216883acc40cb8f8237114726d0fb",
+      "sourcePortId": "0d2216883acc40cb8f8237114726d0fb_Next_Out",
+      "targetNodeId": "3798e18078e042c490fbb83db7864b3d",
+      "targetPortId": "3798e18078e042c490fbb83db7864b3d_Next_IN"
+    },
+    {
+      "id": "e99d7b4397b14857ae119cb8f8aaca54",
+      "sourceNodeId": "0d2216883acc40cb8f8237114726d0fb",
+      "sourcePortId": "0d2216883acc40cb8f8237114726d0fb_Next_Out",
+      "targetNodeId": "5141f900a97543f78003c25665ba4f49",
+      "targetPortId": "5141f900a97543f78003c25665ba4f49_Next_IN"
+    },
+    {
+      "id": "09b1504abd704e01b7f3072bc9a0f7d2",
+      "sourceNodeId": "be0c79f0106f4a15a74e5fff49cadfa4",
+      "sourcePortId": "be0c79f0106f4a15a74e5fff49cadfa4_Next_Out",
+      "targetNodeId": "3ef59b6cf3784cb09664e820c767e57d",
+      "targetPortId": "3ef59b6cf3784cb09664e820c767e57d_Next_IN"
+    },
+    {
+      "id": "d8d161fef59440678257f18abe7c4271",
+      "sourceNodeId": "3ef59b6cf3784cb09664e820c767e57d",
+      "sourcePortId": "3ef59b6cf3784cb09664e820c767e57d_Next_Out",
+      "targetNodeId": "0d2216883acc40cb8f8237114726d0fb",
+      "targetPortId": "0d2216883acc40cb8f8237114726d0fb_Next_IN"
+    },
+    {
+      "id": "c5ea0e4e05f742749949e86e7ce3c38c",
+      "sourceNodeId": "0d46ebdfabac4e3dbfaa5d9ea8520340",
+      "sourcePortId": "0d46ebdfabac4e3dbfaa5d9ea8520340_Next_Out",
+      "targetNodeId": "6c62206b6a6f4fd2aa3ae9bda9eba1ef",
+      "targetPortId": "6c62206b6a6f4fd2aa3ae9bda9eba1ef_Next_IN"
+    },
+    {
+      "id": "fd6390dc87494340b88d0313681ec0d0",
+      "sourceNodeId": "6c62206b6a6f4fd2aa3ae9bda9eba1ef",
+      "sourcePortId": "6c62206b6a6f4fd2aa3ae9bda9eba1ef_Next_Out",
+      "targetNodeId": "3ef59b6cf3784cb09664e820c767e57d",
+      "targetPortId": "3ef59b6cf3784cb09664e820c767e57d_Next_IN"
+    }
+  ]
+}

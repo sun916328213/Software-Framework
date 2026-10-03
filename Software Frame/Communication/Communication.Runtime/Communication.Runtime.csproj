@@ -1,0 +1,41 @@
+﻿<!--
+中文阅读说明：项目构建声明。
+Communication 模块：连接、协议适配及通信界面；主动请求应答与被动数据接收需遵守所用连接的实际契约。
+目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>13.0</LangVersion>
+    <RootNamespace>Communication.Runtime</RootNamespace>
+    <AssemblyName>Communication.Runtime</AssemblyName>
+    <!-- P11: Runtime 是真实协议、Transport 与第三方 SDK 的唯一归属；暂不单独打包。 -->
+    <IsPackable>false</IsPackable>
+    <Platforms>AnyCPU</Platforms>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Communication.Core\Communication.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentModbus" Version="5.3.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua" Version="1.5.378.134" />
+    <PackageReference Include="Prism.Core" Version="8.1.97" />
+    <PackageReference Include="System.IO.Ports" Version="8.0.0" />
+    <PackageReference Include="System.IO.Pipelines" Version="10.0.2" />
+    <!-- MX Component RCW 由内部 NuGet 包提供；项目 AnyCPU，运行时限定 Windows x64（由 adapter 运行时守卫负责）。 -->
+    <PackageReference Include="Mitsubishi.MxComponent.Interop" Version="5.0.0-internal.3" />
+  </ItemGroup>
+
+</Project>
