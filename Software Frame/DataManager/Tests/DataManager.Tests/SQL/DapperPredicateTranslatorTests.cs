@@ -37,7 +37,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 MustTranslate 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 MustTranslate；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、TryTranslate；具体条件和先后次序见方法体。
         /// </summary>
         private static (string Where, Dapper.DynamicParameters Pars) MustTranslate(
@@ -50,7 +50,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 GreaterThan_ProducesParameterizedComparison 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GreaterThan_ProducesParameterizedComparison；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 MustTranslate、Equal、Get；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -62,7 +62,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 FlippedComparison_SwapsOperator 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FlippedComparison_SwapsOperator；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 MustTranslate、Equal、Get；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -74,7 +74,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 AndOrNot_Compose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AndOrNot_Compose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 MustTranslate、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -85,7 +85,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 NullConstant_ProducesIsNull 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 NullConstant_ProducesIsNull；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 MustTranslate、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -96,7 +96,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 NotNull_ProducesIsNotNull 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 NotNull_ProducesIsNotNull；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 MustTranslate、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -107,7 +107,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 BoolMember_ProducesEqualityWithTrue 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BoolMember_ProducesEqualityWithTrue；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 MustTranslate、Equal、True、Get；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -119,7 +119,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 ColumnAttribute_UsesExplicitName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ColumnAttribute_UsesExplicitName；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 MustTranslate、StartsWith；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -130,7 +130,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EnumValue_PassesUnderlyingNumber 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EnumValue_PassesUnderlyingNumber；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 MustTranslate、Equal、Get；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -143,7 +143,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 CapturedEnumVariable_PassesAsInt 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CapturedEnumVariable_PassesAsInt；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 MustTranslate、Equal、Get；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -157,7 +157,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 ClosureVariable_EvaluatedAsParameter 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ClosureVariable_EvaluatedAsParameter；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 MustTranslate、Equal、Get；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -170,7 +170,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 StringMethodCall_FallsBack 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StringMethodCall_FallsBack；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 False、TryTranslate、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -181,7 +181,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Arithmetic_FallsBack 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Arithmetic_FallsBack；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 False、TryTranslate；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -192,7 +192,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 MySql_QuotesWithBackticks 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 MySql_QuotesWithBackticks；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、TryTranslate、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -204,7 +204,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlServer_QuotesWithBrackets 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlServer_QuotesWithBrackets；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、TryTranslate、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

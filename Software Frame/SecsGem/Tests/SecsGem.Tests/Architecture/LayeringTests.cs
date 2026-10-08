@@ -58,7 +58,7 @@ public sealed class LayeringTests
 
     /// <summary>Controls owns module composition; Runtime must remain independent of Controls.</summary>
     /// <remarks>
-    /// 验证 Controls_composes_core_and_runtime_without_reverse_dependency 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Controls_composes_core_and_runtime_without_reverse_dependency；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 LoadCsproj、True、HasUseWpf、ProjectReferences、Contains；具体条件和先后次序见方法体。
     /// </remarks>
     [Fact]

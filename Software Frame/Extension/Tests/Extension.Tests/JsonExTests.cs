@@ -70,7 +70,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Cleanup 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Cleanup；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Delete；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>
@@ -100,7 +100,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToJson_属性级数字同样带引号_但读回时因AllowReadingFromString仍能还原 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToJson_属性级数字同样带引号_但读回时因AllowReadingFromString仍能还原；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToJson、Contains、Equal、FromJson；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -116,7 +116,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToJson_中文不被转义成Unicode转义序列 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToJson_中文不被转义成Unicode转义序列；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToJson、Contains、DoesNotContain；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -129,7 +129,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToJson_带缩进换行 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToJson_带缩进换行；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Contains、ToJson；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -139,7 +139,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToJson_引用类型为null时返回null而不是字符串null 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToJson_引用类型为null时返回null而不是字符串null；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、ToJson；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -151,7 +151,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToJson_值类型默认值不会被当成null 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToJson_值类型默认值不会被当成null；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToJson；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -165,7 +165,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToJson_与FromJson往返_含中文集合与时间 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToJson_与FromJson往返_含中文集合与时间；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToJson、FromJson、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -196,7 +196,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 FromJson_空白或null返回default 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FromJson_空白或null返回default；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、FromJson、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -209,7 +209,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 FromJson_JSON字面量null_引用类型得到null_值类型会抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FromJson_JSON字面量null_引用类型得到null_值类型会抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、FromJson、Exception、IsAssignableFrom；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -222,7 +222,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 FromJson_数字既可从数字也可从带引号字符串读入 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FromJson_数字既可从数字也可从带引号字符串读入；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、FromJson；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -233,7 +233,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 FromJson_非法JSON会抛JsonException_没有兜底 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FromJson_非法JSON会抛JsonException_没有兜底；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exception、FromJson、IsAssignableFrom；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -273,7 +273,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Save会补建缺失的多级目录 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Save会补建缺失的多级目录；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、Combine、Save、True、Exists；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -294,7 +294,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Save三参重载_把目录与文件名拼接 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Save三参重载_把目录与文件名拼接；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、Save、Combine、True、Exists；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -316,7 +316,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Save写出的文件不带BOM 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Save写出的文件不带BOM；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、Combine、Save、ToArray、Take；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -338,7 +338,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Save_对象为null时写出空文件_读回得到default 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Save_对象为null时写出空文件_读回得到default；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、Combine、Save、True、Exists；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -361,7 +361,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Read_文件不存在返回default_不抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Read_文件不存在返回default_不抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、Combine、Null、Read、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -384,7 +384,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Read_文件内容损坏会抛异常_这是与TryRead的分界线 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Read_文件内容损坏会抛异常_这是与TryRead的分界线；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、Combine、WriteAllText、Exception、Read；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -406,7 +406,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 TryRead_文件不存在返回default 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryRead_文件不存在返回default；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、Combine、Null、TryRead、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -428,7 +428,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 TryRead_文件内容损坏也回退default_不抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryRead_文件内容损坏也回退default_不抛；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、Combine、WriteAllText、Null、TryRead；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -449,7 +449,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 TryRead_正常文件与Read结果一致 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryRead_正常文件与Read结果一致；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、Combine、Save、Read、TryRead；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -478,7 +478,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 ToJson_传Type时走的是静态属性字典_不是序列化Type对象 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToJson_传Type时走的是静态属性字典_不是序列化Type对象；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToJson、ToJsonNode、NotNull、Equal、True；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -502,7 +502,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SaveStaticClass与LoadStaticClass往返 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SaveStaticClass与LoadStaticClass往返；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、Combine、SaveStaticClass、LoadStaticClass、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -536,7 +536,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SaveStaticClass写出的文件带UTF8_BOM_与Save不一致 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SaveStaticClass写出的文件带UTF8_BOM_与Save不一致；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、Combine、SaveStaticClass、ToArray、Take；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -559,7 +559,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 LoadStaticClass_文件不存在时静默返回 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 LoadStaticClass_文件不存在时静默返回；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、LoadStaticClass、Combine、Equal、Cleanup；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -580,7 +580,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 LoadStaticClass_根不是JSON对象时静默返回 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 LoadStaticClass_根不是JSON对象时静默返回；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、Combine、WriteAllText、LoadStaticClass、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -604,7 +604,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 LoadStaticClass_单个属性转换失败时保持原值_其余属性继续加载 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 LoadStaticClass_单个属性转换失败时保持原值_其余属性继续加载；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、Combine、WriteAllText、LoadStaticClass、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -633,7 +633,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 LoadStaticClass_JSON里多余的键被忽略 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 LoadStaticClass_JSON里多余的键被忽略；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewTempDir、Combine、WriteAllText、LoadStaticClass、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -660,7 +660,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 ToJsonNode_null或空白返回null 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToJsonNode_null或空白返回null；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、ToJsonNode；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -672,7 +672,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToJsonNode_对象与数组分别得到JsonObject与JsonArray 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToJsonNode_对象与数组分别得到JsonObject与JsonArray；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 IsType、ToJsonNode；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -683,7 +683,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToJsonNode_非法JSON会抛JsonException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToJsonNode_非法JSON会抛JsonException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exception、ToJsonNode、IsAssignableFrom；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -713,7 +713,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToList_嵌套对象_父键会被丢弃 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToList_嵌套对象_父键会被丢弃；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList、ToJsonNode、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -730,7 +730,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToList_标量数组_键与值相同 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToList_标量数组_键与值相同；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList、ToJsonNode、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -746,7 +746,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToList_对象数组_展开并丢弃父键 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToList_对象数组_展开并丢弃父键；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList、ToJsonNode、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -763,7 +763,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToList_null返回空列表_不抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToList_null返回空列表_不抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToList；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -773,7 +773,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToList_根是标量时返回空列表 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToList_根是标量时返回空列表；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToList、ToJsonNode；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -801,7 +801,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Replace_数字与布尔值按文本形式匹配 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Replace_数字与布尔值按文本形式匹配；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToJsonNode、Replace、Create、Equal、ToJsonString；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -816,7 +816,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Replace_数组里替换_仅一处命中 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Replace_数组里替换_仅一处命中；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToJsonNode、Replace、Create、Equal、ToJsonString；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -830,7 +830,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Replace_递归替换嵌套对象与数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Replace_递归替换嵌套对象与数组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToJsonNode、Replace、Create、Equal、ToJsonString；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -845,7 +845,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Replace_同一个替换节点命中多处时会抛InvalidOperationException_是缺陷 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Replace_同一个替换节点命中多处时会抛InvalidOperationException_是缺陷；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToJsonNode、Exception、Replace、Create、IsAssignableFrom；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -862,7 +862,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Replace_键不会被替换_只比较值 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Replace_键不会被替换_只比较值；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToJsonNode、Replace、Create、Equal、ToJsonString；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -876,7 +876,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Replace_无命中时内容不变 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Replace_无命中时内容不变；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToJsonNode、Replace、Create、Equal、ToJsonString；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -890,7 +890,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Replace_根是标量时不生效 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Replace_根是标量时不生效；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToJsonNode、Replace、Create、Same、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -905,7 +905,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Replace_null节点不抛_直接返回null 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Replace_null节点不抛_直接返回null；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、Replace、Create；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -942,7 +942,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 API面_8个是扩展方法_6个是普通静态方法 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 API面_8个是扩展方法_6个是普通静态方法；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetMethods、ToArray、OrderBy、Select、Where；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

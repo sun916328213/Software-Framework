@@ -28,7 +28,7 @@ namespace FlowEditor.Workbench.Tests;
 public class PortDisplayNameTests
 {
     /// <summary>
-    /// 验证 LoopNode_InitialIterationsInput_UsesChineseDisplayNameAndPropertyBinding 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopNode_InitialIterationsInput_UsesChineseDisplayNameAndPropertyBinding；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Single、nameof、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -42,7 +42,7 @@ public class PortDisplayNameTests
     }
 
     /// <summary>
-    /// 验证 LoopNode_ReenabledIterationsInput_UsesAttributeDisplayName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopNode_ReenabledIterationsInput_UsesAttributeDisplayName；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 SetPortConfig、nameof、Single、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -59,7 +59,7 @@ public class PortDisplayNameTests
     }
 
     /// <summary>
-    /// 验证 PropertyPanel_ReenabledIterationsInput_ReloadsSingleNamedRow 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PropertyPanel_ReenabledIterationsInput_ReloadsSingleNamedRow；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 nameof、SetPortConfig、Empty、Single、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -83,7 +83,7 @@ public class PortDisplayNameTests
     }
 
     /// <summary>
-    /// 验证 LoopNode_ChineseIterationsPort_StillWritesBoundProperty 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopNode_ChineseIterationsPort_StillWritesBoundProperty；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Single、nameof、SyncInputValues、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -100,7 +100,7 @@ public class PortDisplayNameTests
     }
 
     /// <summary>
-    /// 验证 PropertyBoundPort_WithBlankRequestedName_UsesAttributeDisplayName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PropertyBoundPort_WithBlankRequestedName_UsesAttributeDisplayName；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 SetPortConfig、nameof、AddCustomInputPort、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -116,7 +116,7 @@ public class PortDisplayNameTests
     }
 
     /// <summary>
-    /// 验证 UnboundPort_WithBlankRequestedName_UsesVisiblePlaceholder 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 UnboundPort_WithBlankRequestedName_UsesVisiblePlaceholder；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddCustomInputPort、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -130,7 +130,7 @@ public class PortDisplayNameTests
     }
 
     /// <summary>
-    /// 验证 RenameCustomPort_ToBlank_IsRejectedAndKeepsExistingName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RenameCustomPort_ToBlank_IsRejectedAndKeepsExistingName；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddCustomInputPort、RenameCustomPort、False、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -146,7 +146,7 @@ public class PortDisplayNameTests
     }
 
     /// <summary>
-    /// 验证 PortModel_DirectBlankAssignment_UsesVisiblePlaceholder 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PortModel_DirectBlankAssignment_UsesVisiblePlaceholder；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateInput、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -160,7 +160,7 @@ public class PortDisplayNameTests
     }
 
     /// <summary>
-    /// 验证 LegacyEnglishIterationsPort_RestoresWithoutDuplicateAndKeepsChineseName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LegacyEnglishIterationsPort_RestoresWithoutDuplicateAndKeepsChineseName；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 IsType、Create、Single、Equal、nameof；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -186,7 +186,7 @@ public class PortDisplayNameTests
     }
 
     /// <summary>
-    /// 验证 LegacyBlankIterationsPort_WithPropertyBinding_RepairsChineseName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LegacyBlankIterationsPort_WithPropertyBinding_RepairsChineseName；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 nameof、IsType、Create、Single、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -217,7 +217,7 @@ public class PortDisplayNameTests
     }
 
     /// <summary>
-    /// 验证 EnablingIterationsInput_RendersVisiblePortNameInNodeView 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EnablingIterationsInput_RendersVisiblePortNameInNodeView；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、SetPortConfig、nameof、Measure、Arrange；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -281,7 +281,7 @@ public class PortDisplayNameTests
     }
 
     /// <summary>
-    /// 验证 FindVisualChildren 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FindVisualChildren；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetChildrenCount、GetChild、FindVisualChildren；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<T> FindVisualChildren<T>(DependencyObject root)
@@ -298,7 +298,7 @@ public class PortDisplayNameTests
     }
 
     /// <summary>
-    /// 验证 GetContrastRatio 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 GetContrastRatio；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Pow、Linearize、Max、Luminance、Min；具体条件和先后次序见方法体。
     /// </summary>
     private static double GetContrastRatio(Color first, Color second)
@@ -330,12 +330,12 @@ public class PortDisplayNameTests
     private sealed class NullPortDialogService : IPortDialogService
     {
         /// <summary>
-        /// 验证 ShowAddPortDialog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowAddPortDialog；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public PortDialogResult? ShowAddPortDialog(PortDialogRequest request) => null;
 
         /// <summary>
-        /// 验证 ShowModifyBindingDialog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowModifyBindingDialog；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public PortDialogResult? ShowModifyBindingDialog(PortDialogRequest request) => null;
     }

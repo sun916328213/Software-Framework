@@ -33,7 +33,7 @@ namespace DataManager.Workbench.Tests
         private readonly WorkbenchAppFixture _host = host;
 
         /// <summary>
-        /// 验证 DarkTheme_InputTextFollowsTheme_NotBlack 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DarkTheme_InputTextFollowsTheme_NotBlack；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、Resolve、SetTheme、ReadFirstInputForeground、True；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -54,7 +54,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 ReadFirstInputForeground 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadFirstInputForeground；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Resolve、Show、UpdateLayout、FirstOrDefault、OfType；具体条件和先后次序见方法体。
         /// </summary>
         private static Color ReadFirstInputForeground()
@@ -109,7 +109,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 CollectAll 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CollectAll；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetChildrenCount、CollectAll、GetChild；具体条件和先后次序见方法体。
         /// </summary>
         private static IEnumerable<DependencyObject> CollectAll(DependencyObject root)
@@ -123,7 +123,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 FindFirstTextBox 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FindFirstTextBox；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ReferenceEquals、GetChildrenCount、FindFirstTextBox、GetChild；具体条件和先后次序见方法体。
         /// </summary>
         private static TextBox? FindFirstTextBox(DependencyObject root, Style? dmInput)
@@ -140,11 +140,11 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 IsLight 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 IsLight；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private static bool IsLight(Color c) => (0.299 * c.R + 0.587 * c.G + 0.114 * c.B) > 128;
         /// <summary>
-        /// 验证 IsDark 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 IsDark；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 IsLight；具体条件和先后次序见方法体。
         /// </summary>
         private static bool IsDark(Color c) => !IsLight(c);

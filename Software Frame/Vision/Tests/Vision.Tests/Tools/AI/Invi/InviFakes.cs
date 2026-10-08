@@ -51,7 +51,7 @@ internal sealed class FakeInviNativeApi : IInviNativeApi
     public int DisposeCalls { get; private set; }
 
     /// <summary>
-    /// 验证 CreateManager 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreateManager；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public IntPtr CreateManager()
     {
@@ -62,7 +62,7 @@ internal sealed class FakeInviNativeApi : IInviNativeApi
     }
 
     /// <summary>
-    /// 验证 DestroyManager 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DestroyManager；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public bool DestroyManager(IntPtr manager)
     {
@@ -71,7 +71,7 @@ internal sealed class FakeInviNativeApi : IInviNativeApi
     }
 
     /// <summary>
-    /// 验证 CreateModel 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreateModel；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、Contains；具体条件和先后次序见方法体。
     /// </summary>
     public bool CreateModel(IntPtr manager, string modelPath, int type)
@@ -83,7 +83,7 @@ internal sealed class FakeInviNativeApi : IInviNativeApi
     }
 
     /// <summary>
-    /// 验证 DestroyModel 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DestroyModel；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、Contains；具体条件和先后次序见方法体。
     /// </summary>
     public bool DestroyModel(IntPtr manager, string modelPath)
@@ -95,14 +95,14 @@ internal sealed class FakeInviNativeApi : IInviNativeApi
     }
 
     /// <summary>
-    /// 验证 InferExe 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 InferExe；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AllocJson；具体条件和先后次序见方法体。
     /// </summary>
     public IntPtr InferExe(IntPtr manager, string modelName, int type, int length, IntPtr imagePtr,
         int inputsize, double threshold, int batchSize, int mArea) => AllocJson();
 
     /// <summary>
-    /// 验证 InferExeIntPtr 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 InferExeIntPtr；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AllocJson；具体条件和先后次序见方法体。
     /// </summary>
     public IntPtr InferExeIntPtr(IntPtr manager, string modelName, int type, int w, int h, int channel,
@@ -115,12 +115,12 @@ internal sealed class FakeInviNativeApi : IInviNativeApi
     }
 
     /// <summary>
-    /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public void Dispose() => DisposeCalls++;
 
     /// <summary>
-    /// 验证 FreeJson 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FreeJson；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FreeHGlobal、Clear；具体条件和先后次序见方法体。
     /// </summary>
     public void FreeJson()
@@ -131,7 +131,7 @@ internal sealed class FakeInviNativeApi : IInviNativeApi
     }
 
     /// <summary>
-    /// 验证 AllocJson 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AllocJson；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 StringToHGlobalAnsi、Add；具体条件和先后次序见方法体。
     /// </summary>
     private IntPtr AllocJson()

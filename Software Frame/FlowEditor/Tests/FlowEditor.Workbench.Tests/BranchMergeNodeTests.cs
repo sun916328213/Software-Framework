@@ -34,7 +34,7 @@ public class BranchMergeNodeTests
             new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult、WaitAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -45,7 +45,7 @@ public class BranchMergeNodeTests
         }
 
         /// <summary>
-        /// 验证 Complete 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Complete；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult；具体条件和先后次序见方法体。
         /// </summary>
         public void Complete() => _release.TrySetResult();
@@ -72,7 +72,7 @@ public class BranchMergeNodeTests
     }
 
     /// <summary>
-    /// 验证 DefaultNode_ProvidesTwoNamedFlowInputsAndOneFlowOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DefaultNode_ProvidesTwoNamedFlowInputsAndOneFlowOutput；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Select、All、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -88,7 +88,7 @@ public class BranchMergeNodeTests
     }
 
     /// <summary>
-    /// 验证 InputCount_AddsAndRemovesFlowInputs 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 InputCount_AddsAndRemovesFlowInputs；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Contains、DoesNotContain；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -103,7 +103,7 @@ public class BranchMergeNodeTests
     }
 
     /// <summary>
-    /// 验证 SelectedSwitchBranch_ThroughMerge_ContinuesToCommonSuccessor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SelectedSwitchBranch_ThroughMerge_ContinuesToCommonSuccessor；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Branch、ToMerge、Flow、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -140,7 +140,7 @@ public class BranchMergeNodeTests
     }
 
     /// <summary>
-    /// 验证 AndMerge_SelectedOneOfTwoBranches_DoesNotContinue 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AndMerge_SelectedOneOfTwoBranches_DoesNotContinue；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、ExecuteAsync、Branch、ToMerge、Flow；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -164,7 +164,7 @@ public class BranchMergeNodeTests
     }
 
     /// <summary>
-    /// 验证 OrMerge_ContinuesAfterFirstActiveBranchCompletes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OrMerge_ContinuesAfterFirstActiveBranchCompletes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、ExecuteAsync、Flow、ToMerge、WaitAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -200,7 +200,7 @@ public class BranchMergeNodeTests
     }
 
     /// <summary>
-    /// 验证 OrMerge_WithBackEdge_ExecutesAndStartsNextCycle 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OrMerge_WithBackEdge_ExecutesAndStartsNextCycle；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、Branch、ToMerge、FromMilliseconds；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
@@ -253,7 +253,7 @@ public class BranchMergeNodeTests
     }
 
     /// <summary>
-    /// 验证 Cycle_EntryFork_StartsBothBranchesBeforeEitherBranchCompletes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Cycle_EntryFork_StartsBothBranchesBeforeEitherBranchCompletes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、FromSeconds、ExecuteAsync、WaitAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -287,7 +287,7 @@ public class BranchMergeNodeTests
     }
 
     /// <summary>
-    /// 验证 Cycle_ShortBranchAdvancesWhileParallelLongBranchIsStillRunning 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Cycle_ShortBranchAdvancesWhileParallelLongBranchIsStillRunning；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、FromSeconds、ExecuteAsync、Flow、ThrowsAnyAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -319,7 +319,7 @@ public class BranchMergeNodeTests
     }
 
     /// <summary>
-    /// 验证 AndMerge_FirstArrivalMarksRunning_ButCompletesOnlyAfterAllBranches 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AndMerge_FirstArrivalMarksRunning_ButCompletesOnlyAfterAllBranches；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、FromSeconds、ExecuteAsync、Flow、ToMerge；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -365,7 +365,7 @@ public class BranchMergeNodeTests
     }
 
     /// <summary>
-    /// 验证 ConditionNode_RemainsLoadableButIsHiddenFromToolbox 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConditionNode_RemainsLoadableButIsHiddenFromToolbox；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Single、Cast、GetCustomAttributes、False、IsType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -378,7 +378,7 @@ public class BranchMergeNodeTests
     }
 
     /// <summary>
-    /// 验证 ReflectionRestore_PreservesDynamicFlowInputTypes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReflectionRestore_PreservesDynamicFlowInputTypes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToDocument、Single、All、Equal、IsType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -407,7 +407,7 @@ public class BranchMergeNodeTests
     }
 
     /// <summary>
-    /// 验证 Branch 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Branch；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 First；具体条件和先后次序见方法体。
     /// </summary>
     private static ConnectionModel Branch(NodeViewModel source, string portName, NodeViewModel target)
@@ -420,7 +420,7 @@ public class BranchMergeNodeTests
         };
 
     /// <summary>
-    /// 验证 ToMerge 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ToMerge；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 First；具体条件和先后次序见方法体。
     /// </summary>
     private static ConnectionModel ToMerge(
@@ -434,7 +434,7 @@ public class BranchMergeNodeTests
         };
 
     /// <summary>
-    /// 验证 WaitUntilAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WaitUntilAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、condition、Delay；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

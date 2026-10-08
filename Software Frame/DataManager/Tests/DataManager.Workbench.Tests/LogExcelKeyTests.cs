@@ -17,7 +17,7 @@ namespace DataManager.Workbench.Tests
     public class LogExcelKeyTests
     {
         /// <summary>
-        /// 验证 BaseLogParam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BaseLogParam；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private static LogParam BaseLogParam() => new()
         {
@@ -29,7 +29,7 @@ namespace DataManager.Workbench.Tests
         };
 
         /// <summary>
-        /// 验证 BaseExcelParam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BaseExcelParam；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private static ExcelParam BaseExcelParam() => new()
         {
@@ -41,7 +41,7 @@ namespace DataManager.Workbench.Tests
         };
 
         /// <summary>
-        /// 验证 BuildLogKey_SameParams_SameKey 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildLogKey_SameParams_SameKey；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、BuildLogKey、BaseLogParam；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -51,7 +51,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 BuildLogKey_FieldChange_DifferentKey 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildLogKey_FieldChange_DifferentKey；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BaseLogParam、SetValue、GetProperty、NotEqual、BuildLogKey；具体条件和先后次序见方法体。
         /// </summary>
         [Theory]
@@ -68,7 +68,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 BuildLogKey_LogTypeChange_DifferentKey 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildLogKey_LogTypeChange_DifferentKey；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BaseLogParam、NotEqual、BuildLogKey；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -82,7 +82,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 BuildExcelKey_SameParams_SameKey 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildExcelKey_SameParams_SameKey；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、BuildExcelKey、BaseExcelParam；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -92,7 +92,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 BuildExcelKey_FieldChange_DifferentKey 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildExcelKey_FieldChange_DifferentKey；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BaseExcelParam、SetValue、GetProperty、NotEqual、BuildExcelKey；具体条件和先后次序见方法体。
         /// </summary>
         [Theory]
@@ -108,7 +108,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 BuildExcelKey_ToolTypeChange_DifferentKey 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildExcelKey_ToolTypeChange_DifferentKey；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BaseExcelParam、NotEqual、BuildExcelKey；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

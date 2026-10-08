@@ -20,7 +20,7 @@ public class ConverterTests
     // ── BoolInverseConverter ────────────────────────────────────
 
     /// <summary>
-    /// 验证 BoolInverse_TrueBecomesFalse 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BoolInverse_TrueBecomesFalse；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Convert、ConvertBack、False、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -34,7 +34,7 @@ public class ConverterTests
     }
 
     /// <summary>
-    /// 验证 BoolInverse_NonBoolPassthrough 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BoolInverse_NonBoolPassthrough；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Same、Convert、ConvertBack；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -50,7 +50,7 @@ public class ConverterTests
     // ── BoolInverseToVisibilityConverter ────────────────────────
 
     /// <summary>
-    /// 验证 BoolInverseToVisibility_TrueBecomesCollapsed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BoolInverseToVisibility_TrueBecomesCollapsed；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Convert；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -62,7 +62,7 @@ public class ConverterTests
     }
 
     /// <summary>
-    /// 验证 BoolInverseToVisibility_NonTrueBecomesVisible 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BoolInverseToVisibility_NonTrueBecomesVisible；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Convert；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -74,7 +74,7 @@ public class ConverterTests
     }
 
     /// <summary>
-    /// 验证 BoolInverseToVisibility_ConvertBackRoundtrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BoolInverseToVisibility_ConvertBackRoundtrip；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ConvertBack、False、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -92,7 +92,7 @@ public class ConverterTests
     // ── BorderClipConverter ────────────────────────────────────
 
     /// <summary>
-    /// 验证 BorderClip_SmallSize_ReturnsEmpty 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BorderClip_SmallSize_ReturnsEmpty；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Convert、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -105,7 +105,7 @@ public class ConverterTests
     }
 
     /// <summary>
-    /// 验证 BorderClip_NullValues_ReturnsUnsetValue 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BorderClip_NullValues_ReturnsUnsetValue；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Convert、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -117,7 +117,7 @@ public class ConverterTests
     }
 
     /// <summary>
-    /// 验证 BorderClip_TooFewValues_ReturnsUnsetValue 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BorderClip_TooFewValues_ReturnsUnsetValue；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Convert、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -129,7 +129,7 @@ public class ConverterTests
     }
 
     /// <summary>
-    /// 验证 BorderClip_ValidRect_ReturnsFrozenGeometry 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BorderClip_ValidRect_ReturnsFrozenGeometry；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Convert、IsType、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -142,7 +142,7 @@ public class ConverterTests
     }
 
     /// <summary>
-    /// 验证 BorderClip_WithCornerRadius_ProducesPath 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BorderClip_WithCornerRadius_ProducesPath；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Convert、IsType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -158,7 +158,7 @@ public class ConverterTests
     }
 
     /// <summary>
-    /// 验证 BorderClip_ConvertBack_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BorderClip_ConvertBack_Throws；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、ConvertBack；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -172,7 +172,7 @@ public class ConverterTests
     // ── IntZeroToVisibilityConverter ────────────────────────────
 
     /// <summary>
-    /// 验证 IntZeroToVisibility_ZeroBecomesVisible 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 IntZeroToVisibility_ZeroBecomesVisible；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Convert；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -183,7 +183,7 @@ public class ConverterTests
     }
 
     /// <summary>
-    /// 验证 IntZeroToVisibility_NonZeroBecomesCollapsed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 IntZeroToVisibility_NonZeroBecomesCollapsed；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Convert；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -195,7 +195,7 @@ public class ConverterTests
     }
 
     /// <summary>
-    /// 验证 IntZeroToVisibility_NonIntBecomesCollapsed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 IntZeroToVisibility_NonIntBecomesCollapsed；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Convert；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -208,7 +208,7 @@ public class ConverterTests
     }
 
     /// <summary>
-    /// 验证 IntZeroToVisibility_ConvertBack_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 IntZeroToVisibility_ConvertBack_Throws；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、ConvertBack；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -222,7 +222,7 @@ public class ConverterTests
     // ── StringNotEmptyToVisibilityConverter ─────────────────────
 
     /// <summary>
-    /// 验证 StringNotEmpty_EmptyBecomesCollapsed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 StringNotEmpty_EmptyBecomesCollapsed；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Convert；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -234,7 +234,7 @@ public class ConverterTests
     }
 
     /// <summary>
-    /// 验证 StringNotEmpty_NonEmptyBecomesVisible 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 StringNotEmpty_NonEmptyBecomesVisible；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Convert；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -246,7 +246,7 @@ public class ConverterTests
     }
 
     /// <summary>
-    /// 验证 StringNotEmpty_NonStringBecomesCollapsed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 StringNotEmpty_NonStringBecomesCollapsed；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Convert；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -258,7 +258,7 @@ public class ConverterTests
     }
 
     /// <summary>
-    /// 验证 StringNotEmpty_ConvertBack_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 StringNotEmpty_ConvertBack_Throws；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、ConvertBack；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

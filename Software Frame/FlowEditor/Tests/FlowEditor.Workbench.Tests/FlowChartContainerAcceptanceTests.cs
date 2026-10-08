@@ -169,7 +169,7 @@ public sealed class FlowChartContainerAcceptanceTests
     }
 
     /// <summary>
-    /// 验证 NewFlowButton_AndTabSwitch_KeepPropertyPanelOnActiveSelection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NewFlowButton_AndTabSwitch_KeepPropertyPanelOnActiveSelection；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RunWithContainer、IsType、AddNodeAt、Invoke、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -204,7 +204,7 @@ public sealed class FlowChartContainerAcceptanceTests
     }
 
     /// <summary>
-    /// 验证 OutputPane_AtNarrowWidth_WrapsControlsWithinAvailableSpace 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OutputPane_AtNarrowWidth_WrapsControlsWithinAvailableSpace；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Measure、Arrange、UpdateLayout、IsType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -226,7 +226,7 @@ public sealed class FlowChartContainerAcceptanceTests
     }
 
     /// <summary>
-    /// 验证 ToolbarExecutionButtons_FollowActiveAndBackgroundFlowStates 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ToolbarExecutionButtons_FollowActiveAndBackgroundFlowStates；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RunWithContainer、Single、FindVisualDescendants、Invoke、ButtonFor；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -287,7 +287,7 @@ public sealed class FlowChartContainerAcceptanceTests
     }
 
     /// <summary>
-    /// 验证 ReplacedAndResetTabs_DetachOldSubscriptionsAndDoNotDuplicateNewOnes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReplacedAndResetTabs_DetachOldSubscriptionsAndDoNotDuplicateNewOnes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RunWithContainer、AddNewTab、ReplaceWithFlow、NotifyCanExecuteChanged、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -318,7 +318,7 @@ public sealed class FlowChartContainerAcceptanceTests
     }
 
     /// <summary>
-    /// 验证 PendingConnectionRender_WhenContextCleared_DoesNotAccessRetiredFlow 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PendingConnectionRender_WhenContextCleared_DoesNotAccessRetiredFlow；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、CreateContainerViewModel、Invoke、IsType、FindName；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -336,7 +336,7 @@ public sealed class FlowChartContainerAcceptanceTests
     }
 
     /// <summary>
-    /// 验证 Canvas_UnloadAndReload_DetachesVisualSubscriptionsAndRestoresCurrentFlow 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Canvas_UnloadAndReload_DetachesVisualSubscriptionsAndRestoresCurrentFlow；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、CreateContainerViewModel、AddNewTab、Invoke、AddNodeAt；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -478,7 +478,7 @@ public sealed class FlowChartContainerAcceptanceTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public FlowChartViewModel Create() => new(
             new FlowChartService(
@@ -511,31 +511,31 @@ public sealed class FlowChartContainerAcceptanceTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ShowOpenFileDialog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowOpenFileDialog；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public string? ShowOpenFileDialog(string filter, string? defaultFileName = null) => _path;
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ShowSaveFileDialog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowSaveFileDialog；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public string? ShowSaveFileDialog(string filter, string defaultFileName, string defaultExt) => _path;
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ShowConfirm 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowConfirm；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public bool? ShowConfirm(string message, string title) => false;
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ConfirmYesNo 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConfirmYesNo；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public bool ConfirmYesNo(string message, string title) => false;
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ShowInfo 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowInfo；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public void ShowInfo(string message, string title = "提示")
         {
@@ -543,7 +543,7 @@ public sealed class FlowChartContainerAcceptanceTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ShowError 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowError；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public void ShowError(string message, string title = "错误") =>
             throw new InvalidOperationException($"{title}: {message}");
@@ -557,13 +557,13 @@ public sealed class FlowChartContainerAcceptanceTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 Discover 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Discover；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public int Discover() => 0;
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 GetGroupedTools 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetGroupedTools；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty；具体条件和先后次序见方法体。
         /// </remarks>
         public IEnumerable<IGrouping<string, ToolMetadata>> GetGroupedTools() =>
@@ -571,7 +571,7 @@ public sealed class FlowChartContainerAcceptanceTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 Search 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Search；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public List<ToolMetadata> Search(string keyword) => [];
     }
@@ -581,13 +581,13 @@ public sealed class FlowChartContainerAcceptanceTests
     {
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ShowAddPortDialog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowAddPortDialog；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public PortDialogResult? ShowAddPortDialog(PortDialogRequest request) => null;
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ShowModifyBindingDialog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowModifyBindingDialog；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public PortDialogResult? ShowModifyBindingDialog(PortDialogRequest request) => null;
     }
@@ -609,7 +609,7 @@ public sealed class FlowChartContainerAcceptanceTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ExportToPngWithDialog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToPngWithDialog；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public bool ExportToPngWithDialog(
             FrameworkElement element,
@@ -625,7 +625,7 @@ public sealed class FlowChartContainerAcceptanceTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ExportToSvgWithDialog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToSvgWithDialog；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public bool ExportToSvgWithDialog(FrameworkElement element) => false;
     }

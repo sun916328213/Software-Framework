@@ -25,7 +25,7 @@ namespace Vision.Tests.Tools.Halcon;
 public sealed class WorldCoordinateTests
 {
     /// <summary>
-    /// 验证 TestChain 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TestChain；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildPose；具体条件和先后次序见方法体。
     /// </summary>
     private static CoordinateChain TestChain()
@@ -44,7 +44,7 @@ public sealed class WorldCoordinateTests
     }
 
     /// <summary>
-    /// 验证 BlobResult_ToWorld_AndToMachine 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BlobResult_ToWorld_AndToMachine；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToWorld、TestChain、True、Equal、ToMachine；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -65,7 +65,7 @@ public sealed class WorldCoordinateTests
     }
 
     /// <summary>
-    /// 验证 FindLineResult_ToWorld_MapsEndpoints 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FindLineResult_ToWorld_MapsEndpoints；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToWorld、TestChain、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -85,7 +85,7 @@ public sealed class WorldCoordinateTests
     }
 
     /// <summary>
-    /// 验证 NonImageChain_IsRejected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NonImageChain_IsRejected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、ToWorld；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

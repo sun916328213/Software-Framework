@@ -22,20 +22,20 @@ namespace Vision.Tests.Tools.AI;
 public sealed class AIRoiTests
 {
     /// <summary>
-    /// 验证 Image 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Image；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromBuffer、ToArray、Select、Range；具体条件和先后次序见方法体。
     /// </summary>
     private static VisionImage Image() =>
         VisionImage.FromBuffer(6, 5, PixelFormat.Mono8, Enumerable.Range(0, 30).Select(x => (byte)x).ToArray(), source: "roi-test");
 
     /// <summary>
-    /// 验证 Rectangle 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Rectangle；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Rectangle；具体条件和先后次序见方法体。
     /// </summary>
     private static Roi Rectangle() => Roi.Rectangle(3, 2, 2, 2); // 原图 [2,4) × [1,3)
 
     /// <summary>
-    /// 验证 Detection_CropsInputAndRestoresBoxToOriginalImageCoordinates 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Detection_CropsInputAndRestoresBoxToOriginalImageCoordinates；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Rectangle、LoadModel、Image、Run、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -77,7 +77,7 @@ public sealed class AIRoiTests
     }
 
     /// <summary>
-    /// 验证 Classification_CropsPaddedInput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Classification_CropsPaddedInput；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Rectangle、LoadModel、FromBuffer、Run、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -104,7 +104,7 @@ public sealed class AIRoiTests
     }
 
     /// <summary>
-    /// 验证 Segmentation_RestoresBoundsAndPolygon 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Segmentation_RestoresBoundsAndPolygon；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Rectangle、LoadModel、Run、Image、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -138,7 +138,7 @@ public sealed class AIRoiTests
     }
 
     /// <summary>
-    /// 验证 AnomalyDetection_RestoresLocationButKeepsEmptyLocation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AnomalyDetection_RestoresLocationButKeepsEmptyLocation；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Rectangle、LoadModel、Run、Image、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -162,7 +162,7 @@ public sealed class AIRoiTests
     }
 
     /// <summary>
-    /// 验证 UnsupportedShapeAndOutOfBoundsRoi_FailBeforeProviderRun 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 UnsupportedShapeAndOutOfBoundsRoi_FailBeforeProviderRun；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Circle、LoadModel、Run、Image、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -203,7 +203,7 @@ public sealed class AIRoiTests
     }
 
     /// <summary>
-    /// 验证 SegmentationMask_ReturnsFailureInsteadOfMisplacingPixels 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SegmentationMask_ReturnsFailureInsteadOfMisplacingPixels；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromBuffer、Rectangle、LoadModel、Run、Image；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

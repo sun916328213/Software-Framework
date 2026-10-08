@@ -11,7 +11,7 @@ namespace FlowEditor.Workbench.Tests;
 public class DispatchertimerExTests
 {
     /// <summary>
-    /// 验证 DispatcherTimer_Headless_NoNRE_AndAutoStart 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DispatcherTimer_Headless_NoNRE_AndAutoStart；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 DispatcherTimer、True、Stop；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -25,7 +25,7 @@ public class DispatchertimerExTests
     }
 
     /// <summary>
-    /// 验证 NamedTimer_SameKey_ReplacesInsteadOfStacking 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NamedTimer_SameKey_ReplacesInsteadOfStacking；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 DispatcherTimer、True、StopTimer、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -43,7 +43,7 @@ public class DispatchertimerExTests
     }
 
     /// <summary>
-    /// 验证 StopTimer_MissingKey_ReturnsFalse 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 StopTimer_MissingKey_ReturnsFalse；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 False、StopTimer；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

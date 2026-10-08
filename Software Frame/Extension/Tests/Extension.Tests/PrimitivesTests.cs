@@ -35,7 +35,7 @@ namespace Extension.Tests
         // ---------- StringEx.PaddingLength ----------
 
         /// <summary>
-        /// 验证 PaddingLength_短字符串左补零 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 PaddingLength_短字符串左补零；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、PaddingLength；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -45,7 +45,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 PaddingLength_长字符串截尾保留右对齐 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 PaddingLength_长字符串截尾保留右对齐；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、PaddingLength；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -55,7 +55,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 PaddingLength_长度为零时保持原样 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 PaddingLength_长度为零时保持原样；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、PaddingLength；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -68,7 +68,7 @@ namespace Extension.Tests
         // ---------- EnumEx ----------
 
         /// <summary>
-        /// 验证 GetDescription_有Description返回描述 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDescription_有Description返回描述；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetDescription；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -78,7 +78,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetDescription_无Description回退枚举名 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDescription_无Description回退枚举名；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetDescription；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -88,7 +88,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetDescription_null返回空串 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDescription_null返回空串；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetDescription；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -98,7 +98,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetName_返回全部枚举名 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetName_返回全部枚举名；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetName；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -108,7 +108,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetEnum_按名解析 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetEnum_按名解析；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetEnum；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -118,7 +118,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetAllDescriptions_值与描述一一对应 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetAllDescriptions_值与描述一一对应；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetAllDescriptions、Equal、First；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -133,7 +133,7 @@ namespace Extension.Tests
         // ---------- BitOperationEx.Compare_Ptr(byte[]) ----------
 
         /// <summary>
-        /// 验证 Compare_Ptr_相同数组返回空 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Compare_Ptr_相同数组返回空；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、Compare_Ptr；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -145,7 +145,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Compare_Ptr_双边沿记录差异点及前后值 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Compare_Ptr_双边沿记录差异点及前后值；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Compare_Ptr、Single、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -161,7 +161,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Compare_Ptr_上升沿只记录变大点 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Compare_Ptr_上升沿只记录变大点；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Compare_Ptr、Single、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -175,7 +175,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Compare_Ptr_空数组抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Compare_Ptr_空数组抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、Compare_Ptr；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -185,7 +185,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Compare_Ptr_长度不等抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Compare_Ptr_长度不等抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、Compare_Ptr；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

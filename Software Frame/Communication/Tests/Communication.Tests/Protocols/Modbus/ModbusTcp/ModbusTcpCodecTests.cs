@@ -14,7 +14,7 @@ namespace Communication.Tests.Protocols.Modbus;
 public sealed class ModbusTcpCodecTests
 {
     /// <summary>
-    /// 验证 Read_holding_register_request_matches_the_modbus_tcp_wire_format 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Read_holding_register_request_matches_the_modbus_tcp_wire_format；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、Read、Encode、Equal、ToArray；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -36,7 +36,7 @@ public sealed class ModbusTcpCodecTests
     }
 
     /// <summary>
-    /// 验证 Write_request_preserves_the_typed_modbus_address 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Write_request_preserves_the_typed_modbus_address；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、Write、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -54,7 +54,7 @@ public sealed class ModbusTcpCodecTests
     }
 
     /// <summary>
-    /// 验证 Split_response_waits_for_the_complete_frame_and_returns_register_bytes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Split_response_waits_for_the_complete_frame_and_returns_register_bytes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AsMemory、False、TryDecode、True、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -79,7 +79,7 @@ public sealed class ModbusTcpCodecTests
     }
 
     /// <summary>
-    /// 验证 Every_segment_boundary_preserves_two_coalesced_responses 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Every_segment_boundary_preserves_two_coalesced_responses；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateSegmentedSequence、True、TryDecode、Slice、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -116,7 +116,7 @@ public sealed class ModbusTcpCodecTests
     }
 
     /// <summary>
-    /// 验证 CreateSegmentedSequence 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreateSegmentedSequence；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AsMemory、Append；具体条件和先后次序见方法体。
     /// </summary>
     private static ReadOnlySequence<byte> CreateSegmentedSequence(
@@ -143,7 +143,7 @@ public sealed class ModbusTcpCodecTests
         }
 
         /// <summary>
-        /// 验证 Append 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Append；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public BufferSegment Append(ReadOnlyMemory<byte> memory)
         {

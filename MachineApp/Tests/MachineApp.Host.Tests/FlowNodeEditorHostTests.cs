@@ -28,7 +28,7 @@ namespace MachineApp.Host.Tests;
 public sealed class FlowNodeEditorHostTests(ProductionFixture fixture)
 {
     /// <summary>
-    /// 验证 ProductionRegistersTheExtensionAndRetainsEditorWindowShape 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ProductionRegistersTheExtensionAndRetainsEditorWindowShape；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、EnsureHandle、Contains、Resolve、IsType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -72,7 +72,7 @@ public sealed class FlowNodeEditorHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 ProductionLauncherOpensAndClosesTheActualVisualEditor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ProductionLauncherOpensAndClosesTheActualVisualEditor；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、EnsureHandle、FromMilliseconds、FirstOrDefault、OfType；具体条件和先后次序见方法体。
     /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
     /// </summary>
@@ -108,7 +108,7 @@ public sealed class FlowNodeEditorHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 ScriptEditorClosesAndWritesBackThroughTheProductionNodeAction 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ScriptEditorClosesAndWritesBackThroughTheProductionNodeAction；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、EnsureHandle、IsType、Create、Resolve；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
@@ -155,7 +155,7 @@ public sealed class FlowNodeEditorHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 AssertWindowShape 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AssertWindowShape；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Same；具体条件和先后次序见方法体。
     /// </summary>
     private static void AssertWindowShape(Window window)

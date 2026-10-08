@@ -97,7 +97,7 @@ public class PropertyGridBuilderServiceTests
         public int ForceWrite { get; private set; } = 5;
 
         /// <summary>
-        /// 验证 OnChanged 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OnChanged；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private void OnChanged([System.Runtime.CompilerServices.CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -118,7 +118,7 @@ public class PropertyGridBuilderServiceTests
     }
 
     /// <summary>
-    /// 验证 Flat 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Flat；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToList、SelectMany；具体条件和先后次序见方法体。
     /// </summary>
     private static List<PropertyItemViewModel> Flat(IEnumerable<PropertyGroupViewModel> groups)
@@ -134,7 +134,7 @@ public class PropertyGridBuilderServiceTests
     }
 
     /// <summary>
-    /// 验证 BuildGroups_FiltersUntaggedAndHiddenProperties 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BuildGroups_FiltersUntaggedAndHiddenProperties；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildGroups、ToList、Select、Flat、DoesNotContain；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -165,7 +165,7 @@ public class PropertyGridBuilderServiceTests
     }
 
     /// <summary>
-    /// 验证 BuildGroups_OrdersGroupsByNumericPrefix 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BuildGroups_OrdersGroupsByNumericPrefix；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildGroups、ToList、Select、IndexOf、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -184,7 +184,7 @@ public class PropertyGridBuilderServiceTests
     }
 
     /// <summary>
-    /// 验证 BuildGroups_OrdersItemsByAttrOrderThenPropertyName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BuildGroups_OrdersItemsByAttrOrderThenPropertyName；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildGroups、First、ToList、Select、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -220,7 +220,7 @@ public class PropertyGridBuilderServiceTests
     }
 
     /// <summary>
-    /// 验证 BuildGroups_IncludesDerivedProperties 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BuildGroups_IncludesDerivedProperties；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildGroups、ToList、Select、Flat、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -252,7 +252,7 @@ public class PropertyGridBuilderServiceTests
     }
 
     /// <summary>
-    /// 验证 BuildGroups_DisplayNameFallsBackToPropertyName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BuildGroups_DisplayNameFallsBackToPropertyName；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildGroups、First、Flat、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -267,7 +267,7 @@ public class PropertyGridBuilderServiceTests
     }
 
     /// <summary>
-    /// 验证 BuildGroups_PropagatesInjectedDispatcherToPropertyItems 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BuildGroups_PropagatesInjectedDispatcherToPropertyItems；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 First、Flat、BuildGroups、nameof、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -295,7 +295,7 @@ public class PropertyGridBuilderServiceTests
     // ── CollectBindableProperties ───────────────────────────────
 
     /// <summary>
-    /// 验证 CollectBindableProperties_ExcludesSystemPortNames 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CollectBindableProperties_ExcludesSystemPortNames；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CollectBindableProperties、DoesNotContain；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -311,7 +311,7 @@ public class PropertyGridBuilderServiceTests
     }
 
     /// <summary>
-    /// 验证 CollectBindableProperties_ReturnsWritablePublicOnly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CollectBindableProperties_ReturnsWritablePublicOnly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CollectBindableProperties、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -327,7 +327,7 @@ public class PropertyGridBuilderServiceTests
     }
 
     /// <summary>
-    /// 验证 CollectBindableProperties_ReturnsFreshList 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CollectBindableProperties_ReturnsFreshList；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CollectBindableProperties、Clear、NotEmpty；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -350,18 +350,18 @@ public class PropertyGridBuilderServiceTests
         public List<Action> Pending { get; } = [];
 
         /// <summary>
-        /// 验证 CheckAccess 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CheckAccess；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool CheckAccess() => false;
 
         /// <summary>
-        /// 验证 Post 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Post；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public void Post(Action action) => Pending.Add(action);
 
         /// <summary>
-        /// 验证 RunPending 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RunPending；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray、action、Clear；具体条件和先后次序见方法体。
         /// </summary>
         public void RunPending()

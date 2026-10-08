@@ -14,7 +14,7 @@ namespace Communication.Tests.Core;
 public sealed class CommunicationDeviceBaseTests
 {
     /// <summary>
-    /// 验证 Concurrent_dispose_calls_share_completion_and_cleanup_once 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Concurrent_dispose_calls_share_completion_and_cleanup_once；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AsTask、DisposeAsync、WaitAsync、FromSeconds、Same；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -68,14 +68,14 @@ public sealed class CommunicationDeviceBaseTests
         public override DeviceRole Role => DeviceRole.Client;
 
         /// <summary>
-        /// 验证 ConnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public override Task<bool> ConnectAsync(CancellationToken ct = default) =>
             Task.FromResult(true);
 
         /// <summary>
-        /// 验证 DisconnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisconnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult、WaitAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -87,7 +87,7 @@ public sealed class CommunicationDeviceBaseTests
         }
 
         /// <summary>
-        /// 验证 ReadAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Empty；具体条件和先后次序见方法体。
         /// </summary>
         public override Task<byte[]> ReadAsync(
@@ -97,7 +97,7 @@ public sealed class CommunicationDeviceBaseTests
             Task.FromResult(Array.Empty<byte>());
 
         /// <summary>
-        /// 验证 WriteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public override Task<bool> WriteAsync(
@@ -107,7 +107,7 @@ public sealed class CommunicationDeviceBaseTests
             Task.FromResult(true);
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Dispose；具体条件和先后次序见方法体。
         /// </summary>
         protected override void Dispose(bool disposing)

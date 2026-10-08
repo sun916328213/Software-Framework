@@ -35,7 +35,7 @@ public class PatternsObserverMediatorTests
 		public Action<IObservable> OnUpdate { get; set; }
 
 		/// <summary>
-		/// 验证 Update 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+		/// 测试相关入口 Update；准备条件、协作调用与结果检查以方法正文为准。
 		/// </summary>
 		public void Update(IObservable subject)
 		{
@@ -52,7 +52,7 @@ public class PatternsObserverMediatorTests
 	private sealed class ThrowingObserver : IObserver
 	{
 		/// <summary>
-		/// 验证 Update 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+		/// 测试相关入口 Update；准备条件、协作调用与结果检查以方法正文为准。
 		/// </summary>
 		public void Update(IObservable subject)
 		{
@@ -79,7 +79,7 @@ public class PatternsObserverMediatorTests
 		public IObservable LastSubject { get; private set; }
 
 		/// <summary>
-		/// 验证 HandleUpdate 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+		/// 测试相关入口 HandleUpdate；准备条件、协作调用与结果检查以方法正文为准。
 		/// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
 		/// </summary>
 		public override void HandleUpdate(IObservable subject, int data)
@@ -110,7 +110,7 @@ public class PatternsObserverMediatorTests
 		}
 
 		/// <summary>
-		/// 验证 Receive 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+		/// 测试相关入口 Receive；准备条件、协作调用与结果检查以方法正文为准。
 		/// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
 		/// </summary>
 		public override void Receive(string from, object message)
@@ -120,7 +120,7 @@ public class PatternsObserverMediatorTests
 		}
 
 		/// <summary>
-		/// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+		/// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
 		/// 正文中的关键协作调用包括 Dispose；具体条件和先后次序见方法体。
 		/// </summary>
 		protected override void Dispose(bool disposing)
@@ -141,7 +141,7 @@ public class PatternsObserverMediatorTests
 		public int LastData { get; private set; }
 
 		/// <summary>
-		/// 验证 HandleEvent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+		/// 测试相关入口 HandleEvent；准备条件、协作调用与结果检查以方法正文为准。
 		/// </summary>
 		public override void HandleEvent(object sender, EventArgs<int> e)
 		{
@@ -151,7 +151,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 ObservableBase_Attach去重_Detach_ObserverCount 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ObservableBase_Attach去重_Detach_ObserverCount；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Attach、Equal、True、ContainsObserver、Detach；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -169,7 +169,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 ObservableBase_Notify把自身作为subject传给观察者 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ObservableBase_Notify把自身作为subject传给观察者；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Attach、Notify、Equal、Same；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -184,7 +184,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 ObservableBase_一个观察者抛异常不影响其他观察者 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ObservableBase_一个观察者抛异常不影响其他观察者；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Attach、Notify、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -199,7 +199,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 ObservableBase_没有观察者时Notify是空操作 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ObservableBase_没有观察者时Notify是空操作；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Notify、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -211,7 +211,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 ObservableBase_Dispose之后Attach抛但Notify静默返回 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ObservableBase_Dispose之后Attach抛但Notify静默返回；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Attach、Dispose、Throws、Detach、ClearObservers；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -239,7 +239,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 ObservableBase_Dispose会清空观察者 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ObservableBase_Dispose会清空观察者；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Attach、Dispose、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -252,7 +252,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 ObservableBase_批量Attach与Detach 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ObservableBase_批量Attach与Detach；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 AttachRange、Equal、DetachRange、True、ContainsObserver；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -270,7 +270,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 ObservableBase_参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ObservableBase_参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Attach、Detach、AttachRange、DetachRange；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -297,7 +297,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 ObservableBase_NotifyAsync会真的通知 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ObservableBase_NotifyAsync会真的通知；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Attach、NotifyAsync、Equal；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -312,7 +312,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Observable_默认开启相等性检查_同值不通知 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Observable_默认开启相等性检查_同值不通知；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Attach、True、UpdateData、False、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -327,7 +327,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Observable_关闭相等性检查_每次赋值都通知 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Observable_关闭相等性检查_每次赋值都通知；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Attach、UpdateData、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -342,7 +342,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Observable_null与非null互换都会通知 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Observable_null与非null互换都会通知；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Attach、True、UpdateData、False、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -358,7 +358,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Observable_Data属性读写与UpdateData等价 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Observable_Data属性读写与UpdateData等价；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Attach、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -373,7 +373,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Observable_UpdateDataAsync同值返回false 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Observable_UpdateDataAsync同值返回false；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Attach、True、UpdateDataAsync、False、Equal；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -388,7 +388,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Observable_引用类型按Equals比较 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Observable_引用类型按Equals比较；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Attach、UpdateData、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -403,7 +403,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Observer_Update用lock_observable_但Data用内部锁_锁的不是同一对象 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Observer_Update用lock_observable_但Data用内部锁_锁的不是同一对象；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Run、Set、Wait、FromSeconds、True；具体条件和先后次序见方法体。
 	/// 方法内使用锁保护部分共享操作；锁外操作的并发约束仍需结合调用者核对。
 	/// </summary>
@@ -451,7 +451,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Observer_Update拿的是实例锁_持锁期间挂了观察者的赋值会被卡住 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Observer_Update拿的是实例锁_持锁期间挂了观察者的赋值会被卡住；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Attach、Run、Set、Wait、FromSeconds；具体条件和先后次序见方法体。
 	/// 方法内使用锁保护部分共享操作；锁外操作的并发约束仍需结合调用者核对。
 	/// </summary>
@@ -500,7 +500,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Observer_Update会从被观察对象取到最新数据 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Observer_Update会从被观察对象取到最新数据；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Attach、UpdateData、Equal、Same；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -516,7 +516,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Observer_Update对null的subject抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Observer_Update对null的subject抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Update；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -530,7 +530,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Observer_Update对不匹配的subject类型只写控制台_不抛也不回调 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Observer_Update对不匹配的subject类型只写控制台_不抛也不回调；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Update、Empty、Null；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -544,7 +544,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedObservable_Subscribe去重_SubscriberCount 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedObservable_Subscribe去重_SubscriberCount；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、Equal、True、ContainsSubscriber、Unsubscribe；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -563,7 +563,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedObservable_Publish通知所有订阅者并带上数据 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedObservable_Publish通知所有订阅者并带上数据；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、Add、Publish、Equal、ToArray；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -584,7 +584,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedObservable_一个订阅者抛异常不影响其他订阅者 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedObservable_一个订阅者抛异常不影响其他订阅者；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、Publish、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -605,7 +605,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedObservable_所有订阅者共享同一个EventArgs实例 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedObservable_所有订阅者共享同一个EventArgs实例；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、Publish、NotNull、Same、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -629,7 +629,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedObservable_Dispose之后Subscribe抛但Publish静默返回 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedObservable_Dispose之后Subscribe抛但Publish静默返回；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、Dispose、Throws、Unsubscribe、Publish；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -659,7 +659,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedObservable_批量订阅与参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedObservable_批量订阅与参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SubscribeRange、Equal、UnsubscribeRange、Throws、Subscribe；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -688,7 +688,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedObservable_PublishAsync会真的通知 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedObservable_PublishAsync会真的通知；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、PublishAsync、Equal；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -706,7 +706,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 EventArgsBase_EventTime在构造时定格 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 EventArgsBase_EventTime在构造时定格；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 InRange；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -719,7 +719,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 EventArgs_T_继承链挂到BCL的System_EventArgs上 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 EventArgs_T_继承链挂到BCL的System_EventArgs上；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、IsAssignableFrom、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -731,7 +731,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 DelegateObserver_构造函数参数校验与事件转发 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 DelegateObserver_构造函数参数校验与事件转发；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -748,7 +748,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedObserverBase_OnEvent转发给HandleEvent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedObserverBase_OnEvent转发给HandleEvent；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 OnEvent、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -761,7 +761,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Mediator_Register后能收到Send的消息 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Mediator_Register后能收到Send的消息；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、Send、Equal、Single；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -778,7 +778,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Mediator_重复Id注册被静默忽略_但新对象的SetMediator已生效 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Mediator_重复Id注册被静默忽略_但新对象的SetMediator已生效；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、Equal、Send、Single、Empty；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -800,7 +800,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Mediator_Register参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Mediator_Register参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Register；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -818,7 +818,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Mediator_接收者抛异常被吞掉_不影响调用方 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Mediator_接收者抛异常被吞掉_不影响调用方；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、Send；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -836,7 +836,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Mediator_Send的接收者标识为空抛ArgumentException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Mediator_Send的接收者标识为空抛ArgumentException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Send；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -854,7 +854,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Mediator_Send目标不存在时静默返回 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Mediator_Send目标不存在时静默返回；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Send；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -865,7 +865,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Mediator_Broadcast会跳过发送者自己 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Mediator_Broadcast会跳过发送者自己；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、Broadcast、Empty、Single；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -882,7 +882,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Mediator_Broadcast_一个同事抛异常不影响其他同事 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Mediator_Broadcast_一个同事抛异常不影响其他同事；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、Broadcast、Single；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -903,7 +903,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Mediator_BroadcastAsync_接收者抛异常时会向外抛_与注释相反 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Mediator_BroadcastAsync_接收者抛异常时会向外抛_与注释相反；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、ThrowsAsync、BroadcastAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -922,7 +922,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Mediator_SendAsync与BroadcastAsync正常路径 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Mediator_SendAsync与BroadcastAsync正常路径；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、SendAsync、BroadcastAsync、Equal、Single；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -941,7 +941,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Mediator_Dispose之后Send静默返回但Register抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Mediator_Dispose之后Send静默返回但Register抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、Dispose、Throws、Unregister、ClearColleagues；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -973,7 +973,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Mediator_Unregister后不再收到消息 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Mediator_Unregister后不再收到消息；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、Unregister、Send、Empty、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -989,7 +989,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 Mediator_批量注册与批量取消 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Mediator_批量注册与批量取消；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterRange、Equal、UnregisterRange、Throws、Unregister；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1017,7 +1017,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 ColleagueBase_Dispose之后Send抛但DelegateColleague的Receive不抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ColleagueBase_Dispose之后Send抛但DelegateColleague的Receive不抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、Throws、Send、SetMediator、Broadcast；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -1045,7 +1045,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 ColleagueBase_未覆写ReceiveAsync时Dispose后会抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ColleagueBase_未覆写ReceiveAsync时Dispose后会抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、ThrowsAsync、ReceiveAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -1058,7 +1058,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 DelegateColleague_构造函数参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 DelegateColleague_构造函数参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1071,7 +1071,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 DelegateColleague_没有异步处理器时回落到同步处理器 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 DelegateColleague_没有异步处理器时回落到同步处理器；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Add、ReceiveAsync、Equal、ToArray；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -1088,7 +1088,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 DelegateColleague_有异步处理器时优先用异步的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 DelegateColleague_有异步处理器时优先用异步的；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ReceiveAsync、Receive、Equal；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -1112,7 +1112,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 TypeFilter_空白名单放行一切 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 TypeFilter_空白名单放行一切；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、ShouldProcess；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1123,7 +1123,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 TypeFilter_非空白名单会丢弃MessageType为空的消息 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 TypeFilter_非空白名单会丢弃MessageType为空的消息；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 False、ShouldProcess、True；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1136,7 +1136,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 TypeFilter_白名单显式含空串时放行空类型 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 TypeFilter_白名单显式含空串时放行空类型；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、ShouldProcess；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1147,7 +1147,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 TypeFilter_构造函数对null抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 TypeFilter_构造函数对null抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1157,7 +1157,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityFilter_按最低优先级过滤 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityFilter_按最低优先级过滤；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 False、ShouldProcess、True；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1170,7 +1170,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 CompositeFilter_空过滤器列表一律通过 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 CompositeFilter_空过滤器列表一律通过；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、ShouldProcess；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1181,7 +1181,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 CompositeFilter_必须全部通过才通过 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 CompositeFilter_必须全部通过才通过；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、ShouldProcess、False；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1198,7 +1198,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 CompositeFilter_构造函数对null抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 CompositeFilter_构造函数对null抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1208,7 +1208,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 FilteredColleague_会丢弃所有非PriorityMessage消息 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FilteredColleague_会丢弃所有非PriorityMessage消息；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Receive、Empty、Single；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1224,7 +1224,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 FilteredColleague_的丢弃语义来自is_PriorityMessage这个形态 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FilteredColleague_的丢弃语义来自is_PriorityMessage这个形态；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SourcePath、True、Exists、ReadAllText、Contains；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1237,7 +1237,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 FilteredColleague_Id委托给内层 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FilteredColleague_Id委托给内层；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1249,7 +1249,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 FilteredColleague_Dispose会连带Dispose内层 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FilteredColleague_Dispose会连带Dispose内层；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、Equal、False、IsAssignableFrom；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1266,7 +1266,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 FilteredColleague_Dispose之后自身全部入口抛ObjectDisposedException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FilteredColleague_Dispose之后自身全部入口抛ObjectDisposedException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、Throws、SetMediator、Receive、Send；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1293,7 +1293,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 FilteredColleague_构造函数参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FilteredColleague_构造函数参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1304,7 +1304,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 FilteredColleague_过滤不通过时不转发且异步返回已完成任务 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FilteredColleague_过滤不通过时不转发且异步返回已完成任务；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ReceiveAsync、Empty、Single；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -1320,7 +1320,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMediator_SendWithPriority会把消息包装成PriorityMessage 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMediator_SendWithPriority会把消息包装成PriorityMessage；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、SendWithPriority、IsType、Equal、Null；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1337,7 +1337,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMediator_SendWithPriorityAsync会把消息包装成PriorityMessage 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMediator_SendWithPriorityAsync会把消息包装成PriorityMessage；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、SendWithPriorityAsync、IsType、Equal；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -1353,7 +1353,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMediator_RegisterWithFilter会包成FilteredColleague并沿用内层Id 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMediator_RegisterWithFilter会包成FilteredColleague并沿用内层Id；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterWithFilter、Equal、SendWithPriority、Empty、Single；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1370,7 +1370,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMediator_Register与RegisterWithFilter的参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMediator_Register与RegisterWithFilter的参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Register、RegisterWithFilter；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1396,7 +1396,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMediator_重复Id注册是静默忽略 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMediator_重复Id注册是静默忽略；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、Equal、Send、Single、Empty；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1414,7 +1414,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMediator_广播不保证投递顺序_只保证都收到 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMediator_广播不保证投递顺序_只保证都收到；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterRange、BroadcastWithPriority、Single、All、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1436,7 +1436,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMediator_BroadcastAsync_接收者抛异常会向外抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMediator_BroadcastAsync_接收者抛异常会向外抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、ThrowsAsync、BroadcastAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -1455,7 +1455,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMediator_Dispose之后Send静默返回但Register抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMediator_Dispose之后Send静默返回但Register抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、Dispose、Throws、Unregister、ClearColleagues；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -1495,7 +1495,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 MessageRouter_路由到已注册通道 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageRouter_路由到已注册通道；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、RegisterChannel、RouteAndSend、Single；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1511,7 +1511,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 MessageRouter_通道未注册或路由结果为空时静默丢弃 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageRouter_通道未注册或路由结果为空时静默丢弃；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、RegisterChannel、RouteAndSend、Empty；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1528,7 +1528,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 MessageRouter_参数校验与重复通道覆盖 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageRouter_参数校验与重复通道覆盖；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、RegisterChannel、Register、RouteAndSend、Single；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1555,7 +1555,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 MessageRouter_异步路由 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageRouter_异步路由；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、RegisterChannel、RouteAndSendAsync、RouteAndBroadcastAsync、Equal；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -1573,7 +1573,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 MessageRouter_Dispose会Dispose所有中介者 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageRouter_Dispose会Dispose所有中介者；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、RegisterChannel、Dispose、Equal、Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1592,7 +1592,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 MessageRouter_Dispose之后路由静默返回 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageRouter_Dispose之后路由静默返回；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Register、RegisterChannel、Dispose、RouteAndSend、RouteAndBroadcast；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -1610,7 +1610,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 ThisFile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ThisFile；准备条件、协作调用与结果检查以方法正文为准。
 	/// </summary>
 	private static string ThisFile([CallerFilePath] string path = "")
 	{
@@ -1618,7 +1618,7 @@ public class PatternsObserverMediatorTests
 	}
 
 	/// <summary>
-	/// 验证 SourcePath 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 SourcePath；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetFullPath、Combine、GetDirectoryName、ThisFile；具体条件和先后次序见方法体。
 	/// </summary>
 	private static string SourcePath(params string[] segments)

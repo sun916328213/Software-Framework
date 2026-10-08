@@ -36,7 +36,7 @@ namespace Extension.Tests
     public class ChannelHelperTests
     {
         /// <summary>
-        /// 验证 SpinUntil 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SpinUntil；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 StartNew、condition、Sleep；具体条件和先后次序见方法体。
         /// </summary>
         private static bool SpinUntil(Func<bool> condition, int timeoutMs)
@@ -71,7 +71,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 构造_容量为0或负数会抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 构造_容量为0或负数会抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -86,7 +86,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 Write与TryRead_先进先出 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Write与TryRead_先进先出；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Write、True、TryRead、Equal、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -105,7 +105,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Write_满模式为Wait时写满会静默丢新数据_是缺陷 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Write_满模式为Wait时写满会静默丢新数据_是缺陷；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Write、True、TryRead、Equal、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -123,7 +123,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WriteAsync_满模式为Wait时会等到有空间再写 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteAsync_满模式为Wait时会等到有空间再写；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Write、WriteAsync、False、Wait、True；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -142,7 +142,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Clear_返回清除条数并清空通道 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Clear_返回清除条数并清空通道；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Write、Equal、Clear、False、TryRead；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -159,7 +159,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ClearAsync_空通道上会一直挂着_只有Complete之后才返回 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ClearAsync_空通道上会一直挂着_只有Complete之后才返回；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAsync、False、Wait、Complete、True；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -177,7 +177,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ClearAsync_即使有数据也会先清完再挂住_必须Complete才返回 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ClearAsync_即使有数据也会先清完再挂住_必须Complete才返回；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Write、ClearAsync、False、Wait、Complete；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -196,7 +196,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 TryReadAsync_名字像Try但空通道上是挂起而不是返回默认值 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadAsync_名字像Try但空通道上是挂起而不是返回默认值；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TryReadAsync、False、Wait、Write、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -213,7 +213,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 TryReadAsync_通道已完成且为空时抛ChannelClosedException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadAsync_通道已完成且为空时抛ChannelClosedException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Complete、ThrowsAsync、TryReadAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -227,7 +227,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WaitToReadAsync_有数据时返回true_完成且空时返回false 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitToReadAsync_有数据时返回true_完成且空时返回false；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Write、True、WaitToReadAsync、Complete、TryRead；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -249,7 +249,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 Complete_之后再写入或清空都抛InvalidOperationException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Complete_之后再写入或清空都抛InvalidOperationException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Complete、Throws、Write、Clear；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -263,7 +263,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Complete_之后再WriteAsync或ClearAsync也抛InvalidOperationException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Complete_之后再WriteAsync或ClearAsync也抛InvalidOperationException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Complete、ThrowsAsync、WriteAsync、ClearAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -278,7 +278,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Complete_是幂等的_且已缓冲的数据仍可读出 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Complete_是幂等的_且已缓冲的数据仍可读出；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Write、Complete、True、TryRead、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -295,7 +295,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 IsCompleted_镜像Reader_Completion_缓冲未读尽时仍为false 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 IsCompleted_镜像Reader_Completion_缓冲未读尽时仍为false；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Write、Complete、False、True、TryRead；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -317,7 +317,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 Dispose_之后所有操作抛ObjectDisposedException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose_之后所有操作抛ObjectDisposedException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Dispose、Throws、Write、Clear、Complete；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -335,7 +335,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Dispose_只完成写入端_已缓冲数据仍可读且读取侧不受影响 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose_只完成写入端_已缓冲数据仍可读且读取侧不受影响；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Write、Dispose、True、TryRead、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -353,7 +353,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Dispose_是幂等的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose_是幂等的；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Dispose、Throws、Write；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -368,7 +368,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Dispose_bool是protected_virtual_是给子类留的钩子 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose_bool是protected_virtual_是给子类留的钩子；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetMethod、NotNull、True；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

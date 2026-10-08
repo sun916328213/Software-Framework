@@ -20,7 +20,7 @@ namespace Communication.Tests.Compatibility;
 public sealed class AddressCapabilityCompatibilityTests
 {
     /// <summary>
-    /// 验证 Legacy_address_read_does_not_return_fake_empty_success 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Legacy_address_read_does_not_return_fake_empty_success；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAsync、ReadAsync、DisposeAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -56,7 +56,7 @@ public sealed class AddressCapabilityCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Legacy_http_server_address_write_does_not_return_fake_success 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Legacy_http_server_address_write_does_not_return_fake_success；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAsync、WriteAsync、DisposeAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

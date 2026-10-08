@@ -21,7 +21,7 @@ public sealed class CameraViewXamlTests
         "http://schemas.microsoft.com/winfx/2006/xaml";
 
     /// <summary>
-    /// 验证 XamlFile_ExistsAtKnownPath 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 XamlFile_ExistsAtKnownPath；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、Exists；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -31,7 +31,7 @@ public sealed class CameraViewXamlTests
     }
 
     /// <summary>
-    /// 验证 ScrollViewer_DisablesPageHorizontalScroll_KeepsVerticalAuto 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ScrollViewer_DisablesPageHorizontalScroll_KeepsVerticalAuto；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Load、First、Descendants、Equal、Attribute；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -45,7 +45,7 @@ public sealed class CameraViewXamlTests
     }
 
     /// <summary>
-    /// 验证 ImageFrame_IsNamedAndClipsToBounds 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ImageFrame_IsNamedAndClipsToBounds；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Load、First、Descendants、Attribute、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -60,7 +60,7 @@ public sealed class CameraViewXamlTests
     }
 
     /// <summary>
-    /// 验证 PreviewImage_BoundsToImageFrameActualSize 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PreviewImage_BoundsToImageFrameActualSize；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Load、First、Descendants、Contains、Attribute；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -88,7 +88,7 @@ public sealed class CameraViewXamlTests
     }
 
     /// <summary>
-    /// 验证 Image_IsNotGivenFixedWidthOrHeight 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Image_IsNotGivenFixedWidthOrHeight；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Load、First、Descendants、Contains、Attribute；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -103,7 +103,7 @@ public sealed class CameraViewXamlTests
     }
 
     /// <summary>
-    /// 验证 TestCard_BindsApplyTriggerAndRuntimeTriggerControls 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TestCard_BindsApplyTriggerAndRuntimeTriggerControls；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Load、Contains、Descendants、Attribute；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -125,7 +125,7 @@ public sealed class CameraViewXamlTests
     }
 
     /// <summary>
-    /// 验证 Load 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Load；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、ReadAllText；具体条件和先后次序见方法体。
     /// </summary>
     private static XDocument Load() => XDocument.Parse(File.ReadAllText(CameraViewPath));

@@ -16,7 +16,7 @@ namespace WPFCustomControls.Tests.PropertyGrid;
 public sealed class PortManagementViewModelTests
 {
     /// <summary>
-    /// 验证 Constructor_ProjectsPortsAndExistingBinding 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Constructor_ProjectsPortsAndExistingBinding；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、Single、True、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -45,7 +45,7 @@ public sealed class PortManagementViewModelTests
     }
 
     /// <summary>
-    /// 验证 AddInputPortCommand_AddsCustomPortFromDialogResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AddInputPortCommand_AddsCustomPortFromDialogResult；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Execute、Equal、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -65,7 +65,7 @@ public sealed class PortManagementViewModelTests
     }
 
     /// <summary>
-    /// 验证 AddOutputPortCommand_PreservesSelectedProperty 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AddOutputPortCommand_PreservesSelectedProperty；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Execute、Equal、Single、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -90,7 +90,7 @@ public sealed class PortManagementViewModelTests
     }
 
     /// <summary>
-    /// 验证 ModifyBinding_ReplacesExistingBinding 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ModifyBinding_ReplacesExistingBinding；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BoundTarget、Execute、Equal、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -115,7 +115,7 @@ public sealed class PortManagementViewModelTests
     }
 
     /// <summary>
-    /// 验证 DeleteBoundPort_RemovesBindingBeforePort 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DeleteBoundPort_RemovesBindingBeforePort；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BoundTarget、Execute、Equal、Empty；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -132,7 +132,7 @@ public sealed class PortManagementViewModelTests
     }
 
     /// <summary>
-    /// 验证 UnlockingInputRegion_UpdatesExistingRows 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 UnlockingInputRegion_UpdatesExistingRows；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、Execute、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -149,7 +149,7 @@ public sealed class PortManagementViewModelTests
     }
 
     /// <summary>
-    /// 验证 ReloadAndDispose_DoNotAccumulateModelSubscriptions 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReloadAndDispose_DoNotAccumulateModelSubscriptions；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、Equal、RaiseBindingsChanged、Dispose；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -170,7 +170,7 @@ public sealed class PortManagementViewModelTests
     }
 
     /// <summary>
-    /// 验证 BoundTarget 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BoundTarget；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
     /// </summary>
     private static PortTarget BoundTarget()
@@ -241,18 +241,18 @@ public sealed class PortManagementViewModelTests
         public event Action ConfigChanged = delegate { };
 
         /// <summary>
-        /// 验证 AddCustomInputPort 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddCustomInputPort；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public void AddCustomInputPort(string name) => AddedInputs.Add(name);
         /// <summary>
-        /// 验证 AddCustomOutputPort 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddCustomOutputPort；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public void AddCustomOutputPort(string name, string? boundProperty = null) =>
             AddedOutputs.Add((name, boundProperty));
         /// <summary>
-        /// 验证 RemoveCustomPort 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RemoveCustomPort；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public bool RemoveCustomPort(string portId)
@@ -261,43 +261,43 @@ public sealed class PortManagementViewModelTests
             return true;
         }
         /// <summary>
-        /// 验证 InvalidatePorts 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 InvalidatePorts；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void InvalidatePorts() { }
         /// <summary>
-        /// 验证 GetUpstreamFlowNodes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetUpstreamFlowNodes；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public IReadOnlyList<UpstreamNodeInfo> GetUpstreamFlowNodes() => UpstreamNodes;
         /// <summary>
-        /// 验证 GetUpstreamOutputPorts 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetUpstreamOutputPorts；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public IReadOnlyList<string> GetUpstreamOutputPorts(string upstreamNodeId) => ["Output", "OtherOutput"];
         /// <summary>
-        /// 验证 CreateDataBinding 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateDataBinding；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public void CreateDataBinding(string upstreamNodeId, string upstreamPortName, string targetPortName) =>
             CreatedBindings.Add((upstreamNodeId, upstreamPortName, targetPortName));
         /// <summary>
-        /// 验证 GetDataBindings 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDataBindings；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public IReadOnlyList<DataBindingInfo> GetDataBindings() => Bindings;
         /// <summary>
-        /// 验证 RemoveDataBinding 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RemoveDataBinding；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public void RemoveDataBinding(string bindingId) => RemovedBindings.Add(bindingId);
         /// <summary>
-        /// 验证 GetPortConfig 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetPortConfig；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public (bool IsInput, bool IsOutput) GetPortConfig(string propertyName) => default;
         /// <summary>
-        /// 验证 SetPortConfig 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetPortConfig；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ConfigChanged；具体条件和先后次序见方法体。
         /// </summary>
         public void SetPortConfig(string propertyName, bool isInput, bool isOutput) => ConfigChanged();
         /// <summary>
-        /// 验证 RaiseBindingsChanged 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RaiseBindingsChanged；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void RaiseBindingsChanged() => DataBindingsChanged?.Invoke();
     }
@@ -313,7 +313,7 @@ public sealed class PortManagementViewModelTests
         public PortDialogRequest? LastAddRequest { get; private set; }
 
         /// <summary>
-        /// 验证 ShowAddPortDialog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowAddPortDialog；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public PortDialogResult? ShowAddPortDialog(PortDialogRequest request)
         {
@@ -322,7 +322,7 @@ public sealed class PortManagementViewModelTests
         }
 
         /// <summary>
-        /// 验证 ShowModifyBindingDialog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowModifyBindingDialog；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public PortDialogResult? ShowModifyBindingDialog(PortDialogRequest request) => ModifyResult;
     }

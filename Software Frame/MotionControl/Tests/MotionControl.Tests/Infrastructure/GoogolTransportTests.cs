@@ -14,7 +14,7 @@ namespace MotionControl.Tests;
 public sealed class GoogolTransportTests
 {
     /// <summary>
-    /// 验证 ConnectMoveAndHome_UseInjectedTransportWithoutNativeSdk 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectMoveAndHome_UseInjectedTransportWithoutNativeSdk；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、ConnectResult、Equal、ServoOnResult；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -56,7 +56,7 @@ public sealed class GoogolTransportTests
     }
 
     /// <summary>
-    /// 验证 Connect_TransportFailure_PreservesSpecificResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connect_TransportFailure_PreservesSpecificResult；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、ConnectResult、Equal、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -72,7 +72,7 @@ public sealed class GoogolTransportTests
     }
 
     /// <summary>
-    /// 验证 Move_TransportFailure_IsReported 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Move_TransportFailure_IsReported；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、Connect、ServoOn、MoveAbsResult；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -97,7 +97,7 @@ public sealed class GoogolTransportTests
     }
 
     /// <summary>
-    /// 验证 PositionRead_TransportFailure_IsNotReportedAsZero 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PositionRead_TransportFailure_IsNotReportedAsZero；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、Connect、ReadCommandPosition、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -122,7 +122,7 @@ public sealed class GoogolTransportTests
     }
 
     /// <summary>
-    /// 验证 Connect_ChannelOutsideSdkRange_IsRejectedBeforeOpen 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connect_ChannelOutsideSdkRange_IsRejectedBeforeOpen；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、ConnectResult、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -139,7 +139,7 @@ public sealed class GoogolTransportTests
     }
 
     /// <summary>
-    /// 验证 CreateCard 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreateCard；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static GoogolHelper CreateCard(FakeGoogolTransport transport)
         => new(transport)
@@ -186,7 +186,7 @@ public sealed class GoogolTransportTests
         private int _stopAllCount;
 
         /// <summary>
-        /// 验证 Open 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Open；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public EMotionResult Open(short channel, string? configFile, int requiredAxes)
         {
@@ -199,7 +199,7 @@ public sealed class GoogolTransportTests
         }
 
         /// <summary>
-        /// 验证 Close 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Close；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Close()
         {
@@ -210,7 +210,7 @@ public sealed class GoogolTransportTests
         }
 
         /// <summary>
-        /// 验证 SetServo 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetServo；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool SetServo(int axis, bool enabled)
         {
@@ -222,12 +222,12 @@ public sealed class GoogolTransportTests
         }
 
         /// <summary>
-        /// 验证 ClearStatus 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ClearStatus；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool ClearStatus(int axis) => true;
 
         /// <summary>
-        /// 验证 StartTrapMove 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StartTrapMove；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool StartTrapMove(int axis, int targetPulse, double acceleration, double deceleration,
             double startVelocity, double maximumVelocity)
@@ -240,16 +240,16 @@ public sealed class GoogolTransportTests
         }
 
         /// <summary>
-        /// 验证 StartJog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StartJog；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool StartJog(int axis, double acceleration, double deceleration, double velocity) => true;
         /// <summary>
-        /// 验证 StopAxis 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StopAxis；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool StopAxis(int axis, bool emergency) => true;
 
         /// <summary>
-        /// 验证 StopAll 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StopAll；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Increment；具体条件和先后次序见方法体。
         /// </summary>
         public bool StopAll(int axisCount, bool emergency)
@@ -259,7 +259,7 @@ public sealed class GoogolTransportTests
         }
 
         /// <summary>
-        /// 验证 TryGetStatus 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGetStatus；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Read；具体条件和先后次序见方法体。
         /// </summary>
         public bool TryGetStatus(int axis, out int status)
@@ -269,7 +269,7 @@ public sealed class GoogolTransportTests
         }
 
         /// <summary>
-        /// 验证 TryGetCommandPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGetCommandPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryGetCommandPosition(int axis, out double pulse)
         {
@@ -278,7 +278,7 @@ public sealed class GoogolTransportTests
         }
 
         /// <summary>
-        /// 验证 TryGetEncoderPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGetEncoderPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryGetEncoderPosition(int axis, out double pulse)
         {
@@ -287,16 +287,16 @@ public sealed class GoogolTransportTests
         }
 
         /// <summary>
-        /// 验证 SetCurrentAsOrigin 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetCurrentAsOrigin；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool SetCurrentAsOrigin(int axis) => true;
         /// <summary>
-        /// 验证 SetCommandPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetCommandPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool SetCommandPosition(int axis, int pulse) => true;
 
         /// <summary>
-        /// 验证 StartHome 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StartHome；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool StartHome(int axis, GoogolHomeProfile profile)
         {
@@ -305,7 +305,7 @@ public sealed class GoogolTransportTests
         }
 
         /// <summary>
-        /// 验证 TryGetHomeState 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGetHomeState；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryGetHomeState(int axis, out GoogolHomeState state)
         {
@@ -314,7 +314,7 @@ public sealed class GoogolTransportTests
         }
 
         /// <summary>
-        /// 验证 TryReadInputs 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadInputs；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadInputs(out long value)
         {
@@ -323,7 +323,7 @@ public sealed class GoogolTransportTests
         }
 
         /// <summary>
-        /// 验证 TryReadOutputs 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadOutputs；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadOutputs(out long value)
         {
@@ -332,11 +332,11 @@ public sealed class GoogolTransportTests
         }
 
         /// <summary>
-        /// 验证 WriteOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool WriteOutput(int index, bool state) => true;
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Close；具体条件和先后次序见方法体。
         /// </summary>
         public void Dispose() => Close();

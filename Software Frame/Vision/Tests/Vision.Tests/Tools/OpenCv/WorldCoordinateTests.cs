@@ -22,7 +22,7 @@ namespace Vision.Tests.Tools.OpenCv;
 public sealed class WorldCoordinateTests
 {
     /// <summary>
-    /// 验证 TestChain 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TestChain；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static CoordinateChain TestChain() => new(
         new Pose2D(10, 20, 0),
@@ -30,7 +30,7 @@ public sealed class WorldCoordinateTests
         Pose2D.Identity);
 
     /// <summary>
-    /// 验证 BlobResult_ToWorld_MapsCenterAndBounds 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BlobResult_ToWorld_MapsCenterAndBounds；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToWorld、TestChain、Equal、ToMachine；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -52,7 +52,7 @@ public sealed class WorldCoordinateTests
     }
 
     /// <summary>
-    /// 验证 FindLineResult_ToMachine_MapsEndpoints 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FindLineResult_ToMachine_MapsEndpoints；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToMachine、TestChain、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

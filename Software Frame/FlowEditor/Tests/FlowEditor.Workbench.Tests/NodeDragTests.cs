@@ -31,7 +31,7 @@ public class NodeDragTests
     }
 
     /// <summary>
-    /// 验证 EndDrag_SetsIsDraggingFalse 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EndDrag_SetsIsDraggingFalse；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、BeginDrag、EndDrag、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -60,7 +60,7 @@ public class NodeDragTests
     }
 
     /// <summary>
-    /// 验证 UpdateDrag_MultipleUpdates_CumulativeFromStart 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 UpdateDrag_MultipleUpdates_CumulativeFromStart；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、BeginDrag、UpdateDrag、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -80,7 +80,7 @@ public class NodeDragTests
     }
 
     /// <summary>
-    /// 验证 UpdateDrag_NegativeOffset_DecreasesPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 UpdateDrag_NegativeOffset_DecreasesPosition；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、BeginDrag、UpdateDrag、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -113,7 +113,7 @@ public class NodeDragTests
     }
 
     /// <summary>
-    /// 验证 UpdateDrag_AfterEndDrag_NoEffect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 UpdateDrag_AfterEndDrag_NoEffect；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、BeginDrag、EndDrag、UpdateDrag、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -145,7 +145,7 @@ public class NodeDragTests
     }
 
     /// <summary>
-    /// 验证 UpdateDrag_DisabledNode_NoPositionChange 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 UpdateDrag_DisabledNode_NoPositionChange；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、BeginDrag、UpdateDrag、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -179,7 +179,7 @@ public class NodeDragTests
     }
 
     /// <summary>
-    /// 验证 Drag_UpdatesPositionProperty 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Drag_UpdatesPositionProperty；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、BeginDrag、UpdateDrag、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

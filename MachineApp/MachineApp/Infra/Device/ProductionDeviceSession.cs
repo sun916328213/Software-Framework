@@ -14,7 +14,7 @@ using System.IO;
 
 namespace MachineApp.Infra.Device;
 
-/// <summary>Production ownership of all configured devices. UI workspaces are never used as the production fleet.</summary>
+/// <summary>持有本机型配置的生产设备；生产会话与界面工作区各自拥有设备，不能互相代替。</summary>
 /// <remarks>
 /// ProductionDeviceSession 的类型定义。MachineApp 模块：具体机型的应用宿主，负责机型业务、导航选择、数据库实体和生产设备生命周期。 本文件位于适配边界，负责把外部能力接到已有契约，不在此引入机型业务规则。
 /// 继承或实现的契约：IProductionDevices。具体约束按这些契约及各成员实现解释。
@@ -51,7 +51,7 @@ public sealed class ProductionDeviceSession(
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             if (_owned.Count != 0) throw new InvalidOperationException("生产设备已经初始化。");
-            // Validate every file before touching hardware. Missing/invalid profiles never silently fall back to a simulation.
+            // 先验证全部配置文件，再接触真实硬件；缺失或无效配置直接失败，不静默切换到模拟设备。
             var cameraProfiles = Load<CameraProfile>(configDirectory, "Cameras.json");
             var lightProfiles = Load<LightProfile>(configDirectory, "Lights.json");
             var rfidProfiles = Load<RfidProfile>(configDirectory, "Rfids.json");

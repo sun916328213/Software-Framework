@@ -19,14 +19,14 @@ namespace Extension.Core.Tests;
 public sealed class AssemblyBoundaryTests
 {
     /// <summary>
-    /// 验证 Root 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Root；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetFullPath、Combine、GetDirectoryName；具体条件和先后次序见方法体。
     /// </summary>
     private static string Root([CallerFilePath] string file = "") =>
         Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file)!, "..", "..", "..", ".."));
 
     /// <summary>
-    /// 验证 Manifest 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Manifest；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、ReadAllText、Combine、Root、Clone；具体条件和先后次序见方法体。
     /// </summary>
     private static JsonElement Manifest()
@@ -36,7 +36,7 @@ public sealed class AssemblyBoundaryTests
     }
 
     /// <summary>
-    /// 验证 CoreBuildsWithoutPackageProjectOrDesktopDependencies 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CoreBuildsWithoutPackageProjectOrDesktopDependencies；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Load、Combine、Root、Equal、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -51,7 +51,7 @@ public sealed class AssemblyBoundaryTests
     }
 
     /// <summary>
-    /// 验证 AllExtractedPublicNamesAreOwnedByCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AllExtractedPublicNamesAreOwnedByCore；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Order、Select、EnumerateArray、GetProperty、Manifest；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -63,7 +63,7 @@ public sealed class AssemblyBoundaryTests
     }
 
     /// <summary>
-    /// 验证 ExtractedFilesMatchReviewedHashesAndOldFilesAreAbsent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExtractedFilesMatchReviewedHashesAndOldFilesAreAbsent；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、ReadAllText、Combine、Root、EnumerateArray；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -87,7 +87,7 @@ public sealed class AssemblyBoundaryTests
     }
 
     /// <summary>
-    /// 验证 FoundationWorksInAProcessWithoutExtensionOrDesktopAssemblies 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FoundationWorksInAProcessWithoutExtensionOrDesktopAssemblies；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、FromJson、ToJson、DoesNotContain、GetAssemblies；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -100,7 +100,7 @@ public sealed class AssemblyBoundaryTests
     }
 
     /// <summary>
-    /// 验证 FoundationConsumersReferenceCoreDirectly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FoundationConsumersReferenceCoreDirectly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Where、EnumerateArray、GetProperty、Manifest、GetBoolean；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -116,7 +116,7 @@ public sealed class AssemblyBoundaryTests
     }
 
     /// <summary>
-    /// 验证 MissingOldAssemblyDoesNotFallBackToCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MissingOldAssemblyDoesNotFallBackToCore；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 DoesNotContain、GetAssemblies、GetName、Null、ResolvePersistedType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

@@ -16,7 +16,7 @@ namespace WPFCustomControls.Tests.Workbench;
 public sealed class WorkbenchLifetimeTests
 {
     /// <summary>
-    /// 验证 WindowClosing_AfterTimeout_AllowsAnExplicitDecisionAndCleansUpOnce 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WindowClosing_AfterTimeout_AllowsAnExplicitDecisionAndCleansUpOnce；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、FromMilliseconds、Show、Close、PumpUntil；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -77,7 +77,7 @@ public sealed class WorkbenchLifetimeTests
     }
 
     /// <summary>
-    /// 验证 PumpUntil 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PumpUntil；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddSeconds、FromMilliseconds、condition、Start、PushFrame；具体条件和先后次序见方法体。
     /// </summary>
     private static void PumpUntil(Func<bool> condition)
@@ -93,7 +93,7 @@ public sealed class WorkbenchLifetimeTests
     }
 
     /// <summary>
-    /// 验证 CloseRegion_RequestsCancellationOfRunningCommands 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CloseRegion_RequestsCancellationOfRunningCommands；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Add、ExecuteAsync、CloseRegionAsync、SetResult；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -129,7 +129,7 @@ public sealed class WorkbenchLifetimeTests
     }
 
     /// <summary>
-    /// 验证 CloseRegion_AfterCleanupFailure_AttemptsEveryStageAndRemainingPages 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CloseRegion_AfterCleanupFailure_AttemptsEveryStageAndRemainingPages；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Add、GetResult、GetAwaiter、StartCommand；具体条件和先后次序见方法体。
     /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
     /// </summary>
@@ -186,7 +186,7 @@ public sealed class WorkbenchLifetimeTests
         public int DisposeCalls { get; private set; }
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Dispose()
         {
@@ -213,13 +213,13 @@ public sealed class WorkbenchLifetimeTests
         public int CommandReads { get; private set; }
         public IAsyncRelayCommand Command { get { CommandReads++; return _command; } }
         /// <summary>
-        /// 验证 StartCommand 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StartCommand；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ExecuteAsync；具体条件和先后次序见方法体。
         /// </summary>
         public Task StartCommand() => _command.ExecuteAsync(null);
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Dispose()
         {
@@ -237,7 +237,7 @@ public sealed class WorkbenchLifetimeTests
     private sealed class AsyncCleanupViewModel(string failure) : CleanupViewModel(failure), IAsyncDisposable
     {
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Dispose、FromException；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask DisposeAsync()
@@ -248,7 +248,7 @@ public sealed class WorkbenchLifetimeTests
     }
 
     /// <summary>
-    /// 验证 WindowClosing_WithAlreadyCompletedCleanup_ClosesAfterTheClosingEvent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WindowClosing_WithAlreadyCompletedCleanup_ClosesAfterTheClosingEvent；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Show、True、BeginCleanup、Close；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -275,7 +275,7 @@ public sealed class WorkbenchLifetimeTests
     }
 
     /// <summary>
-    /// 验证 WindowClosing_AwaitsCleanupOnce_AndContinuesAfterResourceFailure 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WindowClosing_AwaitsCleanupOnce_AndContinuesAfterResourceFailure；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Show、Close、True、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

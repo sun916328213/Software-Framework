@@ -24,7 +24,7 @@ namespace MotionControl.Workbench.Tests;
 public sealed class MvvmInteractionTests(WorkbenchAppFixture host)
 {
     /// <summary>
-    /// 验证 RealButtons_ConnectServoAndDisconnect_ReachBoundAxis 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RealButtons_ConnectServoAndDisconnect_ReachBoundAxis；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Show、IsType、Single、OfType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -66,7 +66,7 @@ public sealed class MvvmInteractionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 SidebarSelection_NavigatesDirectControlsPageAndKeepsSharedWorkspace 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SidebarSelection_NavigatesDirectControlsPageAndKeepsSharedWorkspace；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、IsType、Resolve、Single、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -101,7 +101,7 @@ public sealed class MvvmInteractionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 Invoke 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Invoke；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Single、OfType、Descendants、Equals、NotNull；具体条件和先后次序见方法体。
     /// </summary>
     private static void Invoke(FrameworkElement root, string caption)
@@ -113,7 +113,7 @@ public sealed class MvvmInteractionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 Descendants 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Descendants；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetChildrenCount、GetChild、Descendants；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<DependencyObject> Descendants(DependencyObject root)

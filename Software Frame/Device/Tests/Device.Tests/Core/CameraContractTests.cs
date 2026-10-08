@@ -17,7 +17,7 @@ public sealed class CameraContractTests
     private static readonly DeviceDriverId DriverId = new("camera.fake.gige");
 
     /// <summary>
-    /// 验证 DriverId_JsonRoundTrip_UsesStableStringValue 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DriverId_JsonRoundTrip_UsesStableStringValue；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ValidOptions、Serialize、Deserialize、Contains、NotNull；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -39,7 +39,7 @@ public sealed class CameraContractTests
     }
 
     /// <summary>
-    /// 验证 Create_InvalidConfiguration_ReturnsAllValidationErrors 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Create_InvalidConfiguration_ReturnsAllValidationErrors；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Validate、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -61,7 +61,7 @@ public sealed class CameraContractTests
     }
 
     /// <summary>
-    /// 验证 Validate_LineScanWithFrameAndLineTriggers_IsAccepted 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Validate_LineScanWithFrameAndLineTriggers_IsAccepted；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ValidOptions、Validate；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -86,7 +86,7 @@ public sealed class CameraContractTests
     }
 
     /// <summary>
-    /// 验证 Validate_InvalidScanTriggerAndParameterFile_ReturnsAllErrors 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Validate_InvalidScanTriggerAndParameterFile_ReturnsAllErrors；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Combine、GetTempPath、NewGuid、ValidOptions、Throws；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -113,7 +113,7 @@ public sealed class CameraContractTests
     }
 
     /// <summary>
-    /// 验证 ValidOptions 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ValidOptions；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static CameraOptions ValidOptions(string name) => new()
     {

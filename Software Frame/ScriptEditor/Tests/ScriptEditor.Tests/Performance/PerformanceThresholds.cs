@@ -35,7 +35,7 @@ public sealed class PerformanceThresholds : IDisposable
     }
 
     /// <summary>
-    /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ReleaseSession；具体条件和先后次序见方法体。
     /// </summary>
     public void Dispose()
@@ -47,7 +47,7 @@ public sealed class PerformanceThresholds : IDisposable
     }
 
     /// <summary>
-    /// 验证 NewDetached 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NewDetached；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
     /// </summary>
     private ScriptSession NewDetached(string code)
@@ -58,7 +58,7 @@ public sealed class PerformanceThresholds : IDisposable
     }
 
     /// <summary>
-    /// 验证 PrecompiledFirstRunIsFast 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PrecompiledFirstRunIsFast；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewDetached、PreCompileAsync、StartNew、True、RunAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -75,7 +75,7 @@ public sealed class PerformanceThresholds : IDisposable
     }
 
     /// <summary>
-    /// 验证 OutputFlood1000Lines 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OutputFlood1000Lines；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewDetached、StartNew、True、RunAsync、Stop；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -92,7 +92,7 @@ public sealed class PerformanceThresholds : IDisposable
     }
 
     /// <summary>
-    /// 验证 TwentyScriptTaskPrecompiles 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TwentyScriptTaskPrecompiles；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、GetSession、StartNew、WhenAll、Select；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -127,7 +127,7 @@ public sealed class PerformanceThresholds : IDisposable
     }
 
     /// <summary>
-    /// 验证 LongLoopRunIsStable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LongLoopRunIsStable；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewDetached、LoopRunAsync、Delay、StopLoop、WhenAny；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -146,7 +146,7 @@ public sealed class PerformanceThresholds : IDisposable
     }
 
     /// <summary>
-    /// 验证 RepeatedRecompilesStayStable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RepeatedRecompilesStayStable；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewDetached、True、RunAsync、Max、Collect；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

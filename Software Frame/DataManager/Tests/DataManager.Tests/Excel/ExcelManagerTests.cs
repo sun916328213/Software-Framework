@@ -17,7 +17,7 @@ namespace DataManager.Tests.Excel
     public class ExcelManagerTests
     {
         /// <summary>
-        /// 验证 CreateParam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateParam；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、GetTempPath；具体条件和先后次序见方法体。
         /// </summary>
         private static ExcelParam CreateParam(string name, ExcelType type) => new()
@@ -29,7 +29,7 @@ namespace DataManager.Tests.Excel
         };
 
         /// <summary>
-        /// 验证 Create_MiniExcel_ReturnsMiniExcelHelper 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_MiniExcel_ReturnsMiniExcelHelper；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、CreateParam、IsType、NotNull；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -43,7 +43,7 @@ namespace DataManager.Tests.Excel
         }
 
         /// <summary>
-        /// 验证 Create_EPPlus_ReturnsEPPlusHelper 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_EPPlus_ReturnsEPPlusHelper；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、CreateParam、IsType、NotNull；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -57,7 +57,7 @@ namespace DataManager.Tests.Excel
         }
 
         /// <summary>
-        /// 验证 Create_UnsupportedType_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_UnsupportedType_Throws；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、Create、CreateParam；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -69,7 +69,7 @@ namespace DataManager.Tests.Excel
         }
 
         /// <summary>
-        /// 验证 ExcelParam_HasDefaults 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExcelParam_HasDefaults；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -82,7 +82,7 @@ namespace DataManager.Tests.Excel
         }
 
         /// <summary>
-        /// 验证 Create_MissingFilePath_ThrowsArgumentException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_MissingFilePath_ThrowsArgumentException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateParam、Throws、Create；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -96,7 +96,7 @@ namespace DataManager.Tests.Excel
         }
 
         /// <summary>
-        /// 验证 Create_DuplicateName_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_DuplicateName_Throws；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、CreateParam、Throws；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

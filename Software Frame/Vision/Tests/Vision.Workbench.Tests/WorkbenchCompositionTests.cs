@@ -41,7 +41,7 @@ public sealed class WorkbenchCompositionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 ThemeService_UsesHostThemeBeforeNestedControlsTheme 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ThemeService_UsesHostThemeBeforeNestedControlsTheme；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Single、OfType、Same、FindBundledTheme；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -55,7 +55,7 @@ public sealed class WorkbenchCompositionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 AppBoot_MergesWorkbenchAndControlsResources 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AppBoot_MergesWorkbenchAndControlsResources；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、NotNull、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -72,7 +72,7 @@ public sealed class WorkbenchCompositionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 PackUri_ResolvesBaml_FromForeignEntryAssembly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PackUri_ResolvesBaml_FromForeignEntryAssembly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、GetResourceStream、NotNull；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]

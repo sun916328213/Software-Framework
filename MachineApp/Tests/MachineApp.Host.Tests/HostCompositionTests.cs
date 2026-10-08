@@ -66,12 +66,12 @@ public sealed class ProductionFixture : IDisposable
         if (_fault is not null) throw new InvalidOperationException("整机模块装配失败。", _fault);
     }
     /// <summary>
-    /// 验证 Invoke 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Invoke；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、action；具体条件和先后次序见方法体。
     /// </summary>
     public void Invoke(Action<IContainerProvider> action) => _app!.Dispatcher.Invoke(() => action(_app.Container));
     /// <summary>
-    /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 InvokeShutdown、Join、FromSeconds、Dispose；具体条件和先后次序见方法体。
     /// </summary>
     public void Dispose()
@@ -89,7 +89,7 @@ public sealed class ProductionFixture : IDisposable
 public sealed class HostCompositionTests(ProductionFixture fixture)
 {
     /// <summary>
-    /// 验证 FlowEditorHonorsHostNavigationPolicy 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FlowEditorHonorsHostNavigationPolicy；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、RegisterInstance、Register、RegisterTypes、Resolve；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -112,7 +112,7 @@ public sealed class HostCompositionTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 FeatureControlsResolveWithIndependentBindingsAndReusableOverview 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FeatureControlsResolveWithIndependentBindingsAndReusableOverview；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、IsAssignableFrom、Resolve、NotSame、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -132,7 +132,7 @@ public sealed class HostCompositionTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 RepeatedProductionModuleRegistrationKeepsPrewarmedPages 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RepeatedProductionModuleRegistrationKeepsPrewarmedPages；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、ToDictionary、Resolve、RegisterTypes、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -152,7 +152,7 @@ public sealed class HostCompositionTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 PublicControlsNavigateToThePrewarmedInstance 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PublicControlsNavigateToThePrewarmedInstance；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、IsType、Equal、GetName；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -182,7 +182,7 @@ public sealed class HostCompositionTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 ReinitializingUiModulesDoesNotDuplicateResourcesOrWarmup 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReinitializingUiModulesDoesNotDuplicateResourcesOrWarmup；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、OnInitialized、Equal、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -203,7 +203,7 @@ public sealed class HostCompositionTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 ProductionCatalogLoadsEveryModuleThroughPrism 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ProductionCatalogLoadsEveryModuleThroughPrism；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、ToArray、Resolve、Equal、All；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -223,7 +223,7 @@ public sealed class HostCompositionTests(ProductionFixture fixture)
         });
     }
     /// <summary>
-    /// 验证 CompositionUsesNewFactoriesWithoutConnectingProductionDevices 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CompositionUsesNewFactoriesWithoutConnectingProductionDevices；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、IsType、Resolve、Empty、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -241,7 +241,7 @@ public sealed class HostCompositionTests(ProductionFixture fixture)
         });
     }
     /// <summary>
-    /// 验证 ProductionVisionPageRendersTheNewEditorAndTypedSessions 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ProductionVisionPageRendersTheNewEditorAndTypedSessions；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、IsType、Resolve、nameof、Measure；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -267,7 +267,7 @@ public sealed class HostCompositionTests(ProductionFixture fixture)
         });
     }
     /// <summary>
-    /// 验证 RealRegionNavigationLoadsVisionAndNewCameraPages 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RealRegionNavigationLoadsVisionAndNewCameraPages；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Add、nameof、RequestNavigate；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -289,7 +289,7 @@ public sealed class HostCompositionTests(ProductionFixture fixture)
         });
     }
     /// <summary>
-    /// 验证 Descendants 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Descendants；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetChildrenCount、GetChild、Descendants；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<DependencyObject> Descendants(DependencyObject root)

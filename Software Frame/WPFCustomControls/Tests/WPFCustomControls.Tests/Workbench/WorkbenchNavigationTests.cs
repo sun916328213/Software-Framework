@@ -15,7 +15,7 @@ namespace WPFCustomControls.Tests.Workbench;
 public sealed class WorkbenchNavigationTests
 {
     /// <summary>
-    /// 验证 FailedNavigation_RestoresConfirmedSelectionAndReportsError 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FailedNavigation_RestoresConfirmedSelectionAndReportsError；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、SelectFirst、Complete、Same、NotEmpty；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -33,7 +33,7 @@ public sealed class WorkbenchNavigationTests
     }
 
     /// <summary>
-    /// 验证 PendingNavigation_PreventsAnotherRequest_AndLateCallbackCannotReopenClosedShell 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PendingNavigation_PreventsAnotherRequest_AndLateCallbackCannotReopenClosedShell；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、SelectFirst、Equal、False、Dispose；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -51,7 +51,7 @@ public sealed class WorkbenchNavigationTests
     }
 
     /// <summary>
-    /// 验证 Catalog_RejectsUnknownPagesAndDuplicates_AndFallsBackWhenEmpty 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Catalog_RejectsUnknownPagesAndDuplicates_AndFallsBackWhenEmpty；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、Equal、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -64,7 +64,7 @@ public sealed class WorkbenchNavigationTests
     }
 
     /// <summary>
-    /// 验证 SelectFirst_RetriesMissingRegion_AndDoesNotRenavigateConfirmedPage 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SelectFirst_RetriesMissingRegion_AndDoesNotRenavigateConfirmedPage；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、SelectFirst、Null、NotEmpty、Add；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -83,7 +83,7 @@ public sealed class WorkbenchNavigationTests
     }
 
     /// <summary>
-    /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、Add；具体条件和先后次序见方法体。
     /// </summary>
     private static (Shell Shell, RegionProxy Proxy) Create(IEnumerable<WorkbenchPage>? pages = null, bool regionReady = true)
@@ -113,11 +113,11 @@ public sealed class WorkbenchNavigationTests
         public int Requests { get; private set; }
         private Action<NavigationResult>? _callback;
         /// <summary>
-        /// 验证 Complete 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Complete；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Complete(bool success) => _callback!(new NavigationResult(null!, success));
         /// <summary>
-        /// 验证 Invoke 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Invoke；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Single、OfType；具体条件和先后次序见方法体。
         /// </summary>
         protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)

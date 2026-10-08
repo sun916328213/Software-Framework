@@ -31,7 +31,7 @@ public class ParallelFlowRunnerTests
             new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult、WaitAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -42,14 +42,14 @@ public class ParallelFlowRunnerTests
         }
 
         /// <summary>
-        /// 验证 Complete 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Complete；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult；具体条件和先后次序见方法体。
         /// </summary>
         public void Complete() => _release.TrySetResult();
     }
 
     /// <summary>
-    /// 验证 ExecuteAsync_StartsAllLanes_AndWaitsForEveryLane 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExecuteAsync_StartsAllLanes_AndWaitsForEveryLane；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ExecuteAsync、WaitAsync、WhenAll、FromSeconds、Complete；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -81,7 +81,7 @@ public class ParallelFlowRunnerTests
     }
 
     /// <summary>
-    /// 验证 ExecuteAsync_RejectsFewerThanTwoLanes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExecuteAsync_RejectsFewerThanTwoLanes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAsync、ExecuteAsync、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -101,7 +101,7 @@ public class ParallelFlowRunnerTests
     }
 
     /// <summary>
-    /// 验证 ExecuteAsync_RejectsEmptyLane 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExecuteAsync_RejectsEmptyLane；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAsync、ExecuteAsync、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

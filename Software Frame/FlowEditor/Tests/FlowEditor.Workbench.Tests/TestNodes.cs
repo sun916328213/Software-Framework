@@ -34,7 +34,7 @@ public class ValueNode : NodeModel
     }
 
     /// <summary>
-    /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FindInputPort；具体条件和先后次序见方法体。
     /// </summary>
     public override Task ExecuteAsync(CancellationToken ct)
@@ -58,7 +58,7 @@ public class SourceNode : NodeModel
     public SourceNode() => AddCustomOutputPort("Value", nameof(Value));
 
     /// <summary>
-    /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
 }
@@ -67,7 +67,7 @@ public class SourceNode : NodeModel
 public class FailNode : NodeModel
 {
     /// <summary>
-    /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public override Task ExecuteAsync(CancellationToken ct) => throw new InvalidOperationException("boom");
 }
@@ -78,7 +78,7 @@ public class CountingNode : NodeModel
     public int Executions;
 
     /// <summary>
-    /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Increment；具体条件和先后次序见方法体。
     /// </summary>
     public override Task ExecuteAsync(CancellationToken ct)
@@ -99,7 +99,7 @@ public static class TestGraph
             nodes.Select(node => node.Model).ToList(), connections);
 
     /// <summary>
-    /// 验证 New 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 New；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public static (NodeViewModel Vm, T Model) New<T>(string name) where T : NodeModel, new()
     {
@@ -108,7 +108,7 @@ public static class TestGraph
     }
 
     /// <summary>
-    /// 验证 Flow 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Flow；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public static ConnectionModel Flow(NodeViewModel src, NodeViewModel dst)
         => new()

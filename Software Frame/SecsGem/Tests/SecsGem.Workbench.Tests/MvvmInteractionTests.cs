@@ -21,7 +21,7 @@ namespace SecsGem.Workbench.Tests;
 public sealed class MvvmInteractionTests(WorkbenchAppFixture host)
 {
     /// <summary>
-    /// 验证 RealSampleAndVariableButtons_UpdateRuntimeThroughBindings 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RealSampleAndVariableButtons_UpdateRuntimeThroughBindings；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Home、IsType、Single、OfType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -46,7 +46,7 @@ public sealed class MvvmInteractionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 InvalidPort_IsReportedByAsyncCommand_WithoutConnecting 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 InvalidPort_IsReportedByAsyncCommand_WithoutConnecting；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、IsType、Home、ExecuteAsync、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -70,14 +70,14 @@ public sealed class MvvmInteractionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 Home 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Home；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 IsType、Single、Resolve；具体条件和先后次序见方法体。
     /// </summary>
     private static SecsWorkbenchView Home() => Assert.IsType<SecsWorkbenchView>(
         Assert.Single(ContainerLocator.Container.Resolve<IRegionManager>().Regions["SecsRegion"].ActiveViews));
 
     /// <summary>
-    /// 验证 Invoke 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Invoke；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Single、OfType、Descendants、Equals、NotNull；具体条件和先后次序见方法体。
     /// </summary>
     private static void Invoke(FrameworkElement root, string caption)
@@ -89,7 +89,7 @@ public sealed class MvvmInteractionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 Descendants 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Descendants；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetChildrenCount、GetChild、Descendants；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<DependencyObject> Descendants(DependencyObject root)

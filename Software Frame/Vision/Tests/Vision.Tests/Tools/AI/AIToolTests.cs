@@ -29,14 +29,14 @@ namespace Vision.Tests.Tools.AI;
 public sealed class AIToolTests
 {
     /// <summary>
-    /// 验证 TestImage 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TestImage；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 WhiteRectangle；具体条件和先后次序见方法体。
     /// </summary>
     private static Vision.Core.Imaging.VisionImage TestImage() =>
         SyntheticImages.WhiteRectangle(64, 64, 10, 10, 30, 30);
 
     /// <summary>
-    /// 验证 Provider 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Provider；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static FakeAIProvider Provider(string name = "Fake") => new() { Name = name };
 
@@ -62,7 +62,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 Run_WhenValidationFails_ResetsLastElapsedMs 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Run_WhenValidationFails_ResetsLastElapsedMs；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、LoadModel、True、Run、TestImage；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -89,7 +89,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 Detection_FullFlow_WithFakeProvider 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Detection_FullFlow_WithFakeProvider；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、LoadModel、Run、TestImage、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -108,7 +108,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 Segmentation_FullFlow_WithFakeProvider 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Segmentation_FullFlow_WithFakeProvider；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、LoadModel、Run、TestImage、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -126,7 +126,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 AnomalyDetection_FullFlow_WithFakeProvider 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AnomalyDetection_FullFlow_WithFakeProvider；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、LoadModel、Run、TestImage、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -162,7 +162,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 Detection_MaxResults_CapsToTopBoxes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Detection_MaxResults_CapsToTopBoxes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、LoadModel、Run、TestImage、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -181,7 +181,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 Segmentation_MinAreaFilter_RemovesSmallItems 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Segmentation_MinAreaFilter_RemovesSmallItems；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、LoadModel、Run、TestImage、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -200,7 +200,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 InferenceRequest_ForwardsThresholdAndMaxResults 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 InferenceRequest_ForwardsThresholdAndMaxResults；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、LoadModel、Run、TestImage、NotNull；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -232,7 +232,7 @@ public sealed class AIToolTests
     // ── Validate ────────────────────────────────────────────────────
 
     /// <summary>
-    /// 验证 Validate_WithoutProvider_ReportsMissing 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Validate_WithoutProvider_ReportsMissing；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Validate、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -246,7 +246,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 Validate_EmptyModelPath_ReportsError 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Validate_EmptyModelPath_ReportsError；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、Validate、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -260,7 +260,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 Validate_ScoreThresholdAboveOne_ReportsError 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Validate_ScoreThresholdAboveOne_ReportsError；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、Validate、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -276,7 +276,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 Validate_UnsupportedCapability_ReportsError 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Validate_UnsupportedCapability_ReportsError；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、Validate、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -293,7 +293,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 Validate_UnavailableProvider_WarnsButStaysValid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Validate_UnavailableProvider_WarnsButStaysValid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、Validate、True、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -334,7 +334,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 LoadModel_WhenSessionTypeMismatches_ThrowsAndLeavesNoSession 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoadModel_WhenSessionTypeMismatches_ThrowsAndLeavesNoSession；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、Throws、LoadModel、Null、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -354,7 +354,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 LoadModel_WhenProviderReturnsUnloadedSession_ClosesItAndAllowsRetry 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoadModel_WhenProviderReturnsUnloadedSession_ClosesItAndAllowsRetry；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、MarkClosed、Throws、LoadModel、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -383,7 +383,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 LoadModel_WhenInvalid_ThrowsWithoutTouchingProvider 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoadModel_WhenInvalid_ThrowsWithoutTouchingProvider；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、Throws、LoadModel、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -397,7 +397,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 UnloadModel_ClosesOnce_AndDisposeIsIdempotent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 UnloadModel_ClosesOnce_AndDisposeIsIdempotent；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、LoadModel、UnloadModel、Null、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -420,7 +420,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 Run_WithoutSession_ReturnsFailedResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Run_WithoutSession_ReturnsFailedResult；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、Run、TestImage、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -435,7 +435,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 Run_AfterProviderSwitch_DoesNotUseOldSession 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Run_AfterProviderSwitch_DoesNotUseOldSession；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、LoadModel、False、Run、TestImage；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -457,7 +457,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 Run_AfterModelPathChange_RequiresReloadAndThenUsesNewModel 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Run_AfterModelPathChange_RequiresReloadAndThenUsesNewModel；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、LoadModel、False、Run、TestImage；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -482,7 +482,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 Run_WhenSessionReturnsWrongType_ReportsMismatch 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Run_WhenSessionReturnsWrongType_ReportsMismatch；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Provider、Sleep、LoadModel、Run、TestImage；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -539,7 +539,7 @@ public sealed class AIToolTests
     }
 
     /// <summary>
-    /// 验证 Parameters_RoundTripThroughJson 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Parameters_RoundTripThroughJson；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Deserialize、Serialize、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

@@ -14,7 +14,7 @@ namespace Communication.Tests.Protocols.Mitsubishi;
 public sealed class McAddressValueTests
 {
     /// <summary>
-    /// 验证 Timer_and_counter_addresses_preserve_contact_coil_and_value_semantics 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Timer_and_counter_addresses_preserve_contact_coil_and_value_semantics；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AssertAddress；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -29,7 +29,7 @@ public sealed class McAddressValueTests
     }
 
     /// <summary>
-    /// 验证 Parsed_device_address_round_trips_using_its_declared_radix 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Parsed_device_address_round_trips_using_its_declared_radix；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、ToString、Parse；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -44,7 +44,7 @@ public sealed class McAddressValueTests
     }
 
     /// <summary>
-    /// 验证 Address_offset_preserves_device_type_and_number_radix 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Address_offset_preserves_device_type_and_number_radix；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、ToString、Offset、Parse；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -60,7 +60,7 @@ public sealed class McAddressValueTests
     }
 
     /// <summary>
-    /// 验证 Address_offset_rejects_a_number_beyond_the_protocol_range 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Address_offset_rejects_a_number_beyond_the_protocol_range；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Offset、Parse；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -71,7 +71,7 @@ public sealed class McAddressValueTests
     }
 
     /// <summary>
-    /// 验证 Mc_request_rejects_an_uninitialized_address 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mc_request_rejects_an_uninitialized_address；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Read；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -81,7 +81,7 @@ public sealed class McAddressValueTests
     }
 
     /// <summary>
-    /// 验证 Mc_request_rejects_a_range_beyond_the_24_bit_device_number 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mc_request_rejects_a_range_beyond_the_24_bit_device_number；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、Throws、Read；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -93,7 +93,7 @@ public sealed class McAddressValueTests
     }
 
     /// <summary>
-    /// 验证 Public_device_type_matches_the_typed_address_device_code 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Public_device_type_matches_the_typed_address_device_code；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Parse；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -127,7 +127,7 @@ public sealed class McAddressValueTests
     }
 
     /// <summary>
-    /// 验证 Public_batch_command_metadata_matches_the_codec_commands 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Public_batch_command_metadata_matches_the_codec_commands；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -140,7 +140,7 @@ public sealed class McAddressValueTests
     }
 
     /// <summary>
-    /// 验证 AssertAddress 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AssertAddress；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、Equal；具体条件和先后次序见方法体。
     /// </summary>
     private static void AssertAddress(string text, byte deviceCode, bool isBit)

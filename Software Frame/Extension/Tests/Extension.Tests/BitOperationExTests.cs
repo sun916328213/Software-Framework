@@ -18,7 +18,7 @@ namespace Extension.Tests;
 public class BitOperationExTests
 {
 	/// <summary>
-	/// 验证 Compare_Ptr_null抛裸Exception而不是ArgumentException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_null抛裸Exception而不是ArgumentException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Compare_Ptr；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -32,7 +32,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_长度不等抛裸Exception 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_长度不等抛裸Exception；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Compare_Ptr；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -43,7 +43,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_两个空数组会抛NullReferenceException_是缺陷 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_两个空数组会抛NullReferenceException_是缺陷；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Compare_Ptr、Empty；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -56,7 +56,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_默认模式是Eight_逐字节比对 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_默认模式是Eight_逐字节比对；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Compare_Ptr、Single、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -72,7 +72,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_默认极性是BothEdges_不等就记录 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_默认极性是BothEdges_不等就记录；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Compare_Ptr、Single、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -86,7 +86,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_完全相同返回空 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_完全相同返回空；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Empty、Compare_Ptr、Clone；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -97,7 +97,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_Eight模式_能报出多处差异且下标正确 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_Eight模式_能报出多处差异且下标正确；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Compare_Ptr、Equal、ToArray、Select；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -110,7 +110,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_RisingEdge_只记当前值大于上次 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_RisingEdge_只记当前值大于上次；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Compare_Ptr、Equal、ToArray、Select；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -127,7 +127,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_None极性_什么都不记录 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_None极性_什么都不记录；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Empty、Compare_Ptr；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -139,7 +139,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_相等时不记录任何极性 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_相等时不记录任何极性；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Empty、Compare_Ptr；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -161,7 +161,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_Sixteen模式_差异落在第2字节的高位时漏报 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_Sixteen模式_差异落在第2字节的高位时漏报；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Compare_Ptr、Single、Equal、Empty；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -182,7 +182,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_Thirty_Two模式_同样漏报 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_Thirty_Two模式_同样漏报；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Compare_Ptr、Single、Equal、Empty；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -198,7 +198,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_Eight与Sixty_Four模式不受该缺陷影响 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_Eight与Sixty_Four模式不受该缺陷影响；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Single、Compare_Ptr、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -213,7 +213,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_ushort数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_ushort数组；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Compare_Ptr、Single、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -229,7 +229,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_short数组_支持负数 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_short数组_支持负数；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Empty、Compare_Ptr、Single、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -247,7 +247,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 Compare_Ptr_bool数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Compare_Ptr_bool数组；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Compare_Ptr、Single、Equal、True、False；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -265,7 +265,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 ECompareMode的数值是2的幂指数 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ECompareMode的数值是2的幂指数；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -278,7 +278,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 EComparePolarity的取值顺序 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 EComparePolarity的取值顺序；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -291,7 +291,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 CompareValue是可变结构体_三个属性都可写 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 CompareValue是可变结构体_三个属性都可写；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、True；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -310,7 +310,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 BitOperationEx是静态类 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 BitOperationEx是静态类；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -320,7 +320,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 BitOperationEx_泛型指针方法必须带unmanaged约束 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 BitOperationEx_泛型指针方法必须带unmanaged约束；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ReadAllText、Combine、ExtensionSourceRoot、Contains、Count；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -336,7 +336,7 @@ public class BitOperationExTests
 	}
 
 	/// <summary>
-	/// 验证 ExtensionSourceRoot 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ExtensionSourceRoot；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetDirectoryName、False、IsNullOrEmpty、GetFullPath、Combine；具体条件和先后次序见方法体。
 	/// </summary>
 	private static string ExtensionSourceRoot([CallerFilePath] string thisFile = "")

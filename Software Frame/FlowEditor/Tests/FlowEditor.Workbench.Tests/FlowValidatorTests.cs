@@ -20,7 +20,7 @@ namespace FlowEditor.Workbench.Tests;
 public class FlowValidatorTests
 {
     /// <summary>
-    /// 验证 ParallelContainer_WithEmptyLane_IsRejectedBeforeRun 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ParallelContainer_WithEmptyLane_IsRejectedBeforeRun；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Analyze、True、Equal、Count；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -35,7 +35,7 @@ public class FlowValidatorTests
     }
 
     /// <summary>
-    /// 验证 ParallelContainer_WithOnlyOneLane_IsRejectedBeforeRun 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ParallelContainer_WithOnlyOneLane_IsRejectedBeforeRun；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Analyze、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -53,7 +53,7 @@ public class FlowValidatorTests
     }
 
     /// <summary>
-    /// 验证 LoopContainer_WithEmptyBody_IsRejectedBeforeRun 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopContainer_WithEmptyBody_IsRejectedBeforeRun；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Analyze、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -67,7 +67,7 @@ public class FlowValidatorTests
     }
 
     /// <summary>
-    /// 验证 MissingInConnection_ProducesError 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MissingInConnection_ProducesError；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Analyze、True、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -84,7 +84,7 @@ public class FlowValidatorTests
     }
 
     /// <summary>
-    /// 验证 TypeMismatch_DetectedBeforeRun 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TypeMismatch_DetectedBeforeRun；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 First、New、Data、Flow、Analyze；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -107,7 +107,7 @@ public class FlowValidatorTests
     }
 
     /// <summary>
-    /// 验证 UnreachableNode_ProducesWarning_NotError 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 UnreachableNode_ProducesWarning_NotError；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、Analyze、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -131,7 +131,7 @@ public class FlowValidatorTests
     }
 
     /// <summary>
-    /// 验证 CycleGraph_ProducesInfoOnly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CycleGraph_ProducesInfoOnly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、Analyze、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -149,7 +149,7 @@ public class FlowValidatorTests
     }
 
     /// <summary>
-    /// 验证 CleanLinearFlow_NoDiagnostics 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CleanLinearFlow_NoDiagnostics；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Analyze、Flow、Equal、Insert；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -173,7 +173,7 @@ public class FlowValidatorTests
     }
 
     /// <summary>
-    /// 验证 ImplicitFlowFanOutAndFanIn_AreRejected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ImplicitFlowFanOutAndFanIn_AreRejected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、Analyze、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

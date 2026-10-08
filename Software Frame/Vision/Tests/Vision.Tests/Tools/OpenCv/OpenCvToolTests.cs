@@ -28,7 +28,7 @@ public sealed class OpenCvToolTests
     // ── Validate ──────────────────────────────────────────────────────
 
     /// <summary>
-    /// 验证 AllTools_DefaultParameters_AreValid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AllTools_DefaultParameters_AreValid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、Validate；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -47,7 +47,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 TemplateMatch_WithoutTemplate_IsInvalid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TemplateMatch_WithoutTemplate_IsInvalid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Validate、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -60,7 +60,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 Threshold_MinGreaterThanMax_IsInvalid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Threshold_MinGreaterThanMax_IsInvalid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Validate、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -75,7 +75,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 Morphology_EvenKernel_IsInvalid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Morphology_EvenKernel_IsInvalid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 False、Validate；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -87,7 +87,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 FindLine_DegenerateLine_IsInvalid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FindLine_DegenerateLine_IsInvalid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Validate、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -101,7 +101,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 FindCircle_RadiusRangeReversed_IsInvalid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FindCircle_RadiusRangeReversed_IsInvalid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Validate、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -115,7 +115,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 Run_WhenInvalid_ReturnsFailedResult_WithoutThrowing 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Run_WhenInvalid_ReturnsFailedResult_WithoutThrowing；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、False、NotNull；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -130,7 +130,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 Blob_MissingFeatureConfig_ReturnsFailedResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Blob_MissingFeatureConfig_ReturnsFailedResult；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -165,7 +165,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 Morphology_Erode_ShrinksRectangleByOnePixelBorder 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Morphology_Erode_ShrinksRectangleByOnePixelBorder；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 WhiteRectangle、Run、True、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -182,7 +182,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 Blob_FindsRectangle_WithAnalyticCenterAndArea 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Blob_FindsRectangle_WithAnalyticCenterAndArea；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 WhiteRectangle、Run、True、Single、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -203,7 +203,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 Blob_FeatureFilter_RejectsSmallArea 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Blob_FeatureFilter_RejectsSmallArea；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 WhiteRectangle、Run、True、Empty；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -222,7 +222,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 TemplateMatch_FindsPastedPattern 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TemplateMatch_FindsPastedPattern；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 PatternTemplate、PasteTemplate、Run、True、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -243,7 +243,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 FindLine_FitsSyntheticHorizontalLine 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FindLine_FitsSyntheticHorizontalLine；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 HorizontalLine、Run、True、InRange；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -264,7 +264,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 FindCircle_FindsSyntheticDisc 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FindCircle_FindsSyntheticDisc；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FilledDisc、Run、True、DistanceTo、InRange；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -296,7 +296,7 @@ public sealed class OpenCvToolTests
     };
 
     /// <summary>
-    /// 验证 Result_DerivesFromToolResult_AndExposesNoNativeTypes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Result_DerivesFromToolResult_AndExposesNoNativeTypes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 nameof、True、IsAssignableFrom、GetProperties、Unwrap；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -320,7 +320,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 Parameters_RoundTripThroughJson 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Parameters_RoundTripThroughJson；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Deserialize、Serialize；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -338,7 +338,7 @@ public sealed class OpenCvToolTests
     }
 
     /// <summary>
-    /// 验证 Unwrap 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Unwrap；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetGenericArguments、GetName、StartsWith；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<Type> Unwrap(Type type)

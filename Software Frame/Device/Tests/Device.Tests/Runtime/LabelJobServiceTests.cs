@@ -17,7 +17,7 @@ public sealed class LabelJobServiceTests
     private static readonly LabelPrintEngineOptions Options = new() { Name = "labels", DriverId = new("test") };
 
     /// <summary>
-    /// 验证 CompleteJobPassesTemplateFieldsPrinterAndCopiesThenReleasesEngine 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CompleteJobPassesTemplateFieldsPrinterAndCopiesThenReleasesEngine；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 PrintAsync、Single、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -31,7 +31,7 @@ public sealed class LabelJobServiceTests
     }
 
     /// <summary>
-    /// 验证 FailureIsReportedAndEngineIsReleased 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FailureIsReportedAndEngineIsReleased；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAsync、PrintAsync、Equal、Last、Single；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -50,7 +50,7 @@ public sealed class LabelJobServiceTests
     }
 
     /// <summary>
-    /// 验证 ConcurrentJobsDoNotInterleaveEngineLifetimes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConcurrentJobsDoNotInterleaveEngineLifetimes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 PrintAsync、WaitAsync、FromSeconds、Single、SetResult；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -70,7 +70,7 @@ public sealed class LabelJobServiceTests
     }
 
     /// <summary>
-    /// 验证 CancellationDoesNotCancelCleanupAndGateCanBeReused 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CancellationDoesNotCancelCleanupAndGateCanBeReused；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAnyAsync、PrintAsync、Equal、TakeLast；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -88,7 +88,7 @@ public sealed class LabelJobServiceTests
     }
 
     /// <summary>
-    /// 验证 CleanupFailurePreservesOriginalPrintFailure 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CleanupFailurePreservesOriginalPrintFailure；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAsync、PrintAsync、Equal、Select、Last；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -116,7 +116,7 @@ public sealed class LabelJobServiceTests
         public TaskCompletionSource PrintRelease { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public IReadOnlyList<DeviceDriverDescriptor> AvailableDrivers => [];
         /// <summary>
-        /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public ILabelPrintEngine Create(LabelPrintEngineOptions options) { var engine = new Engine(this, options); Engines.Add(engine); return engine; }
@@ -133,29 +133,29 @@ public sealed class LabelJobServiceTests
         public LabelPrintEngineOptions Options => options;
         public string? TemplatePath { get; private set; }
         /// <summary>
-        /// 验证 GetInstalledPrintersAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetInstalledPrintersAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ValueTask<DeviceResult<IReadOnlyList<string>>> GetInstalledPrintersAsync(CancellationToken ct = default) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 GetFieldsAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetFieldsAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ValueTask<DeviceResult<IReadOnlyList<LabelTemplateField>>> GetFieldsAsync(CancellationToken ct = default) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 RenderPreviewAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RenderPreviewAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ValueTask<DeviceResult<LabelPreview>> RenderPreviewAsync(CancellationToken ct = default) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 OpenTemplateAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OpenTemplateAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、Result；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<DeviceResult> OpenTemplateAsync(string path, CancellationToken ct = default) { Calls.Add("open:" + path); TemplatePath = path; return Result("open"); }
         /// <summary>
-        /// 验证 SetFieldsAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetFieldsAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、Result；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<DeviceResult> SetFieldsAsync(IReadOnlyDictionary<string, string> fields, CancellationToken ct = default) { Calls.Add("fields:" + fields["ID"]); return Result("fields"); }
         /// <summary>
-        /// 验证 PrintAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 PrintAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、TrySetResult、ThrowIfCancellationRequested、Result；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -169,7 +169,7 @@ public sealed class LabelJobServiceTests
             return await Result("print");
         }
         /// <summary>
-        /// 验证 CloseTemplateAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CloseTemplateAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 False、Add、FromResult、Failure、Ok；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<DeviceResult> CloseTemplateAsync(CancellationToken ct = default)
@@ -178,12 +178,12 @@ public sealed class LabelJobServiceTests
             return ValueTask.FromResult(factory.CloseFailure ? DeviceResult.Failure("close", "close") : DeviceResult.Ok());
         }
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask DisposeAsync() { Calls.Add("dispose"); return ValueTask.CompletedTask; }
         /// <summary>
-        /// 验证 Result 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Result；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Failure、Ok；具体条件和先后次序见方法体。
         /// </summary>
         private ValueTask<DeviceResult> Result(string operation) => ValueTask.FromResult(factory.Failure == operation ? DeviceResult.Failure(operation, operation) : DeviceResult.Ok());

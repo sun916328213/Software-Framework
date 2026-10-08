@@ -18,7 +18,7 @@ namespace Vision.Tests.Tools;
 public sealed class ToolBaseResultTests
 {
     /// <summary>
-    /// 验证 HalconBase_PreservesFailureReturnedByRunCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 HalconBase_PreservesFailureReturnedByRunCore；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、False、Equal、NotNull、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -35,7 +35,7 @@ public sealed class ToolBaseResultTests
     }
 
     /// <summary>
-    /// 验证 OpenCvBase_PreservesFailureReturnedByRunCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OpenCvBase_PreservesFailureReturnedByRunCore；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromBuffer、Run、False、Equal、NotNull；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -53,7 +53,7 @@ public sealed class ToolBaseResultTests
     }
 
     /// <summary>
-    /// 验证 HalconBase_ValidationFailureResetsLastElapsedMs 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 HalconBase_ValidationFailureResetsLastElapsedMs；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、True、False、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -72,7 +72,7 @@ public sealed class ToolBaseResultTests
     }
 
     /// <summary>
-    /// 验证 OpenCvBase_ValidationFailureResetsLastElapsedMs 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OpenCvBase_ValidationFailureResetsLastElapsedMs；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromBuffer、Run、True、False、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -114,14 +114,14 @@ public sealed class ToolBaseResultTests
         public override string Name => "FailureStub";
 
         /// <summary>
-        /// 验证 ValidateCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ValidateCore；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 AddError；具体条件和先后次序见方法体。
         /// </summary>
         protected override ValidationResult ValidateCore(StubParameters parameters) =>
             parameters.Invalid ? new ValidationResult().AddError("INVALID", "参数无效") : new ValidationResult();
 
         /// <summary>
-        /// 验证 RunCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RunCore；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Sleep；具体条件和先后次序见方法体。
         /// </summary>
         protected override FailingResult RunCore(HalconDotNet.HObject? image, StubParameters parameters)
@@ -140,14 +140,14 @@ public sealed class ToolBaseResultTests
         public override string Name => "FailureStub";
 
         /// <summary>
-        /// 验证 ValidateCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ValidateCore；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 AddError；具体条件和先后次序见方法体。
         /// </summary>
         protected override ValidationResult ValidateCore(StubParameters parameters) =>
             parameters.Invalid ? new ValidationResult().AddError("INVALID", "参数无效") : new ValidationResult();
 
         /// <summary>
-        /// 验证 RunCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RunCore；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Sleep；具体条件和先后次序见方法体。
         /// </summary>
         protected override FailingResult RunCore(VisionImage image, StubParameters parameters)

@@ -37,7 +37,7 @@ public sealed class FakeCameraFactory : ICameraFactory
     public int CreateCallCount => CreatedOptions.Count;
 
     /// <summary>
-    /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
     /// </summary>
     public ICamera Create(CameraOptions options)
@@ -49,7 +49,7 @@ public sealed class FakeCameraFactory : ICameraFactory
     }
 
     /// <summary>
-    /// 验证 EnumerateDevicesAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EnumerateDevicesAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromResult、Failure；具体条件和先后次序见方法体。
     /// </summary>
     public ValueTask<DeviceResult<IReadOnlyList<CameraDeviceDescriptor>>> EnumerateDevicesAsync(
@@ -88,7 +88,7 @@ public sealed class FakeCamera(CameraOptions options) : ICamera
     public List<(CameraTriggerSettings Frame, CameraTriggerSettings Line)> AppliedTriggers { get; } = [];
 
     /// <summary>
-    /// 验证 ConnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromResult、Failure、Ok；具体条件和先后次序见方法体。
     /// </summary>
     public ValueTask<DeviceResult> ConnectAsync(CancellationToken cancellationToken = default)
@@ -102,7 +102,7 @@ public sealed class FakeCamera(CameraOptions options) : ICamera
     }
 
     /// <summary>
-    /// 验证 DisconnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DisconnectAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromResult、Ok；具体条件和先后次序见方法体。
     /// </summary>
     public ValueTask<DeviceResult> DisconnectAsync(CancellationToken cancellationToken = default)
@@ -112,7 +112,7 @@ public sealed class FakeCamera(CameraOptions options) : ICamera
     }
 
     /// <summary>
-    /// 验证 CaptureAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CaptureAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromResult、Mono8；具体条件和先后次序见方法体。
     /// </summary>
     public ValueTask<ImageFrame> CaptureAsync(CancellationToken cancellationToken = default)
@@ -126,7 +126,7 @@ public sealed class FakeCamera(CameraOptions options) : ICamera
     }
 
     /// <summary>
-    /// 验证 SetExposureGainAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SetExposureGainAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromResult、Ok；具体条件和先后次序见方法体。
     /// </summary>
     public ValueTask<DeviceResult> SetExposureGainAsync(
@@ -136,7 +136,7 @@ public sealed class FakeCamera(CameraOptions options) : ICamera
         ValueTask.FromResult(DeviceResult.Ok());
 
     /// <summary>
-    /// 验证 SetTriggerAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SetTriggerAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、FromResult、Ok；具体条件和先后次序见方法体。
     /// </summary>
     public ValueTask<DeviceResult> SetTriggerAsync(
@@ -149,7 +149,7 @@ public sealed class FakeCamera(CameraOptions options) : ICamera
     }
 
     /// <summary>
-    /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public ValueTask DisposeAsync()
     {
@@ -163,20 +163,20 @@ public sealed class FakeCamera(CameraOptions options) : ICamera
 public static class TestFrames
 {
     /// <summary>
-    /// 验证 Mono8 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mono8；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、Select；具体条件和先后次序见方法体。
     /// </summary>
     public static ImageFrame Mono8(int width, int height, byte fill = 0x40) =>
         new(width, height, "Mono8", new byte[width * height].Select(b => fill).ToArray());
 
     /// <summary>
-    /// 验证 Mono16 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mono16；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public static ImageFrame Mono16(int width, int height) =>
         new(width, height, "Mono16", new byte[width * height * 2]);
 
     /// <summary>
-    /// 验证 Bgr24 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Bgr24；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public static ImageFrame Bgr24(int width, int height) =>
         new(width, height, "BGR8", new byte[width * height * 3]);

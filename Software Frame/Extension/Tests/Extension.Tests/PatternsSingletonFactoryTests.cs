@@ -150,7 +150,7 @@ public class PatternsSingletonFactoryTests
 		}
 
 		/// <summary>
-		/// 验证 OnInitialize 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+		/// 测试相关入口 OnInitialize；准备条件、协作调用与结果检查以方法正文为准。
 		/// </summary>
 		protected override void OnInitialize()
 		{
@@ -158,7 +158,7 @@ public class PatternsSingletonFactoryTests
 		}
 
 		/// <summary>
-		/// 验证 OnDispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+		/// 测试相关入口 OnDispose；准备条件、协作调用与结果检查以方法正文为准。
 		/// </summary>
 		protected override void OnDispose()
 		{
@@ -197,7 +197,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 Singleton_GetInstance泛型_同类型返回同一实例 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Singleton_GetInstance泛型_同类型返回同一实例；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Same、GetInstance；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -207,7 +207,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 Singleton_无参路径与工厂路径互不相干_同一个类型会得到两个单例 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Singleton_无参路径与工厂路径互不相干_同一个类型会得到两个单例；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetInstance、NotNull、NotSame、Same；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -223,7 +223,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 Singleton_工厂返回null抛InvalidOperationException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Singleton_工厂返回null抛InvalidOperationException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、GetInstance、Contains；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -234,7 +234,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 Singleton_工厂抛null之后不记忆失败_下次仍会重试 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Singleton_工厂抛null之后不记忆失败_下次仍会重试；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、GetInstance、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -252,7 +252,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 Singleton_异步工厂失败后永不重试_抛不会重试 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Singleton_异步工厂失败后永不重试_抛不会重试；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ThrowsAsync、GetInstanceAsync、Equal、Contains；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -273,7 +273,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 Singleton_异步工厂返回null抛InvalidOperationException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Singleton_异步工厂返回null抛InvalidOperationException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Contains、ThrowsAsync、GetInstanceAsync、FromResult；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -284,7 +284,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 Singleton_异步工厂成功后返回同一实例 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Singleton_异步工厂成功后返回同一实例；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Same、GetInstanceAsync、FromResult；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -295,7 +295,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 Singleton_工厂参数为null一律抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Singleton_工厂参数为null一律抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、GetInstance、ThrowsAsync、GetInstanceAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -307,7 +307,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 SingletonBase_Instance是懒加载且唯一 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 SingletonBase_Instance是懒加载且唯一；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Same；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -317,7 +317,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 ThreadSafeSingleton_Instance唯一_ResetInstance之后是新实例 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ThreadSafeSingleton_Instance唯一_ResetInstance之后是新实例；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Same、ResetInstance、NotSame；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -332,7 +332,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 Singleton_双重检查锁均已补volatile_工厂版与异步版 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Singleton_双重检查锁均已补volatile_工厂版与异步版；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SourcePath、True、Exists、ReadAllText、IndexOf；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -379,7 +379,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 Products_六个具体产品的Name是固定常量 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Products_六个具体产品的Name是固定常量；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -392,7 +392,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 Products_Name是只读属性_没有setter 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Products_Name是只读属性_没有setter；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Null、GetProperty；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -403,7 +403,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 Products_Collaborate对null产品抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Products_Collaborate对null产品抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Collaborate、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -422,7 +422,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 Products_全部行为方法返回void_只写控制台 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Products_全部行为方法返回void_只写控制台；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、GetMethod；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -434,7 +434,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_CacheStrategy_Singleton与All行为完全一致 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_CacheStrategy_Singleton与All行为完全一致；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterProduct、CreateProduct、Same、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -457,7 +457,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_CacheStrategy_None每次都是新实例且不缓存 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_CacheStrategy_None每次都是新实例且不缓存；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterProduct、CreateProduct、NotSame、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -472,7 +472,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_默认缓存策略是All_默认非线程安全 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_默认缓存策略是All_默认非线程安全；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、False；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -484,7 +484,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_构造函数可设置缓存策略与线程安全标志 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_构造函数可设置缓存策略与线程安全标志；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、True；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -496,7 +496,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_创建器返回null时抛InvalidOperationException_与未注册可区分 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_创建器返回null时抛InvalidOperationException_与未注册可区分；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterProduct、Throws、CreateProduct、Contains、DoesNotContain；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -513,7 +513,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_未注册的产品抛KeyNotFoundException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_未注册的产品抛KeyNotFoundException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、CreateProduct、Contains；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -525,7 +525,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_productId为空或null都抛ArgumentException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_productId为空或null都抛ArgumentException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、CreateProduct；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -537,7 +537,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_RegisterProduct的参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_RegisterProduct的参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、RegisterProduct；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -563,7 +563,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_CreateProduct会调用生命周期Initialize 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_CreateProduct会调用生命周期Initialize；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterProduct、CreateProduct、True、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -578,7 +578,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_CreateProduct_T_类型不匹配抛InvalidCastException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_CreateProduct_T_类型不匹配抛InvalidCastException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterProduct、Throws、CreateProduct、NotNull；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -591,7 +591,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_RegisterProduct泛型用默认构造函数 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_RegisterProduct泛型用默认构造函数；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterProduct、True、ContainsProduct、IsType、CreateProduct；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -604,7 +604,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_RemoveProduct会Dispose缓存实例并摘掉注册 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_RemoveProduct会Dispose缓存实例并摘掉注册；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterProduct、CreateProduct、True、RemoveProduct、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -621,7 +621,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_ClearCache会Dispose缓存但保留注册 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_ClearCache会Dispose缓存但保留注册；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterProduct、CreateProduct、ClearCache、Equal、True；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -638,7 +638,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_ClearProducts会清空注册与缓存 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_ClearProducts会清空注册与缓存；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterProduct、CreateProduct、ClearProducts、Equal、False；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -655,7 +655,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_ContainsProduct对空id返回false_不抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_ContainsProduct对空id返回false_不抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 False、ContainsProduct；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -667,7 +667,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_RemoveProduct对空id返回false_不抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_RemoveProduct对空id返回false_不抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 False、RemoveProduct；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -679,7 +679,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_GetRegisteredProductIds是只读集合 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_GetRegisteredProductIds是只读集合；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterProduct、GetRegisteredProductIds、Equal、Contains；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -695,7 +695,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedFactory_CreateProductAsync可正常创建_实为TaskRun包装的伪异步 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedFactory_CreateProductAsync可正常创建_实为TaskRun包装的伪异步；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterProduct、NotNull、CreateProductAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -709,7 +709,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 FactoryManager_重复注册同名工厂是覆盖_不是去重 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FactoryManager_重复注册同名工厂是覆盖_不是去重；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterFactory、Same、GetFactory、Single、GetRegisteredFactoryNames；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -725,7 +725,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 FactoryManager_参数校验与未找到语义 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FactoryManager_参数校验与未找到语义；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、RegisterFactory、GetFactory、False、ContainsFactory；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -746,7 +746,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 FactoryManager_GetFactory_T_类型不匹配抛InvalidCastException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FactoryManager_GetFactory_T_类型不匹配抛InvalidCastException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterFactory、NotNull、GetFactory、Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -760,7 +760,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 FactoryManager_RemoveFactory会先清空该工厂的产品 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FactoryManager_RemoveFactory会先清空该工厂的产品；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterProduct、CreateProduct、RegisterFactory、True、RemoveFactory；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -779,7 +779,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 FactoryManager_ClearFactories会清空全部工厂的产品 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FactoryManager_ClearFactories会清空全部工厂的产品；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterProduct、CreateProduct、RegisterFactory、ClearFactories、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -797,7 +797,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 FactoryManager_CreateProduct转发到目标工厂 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FactoryManager_CreateProduct转发到目标工厂；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 RegisterProduct、RegisterFactory、IsType、CreateProduct、NotNull；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -813,7 +813,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 FactoryBuilder_Build_T_只对FactoryManager本身成立 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FactoryBuilder_Build_T_只对FactoryManager本身成立；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 NotNull、Build、Create、Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -825,7 +825,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 FactoryBuilder_AddFactory带策略_反射能写进protected_setter 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FactoryBuilder_AddFactory带策略_反射能写进protected_setter；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Build、AddFactory、Create、Equal、Same；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -838,7 +838,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 FactoryBuilder_AddFactory是链式的_返回自身 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FactoryBuilder_AddFactory是链式的_返回自身；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Create、Same、AddFactory；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -850,7 +850,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 ProductLifecycle_Initialize与Dispose都是幂等的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProductLifecycle_Initialize与Dispose都是幂等的；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Initialize、Dispose、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -866,7 +866,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 ProductLifecycle_Dispose之后仍可Initialize_两个标志互相独立 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProductLifecycle_Dispose之后仍可Initialize_两个标志互相独立；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、True、False、Initialize、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -883,7 +883,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedProductBase_两条Dispose入口共享同一个幂等标志 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedProductBase_两条Dispose入口共享同一个幂等标志；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、Equal、True；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -897,7 +897,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedProductBase_构造函数对null参数抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedProductBase_构造函数对null参数抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -907,7 +907,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedProductBase_属性与Execute可用 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedProductBase_属性与Execute可用；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、Execute；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -921,7 +921,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 SourcePath 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 SourcePath；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ThisFile、GetFullPath、Combine、GetDirectoryName；具体条件和先后次序见方法体。
 	/// </summary>
 	private static string SourcePath(params string[] segments)
@@ -937,7 +937,7 @@ public class PatternsSingletonFactoryTests
 	}
 
 	/// <summary>
-	/// 验证 ThisFile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ThisFile；准备条件、协作调用与结果检查以方法正文为准。
 	/// </summary>
 	private static string ThisFile([CallerFilePath] string path = "")
 	{

@@ -14,7 +14,7 @@ namespace Communication.Tests.Protocols.Modbus;
 public sealed class ModbusRtuCodecTests
 {
     /// <summary>
-    /// 验证 Read_request_matches_known_modbus_rtu_frame 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Read_request_matches_known_modbus_rtu_frame；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、Read、Encode、Equal、ToArray；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -35,7 +35,7 @@ public sealed class ModbusRtuCodecTests
     }
 
     /// <summary>
-    /// 验证 Write_request_preserves_the_typed_modbus_address 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Write_request_preserves_the_typed_modbus_address；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、Write、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -53,7 +53,7 @@ public sealed class ModbusRtuCodecTests
     }
 
     /// <summary>
-    /// 验证 Decoder_waits_for_complete_frame_and_validates_crc 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Decoder_waits_for_complete_frame_and_validates_crc；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 False、TryDecode、Equal、True、ToArray；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

@@ -7,7 +7,7 @@ using WPFControls.ProgramControl.Views;
 
 namespace WPFControls.Composition;
 
-// Public view identities remain stable while their internal ViewModels follow feature namespaces.
+// 页面类型身份保持当前约定，内部 ViewModel 按功能命名空间组织，并通过下方显式映射建立关联。
 /// <summary>
 /// FeatureViewModelComposition 的类型定义。WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。 本文件属于组合注册入口，具体依赖可以在这里组装；注册页面不等于选择导航或启动设备。
 /// </summary>

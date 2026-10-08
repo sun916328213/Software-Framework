@@ -27,7 +27,7 @@ public sealed class DiagnosticsCollectionDefinition;
 public sealed class ConnectionSessionTests
 {
     /// <summary>
-    /// 验证 Connected_session_executes_a_request_and_stops_accepting_requests_after_disconnect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connected_session_executes_a_request_and_stops_accepting_requests_after_disconnect；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、ConnectAsync、Equal、AsTask、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -56,7 +56,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Operation_timeout_is_reported_separately_from_caller_cancellation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Operation_timeout_is_reported_separately_from_caller_cancellation；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromMilliseconds、ConnectAsync、ThrowsAsync、AsTask、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -79,7 +79,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Concurrent_connect_and_repeated_disconnect_are_serialized_and_idempotent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Concurrent_connect_and_repeated_disconnect_are_serialized_and_idempotent；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、WhenAll、AsTask、ConnectAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -103,7 +103,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Failed_transport_close_still_leaves_session_disconnected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Failed_transport_close_still_leaves_session_disconnected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、ConnectAsync、ThrowsAsync、AsTask、DisconnectAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -125,7 +125,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Dispose_releases_transport_even_when_disconnect_fails 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose_releases_transport_even_when_disconnect_fails；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、ConnectAsync、ThrowsAsync、AsTask、DisposeAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -146,7 +146,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Concurrent_dispose_calls_share_completion_and_release_transport_once 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Concurrent_dispose_calls_share_completion_and_release_transport_once；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、PauseDispose、AsTask、DisposeAsync、WaitForDisposeStartedAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -180,7 +180,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Connect_started_during_dispose_is_rejected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connect_started_during_dispose_is_rejected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、PauseDispose、AsTask、DisposeAsync、WaitForDisposeStartedAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -213,7 +213,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Successful_request_emits_standard_activity_with_outcome 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Successful_request_emits_standard_activity_with_outcome；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddActivityListener、FromSeconds、ConnectAsync、AsTask、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -247,7 +247,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Request_trace_contains_transport_protocol_and_pipeline_phases 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Request_trace_contains_transport_protocol_and_pipeline_phases；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddActivityListener、FromSeconds、ConnectAsync、AsTask、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -298,7 +298,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Session_emits_connection_and_byte_metrics_through_standard_meter 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Session_emits_connection_and_byte_metrics_through_standard_meter；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 EnableMeasurementEvents、SetMeasurementEventCallback、Add、Start、FromSeconds；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -346,7 +346,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Request_metric_contains_protocol_and_transport_tags 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Request_metric_contains_protocol_and_transport_tags；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 EnableMeasurementEvents、SetMeasurementEventCallback、Add、Start、FromSeconds；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -395,7 +395,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Failed_request_emits_faulted_outcome_and_duration_metrics 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Failed_request_emits_faulted_outcome_and_duration_metrics；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 EnableMeasurementEvents、SetMeasurementEventCallback、Add、GetTagValue、Start；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -450,7 +450,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Waiting_request_emits_queue_depth_until_it_gets_execution_ownership 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Waiting_request_emits_queue_depth_until_it_gets_execution_ownership；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 EnableMeasurementEvents、SetMeasurementEventCallback、Add、Start、FromSeconds；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -495,7 +495,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Request_queue_rejects_new_work_when_its_capacity_is_reached 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Request_queue_rejects_new_work_when_its_capacity_is_reached；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、ConnectAsync、AsTask、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -528,7 +528,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Session_reports_connection_state_changes_through_standard_logger 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Session_reports_connection_state_changes_through_standard_logger；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、ConnectAsync、DisconnectAsync、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -551,7 +551,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Failed_connect_emits_faulted_connection_attempt_metric 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Failed_connect_emits_faulted_connection_attempt_metric；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 EnableMeasurementEvents、SetMeasurementEventCallback、Add、Start、FromSeconds；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -593,7 +593,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Remote_close_faults_session_and_releases_active_connection_metric 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Remote_close_faults_session_and_releases_active_connection_metric；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 EnableMeasurementEvents、SetMeasurementEventCallback、Add、Start、FromSeconds；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -633,7 +633,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Enabled_reconnect_supervisor_restores_connection_after_remote_close 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Enabled_reconnect_supervisor_restores_connection_after_remote_close；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、ConnectAsync、WaitForOpenAsync、AsTask、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -664,7 +664,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Reconnect_delay_uses_injected_time_provider_without_waiting_real_time 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Reconnect_delay_uses_injected_time_provider_without_waiting_real_time；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromDays、FromHours、ConnectAsync、WaitForOpenAttemptAsync、AsTask；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -699,7 +699,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Manual_disconnect_cancels_and_waits_for_reconnect_supervisor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Manual_disconnect_cancels_and_waits_for_reconnect_supervisor；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、ConnectAsync、WaitForOpenAttemptAsync、AsTask、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -729,7 +729,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Manual_connect_from_faulted_state_replaces_failed_transport_generation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Manual_connect_from_faulted_state_replaces_failed_transport_generation；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、ConnectAsync、AsTask、ExecuteAsync、ReadRequestAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -758,7 +758,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 Zero_delay_reconnect_failures_do_not_block_fault_delivery_or_disconnect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Zero_delay_reconnect_failures_do_not_block_fault_delivery_or_disconnect；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、ConnectAsync、AsTask、ExecuteAsync、ReadRequestAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -793,7 +793,7 @@ public sealed class ConnectionSessionTests
     private sealed class SingleByteCodec : IRequestCodec<byte, byte>
     {
         /// <summary>
-        /// 验证 Encode 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Encode；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ReadOnlyMemory<byte> Encode(byte request, ushort correlationId)
         {
@@ -801,7 +801,7 @@ public sealed class ConnectionSessionTests
         }
 
         /// <summary>
-        /// 验证 TryDecode 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryDecode；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CopyTo、Slice、GetPosition；具体条件和先后次序见方法体。
         /// </summary>
         public bool TryDecode(
@@ -832,7 +832,7 @@ public sealed class ConnectionSessionTests
     }
 
     /// <summary>
-    /// 验证 GetTagValue 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 GetTagValue；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static string? GetTagValue(
         ReadOnlySpan<KeyValuePair<string, object?>> tags,
@@ -877,7 +877,7 @@ public sealed class ConnectionSessionTests
         public int DisposeCount { get; private set; }
 
         /// <summary>
-        /// 验证 OpenAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OpenAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested、Release、Delay；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -915,7 +915,7 @@ public sealed class ConnectionSessionTests
         }
 
         /// <summary>
-        /// 验证 CloseAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CloseAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested、CompleteAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -938,7 +938,7 @@ public sealed class ConnectionSessionTests
         }
 
         /// <summary>
-        /// 验证 ReadRequestAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadRequestAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ReadAsync、ToArray、Slice、AdvanceTo、GetPosition；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -957,7 +957,7 @@ public sealed class ConnectionSessionTests
         }
 
         /// <summary>
-        /// 验证 WriteResponseAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteResponseAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -972,41 +972,41 @@ public sealed class ConnectionSessionTests
         }
 
         /// <summary>
-        /// 验证 CompleteResponsesAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CompleteResponsesAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CompleteAsync；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask CompleteResponsesAsync() => _responses.Writer.CompleteAsync();
 
         /// <summary>
-        /// 验证 WaitForOpenAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitForOpenAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WaitAsync；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask WaitForOpenAsync() => new(_opened.WaitAsync());
 
         /// <summary>
-        /// 验证 WaitForOpenAttemptAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitForOpenAttemptAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WaitAsync；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask WaitForOpenAttemptAsync() => new(_openAttempts.WaitAsync());
 
         /// <summary>
-        /// 验证 PauseDispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 PauseDispose；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void PauseDispose() => _pauseDispose = true;
 
         /// <summary>
-        /// 验证 WaitForDisposeStartedAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitForDisposeStartedAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task WaitForDisposeStartedAsync() => _disposeStarted.Task;
 
         /// <summary>
-        /// 验证 ResumeDispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ResumeDispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult；具体条件和先后次序见方法体。
         /// </summary>
         public void ResumeDispose() => _resumeDispose.TrySetResult();
 
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult、CloseAsync、CompleteAsync、Dispose；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -1037,17 +1037,17 @@ public sealed class ConnectionSessionTests
         public List<string> Messages { get; } = new();
 
         /// <summary>
-        /// 验证 BeginScope 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BeginScope；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
 
         /// <summary>
-        /// 验证 IsEnabled 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 IsEnabled；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool IsEnabled(LogLevel logLevel) => true;
 
         /// <summary>
-        /// 验证 Log 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Log；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、formatter；具体条件和先后次序见方法体。
         /// </summary>
         public void Log<TState>(
@@ -1069,7 +1069,7 @@ public sealed class ConnectionSessionTests
         private readonly Dictionary<TimeSpan, TaskCompletionSource> _scheduled = new();
 
         /// <summary>
-        /// 验证 CreateTimer 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateTimer；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、TryGetValue；具体条件和先后次序见方法体。
         /// 方法内使用锁保护部分共享操作；锁外操作的并发约束仍需结合调用者核对。
         /// </summary>
@@ -1092,7 +1092,7 @@ public sealed class ConnectionSessionTests
         }
 
         /// <summary>
-        /// 验证 WaitUntilScheduledAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitUntilScheduledAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Any、TryGetValue、Add；具体条件和先后次序见方法体。
         /// 方法内使用锁保护部分共享操作；锁外操作的并发约束仍需结合调用者核对。
         /// </summary>
@@ -1118,7 +1118,7 @@ public sealed class ConnectionSessionTests
         }
 
         /// <summary>
-        /// 验证 Fire 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Fire；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Last、Fire；具体条件和先后次序见方法体。
         /// 方法内使用锁保护部分共享操作；锁外操作的并发约束仍需结合调用者核对。
         /// </summary>
@@ -1151,7 +1151,7 @@ public sealed class ConnectionSessionTests
             public bool IsDisposed => Volatile.Read(ref _disposed) != 0;
 
             /// <summary>
-            /// 验证 Change 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+            /// 测试相关入口 Change；准备条件、协作调用与结果检查以方法正文为准。
             /// </summary>
             public bool Change(TimeSpan newDueTime, TimeSpan newPeriod)
             {
@@ -1166,7 +1166,7 @@ public sealed class ConnectionSessionTests
             }
 
             /// <summary>
-            /// 验证 Fire 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+            /// 测试相关入口 Fire；准备条件、协作调用与结果检查以方法正文为准。
             /// 正文中的关键协作调用包括 Exchange、callback；具体条件和先后次序见方法体。
             /// </summary>
             public void Fire()
@@ -1180,13 +1180,13 @@ public sealed class ConnectionSessionTests
             }
 
             /// <summary>
-            /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+            /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
             /// 正文中的关键协作调用包括 Exchange；具体条件和先后次序见方法体。
             /// </summary>
             public void Dispose() => Interlocked.Exchange(ref _disposed, 1);
 
             /// <summary>
-            /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+            /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
             /// 正文中的关键协作调用包括 Dispose；具体条件和先后次序见方法体。
             /// </summary>
             public ValueTask DisposeAsync()

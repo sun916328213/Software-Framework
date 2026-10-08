@@ -14,7 +14,7 @@ namespace DataManager.Tests.SQL
     public class SqlDialectHelperTests
     {
         /// <summary>
-        /// 验证 CreateParam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateParam；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private static SQLParam CreateParam(ESQLType dbType) => new()
         {
@@ -27,7 +27,7 @@ namespace DataManager.Tests.SQL
         };
 
         /// <summary>
-        /// 验证 BuildConnectionString_PostgreSQL_ContainsAllParts 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildConnectionString_PostgreSQL_ContainsAllParts；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BuildConnectionString、CreateParam、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -42,7 +42,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 BuildConnectionString_MySQL_WithDatabase 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildConnectionString_MySQL_WithDatabase；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BuildConnectionString、CreateParam、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -56,7 +56,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 BuildConnectionString_MySQL_WithoutDatabase_OmitsDatabase 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildConnectionString_MySQL_WithoutDatabase_OmitsDatabase；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BuildConnectionString、CreateParam、DoesNotContain；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -67,7 +67,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 BuildCreateDatabaseSql_PostgreSQL_UsesQuotes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildCreateDatabaseSql_PostgreSQL_UsesQuotes；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BuildCreateDatabaseSql、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -78,7 +78,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 BuildCreateDatabaseSql_MySQL_SetsUtf8 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildCreateDatabaseSql_MySQL_SetsUtf8；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BuildCreateDatabaseSql、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -89,7 +89,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 BuildCheckTableExistsSql_PostgreSQL_UsesInformationSchema 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildCheckTableExistsSql_PostgreSQL_UsesInformationSchema；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BuildCheckTableExistsSql、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -101,7 +101,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 BuildCheckTableExistsSql_MySQL_UsesSchemaFilter 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildCheckTableExistsSql_MySQL_UsesSchemaFilter；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BuildCheckTableExistsSql、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -112,7 +112,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 WrapTableName_MySQL_WrapsWithBackticks 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WrapTableName_MySQL_WrapsWithBackticks；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、WrapTableName；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -122,7 +122,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 GetCreateTableSuffix_MySQL_HasInnoDB 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetCreateTableSuffix_MySQL_HasInnoDB；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Contains、GetCreateTableSuffix、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -133,7 +133,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 GetDbType_PostgreSQL_MapsTypes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDbType_PostgreSQL_MapsTypes；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetDbType；具体条件和先后次序见方法体。
         /// </summary>
         [Theory]
@@ -157,7 +157,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 GetDbType_NullableInt_MapsToInteger 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDbType_NullableInt_MapsToInteger；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetDbType；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -167,7 +167,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 GetDbType_MySQL_Boolean_TinyInt 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDbType_MySQL_Boolean_TinyInt；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetDbType；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -177,7 +177,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 BuildPrimaryKeyDefinition_PostgreSQL_LongKey_IsBigSerial 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildPrimaryKeyDefinition_PostgreSQL_LongKey_IsBigSerial；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BuildPrimaryKeyDefinition、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -188,7 +188,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 BuildPrimaryKeyDefinition_MySQL_IntKey_AutoIncrement 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildPrimaryKeyDefinition_MySQL_IntKey_AutoIncrement；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BuildPrimaryKeyDefinition、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -199,7 +199,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 CreateConnection_PostgreSQL_ReturnsConnection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateConnection_PostgreSQL_ReturnsConnection；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateConnection、NotNull；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -210,7 +210,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 CreateConnection_Unsupported_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateConnection_Unsupported_Throws；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、CreateConnection；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -221,7 +221,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 CreateConnection_Sqlite_ReturnsConnection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateConnection_Sqlite_ReturnsConnection；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateConnection、NotNull；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -232,7 +232,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 CreateConnection_SqlServer_ReturnsConnection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateConnection_SqlServer_ReturnsConnection；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateConnection、NotNull；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -243,7 +243,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 BuildConnectionString_Sqlite_UsesFilePath 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildConnectionString_Sqlite_UsesFilePath；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BuildConnectionString、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -255,7 +255,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 BuildConnectionString_SqlServer_TrustsCertByDefault 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildConnectionString_SqlServer_TrustsCertByDefault；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BuildConnectionString、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -271,7 +271,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Validate_Sqlite_RequiresFilePath 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Validate_Sqlite_RequiresFilePath；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、Validate；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -284,7 +284,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 WrapTableName_SqlServer_UsesBrackets 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WrapTableName_SqlServer_UsesBrackets；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、WrapTableName；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -294,7 +294,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlServer_Dialect_GeneratesExpectedSql 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlServer_Dialect_GeneratesExpectedSql；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、BuildCreateDatabaseSql、Contains、BuildCheckTableExistsSql、GetDbType；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -313,7 +313,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Sqlite_Dialect_GeneratesExpectedSql 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Sqlite_Dialect_GeneratesExpectedSql；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetDbType、BuildPrimaryKeyDefinition、Contains、BuildCheckTableExistsSql；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -328,7 +328,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Validate_ConnectionStringPassthrough_SkipsServerFields 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Validate_ConnectionStringPassthrough_SkipsServerFields；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Validate；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

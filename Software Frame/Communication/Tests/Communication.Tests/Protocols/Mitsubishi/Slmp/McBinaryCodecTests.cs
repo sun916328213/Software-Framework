@@ -15,7 +15,7 @@ namespace Communication.Tests.Protocols.Mitsubishi;
 public sealed class McBinaryCodecTests
 {
     /// <summary>
-    /// 验证 Three_e_word_read_matches_official_slmp_field_order 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Three_e_word_read_matches_official_slmp_field_order；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Read、Parse、Encode、Equal、ToArray；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -44,7 +44,7 @@ public sealed class McBinaryCodecTests
     }
 
     /// <summary>
-    /// 验证 Decoder_waits_for_complete_three_e_response_and_checks_end_code 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Decoder_waits_for_complete_three_e_response_and_checks_end_code；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 False、TryDecode、Equal、True、ToArray；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -86,7 +86,7 @@ public sealed class McBinaryCodecTests
     }
 
     /// <summary>
-    /// 验证 Address_parser_prefers_multi_letter_devices_and_uses_device_radix 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Address_parser_prefers_multi_letter_devices_and_uses_device_radix；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -102,7 +102,7 @@ public sealed class McBinaryCodecTests
     }
 
     /// <summary>
-    /// 验证 Four_e_frame_carries_and_validates_request_serial_number 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Four_e_frame_carries_and_validates_request_serial_number；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Read、Parse、ToArray、Encode、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

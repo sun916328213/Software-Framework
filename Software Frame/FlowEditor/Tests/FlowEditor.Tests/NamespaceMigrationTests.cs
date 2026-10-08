@@ -14,7 +14,7 @@ namespace FlowEditor.Tests;
 public sealed class NamespaceMigrationTests
 {
     /// <summary>
-    /// 验证 LegacyDocumentNameResolvesWithoutExtensionAssemblyDependency 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LegacyDocumentNameResolvesWithoutExtensionAssemblyDependency；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、ResolvePersistedType、DoesNotContain、GetReferencedAssemblies；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -25,7 +25,7 @@ public sealed class NamespaceMigrationTests
     }
 
     /// <summary>
-    /// 验证 LegacyGenericArgumentResolvesToCurrentDocumentType 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LegacyGenericArgumentResolvesToCurrentDocumentType；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、ResolvePersistedType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -36,7 +36,7 @@ public sealed class NamespaceMigrationTests
     }
 
     /// <summary>
-    /// 验证 HistoricalAssemblyNameResolvesAfterModuleAssemblyRename 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 HistoricalAssemblyNameResolvesAfterModuleAssemblyRename；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、ResolvePersistedType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -46,7 +46,7 @@ public sealed class NamespaceMigrationTests
     }
 
     /// <summary>
-    /// 验证 UnknownTypeRemainsUnresolved 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 UnknownTypeRemainsUnresolved；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Null、ResolvePersistedType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

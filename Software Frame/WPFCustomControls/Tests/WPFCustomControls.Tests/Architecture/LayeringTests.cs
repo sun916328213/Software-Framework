@@ -15,7 +15,7 @@ namespace WPFCustomControls.Tests.Architecture;
 public sealed class LayeringTests
 {
     /// <summary>
-    /// 验证 PropertyGridCore_DoesNotReferenceWpfOrPresentationAssembly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PropertyGridCore_DoesNotReferenceWpfOrPresentationAssembly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToHashSet、Select、GetReferencedAssemblies、DoesNotContain；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -33,7 +33,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 PropertyGridPresentationModels_AreOwnedByCoreAssembly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PropertyGridPresentationModels_AreOwnedByCoreAssembly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、GetName；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -45,7 +45,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 WpfProject_DependsOnPropertyGridCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WpfProject_DependsOnPropertyGridCore；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Select、GetReferencedAssemblies、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -59,7 +59,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 LegacyPropertyGridNamespaceResolvesThroughMigrationAlias 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LegacyPropertyGridNamespaceResolvesThroughMigrationAlias；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、ResolvePersistedType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -71,7 +71,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 CurrentPropertyGridTypes_AreForwardedToCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CurrentPropertyGridTypes_AreForwardedToCore；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、GetType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

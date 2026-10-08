@@ -16,7 +16,7 @@ namespace Device.Workbench.Tests;
 public sealed class CameraProfileTests
 {
     /// <summary>
-    /// 验证 ToOptions_MapsAllConnectionFields 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ToOptions_MapsAllConnectionFields；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToOptions、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -56,7 +56,7 @@ public sealed class CameraProfileTests
     }
 
     /// <summary>
-    /// 验证 ToOptions_BlankParameterFilePath_MapsToNull 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ToOptions_BlankParameterFilePath_MapsToNull；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Null、ToOptions；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -74,7 +74,7 @@ public sealed class CameraProfileTests
     }
 
     /// <summary>
-    /// 验证 BuildFrameTrigger_UsesProfileModeAndSource 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BuildFrameTrigger_UsesProfileModeAndSource；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildFrameTrigger、Equal、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -94,7 +94,7 @@ public sealed class CameraProfileTests
     }
 
     /// <summary>
-    /// 验证 BuildLineTrigger_AlwaysUsesLineStartSelector 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BuildLineTrigger_AlwaysUsesLineStartSelector；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildLineTrigger、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

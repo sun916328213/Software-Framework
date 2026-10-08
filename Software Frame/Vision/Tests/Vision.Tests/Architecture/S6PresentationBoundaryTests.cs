@@ -20,7 +20,7 @@ namespace Vision.Tests.Architecture;
 public sealed class S6PresentationBoundaryTests
 {
     /// <summary>
-    /// 验证 CoreAssemblyHasNoDesktopDependencies 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CoreAssemblyHasNoDesktopDependencies；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、GetCustomAttribute、DoesNotContain、GetReferencedAssemblies、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -34,7 +34,7 @@ public sealed class S6PresentationBoundaryTests
     }
 
     /// <summary>
-    /// 验证 LegacyGeometryContractsUseCoreCoordinates 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LegacyGeometryContractsUseCoreCoordinates；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、SelectMany、GetProperties、Equal、Count；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -49,7 +49,7 @@ public sealed class S6PresentationBoundaryTests
     }
 
     /// <summary>
-    /// 验证 CollectionRetainsBatchNotificationsAndItemDisposal 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CollectionRetainsBatchNotificationsAndItemDisposal；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、Equal、RemoveAt、Single、Dispose；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -78,7 +78,7 @@ public sealed class S6PresentationBoundaryTests
     }
 
     /// <summary>
-    /// 验证 SynchronizationAdapterUsesTheMutationLockAndCanBeReplaced 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SynchronizationAdapterUsesTheMutationLockAndCanBeReplaced；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 UseSynchronization、Equal、Same、True、IsEntered；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -108,7 +108,7 @@ public sealed class S6PresentationBoundaryTests
     {
         public int Disposals;
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Dispose() => Disposals++;
     }
@@ -123,12 +123,12 @@ public sealed class S6PresentationBoundaryTests
         public IEnumerable? Collection;
         public object? Gate;
         /// <summary>
-        /// 验证 Enable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Enable；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Enable(IEnumerable collection, object synchronizationLock)
         { Enables++; Collection = collection; Gate = synchronizationLock; }
         /// <summary>
-        /// 验证 Disable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Disable；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Disable(IEnumerable collection) => Disables++;
     }

@@ -19,7 +19,7 @@ namespace DataManager.Workbench.Tests
     public class SqlViewModelKeyTests
     {
         /// <summary>
-        /// 验证 BaseParam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BaseParam；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private static SQLParam BaseParam() => new()
         {
@@ -34,7 +34,7 @@ namespace DataManager.Workbench.Tests
         };
 
         /// <summary>
-        /// 验证 BuildDbKey_PasswordChange_ProducesDifferentKey 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildDbKey_PasswordChange_ProducesDifferentKey；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BaseParam、NotEqual、BuildDbKey；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -48,7 +48,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 BuildDbKey_SameParams_ProducesSameKey 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildDbKey_SameParams_ProducesSameKey；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、BuildDbKey、BaseParam；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -58,7 +58,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 BuildDbKey_AnyFieldChange_ProducesDifferentKey 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildDbKey_AnyFieldChange_ProducesDifferentKey；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BaseParam、SetValue、GetProperty、NotEqual、BuildDbKey；具体条件和先后次序见方法体。
         /// </summary>
         [Theory]
@@ -78,7 +78,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 BuildDbKey_TrustServerCertificateChange_ProducesDifferentKey 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BuildDbKey_TrustServerCertificateChange_ProducesDifferentKey；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 BaseParam、NotEqual、BuildDbKey；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

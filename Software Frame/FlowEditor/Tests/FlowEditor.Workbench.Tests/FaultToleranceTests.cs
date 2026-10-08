@@ -27,7 +27,7 @@ public class FaultToleranceTests
         public int Attempts;
         public int FailTimes = 2;
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Increment；具体条件和先后次序见方法体。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct)
@@ -43,7 +43,7 @@ public class FaultToleranceTests
     public class SlowNode : NodeModel
     {
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Delay；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -72,7 +72,7 @@ public class FaultToleranceTests
     }
 
     /// <summary>
-    /// 验证 Retry_Exhausted_FailFast_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Retry_Exhausted_FailFast_Throws；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAsync、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -91,7 +91,7 @@ public class FaultToleranceTests
     }
 
     /// <summary>
-    /// 验证 Timeout_FailFast_TerminatesQuickly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Timeout_FailFast_TerminatesQuickly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 StartNew、ThrowsAsync、ExecuteAsync、Stop、True；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -111,7 +111,7 @@ public class FaultToleranceTests
     }
 
     /// <summary>
-    /// 验证 Timeout_ParentCancel_NotSwallowedAsTimeout 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Timeout_ParentCancel_NotSwallowedAsTimeout；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAnyAsync、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -131,7 +131,7 @@ public class FaultToleranceTests
     // ── ContinueOnError ──
 
     /// <summary>
-    /// 验证 ContinueOnError_DownstreamStillRuns_NoThrow 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ContinueOnError_DownstreamStillRuns_NoThrow；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -155,7 +155,7 @@ public class FaultToleranceTests
     // ── RouteToErrorPort ──
 
     /// <summary>
-    /// 验证 RouteToErrorPort_ErrorBranchRuns_NormalBranchPruned 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RouteToErrorPort_ErrorBranchRuns_NormalBranchPruned；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、AddCustomOutputPort、Flow、Branch、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -189,7 +189,7 @@ public class FaultToleranceTests
     }
 
     /// <summary>
-    /// 验证 RouteToErrorPort_Unwired_BehavesAsContinue 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RouteToErrorPort_Unwired_BehavesAsContinue；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -210,7 +210,7 @@ public class FaultToleranceTests
     }
 
     /// <summary>
-    /// 验证 RouteToErrorPort_InCycle_TerminatesLoopOnError 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RouteToErrorPort_InCycle_TerminatesLoopOnError；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddCustomOutputPort、New、Branch、Flow、StartNew；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

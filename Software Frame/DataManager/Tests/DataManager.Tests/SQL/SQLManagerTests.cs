@@ -19,7 +19,7 @@ namespace DataManager.Tests.SQL
     public class SQLManagerTests
     {
         /// <summary>
-        /// 验证 CreateParam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateParam；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private static SQLParam CreateParam(ESQLToolType toolType) => new()
         {
@@ -43,7 +43,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Create_Dapper_ReturnsDapperHelper 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_Dapper_ReturnsDapperHelper；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、CreateParam、IsType、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -58,7 +58,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Create_EFCore_ReturnsEFCoreHelper 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_EFCore_ReturnsEFCoreHelper；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、CreateParam、IsType；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -72,7 +72,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Create_SqlSugar_ReturnsSqlSugarHelper 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_SqlSugar_ReturnsSqlSugarHelper；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、CreateParam、IsType；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -86,7 +86,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Create_InvokesOnCreatedCallback 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_InvokesOnCreatedCallback；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、CreateParam、Same；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -101,7 +101,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Create_CtorCallback_Invoked 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_CtorCallback_Invoked；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、CreateParam、Same；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -116,7 +116,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Create_AddsToManagerAndSupportsNameIndexer 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_AddsToManagerAndSupportsNameIndexer；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、CreateParam、Equal、NotNull；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -131,7 +131,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Create_BaseMethod_ThrowsNotSupported 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_BaseMethod_ThrowsNotSupported；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、Create、CreateParam；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -143,7 +143,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SQLParam_HasDefaults 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SQLParam_HasDefaults；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -155,7 +155,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Create_MissingServerIP_ThrowsArgumentException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_MissingServerIP_ThrowsArgumentException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateParam、Throws、Create；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -169,7 +169,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Create_DuplicateName_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_DuplicateName_Throws；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、CreateParam、Throws；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

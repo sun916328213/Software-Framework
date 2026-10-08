@@ -16,7 +16,7 @@ namespace Communication.Tests.Runtime;
 public sealed class DataPointScanPlannerTests
 {
     /// <summary>
-    /// 验证 Only_points_whose_scan_interval_has_elapsed_are_due 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Only_points_whose_scan_interval_has_elapsed_are_due；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ApplyRead、Plan、AddMilliseconds、FromSeconds、Collection；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -44,7 +44,7 @@ public sealed class DataPointScanPlannerTests
     }
 
     /// <summary>
-    /// 验证 Plan_waits_until_the_nearest_point_deadline 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Plan_waits_until_the_nearest_point_deadline；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ApplyRead、Plan、AddMilliseconds、FromSeconds、Empty；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -72,7 +72,7 @@ public sealed class DataPointScanPlannerTests
     }
 
     /// <summary>
-    /// 验证 New_readable_points_are_due_and_zero_interval_inherits_the_default 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 New_readable_points_are_due_and_zero_interval_inherits_the_default；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToDataPoint、Plan、FromMilliseconds、Collection、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

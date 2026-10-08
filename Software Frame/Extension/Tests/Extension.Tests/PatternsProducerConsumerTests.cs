@@ -23,7 +23,7 @@ namespace Extension.Tests;
 public class PatternsProducerConsumerTests
 {
 	/// <summary>
-	/// 验证 ShortLived 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ShortLived；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 FromMilliseconds；具体条件和先后次序见方法体。
 	/// </summary>
 	private static CancellationTokenSource ShortLived(int milliseconds = 300)
@@ -32,7 +32,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ProducerConsumer_初始计数为0 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProducerConsumer_初始计数为0；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -44,7 +44,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ProducerConsumer_StartAsync参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProducerConsumer_StartAsync参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ThrowsAsync、StartAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -65,7 +65,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ProducerConsumer_Stop是幂等的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProducerConsumer_Stop是幂等的；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Stop、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -78,7 +78,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ProducerConsumer_Dispose之后Stop是空操作 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProducerConsumer_Dispose之后Stop是空操作；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、Stop；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -91,7 +91,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ProducerConsumer_Stop之后StartAsync抛InvalidOperationException_不再忙循环挂起 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProducerConsumer_Stop之后StartAsync抛InvalidOperationException_不再忙循环挂起；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Stop、ShortLived、Contains、ThrowsAsync、StartAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -122,7 +122,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ProducerConsumer_Dispose之后StartAsync抛ObjectDisposedException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProducerConsumer_Dispose之后StartAsync抛ObjectDisposedException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、ShortLived、ThrowsAsync、StartAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -148,7 +148,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 EnhancedProducerConsumer_Stop之后StartAsync抛InvalidOperationException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 EnhancedProducerConsumer_Stop之后StartAsync抛InvalidOperationException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Stop、ShortLived、Contains、ThrowsAsync、StartAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -178,7 +178,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 EnhancedProducerConsumer_Dispose之后StartAsync抛ObjectDisposedException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 EnhancedProducerConsumer_Dispose之后StartAsync抛ObjectDisposedException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、ShortLived、ThrowsAsync、StartAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -204,7 +204,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ProducerConsumer_能真的生产并累计计数 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProducerConsumer_能真的生产并累计计数；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ShortLived、StartAsync、True；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -220,7 +220,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ProducerConsumer_Stop不重置计数器 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProducerConsumer_Stop不重置计数器；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ShortLived、StartAsync、Stop、Equal、True；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -241,7 +241,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 EnhancedProducerConsumer_未Stop时可以生产与消费且保持FIFO 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 EnhancedProducerConsumer_未Stop时可以生产与消费且保持FIFO；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、TryProduceItem、Equal、TryConsumeItem；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -259,7 +259,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 EnhancedProducerConsumer_ConsumeItemAsync取到最早入队的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 EnhancedProducerConsumer_ConsumeItemAsync取到最早入队的；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 TryProduceItem、Equal、ConsumeItemAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -273,7 +273,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 EnhancedProducerConsumer_TryConsumeItem失败时out参数是default 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 EnhancedProducerConsumer_TryConsumeItem失败时out参数是default；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 False、TryConsumeItem、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -285,7 +285,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 EnhancedProducerConsumer_通道满时TryProduceItem返回false 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 EnhancedProducerConsumer_通道满时TryProduceItem返回false；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、TryProduceItem、False、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -299,7 +299,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 EnhancedProducerConsumer_Clear返回被清掉的条数 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 EnhancedProducerConsumer_Clear返回被清掉的条数；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 TryProduceItem、Equal、Clear；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -314,7 +314,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 EnhancedProducerConsumer_Stop之后写入抛读取抛而Try版本返回false 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 EnhancedProducerConsumer_Stop之后写入抛读取抛而Try版本返回false；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Stop、ThrowsAsync、ProduceItemAsync、ConsumeItemAsync、False；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -330,7 +330,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 EnhancedProducerConsumer_Clear在Dispose后抛但TryProduceItem返回false 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 EnhancedProducerConsumer_Clear在Dispose后抛但TryProduceItem返回false；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、Throws、Clear、False、TryProduceItem；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -344,7 +344,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 EnhancedProducerConsumer_StartAsync参数校验与速率限制默认值 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 EnhancedProducerConsumer_StartAsync参数校验与速率限制默认值；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、ThrowsAsync、StartAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -367,7 +367,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 EnhancedProducerConsumer_Dispose会停掉生产 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 EnhancedProducerConsumer_Dispose会停掉生产；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、False、TryProduceItem；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -379,7 +379,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityItem_优先级数字大的排前面 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityItem_优先级数字大的排前面；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、CompareTo；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -392,7 +392,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityItem_CompareTo对null返回1 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityItem_CompareTo对null返回1；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、CompareTo；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -402,7 +402,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityItem_同优先级按创建时间先进先出 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityItem_同优先级按创建时间先进先出；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Sleep、True、CompareTo；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -416,7 +416,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityItem_排序之后第一个就是优先级最高的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityItem_排序之后第一个就是优先级最高的；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Sort、Equal、ToArray、Select；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -433,7 +433,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityItem_属性只读 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityItem_属性只读；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、True；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -446,7 +446,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 BatchItem_Items为null抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 BatchItem_Items为null抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -456,7 +456,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 BatchItem_持有传入的列表引用 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 BatchItem_持有传入的列表引用；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Add、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -469,7 +469,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ProducerConsumerConfig_默认值 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProducerConsumerConfig_默认值；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、False；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -485,7 +485,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ConfigurableProducerConsumer_默认配置下逐条消费 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ConfigurableProducerConsumer_默认配置下逐条消费；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ShortLived、StartAsync、Increment、True；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -503,7 +503,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ConfigurableProducerConsumer_批处理_批次满时会成批处理 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ConfigurableProducerConsumer_批处理_批次满时会成批处理；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ShortLived、StartAsync、Add、True；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// 方法内使用锁保护部分共享操作；锁外操作的并发约束仍需结合调用者核对。
@@ -532,7 +532,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ConfigurableProducerConsumer_批处理里的Timer创建后从未使用 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ConfigurableProducerConsumer_批处理里的Timer创建后从未使用；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SourcePath、True、Exists、ReadAllText、Contains；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -546,7 +546,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ConfigurableProducerConsumer_Stop之后ProduceAsync安静返回不抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ConfigurableProducerConsumer_Stop之后ProduceAsync安静返回不抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Stop、ProduceAsync、Equal；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -560,7 +560,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ConfigurableProducerConsumer_Stop之后StartAsync抛InvalidOperationException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ConfigurableProducerConsumer_Stop之后StartAsync抛InvalidOperationException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Stop、ShortLived、Contains、ThrowsAsync、StartAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -590,7 +590,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ConfigurableProducerConsumer_Dispose之后StartAsync抛ObjectDisposedException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ConfigurableProducerConsumer_Dispose之后StartAsync抛ObjectDisposedException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、ShortLived、ThrowsAsync、StartAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -616,7 +616,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ConfigurableProducerConsumer_StartAsync参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ConfigurableProducerConsumer_StartAsync参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ThrowsAsync、StartAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -637,7 +637,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ConfigurableProducerConsumer_构造时传null配置会用默认配置 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ConfigurableProducerConsumer_构造时传null配置会用默认配置；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -649,7 +649,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ConfigurableProducerConsumer_Stop与Dispose都是幂等的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ConfigurableProducerConsumer_Stop与Dispose都是幂等的；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Stop、Dispose；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -663,7 +663,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityQueueProducerConsumer_StartAsync必抛NotImplementedException且是同步抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityQueueProducerConsumer_StartAsync必抛NotImplementedException且是同步抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 StartAsync、Throws、Contains、GetMethod、NotNull；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -685,7 +685,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityQueueProducerConsumer_按优先级从高到低消费 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityQueueProducerConsumer_按优先级从高到低消费；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Produce、ShortLived、ConsumeAsync、Add、Equal；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// 方法内使用锁保护部分共享操作；锁外操作的并发约束仍需结合调用者核对。
@@ -712,7 +712,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityQueueProducerConsumer_Stop之后Produce抛InvalidOperationException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityQueueProducerConsumer_Stop之后Produce抛InvalidOperationException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Stop、Throws、Produce；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -727,7 +727,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityQueueProducerConsumer_Stop是幂等的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityQueueProducerConsumer_Stop是幂等的；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Stop；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -739,7 +739,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityQueueProducerConsumer_Dispose之后Stop是空操作 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityQueueProducerConsumer_Dispose之后Stop是空操作；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、Stop；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -752,7 +752,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityQueueProducerConsumer_StopAsync会真的停掉 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityQueueProducerConsumer_StopAsync会真的停掉；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 StopAsync、Throws、Produce；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -768,7 +768,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityQueueProducerConsumer_StartConsumersAsync参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityQueueProducerConsumer_StartConsumersAsync参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ThrowsAsync、StartConsumersAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -783,7 +783,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityQueueProducerConsumer_Stop会让消费者从等待中退出 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityQueueProducerConsumer_Stop会让消费者从等待中退出；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Run、Set、ConsumeAsync、True、Wait；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -809,7 +809,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 ThisFile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ThisFile；准备条件、协作调用与结果检查以方法正文为准。
 	/// </summary>
 	private static string ThisFile([CallerFilePath] string path = "")
 	{
@@ -817,7 +817,7 @@ public class PatternsProducerConsumerTests
 	}
 
 	/// <summary>
-	/// 验证 SourcePath 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 SourcePath；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetFullPath、Combine、GetDirectoryName、ThisFile；具体条件和先后次序见方法体。
 	/// </summary>
 	private static string SourcePath(params string[] segments)

@@ -55,7 +55,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 API面_公开实例方法一共六个 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 API面_公开实例方法一共六个；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray、OrderBy、Select、GetMethods、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -95,7 +95,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 SetProperty_同类型直接赋值 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetProperty_同类型直接赋值；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SetProperty、nameof、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -110,7 +110,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SetProperty_字符串自动转数值 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetProperty_字符串自动转数值；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SetProperty、nameof、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -131,7 +131,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SetProperty_数值自动加宽或收窄 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetProperty_数值自动加宽或收窄；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SetProperty、nameof、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -148,7 +148,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SetProperty_字符串与bool与DateTime 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetProperty_字符串与bool与DateTime；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SetProperty、nameof、True、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -169,7 +169,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SetProperty_值类型给null得到默认值 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetProperty_值类型给null得到默认值；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SetProperty、nameof、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -184,7 +184,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SetProperty_可空类型给null得到null而不是0 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetProperty_可空类型给null得到null而不是0；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SetProperty、nameof、Equal、Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -203,7 +203,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SetProperty_参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetProperty_参数校验；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、SetProperty、nameof；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -221,7 +221,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SetProperty_无法转换时包成InvalidOperationException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetProperty_无法转换时包成InvalidOperationException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exception、SetProperty、nameof、NotNull、IsType；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -240,7 +240,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SetProperty_用的是typeof_T而不是运行时类型 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetProperty_用的是typeof_T而不是运行时类型；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、SetProperty、nameof、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -266,7 +266,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 GetProperty_取值与参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetProperty_取值与参数校验；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetProperty、nameof、Throws；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -284,7 +284,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetProperties_含只读属性但不含字段 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetProperties_含只读属性但不含字段；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetProperties、Equal、nameof、True、ContainsKey；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -309,7 +309,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetProperties_可空属性为null时字典里存的是null 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetProperties_可空属性为null时字典里存的是null；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetProperties、True、ContainsKey、nameof、Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -345,7 +345,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SetProperties_null或空字典是noop 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetProperties_null或空字典是noop；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SetProperties、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -361,7 +361,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SetProperties_其中一个值转换失败时整体抛InvalidOperationException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetProperties_其中一个值转换失败时整体抛InvalidOperationException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、SetProperties、nameof；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -382,7 +382,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 CreateInstance_无参重载就是new_T 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateInstance_无参重载就是new_T；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateInstance、NotNull、NotSame、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -401,7 +401,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 CreateInstance_带字典重载_创建后立即填值 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateInstance_带字典重载_创建后立即填值；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateInstance、nameof、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -421,7 +421,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 CreateInstance_带null字典等价于无参 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateInstance_带null字典等价于无参；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateInstance、NotNull、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

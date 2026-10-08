@@ -49,7 +49,7 @@ public sealed class ModuleRegistrationTests
     }
 
     /// <summary>
-    /// 验证 ContractAndImplementation_ShareSameInstance 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ContractAndImplementation_ShareSameInstance；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewContainer、RegisterTypes、Same、Resolve；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -65,7 +65,7 @@ public sealed class ModuleRegistrationTests
     }
 
     /// <summary>
-    /// 验证 ModuleAndExplicitRegister_DoNotDuplicateInstances 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ModuleAndExplicitRegister_DoNotDuplicateInstances；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewContainer、RegisterTypes、Resolve、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -88,7 +88,7 @@ public sealed class ModuleRegistrationTests
     }
 
     /// <summary>
-    /// 验证 HostReplacement_IsNotOverriddenByDefaults 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 HostReplacement_IsNotOverriddenByDefaults；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewContainer、RegisterInstance、RegisterTypes、Same、Resolve；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -103,7 +103,7 @@ public sealed class ModuleRegistrationTests
     }
 
     /// <summary>
-    /// 验证 SeparateContainers_DoNotShareStaticState 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SeparateContainers_DoNotShareStaticState；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewContainer、RegisterTypes、NotSame、Resolve；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -119,7 +119,7 @@ public sealed class ModuleRegistrationTests
     }
 
     /// <summary>
-    /// 验证 NativePrismRegistrationProvidesAllPageKeys 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NativePrismRegistrationProvidesAllPageKeys；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewContainer、RegisterTypes、True、IsRegistered、nameof；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -135,7 +135,7 @@ public sealed class ModuleRegistrationTests
     }
 
     /// <summary>
-    /// 验证 ReuseModes_RegisterNavigationKeys 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReuseModes_RegisterNavigationKeys；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewContainer、RegisterTypes、True、IsRegistered、nameof；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -154,7 +154,7 @@ public sealed class ModuleRegistrationTests
     }
 
     /// <summary>
-    /// 验证 OnInitialized_IsIdempotentAndKeepsLegacyTimestampBehavior 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OnInitialized_IsIdempotentAndKeepsLegacyTimestampBehavior；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewContainer、OnInitialized、True、TryGetSwitch、Initialize；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -170,7 +170,7 @@ public sealed class ModuleRegistrationTests
     }
 
     /// <summary>
-    /// 验证 GenericPrismModuleUsesHostOptionsAndPreservesReplacement 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 GenericPrismModuleUsesHostOptionsAndPreservesReplacement；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewContainer、RegisterInstance、Resolve、RegisterTypes、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -195,7 +195,7 @@ public sealed class ModuleRegistrationTests
     }
 
     /// <summary>
-    /// 验证 NewContainer 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NewContainer；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static DryIocContainerExtension NewContainer() => new();
 }
@@ -209,7 +209,7 @@ public sealed class ModuleWorkbenchCompositionTests(WorkbenchAppFixture host)
     private readonly WorkbenchAppFixture _host = host;
 
     /// <summary>
-    /// 验证 PrismCatalogInitializesTypedModuleBeforeWorkbenchNavigation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PrismCatalogInitializesTypedModuleBeforeWorkbenchNavigation；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Single、Equal、DoesNotContain；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -227,7 +227,7 @@ public sealed class ModuleWorkbenchCompositionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 WorkbenchComposition_TransientViews_SingletonWorkspaces 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WorkbenchComposition_TransientViews_SingletonWorkspaces；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、nameof、NotSame、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

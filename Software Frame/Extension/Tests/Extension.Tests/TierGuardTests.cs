@@ -205,7 +205,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 EnumerateSources 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EnumerateSources；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SourceRoot、CoreSourceRoot、True、Exists、Where；具体条件和先后次序见方法体。
         /// </summary>
         private static IEnumerable<string> EnumerateSources()
@@ -225,20 +225,20 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 CoreSourceRoot 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CoreSourceRoot；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetFullPath、Combine、SourceRoot；具体条件和先后次序见方法体。
         /// </summary>
         private static string CoreSourceRoot() => Path.GetFullPath(Path.Combine(SourceRoot(), "..", "Extension.Core"));
 
         /// <summary>
-        /// 验证 RootFor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RootFor；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 StartsWith、CoreSourceRoot、SourceRoot；具体条件和先后次序见方法体。
         /// </summary>
         private static string RootFor(string file) => file.StartsWith(CoreSourceRoot() + Path.DirectorySeparatorChar,
             StringComparison.OrdinalIgnoreCase) ? CoreSourceRoot() : SourceRoot();
 
         /// <summary>
-        /// 验证 RelDir 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RelDir；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Replace、GetRelativePath、RootFor、LastIndexOf、Substring；具体条件和先后次序见方法体。
         /// </summary>
         private static string RelDir(string root, string file)
@@ -355,7 +355,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 守卫本身是有效的_不能因为扫到0个文件而假绿 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 守卫本身是有效的_不能因为扫到0个文件而假绿；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList、EnumerateSources、True、SourceRoot；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -369,7 +369,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 匹配器不是死的_清空允许清单后必须报出违规 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 匹配器不是死的_清空允许清单后必须报出违规；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FindAdmissionViolations、True；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -387,7 +387,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 扫描器的前缀表必须与受监管前缀表一致 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 扫描器的前缀表必须与受监管前缀表一致；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList、ExtractReferences、True、Any、StartsWith；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -405,7 +405,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 完全限定名写法也必须被扫到_否则守卫有盲区 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 完全限定名写法也必须被扫到_否则守卫有盲区；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList、ExtractReferences、True、Any、StartsWith；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -428,7 +428,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 真实代码里确实存在完全限定名引用_这个盲区不是纸上假设 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 真实代码里确实存在完全限定名引用_这个盲区不是纸上假设；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SourceRoot、Combine、True、Exists、ReadAllText；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -453,7 +453,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 每个文件都必须有namespace_不得落在全局命名空间 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 每个文件都必须有namespace_不得落在全局命名空间；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SourceRoot、EnumerateSources、ReadAllText、IsMatch、Add；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -474,7 +474,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 namespace必须与目录一致_目录即命名空间 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 namespace必须与目录一致_目录即命名空间；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SourceRoot、EnumerateSources、Replace、GetRelativePath、RootFor；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -517,7 +517,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 目录不得越级引用_准入线 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 目录不得越级引用_准入线；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FindAdmissionViolations、True、Join；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -532,7 +532,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 低层目录不得引用高层目录_依赖方向 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 低层目录不得引用高层目录_依赖方向；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SourceRoot、EnumerateSources、Replace、GetRelativePath、RootFor；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -639,7 +639,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 允许清单本身必须是良构的_目录存在且登记项都真的会被检查 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 允许清单本身必须是良构的_目录存在且登记项都真的会被检查；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SourceRoot、Combine、Replace、Exists、Add；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -666,7 +666,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 层级表必须覆盖全部顶层目录_不得有漏网的层 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 层级表必须覆盖全部顶层目录_不得有漏网的层；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SourceRoot、ToList、Distinct、Select、Where；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

@@ -16,7 +16,7 @@ namespace MachineApp.Host.Tests;
 public sealed class ProductionPortTests
 {
     /// <summary>
-    /// 验证 StationAcceptsIndependentPlcAndLogImplementationsWithoutProductionServices 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 StationAcceptsIndependentPlcAndLogImplementationsWithoutProductionServices；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Same、Refresh、AddRunInfo、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -45,7 +45,7 @@ public sealed class ProductionPortTests
     {
         public List<string> Messages = [];
         /// <summary>
-        /// 验证 AddRunInfo 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddRunInfo；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public void AddRunInfo(string info, ELogLevel level = ELogLevel.Information, int retainNum = 1000) => Messages.Add(info);
@@ -60,35 +60,35 @@ public sealed class ProductionPortTests
         public int RefreshCount;
         public bool IsOnline => false;
         /// <summary>
-        /// 验证 Refresh 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Refresh；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Refresh() => RefreshCount++;
         /// <summary>
-        /// 验证 StopRefresh 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StopRefresh；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void StopRefresh() => throw new NotSupportedException();
         /// <summary>
-        /// 验证 TriggerReply 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TriggerReply；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void TriggerReply(string stationName, string pPLCOrder) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 SendData 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendData；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void SendData(string stationName, string pPLCOrder, int offset, object info) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 SendResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendResult；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void SendResult(string stationName, string pPLCOrder, EPLCResult info) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 ReadData 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadData；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public string ReadData(string stationName, string pPLCOrder, int offset = 0, bool islog = true) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 TriggerUserInfo 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TriggerUserInfo；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void TriggerUserInfo(UserInfo value) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 TriggerAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TriggerAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task<EPLCResult> TriggerAsync(string stationName, string pPLCOrder, string data) => throw new NotSupportedException();
     }

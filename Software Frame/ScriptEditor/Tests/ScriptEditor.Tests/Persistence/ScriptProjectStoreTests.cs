@@ -24,7 +24,7 @@ public sealed class ScriptProjectStoreTests : IDisposable
     private readonly List<string> _tempFiles = new();
 
     /// <summary>
-    /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Delete；具体条件和先后次序见方法体。
     /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
     /// </summary>
@@ -41,7 +41,7 @@ public sealed class ScriptProjectStoreTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 NewTempDir 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NewTempDir；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Combine、GetTempPath、NewGuid、CreateDirectory、Add；具体条件和先后次序见方法体。
     /// </summary>
     private string NewTempDir()
@@ -53,7 +53,7 @@ public sealed class ScriptProjectStoreTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 MigrateV1KeepsScriptsAndReferences 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MigrateV1KeepsScriptsAndReferences；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Migrate、NotNull、Equal、NotEqual、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -72,7 +72,7 @@ public sealed class ScriptProjectStoreTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 MigrateInvalidReturnsNull 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MigrateInvalidReturnsNull；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Null、Migrate；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -84,7 +84,7 @@ public sealed class ScriptProjectStoreTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 ModelRoundTripKeepsIds 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ModelRoundTripKeepsIds；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToModel、FromModel、Equal、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -109,7 +109,7 @@ public sealed class ScriptProjectStoreTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 StoreSavesRelativeAndLoadsAbsolute 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 StoreSavesRelativeAndLoadsAbsolute；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewTempDir、Combine、CreateDirectory、WriteAllBytesAsync、SaveAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -150,7 +150,7 @@ public sealed class ScriptProjectStoreTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 StoreLoadsLegacyFile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 StoreLoadsLegacyFile；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Combine、GetTempPath、NewGuid、Add、WriteAllTextAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -166,7 +166,7 @@ public sealed class ScriptProjectStoreTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 StoreRotatesBackup 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 StoreRotatesBackup；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewTempDir、Combine、SaveAsync、True、Exists；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -190,7 +190,7 @@ public sealed class ScriptProjectStoreTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 CheckedInSampleLoadsAndRuns 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CheckedInSampleLoadsAndRuns；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Combine、True、Exists、LoadAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -209,7 +209,7 @@ public sealed class ScriptProjectStoreTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 ManifestRoundTripsIdentity 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ManifestRoundTripsIdentity；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewGuid、Add、Sha256Short、NewTempDir、Save；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -236,7 +236,7 @@ public sealed class ScriptProjectStoreTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 ContentHashIsStable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ContentHashIsStable；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Sha256Short、NotEqual；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

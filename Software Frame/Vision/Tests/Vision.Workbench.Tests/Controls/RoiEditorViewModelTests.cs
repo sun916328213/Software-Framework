@@ -20,7 +20,7 @@ namespace Vision.Workbench.Tests.Controls;
 public sealed class RoiEditorViewModelTests
 {
     /// <summary>
-    /// 验证 Add_SelectsNewRoi_AndTracksCount 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Add_SelectsNewRoi_AndTracksCount；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddRectangle、Equal、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -34,7 +34,7 @@ public sealed class RoiEditorViewModelTests
     }
 
     /// <summary>
-    /// 验证 RemoveSelected_ClearsSelection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RemoveSelected_ClearsSelection；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddRectangle、AddCircle、Equal、Execute、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -54,7 +54,7 @@ public sealed class RoiEditorViewModelTests
     }
 
     /// <summary>
-    /// 验证 MoveSelected_ShiftsPose_AndRejectsWithoutSelection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MoveSelected_ShiftsPose_AndRejectsWithoutSelection；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 False、MoveSelected、AddRectangle、True、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -71,7 +71,7 @@ public sealed class RoiEditorViewModelTests
     }
 
     /// <summary>
-    /// 验证 ResizeSelected_UpdatesSize_AndRejectsBadInput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ResizeSelected_UpdatesSize_AndRejectsBadInput；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddCircle、True、ResizeSelected、Equal、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -89,7 +89,7 @@ public sealed class RoiEditorViewModelTests
     }
 
     /// <summary>
-    /// 验证 FollowFixture_MovesAll_AndKeepsSelection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FollowFixture_MovesAll_AndKeepsSelection；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddRectangle、AddCircle、FollowFixture、Equal、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

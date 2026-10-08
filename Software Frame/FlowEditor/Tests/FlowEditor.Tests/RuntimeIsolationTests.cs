@@ -168,14 +168,14 @@ internal sealed class SmokeNode : INodeExecutable
 
     /// <inheritdoc />
     /// <remarks>
-    /// 验证 FindPortById 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FindPortById；准备条件、协作调用与结果检查以方法正文为准。
     /// </remarks>
     public PortModel? FindPortById(string portId)
         => _input.Id == portId ? _input : _output.Id == portId ? _output : null;
 
     /// <inheritdoc />
     /// <remarks>
-    /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowIfCancellationRequested；具体条件和先后次序见方法体。
     /// </remarks>
     public Task ExecuteAsync(CancellationToken ct)
@@ -187,7 +187,7 @@ internal sealed class SmokeNode : INodeExecutable
 
     /// <inheritdoc />
     /// <remarks>
-    /// 验证 SyncInputValues 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SyncInputValues；准备条件、协作调用与结果检查以方法正文为准。
     /// </remarks>
     public void SyncInputValues()
     {
@@ -195,7 +195,7 @@ internal sealed class SmokeNode : INodeExecutable
 
     /// <inheritdoc />
     /// <remarks>
-    /// 验证 SyncOutputValues 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SyncOutputValues；准备条件、协作调用与结果检查以方法正文为准。
     /// </remarks>
     public void SyncOutputValues()
     {
@@ -203,7 +203,7 @@ internal sealed class SmokeNode : INodeExecutable
 
     /// <inheritdoc />
     /// <remarks>
-    /// 验证 ResetActivation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ResetActivation；准备条件、协作调用与结果检查以方法正文为准。
     /// </remarks>
     public void ResetActivation()
     {
@@ -211,7 +211,7 @@ internal sealed class SmokeNode : INodeExecutable
 
     /// <inheritdoc />
     /// <remarks>
-    /// 验证 GetActivatedOutputNames 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 GetActivatedOutputNames；准备条件、协作调用与结果检查以方法正文为准。
     /// </remarks>
     public IReadOnlyCollection<string>? GetActivatedOutputNames() => null;
 }

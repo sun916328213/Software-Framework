@@ -27,7 +27,7 @@ public sealed class DeviceControlsModuleTests
     public DeviceControlsModuleTests(WorkbenchAppFixture fixture) => _fixture = fixture;
 
     /// <summary>
-    /// 验证 DefaultsPreserveHostFactoryReplacementAcrossRepeatedRegistration 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DefaultsPreserveHostFactoryReplacementAcrossRepeatedRegistration；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterInstance、RegisterTypes、Resolve、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -44,7 +44,7 @@ public sealed class DeviceControlsModuleTests
     }
 
     /// <summary>
-    /// 验证 NativeNavigationRegistrationPreservesWorkspace 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NativeNavigationRegistrationPreservesWorkspace；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、RegisterTypes、Resolve、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -61,7 +61,7 @@ public sealed class DeviceControlsModuleTests
     }
 
     /// <summary>
-    /// 验证 DefaultFactoriesBelongToEachContainer 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DefaultFactoriesBelongToEachContainer；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterTypes、NotSame、Resolve；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -75,7 +75,7 @@ public sealed class DeviceControlsModuleTests
     }
 
     /// <summary>
-    /// 验证 NavigationLifetimeMatchesHostPolicy_WhileWorkspaceRemainsSingleton 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NavigationLifetimeMatchesHostPolicy_WhileWorkspaceRemainsSingleton；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、RegisterFactories、RegisterTypes、Resolve、nameof；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -98,7 +98,7 @@ public sealed class DeviceControlsModuleTests
     }
 
     /// <summary>
-    /// 验证 DeviceConfigurationAndCompositionDoNotDependOnWpfControl 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DeviceConfigurationAndCompositionDoNotDependOnWpfControl；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、GetName、DoesNotContain、GetReferencedAssemblies；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -111,7 +111,7 @@ public sealed class DeviceControlsModuleTests
     }
 
     /// <summary>
-    /// 验证 WpfHostDelegatesDeviceRegistrationAndHasPortablePackageConfiguration 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WpfHostDelegatesDeviceRegistrationAndHasPortablePackageConfiguration；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Exists、Combine、NotNull、Load、ToArray；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

@@ -18,7 +18,7 @@ namespace Communication.Tests.Composition;
 public sealed class CommunicationDeviceRegistryTests
 {
     /// <summary>
-    /// 验证 Registry_supports_core_factory_seam_and_legacy_composition_alias 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Registry_supports_core_factory_seam_and_legacy_composition_alias；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 IsAssignableFrom；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -33,7 +33,7 @@ public sealed class CommunicationDeviceRegistryTests
     }
 
     /// <summary>
-    /// 验证 Manager_accepts_factory_through_core_seam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Manager_accepts_factory_through_core_seam；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateDevice、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -49,7 +49,7 @@ public sealed class CommunicationDeviceRegistryTests
     }
 
     /// <summary>
-    /// 验证 Manager_rejects_missing_core_factory 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Manager_rejects_missing_core_factory；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -59,7 +59,7 @@ public sealed class CommunicationDeviceRegistryTests
     }
 
     /// <summary>
-    /// 验证 New_parameter_type_can_be_registered_without_changing_a_core_switch 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 New_parameter_type_can_be_registered_without_changing_a_core_switch；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Register、Create、IsType、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -78,7 +78,7 @@ public sealed class CommunicationDeviceRegistryTests
     }
 
     /// <summary>
-    /// 验证 Microsoft_di_resolves_new_and_legacy_factory_seams_to_one_instance 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Microsoft_di_resolves_new_and_legacy_factory_seams_to_one_instance；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddCommunicationNew、BuildServiceProvider、GetRequiredService、Same、NotNull；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -115,7 +115,7 @@ public sealed class CommunicationDeviceRegistryTests
         : Communication.Core.ICommunicationDeviceFactory
     {
         /// <summary>
-        /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ICommunicationDevice Create(CommunicationParam parameter) => device;
     }

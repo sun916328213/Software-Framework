@@ -14,7 +14,7 @@ namespace MotionControl.Tests;
 public sealed class MotionResultTests
 {
     /// <summary>
-    /// 验证 DefaultResult_IsNeverSuccessful 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DefaultResult_IsNeverSuccessful；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 False、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -30,7 +30,7 @@ public sealed class MotionResultTests
     }
 
     /// <summary>
-    /// 验证 ReadInput_LowLevel_ReturnsSuccessfulFalseInsteadOfFailure 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReadInput_LowLevel_ReturnsSuccessfulFalseInsteadOfFailure；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateConnectedCard、ReadInput、True、False、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -54,7 +54,7 @@ public sealed class MotionResultTests
     }
 
     /// <summary>
-    /// 验证 ReadInput_TransportFailure_IsNotReportedAsLowLevel 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReadInput_TransportFailure_IsNotReportedAsLowLevel；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateConnectedCard、ReadInput、False、Equal、DisConnect；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -79,7 +79,7 @@ public sealed class MotionResultTests
     }
 
     /// <summary>
-    /// 验证 ReadCommandPosition_InvalidAxis_ReturnsExplicitError 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReadCommandPosition_InvalidAxis_ReturnsExplicitError；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateConnectedCard、ReadCommandPosition、False、Equal、DisConnect；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -102,7 +102,7 @@ public sealed class MotionResultTests
     }
 
     /// <summary>
-    /// 验证 ReadCommandPosition_TransportFailure_IsNotReportedAsZeroPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReadCommandPosition_TransportFailure_IsNotReportedAsZeroPosition；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateConnectedCard、ReadCommandPosition、False、Equal、DisConnect；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -127,7 +127,7 @@ public sealed class MotionResultTests
     }
 
     /// <summary>
-    /// 验证 WaitInPosition_CancelledToken_ReturnsCancelledResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WaitInPosition_CancelledToken_ReturnsCancelledResult；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateConnectedCard、Cancel、WaitInPositionResultAsync、False、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -153,7 +153,7 @@ public sealed class MotionResultTests
     }
 
     /// <summary>
-    /// 验证 CreateConnectedCard 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreateConnectedCard；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、Connect；具体条件和先后次序见方法体。
     /// </summary>
     private static InovanceHelper CreateConnectedCard(FakeInovanceTransport transport)
@@ -181,7 +181,7 @@ public sealed class MotionResultTests
         public bool IsConnected { get; private set; }
 
         /// <summary>
-        /// 验证 Connect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Connect；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool Connect(string ipAddress, int port, InovanceParam parameter, int requiredAxes)
         {
@@ -190,12 +190,12 @@ public sealed class MotionResultTests
         }
 
         /// <summary>
-        /// 验证 Disconnect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Disconnect；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Disconnect() => IsConnected = false;
 
         /// <summary>
-        /// 验证 TryReadStatus 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadStatus；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadStatus(int axis, out ushort status)
         {
@@ -204,16 +204,16 @@ public sealed class MotionResultTests
         }
 
         /// <summary>
-        /// 验证 UpdateControlWord 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 UpdateControlWord；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool UpdateControlWord(int axis, ushort setBits, ushort clearMask) => true;
         /// <summary>
-        /// 验证 WriteTarget 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteTarget；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool WriteTarget(int axis, int position, float velocity) => true;
 
         /// <summary>
-        /// 验证 TryReadCurrentPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadCurrentPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadCurrentPosition(int axis, out int position)
         {
@@ -222,12 +222,12 @@ public sealed class MotionResultTests
         }
 
         /// <summary>
-        /// 验证 SetCurrentPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetCurrentPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool SetCurrentPosition(int axis, int position) => true;
 
         /// <summary>
-        /// 验证 TryReadInput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadInput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadInput(int index, out bool state)
         {
@@ -236,7 +236,7 @@ public sealed class MotionResultTests
         }
 
         /// <summary>
-        /// 验证 TryReadOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadOutput(int index, out bool state)
         {
@@ -245,11 +245,11 @@ public sealed class MotionResultTests
         }
 
         /// <summary>
-        /// 验证 WriteOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool WriteOutput(int index, bool state) => true;
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Disconnect；具体条件和先后次序见方法体。
         /// </summary>
         public void Dispose() => Disconnect();

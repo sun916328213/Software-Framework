@@ -18,7 +18,7 @@ public sealed class CommunicationFactoryCompositionTests
 {
 
     /// <summary>
-    /// 验证 Manager_uses_explicit_builtin_protocol_registry 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Manager_uses_explicit_builtin_protocol_registry；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateDefaultFactory、CreateDevice、IsType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -32,7 +32,7 @@ public sealed class CommunicationFactoryCompositionTests
     }
 
     /// <summary>
-    /// 验证 Default_registry_creates_builtin_protocol_device 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Default_registry_creates_builtin_protocol_device；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、CreateDefaultFactory、IsType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -44,7 +44,7 @@ public sealed class CommunicationFactoryCompositionTests
     }
 
     /// <summary>
-    /// 验证 Core_factory_contract_can_be_injected_into_manager 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Core_factory_contract_can_be_injected_into_manager；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateDefaultFactory、CreateDevice、IsType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -59,7 +59,7 @@ public sealed class CommunicationFactoryCompositionTests
     }
 
     /// <summary>
-    /// 验证 Default_factory_exposes_core_factory_seam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Default_factory_exposes_core_factory_seam；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateDefaultFactory、Create、IsType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

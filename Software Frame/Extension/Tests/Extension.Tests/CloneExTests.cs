@@ -42,7 +42,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 NewModel 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 NewModel；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private static Model NewModel()
         {
@@ -55,7 +55,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DeepClone_对象_嵌套引用不共享 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DeepClone_对象_嵌套引用不共享；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewModel、DeepClone、NotSame、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -74,7 +74,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DeepClone_改副本不影响原件 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DeepClone_改副本不影响原件；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewModel、DeepClone、Add、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -93,7 +93,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DeepClone_集合_得到独立实例 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DeepClone_集合_得到独立实例；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 DeepClone、NotSame、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -108,7 +108,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DeepClone_字符串作为根对象会抛ArgumentException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DeepClone_字符串作为根对象会抛ArgumentException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exception、DeepClone、IsAssignableFrom、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -128,7 +128,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DeepClone_null引用_原样返回null且不抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DeepClone_null引用_原样返回null且不抛；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、Exception、DeepClone；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -141,7 +141,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 API面_DeepClone是泛型扩展方法 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 API面_DeepClone是泛型扩展方法；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetMethod、NotNull、True、IsDefined、Single；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -157,7 +157,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 CloneEx_是静态类_1个公开静态方法 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CloneEx_是静态类_1个公开静态方法；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、Single、GetMethods、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

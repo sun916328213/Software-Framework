@@ -16,7 +16,7 @@ namespace WPFControls.Tests;
 public sealed class ErrorExecutorTests
 {
     /// <summary>
-    /// 验证 ContainersKeepIndependentErrorTargets 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ContainersKeepIndependentErrorTargets；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterSingleton、TryExecute、Resolve、Equal、Select；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -36,7 +36,7 @@ public sealed class ErrorExecutorTests
     }
 
     /// <summary>
-    /// 验证 ReentrantAndThrowingReporterCannotEscapeOrLoop 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReentrantAndThrowingReporterCannotEscapeOrLoop；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 TryExecute、False、TryExecuteWithResult、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -57,7 +57,7 @@ public sealed class ErrorExecutorTests
     }
 
     /// <summary>
-    /// 验证 ThrowingErrorCallbackStillReportsOriginalFailure 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ThrowingErrorCallbackStillReportsOriginalFailure；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 TryExecute、Same、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -70,7 +70,7 @@ public sealed class ErrorExecutorTests
     }
 
     /// <summary>
-    /// 验证 AsyncFailureReportsAndReturnsCallerFallback 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AsyncFailureReportsAndReturnsCallerFallback；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 TryExecuteAsync、Yield、Equal、Single、FromResult；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -90,7 +90,7 @@ public sealed class ErrorExecutorTests
     }
 
     /// <summary>
-    /// 验证 LoggingFailureDoesNotCallItsOwnReporter 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoggingFailureDoesNotCallItsOwnReporter；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 TryExecuteWithoutReport、Equal、TryExecute；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

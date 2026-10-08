@@ -15,7 +15,7 @@ namespace Device.Workbench.Tests;
 public sealed class CameraPageModelTests
 {
     /// <summary>
-    /// 验证 StaticLookupLists_ExposeStableEnumAndSourceValues 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 StaticLookupLists_ExposeStableEnumAndSourceValues；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -35,7 +35,7 @@ public sealed class CameraPageModelTests
     }
 
     /// <summary>
-    /// 验证 Defaults_MatchTestCardExpectations 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Defaults_MatchTestCardExpectations；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Null、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -54,7 +54,7 @@ public sealed class CameraPageModelTests
     }
 
     /// <summary>
-    /// 验证 SelectedProfileChange_ResetsConnectionState 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SelectedProfileChange_ResetsConnectionState；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 False、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -74,7 +74,7 @@ public sealed class CameraPageModelTests
     }
 
     /// <summary>
-    /// 验证 IsLineTriggerEnabled_FollowsSelectedProfileScanType 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 IsLineTriggerEnabled_FollowsSelectedProfileScanType；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RefreshLineTriggerAvailability、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -94,7 +94,7 @@ public sealed class CameraPageModelTests
     }
 
     /// <summary>
-    /// 验证 RefreshLineTriggerAvailability_RaisesPropertyChanged 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RefreshLineTriggerAvailability_RaisesPropertyChanged；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 nameof、RefreshLineTriggerAvailability、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -114,7 +114,7 @@ public sealed class CameraPageModelTests
     }
 
     /// <summary>
-    /// 验证 BuildRuntimeTriggers_CaptureCurrentTestCardValues 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BuildRuntimeTriggers_CaptureCurrentTestCardValues；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildRuntimeFrameTrigger、BuildRuntimeLineTrigger、Equal、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -140,7 +140,7 @@ public sealed class CameraPageModelTests
     }
 
     /// <summary>
-    /// 验证 SelectedProfileOrThrow_WithoutProfile_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SelectedProfileOrThrow_WithoutProfile_Throws；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

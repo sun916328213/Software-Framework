@@ -26,7 +26,7 @@ namespace DataManager.Tests.Excel
         }
 
         /// <summary>
-        /// 验证 CreateHelper 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateHelper；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private MiniExcelHelper CreateHelper()
         {
@@ -44,7 +44,7 @@ namespace DataManager.Tests.Excel
         }
 
         /// <summary>
-        /// 验证 Sample 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Sample；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList、Select、Range；具体条件和先后次序见方法体。
         /// </summary>
         private static List<PersonRecord> Sample(int count) => Enumerable.Range(1, count)
@@ -52,7 +52,7 @@ namespace DataManager.Tests.Excel
             .ToList();
 
         /// <summary>
-        /// 验证 WriteThenQuery_RoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteThenQuery_RoundTrip；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateHelper、Write、Sample、ToList、Query；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -69,7 +69,7 @@ namespace DataManager.Tests.Excel
         }
 
         /// <summary>
-        /// 验证 Query_WithPredicate_Filters 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Query_WithPredicate_Filters；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateHelper、Write、Sample、ToList、Query；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -84,7 +84,7 @@ namespace DataManager.Tests.Excel
         }
 
         /// <summary>
-        /// 验证 QueryAsync_ReturnsData 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 QueryAsync_ReturnsData；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateHelper、Write、Sample、QueryAsync、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -100,7 +100,7 @@ namespace DataManager.Tests.Excel
         }
 
         /// <summary>
-        /// 验证 Add_ThrowsNotSupported 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Add_ThrowsNotSupported；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateHelper、Throws、Add、Sample；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -111,7 +111,7 @@ namespace DataManager.Tests.Excel
         }
 
         /// <summary>
-        /// 验证 Update_ThrowsNotSupported 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Update_ThrowsNotSupported；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateHelper、Throws、Update、Sample；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -122,7 +122,7 @@ namespace DataManager.Tests.Excel
         }
 
         /// <summary>
-        /// 验证 AsReader_Works 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AsReader_Works；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateHelper、Write、Sample、Equal、Count；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -135,7 +135,7 @@ namespace DataManager.Tests.Excel
         }
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Delete；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>

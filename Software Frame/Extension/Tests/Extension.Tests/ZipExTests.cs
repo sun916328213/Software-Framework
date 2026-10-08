@@ -34,7 +34,7 @@ namespace Extension.Tests
     public class ZipExTests
     {
         /// <summary>
-        /// 验证 WriteGzipBytes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteGzipBytes；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Write；具体条件和先后次序见方法体。
         /// </summary>
         private static string WriteGzipBytes(string path, byte[] payload)
@@ -48,7 +48,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WriteGzipText 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteGzipText；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteGzipBytes、GetBytes；具体条件和先后次序见方法体。
         /// </summary>
         private static string WriteGzipText(string path, string content)
@@ -71,7 +71,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GZIPExtractToString_往返_中文UTF8 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GZIPExtractToString_往返_中文UTF8；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteGzipText、Combine、Equal、GZIPExtractToString；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -84,7 +84,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GZIPExtractToString_空内容_返回空字符串 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GZIPExtractToString_空内容_返回空字符串；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteGzipText、Combine、Equal、GZIPExtractToString；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -97,7 +97,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GZIPExtractToString_大内容_往返一致 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GZIPExtractToString_大内容_往返一致；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、ToString、WriteGzipText、Combine、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -134,7 +134,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GZIPExtractToString_非UTF8负载_静默替换为UFFFD而不报错 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GZIPExtractToString_非UTF8负载_静默替换为UFFFD而不报错；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteGzipBytes、Combine、GZIPExtractToString、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -165,7 +165,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GZIPExtractToString_内容不是GZIP_抛InvalidDataException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GZIPExtractToString_内容不是GZIP_抛InvalidDataException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、Throws、GZIPExtractToString；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -192,7 +192,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ZIPEX_是静态类_1个公开静态方法 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ZIPEX_是静态类_1个公开静态方法；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、Single、GetMethods；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

@@ -96,7 +96,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 TwoRows 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TwoRows；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private static List<CsvRow> TwoRows() => new List<CsvRow>
         {
@@ -124,7 +124,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_includeHeader为false_不写表头 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_includeHeader为false_不写表头；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync、TwoRows、ReadAllLines、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -142,7 +142,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_自定义分隔符 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_自定义分隔符；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync、TwoRows、ReadAllLines、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -160,7 +160,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_自动创建目标目录 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_自动创建目标目录；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync、TwoRows、True、Exists；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -176,7 +176,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_已存在文件_被覆盖 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_已存在文件_被覆盖；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、ExportToCsvAsync、TwoRows、DoesNotContain、ReadAllText；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -192,7 +192,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_超过BatchSize_2500行全部写出 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_超过BatchSize_2500行全部写出；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ToList、Select、Range、ExportToCsvAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -217,7 +217,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_null属性值_写成空字段 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_null属性值_写成空字段；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync、ReadAllLines、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -252,7 +252,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_值含引号_引号双写 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_值含引号_引号双写；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync、Equal、ReadAllLines；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -269,7 +269,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_值含换行_被引号包裹_物理行数多于记录数 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_值含换行_被引号包裹_物理行数多于记录数；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync、Contains、ReadAllText、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -287,7 +287,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_值含反斜杠_不加引号不转义 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_值含反斜杠_不加引号不转义；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync、Equal、ReadAllLines；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -324,7 +324,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_显式传入无BOM编码_不写BOM 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_显式传入无BOM编码_不写BOM；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync、TwoRows、ToArray、Take；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -341,7 +341,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_data为null_抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_data为null_抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAsync、ExportToCsvAsync、Combine；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -355,7 +355,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_路径为空白_抛ArgumentException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_路径为空白_抛ArgumentException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAsync、ExportToCsvAsync、TwoRows；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -367,7 +367,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_类型没有公共属性_抛InvalidOperationException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_类型没有公共属性_抛InvalidOperationException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAsync、ExportToCsvAsync、Combine；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -382,7 +382,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_集合属性_导出的是类型名而不是元素 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_集合属性_导出的是类型名而不是元素；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync、ReadAllLines、Contains、DoesNotContain；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -422,7 +422,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_表头大小写不敏感 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_表头大小写不敏感；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、ReadCsv、Equal、Single；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -438,7 +438,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_表头列顺序与属性顺序无关 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_表头列顺序与属性顺序无关；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、ReadCsv、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -454,7 +454,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_未匹配的表头列_被忽略_属性保持默认值 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_未匹配的表头列_被忽略_属性保持默认值；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、ReadCsv、Equal、Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -470,7 +470,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_hasHeaderRow为false_用属性名当表头按顺序匹配 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_hasHeaderRow为false_用属性名当表头按顺序匹配；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、ReadCsv、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -487,7 +487,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_空文件_返回空列表 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_空文件_返回空列表；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、Empty、ReadCsv；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -500,7 +500,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_只有表头_返回空列表 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_只有表头_返回空列表；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、Empty、ReadCsv；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -513,7 +513,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_空白行被跳过_物理行数不等于记录数 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_空白行被跳过_物理行数不等于记录数；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、ReadCsv、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -528,7 +528,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_自定义分隔符 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_自定义分隔符；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、ReadCsv、Equal、Single；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -544,7 +544,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_双写引号不被还原_引号被吞掉 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_双写引号不被还原_引号被吞掉；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、Equal、ReadCsv；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -559,7 +559,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 往返_含双引号的值_引号在回读时丢失 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 往返_含双引号的值_引号在回读时丢失；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync、ReadCsv、Equal、ReadAllLines；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -579,7 +579,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_带引号且内嵌分隔符的字段_不被拆开 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_带引号且内嵌分隔符的字段_不被拆开；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、ReadCsv、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -594,7 +594,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_空字段_属性保持默认值而不是转换失败 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_空字段_属性保持默认值而不是转换失败；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、ReadCsv、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -612,7 +612,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_枚举属性_大小写不敏感解析 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_枚举属性_大小写不敏感解析；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、Equal、ReadCsv；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -625,7 +625,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_ListString属性_带引号的方括号列表_被拆成多个元素 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_ListString属性_带引号的方括号列表_被拆成多个元素；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、ReadCsv、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -641,7 +641,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_ListString属性_不加引号的方括号列表_只取到第一个元素 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_ListString属性_不加引号的方括号列表_只取到第一个元素；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、ReadCsv、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -673,7 +673,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_反斜杠还能转义分隔符_使字段不被拆开 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_反斜杠还能转义分隔符_使字段不被拆开；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、ReadCsv、Equal、Single；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -689,7 +689,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 往返_含反斜杠的值_导出后再读回会损坏 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 往返_含反斜杠的值_导出后再读回会损坏；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync、ReadCsv、Equal、ReadAllLines；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -711,7 +711,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_字段首尾空格被Trim掉 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_字段首尾空格被Trim掉；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、Equal、ReadCsv；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -725,7 +725,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 往返_首尾带空格的值_导出后再读回会丢空格 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 往返_首尾带空格的值_导出后再读回会丢空格；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync、ReadCsv、Equal、ReadAllLines；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -744,7 +744,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_ListInt属性_抛异常_因为塞进去的是ListString 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_ListInt属性_抛异常_因为塞进去的是ListString；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、Exception、ReadCsv、NotNull、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -762,7 +762,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_文件不存在_抛裸Exception而不是FileNotFoundException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_文件不存在_抛裸Exception而不是FileNotFoundException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exception、ReadCsv、Combine、NotNull、IsType；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -780,7 +780,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_单元格类型转换失败_异常被两层包装 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_单元格类型转换失败_异常被两层包装；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、Exception、ReadCsv、NotNull、IsType；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -798,7 +798,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadCsv_类型没有公共属性_不抛异常但得到空对象 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCsv_类型没有公共属性_不抛异常但得到空对象；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、ReadCsv、Single；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -825,7 +825,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_String_写出每个字符串一行 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_String_写出每个字符串一行；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync_String、ReadAllLines、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -844,7 +844,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_String_includeHeader参数被忽略 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_String_includeHeader参数被忽略；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync_String、ReadAllLines、Equal、DoesNotContain；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -865,7 +865,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_String_null元素_写成空行 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_String_null元素_写成空行；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync_String、ReadAllLines、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -883,7 +883,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_String_含逗号的元素_被引号包裹 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_String_含逗号的元素_被引号包裹；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ExportToCsvAsync_String、Equal、ReadAllLines；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -899,7 +899,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ExportToCsvAsync_String_data为null_抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToCsvAsync_String_data为null_抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAsync、ExportToCsvAsync_String、Combine；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -932,7 +932,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 API面_三个公开方法_ReadCsv不是扩展方法 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 API面_三个公开方法_ReadCsv不是扩展方法；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetMethods、Equal、All、False、IsDefined；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -948,7 +948,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 CSVEx_是静态类 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CSVEx_是静态类；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

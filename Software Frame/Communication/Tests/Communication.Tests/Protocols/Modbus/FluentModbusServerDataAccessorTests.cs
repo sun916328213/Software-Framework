@@ -14,7 +14,7 @@ namespace Communication.Tests.Protocols.Modbus;
 public sealed class FluentModbusServerDataAccessorTests
 {
     /// <summary>
-    /// 验证 Accessor_round_trips_registers_and_unaligned_coils 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Accessor_round_trips_registers_and_unaligned_coils；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Write、Equal、Read；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -36,7 +36,7 @@ public sealed class FluentModbusServerDataAccessorTests
     }
 
     /// <summary>
-    /// 验证 Accessor_waits_for_the_fluent_modbus_data_lock 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Accessor_waits_for_the_fluent_modbus_data_lock；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Set、Wait、True、FromSeconds；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// 方法内使用锁保护部分共享操作；锁外操作的并发约束仍需结合调用者核对。
@@ -73,7 +73,7 @@ public sealed class FluentModbusServerDataAccessorTests
     }
 
     /// <summary>
-    /// 验证 Accessor_rejects_writes_to_read_only_regions 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Accessor_rejects_writes_to_read_only_regions；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Write；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

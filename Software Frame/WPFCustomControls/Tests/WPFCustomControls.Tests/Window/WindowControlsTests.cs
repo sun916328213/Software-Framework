@@ -24,7 +24,7 @@ public class WindowControlsTests
     // ── MessagePrompt ─────────────────────────────────────────
 
     /// <summary>
-    /// 验证 MessagePrompt_DefaultsAreAppliedFromMetadata 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MessagePrompt_DefaultsAreAppliedFromMetadata；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -44,7 +44,7 @@ public class WindowControlsTests
     }
 
     /// <summary>
-    /// 验证 MessagePrompt_ConstructorInjectsProperties 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MessagePrompt_ConstructorInjectsProperties；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -61,7 +61,7 @@ public class WindowControlsTests
     }
 
     /// <summary>
-    /// 验证 MessagePrompt_PropertySetters_UpdateValues 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MessagePrompt_PropertySetters_UpdateValues；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -85,7 +85,7 @@ public class WindowControlsTests
     }
 
     /// <summary>
-    /// 验证 MessagePrompt_DependencyProperties_AreRegistered 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MessagePrompt_DependencyProperties_AreRegistered；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NotNull、GetField；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -101,7 +101,7 @@ public class WindowControlsTests
     // ── FileLoading ───────────────────────────────────────────
 
     /// <summary>
-    /// 验证 FileLoading_DefaultText_IsLoadingDots 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FileLoading_DefaultText_IsLoadingDots；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -116,7 +116,7 @@ public class WindowControlsTests
     }
 
     /// <summary>
-    /// 验证 FileLoading_TextSetter_UpdatesValue 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FileLoading_TextSetter_UpdatesValue；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -132,7 +132,7 @@ public class WindowControlsTests
     // ── NameInputControl ──────────────────────────────────────
 
     /// <summary>
-    /// 验证 NameInputControl_Defaults 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NameInputControl_Defaults；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -149,7 +149,7 @@ public class WindowControlsTests
     }
 
     /// <summary>
-    /// 验证 NameInputControl_PropertySetters_UpdateValues 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NameInputControl_PropertySetters_UpdateValues；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -173,7 +173,7 @@ public class WindowControlsTests
     }
 
     /// <summary>
-    /// 验证 NameInputControl_InputText_BindsTwoWayByDefault 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NameInputControl_InputText_BindsTwoWayByDefault；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetField、NotNull；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -199,7 +199,7 @@ public class WindowControlsTests
     }
 
     /// <summary>
-    /// 验证 MessagePrompt_HidesWindowTitle_NewKeywordApplied 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MessagePrompt_HidesWindowTitle_NewKeywordApplied；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetProperty、NotNull、GetGetMethod、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

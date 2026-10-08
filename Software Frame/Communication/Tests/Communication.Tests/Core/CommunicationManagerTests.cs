@@ -16,7 +16,7 @@ namespace Communication.Tests.Core;
 public sealed class CommunicationManagerTests
 {
     /// <summary>
-    /// 验证 Duplicate_device_id_is_rejected_without_replacing_owned_device 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Duplicate_device_id_is_rejected_without_replacing_owned_device；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateDevice、Throws、Contains、Same、GetDevice；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -47,7 +47,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Duplicate_external_device_is_rejected_without_taking_ownership 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Duplicate_external_device_is_rejected_without_taking_ownership；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterDevice、Throws、Contains、Same、GetDevice；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -77,7 +77,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Disposed_manager_rejects_new_devices_before_taking_ownership 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Disposed_manager_rejects_new_devices_before_taking_ownership；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 DisposeAsync、Throws、CreateDevice、RegisterDevice、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -103,7 +103,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Disposed_manager_rejects_device_removal 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Disposed_manager_rejects_device_removal；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 DisposeAsync、ThrowsAsync、RemoveDeviceAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -118,7 +118,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Concurrent_dispose_calls_wait_for_the_same_device_cleanup 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Concurrent_dispose_calls_wait_for_the_same_device_cleanup；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterDevice、AsTask、DisposeAsync、WaitAsync、FromSeconds；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -145,7 +145,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Manager_disposal_does_not_disconnect_device_twice 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Manager_disposal_does_not_disconnect_device_twice；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterDevice、DisposeAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -163,7 +163,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Removing_device_runs_its_shutdown_chain_once 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Removing_device_runs_its_shutdown_chain_once；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterDevice、RemoveDeviceAsync、True、Null、GetDevice；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -183,7 +183,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Manager_disposal_waits_for_device_removal_already_in_progress 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Manager_disposal_waits_for_device_removal_already_in_progress；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterDevice、RemoveDeviceAsync、WaitAsync、FromSeconds、AsTask；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -209,7 +209,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Connect_all_reports_legacy_device_false_result_as_failure 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connect_all_reports_legacy_device_false_result_as_failure；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterDevice、ThrowsAsync、ConnectAllAsync、Contains、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -228,7 +228,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Connect_all_preserves_every_device_failure 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connect_all_preserves_every_device_failure；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterDevice、ThrowsAsync、ConnectAllAsync、ToArray、Select；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -252,7 +252,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Batch_lifecycle_prefers_the_new_connection_capability 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Batch_lifecycle_prefers_the_new_connection_capability；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterDevice、ConnectAllAsync、DisconnectAllAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -273,7 +273,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Manager_disposal_waits_for_batch_connection_already_in_progress 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Manager_disposal_waits_for_batch_connection_already_in_progress；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterDevice、ConnectAllAsync、WaitAsync、FromSeconds、AsTask；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -298,7 +298,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Device_removal_waits_for_batch_connection_already_in_progress 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Device_removal_waits_for_batch_connection_already_in_progress；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterDevice、ConnectAllAsync、WaitAsync、FromSeconds、RemoveDeviceAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -337,7 +337,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Batch_lifecycle_operations_run_in_submission_order 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Batch_lifecycle_operations_run_in_submission_order；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterDevice、ConnectAllAsync、WaitAsync、FromSeconds、DisconnectAllAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -380,7 +380,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Disconnect_all_invokes_every_device_when_adapters_throw_synchronously 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Disconnect_all_invokes_every_device_when_adapters_throw_synchronously；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterDevice、ThrowsAsync、DisconnectAllAsync、ToArray、Select；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -408,7 +408,7 @@ public sealed class CommunicationManagerTests
     }
 
     /// <summary>
-    /// 验证 Disconnect_all_propagates_cancellation_to_connection_capability 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Disconnect_all_propagates_cancellation_to_connection_capability；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterDevice、DisconnectAllAsync、WaitAsync、FromSeconds、Cancel；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -441,7 +441,7 @@ public sealed class CommunicationManagerTests
         public int CreateCount { get; private set; }
 
         /// <summary>
-        /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Dequeue；具体条件和先后次序见方法体。
         /// </summary>
         public ICommunicationDevice Create(CommunicationParam parameter)
@@ -504,7 +504,7 @@ public sealed class CommunicationManagerTests
         }
 
         /// <summary>
-        /// 验证 ConnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> ConnectAsync(CancellationToken ct = default)
@@ -513,7 +513,7 @@ public sealed class CommunicationManagerTests
             return Task.FromResult(connectResult);
         }
         /// <summary>
-        /// 验证 DisconnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisconnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult、WaitAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -527,36 +527,36 @@ public sealed class CommunicationManagerTests
             }
         }
         /// <summary>
-        /// 验证 ReadAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Empty；具体条件和先后次序见方法体。
         /// </summary>
         public Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default) =>
             Task.FromResult(Array.Empty<byte>());
         /// <summary>
-        /// 验证 WriteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default) =>
             Task.FromResult(true);
         /// <summary>
-        /// 验证 SendAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> SendAsync(byte[] data, CancellationToken ct = default) => Task.FromResult(true);
         /// <summary>
-        /// 验证 SendAndReceiveAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendAndReceiveAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Empty；具体条件和先后次序见方法体。
         /// </summary>
         public Task<byte[]> SendAndReceiveAsync(byte[] data, CancellationToken ct = default) =>
             Task.FromResult(Array.Empty<byte>());
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Dispose() => DisposeCount++;
 
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 DisconnectAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -594,7 +594,7 @@ public sealed class CommunicationManagerTests
         public ConnectionState State => ConnectionState.Disconnected;
 
         /// <summary>
-        /// 验证 ConnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult、WaitAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -609,7 +609,7 @@ public sealed class CommunicationManagerTests
         }
 
         /// <summary>
-        /// 验证 DisconnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisconnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult、WaitAsync；具体条件和先后次序见方法体。
         /// </summary>
         ValueTask IConnection.DisconnectAsync(CancellationToken cancellationToken)

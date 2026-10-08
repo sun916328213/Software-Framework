@@ -14,7 +14,7 @@ namespace MotionControl.Tests;
 public sealed class MotionControlLifecycleTests
 {
     /// <summary>
-    /// 验证 Disconnect_WaitsForInFlightCommandBeforeReleasingConnection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Disconnect_WaitsForInFlightCommandBeforeReleasingConnection；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、Connect、Run、MoveAbsResult、Wait；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -55,12 +55,12 @@ public sealed class MotionControlLifecycleTests
         public List<string> Events { get; } = new();
 
         /// <summary>
-        /// 验证 ConnectRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConnectRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult ConnectRefactor() => EMotionResult.Success;
 
         /// <summary>
-        /// 验证 DisConnectRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisConnectRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Set、Add；具体条件和先后次序见方法体。
         /// 方法内使用锁保护部分共享操作；锁外操作的并发约束仍需结合调用者核对。
         /// </summary>
@@ -73,24 +73,24 @@ public sealed class MotionControlLifecycleTests
         }
 
         /// <summary>
-        /// 验证 ServoOnRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ServoOnRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult ServoOnRefactor(int axis) => EMotionResult.Success;
         /// <summary>
-        /// 验证 ServoOffRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ServoOffRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult ServoOffRefactor(int axis) => EMotionResult.Success;
         /// <summary>
-        /// 验证 ClearAxisStatusRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ClearAxisStatusRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult ClearAxisStatusRefactor(int axis) => EMotionResult.Success;
         /// <summary>
-        /// 验证 SetSpeedRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetSpeedRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult SetSpeedRefactor(int axis, long velPulse) => EMotionResult.Success;
 
         /// <summary>
-        /// 验证 MoveAbsRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 MoveAbsRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、Set、Wait、FromSeconds；具体条件和先后次序见方法体。
         /// 方法内使用锁保护部分共享操作；锁外操作的并发约束仍需结合调用者核对。
         /// </summary>
@@ -107,28 +107,28 @@ public sealed class MotionControlLifecycleTests
         }
 
         /// <summary>
-        /// 验证 MoveRelRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 MoveRelRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult MoveRelRefactor(int axis, long pulse) => EMotionResult.Success;
         /// <summary>
-        /// 验证 JogStartRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 JogStartRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult JogStartRefactor(int axis, short direction) => EMotionResult.Success;
         /// <summary>
-        /// 验证 StopAxisRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StopAxisRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult StopAxisRefactor(int axis, EStopMode stopMode) => EMotionResult.Success;
         /// <summary>
-        /// 验证 StopAllRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StopAllRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult StopAllRefactor(EStopMode stopMode) => EMotionResult.Success;
         /// <summary>
-        /// 验证 HomeStartRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 HomeStartRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult HomeStartRefactor(int axis) => EMotionResult.Success;
 
         /// <summary>
-        /// 验证 GetCommandPositionRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetCommandPositionRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult GetCommandPositionRefactor(int axis, out long pulse)
         {
@@ -137,7 +137,7 @@ public sealed class MotionControlLifecycleTests
         }
 
         /// <summary>
-        /// 验证 GetEncoderPositionRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetEncoderPositionRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult GetEncoderPositionRefactor(int axis, out long pulse)
         {
@@ -146,7 +146,7 @@ public sealed class MotionControlLifecycleTests
         }
 
         /// <summary>
-        /// 验证 GetAxisStatusRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetAxisStatusRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult GetAxisStatusRefactor(int axis, out long raw)
         {
@@ -155,7 +155,7 @@ public sealed class MotionControlLifecycleTests
         }
 
         /// <summary>
-        /// 验证 GetInputRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetInputRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult GetInputRefactor(int index, out bool state)
         {
@@ -164,7 +164,7 @@ public sealed class MotionControlLifecycleTests
         }
 
         /// <summary>
-        /// 验证 GetOutputRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetOutputRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult GetOutputRefactor(int index, out bool state)
         {
@@ -173,7 +173,7 @@ public sealed class MotionControlLifecycleTests
         }
 
         /// <summary>
-        /// 验证 SetOutputRefactor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetOutputRefactor；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override EMotionResult SetOutputRefactor(int index, bool state) => EMotionResult.Success;
     }

@@ -32,7 +32,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Append_累加Count并保持顺序 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Append_累加Count并保持顺序；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Equal、CopyFrame；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -50,7 +50,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Append_空数据是noop 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Append_空数据是noop；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Equal、CopyFrame；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -66,7 +66,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Span暴露当前有效区间 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Span暴露当前有效区间；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Consume、Equal、ToArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -85,7 +85,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 Consume_丢弃前N字节 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Consume_丢弃前N字节；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Consume、Equal、CopyFrame；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -101,7 +101,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Consume_超出Count时按Count截断_不抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Consume_超出Count时按Count截断_不抛；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Consume、Equal、True；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -117,7 +117,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Consume_零或负数直接返回 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Consume_零或负数直接返回；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Consume、Equal、CopyFrame；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -134,7 +134,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Consume_全部消费后还能继续追加 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Consume_全部消费后还能继续追加；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Consume、Equal、CopyFrame；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -170,7 +170,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 消费不超过一半时不平移_但数据依然正确 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 消费不超过一半时不平移_但数据依然正确；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Consume、Equal、CopyFrame；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -189,7 +189,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 多轮追加消费_内容顺序始终不乱 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 多轮追加消费_内容顺序始终不乱；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Enqueue、CopyFrame、Equal、Dequeue；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -236,7 +236,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 超出容量时自动翻倍扩容_数据不丢 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 超出容量时自动翻倍扩容_数据不丢；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Equal、CopyFrame；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -257,7 +257,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 扩容后原有数据全部保留 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 扩容后原有数据全部保留；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Equal、CopyFrame；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -276,7 +276,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 先消费再追加_不会因为mRead残留而写错位置 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 先消费再追加_不会因为mRead残留而写错位置；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Consume、Equal、CopyFrame；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -310,7 +310,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 CopyFrame_越界抛ArgumentOutOfRangeException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CopyFrame_越界抛ArgumentOutOfRangeException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Throws、CopyFrame；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -327,7 +327,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 CopyFrame_返回的是新数组_修改它不影响缓冲 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CopyFrame_返回的是新数组_修改它不影响缓冲；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、CopyFrame、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -347,7 +347,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 Clear_重置计数但不清零底层数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Clear_重置计数但不清零底层数组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Clear、Equal、True、CopyFrame；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -367,7 +367,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Clear后可以重新增长到原容量之外 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Clear后可以重新增长到原容量之外；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Append、Clear、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -400,7 +400,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 API面_SlidingBuffer的公开成员面 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 API面_SlidingBuffer的公开成员面；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToArray、OrderBy、Select、GetMethods；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

@@ -32,7 +32,7 @@ public class FlowChartServiceExecutionTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 Write 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Write；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Enqueue；具体条件和先后次序见方法体。
         /// </remarks>
         public void Write(FlowLogRecord record) => Records.Enqueue(record);
@@ -46,7 +46,7 @@ public class FlowChartServiceExecutionTests
     {
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 Write 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Write；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Contains；具体条件和先后次序见方法体。
         /// </remarks>
         public void Write(FlowLogRecord record)
@@ -66,7 +66,7 @@ public class FlowChartServiceExecutionTests
             new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult、Delay；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -78,7 +78,7 @@ public class FlowChartServiceExecutionTests
     }
 
     /// <summary>
-    /// 验证 RunAsync_ExecutesActiveGraphAndSkipsExcludedNodes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RunAsync_ExecutesActiveGraphAndSkipsExcludedNodes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、RunAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -109,7 +109,7 @@ public class FlowChartServiceExecutionTests
     }
 
     /// <summary>
-    /// 验证 RunAsync_NodeFailure_AlwaysRestoresRuntimeState 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RunAsync_NodeFailure_AlwaysRestoresRuntimeState；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、RunAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -212,7 +212,7 @@ public class FlowChartServiceExecutionTests
     }
 
     /// <summary>
-    /// 验证 Stop_CancelsRunningNodeAndCompletesRunTask 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Stop_CancelsRunningNodeAndCompletesRunTask；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、RunAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -238,7 +238,7 @@ public class FlowChartServiceExecutionTests
     }
 
     /// <summary>
-    /// 验证 StopLoop_CompletesLoopAndReportsStoppedState 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 StopLoop_CompletesLoopAndReportsStoppedState；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、RunLoopAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -264,7 +264,7 @@ public class FlowChartServiceExecutionTests
     }
 
     /// <summary>
-    /// 验证 AppendLog_FlushesQuietTrailingBatchWithoutAnotherMessage 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AppendLog_FlushesQuietTrailingBatchWithoutAnotherMessage；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、Append、DoesNotContain、WaitUntilAsync、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -285,7 +285,7 @@ public class FlowChartServiceExecutionTests
     }
 
     /// <summary>
-    /// 验证 RunAsync_PublishesNodeStartBeforeLongRunningNodeCompletes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RunAsync_PublishesNodeStartBeforeLongRunningNodeCompletes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、RunAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -309,7 +309,7 @@ public class FlowChartServiceExecutionTests
     }
 
     /// <summary>
-    /// 验证 RunAsync_LogSinkFailureAfterSuccessfulNodes_DoesNotChangeSuccessStatus 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RunAsync_LogSinkFailureAfterSuccessfulNodes_DoesNotChangeSuccessStatus；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、RunAsync、Equal、All；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -326,7 +326,7 @@ public class FlowChartServiceExecutionTests
     }
 
     /// <summary>
-    /// 验证 RunAsync_ImmediatelyReplacesPreviousErrorWithRunningStatus 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RunAsync_ImmediatelyReplacesPreviousErrorWithRunningStatus；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、RunAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -350,14 +350,14 @@ public class FlowChartServiceExecutionTests
     }
 
     /// <summary>
-    /// 验证 CreateService 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreateService；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService；具体条件和先后次序见方法体。
     /// </summary>
     private static FlowChartService CreateService() =>
         TestFlowEditorFactory.CreateService();
 
     /// <summary>
-    /// 验证 WaitUntilAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WaitUntilAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、condition、Delay；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

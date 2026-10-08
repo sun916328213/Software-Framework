@@ -89,13 +89,13 @@ public sealed class StandardToolContractTests
     public static IEnumerable<object[]> AllCases => Cases.Select(c => new object[] { c.Name });
 
     /// <summary>
-    /// 验证 Find 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Find；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 First；具体条件和先后次序见方法体。
     /// </summary>
     private static Case Find(string name) => Cases.First(c => c.Name == name);
 
     /// <summary>
-    /// 验证 DefaultValidation_MatchesExpectation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DefaultValidation_MatchesExpectation；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 nameof、Find、Create、Equal、Validate；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -111,7 +111,7 @@ public sealed class StandardToolContractTests
     }
 
     /// <summary>
-    /// 验证 InvalidParams_ProduceFailedRun_WithoutThrowing 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 InvalidParams_ProduceFailedRun_WithoutThrowing；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 nameof、Find、Create、MakeInvalid、Params；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -136,7 +136,7 @@ public sealed class StandardToolContractTests
     }
 
     /// <summary>
-    /// 验证 Results_AreClean 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Results_AreClean；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 nameof、Create、Find、IsCleanResult；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -151,7 +151,7 @@ public sealed class StandardToolContractTests
     }
 
     /// <summary>
-    /// 验证 Parameters_RoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Parameters_RoundTrip；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 nameof、Create、Find、RoundTripsThroughJson、Params；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -166,7 +166,7 @@ public sealed class StandardToolContractTests
     }
 
     /// <summary>
-    /// 验证 CaseTable_CoversFourteenTools 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CaseTable_CoversFourteenTools；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

@@ -14,7 +14,7 @@ namespace Communication.Tests.Core;
 public sealed class DeviceValueTests
 {
     /// <summary>
-    /// 验证 Failed_conversion_is_reported_instead_of_returning_default 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Failed_conversion_is_reported_instead_of_returning_default；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、GetValue、Contains、NotNull；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

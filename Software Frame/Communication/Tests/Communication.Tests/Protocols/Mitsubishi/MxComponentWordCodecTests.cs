@@ -14,7 +14,7 @@ namespace Communication.Tests.Protocols.Mitsubishi;
 public sealed class MxComponentWordCodecTests
 {
     /// <summary>
-    /// 验证 Mx_words_are_encoded_as_explicit_little_endian_mc_payload 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mx_words_are_encoded_as_explicit_little_endian_mc_payload；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、ToPayload；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -28,7 +28,7 @@ public sealed class MxComponentWordCodecTests
     }
 
     /// <summary>
-    /// 验证 Mc_payload_is_decoded_to_signed_mx_words_without_using_host_endianness 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mc_payload_is_decoded_to_signed_mx_words_without_using_host_endianness；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、FromPayload；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -42,7 +42,7 @@ public sealed class MxComponentWordCodecTests
     }
 
     /// <summary>
-    /// 验证 Odd_length_word_payload_is_rejected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Odd_length_word_payload_is_rejected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、FromPayload；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

@@ -14,7 +14,7 @@ namespace Communication.Tests.Converters;
 public sealed class DataFormatCodecTests
 {
     /// <summary>
-    /// 验证 Legacy_runtime_codec_remains_compatible_during_namespace_migration 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Legacy_runtime_codec_remains_compatible_during_namespace_migration；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、DecodeInt32、EncodeInt32；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -29,7 +29,7 @@ public sealed class DataFormatCodecTests
     }
 
     /// <summary>
-    /// 验证 Int32_round_trips_for_each_device_data_format 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Int32_round_trips_for_each_device_data_format；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、DecodeInt32、EncodeInt32；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]

@@ -35,7 +35,7 @@ public class ReflectionNodeFactoryTests
         /// </summary>
         public DiOnlyNode(DiService service) => Injected = service;
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
     }
@@ -59,7 +59,7 @@ public class ReflectionNodeFactoryTests
             Source = $"di:{s1.Tag}/{s2.Tag}";
         }
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
     }
@@ -72,13 +72,13 @@ public class ReflectionNodeFactoryTests
         /// </summary>
         public UnresolvedNode(Stream stream) { }
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
     }
 
     /// <summary>
-    /// 验证 Desc 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Desc；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static NodeDocumentModel Desc<T>() where T : NodeModel
         => new() { Id = "t", TypeName = typeof(T).AssemblyQualifiedName!, Name = "n" };
@@ -108,7 +108,7 @@ public class ReflectionNodeFactoryTests
     }
 
     /// <summary>
-    /// 验证 DiCtor_ResolvedViaRegisterService 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DiCtor_ResolvedViaRegisterService；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterService、Create、Desc、IsType、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -123,7 +123,7 @@ public class ReflectionNodeFactoryTests
     }
 
     /// <summary>
-    /// 验证 DiCtor_ResolvedViaInstanceFallback 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DiCtor_ResolvedViaInstanceFallback；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、Desc、NotNull、IsType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -138,7 +138,7 @@ public class ReflectionNodeFactoryTests
     }
 
     /// <summary>
-    /// 验证 GreedyCtor_PrefersResolvableParameterful_OverParameterless 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 GreedyCtor_PrefersResolvableParameterful_OverParameterless；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterService、Create、Desc、StartsWith；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -153,7 +153,7 @@ public class ReflectionNodeFactoryTests
     }
 
     /// <summary>
-    /// 验证 Parameterless_WinsWhenNoServicesRegistered 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Parameterless_WinsWhenNoServicesRegistered；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、Desc、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -165,7 +165,7 @@ public class ReflectionNodeFactoryTests
     }
 
     /// <summary>
-    /// 验证 MissingDependency_ThrowsWithServiceNames 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MissingDependency_ThrowsWithServiceNames；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Create、Desc、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

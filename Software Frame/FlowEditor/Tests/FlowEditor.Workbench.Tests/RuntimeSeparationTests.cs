@@ -51,7 +51,7 @@ public class RuntimeSeparationTests
     }
 
     /// <summary>
-    /// 验证 ToDescriptor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ToDescriptor；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetType、ToList、Select；具体条件和先后次序见方法体。
     /// </summary>
     private static NodeDocumentModel ToDescriptor(NodeViewModel vm)
@@ -73,7 +73,7 @@ public class RuntimeSeparationTests
     }
 
     /// <summary>
-    /// 验证 TwoInstances_ConcurrentRun_Isolated 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TwoInstances_ConcurrentRun_Isolated；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildPlusOneProgram、Create、Inject、WhenAll、RunAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -99,7 +99,7 @@ public class RuntimeSeparationTests
     }
 
     /// <summary>
-    /// 验证 SameProgram_RerunOnSameInstance_RetainsIndependentState 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SameProgram_RerunOnSameInstance_RetainsIndependentState；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildPlusOneProgram、Create、Inject、RunAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -118,7 +118,7 @@ public class RuntimeSeparationTests
     }
 
     /// <summary>
-    /// 验证 Program_ListSnapshot_IsolatedFromSourceDocument 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Program_ListSnapshot_IsolatedFromSourceDocument；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、FromDocument、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -134,7 +134,7 @@ public class RuntimeSeparationTests
     }
 
     /// <summary>
-    /// 验证 Instance_StatusEvents_Fire 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Instance_StatusEvents_Fire；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildPlusOneProgram、Create、Add、RunAsync、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -154,7 +154,7 @@ public class RuntimeSeparationTests
     }
 
     /// <summary>
-    /// 验证 Inject 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Inject；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 First；具体条件和先后次序见方法体。
     /// </summary>
     private static void Inject(FlowInstance instance, string nodeName, int value)
@@ -164,7 +164,7 @@ public class RuntimeSeparationTests
     }
 
     /// <summary>
-    /// 验证 FindValueNode 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FindValueNode；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 First；具体条件和先后次序见方法体。
     /// </summary>
     private static ValueNode FindValueNode(FlowInstance instance, string name)

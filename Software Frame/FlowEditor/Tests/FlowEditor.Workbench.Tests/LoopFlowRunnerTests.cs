@@ -17,7 +17,7 @@ namespace FlowEditor.Workbench.Tests;
 public class LoopFlowRunnerTests
 {
     /// <summary>
-    /// 验证 ExecuteAsync_RunsBodyExactlyConfiguredNumberOfTimes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExecuteAsync_RunsBodyExactlyConfiguredNumberOfTimes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -37,7 +37,7 @@ public class LoopFlowRunnerTests
     }
 
     /// <summary>
-    /// 验证 ExecuteAsync_RejectsEmptyBody 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExecuteAsync_RejectsEmptyBody；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAsync、ExecuteAsync、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -54,7 +54,7 @@ public class LoopFlowRunnerTests
     }
 
     /// <summary>
-    /// 验证 ExecuteAsync_EmitsConciseIterationAndNodeLogs 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExecuteAsync_EmitsConciseIterationAndNodeLogs；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ExecuteAsync、Equal、Count、StartsWith、DoesNotContain；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -75,7 +75,7 @@ public class LoopFlowRunnerTests
     }
 
     /// <summary>
-    /// 验证 ExecuteAsync_MinusOneRunsUntilCancellation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExecuteAsync_MinusOneRunsUntilCancellation；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAnyAsync、ExecuteAsync、Cancel、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

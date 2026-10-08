@@ -41,7 +41,7 @@ public sealed class HalconToolContractTests
     }
 
     /// <summary>
-    /// 验证 FindLine_DefaultParameters_AreValid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FindLine_DefaultParameters_AreValid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Validate、True、ToMessage；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -53,7 +53,7 @@ public sealed class HalconToolContractTests
     }
 
     /// <summary>
-    /// 验证 Fixture_DefaultParameters_AreValid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Fixture_DefaultParameters_AreValid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Validate、True、ToMessage；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -65,7 +65,7 @@ public sealed class HalconToolContractTests
     }
 
     /// <summary>
-    /// 验证 Barcode_DataCode_DefaultParameters_AreValid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Barcode_DataCode_DefaultParameters_AreValid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、Validate；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -78,7 +78,7 @@ public sealed class HalconToolContractTests
     }
 
     /// <summary>
-    /// 验证 ShapeMatch_WithoutModel_ReportsNotTrained 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ShapeMatch_WithoutModel_ReportsNotTrained；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Validate、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -91,7 +91,7 @@ public sealed class HalconToolContractTests
     }
 
     /// <summary>
-    /// 验证 Calibration_WithoutPoints_ReportsTooFew 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Calibration_WithoutPoints_ReportsTooFew；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Validate、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -104,7 +104,7 @@ public sealed class HalconToolContractTests
     }
 
     /// <summary>
-    /// 验证 ImageFile_EmptyPath_ReportsEmpty 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ImageFile_EmptyPath_ReportsEmpty；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Validate、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -130,7 +130,7 @@ public sealed class HalconToolContractTests
     }
 
     /// <summary>
-    /// 验证 Blob_MissingFeatureConfig_ReturnsFailedResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Blob_MissingFeatureConfig_ReturnsFailedResult；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -149,7 +149,7 @@ public sealed class HalconToolContractTests
     }
 
     /// <summary>
-    /// 验证 FindLine_DegenerateLine_IsInvalid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FindLine_DegenerateLine_IsInvalid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Validate、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -163,7 +163,7 @@ public sealed class HalconToolContractTests
     }
 
     /// <summary>
-    /// 验证 Fixture_NonPositiveScale_IsInvalid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Fixture_NonPositiveScale_IsInvalid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Validate、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -177,7 +177,7 @@ public sealed class HalconToolContractTests
     }
 
     /// <summary>
-    /// 验证 ShapeMatch_BadScoreRange_IsInvalid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ShapeMatch_BadScoreRange_IsInvalid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Validate、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -206,7 +206,7 @@ public sealed class HalconToolContractTests
     }
 
     /// <summary>
-    /// 验证 RunImage_WhenInvalid_ValidatesBeforeConverting 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RunImage_WhenInvalid_ValidatesBeforeConverting；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromBuffer、RunImage、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -225,7 +225,7 @@ public sealed class HalconToolContractTests
     }
 
     /// <summary>
-    /// 验证 RunImage_WhenFormatIsUnsupported_ReturnsFailedResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RunImage_WhenFormatIsUnsupported_ReturnsFailedResult；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromBuffer、RunImage、False、True、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -256,7 +256,7 @@ public sealed class HalconToolContractTests
     };
 
     /// <summary>
-    /// 验证 Result_DerivesFromToolResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Result_DerivesFromToolResult；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 nameof、True、IsAssignableFrom；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -267,7 +267,7 @@ public sealed class HalconToolContractTests
     }
 
     /// <summary>
-    /// 验证 Result_PublicSignature_ExposesNoHalconTypes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Result_PublicSignature_ExposesNoHalconTypes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 nameof、ExposedTypes、GetName、False、StartsWith；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -338,7 +338,7 @@ public sealed class HalconToolContractTests
     }
 
     /// <summary>
-    /// 验证 RunImage_RepeatedCalls_KeepStableResults 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RunImage_RepeatedCalls_KeepStableResults；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Clear、Mono8BlobImage、Clone、RunImage、True；具体条件和先后次序见方法体。
     /// </summary>
     [HalconRuntimeFact]
@@ -374,7 +374,7 @@ public sealed class HalconToolContractTests
     ]);
 
     /// <summary>
-    /// 验证 ExposedTypes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExposedTypes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetProperties、Unwrap、GetFields、GetGenericArguments、StartsWith；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<Type> ExposedTypes(Type type)

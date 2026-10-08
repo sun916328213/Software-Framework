@@ -20,7 +20,7 @@ namespace Vision.Workbench.Tests.WorkbenchSmoke;
 public sealed class WorkbenchSmokeTests
 {
     /// <summary>
-    /// 验证 Browser_BuildsFullCatalog_AndSelectsFirst 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Browser_BuildsFullCatalog_AndSelectsFirst；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、NotNull、NotEmpty；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -37,7 +37,7 @@ public sealed class WorkbenchSmokeTests
     }
 
     /// <summary>
-    /// 验证 Browser_SelectsEveryEntry_WithoutThrowing 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Browser_SelectsEveryEntry_WithoutThrowing；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NotNull、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -54,7 +54,7 @@ public sealed class WorkbenchSmokeTests
     }
 
     /// <summary>
-    /// 验证 Browser_DemoImage_Compare_AndBenchmark_FlowThrough 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Browser_DemoImage_Compare_AndBenchmark_FlowThrough；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Execute、Contains、NotEqual；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -73,7 +73,7 @@ public sealed class WorkbenchSmokeTests
     }
 
     /// <summary>
-    /// 验证 Browser_Compare_WithoutImage_AsksForImage 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Browser_Compare_WithoutImage_AsksForImage；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Execute、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

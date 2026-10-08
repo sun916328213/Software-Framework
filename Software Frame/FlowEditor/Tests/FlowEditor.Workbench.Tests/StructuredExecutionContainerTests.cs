@@ -39,7 +39,7 @@ public class StructuredExecutionContainerTests
             new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult、WaitAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -50,7 +50,7 @@ public class StructuredExecutionContainerTests
         }
 
         /// <summary>
-        /// 验证 Complete 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Complete；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult；具体条件和先后次序见方法体。
         /// </summary>
         public void Complete() => _release.TrySetResult();
@@ -65,7 +65,7 @@ public class StructuredExecutionContainerTests
         public static int Executions;
 
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Increment；具体条件和先后次序见方法体。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct)
@@ -92,7 +92,7 @@ public class StructuredExecutionContainerTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public override Task ExecuteAsync(CancellationToken ct)
         {
@@ -119,7 +119,7 @@ public class StructuredExecutionContainerTests
         public int Attempts { get; private set; }
 
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct)
         {
@@ -131,7 +131,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 ParallelContainer_OnMainCanvas_StartsAllLanesAndWaitsForAll 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ParallelContainer_OnMainCanvas_StartsAllLanesAndWaitsForAll；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、RunAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -173,7 +173,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 ParallelContainer_FailedLane_DoesNotCancelRunningSiblingLane 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ParallelContainer_FailedLane_DoesNotCancelRunningSiblingLane；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ExecuteAsync、WaitAsync、FromSeconds、Delay、False；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -201,7 +201,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 LoopContainer_OnMainCanvas_RepeatsItsBodyExactly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopContainer_OnMainCanvas_RepeatsItsBodyExactly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、RunAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -229,7 +229,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 LoopContainer_MinusOneMeansInfiniteLoop 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopContainer_MinusOneMeansInfiniteLoop；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -241,7 +241,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 LoopContainer_ExposesIterationDelaySetting 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopContainer_ExposesIterationDelaySetting；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetProperty、NotNull、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -254,7 +254,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 LoopRunner_WaitsConfiguredDelayBetweenIterations 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopRunner_WaitsConfiguredDelayBetweenIterations；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 StartNew、ExecuteAsync、Equal、True；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -315,7 +315,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 ToolBlock_ExecutesNestedLoopWithItsOwnRuntimeScope 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ToolBlock_ExecutesNestedLoopWithItsOwnRuntimeScope；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、BuildNodeDocument、Add、Flow；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -410,7 +410,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 ContinueFromNode_ResumesFailedParallelLaneThenContinuesOuterFlow 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ContinueFromNode_ResumesFailedParallelLaneThenContinuesOuterFlow；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、RunAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -462,7 +462,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 ContinueFromNode_RecoversParallelLaneWhileSiblingIsStillRunning 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ContinueFromNode_RecoversParallelLaneWhileSiblingIsStillRunning；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、RunAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -598,7 +598,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 ContinueFromFailedLoopNode_CompletesCurrentAndRemainingIterations 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ContinueFromFailedLoopNode_CompletesCurrentAndRemainingIterations；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、RunAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -644,7 +644,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 ToolbarContinue_AfterLoopFailure_CanJumpToPreviousNodeAndContinuePath 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ToolbarContinue_AfterLoopFailure_CanJumpToPreviousNodeAndContinuePath；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、CreateViewModel、AddNode、Add、Flow；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -699,7 +699,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 LoopRegion_UsesExistingBoundaryConnectionsWithoutContainerWiring 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopRegion_UsesExistingBoundaryConnectionsWithoutContainerWiring；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、RunAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -740,7 +740,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 LoopRegion_PreservesDataTransferAcrossItsVisualBoundary 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopRegion_PreservesDataTransferAcrossItsVisualBoundary；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、Data；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -776,7 +776,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 CompiledFlowInstance_PreservesAndExecutesContainerMembers 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CompiledFlowInstance_PreservesAndExecutesContainerMembers；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、CompileProgram；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -805,7 +805,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 Validator_RejectsConnectionAcrossParallelLanes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Validator_RejectsConnectionAcrossParallelLanes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Flow、Analyze、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -832,7 +832,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 ConnectionService_RejectsCrossLaneConnectionBeforeItIsCreated 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectionService_RejectsCrossLaneConnectionBeforeItIsCreated；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 PlanConnection、Single、False、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -859,7 +859,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 DragParallelContainer_MovesItsMemberBySameDelta 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DragParallelContainer_MovesItsMemberBySameDelta；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、CreateViewModel、AddNode、SetSelectedNodes、BeginNodeDrag；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -891,7 +891,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 PuttingConnectedNodeInsideLoopContainer_PreservesItsConnections 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PuttingConnectedNodeInsideLoopContainer_PreservesItsConnections；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、CreateViewModel、AddNode、Add、Flow；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -917,7 +917,7 @@ public class StructuredExecutionContainerTests
     }
 
     /// <summary>
-    /// 验证 CreateService 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreateService；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService；具体条件和先后次序见方法体。
     /// </summary>
     private static FlowChartService CreateService() =>

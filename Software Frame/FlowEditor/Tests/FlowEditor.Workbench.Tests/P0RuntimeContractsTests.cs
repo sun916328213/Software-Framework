@@ -17,7 +17,7 @@ namespace FlowEditor.Workbench.Tests;
 public class P0RuntimeContractsTests
 {
     /// <summary>
-    /// 验证 Context_CanBeBuilt_InUnitTest_WithoutWpf 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Context_CanBeBuilt_InUnitTest_WithoutWpf；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateTest、Equal、NotNull、Null、ThrowIfCancellationRequested；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -37,7 +37,7 @@ public class P0RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 Context_Variables_And_Services_AreSafe 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Context_Variables_And_Services_AreSafe；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateTest、Equal、GetVariable、NotNull、GetService；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -56,7 +56,7 @@ public class P0RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 FlowNodeException_Carries_StableCode_And_Category 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FlowNodeException_Carries_StableCode_And_Category；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 DeviceOffline、Equal、True、Config、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -85,7 +85,7 @@ public class P0RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 ResourceLease_Owned_Disposes_But_Borrowed_DoesNot 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ResourceLease_Owned_Disposes_But_Borrowed_DoesNot；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Dispose、True、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -103,7 +103,7 @@ public class P0RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 ResourceScope_CleansUp_OnDispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ResourceScope_CleansUp_OnDispose；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Track、Equal、Dispose、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -120,7 +120,7 @@ public class P0RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 Engine_Prefers_ContextContract_Over_Legacy 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Engine_Prefers_ContextContract_Over_Legacy；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ExecuteAsync、True、False、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -137,7 +137,7 @@ public class P0RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 Engine_LegacyNode_StillRuns_WithoutChanges 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Engine_LegacyNode_StillRuns_WithoutChanges；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ExecuteAsync、True、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -153,7 +153,7 @@ public class P0RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 Engine_Cancellation_DoesNotRetry_And_FailsFast 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Engine_Cancellation_DoesNotRetry_And_FailsFast；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Cancel、ThrowsAnyAsync、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -184,7 +184,7 @@ public class P0RuntimeContractsTests
     {
         private readonly object[] _services = services;
         /// <summary>
-        /// 验证 GetService 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetService；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FirstOrDefault、IsInstanceOfType；具体条件和先后次序见方法体。
         /// </summary>
         public object? GetService(Type serviceType) =>
@@ -199,7 +199,7 @@ public class P0RuntimeContractsTests
     {
         public bool Disposed { get; private set; }
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Dispose() => Disposed = true;
     }
@@ -227,15 +227,15 @@ public class P0RuntimeContractsTests
         public IReadOnlyList<string>? ControlFlowPorts => null;
         public FlowJoinMode FlowJoinMode => FlowJoinMode.WaitAllAnyActive;
         /// <summary>
-        /// 验证 FindPortById 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FindPortById；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public PortModel? FindPortById(string portId) => null;
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task ExecuteAsync(CancellationToken ct) { LegacyUsed = true; return Task.CompletedTask; }
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfNull、ThrowIfCancellationRequested、LogInfo；具体条件和先后次序见方法体。
         /// </summary>
         public Task ExecuteAsync(NodeExecutionContext ctx)
@@ -247,19 +247,19 @@ public class P0RuntimeContractsTests
             return Task.CompletedTask;
         }
         /// <summary>
-        /// 验证 SyncInputValues 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SyncInputValues；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void SyncInputValues() { }
         /// <summary>
-        /// 验证 SyncOutputValues 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SyncOutputValues；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void SyncOutputValues() { }
         /// <summary>
-        /// 验证 ResetActivation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ResetActivation；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void ResetActivation() { }
         /// <summary>
-        /// 验证 GetActivatedOutputNames 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetActivatedOutputNames；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public IReadOnlyCollection<string>? GetActivatedOutputNames() => null;
     }
@@ -286,27 +286,27 @@ public class P0RuntimeContractsTests
         public IReadOnlyList<string>? ControlFlowPorts => null;
         public FlowJoinMode FlowJoinMode => FlowJoinMode.WaitAllAnyActive;
         /// <summary>
-        /// 验证 FindPortById 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FindPortById；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public PortModel? FindPortById(string portId) => null;
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task ExecuteAsync(CancellationToken ct) { Executed = true; return Task.CompletedTask; }
         /// <summary>
-        /// 验证 SyncInputValues 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SyncInputValues；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void SyncInputValues() { }
         /// <summary>
-        /// 验证 SyncOutputValues 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SyncOutputValues；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void SyncOutputValues() { }
         /// <summary>
-        /// 验证 ResetActivation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ResetActivation；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void ResetActivation() { }
         /// <summary>
-        /// 验证 GetActivatedOutputNames 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetActivatedOutputNames；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public IReadOnlyCollection<string>? GetActivatedOutputNames() => null;
     }

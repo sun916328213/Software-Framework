@@ -15,7 +15,7 @@ namespace Communication.Tests.Protocols.Modbus;
 public sealed class ModbusReadBatchPlannerTests
 {
     /// <summary>
-    /// 验证 One_hundred_adjacent_registers_are_merged_into_one_request 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 One_hundred_adjacent_registers_are_merged_into_one_request；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、Select、Range、Single、Plan；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -37,7 +37,7 @@ public sealed class ModbusReadBatchPlannerTests
     }
 
     /// <summary>
-    /// 验证 A_batch_response_updates_every_point_from_its_own_slice 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 A_batch_response_updates_every_point_from_its_own_slice；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Single、Plan、ApplyResponse、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -57,7 +57,7 @@ public sealed class ModbusReadBatchPlannerTests
     }
 
     /// <summary>
-    /// 验证 Protocol_limit_splits_one_hundred_and_twenty_six_adjacent_registers 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Protocol_limit_splits_one_hundred_and_twenty_six_adjacent_registers；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、Select、Range、Plan、Collection；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -79,7 +79,7 @@ public sealed class ModbusReadBatchPlannerTests
     }
 
     /// <summary>
-    /// 验证 A_point_wider_than_the_configured_request_limit_is_rejected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 A_point_wider_than_the_configured_request_limit_is_rejected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Plan、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -94,7 +94,7 @@ public sealed class ModbusReadBatchPlannerTests
     }
 
     /// <summary>
-    /// 验证 Address_gaps_and_register_regions_are_not_merged 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Address_gaps_and_register_regions_are_not_merged；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Plan、Equal、Contains、Select、Where；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -117,7 +117,7 @@ public sealed class ModbusReadBatchPlannerTests
     }
 
     /// <summary>
-    /// 验证 Invalid_response_length_is_rejected_before_any_point_is_updated 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Invalid_response_length_is_rejected_before_any_point_is_updated；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Single、Plan、Throws、ApplyResponse、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -136,7 +136,7 @@ public sealed class ModbusReadBatchPlannerTests
     }
 
     /// <summary>
-    /// 验证 Eight_adjacent_coils_are_merged_and_unpacked_low_bit_first 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Eight_adjacent_coils_are_merged_and_unpacked_low_bit_first；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、Select、Range、Single、Plan；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -162,7 +162,7 @@ public sealed class ModbusReadBatchPlannerTests
     }
 
     /// <summary>
-    /// 验证 Two_thousand_and_one_adjacent_coils_are_split_at_the_protocol_limit 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Two_thousand_and_one_adjacent_coils_are_split_at_the_protocol_limit；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、Select、Range、Plan、Collection；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

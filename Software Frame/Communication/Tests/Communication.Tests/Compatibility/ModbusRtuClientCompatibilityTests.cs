@@ -18,7 +18,7 @@ namespace Communication.Tests.Compatibility;
 public sealed class ModbusRtuClientCompatibilityTests
 {
     /// <summary>
-    /// 验证 Legacy_read_uses_serial_transport_codec_and_connection_session 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Legacy_read_uses_serial_transport_codec_and_connection_session；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 IsAssignableFrom、True、ConnectAsync、ReadAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -62,7 +62,7 @@ public sealed class ModbusRtuClientCompatibilityTests
         public bool IsOpen { get; private set; }
 
         /// <summary>
-        /// 验证 OpenAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OpenAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask OpenAsync(CancellationToken cancellationToken = default)
@@ -73,7 +73,7 @@ public sealed class ModbusRtuClientCompatibilityTests
         }
 
         /// <summary>
-        /// 验证 CloseAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CloseAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested、CompleteAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -90,7 +90,7 @@ public sealed class ModbusRtuClientCompatibilityTests
         }
 
         /// <summary>
-        /// 验证 ReadRequestAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadRequestAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ReadAsync、ToArray、Slice、AdvanceTo、GetPosition；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -108,14 +108,14 @@ public sealed class ModbusRtuClientCompatibilityTests
         }
 
         /// <summary>
-        /// 验证 WriteResponseAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteResponseAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteAsync；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<FlushResult> WriteResponseAsync(ReadOnlyMemory<byte> response) =>
             _responses.Writer.WriteAsync(response);
 
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CloseAsync、CompleteAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>

@@ -36,27 +36,27 @@ namespace Extension.Tests
             RegexOptions.Compiled);
 
         /// <summary>
-        /// 验证 SourceRoot 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SourceRoot；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetFullPath、Combine、GetDirectoryName；具体条件和先后次序见方法体。
         /// </summary>
         private static string SourceRoot([CallerFilePath] string thisFile = "") =>
             Path.GetFullPath(Path.Combine(Path.GetDirectoryName(thisFile)!, "..", "..", "Extension"));
 
         /// <summary>
-        /// 验证 CoreSourceRoot 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CoreSourceRoot；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetFullPath、Combine、SourceRoot；具体条件和先后次序见方法体。
         /// </summary>
         private static string CoreSourceRoot() => Path.GetFullPath(Path.Combine(SourceRoot(), "..", "Extension.Core"));
 
         /// <summary>
-        /// 验证 RootFor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RootFor；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 StartsWith、CoreSourceRoot、SourceRoot；具体条件和先后次序见方法体。
         /// </summary>
         private static string RootFor(string file) => file.StartsWith(CoreSourceRoot() + Path.DirectorySeparatorChar,
             StringComparison.OrdinalIgnoreCase) ? CoreSourceRoot() : SourceRoot();
 
         /// <summary>
-        /// 验证 Sources 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Sources；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Where、SelectMany、SourceRoot、CoreSourceRoot、EnumerateFiles；具体条件和先后次序见方法体。
         /// </summary>
         private static IEnumerable<string> Sources() => new[] { SourceRoot(), CoreSourceRoot() }
@@ -65,7 +65,7 @@ namespace Extension.Tests
                         && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"));
 
         /// <summary>
-        /// 验证 ReferencedModules 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReferencedModules；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Split、TrimStart、StartsWith、Matches；具体条件和先后次序见方法体。
         /// </summary>
         private static IEnumerable<string> ReferencedModules(string text)
@@ -80,7 +80,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 顶层模块必须是封闭集合 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 顶层模块必须是封闭集合；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray、OrderBy、Distinct、Select、Sources；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -96,7 +96,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 模块引用只能走显式允许边 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 模块引用只能走显式允许边；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Sources、GetRelativePath、RootFor、Split、Distinct；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -119,7 +119,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 完全限定名不能绕过模块守卫 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 完全限定名不能绕过模块守卫；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Contains、ReferencedModules、Empty；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -131,7 +131,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 模块依赖图必须无环 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 模块依赖图必须无环；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Visit；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -144,7 +144,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Visit 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Visit；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Contains、Add、Fail、Join、Concat；具体条件和先后次序见方法体。
         /// </summary>
         private static void Visit(string module, HashSet<string> visiting, HashSet<string> visited, List<string> path)

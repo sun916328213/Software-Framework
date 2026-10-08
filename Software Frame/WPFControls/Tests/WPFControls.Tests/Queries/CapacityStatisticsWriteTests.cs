@@ -13,7 +13,7 @@ namespace WPFControls.Tests.Queries;
 public sealed class CapacityStatisticsWriteTests
 {
     /// <summary>
-    /// 验证 RecordCreatesDayThenIncrementsOnlyTheRequestedHour 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RecordCreatesDayThenIncrementsOnlyTheRequestedHour；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Record、Equal、All、Take；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -34,7 +34,7 @@ public sealed class CapacityStatisticsWriteTests
     }
 
     /// <summary>
-    /// 验证 HourlySnapshotKeepsOffsetDayAndUsesTheAdjustedHourFromInput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 HourlySnapshotKeepsOffsetDayAndUsesTheAdjustedHourFromInput；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 SetHourly、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -61,7 +61,7 @@ public sealed class CapacityStatisticsWriteTests
     }
 
     /// <summary>
-    /// 验证 NullSnapshotDoesNotTouchPersistenceAndFailuresReachTheUiErrorBoundary 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NullSnapshotDoesNotTouchPersistenceAndFailuresReachTheUiErrorBoundary；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 SetHourly、Empty、Same、Throws、Record；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -96,41 +96,41 @@ public sealed class CapacityStatisticsWriteTests
         public Exception? Error;
         public List<string> Calls = [];
         /// <summary>
-        /// 验证 FindDay 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FindDay；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public Row? FindDay(DateTime day) { Calls.Add("query"); if (Error != null) throw Error; return Row; }
         /// <summary>
-        /// 验证 CreateDay 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateDay；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Row CreateDay(string id, DateTime day) => new() { Id = id, At = day };
         /// <summary>
-        /// 验证 Time 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Time；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public DateTime Time(Row row) => row.At;
         /// <summary>
-        /// 验证 Good 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Good；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public int Good(Row row, int hour) => row.Good[hour];
         /// <summary>
-        /// 验证 Defect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Defect；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public int Defect(Row row, int hour) => row.Defect[hour];
         /// <summary>
-        /// 验证 SetGood 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetGood；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void SetGood(Row row, int hour, int value) => row.Good[hour] = value;
         /// <summary>
-        /// 验证 SetDefect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetDefect；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void SetDefect(Row row, int hour, int value) => row.Defect[hour] = value;
         /// <summary>
-        /// 验证 UpdateDay 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 UpdateDay；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public void UpdateDay(DateTime day, Row row) { Calls.Add("update"); Row = row; }
         /// <summary>
-        /// 验证 Add 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Add；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public void Add(Row row) { Calls.Add("add"); Row = row; }

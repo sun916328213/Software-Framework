@@ -23,7 +23,7 @@ namespace ScriptEditor.Workbench.Tests;
 public sealed class InteractionTests(WorkbenchAppFixture host)
 {
     /// <summary>
-    /// 验证 RealManagerButtons_RefreshEmptyAndBoundaryAvailability 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RealManagerButtons_RefreshEmptyAndBoundaryAvailability；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、IsType、Single、Resolve、Empty；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -53,7 +53,7 @@ public sealed class InteractionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 LoadedPage_ContextReplacementAndUnload_DetachOldModel 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoadedPage_ContextReplacementAndUnload_DetachOldModel；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Show、NotifyStateChanged、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -90,7 +90,7 @@ public sealed class InteractionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 RoslynEditor_ThemeChangesPreserveDocument_AndUseWhiteLightSurface 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RoslynEditor_ThemeChangesPreserveDocument_AndUseWhiteLightSurface；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Show、Initialize、IsAssignableFrom；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -121,12 +121,12 @@ public sealed class InteractionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 Button 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Button；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Single、OfType、Descendants、Equals；具体条件和先后次序见方法体。
     /// </summary>
     private static Button Button(DependencyObject root, string tooltip) => Descendants(root).OfType<Button>().Single(b => Equals(b.ToolTip, tooltip));
     /// <summary>
-    /// 验证 Invoke 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Invoke；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Button、NotNull、Invoke、GetPattern；具体条件和先后次序见方法体。
     /// </summary>
     private static void Invoke(FrameworkElement root, string tooltip)
@@ -137,7 +137,7 @@ public sealed class InteractionTests(WorkbenchAppFixture host)
         root.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
     }
     /// <summary>
-    /// 验证 Descendants 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Descendants；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetChildrenCount、GetChild、Descendants；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<DependencyObject> Descendants(DependencyObject root)

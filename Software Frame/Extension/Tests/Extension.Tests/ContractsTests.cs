@@ -32,7 +32,7 @@ namespace Extension.Tests
         // ------------------------------------------------------------ EDeviceStatus
 
         /// <summary>
-        /// 验证 EDeviceStatus_取值固定_不得随意重排 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EDeviceStatus_取值固定_不得随意重排；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetValues；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -48,7 +48,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ESecsMode_取值固定 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ESecsMode_取值固定；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetValues；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -61,7 +61,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ESecsMode_成员名用了下划线_不是常见命名风格 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ESecsMode_成员名用了下划线_不是常见命名风格；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Contains、GetNames；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -76,7 +76,7 @@ namespace Extension.Tests
         // ---------------------------------------------------------------- KeyValue
 
         /// <summary>
-        /// 验证 KeyValue_无参构造_两个属性都是null 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 KeyValue_无参构造_两个属性都是null；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -89,7 +89,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 KeyValue_有参构造_按位置赋值 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 KeyValue_有参构造_按位置赋值；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -102,7 +102,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 KeyValue_是引用类型_赋值共享同一个实例 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 KeyValue_是引用类型_赋值共享同一个实例；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Same、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -118,7 +118,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 KeyValue_没有重写Equals_内容相同也不相等 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 KeyValue_没有重写Equals_内容相同也不相等；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NotEqual、False、Equals、Equal、Count；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -139,7 +139,7 @@ namespace Extension.Tests
         // --------------------------------------------------------------- ImageInfo
 
         /// <summary>
-        /// 验证 ImageInfo_是结构体_赋值是拷贝 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ImageInfo_是结构体_赋值是拷贝；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -155,7 +155,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ImageInfo_结构体里的引用成员_浅拷贝共享同一个List 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ImageInfo_结构体里的引用成员_浅拷贝共享同一个List；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、Equal、Same；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -175,7 +175,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ImageInfo_默认值_成员为null 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ImageInfo_默认值_成员为null；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -188,7 +188,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ImageInfoDTO_是结构体_成员是值类型加字符串 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ImageInfoDTO_是结构体_成员是值类型加字符串；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -204,7 +204,7 @@ namespace Extension.Tests
         // --------------------------------------------------------- ImageInfoMapping
 
         /// <summary>
-        /// 验证 ImageInfoMapping_正向映射_ImageCount取路径条数 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ImageInfoMapping_正向映射_ImageCount取路径条数；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Configure、Adapt、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -222,7 +222,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ImageInfoMapping_正向映射_路径为null时计数为0不抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ImageInfoMapping_正向映射_路径为null时计数为0不抛；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Configure、Adapt、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -237,7 +237,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ImageInfoMapping_反向映射_ImagePath被忽略 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ImageInfoMapping_反向映射_ImagePath被忽略；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Configure、Adapt、Equal、Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -255,7 +255,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ImageInfoMapping_是T2依赖_这个文件靠Mapster才能编译 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ImageInfoMapping_是T2依赖_这个文件靠Mapster才能编译；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetName、NotNull、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

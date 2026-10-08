@@ -14,7 +14,7 @@ namespace Communication.Tests.Core;
 public sealed class DataPointCollectionTests
 {
     /// <summary>
-    /// 验证 AddRange_failure_does_not_partially_change_the_collection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AddRange_failure_does_not_partially_change_the_collection；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、Throws、AddRange、Equal、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -35,7 +35,7 @@ public sealed class DataPointCollectionTests
     }
 
     /// <summary>
-    /// 验证 AddDefinitions_failure_does_not_partially_change_the_collection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AddDefinitions_failure_does_not_partially_change_the_collection；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、Throws、AddDefinitions、Equal、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -56,7 +56,7 @@ public sealed class DataPointCollectionTests
     }
 
     /// <summary>
-    /// 验证 All_does_not_allow_bypassing_collection_invariants 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 All_does_not_allow_bypassing_collection_invariants；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、IsAssignableFrom、Throws、Equal、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

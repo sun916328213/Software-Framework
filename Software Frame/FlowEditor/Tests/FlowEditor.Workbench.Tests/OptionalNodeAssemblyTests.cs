@@ -14,7 +14,7 @@ namespace FlowEditor.Workbench.Tests;
 public sealed class OptionalNodeAssemblyTests
 {
     /// <summary>
-    /// 验证 MissingOptionalAssemblyAllowsBuiltInNodes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MissingOptionalAssemblyAllowsBuiltInNodes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 LoadOptionalFlowNodes、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -26,7 +26,7 @@ public sealed class OptionalNodeAssemblyTests
     }
 
     /// <summary>
-    /// 验证 MissingPluginDependencyKeepsOriginalCause 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MissingPluginDependencyKeepsOriginalCause；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、LoadOptionalFlowNodes、Same、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -42,7 +42,7 @@ public sealed class OptionalNodeAssemblyTests
     }
 
     /// <summary>
-    /// 验证 BrokenPluginIsNotTreatedAsMissingOptionalAssembly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BrokenPluginIsNotTreatedAsMissingOptionalAssembly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、LoadOptionalFlowNodes、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

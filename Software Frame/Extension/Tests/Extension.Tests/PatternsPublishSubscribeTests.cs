@@ -38,7 +38,7 @@ public class PatternsPublishSubscribeTests
 		}
 
 		/// <summary>
-		/// 验证 HandleMessage 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+		/// 测试相关入口 HandleMessage；准备条件、协作调用与结果检查以方法正文为准。
 		/// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
 		/// </summary>
 		public override void HandleMessage(string message)
@@ -47,7 +47,7 @@ public class PatternsPublishSubscribeTests
 		}
 
 		/// <summary>
-		/// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+		/// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
 		/// 正文中的关键协作调用包括 Dispose；具体条件和先后次序见方法体。
 		/// </summary>
 		protected override void Dispose(bool disposing)
@@ -64,7 +64,7 @@ public class PatternsPublishSubscribeTests
 	private sealed class ThrowingSubscriber : ISubscriber<string>
 	{
 		/// <summary>
-		/// 验证 HandleMessage 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+		/// 测试相关入口 HandleMessage；准备条件、协作调用与结果检查以方法正文为准。
 		/// </summary>
 		public void HandleMessage(string message)
 		{
@@ -73,7 +73,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 SubscriberBase_Name为null抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 SubscriberBase_Name为null抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -84,7 +84,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 SubscriberBase_Dispose之后HandleMessage仍可调用_没有_disposed检查 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 SubscriberBase_Dispose之后HandleMessage仍可调用_没有_disposed检查；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、HandleMessage、Single；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -97,7 +97,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 DelegateSubscriber_Dispose之后HandleMessage抛ObjectDisposedException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 DelegateSubscriber_Dispose之后HandleMessage抛ObjectDisposedException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、Throws、HandleMessage；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -114,7 +114,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 DelegateSubscriber_构造函数参数校验与Dispose幂等 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 DelegateSubscriber_构造函数参数校验与Dispose幂等；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Dispose；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -132,7 +132,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageBroker_Subscribe去重_SubscriberCount 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageBroker_Subscribe去重_SubscriberCount；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -146,7 +146,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageBroker_Publish送达所有订阅者 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageBroker_Publish送达所有订阅者；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、Publish、Equal、ToArray；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -163,7 +163,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageBroker_一个订阅者抛异常不影响其他订阅者 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageBroker_一个订阅者抛异常不影响其他订阅者；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、Publish、Single；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -178,7 +178,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageBroker_Unsubscribe后不再收到 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageBroker_Unsubscribe后不再收到；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、Unsubscribe、Publish、Empty、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -194,7 +194,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageBroker_ClearSubscribers会清空名单 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageBroker_ClearSubscribers会清空名单；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、ClearSubscribers、Publish、Equal、Empty；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -210,7 +210,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageBroker_Dispose会清空订阅者 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageBroker_Dispose会清空订阅者；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、Dispose、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -223,7 +223,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageBroker_Dispose之后Publish静默返回但Subscribe抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageBroker_Dispose之后Publish静默返回但Subscribe抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、Throws、Subscribe、Unsubscribe、ClearSubscribers；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -251,7 +251,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageBroker_批量订阅与取消会跳过null 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageBroker_批量订阅与取消会跳过null；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SubscribeRange、Equal、UnsubscribeRange；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -267,7 +267,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageBroker_参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageBroker_参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Subscribe、Unsubscribe、SubscribeRange、UnsubscribeRange；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -293,7 +293,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageBroker_PublishAsync会真的送达 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageBroker_PublishAsync会真的送达；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、PublishAsync、Single；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -308,7 +308,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMessageBroker_主题订阅者不会收到Publish 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMessageBroker_主题订阅者不会收到Publish；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、SubscribeToTopic、Publish、Single、Empty；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -328,7 +328,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMessageBroker_PublishToTopic只发给该主题的订阅者 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMessageBroker_PublishToTopic只发给该主题的订阅者；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SubscribeToTopic、PublishToTopic、Single、Empty；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -345,7 +345,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMessageBroker_SubscriberCount只算全局订阅者 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMessageBroker_SubscriberCount只算全局订阅者；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SubscribeToTopic、Equal、Subscribe；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -359,7 +359,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMessageBroker_Unsubscribe会同时从所有主题移除 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMessageBroker_Unsubscribe会同时从所有主题移除；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、SubscribeToTopic、Unsubscribe、Publish、PublishToTopic；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -379,7 +379,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMessageBroker_UnsubscribeFromTopic只影响该主题 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMessageBroker_UnsubscribeFromTopic只影响该主题；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SubscribeToTopic、UnsubscribeFromTopic、PublishToTopic、Empty、Single；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -397,7 +397,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMessageBroker_ClearSubscribers会连主题名单一起清空 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMessageBroker_ClearSubscribers会连主题名单一起清空；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、SubscribeToTopic、ClearSubscribers、Publish、PublishToTopic；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -417,7 +417,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMessageBroker_参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMessageBroker_参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Subscribe、SubscribeToTopic、UnsubscribeFromTopic、SubscribeRange；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -451,7 +451,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMessageBroker_Dispose之后Publish静默返回但Subscribe抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMessageBroker_Dispose之后Publish静默返回但Subscribe抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SubscribeToTopic、Dispose、Throws、Subscribe、ClearSubscribers；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -478,7 +478,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 AdvancedMessageBroker_PublishToTopicAsync会真的送达 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AdvancedMessageBroker_PublishToTopicAsync会真的送达；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SubscribeToTopic、PublishToTopicAsync、Single；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -493,7 +493,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 TopicFilter_空Topic的语义是空白名单才放行 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 TopicFilter_空Topic的语义是空白名单才放行；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、ShouldProcess、False；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -507,7 +507,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 TopicFilter_构造函数对null抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 TopicFilter_构造函数对null抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -517,7 +517,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 PriorityFilter_T_按最低优先级过滤 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 PriorityFilter_T_按最低优先级过滤；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 False、ShouldProcess、True；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -530,7 +530,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 CompositeFilter_T_空列表一律通过 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 CompositeFilter_T_空列表一律通过；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、ShouldProcess；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -541,7 +541,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 CompositeFilter_T_必须全部通过才通过 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 CompositeFilter_T_必须全部通过才通过；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、ShouldProcess、False；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -558,7 +558,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 CompositeFilter_T_构造函数对null抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 CompositeFilter_T_构造函数对null抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -568,7 +568,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 FilteredSubscriber_过滤通过才转发 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FilteredSubscriber_过滤通过才转发；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Add、HandleMessage、Empty、Single；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -588,7 +588,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 FilteredSubscriber_Dispose会连带Dispose内层 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FilteredSubscriber_Dispose会连带Dispose内层；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、Equal、False、IsAssignableFrom；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -606,7 +606,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 FilteredSubscriber_Dispose会连带Dispose内层的DelegateSubscriber 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FilteredSubscriber_Dispose会连带Dispose内层的DelegateSubscriber；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 HandleMessage、Dispose、Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -625,7 +625,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 FilteredSubscriber_Name会带上Filtered前缀_内层两种实现都能分辨 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FilteredSubscriber_Name会带上Filtered前缀_内层两种实现都能分辨；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、NotEqual；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -644,7 +644,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 FilteredSubscriber_Dispose之后HandleMessage抛ObjectDisposedException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FilteredSubscriber_Dispose之后HandleMessage抛ObjectDisposedException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、Throws、HandleMessage；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -659,7 +659,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 FilteredSubscriber_构造函数参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FilteredSubscriber_构造函数参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -671,7 +671,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 Advanced_AdvancedMessageBroker_投递顺序不可由优先级决定 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Advanced_AdvancedMessageBroker_投递顺序不可由优先级决定；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、Add、Publish、Equal、ToArray；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -693,7 +693,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 Advanced_AdvancedMessageBroker_的排序键与订阅者无关 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Advanced_AdvancedMessageBroker_的排序键与订阅者无关；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SourcePath、True、Exists、ReadAllText、Contains；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -707,7 +707,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 Advanced_AdvancedMessageBroker_订阅与主题发布 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Advanced_AdvancedMessageBroker_订阅与主题发布；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、SubscribeToTopic、Publish、PublishToTopic、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -731,7 +731,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 Advanced_AdvancedMessageBroker_SubscriberCount只算全局订阅者 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Advanced_AdvancedMessageBroker_SubscriberCount只算全局订阅者；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SubscribeToTopic、Equal、Subscribe；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -749,7 +749,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 两个同名AdvancedMessageBroker只能靠命名空间区分 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 两个同名AdvancedMessageBroker只能靠命名空间区分；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、NotEqual、True、IsAssignableFrom；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -765,7 +765,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 两个同名MessagePriority枚举都还在 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 两个同名MessagePriority枚举都还在；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -778,7 +778,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 Advanced_AdvancedMessageBroker_Dispose之后Publish静默返回但Subscribe抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Advanced_AdvancedMessageBroker_Dispose之后Publish静默返回但Subscribe抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、Dispose、Throws、ClearSubscribers、Publish；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -810,7 +810,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 Advanced_AdvancedMessageBroker_参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Advanced_AdvancedMessageBroker_参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Subscribe、SubscribeToTopic、PublishToTopic、SubscribeRange；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -846,7 +846,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageRouter_T_路由到已注册的broker 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageRouter_T_路由到已注册的broker；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、RegisterChannel、RouteAndPublish、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -865,7 +865,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageRouter_T_通道未注册或路由结果为空时静默丢弃 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageRouter_T_通道未注册或路由结果为空时静默丢弃；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、RegisterChannel、RouteAndPublish、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -885,7 +885,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageRouter_T_参数校验与重复通道覆盖 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageRouter_T_参数校验与重复通道覆盖；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、RegisterChannel、Subscribe、RouteAndPublish、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -915,7 +915,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageRouter_T_Dispose会Dispose所有broker 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageRouter_T_Dispose会Dispose所有broker；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、RegisterChannel、Dispose、Equal、Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -936,7 +936,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageRouter_T_Dispose之后路由静默返回 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageRouter_T_Dispose之后路由静默返回；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、RegisterChannel、Dispose、RouteAndPublish、RouteAndPublishAsync；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -958,7 +958,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 MessageRouter_T_异步路由会真的送达 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MessageRouter_T_异步路由会真的送达；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Subscribe、RegisterChannel、RouteAndPublishAsync、Equal；具体条件和先后次序见方法体。
 	/// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
 	/// </summary>
@@ -978,7 +978,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 ThisFile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ThisFile；准备条件、协作调用与结果检查以方法正文为准。
 	/// </summary>
 	private static string ThisFile([CallerFilePath] string path = "")
 	{
@@ -986,7 +986,7 @@ public class PatternsPublishSubscribeTests
 	}
 
 	/// <summary>
-	/// 验证 SourcePath 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 SourcePath；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetFullPath、Combine、GetDirectoryName、ThisFile；具体条件和先后次序见方法体。
 	/// </summary>
 	private static string SourcePath(params string[] segments)

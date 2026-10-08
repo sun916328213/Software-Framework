@@ -25,7 +25,7 @@ public sealed class LayeringTests
     private static readonly Assembly RuntimeAssembly = typeof(SQLManager).Assembly;
 
     /// <summary>
-    /// 验证 Core_assembly_does_not_reference_runtime_or_provider_packages 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Core_assembly_does_not_reference_runtime_or_provider_packages；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToHashSet、Select、GetReferencedAssemblies、DoesNotContain；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -54,7 +54,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Core_public_surface_does_not_expose_provider_types 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Core_public_surface_does_not_expose_provider_types；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、OrderBy、Distinct、Select、Where；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -74,7 +74,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Runtime_assembly_references_core 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Runtime_assembly_references_core；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToHashSet、Select、GetReferencedAssemblies、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -88,7 +88,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Runtime_hosts_only_known_manager_implementations 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Runtime_hosts_only_known_manager_implementations；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、IsAssignableFrom、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -108,7 +108,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Default_manager_constructors_use_builtin_factories 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Default_manager_constructors_use_builtin_factories；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 IsAssignableFrom；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -131,7 +131,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Legacy_manager_apis_remain_reachable_after_facade_removal 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Legacy_manager_apis_remain_reachable_after_facade_removal；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetType、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -149,7 +149,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Controls_references_core_and_runtime_only 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Controls_references_core_and_runtime_only；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 LoadCsproj、ProjectReferences、Contains、DoesNotContain、EndsWith；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -165,7 +165,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Workbench_composes_core_runtime_and_controls 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Workbench_composes_core_runtime_and_controls；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 LoadCsproj、ProjectReferences、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -179,7 +179,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Compat_facade_project_is_removed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Compat_facade_project_is_removed；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Combine、RepoRoot、False、Exists；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -275,14 +275,14 @@ public sealed class LayeringTests
         LineComments.Replace(BlockComments.Replace(text, " "), " ");
 
     /// <summary>
-    /// 验证 HasUseWpf 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 HasUseWpf；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equals、FirstOrDefault、Descendants、Trim；具体条件和先后次序见方法体。
     /// </summary>
     private static bool HasUseWpf(XDocument csproj) =>
         string.Equals(csproj.Descendants("UseWPF").FirstOrDefault()?.Value.Trim(), "true", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// 验证 SourceFiles 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SourceFiles；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Where、EnumerateFiles、Combine、RepoRoot、Contains；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<string> SourceFiles(string projectFolder) =>
@@ -291,7 +291,7 @@ public sealed class LayeringTests
                         && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"));
 
     /// <summary>
-    /// 验证 IsAllowedFrameworkType 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 IsAllowedFrameworkType；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetName、StartsWith；具体条件和先后次序见方法体。
     /// </summary>
     private static bool IsAllowedFrameworkType(Type type)
@@ -305,7 +305,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 RepoRoot 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RepoRoot；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Exists、Combine、True；具体条件和先后次序见方法体。
     /// </summary>
     private static string RepoRoot()
@@ -321,7 +321,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 LoadCsproj 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoadCsproj；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Combine、RepoRoot、True、Exists、Load；具体条件和先后次序见方法体。
     /// </summary>
     private static XDocument LoadCsproj(params string[] relativeParts)
@@ -332,7 +332,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 ProjectReferences 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ProjectReferences；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToHashSet、Select、Descendants、Replace、Attribute；具体条件和先后次序见方法体。
     /// </summary>
     private static HashSet<string> ProjectReferences(XDocument csproj) =>
@@ -341,7 +341,7 @@ public sealed class LayeringTests
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    /// 验证 PackageReferences 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PackageReferences；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToHashSet、Select、Descendants、Attribute；具体条件和先后次序见方法体。
     /// </summary>
     private static HashSet<string> PackageReferences(XDocument csproj) =>
@@ -350,7 +350,7 @@ public sealed class LayeringTests
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    /// 验证 GetPublicSurfaceTypes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 GetPublicSurfaceTypes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Expand、GetInterfaces、GetConstructors、GetParameters、GetFields；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<Type> GetPublicSurfaceTypes(Type type)
@@ -424,7 +424,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Expand 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Expand；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Expand、GetElementType、GetGenericTypeDefinition、GetGenericArguments；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<Type> Expand(Type type)

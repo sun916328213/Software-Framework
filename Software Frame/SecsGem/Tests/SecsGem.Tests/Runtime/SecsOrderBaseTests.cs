@@ -26,7 +26,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 AddData_ASCII_Null_ReturnsEmptyAscii 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddData_ASCII_Null_ReturnsEmptyAscii；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 AddData、Equal、GetString；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -37,7 +37,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 AddData_Unsigned_RoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddData_Unsigned_RoundTrip；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 AddData、Equal、ToString、SecsItemToList；具体条件和先后次序见方法体。
         /// </summary>
         [Theory]
@@ -52,7 +52,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 AddData_Boolean_True 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddData_Boolean_True；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 AddData、Equal、SecsItemToList；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -64,7 +64,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 AddData_List_FromStringList_BuildsListOfAscii 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddData_List_FromStringList_BuildsListOfAscii；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 AddData、Equal、GetString；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -80,7 +80,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 AddData_List_FromDictionary_BuildsListOfPairs 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddData_List_FromDictionary_BuildsListOfPairs；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 AddData、Equal、GetString；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -103,7 +103,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 AddData_List_Null_ReturnsEmptyList 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddData_List_Null_ReturnsEmptyList；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 AddData、Equal、Empty；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -128,7 +128,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 SecsItemToList_FlattensNestedList 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SecsItemToList_FlattensNestedList；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 L、A、U4、SecsItemToList、NotNull；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -146,7 +146,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 SecsItemToList_Null_ReturnsNull 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SecsItemToList_Null_ReturnsNull；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、SecsItemToList；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -156,7 +156,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 SecsItemToList_EmptyList_ReturnsEmpty 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SecsItemToList_EmptyList_ReturnsEmpty；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SecsItemToList、L、NotNull、Empty；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -170,7 +170,7 @@ namespace SecsGem.Tests
         // ── GetValue<T> ──
 
         /// <summary>
-        /// 验证 GetValue_ReturnsFirstElementAsString 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetValue_ReturnsFirstElementAsString；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 U1、Equal、GetValue；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -181,7 +181,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 GetValue_EmptyMemory_ReturnsNull 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetValue_EmptyMemory_ReturnsNull；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 U1、Null、GetValue；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

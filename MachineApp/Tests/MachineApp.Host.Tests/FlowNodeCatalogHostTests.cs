@@ -28,7 +28,7 @@ namespace MachineApp.Host.Tests;
 public sealed class FlowNodeCatalogHostTests(ProductionFixture fixture)
 {
     /// <summary>
-    /// 验证 ProductionAndWorkbenchUseTheSameExplicitCompositionAndNodeIdentities 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ProductionAndWorkbenchUseTheSameExplicitCompositionAndNodeIdentities；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、CreateNodeCatalog、Equal、Order；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -77,7 +77,7 @@ public sealed class FlowNodeCatalogHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 ProductionToolboxKeepsTheOriginalMetadataFilteringOrderingAndIcons 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ProductionToolboxKeepsTheOriginalMetadataFilteringOrderingAndIcons；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Discover、ToArray、ThenBy；具体条件和先后次序见方法体。
     /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
     /// </summary>
@@ -117,7 +117,7 @@ public sealed class FlowNodeCatalogHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 EveryVisibleProductionToolCreatesSavesAndRestoresThroughTheSharedCatalog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EveryVisibleProductionToolCreatesSavesAndRestoresThroughTheSharedCatalog；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Refresh、Combine、GetTempPath；具体条件和先后次序见方法体。
     /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
     /// </summary>
@@ -171,7 +171,7 @@ public sealed class FlowNodeCatalogHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 CameraAndCommunicationNodeDependenciesResolveWithoutOpeningDevices 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CameraAndCommunicationNodeDependenciesResolveWithoutOpeningDevices；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、IsType、Empty、Throws；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

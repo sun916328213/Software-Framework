@@ -48,7 +48,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WaitSignal_引用类型结果也能传递 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitSignal_引用类型结果也能传递；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WaitSignal、SetSignal、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -64,7 +64,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 同一个实例可以重复使用_第二次WaitSignal仍然有效 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 同一个实例可以重复使用_第二次WaitSignal仍然有效；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WaitSignal、SetSignal、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -84,7 +84,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SetSignal_已经完成之后第二次返回false_不会覆盖首个结果 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetSignal_已经完成之后第二次返回false_不会覆盖首个结果；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WaitSignal、True、SetSignal、False、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -101,7 +101,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SetException_能让等待方收到指定异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetException_能让等待方收到指定异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WaitSignal、True、SetException、ThrowsAsync、AsTask；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -118,7 +118,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SetException_第二次返回false 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetException_第二次返回false；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WaitSignal、True、SetException、False、ThrowsAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -149,7 +149,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WaitSignal_外部取消令牌触发时抛OperationCanceledException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitSignal_外部取消令牌触发时抛OperationCanceledException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WaitSignal、Cancel、ThrowsAsync、AsTask；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -166,7 +166,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WaitSignal_timeout为0或负数表示不设超时_不会自己失败 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitSignal_timeout为0或负数表示不设超时_不会自己失败；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WaitSignal、False、SetSignal、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -183,7 +183,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WaitSignal_超时前收到信号则正常返回_不会误报超时 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitSignal_超时前收到信号则正常返回_不会误报超时；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WaitSignal、SetSignal、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -221,7 +221,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetStatus_在Reset之前版本号是0且状态为Pending 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetStatus_在Reset之前版本号是0且状态为Pending；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetStatus、True、SetSignal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -241,7 +241,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 WaitSignal在Dispose之后抛ObjectDisposedException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitSignal在Dispose之后抛ObjectDisposedException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Dispose、Throws、WaitSignal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -254,7 +254,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 SetSignal与SetException在Dispose之后只返回false不抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetSignal与SetException在Dispose之后只返回false不抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Dispose、False、SetSignal、SetException；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -269,7 +269,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Dispose是幂等的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose是幂等的；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Dispose、False、SetSignal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -284,7 +284,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Dispose_bool是protected_virtual_是给子类留的钩子 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose_bool是protected_virtual_是给子类留的钩子；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetMethod、NotNull、True；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -333,7 +333,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 API面_泛型参数是结果类型而不是元素类型 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 API面_泛型参数是结果类型而不是元素类型；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Single、GetGenericArguments；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

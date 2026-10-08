@@ -38,7 +38,7 @@ namespace Extension.Tests
     public class TaskExTests
     {
         /// <summary>
-        /// 验证 SpinUntil 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SpinUntil；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 StartNew、condition、Sleep；具体条件和先后次序见方法体。
         /// </summary>
         private static bool SpinUntil(Func<bool> condition, int timeoutMs)
@@ -63,7 +63,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WithTimeout_超时抛TimeoutException_消息里带超时毫秒数 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithTimeout_超时抛TimeoutException_消息里带超时毫秒数；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAsync、WithTimeout、Contains；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -78,7 +78,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WithTimeout_超时不会取消原始任务_它仍在后台继续跑 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithTimeout_超时不会取消原始任务_它仍在后台继续跑；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAsync、WithTimeout、False、SetResult、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -97,7 +97,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WithTimeout_外部取消时抛OperationCanceledException而不是TimeoutException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithTimeout_外部取消时抛OperationCanceledException而不是TimeoutException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WithTimeout、Cancel、ExceptionAsync、IsAssignableFrom、IsNotType；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -117,7 +117,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WithTimeout_timeout为0会立即超时_与WaitSignal的0表示不超时相反 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithTimeout_timeout为0会立即超时_与WaitSignal的0表示不超时相反；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAsync、WithTimeout；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -131,7 +131,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WithTimeout_timeout为负1表示无限等待_直接透传 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithTimeout_timeout为负1表示无限等待_直接透传；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、WithTimeout、FromResult；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -142,7 +142,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WithTimeout_timeout为负1但有取消令牌时走取消路径 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithTimeout_timeout为负1但有取消令牌时走取消路径；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WithTimeout、Cancel、ExceptionAsync、IsAssignableFrom；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -160,7 +160,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WithTimeout_超时时间小于负1抛ArgumentOutOfRangeException_且是装进Task的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithTimeout_超时时间小于负1抛ArgumentOutOfRangeException_且是装进Task的；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAsync、WithTimeout、FromResult；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -173,7 +173,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WithTimeout_原始任务的异常会原样传播 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithTimeout_原始任务的异常会原样传播；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WithTimeout、SetException、ThrowsAsync、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -199,7 +199,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WithTimeout_无返回值版本_超时抛TimeoutException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithTimeout_无返回值版本_超时抛TimeoutException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAsync、WithTimeout；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -213,7 +213,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WithTimeout_无返回值版本_参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithTimeout_无返回值版本_参数校验；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAsync、WithTimeout；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -229,7 +229,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 WithCancellation_任务先完成时正常返回结果 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithCancellation_任务先完成时正常返回结果；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、WithCancellation、FromResult；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -240,7 +240,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WithCancellation_令牌已取消时_即使任务早已完成也会抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithCancellation_令牌已取消时_即使任务早已完成也会抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Cancel、ExceptionAsync、WithCancellation、FromResult、IsAssignableFrom；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -257,7 +257,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WithCancellation_等待中被取消时抛OperationCanceledException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithCancellation_等待中被取消时抛OperationCanceledException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WithCancellation、Cancel、ExceptionAsync、IsAssignableFrom、False；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -276,7 +276,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WithCancellation_原始任务异常会传播 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithCancellation_原始任务异常会传播；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WithCancellation、SetException、ThrowsAsync、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -292,7 +292,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WithCancellation_无返回值版本 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WithCancellation_无返回值版本；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WithCancellation、Cancel、ExceptionAsync、IsAssignableFrom；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -316,7 +316,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 TimesRun_恰好执行指定次数 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TimesRun_恰好执行指定次数；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TimesRun、Increment、True、SpinUntil、Read；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -332,7 +332,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 TimesRun_次数为0时一次都不执行 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TimesRun_次数为0时一次都不执行；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TimesRun、Increment、Sleep、Equal、Read；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -348,7 +348,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 TimesRun_动作抛异常不会中断循环 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TimesRun_动作抛异常不会中断循环；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TimesRun、Increment、True、SpinUntil、Read；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -367,7 +367,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 TimesRun_参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TimesRun_参数校验；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAsync、TimesRun；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -384,7 +384,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 LongTimeRun_await返回后循环其实还在后台跑_返回的Task不代表循环生命周期 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 LongTimeRun_await返回后循环其实还在后台跑_返回的Task不代表循环生命周期；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 LongTimeRun、Increment、True、Wait、Read；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -407,7 +407,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 LongTimeRun_取消令牌触发后循环停止 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 LongTimeRun_取消令牌触发后循环停止；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 LongTimeRun、Increment、True、SpinUntil、Read；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -429,7 +429,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 LongTimeRun_动作抛异常不会终止循环 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 LongTimeRun_动作抛异常不会终止循环；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 LongTimeRun、Increment、True、SpinUntil、Read；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -449,7 +449,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 LongTimeRun_参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 LongTimeRun_参数校验；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAsync、LongTimeRun；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -465,7 +465,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 ThreadRun_在后台线程上执行一次 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ThreadRun_在后台线程上执行一次；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThreadRun、Increment、True、SpinUntil、Read；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -481,7 +481,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ThreadRun_是fire_and_forget_返回时动作可能还没跑完 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ThreadRun_是fire_and_forget_返回时动作可能还没跑完；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThreadRun、Sleep、Increment、True、SpinUntil；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -496,7 +496,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 API面_ThreadRun的优先级参数是死参数_源码里从未使用 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 API面_ThreadRun的优先级参数是死参数_源码里从未使用；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetMethod、nameof、NotNull、Equal、GetParameters；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

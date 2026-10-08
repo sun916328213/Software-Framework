@@ -12,7 +12,7 @@ namespace ScriptEditor.Tests.Core;
 public sealed class ScriptModelTests
 {
     /// <summary>
-    /// 验证 ReferenceDescriptionKeepsPathAndAssemblyName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReferenceDescriptionKeepsPathAndAssemblyName；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 SetReferences、Single、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -27,7 +27,7 @@ public sealed class ScriptModelTests
     }
 
     /// <summary>
-    /// 验证 ProjectItemAlwaysHasValidId 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ProjectItemAlwaysHasValidId；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NotEqual；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -38,7 +38,7 @@ public sealed class ScriptModelTests
     }
 
     /// <summary>
-    /// 验证 BreakpointsRoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BreakpointsRoundTrip；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、Deserialize、Serialize、NotNull、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -54,7 +54,7 @@ public sealed class ScriptModelTests
     }
 
     /// <summary>
-    /// 验证 CopySemanticsKeepContentWithNewId 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CopySemanticsKeepContentWithNewId；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 SetReferences、Add、NotEqual、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -76,7 +76,7 @@ public sealed class ScriptModelTests
     }
 
     /// <summary>
-    /// 验证 ViewStateIsNotPersisted 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ViewStateIsNotPersisted；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Serialize、DoesNotContain；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

@@ -14,7 +14,7 @@ namespace MotionControl.Tests;
 public sealed class ZMotionTransportTests
 {
     /// <summary>
-    /// 验证 ConnectAndMove_UseInjectedTransportWithoutNativeSdk 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectAndMove_UseInjectedTransportWithoutNativeSdk；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、ConnectResult、Equal、ServoOnResult；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -49,7 +49,7 @@ public sealed class ZMotionTransportTests
     }
 
     /// <summary>
-    /// 验证 Connect_TransportFailure_ReturnsFail 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connect_TransportFailure_ReturnsFail；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、ConnectResult、Equal、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -65,7 +65,7 @@ public sealed class ZMotionTransportTests
     }
 
     /// <summary>
-    /// 验证 PositionRead_TransportFailure_IsNotReportedAsZero 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PositionRead_TransportFailure_IsNotReportedAsZero；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、Connect、ReadCommandPosition、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -91,7 +91,7 @@ public sealed class ZMotionTransportTests
     }
 
     /// <summary>
-    /// 验证 CreateCard 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreateCard；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static ZMotionHelper CreateCard(FakeZMotionTransport transport)
         => new(transport)
@@ -123,7 +123,7 @@ public sealed class ZMotionTransportTests
         public int CancelCount => Volatile.Read(ref _cancelCount);
 
         /// <summary>
-        /// 验证 Connect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Connect；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool Connect(string ipAddress, uint port)
         {
@@ -134,12 +134,12 @@ public sealed class ZMotionTransportTests
         }
 
         /// <summary>
-        /// 验证 Disconnect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Disconnect；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Disconnect() => IsConnected = false;
 
         /// <summary>
-        /// 验证 ConfigureAxis 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConfigureAxis；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public bool ConfigureAxis(int axis)
@@ -149,7 +149,7 @@ public sealed class ZMotionTransportTests
         }
 
         /// <summary>
-        /// 验证 SetMotionProfile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetMotionProfile；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool SetMotionProfile(int axis, float speed, float acceleration, float deceleration)
         {
@@ -160,7 +160,7 @@ public sealed class ZMotionTransportTests
         }
 
         /// <summary>
-        /// 验证 MoveAbsolute 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 MoveAbsolute；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool MoveAbsolute(int axis, long pulse)
         {
@@ -169,16 +169,16 @@ public sealed class ZMotionTransportTests
         }
 
         /// <summary>
-        /// 验证 MoveRelative 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 MoveRelative；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool MoveRelative(int axis, long pulse) => true;
         /// <summary>
-        /// 验证 Jog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Jog；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool Jog(int axis, int direction) => true;
 
         /// <summary>
-        /// 验证 Cancel 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Cancel；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Increment；具体条件和先后次序见方法体。
         /// </summary>
         public bool Cancel(int axis, int mode)
@@ -190,16 +190,16 @@ public sealed class ZMotionTransportTests
         private int _cancelCount;
 
         /// <summary>
-        /// 验证 Datum 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Datum；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool Datum(int axis, int mode) => true;
         /// <summary>
-        /// 验证 SetCommandPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetCommandPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool SetCommandPosition(int axis, float pulse) => true;
 
         /// <summary>
-        /// 验证 TryGetCommandPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGetCommandPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryGetCommandPosition(int axis, out float pulse)
         {
@@ -208,7 +208,7 @@ public sealed class ZMotionTransportTests
         }
 
         /// <summary>
-        /// 验证 TryGetFeedbackPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGetFeedbackPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryGetFeedbackPosition(int axis, out float pulse)
         {
@@ -217,7 +217,7 @@ public sealed class ZMotionTransportTests
         }
 
         /// <summary>
-        /// 验证 TryGetAxisStatus 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGetAxisStatus；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryGetAxisStatus(int axis, out int status)
         {
@@ -226,7 +226,7 @@ public sealed class ZMotionTransportTests
         }
 
         /// <summary>
-        /// 验证 TryGetIdle 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGetIdle；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryGetIdle(int axis, out int idle)
         {
@@ -235,7 +235,7 @@ public sealed class ZMotionTransportTests
         }
 
         /// <summary>
-        /// 验证 TryGetInput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGetInput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryGetInput(int index, out uint value)
         {
@@ -244,7 +244,7 @@ public sealed class ZMotionTransportTests
         }
 
         /// <summary>
-        /// 验证 TryGetOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGetOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryGetOutput(int index, out uint value)
         {
@@ -253,11 +253,11 @@ public sealed class ZMotionTransportTests
         }
 
         /// <summary>
-        /// 验证 SetOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool SetOutput(int index, uint value) => true;
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Disconnect；具体条件和先后次序见方法体。
         /// </summary>
         public void Dispose() => Disconnect();

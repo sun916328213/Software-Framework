@@ -16,7 +16,7 @@ namespace MotionControl.Tests;
 public sealed class MotionManagerTests
 {
     /// <summary>
-    /// 验证 Register_CustomDriverId_CreatesDriverWithoutChangingVendorEnum 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Register_CustomDriverId_CreatesDriverWithoutChangingVendorEnum；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Register、Create、IsAssignableFrom、Same、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -39,7 +39,7 @@ public sealed class MotionManagerTests
     }
 
     /// <summary>
-    /// 验证 Create_WithoutDriverId_UsesLegacyCardTypeRegistration 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Create_WithoutDriverId_UsesLegacyCardTypeRegistration；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、IsAssignableFrom、True、IsRegistered；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -59,7 +59,7 @@ public sealed class MotionManagerTests
     }
 
     /// <summary>
-    /// 验证 Register_DefaultDriverId_IsRejected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Register_DefaultDriverId_IsRejected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Register；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -72,7 +72,7 @@ public sealed class MotionManagerTests
     }
 
     /// <summary>
-    /// 验证 Create_FactoryReturnsNull_ReportsDriverId 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Create_FactoryReturnsNull_ReportsDriverId；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Register、Throws、Create、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -88,7 +88,7 @@ public sealed class MotionManagerTests
     }
 
     /// <summary>
-    /// 验证 ManagerLifecycle_PreservesLegacyCallShapeWithoutDeviceDependency 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ManagerLifecycle_PreservesLegacyCallShapeWithoutDeviceDependency；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、ConnectAsync、Equal、Same、DeviceNameCollection；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -123,7 +123,7 @@ public sealed class MotionManagerTests
     }
 
     /// <summary>
-    /// 验证 BatchOperations_ReturnOrderedPerDeviceResultsAndContinueAfterFailure 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BatchOperations_ReturnOrderedPerDeviceResultsAndContinueAfterFailure；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、ConnectAllResultAsync、False、Equal、Collection；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -176,7 +176,7 @@ public sealed class MotionManagerTests
     }
 
     /// <summary>
-    /// 验证 BatchOperation_EmptyManager_IsSuccessful 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BatchOperation_EmptyManager_IsSuccessful；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ConnectAllResult、True、Equal、Empty；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -193,7 +193,7 @@ public sealed class MotionManagerTests
     }
 
     /// <summary>
-    /// 验证 BatchOperation_DriverException_IsCapturedAndLaterDevicesStillRun 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BatchOperation_DriverException_IsCapturedAndLaterDevicesStillRun；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、Create、ConnectAllResult、False、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -225,7 +225,7 @@ public sealed class MotionManagerTests
     }
 
     /// <summary>
-    /// 验证 Config_WhenNewConfigurationIsInvalid_PreservesCurrentDevices 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Config_WhenNewConfigurationIsInvalid_PreservesCurrentDevices；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、Throws、Config、Equal、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -255,7 +255,7 @@ public sealed class MotionManagerTests
     }
 
     /// <summary>
-    /// 验证 Config_DisconnectsDevicesBeforeReplacingOwnedCollection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Config_DisconnectsDevicesBeforeReplacingOwnedCollection；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、True、Connect、Config、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -277,7 +277,7 @@ public sealed class MotionManagerTests
     }
 
     /// <summary>
-    /// 验证 RemoveAndClear_DisconnectOwnedDevices 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RemoveAndClear_DisconnectOwnedDevices；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、True、Connect、Remove、Clear；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -308,7 +308,7 @@ public sealed class MotionManagerTests
     }
 
     /// <summary>
-    /// 验证 MutatingDisposedManager_IsRejected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MutatingDisposedManager_IsRejected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Dispose、Throws、Create、Add、Register；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -331,7 +331,7 @@ public sealed class MotionManagerTests
     private sealed class ThrowingConnectCard : SimulationMotionCard, IMotionCard
     {
         /// <summary>
-        /// 验证 ConnectResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConnectResult；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         MotionResult IMotionCard.ConnectResult() => throw new InvalidOperationException("driver exploded");
     }

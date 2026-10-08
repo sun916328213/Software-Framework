@@ -35,7 +35,7 @@ public class P1RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 Validate_CrashingValidator_BecomesDiagnostic_NotCrash 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Validate_CrashingValidator_BecomesDiagnostic_NotCrash；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、ValidateAsync、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -50,7 +50,7 @@ public class P1RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 Validate_LoopNode_Rejects_ZeroIterations_BeforeRun 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Validate_LoopNode_Rejects_ZeroIterations_BeforeRun；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、ValidateAsync、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -65,7 +65,7 @@ public class P1RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 RuntimeInstance_Validate_DoesNotExecute 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RuntimeInstance_Validate_DoesNotExecute；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Add、ValidateAsync、True、False；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -100,7 +100,7 @@ public class P1RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 RuntimePortReader_DoesNotNeed_PropertyGrid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RuntimePortReader_DoesNotNeed_PropertyGrid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetDeclaredPorts、Contains、nameof、DoesNotContain；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -113,7 +113,7 @@ public class P1RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 RuntimeState_Members_AreDiscoverable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RuntimeState_Members_AreDiscoverable；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetRuntimeStateMembers、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -124,7 +124,7 @@ public class P1RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 LoopNode_MigratedPorts_Use_NewContract 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopNode_MigratedPorts_Use_NewContract；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、GetDeclaredFlowPorts、First、nameof、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -149,7 +149,7 @@ public class P1RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 Concurrency_ResourceKey_Declared_ByNode 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Concurrency_ResourceKey_Declared_ByNode；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Equal、ToList、GetResourceKeys；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -161,7 +161,7 @@ public class P1RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 Affinity_PureCompute_Declares_Any 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Affinity_PureCompute_Declares_Any；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -179,7 +179,7 @@ public class P1RuntimeContractsTests
         public readonly List<FlowDiagnostic> Problems = [];
         public bool Executed;
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct)
         {
@@ -187,7 +187,7 @@ public class P1RuntimeContractsTests
             return Task.CompletedTask;
         }
         /// <summary>
-        /// 验证 ValidateAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ValidateAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public override Task<IEnumerable<FlowDiagnostic>> ValidateAsync(NodeValidationContext ctx) =>
@@ -198,11 +198,11 @@ public class P1RuntimeContractsTests
     public class CrashValidatorNode : NodeModel
     {
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
         /// <summary>
-        /// 验证 ValidateAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ValidateAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task<IEnumerable<FlowDiagnostic>> ValidateAsync(NodeValidationContext ctx) =>
             throw new InvalidOperationException("validator boom");
@@ -219,7 +219,7 @@ public class P1RuntimeContractsTests
         public int LegacyValue { get; set; }
 
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
     }
@@ -229,11 +229,11 @@ public class P1RuntimeContractsTests
     {
         public override NodeConcurrencyMode ConcurrencyMode => NodeConcurrencyMode.ResourceExclusive;
         /// <summary>
-        /// 验证 GetResourceKeys 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetResourceKeys；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override IEnumerable<string> GetResourceKeys() => ["Camera:Cam01"];
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
     }

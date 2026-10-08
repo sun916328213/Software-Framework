@@ -20,7 +20,7 @@ public sealed class LayeringTests
     private static readonly Assembly RuntimeAssembly = typeof(CommunicationManager).Assembly;
 
     /// <summary>
-    /// 验证 Public_layer_surface_only_references_allowed_internal_namespaces 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Public_layer_surface_only_references_allowed_internal_namespaces；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、OrderBy、Distinct、Select、Where；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -54,7 +54,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Core_factory_seam_does_not_expose_composition_or_protocol_types 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Core_factory_seam_does_not_expose_composition_or_protocol_types；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、OrderBy、Distinct、Select、Where；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -78,7 +78,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Manager_requires_injected_core_factory_and_legacy_entries_are_absent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Manager_requires_injected_core_factory_and_legacy_entries_are_absent；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetConstructor、NotNull、False、GetParameters、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -92,7 +92,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Legacy_composition_factory_interface_is_removed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Legacy_composition_factory_interface_is_removed；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Null、GetType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -102,7 +102,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Default_composition_entry_returns_only_core_factory_seam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Default_composition_entry_returns_only_core_factory_seam；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetMethod、Equal、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -114,7 +114,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Legacy_device_interface_member_set_is_frozen 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Legacy_device_interface_member_set_is_frozen；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、OrderBy、Select、GetProperties、GetEvents；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -153,7 +153,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Abstractions_public_surface_does_not_expose_third_party_assemblies 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Abstractions_public_surface_does_not_expose_third_party_assemblies；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、OrderBy、Distinct、Select、Where；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -173,7 +173,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Core_public_surface_does_not_expose_third_party_sdk_types 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Core_public_surface_does_not_expose_third_party_sdk_types；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、OrderBy、Distinct、Select、Where；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -196,7 +196,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Protocols_public_surface_does_not_expose_third_party_sdk_types 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Protocols_public_surface_does_not_expose_third_party_sdk_types；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、OrderBy、Distinct、Select、Where；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -220,7 +220,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Built_in_protocol_devices_use_the_new_connection_seam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Built_in_protocol_devices_use_the_new_connection_seam；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、OrderBy、Select、Where、IsInNamespace；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -240,7 +240,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Address_capabilities_are_exposed_only_by_devices_with_real_address_semantics 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Address_capabilities_are_exposed_only_by_devices_with_real_address_semantics；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、Where、IsInNamespace、IsAssignableFrom、OrderBy；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -284,7 +284,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Raw_transport_capabilities_are_exposed_only_by_matching_socket_and_serial_devices 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Raw_transport_capabilities_are_exposed_only_by_matching_socket_and_serial_devices；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、Where、IsInNamespace、IsAssignableFrom、OrderBy；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -334,7 +334,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Core_assembly_does_not_reference_runtime_or_protocol_sdks 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Core_assembly_does_not_reference_runtime_or_protocol_sdks；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToHashSet、Select、GetReferencedAssemblies、DoesNotContain；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -356,7 +356,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Runtime_assembly_references_core 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Runtime_assembly_references_core；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToHashSet、Select、GetReferencedAssemblies、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -370,7 +370,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Runtime_hosts_only_known_core_namespace_implementations 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Runtime_hosts_only_known_core_namespace_implementations；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、OrderBy、Select、Where、IsInNamespace；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -394,7 +394,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Parameter_snapshot_seam_is_implemented_by_device_base 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Parameter_snapshot_seam_is_implemented_by_device_base；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、IsAssignableFrom、NotNull、GetMethod、nameof；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -405,7 +405,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Manager_implements_core_contract 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Manager_implements_core_contract；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、IsAssignableFrom；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -415,14 +415,14 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 IsInNamespace 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 IsInNamespace；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static bool IsInNamespace(Type type, string expectedNamespace) =>
         type.Namespace == expectedNamespace ||
         type.Namespace?.StartsWith(expectedNamespace + ".", StringComparison.Ordinal) == true;
 
     /// <summary>
-    /// 验证 IsAllowedFrameworkType 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 IsAllowedFrameworkType；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetName、StartsWith；具体条件和先后次序见方法体。
     /// </summary>
     private static bool IsAllowedFrameworkType(Type type)
@@ -433,7 +433,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 GetPublicSurfaceTypes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 GetPublicSurfaceTypes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Expand、GetInterfaces、Where、GetConstructors、GetCustomAttribute；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<Type> GetPublicSurfaceTypes(Type type)
@@ -512,7 +512,7 @@ public sealed class LayeringTests
     }
 
     /// <summary>
-    /// 验证 Expand 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Expand；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Expand、GetElementType、GetGenericTypeDefinition、GetGenericArguments；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<Type> Expand(Type type)

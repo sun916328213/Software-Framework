@@ -20,7 +20,7 @@ public class ConnectionServiceTests
     private readonly ConnectionService _service = new();
 
     /// <summary>
-    /// 验证 PlanConnection_RejectsIncompatibleDataTypes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PlanConnection_RejectsIncompatibleDataTypes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateOutput、CreateInput、PlanConnection、Empty、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -38,7 +38,7 @@ public class ConnectionServiceTests
     }
 
     /// <summary>
-    /// 验证 PlanConnection_ReturnsPlanWithoutMutatingExistingConnections 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PlanConnection_ReturnsPlanWithoutMutatingExistingConnections；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateOutput、CreateInput、PlanConnection、Empty、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -56,7 +56,7 @@ public class ConnectionServiceTests
     }
 
     /// <summary>
-    /// 验证 PlanConnection_FlowConnectionIncludesMatchingTypedBindings 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PlanConnection_FlowConnectionIncludesMatchingTypedBindings；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、First、PlanConnection、True、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -83,7 +83,7 @@ public class ConnectionServiceTests
     }
 
     /// <summary>
-    /// 验证 PlanConnection_RejectsSecondTargetFromSameFlowOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PlanConnection_RejectsSecondTargetFromSameFlowOutput；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、PlanConnection、Single、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -105,7 +105,7 @@ public class ConnectionServiceTests
     }
 
     /// <summary>
-    /// 验证 PlanConnection_RejectsSecondSourceIntoSameFlowInput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PlanConnection_RejectsSecondSourceIntoSameFlowInput；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、PlanConnection、Single、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -127,7 +127,7 @@ public class ConnectionServiceTests
     }
 
     /// <summary>
-    /// 验证 PlanConnection_DataOutputMayFanOutToDifferentInputs 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PlanConnection_DataOutputMayFanOutToDifferentInputs；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Single、PlanConnection、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -157,7 +157,7 @@ public class ConnectionServiceTests
     }
 
     /// <summary>
-    /// 验证 PortTypeClassifier_MapsClrTypes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PortTypeClassifier_MapsClrTypes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、FromClrType；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]

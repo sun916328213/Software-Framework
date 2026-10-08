@@ -40,7 +40,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBytes_ushort_大小端 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBytes_ushort_大小端；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToBytes；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -51,7 +51,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBytes_int_大小端 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBytes_int_大小端；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToBytes；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -62,7 +62,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBytes_uint_大小端 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBytes_uint_大小端；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToBytes；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -73,7 +73,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBytes_long_与ulong_都是8字节 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBytes_long_与ulong_都是8字节；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToBytes；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -89,7 +89,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBytes_double_按IEEE754 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBytes_double_按IEEE754；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToBytes；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -172,7 +172,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToASCII_空数组与null 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToASCII_空数组与null；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToASCII、Throws；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -195,7 +195,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToUShort_大小端 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToUShort_大小端；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToUShort；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -207,7 +207,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToInt_大小端 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToInt_大小端；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToInt；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -218,7 +218,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToUInt_大小端 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToUInt_大小端；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToUInt；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -229,7 +229,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToFloat_大小端 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToFloat_大小端；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToFloat；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -243,7 +243,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToDouble_大小端 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToDouble_大小端；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToDouble；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -255,7 +255,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 字节数不足时_BinaryPrimitives抛参数异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 字节数不足时_BinaryPrimitives抛参数异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exception、ToShort、NotNull、IsAssignableFrom、ToInt；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -272,7 +272,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToUInt16_自带边界检查_可指定起点 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToUInt16_自带边界检查_可指定起点；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToUInt16；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -286,7 +286,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToUInt16_越界与null抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToUInt16_越界与null抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、ToUInt16；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -314,7 +314,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToHexBools_只认0x10和0x01_其余位被忽略 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToHexBools_只认0x10和0x01_其余位被忽略；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToHexBools；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -328,7 +328,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToHexBools_空与null返回空数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToHexBools_空与null返回空数组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToHexBools；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -352,7 +352,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBytes_字符串_小端时按寄存器两两交换 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBytes_字符串_小端时按寄存器两两交换；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToBytes；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -365,7 +365,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBytes_字符串_UTF8多字节按字节处理 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBytes_字符串_UTF8多字节按字节处理；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToBytes；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -376,7 +376,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBytes_字符串_超长输入走堆分配不炸栈 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBytes_字符串_超长输入走堆分配不炸栈；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToBytes、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -408,7 +408,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 往返_uint 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 往返_uint；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToUInt、ToBytes；具体条件和先后次序见方法体。
         /// </summary>
         [Theory]
@@ -423,7 +423,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 往返_double 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 往返_double；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToDouble、ToBytes；具体条件和先后次序见方法体。
         /// </summary>
         [Theory]

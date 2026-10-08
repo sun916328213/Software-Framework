@@ -14,7 +14,7 @@ namespace Communication.Tests.Core;
 public sealed class DataPointDefinitionTests
 {
     /// <summary>
-    /// 验证 Zero_length_uses_type_default_for_both_materialization_paths 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Zero_length_uses_type_default_for_both_materialization_paths；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToDataPoint、AddDefinition、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -37,7 +37,7 @@ public sealed class DataPointDefinitionTests
     }
 
     /// <summary>
-    /// 验证 Negative_length_is_rejected_when_definition_is_materialized 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Negative_length_is_rejected_when_definition_is_materialized；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、ToDataPoint；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -55,7 +55,7 @@ public sealed class DataPointDefinitionTests
     }
 
     /// <summary>
-    /// 验证 Unsupported_data_type_is_rejected_even_when_length_is_configured 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Unsupported_data_type_is_rejected_even_when_length_is_configured；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、ToDataPoint；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -73,7 +73,7 @@ public sealed class DataPointDefinitionTests
     }
 
     /// <summary>
-    /// 验证 Fixed_width_data_type_rejects_length_shorter_than_its_value 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Fixed_width_data_type_rejects_length_shorter_than_its_value；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、ToDataPoint；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -91,7 +91,7 @@ public sealed class DataPointDefinitionTests
     }
 
     /// <summary>
-    /// 验证 Blank_name_is_rejected_when_definition_is_materialized 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Blank_name_is_rejected_when_definition_is_materialized；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、ToDataPoint；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -107,7 +107,7 @@ public sealed class DataPointDefinitionTests
     }
 
     /// <summary>
-    /// 验证 Blank_address_is_rejected_when_definition_is_materialized 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Blank_address_is_rejected_when_definition_is_materialized；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、ToDataPoint；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

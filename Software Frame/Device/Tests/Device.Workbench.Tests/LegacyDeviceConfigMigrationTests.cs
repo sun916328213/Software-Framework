@@ -48,7 +48,7 @@ namespace Device.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Delete；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>
@@ -102,7 +102,7 @@ namespace Device.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Import_MapsDeterministicTriggerCombinations 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Import_MapsDeterministicTriggerCombinations；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteLegacy、Import、False、ReadNew、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -136,7 +136,7 @@ namespace Device.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Import_SkipsUnsupportedCameraBrandAndWarns 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Import_SkipsUnsupportedCameraBrandAndWarns；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteLegacy、Import、Contains、Single、ReadNew；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -160,7 +160,7 @@ namespace Device.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Import_SkipsNonGigeCameraInterfaceAndWarns 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Import_SkipsNonGigeCameraInterfaceAndWarns；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteLegacy、Import、Contains、DoesNotContain、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -183,7 +183,7 @@ namespace Device.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Import_WarnsOnAmbiguousTriggerAndFallsBackToOff 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Import_WarnsOnAmbiguousTriggerAndFallsBackToOff；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteLegacy、Import、Contains、Single、ReadNew；具体条件和先后次序见方法体。
         /// </summary>
         [Theory]
@@ -234,7 +234,7 @@ namespace Device.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Import_MapsRfidSerialAndModbusFields 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Import_MapsRfidSerialAndModbusFields；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteLegacy、Import、Contains、Single、ReadNew；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -270,7 +270,7 @@ namespace Device.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Import_MapsScannerSerialFields 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Import_MapsScannerSerialFields；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteLegacy、Import、Contains、Single、ReadNew；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -304,7 +304,7 @@ namespace Device.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Import_WarnsOnUnsupportedSerialStopBits 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Import_WarnsOnUnsupportedSerialStopBits；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteLegacy、Import、Contains、Equal、Single；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -359,7 +359,7 @@ namespace Device.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Import_DoesNotOverwriteExistingNewFile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Import_DoesNotOverwriteExistingNewFile；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteLegacy、Import、Contains、Single、ReadNew；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -384,7 +384,7 @@ namespace Device.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Import_NeverTouchesLegacyFiles 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Import_NeverTouchesLegacyFiles；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteLegacy、Combine、GetLastWriteTimeUtc、Import、True；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -407,7 +407,7 @@ namespace Device.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Import_ReportsWarningInsteadOfThrowingOnMalformedLegacyFile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Import_ReportsWarningInsteadOfThrowingOnMalformedLegacyFile；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteLegacy、Import、Contains、DoesNotContain；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

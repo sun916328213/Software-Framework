@@ -25,7 +25,7 @@ namespace WPFControls.Tests.Alarms;
 public class AlarmHistoryHostTests
 {
     /// <summary>
-    /// 验证 PrismResolvesSharedQueryWithoutEagerlyLoadingAlarmConfiguration 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PrismResolvesSharedQueryWithoutEagerlyLoadingAlarmConfiguration；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 OnDispatcher、Register、Combine、GetTempPath、ToString；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -44,7 +44,7 @@ public class AlarmHistoryHostTests
     });
 
     /// <summary>
-    /// 验证 RealExcelHistoryReadsBothFilesWithoutRetargetingLiveWriter 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RealExcelHistoryReadsBothFilesWithoutRetargetingLiveWriter；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Combine、GetTempPath、ToString、NewGuid、CreateDirectory；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -77,7 +77,7 @@ public class AlarmHistoryHostTests
     }
 
     /// <summary>
-    /// 验证 PageStateIsIndependentAndResultNotificationsResumeOnDispatcher 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PageStateIsIndependentAndResultNotificationsResumeOnDispatcher；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 OnDispatcher、NotSame、Add、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -101,7 +101,7 @@ public class AlarmHistoryHostTests
     });
 
     /// <summary>
-    /// 验证 FailedQueryPreservesPreviouslyDisplayedRowsAndChart 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FailedQueryPreservesPreviouslyDisplayedRowsAndChart；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 OnDispatcher、ExecuteAsync、ThrowsAsync、Same；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -127,7 +127,7 @@ public class AlarmHistoryHostTests
     {
         public bool Fail { get; set; }
         /// <summary>
-        /// 验证 QueryAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 QueryAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ConfigureAwait、Delay；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -140,7 +140,7 @@ public class AlarmHistoryHostTests
     }
 
     /// <summary>
-    /// 验证 OnDispatcher 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OnDispatcher；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 SetSynchronizationContext、BeginInvoke、action、TrySetResult、TrySetException；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。

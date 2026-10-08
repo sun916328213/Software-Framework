@@ -46,7 +46,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Day 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Day；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FindSplitFieldProperty、CandidateSuffixes；具体条件和先后次序见方法体。
         /// </summary>
         private static HashSet<string>? Day<T>(System.Linq.Expressions.Expression<Func<T, bool>> pred)
@@ -56,7 +56,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Equality_ReturnsSingleSuffix 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Equality_ReturnsSingleSuffix；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Day、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -68,7 +68,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 ContradictoryEqualities_ReturnsEmpty 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ContradictoryEqualities_ReturnsEmpty；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Day、NotNull、Empty；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -80,7 +80,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 BoundedRange_EnumeratesDays 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BoundedRange_EnumeratesDays；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Day、Equal、Order；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -91,7 +91,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 MixedStrictBounds_StillSound 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 MixedStrictBounds_StillSound；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Day、Equal、Order；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -103,7 +103,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 HalfBoundedRange_ReturnsNull 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 HalfBoundedRange_ReturnsNull；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、Day；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -114,7 +114,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 InvertedRange_ReturnsEmpty 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 InvertedRange_ReturnsEmpty；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Day、NotNull、Empty；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -126,7 +126,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 NonDatePredicate_ReturnsNull 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 NonDatePredicate_ReturnsNull；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、Day；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -136,7 +136,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 OrPredicate_ReturnsNull 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OrPredicate_ReturnsNull；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、Day；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -146,7 +146,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 OverCapRange_ReturnsNull 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OverCapRange_ReturnsNull；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Day、Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -157,7 +157,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 MonthPeriod_EnumeratesMonths 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 MonthPeriod_EnumeratesMonths；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FindSplitFieldProperty、CandidateSuffixes、Equal、Order；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -171,7 +171,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 YearPeriod_EnumeratesYears 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 YearPeriod_EnumeratesYears；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FindSplitFieldProperty、CandidateSuffixes、Equal、Order；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -185,7 +185,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EqualityOutsideRange_ReturnsEmpty 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EqualityOutsideRange_ReturnsEmpty；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Day、NotNull、Empty；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -198,7 +198,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 FlippedBounds_PruneCorrectly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FlippedBounds_PruneCorrectly；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Day、Equal、Order；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -210,7 +210,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 OrNestedInAnd_RangeStillApplies 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OrNestedInAnd_RangeStillApplies；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Day、Equal、Order；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -223,7 +223,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 NullEquality_DoesNotPrune 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 NullEquality_DoesNotPrune；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、Day；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

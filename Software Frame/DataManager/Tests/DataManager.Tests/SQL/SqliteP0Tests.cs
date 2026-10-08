@@ -124,7 +124,7 @@ namespace DataManager.Tests.SQL
             Path.GetTempPath(), $"dm_sqlite_p0_{Guid.NewGuid():N}.db");
 
         /// <summary>
-        /// 验证 ParamFor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ParamFor；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewGuid；具体条件和先后次序见方法体。
         /// </summary>
         private SQLParam ParamFor<T>(ESQLToolType tool) => new()
@@ -158,7 +158,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_DropTable_RemovesTable_And_NoOpWhenMissing 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_DropTable_RemovesTable_And_NoOpWhenMissing；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、CreateTable、True；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -190,7 +190,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_DropAllTables_ClearsAll 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_DropAllTables_ClearsAll；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、CreateTable、Add；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -251,7 +251,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_AddRangeAsync_GroupsBySplitTable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_AddRangeAsync_GroupsBySplitTable；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、AddRangeAsync、AddDays；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -279,7 +279,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_AddRange_And_AddRangeAsync_RouteSplitRows 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_AddRange_And_AddRangeAsync_RouteSplitRows；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、AddRange、AddDays；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -314,7 +314,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_AddRange_And_AddRangeAsync_RouteSplitRows 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_AddRange_And_AddRangeAsync_RouteSplitRows；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、AddRange、AddDays；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -348,7 +348,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_AddRange_NonSplit_WritesSingleTable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_AddRange_NonSplit_WritesSingleTable；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DeleteAll、AddRange；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -401,7 +401,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_YearSplit_RoutesAndPrunes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_YearSplit_RoutesAndPrunes；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Add、GetSplitTables；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -428,7 +428,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_YearSplit_RoutesAndLists 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_YearSplit_RoutesAndLists；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Add、GetSplitTables；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -473,7 +473,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_NestedTransactionAsync_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_NestedTransactionAsync_Throws；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、ThrowsAsync、ExecuteInTransactionAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -497,7 +497,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_SplitTransactionAsync_ThrowsNotSupported 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_SplitTransactionAsync_ThrowsNotSupported；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、ThrowsAsync、ExecuteInTransactionAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -516,7 +516,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_NestedTransaction_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_NestedTransaction_Throws；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Throws、ExecuteInTransaction；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -537,7 +537,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_NestedTransactionAsync_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_NestedTransactionAsync_Throws；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、ThrowsAsync、ExecuteInTransactionAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -560,7 +560,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_SplitTransaction_IsAtomicAcrossTables 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_SplitTransaction_IsAtomicAcrossTables；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、ExecuteInTransaction、Add；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -596,7 +596,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_SplitTransaction_Commit_PersistsAcrossTables 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_SplitTransaction_Commit_PersistsAcrossTables；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、ExecuteInTransaction、Add；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -645,7 +645,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_DeleteAsync_DeleteAllAsync_RoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_DeleteAsync_DeleteAllAsync_RoundTrip；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DeleteAll、AddRangeAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -675,7 +675,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_Split_DeleteAsync_And_DeleteAllAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_Split_DeleteAsync_And_DeleteAllAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Add、AddDays；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -703,7 +703,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_DeleteAsync_DeleteAllAsync_RoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_DeleteAsync_DeleteAllAsync_RoundTrip；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DeleteAll、AddRangeAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -733,7 +733,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_Split_QueryAsync_DeleteAsync_CoverAllTables 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_Split_QueryAsync_DeleteAsync_CoverAllTables；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Add、AddDays；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -763,7 +763,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_Split_UpdateAsync_Predicate_Routes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_Split_UpdateAsync_Predicate_Routes；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Add、AddDays；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -791,7 +791,7 @@ namespace DataManager.Tests.SQL
         #endregion
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exists、Delete、SuppressFinalize；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>

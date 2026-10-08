@@ -22,7 +22,7 @@ namespace Vision.Tests.Tools.AI.Aiditron;
 public sealed class AiditronProviderTests
 {
     /// <summary>
-    /// 验证 Provider_DeclaresNameAndCapabilities_WithoutAnomaly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Provider_DeclaresNameAndCapabilities_WithoutAnomaly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、True、HasFlag、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -37,7 +37,7 @@ public sealed class AiditronProviderTests
     }
 
     /// <summary>
-    /// 验证 Provider_IsAvailable_DoesNotThrow 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Provider_IsAvailable_DoesNotThrow；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     [Fact]
     public void Provider_IsAvailable_DoesNotThrow()
@@ -47,7 +47,7 @@ public sealed class AiditronProviderTests
     }
 
     /// <summary>
-    /// 验证 OpenSession_AnomalyType_ThrowsNotSupported_BeforeTouchingNative 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OpenSession_AnomalyType_ThrowsNotSupported_BeforeTouchingNative；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、OpenSession；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -59,7 +59,7 @@ public sealed class AiditronProviderTests
     }
 
     /// <summary>
-    /// 验证 OpenSession_WithoutSdk_ThrowsWithModelPathContext 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OpenSession_WithoutSdk_ThrowsWithModelPathContext；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、OpenSession、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -74,7 +74,7 @@ public sealed class AiditronProviderTests
     }
 
     /// <summary>
-    /// 验证 CloseSession_Null_IsNoOp 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CloseSession_Null_IsNoOp；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CloseSession；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -85,7 +85,7 @@ public sealed class AiditronProviderTests
     }
 
     /// <summary>
-    /// 验证 Converter_MapsDetectionSegmentationClassification 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Converter_MapsDetectionSegmentationClassification；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToDetection、Single、Equal、ToSegmentation、Empty；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -115,7 +115,7 @@ public sealed class AiditronProviderTests
     }
 
     /// <summary>
-    /// 验证 Run_AgainstRealSdk_RequiresRuntime 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Run_AgainstRealSdk_RequiresRuntime；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     [Fact(Skip = "需要真实 teTreePredict.dll/teRuntime.dll、加密芯片与工程模型（计划 §9.1 Integration）。")]
     [Trait("Category", "RequiresRuntime")]

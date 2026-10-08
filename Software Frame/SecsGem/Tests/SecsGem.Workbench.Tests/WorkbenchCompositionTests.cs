@@ -36,7 +36,7 @@ public sealed class WorkbenchCompositionTests
     public WorkbenchCompositionTests(WorkbenchAppFixture fixture) => _fixture = fixture;
 
     /// <summary>
-    /// 验证 AppBoot_ShowsShell_MainWindow 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AppBoot_ShowsShell_MainWindow；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、IsType、False、IsNullOrWhiteSpace；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -50,7 +50,7 @@ public sealed class WorkbenchCompositionTests
     }
 
     /// <summary>
-    /// 验证 AppBoot_InitializesCatalogModulesBeforeResolvingShellServices 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AppBoot_InitializesCatalogModulesBeforeResolvingShellServices；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Single、Equal、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -71,7 +71,7 @@ public sealed class WorkbenchCompositionTests
     }
 
     /// <summary>
-    /// 验证 AppBoot_MergesShellResources 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AppBoot_MergesShellResources；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -84,7 +84,7 @@ public sealed class WorkbenchCompositionTests
     }
 
     /// <summary>
-    /// 验证 Container_RegistersCatalogSingletons_FromModule 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Container_RegistersCatalogSingletons_FromModule；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、NotNull、Resolve；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -106,7 +106,7 @@ public sealed class WorkbenchCompositionTests
     }
 
     /// <summary>
-    /// 验证 Container_ResolvesLogManager_AsHostSingleton 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Container_ResolvesLogManager_AsHostSingleton；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、NotNull、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -120,7 +120,7 @@ public sealed class WorkbenchCompositionTests
     }
 
     /// <summary>
-    /// 验证 Container_RegistersSecsGemModuleServices 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Container_RegistersSecsGemModuleServices；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、NotNull、Resolve；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -139,7 +139,7 @@ public sealed class WorkbenchCompositionTests
     }
 
     /// <summary>
-    /// 验证 Container_RuntimeFacade_IsSingleton_AcrossContracts 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Container_RuntimeFacade_IsSingleton_AcrossContracts；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -154,7 +154,7 @@ public sealed class WorkbenchCompositionTests
     }
 
     /// <summary>
-    /// 验证 ControlsWpf_SecsOverviewView_InstantiatesOnUiThread 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ControlsWpf_SecsOverviewView_InstantiatesOnUiThread；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、IsType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -166,7 +166,7 @@ public sealed class WorkbenchCompositionTests
     }
 
     /// <summary>
-    /// 验证 PackUri_ResolvesBaml_FromForeignEntryAssembly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PackUri_ResolvesBaml_FromForeignEntryAssembly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、GetResourceStream、True；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]

@@ -25,7 +25,7 @@ namespace Vision.Workbench.Tests.Controls;
 public sealed class S6PresentationAdapterTests(WorkbenchAppFixture host)
 {
     /// <summary>
-    /// 验证 CoordinateJsonRetainsWpfPointShapeAndValues 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CoordinateJsonRetainsWpfPointShapeAndValues；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Serialize、Equal、Deserialize、DoubleToInt64Bits；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -42,7 +42,7 @@ public sealed class S6PresentationAdapterTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 WpfSynchronizationAllowsWorkerAccessWithTheCollectionLock 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WpfSynchronizationAllowsWorkerAccessWithTheCollectionLock；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、UseSynchronization、GetDefaultView、GetResult、GetAwaiter；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -67,7 +67,7 @@ public sealed class S6PresentationAdapterTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 ActualPropertyPanelRendersAndButtonUsesUiAdapter 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ActualPropertyPanelRendersAndButtonUsesUiAdapter；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Measure、Arrange、UpdateLayout、Render；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -90,7 +90,7 @@ public sealed class S6PresentationAdapterTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 MovedConverterKeepsFormattingParsingAndInvalidInputBehavior 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MovedConverterKeepsFormattingParsingAndInvalidInputBehavior；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Convert、Equal、IsType、ConvertBack、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -113,23 +113,23 @@ public sealed class S6PresentationAdapterTests(WorkbenchAppFixture host)
     private sealed class ProbeTool : Tool
     {
         /// <summary>
-        /// 验证 Run 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Run；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override void Run() { }
         /// <summary>
-        /// 验证 Reset 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Reset；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override void Reset() { }
         /// <summary>
-        /// 验证 Pause 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Pause；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override void Pause() { }
         /// <summary>
-        /// 验证 Config 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Config；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override void Config() { }
         /// <summary>
-        /// 验证 SaveSnapShot 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SaveSnapShot；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override void SaveSnapShot() { }
     }

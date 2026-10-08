@@ -36,7 +36,7 @@ public class SwitchDispatchTests
         }
 
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
     }
@@ -60,13 +60,13 @@ public class SwitchDispatchTests
         }
 
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
     }
 
     /// <summary>
-    /// 验证 New 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 New；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static (NodeViewModel Vm, T Model) New<T>(T model) where T : NodeModel
     {
@@ -75,7 +75,7 @@ public class SwitchDispatchTests
     }
 
     /// <summary>
-    /// 验证 Flow 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Flow；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static ConnectionModel Flow(NodeViewModel src, NodeViewModel dst) => new()
     {
@@ -86,7 +86,7 @@ public class SwitchDispatchTests
     };
 
     /// <summary>
-    /// 验证 Branch 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Branch；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 First；具体条件和先后次序见方法体。
     /// </summary>
     private static ConnectionModel Branch(NodeViewModel src, string portName, NodeViewModel dst) => new()
@@ -98,7 +98,7 @@ public class SwitchDispatchTests
     };
 
     /// <summary>
-    /// 验证 Data 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Data；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 First；具体条件和先后次序见方法体。
     /// </summary>
     private static ConnectionModel Data(NodeViewModel src, string srcPort, NodeViewModel dst, string dstPort) => new()
@@ -110,7 +110,7 @@ public class SwitchDispatchTests
     };
 
     /// <summary>
-    /// 验证 BuildIntGraph 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BuildIntGraph；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、Data、Branch；具体条件和先后次序见方法体。
     /// </summary>
     private static (List<NodeViewModel> Nodes, List<ConnectionModel> Conns) BuildIntGraph(
@@ -135,12 +135,12 @@ public class SwitchDispatchTests
     }
 
     /// <summary>
-    /// 验证 Executions 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Executions；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static int Executions(NodeViewModel vm) => ((CountingNode)vm.Model).Executions;
 
     /// <summary>
-    /// 验证 Input1_ActivatesOut1_Only 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Input1_ActivatesOut1_Only；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildIntGraph、ExecuteAsync、Equal、Executions；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -160,7 +160,7 @@ public class SwitchDispatchTests
     }
 
     /// <summary>
-    /// 验证 Input2_ActivatesOut2_Only 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Input2_ActivatesOut2_Only；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildIntGraph、ExecuteAsync、Equal、Executions；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -177,7 +177,7 @@ public class SwitchDispatchTests
     }
 
     /// <summary>
-    /// 验证 UnmatchedInput_ReportsDispatchError_EvenWhenLegacyDefaultIsEnabled 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 UnmatchedInput_ReportsDispatchError_EvenWhenLegacyDefaultIsEnabled；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildIntGraph、ThrowsAsync、ExecuteAsync、Equal、Executions；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -197,7 +197,7 @@ public class SwitchDispatchTests
     }
 
     /// <summary>
-    /// 验证 UnmatchedInput_ReportsDispatchError_WhenLegacyDefaultIsDisabled 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 UnmatchedInput_ReportsDispatchError_WhenLegacyDefaultIsDisabled；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildIntGraph、ThrowsAsync、ExecuteAsync、Equal、Executions；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -218,7 +218,7 @@ public class SwitchDispatchTests
     }
 
     /// <summary>
-    /// 验证 EmptyInput_ReportsDispatchError_AndStopsEveryDownstreamBranch 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EmptyInput_ReportsDispatchError_AndStopsEveryDownstreamBranch；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Branch、Flow、ThrowsAsync、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -258,7 +258,7 @@ public class SwitchDispatchTests
     }
 
     /// <summary>
-    /// 验证 NodeCanvas_OnlyProvidesRuleEditorAction 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NodeCanvas_OnlyProvidesRuleEditorAction；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Single、Equal、DoesNotContain；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -273,7 +273,7 @@ public class SwitchDispatchTests
     }
 
     /// <summary>
-    /// 验证 CustomBranchName_AutoCreatesPort_AndActivates 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CustomBranchName_AutoCreatesPort_AndActivates；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、Data、ExecuteAsync、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -306,7 +306,7 @@ public class SwitchDispatchTests
     }
 
     /// <summary>
-    /// 验证 StringMatch_IsCaseInsensitive_ByDefault 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 StringMatch_IsCaseInsensitive_ByDefault；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、Data、Branch、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -334,7 +334,7 @@ public class SwitchDispatchTests
     }
 
     /// <summary>
-    /// 验证 BranchCount_SyncsNumberedPorts 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BranchCount_SyncsNumberedPorts；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Contains、DoesNotContain；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -356,7 +356,7 @@ public class SwitchDispatchTests
     }
 
     /// <summary>
-    /// 验证 ParseRules_SupportsComments_AndColonSeparator 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ParseRules_SupportsComments_AndColonSeparator；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ParseRules、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -367,7 +367,7 @@ public class SwitchDispatchTests
     }
 
     /// <summary>
-    /// 验证 CustomRules_SupportSemicolons_AndSynchronizeNamedFlowPortsImmediately 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CustomRules_SupportSemicolons_AndSynchronizeNamedFlowPortsImmediately；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、ParseRules、All、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -386,7 +386,7 @@ public class SwitchDispatchTests
     }
 
     /// <summary>
-    /// 验证 InputToString_UnpacksJsonElement_AfterFlowReload 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 InputToString_UnpacksJsonElement_AfterFlowReload；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、Equal、InputToString；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

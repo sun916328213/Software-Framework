@@ -116,7 +116,7 @@ public sealed class FlowDocumentStoreTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public FlowChartViewModel Create()
         {

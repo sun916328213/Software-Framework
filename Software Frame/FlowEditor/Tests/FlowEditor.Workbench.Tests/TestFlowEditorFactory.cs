@@ -52,31 +52,31 @@ internal static class TestFlowEditorFactory
     {
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ShowOpenFileDialog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowOpenFileDialog；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public string? ShowOpenFileDialog(string filter, string? defaultFileName = null) => null;
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ShowSaveFileDialog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowSaveFileDialog；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public string? ShowSaveFileDialog(string filter, string defaultFileName, string defaultExt) => null;
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ShowConfirm 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowConfirm；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public bool? ShowConfirm(string message, string title) => null;
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ConfirmYesNo 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConfirmYesNo；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public bool ConfirmYesNo(string message, string title) => false;
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ShowInfo 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowInfo；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public void ShowInfo(string message, string title = "提示")
         {
@@ -84,7 +84,7 @@ internal static class TestFlowEditorFactory
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ShowError 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowError；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public void ShowError(string message, string title = "错误")
         {
@@ -96,14 +96,14 @@ internal static class TestFlowEditorFactory
     {
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ExportToPngWithDialog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToPngWithDialog；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public bool ExportToPngWithDialog(FrameworkElement element, Rect contentBounds, double scale = 2)
             => false;
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ExportToSvgWithDialog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExportToSvgWithDialog；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public bool ExportToSvgWithDialog(FrameworkElement element) => false;
     }

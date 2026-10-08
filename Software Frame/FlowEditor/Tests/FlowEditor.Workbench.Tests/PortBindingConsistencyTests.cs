@@ -34,7 +34,7 @@ public class PortBindingConsistencyTests
         public string B { get; set; } = string.Empty;
 
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
     }
@@ -49,7 +49,7 @@ public class PortBindingConsistencyTests
         public string DeviceName { get; set; } = "TCP1";
 
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
     }
@@ -61,7 +61,7 @@ public class PortBindingConsistencyTests
     private sealed class TcpConnectNode : CommunicationBaseNode;
 
     /// <summary>
-    /// 验证 DisablePropertyOutput_RemovesItsConnection_AndReplacementPortCanReconnect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DisablePropertyOutput_RemovesItsConnection_AndReplacementPortCanReconnect；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、SetPortConfig、nameof、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -95,7 +95,7 @@ public class PortBindingConsistencyTests
     }
 
     /// <summary>
-    /// 验证 BindingUpstreamNodes_ContainsOnlyTransitivePredecessors 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BindingUpstreamNodes_ContainsOnlyTransitivePredecessors；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、Add、Flow、GetUpstreamFlowNodes；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -117,7 +117,7 @@ public class PortBindingConsistencyTests
     }
 
     /// <summary>
-    /// 验证 BindableOutputProperties_IncludePropertiesDeclaredOnToolBaseClasses 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BindableOutputProperties_IncludePropertiesDeclaredOnToolBaseClasses；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetBindableProperties、Contains、nameof；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -131,7 +131,7 @@ public class PortBindingConsistencyTests
     }
 
     /// <summary>
-    /// 验证 RemovePropertyPort_ClearsInlineCheckStateAndRaisesConfigChanged 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RemovePropertyPort_ClearsInlineCheckStateAndRaisesConfigChanged；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 SetPortConfig、nameof、Single、True、RemoveCustomPort；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

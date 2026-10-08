@@ -14,7 +14,7 @@ namespace MotionControl.Tests;
 public sealed class LeadshineTransportTests
 {
     /// <summary>
-    /// 验证 ConnectMoveAndHome_UseInjectedTransportWithoutNativeSdk 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectMoveAndHome_UseInjectedTransportWithoutNativeSdk；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、ConnectResult、Equal、ServoOnResult；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -54,7 +54,7 @@ public sealed class LeadshineTransportTests
     }
 
     /// <summary>
-    /// 验证 Connect_TransportFailure_PreservesSpecificResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connect_TransportFailure_PreservesSpecificResult；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、ConnectResult、Equal、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -71,7 +71,7 @@ public sealed class LeadshineTransportTests
     }
 
     /// <summary>
-    /// 验证 Connect_ProfileFailure_ClosesTransportAndRollsBack 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connect_ProfileFailure_ClosesTransportAndRollsBack；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、ConnectResult、Equal、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -89,7 +89,7 @@ public sealed class LeadshineTransportTests
     }
 
     /// <summary>
-    /// 验证 Connect_CardNumberOutsideSdkRange_IsRejectedBeforeOpen 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connect_CardNumberOutsideSdkRange_IsRejectedBeforeOpen；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、ConnectResult、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -106,7 +106,7 @@ public sealed class LeadshineTransportTests
     }
 
     /// <summary>
-    /// 验证 CreateCard 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreateCard；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static LeadshineHelper CreateCard(FakeLeadshineTransport transport)
         => new(transport)
@@ -151,7 +151,7 @@ public sealed class LeadshineTransportTests
         private int _emergencyStopCount;
 
         /// <summary>
-        /// 验证 Open 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Open；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public EMotionResult Open(ushort cardNumber, int requiredAxes)
         {
@@ -163,7 +163,7 @@ public sealed class LeadshineTransportTests
         }
 
         /// <summary>
-        /// 验证 Close 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Close；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Close()
         {
@@ -174,7 +174,7 @@ public sealed class LeadshineTransportTests
         }
 
         /// <summary>
-        /// 验证 SetProfile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetProfile；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool SetProfile(int axis, double minimumVelocity, double maximumVelocity,
             double accelerationTime, double decelerationTime, double stopVelocity)
@@ -185,12 +185,12 @@ public sealed class LeadshineTransportTests
         }
 
         /// <summary>
-        /// 验证 SetServo 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetServo；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool SetServo(int axis, bool enabled) => true;
 
         /// <summary>
-        /// 验证 MovePosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 MovePosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool MovePosition(int axis, int pulse, bool absolute)
         {
@@ -200,15 +200,15 @@ public sealed class LeadshineTransportTests
         }
 
         /// <summary>
-        /// 验证 MoveVelocity 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 MoveVelocity；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool MoveVelocity(int axis, bool positive) => true;
         /// <summary>
-        /// 验证 Stop 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Stop；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool Stop(int axis, bool emergency) => true;
         /// <summary>
-        /// 验证 EmergencyStopAll 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EmergencyStopAll；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Increment；具体条件和先后次序见方法体。
         /// </summary>
         public bool EmergencyStopAll()
@@ -218,7 +218,7 @@ public sealed class LeadshineTransportTests
         }
 
         /// <summary>
-        /// 验证 ConfigureHome 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConfigureHome；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool ConfigureHome(int axis, ushort direction, double velocity, ushort mode,
             bool enableLimitReturn, int? offsetPulse)
@@ -230,12 +230,12 @@ public sealed class LeadshineTransportTests
         }
 
         /// <summary>
-        /// 验证 StartHome 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StartHome；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool StartHome(int axis) => true;
 
         /// <summary>
-        /// 验证 TryGetHomeResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGetHomeResult；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryGetHomeResult(int axis, out ushort state)
         {
@@ -244,39 +244,39 @@ public sealed class LeadshineTransportTests
         }
 
         /// <summary>
-        /// 验证 CheckDone 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CheckDone；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public short CheckDone(int axis) => 1;
         /// <summary>
-        /// 验证 GetAxisIoStatus 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetAxisIoStatus；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public uint GetAxisIoStatus(int axis) => 0;
         /// <summary>
-        /// 验证 GetCommandPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetCommandPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public int GetCommandPosition(int axis) => 0;
         /// <summary>
-        /// 验证 GetEncoderPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetEncoderPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public int GetEncoderPosition(int axis) => 0;
         /// <summary>
-        /// 验证 SetCurrentPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetCurrentPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool SetCurrentPosition(int axis, int pulse) => true;
         /// <summary>
-        /// 验证 ReadInput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadInput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public short ReadInput(int index) => 0;
         /// <summary>
-        /// 验证 ReadOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public short ReadOutput(int index) => 0;
         /// <summary>
-        /// 验证 WriteOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool WriteOutput(int index, bool state) => true;
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Close；具体条件和先后次序见方法体。
         /// </summary>
         public void Dispose() => Close();

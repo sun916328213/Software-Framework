@@ -13,7 +13,7 @@ namespace Communication.Tests.Protocols.Modbus;
 public sealed class ModbusServerDataCodecTests
 {
     /// <summary>
-    /// 验证 Unaligned_bit_range_is_repacked_from_bit_zero 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Unaligned_bit_range_is_repacked_from_bit_zero；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、ReadBits；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -27,7 +27,7 @@ public sealed class ModbusServerDataCodecTests
     }
 
     /// <summary>
-    /// 验证 Unaligned_bit_write_preserves_bits_outside_the_target_range 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Unaligned_bit_write_preserves_bits_outside_the_target_range；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 WriteBits、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -44,7 +44,7 @@ public sealed class ModbusServerDataCodecTests
     }
 
     /// <summary>
-    /// 验证 Bit_window_rejects_a_range_beyond_the_storage 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Bit_window_rejects_a_range_beyond_the_storage；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、ReadBits、WriteBits；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -60,7 +60,7 @@ public sealed class ModbusServerDataCodecTests
     }
 
     /// <summary>
-    /// 验证 Register_window_preserves_the_raw_big_endian_bytes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Register_window_preserves_the_raw_big_endian_bytes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、ReadRegisters；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -74,7 +74,7 @@ public sealed class ModbusServerDataCodecTests
     }
 
     /// <summary>
-    /// 验证 Complete_big_endian_registers_are_written_without_host_endian_conversion 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Complete_big_endian_registers_are_written_without_host_endian_conversion；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 WriteRegisters、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -89,7 +89,7 @@ public sealed class ModbusServerDataCodecTests
     }
 
     /// <summary>
-    /// 验证 Final_unpaired_byte_is_written_as_the_high_byte 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Final_unpaired_byte_is_written_as_the_high_byte；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 WriteRegisters、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

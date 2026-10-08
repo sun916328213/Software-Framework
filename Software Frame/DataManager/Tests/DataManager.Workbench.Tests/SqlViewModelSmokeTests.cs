@@ -25,14 +25,14 @@ namespace DataManager.Workbench.Tests
     public class SqlViewModelSmokeTests
     {
         /// <summary>
-        /// 验证 Env 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Env；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetEnvironmentVariable；具体条件和先后次序见方法体。
         /// </summary>
         private static string Env(string key, string fallback)
             => Environment.GetEnvironmentVariable(key) ?? fallback;
 
         /// <summary>
-        /// 验证 PgConnectionString 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 PgConnectionString；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Env；具体条件和先后次序见方法体。
         /// </summary>
         private static string PgConnectionString(string password, string db) =>
@@ -40,7 +40,7 @@ namespace DataManager.Workbench.Tests
             $"Database={Env("DM_PG_DB", db)};Username={Env("DM_PG_USER", "postgres")};Password={password};";
 
         /// <summary>
-        /// 验证 CreateVm 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateVm；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 PgConnectionString；具体条件和先后次序见方法体。
         /// </summary>
         private static SqlViewModel<TestEntity> CreateVm(string password, string db = "dm_smoke")
@@ -53,13 +53,13 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 PgPassword 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 PgPassword；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Env；具体条件和先后次序见方法体。
         /// </summary>
         private static string PgPassword() => Env("DM_PG_PASSWORD", "postgres");
 
         /// <summary>
-        /// 验证 WaitUntil 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitUntil；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 StartNew、cond、Sleep；具体条件和先后次序见方法体。
         /// </summary>
         private static void WaitUntil(Func<bool> cond, SqlViewModel<TestEntity> vm, string what, int timeoutMs = 30000)
@@ -74,14 +74,14 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 WaitMarker 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitMarker；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WaitUntil、Contains；具体条件和先后次序见方法体。
         /// </summary>
         private static void WaitMarker(SqlViewModel<TestEntity> vm, string marker) =>
             WaitUntil(() => vm.OutputText.Contains(marker), vm, marker);
 
         /// <summary>
-        /// 验证 FullFlow_ConnectAddQueryUpdateDelete 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FullFlow_ConnectAddQueryUpdateDelete；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateVm、PgPassword、Execute、WaitUntil、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -131,7 +131,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 WrongPasswordThenFixed_Reconnects 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WrongPasswordThenFixed_Reconnects；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateVm、Execute、WaitUntil、Contains、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

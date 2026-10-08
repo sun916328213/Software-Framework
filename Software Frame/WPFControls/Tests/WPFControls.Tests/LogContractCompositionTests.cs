@@ -19,7 +19,7 @@ namespace WPFControls.Tests;
 public sealed class LogContractCompositionTests
 {
     /// <summary>
-    /// 验证 UiAndFlowLoggingUseHostContractWithoutResolvingDefaultManager 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 UiAndFlowLoggingUseHostContractWithoutResolvingDefaultManager；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterInstance、RegisterSingleton、RegisterTypes、AddRunInfo、Resolve；具体条件和先后次序见方法体。
     /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
     /// </summary>
@@ -62,32 +62,32 @@ public sealed class LogContractCompositionTests
         public IReadOnlyList<ILog> Items => [];
         public int Count => 0;
         /// <summary>
-        /// 验证 TryGet 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGet；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public bool TryGet(string name, out ILog? item) { Lookups.Add(name); item = null; return false; }
         /// <summary>
-        /// 验证 ReplaceConfigured 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReplaceConfigured；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void ReplaceConfigured(IReadOnlyCollection<string> ownedNames, IReadOnlyList<LogParam> parameters) { }
         /// <summary>
-        /// 验证 Config 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Config；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Config(List<LogParam> parameters) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ILog Create(LogParam parameter) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 Add 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Add；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Add(ILog item) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 Remove 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Remove；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool Remove(ILog item) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 Clear 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Clear；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Clear() => throw new NotSupportedException();
     }

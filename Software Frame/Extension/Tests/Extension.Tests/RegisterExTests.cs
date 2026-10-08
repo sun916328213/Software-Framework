@@ -54,7 +54,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBoolArray_长度参数可自定义_短于16位只取低位 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBoolArray_长度参数可自定义_短于16位只取低位；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToBoolArray、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -68,7 +68,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBoolArray_长度0返回空数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBoolArray_长度0返回空数组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToBoolArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -78,7 +78,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBoolArray_负数16位_补码全1 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBoolArray_负数16位_补码全1；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 All、ToBoolArray、True、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -90,7 +90,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBoolArray_长度超过16位时_高位按int提升后的补码给出true 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBoolArray_长度超过16位时_高位按int提升后的补码给出true；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToBoolArray、Equal、All、True、Skip；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -108,7 +108,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBoolArray_负长度会抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBoolArray_负长度会抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NotNull、Exception、ToBoolArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -119,7 +119,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBoolArray_与ToBinaryArray的字符串正好互为逆序 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBoolArray_与ToBinaryArray的字符串正好互为逆序；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToBinaryArray、Concat、Select、Reverse、ToBoolArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -142,7 +142,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 ToList_BoolArray_逐元素转换且顺序保持 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToList_BoolArray_逐元素转换且顺序保持；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList_BoolArray、Equal、True、All、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -158,7 +158,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToList_BoolArray_长度参数对每个元素都生效 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToList_BoolArray_长度参数对每个元素都生效；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList_BoolArray、Equal、All；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -173,7 +173,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToList_BoolArray_空数组返回空列表 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToList_BoolArray_空数组返回空列表；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToList_BoolArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -183,7 +183,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToList_BoolArray_null会抛NullReferenceException_没有null保护 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToList_BoolArray_null会抛NullReferenceException_没有null保护；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、ToList_BoolArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -206,7 +206,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBinaryArray_short_负数与边界值_取低16位补码 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBinaryArray_short_负数与边界值_取低16位补码；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToBinaryArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -220,7 +220,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBinaryArray_short数组_逐元素且顺序保持 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBinaryArray_short数组_逐元素且顺序保持；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToBinaryArray、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -234,7 +234,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToBinaryArray_short数组_空数组返回空_但null会抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToBinaryArray_short数组_空数组返回空_但null会抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToBinaryArray、Throws；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -249,7 +249,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 ToIntArray_低字在前_高字在后 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToIntArray_低字在前_高字在后；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToIntArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -262,7 +262,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToIntArray_多个元素_按两两一组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToIntArray_多个元素_按两两一组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToIntArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -273,7 +273,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToIntArray_null或空返回空数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToIntArray_null或空返回空数组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToIntArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -284,7 +284,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToIntArray_奇数长度抛ArgumentException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToIntArray_奇数长度抛ArgumentException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、ToIntArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -295,7 +295,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToIntArray_与int的ToShortArray互为逆运算_含负数与边界 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToIntArray_与int的ToShortArray互为逆运算_含负数与边界；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToIntArray、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -314,7 +314,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 ToStringArray_按UTF8逐2字节解码_每个short一个字符串 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToStringArray_按UTF8逐2字节解码_每个short一个字符串；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToStringArray、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -328,7 +328,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToStringArray_两字节都是可打印字符时_得到一个双字符字符串 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToStringArray_两字节都是可打印字符时_得到一个双字符字符串；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToStringArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -341,7 +341,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToStringArray_非法UTF8字节会被替换成UFFFD_信息不可逆 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToStringArray_非法UTF8字节会被替换成UFFFD_信息不可逆；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToStringArray、Single、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -356,7 +356,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToStringArray_null或空返回空数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToStringArray_null或空返回空数组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToStringArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -367,7 +367,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToStringArray_与string的ToShortArray不是互逆关系 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToStringArray_与string的ToShortArray不是互逆关系；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToStringArray、ToShortArray、Equal、NotEqual；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -387,7 +387,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 ToFloatArray_成对还原float 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToFloatArray_成对还原float；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToFloatArray、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -399,7 +399,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToFloatArray_null或空返回空数组_奇数长度抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToFloatArray_null或空返回空数组_奇数长度抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToFloatArray、Throws；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -412,7 +412,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToFloatArray_长度2是合法的_但长度6也是合法的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToFloatArray_长度2是合法的_但长度6也是合法的；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Single、ToFloatArray、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -424,7 +424,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToFloatArray_与float的ToShortArray互为逆运算 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToFloatArray_与float的ToShortArray互为逆运算；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToFloatArray、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -436,7 +436,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToDoubleArray_四元组还原double 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToDoubleArray_四元组还原double；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToDoubleArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -447,7 +447,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToDoubleArray_null或空返回空数组_长度必须是4的倍数 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToDoubleArray_null或空返回空数组_长度必须是4的倍数；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToDoubleArray、Single、Throws；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -463,7 +463,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToDoubleArray_与double的ToShortArray互为逆运算 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToDoubleArray_与double的ToShortArray互为逆运算；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToDoubleArray、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -479,7 +479,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 ToShortArray_int_低字在前高字在后 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_int_低字在前高字在后；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -491,7 +491,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_int_负值走算术右移_高位补符号 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_int_负值走算术右移_高位补符号；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -504,7 +504,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_int数组_每个int两个short_顺序保持 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_int数组_每个int两个short_顺序保持；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -515,7 +515,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_int数组_null或空返回空数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_int数组_null或空返回空数组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -537,7 +537,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_string_中文按UTF32得到码位 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_string_中文按UTF32得到码位；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -548,7 +548,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_string_内嵌NUL会被静默丢弃_是有损的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_string_内嵌NUL会被静默丢弃_是有损的；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -561,7 +561,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_string_码位U10000的低字0被丢弃_数据被破坏 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_string_码位U10000的低字0被丢弃_数据被破坏；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -573,7 +573,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_string_null或空返回空数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_string_null或空返回空数组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -584,7 +584,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_string数组_按元素拼接 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_string数组_按元素拼接；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -595,7 +595,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_string数组_null元素被静默跳过 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_string数组_null元素被静默跳过；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -606,7 +606,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_string数组_null或空返回空数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_string数组_null或空返回空数组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -621,7 +621,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 ToShortArray_float_两个short 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_float_两个short；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -631,7 +631,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_float数组_每个float两个short 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_float数组_每个float两个short；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToShortArray、Equal、ToFloatArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -644,7 +644,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_float数组_null或空返回空数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_float数组_null或空返回空数组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -655,7 +655,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_double_四个short 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_double_四个short；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -665,7 +665,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_double数组_每个double四个short 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_double数组_每个double四个short；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToShortArray、Equal、ToDoubleArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -678,7 +678,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_double数组_null或空返回空数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_double数组_null或空返回空数组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -689,7 +689,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToShortArray_double与float占用的short个数比是2比1 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToShortArray_double与float占用的short个数比是2比1；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -720,7 +720,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 API面_ToShortArray有8个重载_是重载最密集的成员 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 API面_ToShortArray有8个重载_是重载最密集的成员；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetMethods、Equal、Count、GetParameters；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

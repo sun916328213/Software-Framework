@@ -115,13 +115,13 @@ public sealed class FlowChartServiceModuleTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 OnAttached 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OnAttached；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public override void OnAttached(IFlowChartService service) => AttachedCount++;
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 OnDetached 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OnDetached；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public override void OnDetached()
         {
@@ -131,7 +131,7 @@ public sealed class FlowChartServiceModuleTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
     }

@@ -20,7 +20,7 @@ public sealed class TcpSilentServerLifecycleTests
     private static readonly TimeSpan GuardTimeout = TimeSpan.FromSeconds(5);
 
     /// <summary>
-    /// 验证 StartSilentServerAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 StartSilentServerAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Start、AcceptTcpClientAsync；具体条件和先后次序见方法体。
     /// </summary>
     private static async Task<(TcpListener Listener, int Port, Task<TcpClient> Accept)> StartSilentServerAsync()
@@ -34,7 +34,7 @@ public sealed class TcpSilentServerLifecycleTests
     }
 
     /// <summary>
-    /// 验证 SilentParam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SilentParam；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToString；具体条件和先后次序见方法体。
     /// </summary>
     private static SocketParam SilentParam(int port, bool autoReconnect) => new()
@@ -48,7 +48,7 @@ public sealed class TcpSilentServerLifecycleTests
     };
 
     /// <summary>
-    /// 验证 Dispose_ConnectedSilentServer_CompletesPromptly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose_ConnectedSilentServer_CompletesPromptly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 StartSilentServerAsync、SilentParam、True、ConnectAsync、WaitAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -74,7 +74,7 @@ public sealed class TcpSilentServerLifecycleTests
     }
 
     /// <summary>
-    /// 验证 Disconnect_Then_Reconnect_SilentServer_Succeeds 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Disconnect_Then_Reconnect_SilentServer_Succeeds；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 StartSilentServerAsync、SilentParam、True、ConnectAsync、WaitAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -98,7 +98,7 @@ public sealed class TcpSilentServerLifecycleTests
     }
 
     /// <summary>
-    /// 验证 SecondDevice_SameEndpoint_Connects_After_First_Disposed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SecondDevice_SameEndpoint_Connects_After_First_Disposed；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 StartSilentServerAsync、SilentParam、True、ConnectAsync、WaitAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

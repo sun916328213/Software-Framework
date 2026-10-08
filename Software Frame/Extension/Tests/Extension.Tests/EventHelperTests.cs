@@ -61,7 +61,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 CEventArgs_两个构造函数_单参版本Data为null 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CEventArgs_两个构造函数_单参版本Data为null；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -77,7 +77,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 CEventArgs_继承自EventArgs_且两个属性都是只读的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CEventArgs_继承自EventArgs_且两个属性都是只读的；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、IsAssignableFrom、NotNull、GetProperty、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -113,7 +113,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegisterEvent_不同指令互不影响 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegisterEvent_不同指令互不影响；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、RegisterEvent、Add、TriggerEvent、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -132,7 +132,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegisterEvent_指令为空或处理器为null时抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegisterEvent_指令为空或处理器为null时抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、Throws、RegisterEvent；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -148,7 +148,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 UnregisterEvent_摘掉一个处理器_其余仍然生效 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 UnregisterEvent_摘掉一个处理器_其余仍然生效；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、Add、RegisterEvent、UnregisterEvent、TriggerEvent；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -170,7 +170,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 UnregisterEvent_摘掉未注册的处理器是无操作 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 UnregisterEvent_摘掉未注册的处理器是无操作；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、RegisterEvent、Add、UnregisterEvent、TriggerEvent；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -189,7 +189,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 UnregisterEvent_摘掉不存在的指令是无操作 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 UnregisterEvent_摘掉不存在的指令是无操作；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、UnregisterEvent；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -204,7 +204,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ClearEvents_只清指定指令 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ClearEvents_只清指定指令；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、RegisterEvent、Add、ClearEvents、TriggerEvent；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -225,7 +225,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 TriggerEvent_没有订阅者时什么都不发生 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TriggerEvent_没有订阅者时什么都不发生；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、TriggerEvent；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -240,7 +240,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 TriggerEvent_指令为空时抛ArgumentException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TriggerEvent_指令为空时抛ArgumentException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、Throws、TriggerEvent；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -302,7 +302,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 TriggerEvent_带数据的重载同样会外传异常且保留栈 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TriggerEvent_带数据的重载同样会外传异常且保留栈；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、RegisterEvent、Exception、TriggerEvent、NotNull；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -321,7 +321,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 TriggerEvent_带数据的重载会把Data传下去 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TriggerEvent_带数据的重载会把Data传下去；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、RegisterEvent、TriggerEvent、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -342,7 +342,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 WaitForEventAsync_收到事件时返回参数并自动取消注册 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitForEventAsync_收到事件时返回参数并自动取消注册；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、RegisterEvent、UnregisterEvent、WaitForEventAsync、TriggerEvent；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -369,7 +369,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WaitForEventAsync_超时抛TimeoutException_但处理器没有被取消注册_是缺陷 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitForEventAsync_超时抛TimeoutException_但处理器没有被取消注册_是缺陷；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、RegisterEvent、UnregisterEvent、ThrowsAsync、WaitForEventAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -394,7 +394,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WaitForEventAsync_取消令牌触发时抛OperationCanceledException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitForEventAsync_取消令牌触发时抛OperationCanceledException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、WaitForEventAsync、Cancel、ExceptionAsync、IsAssignableFrom；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -421,7 +421,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WaitForEventAsync_命令重载_收到事件时返回参数 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitForEventAsync_命令重载_收到事件时返回参数；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、WaitForEventAsync、TriggerEvent、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -441,7 +441,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WaitForEventAsync_参数校验_异常是被装进Task而不是同步抛出 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitForEventAsync_参数校验_异常是被装进Task而不是同步抛出；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAsync、WaitForEventAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -462,7 +462,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 WaitForEventAsync_两个重载的默认超时不一致 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitForEventAsync_两个重载的默认超时不一致；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray、Where、GetMethods、nameof、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -485,7 +485,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 API面_EventHelper是普通class而不是static_class_8个公开静态方法 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 API面_EventHelper是普通class而不是static_class_8个公开静态方法；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 False、NotNull、CreateInstance、GetMethods、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -513,7 +513,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 API面_没有一个是扩展方法_全部是普通静态方法 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 API面_没有一个是扩展方法_全部是普通静态方法；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetMethods、All、False、IsDefined；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -529,7 +529,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 事件表是static的_跨实例共享 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 事件表是static的_跨实例共享；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ClearAllEvents、RegisterEvent、Increment、TriggerEvent、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

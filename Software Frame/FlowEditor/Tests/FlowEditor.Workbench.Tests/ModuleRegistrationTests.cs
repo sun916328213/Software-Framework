@@ -18,7 +18,7 @@ namespace FlowEditor.Workbench.Tests;
 public sealed class ModuleRegistrationTests
 {
     /// <summary>
-    /// 验证 RepeatedRegistrationPreservesServicesAndHostReplacement 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RepeatedRegistrationPreservesServicesAndHostReplacement；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterInstance、RegisterTypes、Resolve、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -35,7 +35,7 @@ public sealed class ModuleRegistrationTests
     }
 
     /// <summary>
-    /// 验证 DefaultServicesBelongToTheirContainer 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DefaultServicesBelongToTheirContainer；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterTypes、NotSame、Resolve；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

@@ -33,7 +33,7 @@ namespace Extension.Tests
         private sealed class Probe : NotifyPropertyChanged
         {
             /// <summary>
-            /// 验证 Raise 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+            /// 测试相关入口 Raise；准备条件、协作调用与结果检查以方法正文为准。
             /// 正文中的关键协作调用包括 OnPropertyChanged；具体条件和先后次序见方法体。
             /// </summary>
             public void Raise(string propertyName) => OnPropertyChanged(propertyName);
@@ -46,13 +46,13 @@ namespace Extension.Tests
             public bool CallBase = true;
 
             /// <summary>
-            /// 验证 Raise 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+            /// 测试相关入口 Raise；准备条件、协作调用与结果检查以方法正文为准。
             /// 正文中的关键协作调用包括 OnPropertyChanged；具体条件和先后次序见方法体。
             /// </summary>
             public void Raise(string propertyName) => OnPropertyChanged(propertyName);
 
             /// <summary>
-            /// 验证 OnPropertyChanged 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+            /// 测试相关入口 OnPropertyChanged；准备条件、协作调用与结果检查以方法正文为准。
             /// 正文中的关键协作调用包括 OnPropertyChanged；具体条件和先后次序见方法体。
             /// </summary>
             protected override void OnPropertyChanged(string propertyName)
@@ -76,7 +76,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 OnPropertyChanged_触发事件_发送者是自身且携带属性名 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OnPropertyChanged_触发事件_发送者是自身且携带属性名；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Raise、Same、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -94,7 +94,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 OnPropertyChanged_未订阅时不抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OnPropertyChanged_未订阅时不抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、Exception、Raise；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -106,7 +106,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 OnPropertyChanged_属性名为null时_原样传给事件参数 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OnPropertyChanged_属性名为null时_原样传给事件参数；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Raise、True、Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -125,7 +125,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 多个订阅者_全部按注册顺序收到通知 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 多个订阅者_全部按注册顺序收到通知；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Raise、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -143,7 +143,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 某个订阅者抛异常_排在它后面的订阅者收不到通知 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 某个订阅者抛异常_排在它后面的订阅者收不到通知；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、Raise、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -161,7 +161,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 取消订阅后_不再收到通知 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 取消订阅后_不再收到通知；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Raise、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -196,7 +196,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 OnPropertyChanged_参数是裸string_没有CallerMemberName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OnPropertyChanged_参数是裸string_没有CallerMemberName；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetMethod、Single、GetParameters、Equal、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -211,7 +211,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 覆写OnPropertyChanged后_调用被派发到覆写实现 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 覆写OnPropertyChanged后_调用被派发到覆写实现；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Raise、True、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -228,7 +228,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 覆写时若不调base_事件不会触发 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 覆写时若不调base_事件不会触发；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Raise、True、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -261,7 +261,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 PropertyChanged是公开实例事件_类型为PropertyChangedEventHandler 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 PropertyChanged是公开实例事件_类型为PropertyChangedEventHandler；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetEvent、NotNull、Equal、False、GetAddMethod；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

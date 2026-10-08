@@ -27,7 +27,7 @@ public sealed class CameraViewModelTests
     public CameraViewModelTests(CameraConfigScope scope) => _scope = scope;
 
     /// <summary>
-    /// 验证 CreateVm 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreateVm；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static (CameraViewModel Vm, FakeCameraFactory Factory) CreateVm()
     {
@@ -37,7 +37,7 @@ public sealed class CameraViewModelTests
     }
 
     /// <summary>
-    /// 验证 Model_ExposesWorkspaceState 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Model_ExposesWorkspaceState；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、CreateVm、NotNull、Equal、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -54,7 +54,7 @@ public sealed class CameraViewModelTests
     }
 
     /// <summary>
-    /// 验证 ConnectToggleAsync_WhenDisconnected_ConnectsAndLogsSuccess 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectToggleAsync_WhenDisconnected_ConnectsAndLogsSuccess；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、CreateVm、ExecuteAsync、True、False；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -75,7 +75,7 @@ public sealed class CameraViewModelTests
     }
 
     /// <summary>
-    /// 验证 ConnectCommand_WhenDisconnected_ConnectsViaBaseCommand 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectCommand_WhenDisconnected_ConnectsViaBaseCommand；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、CreateVm、ExecuteAsync、True、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -92,7 +92,7 @@ public sealed class CameraViewModelTests
     }
 
     /// <summary>
-    /// 验证 CaptureCommand_Connected_FillsPreviewAndLogs 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CaptureCommand_Connected_FillsPreviewAndLogs；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、CreateVm、ExecuteAsync、NotNull、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -113,7 +113,7 @@ public sealed class CameraViewModelTests
     }
 
     /// <summary>
-    /// 验证 CaptureCommand_BeforeConnect_LogsFailure 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CaptureCommand_BeforeConnect_LogsFailure；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、CreateVm、ExecuteAsync、Null、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -131,7 +131,7 @@ public sealed class CameraViewModelTests
     }
 
     /// <summary>
-    /// 验证 LiveCommand_TogglesLiveButtonTextAndStopsOnDisconnect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LiveCommand_TogglesLiveButtonTextAndStopsOnDisconnect；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、CreateVm、ExecuteAsync、Execute、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -155,7 +155,7 @@ public sealed class CameraViewModelTests
     }
 
     /// <summary>
-    /// 验证 ApplyTriggerCommand_WithoutConnect_DoesNothingAndKeepsBusyFalse 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ApplyTriggerCommand_WithoutConnect_DoesNothingAndKeepsBusyFalse；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、CreateVm、ExecuteAsync、False、DoesNotContain；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -172,7 +172,7 @@ public sealed class CameraViewModelTests
     }
 
     /// <summary>
-    /// 验证 ApplyTriggerCommand_Connected_PushesRuntimeTriggerAndLogs 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ApplyTriggerCommand_Connected_PushesRuntimeTriggerAndLogs；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、CreateVm、ExecuteAsync、Contains、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -194,7 +194,7 @@ public sealed class CameraViewModelTests
     }
 
     /// <summary>
-    /// 验证 ClearOutputCommand_ClearsLog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ClearOutputCommand_ClearsLog；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、CreateVm、ProfileAddedAction、NotEqual、Execute；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -212,7 +212,7 @@ public sealed class CameraViewModelTests
     }
 
     /// <summary>
-    /// 验证 ProfileCallbacks_AddDeleteSaveSelect_LogExpectedMessages 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ProfileCallbacks_AddDeleteSaveSelect_LogExpectedMessages；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、CreateVm、ProfileAddedAction、Contains、SelectCallbackAction；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -237,7 +237,7 @@ public sealed class CameraViewModelTests
     }
 
     /// <summary>
-    /// 验证 ConnectToggleAsync_WhenAlreadyConnected_Disconnects 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectToggleAsync_WhenAlreadyConnected_Disconnects；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、CreateVm、ExecuteAsync、True、False；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -257,7 +257,7 @@ public sealed class CameraViewModelTests
         Assert.Contains("断开相机", vm.OutputText, StringComparison.Ordinal);
     }
     /// <summary>
-    /// 验证 CommandAvailability_FollowsConnectionAndRetirement 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CommandAvailability_FollowsConnectionAndRetirement；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、CreateVm、True、CanExecute、False；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -279,7 +279,7 @@ public sealed class CameraViewModelTests
     }
 
     /// <summary>
-    /// 验证 WorkspaceDisposal_ReleasesOwnedCameraOnce_AndRejectsReconnect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WorkspaceDisposal_ReleasesOwnedCameraOnce_AndRejectsReconnect；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、ConnectAsync、DisposeAsync、True、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

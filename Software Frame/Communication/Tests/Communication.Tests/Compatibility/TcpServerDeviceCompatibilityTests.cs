@@ -17,7 +17,7 @@ namespace Communication.Tests.Compatibility;
 public sealed class TcpServerDeviceCompatibilityTests
 {
     /// <summary>
-    /// 验证 Disconnecting_one_peer_keeps_server_lifecycle_and_remaining_peer_io_active 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Disconnecting_one_peer_keeps_server_lifecycle_and_remaining_peer_io_active；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ReservePort、ToString、Increment、TrySetResult、True；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -83,7 +83,7 @@ public sealed class TcpServerDeviceCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 ReservePort 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReservePort；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Start、Stop；具体条件和先后次序见方法体。
     /// </summary>
     private static int ReservePort()
@@ -101,7 +101,7 @@ public sealed class TcpServerDeviceCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 WaitUntilAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WaitUntilAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、condition、Delay；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

@@ -67,13 +67,13 @@ public sealed class WorkbenchFixture : IDisposable
     }
 
     /// <summary>
-    /// 验证 Invoke 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Invoke；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、action；具体条件和先后次序见方法体。
     /// </summary>
     public void Invoke(Action<IContainerProvider> action) => _app!.Dispatcher.Invoke(() => action(_app.Container));
 
     /// <summary>
-    /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Shutdown、Join、FromSeconds、Dispose；具体条件和先后次序见方法体。
     /// </summary>
     public void Dispose()
@@ -91,7 +91,7 @@ public sealed class WorkbenchFixture : IDisposable
 public sealed class WorkbenchCompositionTests(WorkbenchFixture host)
 {
     /// <summary>
-    /// 验证 ActualAppLoadsModulesAndRendersTheNavigatedEditor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ActualAppLoadsModulesAndRendersTheNavigatedEditor；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、ToArray、Resolve、Equal、All；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -117,7 +117,7 @@ public sealed class WorkbenchCompositionTests(WorkbenchFixture host)
     }
 
     /// <summary>
-    /// 验证 ActualCatalogToolboxFactoryAndEditorUseTheSharedComposition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ActualCatalogToolboxFactoryAndEditorUseTheSharedComposition；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Equal、CreateNodeCatalog、Empty；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -141,7 +141,7 @@ public sealed class WorkbenchCompositionTests(WorkbenchFixture host)
     }
 
     /// <summary>
-    /// 验证 ActualScriptRuntimeExecutesThroughTheWorkbenchNodeFactory 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ActualScriptRuntimeExecutesThroughTheWorkbenchNodeFactory；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、IsType、Create、NotNull；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

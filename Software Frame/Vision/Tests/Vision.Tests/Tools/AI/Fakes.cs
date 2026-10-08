@@ -40,7 +40,7 @@ internal sealed class FakeAIProvider : IAIProvider
     public AIModelRequest? LastRequest { get; private set; }
 
     /// <summary>
-    /// 验证 OpenSession 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OpenSession；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 OpenSessionFunc；具体条件和先后次序见方法体。
     /// </summary>
     public IAIModelSession OpenSession(AIModelRequest request)
@@ -53,7 +53,7 @@ internal sealed class FakeAIProvider : IAIProvider
     }
 
     /// <summary>
-    /// 验证 CloseSession 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CloseSession；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 MarkClosed；具体条件和先后次序见方法体。
     /// </summary>
     public void CloseSession(IAIModelSession session)
@@ -94,7 +94,7 @@ internal sealed class FakeAIModelSession : IAIModelSession
     public int RunCalls { get; private set; }
 
     /// <summary>
-    /// 验证 Run 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Run；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Default；具体条件和先后次序见方法体。
     /// </summary>
     public ToolResult Run(AIInferenceRequest request)
@@ -107,12 +107,12 @@ internal sealed class FakeAIModelSession : IAIModelSession
     }
 
     /// <summary>
-    /// 验证 MarkClosed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MarkClosed；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public void MarkClosed() => IsLoaded = false;
 
     /// <summary>
-    /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public void Dispose() => IsLoaded = false;
 }
@@ -121,7 +121,7 @@ internal sealed class FakeAIModelSession : IAIModelSession
 internal static class CannedResults
 {
     /// <summary>
-    /// 验证 Default 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Default；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public static ToolResult Default(AIModelType modelType) => modelType switch
     {

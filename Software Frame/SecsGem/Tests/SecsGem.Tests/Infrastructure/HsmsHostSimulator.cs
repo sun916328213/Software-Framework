@@ -58,7 +58,7 @@ namespace SecsGem.Tests.Infrastructure
         }
 
         /// <summary>
-        /// 验证 Start 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Start；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Start；具体条件和先后次序见方法体。
         /// </summary>
         public static HsmsHostSimulator Start()
@@ -139,7 +139,7 @@ namespace SecsGem.Tests.Infrastructure
         }
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Stop；具体条件和先后次序见方法体。
         /// </summary>
         public void Dispose()
@@ -166,7 +166,7 @@ namespace SecsGem.Tests.Infrastructure
         }
 
         /// <summary>
-        /// 验证 SendFrame 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendFrame；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested、Copy、Register、Write、Flush；具体条件和先后次序见方法体。
         /// </summary>
         private void SendFrame(byte[] header, byte[] body, CancellationToken ct)
@@ -188,7 +188,7 @@ namespace SecsGem.Tests.Infrastructure
         }
 
         /// <summary>
-        /// 验证 ReadExactAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadExactAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Register、Dispose、ConfigureAwait、ReadAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>

@@ -21,7 +21,7 @@ namespace Vision.Tests.Tools.Halcon;
 public sealed class HalconInternalTests
 {
     /// <summary>
-    /// 验证 ImageConverter_RejectsPaddedRowsBeforeNativeCall 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ImageConverter_RejectsPaddedRowsBeforeNativeCall；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromBuffer、Throws、FromVisionImage；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -33,7 +33,7 @@ public sealed class HalconInternalTests
     }
 
     /// <summary>
-    /// 验证 MatrixString_RoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MatrixString_RoundTrip；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToMatrixString、Equal、ParseMatrixString；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -46,7 +46,7 @@ public sealed class HalconInternalTests
     }
 
     /// <summary>
-    /// 验证 MatrixString_AcceptsLegacyCommaOnlyFormat 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MatrixString_AcceptsLegacyCommaOnlyFormat；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ParseMatrixString、Equal、True、IsIdentityMatrix、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -61,7 +61,7 @@ public sealed class HalconInternalTests
     }
 
     /// <summary>
-    /// 验证 MatrixString_BadInput_FailsWithoutThrowing 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MatrixString_BadInput_FailsWithoutThrowing；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 False、TryParseMatrixString、IsNullOrEmpty、Throws、ParseMatrixString；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -74,7 +74,7 @@ public sealed class HalconInternalTests
     }
 
     /// <summary>
-    /// 验证 ThresholdRange_Validation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ThresholdRange_Validation；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、IsValidThresholdRange；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -88,7 +88,7 @@ public sealed class HalconInternalTests
     }
 
     /// <summary>
-    /// 验证 Fixture_BuildPose_Identity 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Fixture_BuildPose_Identity；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildPose、True、IsIdentityMatrix、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -108,7 +108,7 @@ public sealed class HalconInternalTests
     }
 
     /// <summary>
-    /// 验证 Fixture_BuildPose_PureTranslation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Fixture_BuildPose_PureTranslation；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildPose、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -126,7 +126,7 @@ public sealed class HalconInternalTests
     }
 
     /// <summary>
-    /// 验证 Fixture_BuildPose_NinetyDegreeRotation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Fixture_BuildPose_NinetyDegreeRotation；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildPose、ParseMatrixString、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -148,7 +148,7 @@ public sealed class HalconInternalTests
     }
 
     /// <summary>
-    /// 验证 Fixture_BuildPose_NonPositiveScale_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Fixture_BuildPose_NonPositiveScale_Throws；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、BuildPose；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

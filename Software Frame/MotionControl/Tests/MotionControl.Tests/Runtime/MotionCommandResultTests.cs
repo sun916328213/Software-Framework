@@ -14,7 +14,7 @@ namespace MotionControl.Tests;
 public sealed class MotionCommandResultTests
 {
     /// <summary>
-    /// 验证 AxisCommand_InvalidAxis_IsDistinguishedFromNotConnected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AxisCommand_InvalidAxis_IsDistinguishedFromNotConnected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、ServoOnResult、Equal、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -29,7 +29,7 @@ public sealed class MotionCommandResultTests
     }
 
     /// <summary>
-    /// 验证 Commands_WhenDisconnected_ReturnNotConnected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Commands_WhenDisconnected_ReturnNotConnected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、Equal、ServoOnResult、StopAllResult；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -42,7 +42,7 @@ public sealed class MotionCommandResultTests
     }
 
     /// <summary>
-    /// 验证 MotionCommand_InvalidNumber_ReturnsInvalidParam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MotionCommand_InvalidNumber_ReturnsInvalidParam；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateConnectedCard、Equal、SetSpeedResult、MoveAbsResult、MoveRelResult；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -62,7 +62,7 @@ public sealed class MotionCommandResultTests
     }
 
     /// <summary>
-    /// 验证 DriverResultCode_IsPreservedAndLegacyBoolUsesSamePath 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DriverResultCode_IsPreservedAndLegacyBoolUsesSamePath；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateConnectedCard、MoveAbsResult、Equal、False、MoveAbs；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -86,7 +86,7 @@ public sealed class MotionCommandResultTests
     }
 
     /// <summary>
-    /// 验证 InvalidEnumsAndDisabledHoming_ReturnInvalidParam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 InvalidEnumsAndDisabledHoming_ReturnInvalidParam；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateConnectedCard、True、ServoOn、Equal、JogStartResult；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -108,7 +108,7 @@ public sealed class MotionCommandResultTests
     }
 
     /// <summary>
-    /// 验证 OutputAndDisconnect_ReturnDiagnosticResults 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OutputAndDisconnect_ReturnDiagnosticResults；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateConnectedCard、Equal、SetOutputResult、True、DisconnectResult；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -124,7 +124,7 @@ public sealed class MotionCommandResultTests
     }
 
     /// <summary>
-    /// 验证 Simulation_SubPulsePerTickSpeed_StillAccumulatesAndArrives 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Simulation_SubPulsePerTickSpeed_StillAccumulatesAndArrives；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateConnectedCard、True、ServoOn、SetSpeed、MoveAbs；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -150,7 +150,7 @@ public sealed class MotionCommandResultTests
     }
 
     /// <summary>
-    /// 验证 Simulation_EmergencyStopBlocksMotionUntilStatusIsCleared 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Simulation_EmergencyStopBlocksMotionUntilStatusIsCleared；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateConnectedCard、True、ServoOn、Stop、ReadAxisStatus；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -174,7 +174,7 @@ public sealed class MotionCommandResultTests
     }
 
     /// <summary>
-    /// 验证 CreateCard 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreateCard；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static SimulationMotionCard CreateCard(EHomeMode homeMode = EHomeMode.OriginSwitch)
         => new()
@@ -186,7 +186,7 @@ public sealed class MotionCommandResultTests
         };
 
     /// <summary>
-    /// 验证 CreateConnectedCard 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreateConnectedCard；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、Connect；具体条件和先后次序见方法体。
     /// </summary>
     private static SimulationMotionCard CreateConnectedCard(EHomeMode homeMode = EHomeMode.OriginSwitch)

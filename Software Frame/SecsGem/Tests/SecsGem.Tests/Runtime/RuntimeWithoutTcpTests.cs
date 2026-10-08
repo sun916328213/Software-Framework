@@ -20,7 +20,7 @@ namespace SecsGem.Tests.Runtime;
 public sealed class RuntimeWithoutTcpTests
 {
     /// <summary>
-    /// 验证 S1F13_Is_Acknowledged_Without_A_Tcp_Connection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 S1F13_Is_Acknowledged_Without_A_Tcp_Connection；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、ConnectAsync、EmitReceivedAsync、L、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -39,7 +39,7 @@ public sealed class RuntimeWithoutTcpTests
     }
 
     /// <summary>
-    /// 验证 Remote_Command_Reaches_Registered_Equipment_Handler_Without_Tcp 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Remote_Command_Reaches_Registered_Equipment_Handler_Without_Tcp；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、SetEventHandler、ConnectAsync、EmitReceivedAsync、L；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -65,7 +65,7 @@ public sealed class RuntimeWithoutTcpTests
     }
 
     /// <summary>
-    /// 验证 Host_Variable_Query_Uses_Fresh_Equipment_Snapshot 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Host_Variable_Query_Uses_Fresh_Equipment_Snapshot；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、Add、SetEquipmentDataProvider、EmitReceivedAsync、L；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -92,7 +92,7 @@ public sealed class RuntimeWithoutTcpTests
     }
 
     /// <summary>
-    /// 验证 Disconnect_Updates_Public_State_Without_Tcp 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Disconnect_Updates_Public_State_Without_Tcp；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、ConnectAsync、UpdateSEMIMode、UpdateDeviceStatus、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

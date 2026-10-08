@@ -19,7 +19,7 @@ namespace FlowEditor.Workbench.Tests;
 public class P2RuntimeContractsTests
 {
     /// <summary>
-    /// 验证 ClearRegistries 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ClearRegistries；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Clear；具体条件和先后次序见方法体。
     /// </summary>
     private static void ClearRegistries()
@@ -44,7 +44,7 @@ public class P2RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 Registry_LegacyAlias_Resolves_OldDocument 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Registry_LegacyAlias_Resolves_OldDocument；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Register、RegisterLegacyAlias、Same、ResolveDocumentType、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -63,7 +63,7 @@ public class P2RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 PluginRegistry_Tracks_Availability 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PluginRegistry_Tracks_Availability；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Register、True、IsNodeAvailable、False、Unregister；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -114,7 +114,7 @@ public class P2RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 MissingNode_Validate_And_Execute_Use_StableCode 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MissingNode_Validate_And_Execute_Use_StableCode；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ValidateAsync、CreateTest、Contains、ThrowsAsync、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -130,7 +130,7 @@ public class P2RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 MissingNode_RoundTrip_Keeps_Original_Config 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MissingNode_RoundTrip_Keeps_Original_Config；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 IsType、Create、ToNodeDocument、Equal、ClearRegistries；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -163,7 +163,7 @@ public class P2RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 MissingNode_Upgrade_Restores_RealNode_With_Config 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MissingNode_Upgrade_Restores_RealNode_With_Config；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Register、Upgrade、IsType、Equal、ClearRegistries；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -191,7 +191,7 @@ public class P2RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 Factory_Throws_When_Missing_Disallowed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Factory_Throws_When_Missing_Disallowed；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Create；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -203,7 +203,7 @@ public class P2RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 Mapper_Writes_StableId_And_SchemaVersion 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mapper_Writes_StableId_And_SchemaVersion；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Register、ToNodeDocument、Equal、ClearRegistries；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -238,7 +238,7 @@ public class P2RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 Retry_NonRetryable_Breaks_Early 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Retry_NonRetryable_Breaks_Early；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAsync、ExecuteAsync、IsType、Equal、Empty；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -260,7 +260,7 @@ public class P2RuntimeContractsTests
     }
 
     /// <summary>
-    /// 验证 Retry_Retryable_Honored_With_Telemetry 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Retry_Retryable_Honored_With_Telemetry；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ExecuteAsync、Equal、All、True；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -311,7 +311,7 @@ public class P2RuntimeContractsTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Increment、Config；具体条件和先后次序见方法体。
         /// </remarks>
         public override Task ExecuteAsync(CancellationToken ct)
@@ -329,7 +329,7 @@ public class P2RuntimeContractsTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Increment、DeviceOffline；具体条件和先后次序见方法体。
         /// </remarks>
         public override Task ExecuteAsync(CancellationToken ct)
@@ -346,7 +346,7 @@ public class P2RuntimeContractsTests
     {
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 DeviceOffline；具体条件和先后次序见方法体。
         /// </remarks>
         public override Task ExecuteAsync(CancellationToken ct) =>

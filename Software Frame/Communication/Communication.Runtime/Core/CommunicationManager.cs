@@ -17,6 +17,8 @@ namespace Communication.Runtime.Core
     public class CommunicationManager : ICommunicationManager
     {
         private readonly ConcurrentDictionary<string, ICommunicationDevice> _devices = new();
+        // 字典负责设备索引的并发访问；创建、移除、批量操作及释放的协调仍依赖后面的生命周期锁。
+        // 不能因为使用了并发字典，就把整个设备创建与释放流程视为自动具备原子性。
         private readonly ICommunicationDeviceFactory _factory;
         private readonly object _lifecycleGate = new();
         private readonly HashSet<Task> _pendingBatchOperations = [];

@@ -15,7 +15,7 @@ namespace Communication.Tests.Converters;
 public sealed class ValueConverterFactoryTests
 {
     /// <summary>
-    /// 验证 All_data_formats_remain_isolated_during_concurrent_conversion 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 All_data_formats_remain_isolated_during_concurrent_conversion；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Select、Run、Create、Equal、Decode；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -46,7 +46,7 @@ public sealed class ValueConverterFactoryTests
     }
 
     /// <summary>
-    /// 验证 Device_specific_data_formats_do_not_share_mutable_endianness 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Device_specific_data_formats_do_not_share_mutable_endianness；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、Equal、Decode；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

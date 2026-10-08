@@ -15,7 +15,7 @@ namespace Communication.Tests.Transports;
 public sealed class SerialByteStreamTransportTests
 {
     /// <summary>
-    /// 验证 Repeated_open_is_idempotent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Repeated_open_is_idempotent；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 OpenAsync、True、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -35,7 +35,7 @@ public sealed class SerialByteStreamTransportTests
     }
 
     /// <summary>
-    /// 验证 Open_transport_exposes_duplex_stream_and_close_is_idempotent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Open_transport_exposes_duplex_stream_and_close_is_idempotent；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 OpenAsync、WriteAsync、ReadAsync、ToArray、AdvanceTo；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -64,7 +64,7 @@ public sealed class SerialByteStreamTransportTests
     }
 
     /// <summary>
-    /// 验证 Concurrent_dispose_calls_release_the_serial_connection_once 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Concurrent_dispose_calls_release_the_serial_connection_once；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 OpenAsync、PauseNextClose、Run、DisposeAsync、WaitAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -99,7 +99,7 @@ public sealed class SerialByteStreamTransportTests
     }
 
     /// <summary>
-    /// 验证 Open_started_during_dispose_is_rejected_without_reopening_the_port 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Open_started_during_dispose_is_rejected_without_reopening_the_port；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 OpenAsync、PauseNextClose、Run、DisposeAsync、WaitAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -125,7 +125,7 @@ public sealed class SerialByteStreamTransportTests
     }
 
     /// <summary>
-    /// 验证 Pending_read_observes_caller_cancellation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Pending_read_observes_caller_cancellation；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 OpenAsync、AsTask、ReadAsync、Cancel、ThrowsAnyAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -165,7 +165,7 @@ public sealed class SerialByteStreamTransportTests
         public int DisposeCount { get; private set; }
 
         /// <summary>
-        /// 验证 Open 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Open；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Open()
         {
@@ -174,7 +174,7 @@ public sealed class SerialByteStreamTransportTests
         }
 
         /// <summary>
-        /// 验证 Close 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Close；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult、Wait；具体条件和先后次序见方法体。
         /// </summary>
         public void Close()
@@ -196,7 +196,7 @@ public sealed class SerialByteStreamTransportTests
         }
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Close、Dispose；具体条件和先后次序见方法体。
         /// </summary>
         public void Dispose()
@@ -208,17 +208,17 @@ public sealed class SerialByteStreamTransportTests
         }
 
         /// <summary>
-        /// 验证 PauseNextClose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 PauseNextClose；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void PauseNextClose() => _pauseNextClose = true;
 
         /// <summary>
-        /// 验证 WaitForCloseStartedAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitForCloseStartedAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task WaitForCloseStartedAsync() => _closeStarted.Task;
 
         /// <summary>
-        /// 验证 ResumeClose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ResumeClose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Set；具体条件和先后次序见方法体。
         /// </summary>
         public void ResumeClose() => _resumeClose.Set();
@@ -243,7 +243,7 @@ public sealed class SerialByteStreamTransportTests
         }
 
         /// <summary>
-        /// 验证 ReadAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ReadCoreAsync；具体条件和先后次序见方法体。
         /// </summary>
         public override ValueTask<int> ReadAsync(
@@ -252,7 +252,7 @@ public sealed class SerialByteStreamTransportTests
             ReadCoreAsync(buffer, cancellationToken);
 
         /// <summary>
-        /// 验证 WriteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -264,7 +264,7 @@ public sealed class SerialByteStreamTransportTests
         }
 
         /// <summary>
-        /// 验证 ReadCoreAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadCoreAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ReadAsync、Min、CopyTo、Slice、AdvanceTo；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -280,35 +280,35 @@ public sealed class SerialByteStreamTransportTests
         }
 
         /// <summary>
-        /// 验证 Flush 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Flush；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override void Flush() { }
         /// <summary>
-        /// 验证 FlushAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FlushAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task FlushAsync(CancellationToken cancellationToken) => Task.CompletedTask;
         /// <summary>
-        /// 验证 Read 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Read；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override int Read(byte[] buffer, int offset, int count) =>
             throw new NotSupportedException();
         /// <summary>
-        /// 验证 Write 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Write；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override void Write(byte[] buffer, int offset, int count) =>
             throw new NotSupportedException();
         /// <summary>
-        /// 验证 Seek 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Seek；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override long Seek(long offset, SeekOrigin origin) =>
             throw new NotSupportedException();
         /// <summary>
-        /// 验证 SetLength 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetLength；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override void SetLength(long value) => throw new NotSupportedException();
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Complete、Dispose；具体条件和先后次序见方法体。
         /// </summary>
         protected override void Dispose(bool disposing)

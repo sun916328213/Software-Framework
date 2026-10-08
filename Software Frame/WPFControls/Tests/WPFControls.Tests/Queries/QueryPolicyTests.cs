@@ -14,7 +14,7 @@ namespace WPFControls.Tests.Queries;
 public sealed class QueryPolicyTests
 {
     /// <summary>
-    /// 验证 QueryClassesDependOnReaderContractsInsideTheUnifiedUiLibrary 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 QueryClassesDependOnReaderContractsInsideTheUnifiedUiLibrary；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、GetName、Select、SelectMany、GetConstructors；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -29,7 +29,7 @@ public sealed class QueryPolicyTests
         }
 
     /// <summary>
-    /// 验证 TableQueryKeepsDateNormalizationInclusiveNextDayAndExactId 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TableQueryKeepsDateNormalizationInclusiveNextDayAndExactId；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddDays、Query、Equal、Throws、Add；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -47,7 +47,7 @@ public sealed class QueryPolicyTests
     }
 
     /// <summary>
-    /// 验证 TableQueryNullSourceReturnsEmptyWithoutChangingTheId 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TableQueryNullSourceReturnsEmptyWithoutChangingTheId；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Empty、Query、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -59,7 +59,7 @@ public sealed class QueryPolicyTests
     }
 
     /// <summary>
-    /// 验证 CapacityKeepsHourlyMergeYieldActiveHoursAndExtraDayDenominator 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CapacityKeepsHourlyMergeYieldActiveHoursAndExtraDayDenominator；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Entry、AddDays、Query、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -78,7 +78,7 @@ public sealed class QueryPolicyTests
     }
 
     /// <summary>
-    /// 验证 CapacityKeepsInclusiveDailyTrendAndMissingDays 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CapacityKeepsInclusiveDailyTrendAndMissingDays；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Entry、AddDays、Query、Equal、Select；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -93,7 +93,7 @@ public sealed class QueryPolicyTests
     }
 
     /// <summary>
-    /// 验证 CapacityKeepsTwoDayThresholdAndNonNormalizedStart 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CapacityKeepsTwoDayThresholdAndNonNormalizedStart；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Query、AddDays；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -111,7 +111,7 @@ public sealed class QueryPolicyTests
     }
 
     /// <summary>
-    /// 验证 CapacityDoesNotSwallowPersistenceExceptions 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CapacityDoesNotSwallowPersistenceExceptions；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Same、Throws、Query；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -124,7 +124,7 @@ public sealed class QueryPolicyTests
     }
 
     /// <summary>
-    /// 验证 LogsKeepTimeOfDayAndInclusiveNextDayAcrossMonthBoundary 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LogsKeepTimeOfDayAndInclusiveNextDayAcrossMonthBoundary；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 QueryAsync、Equal、AddDays、Single、Throws；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -141,7 +141,7 @@ public sealed class QueryPolicyTests
     }
 
     /// <summary>
-    /// 验证 LogsFilterCaseInsensitivePropertyTextAndKeepUnknownOrEmptyFields 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LogsFilterCaseInsensitivePropertyTextAndKeepUnknownOrEmptyFields；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Take、Filter、nameof、Select；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -157,7 +157,7 @@ public sealed class QueryPolicyTests
     }
 
     /// <summary>
-    /// 验证 LogsPagingKeepsMinimumSizeAndDoesNotClampPageOrKeepSharedState 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LogsPagingKeepsMinimumSizeAndDoesNotClampPageOrKeepSharedState；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToArray、Select、Range、ToString、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -174,7 +174,7 @@ public sealed class QueryPolicyTests
     }
 
     /// <summary>
-    /// 验证 LogsSummaryUsesOnlyTheSuppliedPageAndPreservesGroupOrder 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LogsSummaryUsesOnlyTheSuppliedPageAndPreservesGroupOrder；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Summarize、Page、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -187,7 +187,7 @@ public sealed class QueryPolicyTests
     }
 
     /// <summary>
-    /// 验证 SemiLogStringsRemainOrderedAndUnmodified 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SemiLogStringsRemainOrderedAndUnmodified；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、QueryAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -200,7 +200,7 @@ public sealed class QueryPolicyTests
     }
 
     /// <summary>
-    /// 验证 Entry 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Entry；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static CapacityStatisticsEntry<string> Entry(string row, DateTime day, int hour, int good, int defect)
     {
@@ -216,7 +216,7 @@ public sealed class QueryPolicyTests
         public (DateTime Start, DateTime End) Request;
         public Exception? Error;
         /// <summary>
-        /// 验证 Read 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Read；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public IReadOnlyList<CapacityStatisticsEntry<string>> Read(DateTime start, DateTime end)
         { Request = (start, end); if (Error != null) throw Error; return rows; }
@@ -231,13 +231,13 @@ public sealed class QueryPolicyTests
         public int Enumerations;
         public bool Empty;
         /// <summary>
-        /// 验证 Read 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Read；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Enumerate；具体条件和先后次序见方法体。
         /// </summary>
         public IEnumerable<string>? Read(DateTime start, DateTime end, string? id)
         { Request = (start, end, id); return Empty ? null : Enumerate(); }
         /// <summary>
-        /// 验证 Enumerate 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Enumerate；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private IEnumerable<string> Enumerate() { Enumerations++; yield return "first"; yield return "second"; }
     }
@@ -253,7 +253,7 @@ public sealed class QueryPolicyTests
     {
         public (DateTime Start, DateTime End) Request;
         /// <summary>
-        /// 验证 ReadAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<IEnumerable<Row>> ReadAsync(DateTime start, DateTime end)
@@ -266,7 +266,7 @@ public sealed class QueryPolicyTests
     private sealed class StringReader(IEnumerable<string> rows) : ILogHistoryReader<string>
     {
         /// <summary>
-        /// 验证 ReadAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<IEnumerable<string>> ReadAsync(DateTime start, DateTime end) => Task.FromResult(rows);

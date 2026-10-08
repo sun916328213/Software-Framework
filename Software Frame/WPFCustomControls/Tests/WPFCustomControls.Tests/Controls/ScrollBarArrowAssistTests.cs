@@ -30,7 +30,7 @@ public class ScrollBarArrowAssistTests
     };
 
     /// <summary>
-    /// 验证 AllProperties_AreRegistered 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AllProperties_AreRegistered；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetField、NotNull、IsType、GetValue；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -46,7 +46,7 @@ public class ScrollBarArrowAssistTests
     }
 
     /// <summary>
-    /// 验证 Defaults_AreAsDocumented 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Defaults_AreAsDocumented；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Equal、GetSize、GetMargin、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -66,7 +66,7 @@ public class ScrollBarArrowAssistTests
     }
 
     /// <summary>
-    /// 验证 Setters_RoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Setters_RoundTrip；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、SetSize、SetMargin、SetBrush、SetHighlightBrush；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -93,7 +93,7 @@ public class ScrollBarArrowAssistTests
     }
 
     /// <summary>
-    /// 验证 AllProperties_AreInheritable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AllProperties_AreInheritable；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetValue、GetField、GetMetadata、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -111,7 +111,7 @@ public class ScrollBarArrowAssistTests
     }
 
     /// <summary>
-    /// 验证 InheritedValue_FlowsToDescendant 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 InheritedValue_FlowsToDescendant；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、SetSize、SetBrush、Equal、GetSize；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

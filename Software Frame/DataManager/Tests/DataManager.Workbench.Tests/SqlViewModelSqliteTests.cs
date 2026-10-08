@@ -25,7 +25,7 @@ namespace DataManager.Workbench.Tests
             Path.GetTempPath(), $"dm_wb_sqlite_{Guid.NewGuid():N}.db");
 
         /// <summary>
-        /// 验证 CreateVm 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateVm；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Clear、Add；具体条件和先后次序见方法体。
         /// </summary>
         private SqlViewModel<TestEntity> CreateVm()
@@ -45,7 +45,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 WaitUntil 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitUntil；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 StartNew、cond、Sleep；具体条件和先后次序见方法体。
         /// </summary>
         private static void WaitUntil(Func<bool> cond, SqlViewModel<TestEntity> vm, string what, int timeoutMs = 30000)
@@ -60,14 +60,14 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 WaitMarker 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitMarker；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WaitUntil、Contains；具体条件和先后次序见方法体。
         /// </summary>
         private static void WaitMarker(SqlViewModel<TestEntity> vm, string marker) =>
             WaitUntil(() => vm.OutputText.Contains(marker), vm, marker);
 
         /// <summary>
-        /// 验证 FullFlow_ConnectAddQueryDeleteAll 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FullFlow_ConnectAddQueryDeleteAll；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateVm、Execute、WaitUntil、WaitMarker、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -100,7 +100,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exists、Delete、SuppressFinalize；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>

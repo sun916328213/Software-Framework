@@ -20,7 +20,7 @@ namespace Extension.Tests;
 public class DistributionSecurityTests
 {
 	/// <summary>
-	/// 验证 HashEx_Sha256Hex_已知向量 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 HashEx_Sha256Hex_已知向量；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、Sha256Hex；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -30,7 +30,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 HashEx_Sha256Hex_对null返回空串而不是抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 HashEx_Sha256Hex_对null返回空串而不是抛异常；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、Sha256Hex、Sha512Hex；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -42,7 +42,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 HashEx_字符串版与字节版对同一UTF8内容结果一致 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 HashEx_字符串版与字节版对同一UTF8内容结果一致；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetBytes、Equal、Sha256Hex、NotEqual；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -54,7 +54,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 HashEx_Sha512Hex_长度128且小写 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 HashEx_Sha512Hex_长度128且小写；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Sha512Hex、Equal、Matches；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -66,7 +66,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 HashEx_Sha256File_与内存哈希一致_不存在的文件抛FileNotFound 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 HashEx_Sha256File_与内存哈希一致_不存在的文件抛FileNotFound；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 WriteFile、Equal、Sha256Hex、Sha256File、Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -89,7 +89,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 HashEx_HmacSha256_RFC4231测试向量 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 HashEx_HmacSha256_RFC4231测试向量；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetBytes、Equal、HmacSha256Hex、ToBase64String、FromHexString；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -102,7 +102,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 HashEx_Pbkdf2_长度可控且同输入稳定_换盐即换密钥 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 HashEx_Pbkdf2_长度可控且同输入稳定_换盐即换密钥；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetBytes、Pbkdf2、Equal、NotEqual；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -120,7 +120,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 HashEx_SecureRandom_长度正确且两次不同 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 HashEx_SecureRandom_长度正确且两次不同；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SecureRandom、Equal、NotEqual、Empty、Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -136,7 +136,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 HashEx_FixedTimeEquals_任意一侧为null都返回false 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 HashEx_FixedTimeEquals_任意一侧为null都返回false；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、FixedTimeEquals、False；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -153,7 +153,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 AesEx_CBC字符串往返_且每次密文都不同 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AesEx_CBC字符串往返_且每次密文都不同；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 AesEncrypt、Equal、AesDecrypt、NotEqual；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -166,7 +166,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 AesEx_CBC口令错误_绝不会返回原文 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AesEx_CBC口令错误_绝不会返回原文；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 AesEncrypt、NotEqual、AesDecrypt、IsType；具体条件和先后次序见方法体。
 	/// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
 	/// </summary>
@@ -185,7 +185,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 AesEx_CBC_明文为null时返回空串_而空串是解不开的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AesEx_CBC_明文为null时返回空串_而空串是解不开的；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、AesEncrypt、Throws、AesDecrypt；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -196,7 +196,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 AesEx_CBC_空串能往返 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AesEx_CBC_空串能往返；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、AesDecrypt、AesEncrypt；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -206,7 +206,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 AesEx_CBC_密文格式非法_抛CryptographicException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AesEx_CBC_密文格式非法_抛CryptographicException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、AesDecrypt、ToBase64String；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -217,7 +217,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 AesEx_CBC没有完整性保护_改一个字节不抛但明文变了 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AesEx_CBC没有完整性保护_改一个字节不抛但明文变了；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 AesEncrypt、FromBase64String、Equal、ToBase64String、AesDecrypt；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -233,7 +233,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 AesEx_GCM字符串往返_且每次密文都不同 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AesEx_GCM字符串往返_且每次密文都不同；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SecureRandom、AesGcmEncrypt、Equal、AesGcmDecrypt、NotEqual；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -247,7 +247,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 AesEx_GCM密钥必须32字节_否则抛ArgumentException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AesEx_GCM密钥必须32字节_否则抛ArgumentException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、AesGcmEncrypt、AesGcmDecrypt；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -261,7 +261,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 AesEx_GCM_密文或tag被改_抛AuthenticationTagMismatchException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AesEx_GCM_密文或tag被改_抛AuthenticationTagMismatchException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SecureRandom、AesGcmEncrypt、FromBase64String、ThrowsAny、AesGcmDecrypt；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -279,7 +279,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 AesEx_GCM_空明文能加密_但解不开_往返断裂 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AesEx_GCM_空明文能加密_但解不开_往返断裂；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SecureRandom、AesGcmEncrypt、Equal、FromBase64String、Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -292,7 +292,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 AesEx_GCM_密文格式非法_抛CryptographicException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AesEx_GCM_密文格式非法_抛CryptographicException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SecureRandom、Throws、AesGcmDecrypt、ToBase64String；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -304,7 +304,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 AesEx_文件加解密往返_密文与明文不同 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AesEx_文件加解密往返_密文与明文不同；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 WriteFile、Combine、AesEncryptFile、NotEqual、ReadAllBytes；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -322,7 +322,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 AesEx_文件头不足32字节_解密抛CryptographicException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AesEx_文件头不足32字节_解密抛CryptographicException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 WriteFile、Throws、AesDecryptFile、Combine、Dispose；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -347,7 +347,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 RsaEx_密钥对生成_2048位且可往返导入 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 RsaEx_密钥对生成_2048位且可往返导入；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、FromPrivateKey、FromPublicKey、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -362,7 +362,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 RsaEx_签名验签往返_篡改后失败_且PKCS1签名是确定性的 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 RsaEx_签名验签往返_篡改后失败_且PKCS1签名是确定性的；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、RsaSign、True、RsaVerify、False；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -378,7 +378,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 RsaEx_null明文被静默当成空串签名 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 RsaEx_null明文被静默当成空串签名；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、Equal、RsaSign、True、RsaVerify；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -390,7 +390,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 RsaEx_验签失败一律返回false不抛_符合fail_closed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 RsaEx_验签失败一律返回false不抛_符合fail_closed；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、RsaSign、False、RsaVerify；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -410,7 +410,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 RsaEx_加密解密往返_且超过OAEP上限时抛异常而不是静默截断 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 RsaEx_加密解密往返_且超过OAEP上限时抛异常而不是静默截断；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、Equal、RsaDecrypt、RsaEncrypt、Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -425,7 +425,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 RsaEx_解密失败是抛异常_与验签的fail_closed风格不同 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 RsaEx_解密失败是抛异常_与验签的fail_closed风格不同；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、RsaEncrypt、Throws、RsaDecrypt；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -439,7 +439,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 RsaEx_只认PKCS1格式的DER_不认PKCS8和SPKI 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 RsaEx_只认PKCS1格式的DER_不认PKCS8和SPKI；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、FromPrivateKey、ToBase64String、ExportPkcs8PrivateKey、FromPublicKey；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -461,7 +461,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 RsaEx_导入非Base64密钥_抛FormatException或ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 RsaEx_导入非Base64密钥_抛FormatException或ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、FromPrivateKey、FromPublicKey；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -474,7 +474,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseInfo_默认值_永久且不绑定机器 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseInfo_默认值_永久且不绑定机器；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、Matches、NotNull、Empty、True；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -495,7 +495,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseInfo_IsPermanent的判据是距MaxValue不超过一天_比文档宽松 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseInfo_IsPermanent的判据是距MaxValue不超过一天_比文档宽松；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、AddDays、False、AddYears；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -520,7 +520,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseInfo_JSON里的显式null会覆盖属性初始化器 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseInfo_JSON里的显式null会覆盖属性初始化器；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Deserialize、NotNull、Null；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -536,7 +536,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseManagerEx_签发与校验往返_永久License 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseManagerEx_签发与校验往返_永久License；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、Create、Verify、Equal、True；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -560,7 +560,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseManagerEx_篡改payload后判签名无效 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseManagerEx_篡改payload后判签名无效；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、Create、Split、Substring、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -580,7 +580,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseManagerEx_格式错误的各种输入都判Malformed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseManagerEx_格式错误的各种输入都判Malformed；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、Verify、Equal、False、NotEqual；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -598,7 +598,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseManagerEx_空payload加空签名被判签名无效_而不是格式错误 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseManagerEx_空payload加空签名被判签名无效_而不是格式错误；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、Equal、Verify；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -609,7 +609,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseManagerEx_clockSkew是提前5分钟判过期_方向与文档的容差说法相反 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseManagerEx_clockSkew是提前5分钟判过期_方向与文档的容差说法相反；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、Equal、St、Lic、AddMinutes；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -635,7 +635,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseManagerEx_机器码绑定_空机器码等于不绑定 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseManagerEx_机器码绑定_空机器码等于不绑定；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、Create、Equal、Verify、GetMachineCode；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -663,7 +663,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseManagerEx_功能点为空列表时_任何功能都放行 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseManagerEx_功能点为空列表时_任何功能都放行；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、Create、Equal、Verify；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -688,7 +688,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseManagerEx_签名合法但Features为null_修后归一化成空集合按全功能放行 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseManagerEx_签名合法但Features为null_修后归一化成空集合按全功能放行；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、Create、Serialize、Contains、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -724,7 +724,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseManagerEx_CreateTrial_绑定本机并打Trial标记 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseManagerEx_CreateTrial_绑定本机并打Trial标记；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、CreateTrial、Verify、Equal、GetMachineCode；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -744,7 +744,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseManagerEx_CreateTrial_不传功能点时Features保持为空 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseManagerEx_CreateTrial_不传功能点时Features保持为空；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、CreateTrial、Verify、Empty；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -759,7 +759,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseManagerEx_VerifyFile_文件不存在判Malformed_存在时往返成功 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseManagerEx_VerifyFile_文件不存在判Malformed_存在时往返成功；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、Equal、VerifyFile、Combine、CreateFile；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -778,7 +778,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 LicenseManagerEx_CreateFile_自动补出多层目录 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 LicenseManagerEx_CreateFile_自动补出多层目录；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、Combine、CreateFile、True、Exists；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -796,7 +796,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 MachineCodeEx_机器码格式固定_同机多次调用稳定 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MachineCodeEx_机器码格式固定_同机多次调用稳定；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetMachineCode、Equal、Matches；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -810,7 +810,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 MachineCodeEx_IsCurrentMachine_大小写不敏感_空白一律false 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MachineCodeEx_IsCurrentMachine_大小写不敏感_空白一律false；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetMachineCode、True、IsCurrentMachine、ToLowerInvariant、False；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -827,7 +827,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 MachineCodeEx_采集失败时降级为占位符_但两处都必须留痕 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MachineCodeEx_采集失败时降级为占位符_但两处都必须留痕；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ReadAllText、Combine、ExtensionSourceRoot、Contains、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -840,7 +840,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 MachineCodeEx_用PInvoke取卷序列号_守卫扫不到DllImport字符串_这不是漏网 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 MachineCodeEx_用PInvoke取卷序列号_守卫扫不到DllImport字符串_这不是漏网；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ReadAllText、Combine、ExtensionSourceRoot、Contains；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -852,7 +852,7 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 验证 ExtensionSourceRoot 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ExtensionSourceRoot；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetDirectoryName、False、IsNullOrEmpty、GetFullPath、Combine；具体条件和先后次序见方法体。
 	/// </summary>
 	private static string ExtensionSourceRoot([CallerFilePath] string thisFile = "")

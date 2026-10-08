@@ -34,6 +34,8 @@ public static class FrameworkTypeResolver
     /// </remarks>
     public static Type? ResolvePersistedType(string? name)
     {
+        // 入口处理的是持久化 CLR 类型身份，包括旧程序集名称、泛型参数和嵌套类型。
+        // 精确迁移映射用于读取旧数据，不意味着恢复旧程序集 API 或为未知类型猜测替代实现。
         if (string.IsNullOrWhiteSpace(name)) return null;
         try
         {

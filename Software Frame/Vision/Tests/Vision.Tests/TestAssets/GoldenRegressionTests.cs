@@ -17,7 +17,7 @@ namespace Vision.Tests.TestAssets;
 public sealed class GoldenRegressionTests
 {
     /// <summary>
-    /// 验证 Threshold_Rect600_CountIsLocked 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Threshold_Rect600_CountIsLocked；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Rect600、True、Rect600Expected、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -32,7 +32,7 @@ public sealed class GoldenRegressionTests
     }
 
     /// <summary>
-    /// 验证 Blob_Rect600_CenterAndAreaAreLocked 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Blob_Rect600_CenterAndAreaAreLocked；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Rect600、True、Single、Rect600Expected；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -51,7 +51,7 @@ public sealed class GoldenRegressionTests
     }
 
     /// <summary>
-    /// 验证 Morphology_Erode_Rect600_AreaIsLocked 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Morphology_Erode_Rect600_AreaIsLocked；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Rect600、True、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -66,7 +66,7 @@ public sealed class GoldenRegressionTests
     }
 
     /// <summary>
-    /// 验证 TemplateMatch_PastePattern_LocationIsLocked 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TemplateMatch_PastePattern_LocationIsLocked；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 PatternTemplate、Run、PastePattern、True、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -84,7 +84,7 @@ public sealed class GoldenRegressionTests
     }
 
     /// <summary>
-    /// 验证 FindLine_HLine200_RowIsLocked 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FindLine_HLine200_RowIsLocked；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、HLine200、True、HLine200Expected、InRange；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -101,7 +101,7 @@ public sealed class GoldenRegressionTests
     }
 
     /// <summary>
-    /// 验证 FindCircle_Disc30_CenterAndRadiusAreLocked 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FindCircle_Disc30_CenterAndRadiusAreLocked；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、Disc30、True、Disc30Expected、DistanceTo；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

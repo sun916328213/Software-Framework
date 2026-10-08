@@ -84,7 +84,7 @@ public sealed class RfidDeviceFactoryTests
     }
 
     /// <summary>
-    /// 验证 ValidOptions 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ValidOptions；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static RfidOptions ValidOptions(string driverId) => new()
     {

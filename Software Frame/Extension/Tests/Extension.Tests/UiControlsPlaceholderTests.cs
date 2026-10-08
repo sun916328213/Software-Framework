@@ -21,7 +21,7 @@ public class UiControlsPlaceholderTests
 	private const string UiControlsNamespace = "Extension.UI.Controls";
 
 	/// <summary>
-	/// 验证 Ui_Controls命名空间里没有DataGridView相关类型 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Ui_Controls命名空间里没有DataGridView相关类型；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ToArray、GetTypes、NotEmpty、Contains、DoesNotContain；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -36,7 +36,7 @@ public class UiControlsPlaceholderTests
 	}
 
 	/// <summary>
-	/// 验证 DataGridViewEx_有效代码只有using与命名空间声明 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 DataGridViewEx_有效代码只有using与命名空间声明；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SourcePath、True、Exists、ToArray、ReadAllLines；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -61,7 +61,7 @@ public class UiControlsPlaceholderTests
 	}
 
 	/// <summary>
-	/// 验证 Extension工程是UseWPF的_而该文件自称Winforms扩展 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 Extension工程是UseWPF的_而该文件自称Winforms扩展；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SourcePath、True、Exists、Contains、ReadAllText；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -75,7 +75,7 @@ public class UiControlsPlaceholderTests
 	}
 
 	/// <summary>
-	/// 验证 DataGridViewEx_没有任何宿主或第三方using 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 DataGridViewEx_没有任何宿主或第三方using；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ReadAllText、SourcePath、DoesNotContain；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -88,7 +88,7 @@ public class UiControlsPlaceholderTests
 	}
 
 	/// <summary>
-	/// 验证 ThisFile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ThisFile；准备条件、协作调用与结果检查以方法正文为准。
 	/// </summary>
 	private static string ThisFile([CallerFilePath] string path = "")
 	{
@@ -96,7 +96,7 @@ public class UiControlsPlaceholderTests
 	}
 
 	/// <summary>
-	/// 验证 SourcePath 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 SourcePath；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetFullPath、Combine、GetDirectoryName、ThisFile；具体条件和先后次序见方法体。
 	/// </summary>
 	private static string SourcePath(params string[] segments)

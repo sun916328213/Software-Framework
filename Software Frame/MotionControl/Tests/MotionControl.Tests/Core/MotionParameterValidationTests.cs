@@ -16,7 +16,7 @@ namespace MotionControl.Tests;
 public sealed class MotionParameterValidationTests
 {
     /// <summary>
-    /// 验证 ConnectResult_InvalidCommonAxisParameters_DoNotEnterDriver 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectResult_InvalidCommonAxisParameters_DoNotEnterDriver；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ConnectResult、False、Equal、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -45,7 +45,7 @@ public sealed class MotionParameterValidationTests
     }
 
     /// <summary>
-    /// 验证 ConnectResult_InvalidSoftLimits_ReturnsDiagnosticMessage 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectResult_InvalidSoftLimits_ReturnsDiagnosticMessage；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ConnectResult、Equal、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -74,7 +74,7 @@ public sealed class MotionParameterValidationTests
     }
 
     /// <summary>
-    /// 验证 ConnectResult_ValidSimulationConfiguration_ConnectsSuccessfully 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectResult_ValidSimulationConfiguration_ConnectsSuccessfully；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ConnectResult、True、DisConnect；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -99,7 +99,7 @@ public sealed class MotionParameterValidationTests
     }
 
     /// <summary>
-    /// 验证 MotionCommands_NonFiniteOrOverflowingValues_ReturnFalse 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MotionCommands_NonFiniteOrOverflowingValues_ReturnFalse；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、Connect、False、SetSpeed、MoveAbs；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -125,7 +125,7 @@ public sealed class MotionParameterValidationTests
     }
 
     /// <summary>
-    /// 验证 ConnectResult_PulseConversionOverflow_IsRejected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectResult_PulseConversionOverflow_IsRejected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ConnectResult、Equal、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -146,7 +146,7 @@ public sealed class MotionParameterValidationTests
     }
 
     /// <summary>
-    /// 验证 ConnectedCard_UsesStableSnapshotUntilNextConnection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectedCard_UsesStableSnapshotUntilNextConnection；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、Connect、Add、Same、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -178,7 +178,7 @@ public sealed class MotionParameterValidationTests
     }
 
     /// <summary>
-    /// 验证 ParameterSnapshot_PreservesDerivedTypeAndClonesAxes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ParameterSnapshot_PreservesDerivedTypeAndClonesAxes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 IsType、Snapshot、Add、Equal、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -202,7 +202,7 @@ public sealed class MotionParameterValidationTests
     }
 
     /// <summary>
-    /// 验证 ZMotion_MissingIpAddress_IsRejectedBeforeNativeSdkCall 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ZMotion_MissingIpAddress_IsRejectedBeforeNativeSdkCall；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ConnectResult、Equal、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -220,7 +220,7 @@ public sealed class MotionParameterValidationTests
     }
 
     /// <summary>
-    /// 验证 Inovance_RegisterMapOverflow_IsRejectedBeforeTransportCall 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Inovance_RegisterMapOverflow_IsRejectedBeforeTransportCall；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ConnectResult、Equal、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -251,48 +251,48 @@ public sealed class MotionParameterValidationTests
     {
         public bool IsConnected => false;
         /// <summary>
-        /// 验证 Connect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Connect；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool Connect(string ipAddress, int port, InovanceParam parameter, int requiredAxes)
             => throw new InvalidOperationException("参数无效时不应访问传输层。");
         /// <summary>
-        /// 验证 Disconnect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Disconnect；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Disconnect() { }
         /// <summary>
-        /// 验证 TryReadStatus 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadStatus；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadStatus(int axis, out ushort status) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 UpdateControlWord 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 UpdateControlWord；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool UpdateControlWord(int axis, ushort setBits, ushort clearMask) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 WriteTarget 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteTarget；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool WriteTarget(int axis, int position, float velocity) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 TryReadCurrentPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadCurrentPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadCurrentPosition(int axis, out int position) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 SetCurrentPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetCurrentPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool SetCurrentPosition(int axis, int position) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 TryReadInput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadInput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadInput(int index, out bool state) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 TryReadOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadOutput(int index, out bool state) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 WriteOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool WriteOutput(int index, bool state) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Dispose() { }
     }

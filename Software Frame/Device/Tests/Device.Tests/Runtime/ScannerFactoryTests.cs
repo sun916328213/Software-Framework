@@ -118,7 +118,7 @@ public sealed class ScannerFactoryTests
     }
 
     /// <summary>
-    /// 验证 ValidOptions 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ValidOptions；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static ScannerOptions ValidOptions() => new()
     {
@@ -141,7 +141,7 @@ public sealed class ScannerFactoryTests
         public bool IsOpen { get; private set; }
 
         /// <summary>
-        /// 验证 OpenAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OpenAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask OpenAsync(CancellationToken cancellationToken = default)
@@ -152,7 +152,7 @@ public sealed class ScannerFactoryTests
         }
 
         /// <summary>
-        /// 验证 CloseAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CloseAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested、CancelPendingRead；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask CloseAsync(CancellationToken cancellationToken = default)
@@ -164,7 +164,7 @@ public sealed class ScannerFactoryTests
         }
 
         /// <summary>
-        /// 验证 SendToScannerAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendToScannerAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteAsync、GetBytes；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -174,7 +174,7 @@ public sealed class ScannerFactoryTests
         }
 
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CompleteAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>

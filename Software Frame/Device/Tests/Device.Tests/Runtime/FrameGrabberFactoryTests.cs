@@ -105,7 +105,7 @@ public sealed class FrameGrabberFactoryTests
     }
 
     /// <summary>
-    /// 验证 ValidOptions 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ValidOptions；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static FrameGrabberOptions ValidOptions(DeviceDriverId driverId) => new()
     {
@@ -127,17 +127,17 @@ public sealed class FrameGrabberFactoryTests
         protected override string ErrorCodePrefix => "frame-grabber.fake";
 
         /// <summary>
-        /// 验证 ConnectCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConnectCore；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override void ConnectCore() => ConnectCount++;
 
         /// <summary>
-        /// 验证 DisconnectCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisconnectCore；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override void DisconnectCore() => DisconnectCount++;
 
         /// <summary>
-        /// 验证 EmitFrame 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EmitFrame；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 PublishFrame；具体条件和先后次序见方法体。
         /// </summary>
         public void EmitFrame() => PublishFrame(new FrameGrabberFrame(

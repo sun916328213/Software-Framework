@@ -26,7 +26,7 @@ namespace DataManager.Workbench.Tests
         private readonly ITestOutputHelper _output = output;
 
         /// <summary>
-        /// 验证 Probe_ControlSave_WritesProfileFile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Probe_ControlSave_WritesProfileFile；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TryReadAllText、Invoke、Exists、Delete、Show；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>
@@ -81,7 +81,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 TryReadAllText 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadAllText；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exists、ReadAllText；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>
@@ -98,7 +98,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 FindChild 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FindChild；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetChildrenCount、FindChild、GetChild；具体条件和先后次序见方法体。
         /// </summary>
         private static T? FindChild<T>(DependencyObject root) where T : DependencyObject

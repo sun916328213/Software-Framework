@@ -42,7 +42,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Restore、SuppressFinalize；具体条件和先后次序见方法体。
         /// </summary>
         public void Dispose()
@@ -52,7 +52,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Restore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Restore；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exists、Delete、WriteAllText；具体条件和先后次序见方法体。
         /// </summary>
         private static void Restore(string path, string? backup)
@@ -69,7 +69,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 SqlParam_RaisesPropertyChanged 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlParam_RaisesPropertyChanged；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、Contains、nameof；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -91,7 +91,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Ctor_WithoutConfig_HasExactlyOneProfile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Ctor_WithoutConfig_HasExactlyOneProfile；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Single、NotNull；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -103,7 +103,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 AddRemove_ViaManagerCallbacks_UpdatesSelectionAndCount 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddRemove_ViaManagerCallbacks_UpdatesSelectionAndCount；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、OnConnectionAddedExternally、Equal、RemoveAt、OnConnectionDeletedExternally；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -127,7 +127,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 DeleteLastRow_RestoresDefault 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DeleteLastRow_RestoresDefault；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Clear、OnConnectionDeletedExternally、Single、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -141,7 +141,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 SaveLoad_RoundTripsAllFields 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SaveLoad_RoundTripsAllFields；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、OnConnectionAddedExternally、Save、ToList、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

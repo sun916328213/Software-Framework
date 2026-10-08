@@ -14,7 +14,7 @@ namespace MotionControl.Tests;
 public sealed class AdlinkTransportTests
 {
     /// <summary>
-    /// 验证 ConnectMoveAndHome_UseInjectedTransportWithoutNativeSdk 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectMoveAndHome_UseInjectedTransportWithoutNativeSdk；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、ConnectResult、Equal、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -54,7 +54,7 @@ public sealed class AdlinkTransportTests
     }
 
     /// <summary>
-    /// 验证 Connect_TransportFailure_PreservesSpecificResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connect_TransportFailure_PreservesSpecificResult；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、ConnectResult、Equal、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -70,7 +70,7 @@ public sealed class AdlinkTransportTests
     }
 
     /// <summary>
-    /// 验证 Move_WhenServoIsOff_ReturnsFailRatherThanNotConnected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Move_WhenServoIsOff_ReturnsFailRatherThanNotConnected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、Connect、MoveAbsResult、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -94,7 +94,7 @@ public sealed class AdlinkTransportTests
     }
 
     /// <summary>
-    /// 验证 Move_TransportFailure_IsReported 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Move_TransportFailure_IsReported；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、Connect、ServoOn、MoveAbsResult；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -119,7 +119,7 @@ public sealed class AdlinkTransportTests
     }
 
     /// <summary>
-    /// 验证 PositionRead_TransportFailure_IsNotReportedAsZero 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PositionRead_TransportFailure_IsNotReportedAsZero；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、Connect、ReadCommandPosition、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -144,7 +144,7 @@ public sealed class AdlinkTransportTests
     }
 
     /// <summary>
-    /// 验证 Connect_BoardNumberOutsideMaskRange_IsRejectedBeforeOpen 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connect_BoardNumberOutsideMaskRange_IsRejectedBeforeOpen；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、ConnectResult、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -161,7 +161,7 @@ public sealed class AdlinkTransportTests
     }
 
     /// <summary>
-    /// 验证 CreateCard 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreateCard；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static AdlinkHelper CreateCard(FakeAdlinkTransport transport)
         => new(transport)
@@ -204,7 +204,7 @@ public sealed class AdlinkTransportTests
         private int _stopAllCount;
 
         /// <summary>
-        /// 验证 Open 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Open；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray；具体条件和先后次序见方法体。
         /// </summary>
         public EMotionResult Open(int boardNumber, string? configFile,
@@ -219,7 +219,7 @@ public sealed class AdlinkTransportTests
         }
 
         /// <summary>
-        /// 验证 Close 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Close；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Close()
         {
@@ -230,16 +230,16 @@ public sealed class AdlinkTransportTests
         }
 
         /// <summary>
-        /// 验证 SetServo 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetServo；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool SetServo(int axis, bool enabled) => true;
         /// <summary>
-        /// 验证 ResetServo 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ResetServo；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool ResetServo(int axis, bool reenable) => true;
 
         /// <summary>
-        /// 验证 MoveAbsolute 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 MoveAbsolute；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool MoveAbsolute(int axis, int pulse, int maximumSpeed)
         {
@@ -249,20 +249,20 @@ public sealed class AdlinkTransportTests
         }
 
         /// <summary>
-        /// 验证 MoveRelative 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 MoveRelative；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool MoveRelative(int axis, int pulse, int maximumSpeed) => MoveSucceeds;
         /// <summary>
-        /// 验证 MoveVelocity 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 MoveVelocity；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool MoveVelocity(int axis, int speed) => MoveSucceeds;
         /// <summary>
-        /// 验证 StopAxis 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StopAxis；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool StopAxis(int axis, bool emergency) => true;
 
         /// <summary>
-        /// 验证 StopAll 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StopAll；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Increment；具体条件和先后次序见方法体。
         /// </summary>
         public bool StopAll(int axisCount, bool emergency)
@@ -272,7 +272,7 @@ public sealed class AdlinkTransportTests
         }
 
         /// <summary>
-        /// 验证 StartHome 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StartHome；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool StartHome(int axis)
         {
@@ -281,12 +281,12 @@ public sealed class AdlinkTransportTests
         }
 
         /// <summary>
-        /// 验证 SetCurrentPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetCurrentPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool SetCurrentPosition(int axis, int pulse) => true;
 
         /// <summary>
-        /// 验证 TryGetCommandPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGetCommandPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryGetCommandPosition(int axis, out int pulse)
         {
@@ -295,7 +295,7 @@ public sealed class AdlinkTransportTests
         }
 
         /// <summary>
-        /// 验证 TryGetEncoderPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGetEncoderPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryGetEncoderPosition(int axis, out int pulse)
         {
@@ -304,16 +304,16 @@ public sealed class AdlinkTransportTests
         }
 
         /// <summary>
-        /// 验证 GetMotionStatus 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetMotionStatus；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public int GetMotionStatus(int axis) => 0;
         /// <summary>
-        /// 验证 GetMotionIoStatus 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetMotionIoStatus；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public int GetMotionIoStatus(int axis) => 0;
 
         /// <summary>
-        /// 验证 TryReadInput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadInput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadInput(int index, out bool state)
         {
@@ -322,7 +322,7 @@ public sealed class AdlinkTransportTests
         }
 
         /// <summary>
-        /// 验证 TryReadOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadOutput(int index, out bool state)
         {
@@ -331,11 +331,11 @@ public sealed class AdlinkTransportTests
         }
 
         /// <summary>
-        /// 验证 WriteOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool WriteOutput(int index, bool state) => true;
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Close；具体条件和先后次序见方法体。
         /// </summary>
         public void Dispose() => Close();

@@ -20,7 +20,7 @@ namespace Vision.Tests.Core;
 public sealed class RoiFollowTests
 {
     /// <summary>
-    /// 验证 FollowFixture_Translation_MovesRectExactly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FollowFixture_Translation_MovesRectExactly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Rectangle、FollowFixture、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -36,7 +36,7 @@ public sealed class RoiFollowTests
     }
 
     /// <summary>
-    /// 验证 FollowFixture_Rotation_TurnsRectIntoRotatedRect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FollowFixture_Rotation_TurnsRectIntoRotatedRect；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Rectangle、FollowFixture、Equal、True、NormalizeAngle；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -51,7 +51,7 @@ public sealed class RoiFollowTests
     }
 
     /// <summary>
-    /// 验证 FollowFixture_MovesPolygonVerticesExactly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FollowFixture_MovesPolygonVerticesExactly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Polygon、FollowFixture、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -69,7 +69,7 @@ public sealed class RoiFollowTests
     }
 
     /// <summary>
-    /// 验证 FollowFixture_KeepsCircleCircular 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FollowFixture_KeepsCircleCircular；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Circle、FollowFixture、Equal、Sqrt；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -86,7 +86,7 @@ public sealed class RoiFollowTests
     }
 
     /// <summary>
-    /// 验证 Transform_Similarity_KeepsRectShape 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Transform_Similarity_KeepsRectShape；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Rectangle、Transform、Equal、FromPose；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -102,7 +102,7 @@ public sealed class RoiFollowTests
     }
 
     /// <summary>
-    /// 验证 Transform_Shear_DegradesRectToPolygon 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Transform_Shear_DegradesRectToPolygon；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Rectangle、Transform、Equal、True、DistanceTo；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -117,7 +117,7 @@ public sealed class RoiFollowTests
     }
 
     /// <summary>
-    /// 验证 Transform_NonUniformScale_TurnsCircleIntoEllipse 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Transform_NonUniformScale_TurnsCircleIntoEllipse；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Circle、Transform、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -130,7 +130,7 @@ public sealed class RoiFollowTests
     }
 
     /// <summary>
-    /// 验证 Bounds_OfCircle_AndJsonRoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Bounds_OfCircle_AndJsonRoundTrip；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Circle、Equal、False、True、Deserialize；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

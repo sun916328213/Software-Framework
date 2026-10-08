@@ -57,7 +57,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 HelperOf 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 HelperOf；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create；具体条件和先后次序见方法体。
         /// </summary>
         private static EFCoreHelper<T> HelperOf<T>() where T : class
@@ -76,7 +76,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 TableOf 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TableOf；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetTableName、FindEntityType；具体条件和先后次序见方法体。
         /// </summary>
         private static string TableOf<T>(EFCoreBase<T> helper) where T : class
@@ -85,7 +85,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 PlainEntity_IsNotSplit_DefaultTableIsClassName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 PlainEntity_IsNotSplit_DefaultTableIsClassName；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 HelperOf、False、IsSplitTableEntity、Null、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -99,7 +99,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 DapperAttribute_DaySuffix 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DapperAttribute_DaySuffix；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 HelperOf、True、IsSplitTableEntity、Equal、GetSplitTableName；具体条件和先后次序见方法体。
         /// </summary>
         [Theory]
@@ -113,7 +113,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SharedAttribute_MonthSuffix_AndSplitField 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SharedAttribute_MonthSuffix_AndSplitField；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 HelperOf、True、IsSplitTableEntity、Equal、GetSplitTableName；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -126,7 +126,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SharedAttribute_YearSuffix_FallsBackToFirstDateTimeField 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SharedAttribute_YearSuffix_FallsBackToFirstDateTimeField；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 HelperOf、Equal、GetSplitTableName；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -138,7 +138,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Fork_MapsToSplitTable_AndDefaultModelUnaffected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Fork_MapsToSplitTable_AndDefaultModelUnaffected；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 HelperOf、ForkForTable、Equal、TableOf、nameof；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -154,7 +154,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Fork_SameTable_SharesModel 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Fork_SameTable_SharesModel；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 HelperOf、ForkForTable、Same；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

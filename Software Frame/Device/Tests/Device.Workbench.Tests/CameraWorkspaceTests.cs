@@ -28,7 +28,7 @@ public sealed class CameraWorkspaceTests
     public CameraWorkspaceTests(CameraConfigScope scope) => _scope = scope;
 
     /// <summary>
-    /// 验证 Ctor_NoProfilesFile_CreatesFallbackProfileAndDriverList 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Ctor_NoProfilesFile_CreatesFallbackProfileAndDriverList；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、Equal、Single、Same、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -50,7 +50,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 Ctor_NoDrivers_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Ctor_NoDrivers_Throws；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -60,7 +60,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 Ctor_LoadsExistingProfilesFromFile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Ctor_LoadsExistingProfilesFromFile；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 WriteProfiles、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -78,7 +78,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 ConnectAsync_Success_MarksConnectedAndSeedsRuntimeTriggerFromProfile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectAsync_Success_MarksConnectedAndSeedsRuntimeTriggerFromProfile；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、ConnectAsync、True、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -110,7 +110,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 ConnectAsync_FactoryFailure_ThrowsAndStaysDisconnected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectAsync_FactoryFailure_ThrowsAndStaysDisconnected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、ConnectAsync、DisconnectAsync、ThrowsAsync、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -134,7 +134,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 CaptureAsync_BeforeConnect_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CaptureAsync_BeforeConnect_Throws；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、ThrowsAsync、Contains、Null、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -152,7 +152,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 CaptureAsync_Connected_FillsPreviewAndFrameInfo 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CaptureAsync_Connected_FillsPreviewAndFrameInfo；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、ConnectAsync、CaptureAsync、NotNull、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -173,7 +173,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 ConnectAsync_AfterProfileFieldChange_RebuildsCameraInstance 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectAsync_AfterProfileFieldChange_RebuildsCameraInstance；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、ConnectAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -197,7 +197,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 ConnectAsync_SameProfile_ReusesCameraInstance 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectAsync_SameProfile_ReusesCameraInstance；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、ConnectAsync、DisconnectAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -217,7 +217,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 ToggleLive_WithoutConnect_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ToggleLive_WithoutConnect_Throws；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、Throws、Contains、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -233,7 +233,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 ToggleLive_WithConnect_StartsAndStopResetsButtonText 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ToggleLive_WithConnect_StartsAndStopResetsButtonText；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、ConnectAsync、ToggleLive、Equal、StopLive；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -257,7 +257,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 DisconnectAsync_StopsLiveAndClearsConnection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DisconnectAsync_StopsLiveAndClearsConnection；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、ConnectAsync、ToggleLive、DisconnectAsync、False；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -278,7 +278,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 ApplyTriggerAsync_Connected_PushesRuntimeSettings 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ApplyTriggerAsync_Connected_PushesRuntimeSettings；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、ConnectAsync、ApplyTriggerAsync、Single、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -303,7 +303,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 SetCurDevice_SwitchingProfile_SyncsRuntimeTriggerFromProfile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SetCurDevice_SwitchingProfile_SyncsRuntimeTriggerFromProfile；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、Add、SetCurDevice、Equal、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -331,7 +331,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 CompleteAddedProfile_NamesAndSelectsFallbackDriver 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CompleteAddedProfile_NamesAndSelectsFallbackDriver；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、CompleteAddedProfile、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -347,7 +347,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 FixAfterDelete_EmptyCollection_RestoresFallbackProfile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FixAfterDelete_EmptyCollection_RestoresFallbackProfile；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、Clear、FixAfterDelete、Single、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -366,7 +366,7 @@ public sealed class CameraWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 SaveProfiles_RoundTripsThroughDisk 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SaveProfiles_RoundTripsThroughDisk；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset、SaveProfiles、True、Exists、TryRead；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -399,7 +399,7 @@ public sealed class CameraConfigScope
     public CameraConfigScope() => Reset();
 
     /// <summary>
-    /// 验证 Reset 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Reset；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Exists、Delete；具体条件和先后次序见方法体。
     /// </summary>
     public void Reset()
@@ -409,13 +409,13 @@ public sealed class CameraConfigScope
     }
 
     /// <summary>
-    /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Reset；具体条件和先后次序见方法体。
     /// </summary>
     public void Dispose() => Reset();
 
     /// <summary>
-    /// 验证 WriteProfiles 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WriteProfiles；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetDirectoryName、CreateDirectory、Save；具体条件和先后次序见方法体。
     /// </summary>
     public void WriteProfiles(params CameraProfile[] profiles)

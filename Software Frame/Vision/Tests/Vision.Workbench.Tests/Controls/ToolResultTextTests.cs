@@ -20,7 +20,7 @@ namespace Vision.Workbench.Tests.Controls;
 public sealed class ToolResultTextTests
 {
     /// <summary>
-    /// 验证 Null_AndFailure_HavePlaceholders 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Null_AndFailure_HavePlaceholders；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Summarize；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -35,7 +35,7 @@ public sealed class ToolResultTextTests
     }
 
     /// <summary>
-    /// 验证 AIResults_SummarizeByDomain 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AIResults_SummarizeByDomain；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Contains、Summarize；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -69,7 +69,7 @@ public sealed class ToolResultTextTests
     }
 
     /// <summary>
-    /// 验证 TraditionalTools_SummarizeCounts 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TraditionalTools_SummarizeCounts；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Contains、Summarize；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

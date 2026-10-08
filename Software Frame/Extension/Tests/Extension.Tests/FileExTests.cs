@@ -38,7 +38,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 Read_读取已存在文件_返回全部文本 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Read_读取已存在文件_返回全部文本；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、Equal、Read；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -51,7 +51,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Read_文件不存在_抛FileNotFoundException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Read_文件不存在_抛FileNotFoundException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、Read；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -63,7 +63,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Read_fileName是绝对路径时_忽略filePath 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Read_fileName是绝对路径时_忽略filePath；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、Combine、Equal、Read；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -93,7 +93,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Write_覆盖写入时_旧内容轮换为bak 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Write_覆盖写入时_旧内容轮换为bak；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Write、Equal、ReadAllText、Combine；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -109,7 +109,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Write_bak只保留一代_三次写入后bak里是倒数第二版 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Write_bak只保留一代_三次写入后bak里是倒数第二版；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Write、Equal、ReadAllText、Combine、Single；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -142,7 +142,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Write_filePath为null时_直接以fileName作为路径 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Write_filePath为null时_直接以fileName作为路径；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、Write、Equal、ReadAllText；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -172,7 +172,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Write_数据为null时不抛异常_而是把文件静默清空 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Write_数据为null时不抛异常_而是把文件静默清空；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Write、Combine、Null、Exception、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -193,7 +193,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Write_目标目录不存在时_抛DirectoryNotFoundException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Write_目标目录不存在时_抛DirectoryNotFoundException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、Write、Combine；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -206,7 +206,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Write_备份失败不阻断写入_异常被过滤器吞掉 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Write_备份失败不阻断写入_异常被过滤器吞掉；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Write、CreateDirectory、Combine、Null、Exception；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -243,7 +243,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 FileEx_是静态类_2个公开静态方法 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FileEx_是静态类_2个公开静态方法；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、Equal、GetMethods；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

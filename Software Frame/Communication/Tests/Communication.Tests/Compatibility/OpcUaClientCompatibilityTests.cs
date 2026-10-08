@@ -15,7 +15,7 @@ namespace Communication.Tests.Compatibility;
 public sealed class OpcUaClientCompatibilityTests
 {
     /// <summary>
-    /// 验证 Client_adapter_performs_real_session_operations_through_legacy_surface 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Client_adapter_performs_real_session_operations_through_legacy_surface；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 IsAssignableFrom、True、ConnectAsync、Equal、ReadAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -55,7 +55,7 @@ public sealed class OpcUaClientCompatibilityTests
         public (string NodeId, byte[] Value)? LastWrite { get; private set; }
 
         /// <summary>
-        /// 验证 ConnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ValueTask ConnectAsync(CancellationToken cancellationToken)
         {
@@ -64,7 +64,7 @@ public sealed class OpcUaClientCompatibilityTests
         }
 
         /// <summary>
-        /// 验证 DisconnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisconnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ValueTask DisconnectAsync(CancellationToken cancellationToken)
         {
@@ -77,14 +77,14 @@ public sealed class OpcUaClientCompatibilityTests
         }
 
         /// <summary>
-        /// 验证 ReadAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<byte[]> ReadAsync(string nodeId, CancellationToken cancellationToken) =>
             ValueTask.FromResult(ReadResult);
 
         /// <summary>
-        /// 验证 WriteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask WriteAsync(
@@ -97,7 +97,7 @@ public sealed class OpcUaClientCompatibilityTests
         }
 
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 DisconnectAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>

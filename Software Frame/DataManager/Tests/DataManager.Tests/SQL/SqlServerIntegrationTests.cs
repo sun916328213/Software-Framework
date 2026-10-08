@@ -81,14 +81,14 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Env 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Env；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetEnvironmentVariable；具体条件和先后次序见方法体。
         /// </summary>
         private static string Env(string key, string fallback)
             => Environment.GetEnvironmentVariable(key) ?? fallback;
 
         /// <summary>
-        /// 验证 ParamFor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ParamFor；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Env、IsNullOrEmpty；具体条件和先后次序见方法体。
         /// </summary>
         private static SQLParam ParamFor(ESQLToolType tool, string name)
@@ -125,7 +125,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 AdminConnectionString 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AdminConnectionString；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ParamFor；具体条件和先后次序见方法体。
         /// </summary>
         private static string AdminConnectionString()
@@ -135,7 +135,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 DropTablesLike 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DropTablesLike；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 AdminConnectionString、Open、CreateCommand、ExecuteReader、Read；具体条件和先后次序见方法体。
         /// </summary>
         private static void DropTablesLike(params string[] prefixes)
@@ -162,7 +162,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_CRUD_RoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_CRUD_RoundTrip；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DeleteAll、Add；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -190,7 +190,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_SplitTable_AutoRoutesByDate 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_SplitTable_AutoRoutesByDate；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DeleteAll、Add；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -218,7 +218,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_CRUD_RoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_CRUD_RoundTrip；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DeleteAll、Add；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -245,7 +245,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_SplitTable_AutoRoutesByDate 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_SplitTable_AutoRoutesByDate；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DeleteAll、Add；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -269,7 +269,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_CRUD_RoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_CRUD_RoundTrip；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DeleteAll、Add；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -295,7 +295,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_Transaction_CommitAndRollback 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_Transaction_CommitAndRollback；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DeleteAll、ExecuteInTransaction；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -325,7 +325,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 DropTablesLike、SuppressFinalize；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>

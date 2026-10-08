@@ -27,7 +27,7 @@ namespace FlowEditor.Workbench.Tests;
 public sealed class FlowNodeCatalogTests
 {
     /// <summary>
-    /// 验证 MultipleConsumersShareOneScanAndImmutableDescriptions 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MultipleConsumersShareOneScanAndImmutableDescriptions；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Discover、Same、TryResolveType、Throws；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -52,7 +52,7 @@ public sealed class FlowNodeCatalogTests
     }
 
     /// <summary>
-    /// 验证 ToolboxProjectionKeepsMetadataVisibilityOrderingAndIconFallback 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ToolboxProjectionKeepsMetadataVisibilityOrderingAndIconFallback；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Discover、Equal、Select、Single、Search；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -73,7 +73,7 @@ public sealed class FlowNodeCatalogTests
     }
 
     /// <summary>
-    /// 验证 ModuleUsesHostCatalogAndPreservesItAcrossRepeatedRegistration 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ModuleUsesHostCatalogAndPreservesItAcrossRepeatedRegistration；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterInstance、RegisterTypes、Same、Resolve、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -98,7 +98,7 @@ public sealed class FlowNodeCatalogTests
     }
 
     /// <summary>
-    /// 验证 DocumentMappingAndRestorationUseCatalogEvenAfterGlobalRegistryIsCleared 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DocumentMappingAndRestorationUseCatalogEvenAfterGlobalRegistryIsCleared；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Discover、Clear、ToNodeDocument、Equal、IsType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -117,7 +117,7 @@ public sealed class FlowNodeCatalogTests
     }
 
     /// <summary>
-    /// 验证 CatalogAcceptsPersistedClrNamesAndFrameworkMigrationAliases 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CatalogAcceptsPersistedClrNamesAndFrameworkMigrationAliases；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Same、TryResolveType、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -131,7 +131,7 @@ public sealed class FlowNodeCatalogTests
     }
 
     /// <summary>
-    /// 验证 ScopedRestorationDoesNotTakeAnUnknownIdentityFromAnotherCatalog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ScopedRestorationDoesNotTakeAnUnknownIdentityFromAnotherCatalog；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Discover、Throws、Create、IsType、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -149,7 +149,7 @@ public sealed class FlowNodeCatalogTests
     }
 
     /// <summary>
-    /// 验证 RequiredAssemblyTypeLoadFailurePreservesSourceAndOriginalCause 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RequiredAssemblyTypeLoadFailurePreservesSourceAndOriginalCause；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Discover、Same、Contains、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -166,7 +166,7 @@ public sealed class FlowNodeCatalogTests
     }
 
     /// <summary>
-    /// 验证 AmbientUnrelatedAssemblyFailureIsRecordedWithoutDiscardingBuiltInNodes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AmbientUnrelatedAssemblyFailureIsRecordedWithoutDiscardingBuiltInNodes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Discover、Same、Single、TryResolveType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -182,7 +182,7 @@ public sealed class FlowNodeCatalogTests
     }
 
     /// <summary>
-    /// 验证 ConflictingStableIdentityFailsBeforePublishingTheCatalog 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConflictingStableIdentityFailsBeforePublishingTheCatalog；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 DefineDynamicAssembly、DefineType、DefineDynamicModule、SetCustomAttribute、GetConstructor；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -235,7 +235,7 @@ public sealed class FlowNodeCatalogTests
     public abstract class ProbeNode : NodeModel
     {
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
     }

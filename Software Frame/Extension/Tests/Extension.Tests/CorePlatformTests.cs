@@ -24,7 +24,7 @@ namespace Extension.Tests;
 public class CorePlatformTests
 {
 	/// <summary>
-	/// 验证 FpsEx_初始状态_帧率与总帧数都是0 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FpsEx_初始状态_帧率与总帧数都是0；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -36,7 +36,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 FpsEx_未达计算间隔_不更新帧率但总帧数照加 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FpsEx_未达计算间隔_不更新帧率但总帧数照加；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Tick、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -52,7 +52,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 FpsEx_达到计算间隔_算出帧率 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FpsEx_达到计算间隔_算出帧率；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Tick、Sleep、Equal、True；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -69,7 +69,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 FpsEx_间隔参数非正数_回落到10 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FpsEx_间隔参数非正数_回落到10；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetField、Equal、GetValue；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -82,7 +82,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 FpsEx_Stop之后Tick到间隔_会把停掉的秒表重启 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FpsEx_Stop之后Tick到间隔_会把停掉的秒表重启；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetValue、GetField、Tick、Stop、False；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -100,7 +100,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 FpsEx_Reset_清空计数与帧率 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FpsEx_Reset_清空计数与帧率；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Tick、Reset、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -115,7 +115,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 FpsEx_格式化输出 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 FpsEx_格式化输出；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Tick、StartsWith、GetFormattedFps、Contains、GetDetailedFpsInfo；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -129,7 +129,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 SafeMemoryHandle_把字节复制进非托管内存_可读回 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 SafeMemoryHandle_把字节复制进非托管内存_可读回；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 CreateFromBytes、Equal、GetPointer、NotEqual、ReadByte；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -145,7 +145,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 SafeMemoryHandle_释放后取指针_抛ObjectDisposedException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 SafeMemoryHandle_释放后取指针_抛ObjectDisposedException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 CreateFromBytes、GetPointer、NotEqual、Dispose、True；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -160,7 +160,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 SafeMemoryHandle_传null_抛NullReferenceException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 SafeMemoryHandle_传null_抛NullReferenceException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、CreateFromBytes；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -170,7 +170,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 SafeMemoryHandle_类型来自BCL而不是宿主程序集 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 SafeMemoryHandle_类型来自BCL而不是宿主程序集；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetName、NotNull、DoesNotContain；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -184,7 +184,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 DynamicDllLoaderEx_路径为空_抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 DynamicDllLoaderEx_路径为空_抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -195,7 +195,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 DynamicDllLoaderEx_加载不存在的DLL_抛DllNotFoundException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 DynamicDllLoaderEx_加载不存在的DLL_抛DllNotFoundException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、Contains；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -207,7 +207,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 DynamicDllLoaderEx_取不存在的导出函数_抛EntryPointNotFoundException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 DynamicDllLoaderEx_取不存在的导出函数_抛EntryPointNotFoundException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、GetFunction、Contains、Dispose；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -229,7 +229,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 DynamicDllLoaderEx_释放后取函数_抛ObjectDisposedException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 DynamicDllLoaderEx_释放后取函数_抛ObjectDisposedException；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、Throws、GetFunction；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -241,7 +241,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 DynamicDllLoaderEx_重复释放_不抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 DynamicDllLoaderEx_重复释放_不抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Null、Exception、Dispose；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -259,7 +259,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 CpuMonitorEx_构造与读取_不抛且取值落在0到100 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 CpuMonitorEx_构造与读取_不抛且取值落在0到100；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetSystemCpuUsage、GetProcessCpuUsage、InRange；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -273,7 +273,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 CpuMonitorEx_重复释放_不抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 CpuMonitorEx_重复释放_不抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Null、Exception、Dispose；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -291,7 +291,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 CpuMonitorEx_释放后读取_不抛且取值仍在0到100 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 CpuMonitorEx_释放后读取_不抛且取值仍在0到100；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Dispose、Null、Exception、GetSystemCpuUsage、InRange；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -315,7 +315,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 CpuMonitorEx_计数器不可用时的降级_返回0而不抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 CpuMonitorEx_计数器不可用时的降级_返回0而不抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 SetValue、GetField、Equal、GetSystemCpuUsage、GetProcessCpuUsage；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -329,7 +329,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 ProcessEx_进程不存在_静默返回不抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProcessEx_进程不存在_静默返回不抛；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ToString、NewGuid、Empty、GetProcessesByName、Null；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -344,7 +344,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 ProcessEx_传null或空串_在碰进程之前就抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProcessEx_传null或空串_在碰进程之前就抛异常；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、CloseProcess、False、IsAssignableFrom、GetType；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -365,7 +365,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 ProcessEx_源码里必须保留参数校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProcessEx_源码里必须保留参数校验；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ReadAllText、Combine、ExtensionSourceRoot、Contains；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -380,7 +380,7 @@ public class CorePlatformTests
 	}
 
 	/// <summary>
-	/// 验证 ExtensionSourceRoot 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ExtensionSourceRoot；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetDirectoryName、False、IsNullOrEmpty、GetFullPath、Combine；具体条件和先后次序见方法体。
 	/// </summary>
 	private static string ExtensionSourceRoot([CallerFilePath] string thisFile = "")

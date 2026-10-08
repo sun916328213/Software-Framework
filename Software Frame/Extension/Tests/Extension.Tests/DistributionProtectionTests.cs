@@ -20,7 +20,7 @@ namespace Extension.Tests;
 public class DistributionProtectionTests
 {
 	/// <summary>
-	/// 验证 AntiDebugEx_IsDebuggerAttached与ThrowIf结论必须一致 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AntiDebugEx_IsDebuggerAttached与ThrowIf结论必须一致；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 IsDebuggerAttached、Exception、ThrowIfDebuggerAttached、IsType、Null；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -42,7 +42,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AntiDebugEx_计时陷阱的阈值非正数直接抛_不再恒真误报 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AntiDebugEx_计时陷阱的阈值非正数直接抛_不再恒真误报；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Throws、IsTimingAnomaly、False；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -56,7 +56,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AntiDebugEx_计时陷阱的阈值低于Sleep时长仍恒真_已记录未修 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AntiDebugEx_计时陷阱的阈值低于Sleep时长仍恒真_已记录未修；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、IsTimingAnomaly；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -67,7 +67,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AntiDebugEx_三个Win32探测点都必须吞环境异常并留痕 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AntiDebugEx_三个Win32探测点都必须吞环境异常并留痕；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ReadAllText、Combine、ExtensionSourceRoot、Equal、Split；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -84,7 +84,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AntiTamperEx_入口程序集哈希_自己算的能自己校验通过 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AntiTamperEx_入口程序集哈希_自己算的能自己校验通过；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetEntryAssemblyHash、Equal、Matches、True、VerifyEntryAssembly；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -99,7 +99,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AntiTamperEx_VerifyEntryAssembly对空期望值返回false 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AntiTamperEx_VerifyEntryAssembly对空期望值返回false；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 False、VerifyEntryAssembly；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -112,7 +112,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AntiTamperEx_VerifyFile_不存在返回false_存在时按哈希比对 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AntiTamperEx_VerifyFile_不存在返回false_存在时按哈希比对；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 WriteFile、Sha256File、True、VerifyFile、ToUpperInvariant；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -128,7 +128,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AntiTamperEx_两个校验方法对null期望值的处理已对齐 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AntiTamperEx_两个校验方法对null期望值的处理已对齐；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 WriteFile、False、VerifyEntryAssembly、VerifyFile；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -144,7 +144,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AntiTamperEx_源码里VerifyFile必须保留期望值空值短路 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AntiTamperEx_源码里VerifyFile必须保留期望值空值短路；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ReadAllText、Combine、ExtensionSourceRoot、Contains；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -155,7 +155,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AntiTamperEx_ildasm抑制检查_按特性全名做字符串比较 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AntiTamperEx_ildasm抑制检查_按特性全名做字符串比较；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ReadAllText、Combine、ExtensionSourceRoot、Contains、False；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -168,7 +168,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AntiToolProcessEx_名单是27项小写且不含exe后缀 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AntiToolProcessEx_名单是27项小写且不含exe后缀；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Equal、All、DoesNotContain、ToLowerInvariant、False；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -192,7 +192,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AntiToolProcessEx_枚举是只读操作_返回的Process必须由调用方释放 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AntiToolProcessEx_枚举是只读操作_返回的Process必须由调用方释放；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetSuspiciousProcesses、True、GetType、NotNull、Dispose；具体条件和先后次序见方法体。
 	/// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
 	/// </summary>
@@ -223,7 +223,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AntiToolProcessEx_命中读取进程名时只吞进程已退出这一种异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AntiToolProcessEx_命中读取进程名时只吞进程已退出这一种异常；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ReadAllText、Combine、ExtensionSourceRoot、Contains；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -236,7 +236,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 ProtectionOptions_默认值_默认就是抛异常且不轮询 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ProtectionOptions_默认值_默认就是抛异常且不轮询；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 True、False、Null、Equal；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -252,7 +252,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AppProtectionEx_三项检查全关时Protect不抛且可反复启停 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AppProtectionEx_三项检查全关时Protect不抛且可反复启停；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 StopWatching、Null、Exception、Protect、FromMilliseconds；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -295,7 +295,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AppProtectionEx_开了完整性校验但没给期望哈希_会静默跳过 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AppProtectionEx_开了完整性校验但没给期望哈希_会静默跳过；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Protect、False、StopWatching；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -327,7 +327,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AppProtectionEx_完整性校验失败时NotifyOnly只触发事件不中断 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AppProtectionEx_完整性校验失败时NotifyOnly只触发事件不中断；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 Add、NotEqual、Protect、Equal、StopWatching；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -360,7 +360,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 AppProtectionEx_Exit动作会直接杀进程_测试里绝不能让它命中 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 AppProtectionEx_Exit动作会直接杀进程_测试里绝不能让它命中；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 ReadAllText、Combine、ExtensionSourceRoot、Contains；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
@@ -373,7 +373,7 @@ public class DistributionProtectionTests
 	}
 
 	/// <summary>
-	/// 验证 ExtensionSourceRoot 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+	/// 测试相关入口 ExtensionSourceRoot；准备条件、协作调用与结果检查以方法正文为准。
 	/// 正文中的关键协作调用包括 GetDirectoryName、False、IsNullOrEmpty、GetFullPath、Combine；具体条件和先后次序见方法体。
 	/// </summary>
 	private static string ExtensionSourceRoot([CallerFilePath] string thisFile = "")

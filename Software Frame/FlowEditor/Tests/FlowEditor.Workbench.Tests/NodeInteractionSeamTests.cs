@@ -94,7 +94,7 @@ public sealed class NodeInteractionSeamTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 Open 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Open；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </remarks>
         public void Open(NodeModel node) => Requests.Add(node);
@@ -108,7 +108,7 @@ public sealed class NodeInteractionSeamTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 ShowInformation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowInformation；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </remarks>
         public void ShowInformation(string title, string message)

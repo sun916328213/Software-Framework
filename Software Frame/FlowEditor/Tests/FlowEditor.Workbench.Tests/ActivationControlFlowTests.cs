@@ -46,7 +46,7 @@ public class ActivationControlFlowTests
     }
 
     /// <summary>
-    /// 验证 Condition_UnselectedBranch_DoesNotPropagateData 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Condition_UnselectedBranch_DoesNotPropagateData；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、Branch、Data、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -72,7 +72,7 @@ public class ActivationControlFlowTests
     }
 
     /// <summary>
-    /// 验证 Condition_SelectedBranchRejoinsCommonSuccessor_CommonSuccessorExecutes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Condition_SelectedBranchRejoinsCommonSuccessor_CommonSuccessorExecutes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Branch、Flow、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -106,7 +106,7 @@ public class ActivationControlFlowTests
     }
 
     /// <summary>
-    /// 验证 Dispatch_NoRuleMatched_RejoinIsStoppedByDispatchError 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispatch_NoRuleMatched_RejoinIsStoppedByDispatchError；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Branch、Flow、ThrowsAsync、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -142,7 +142,7 @@ public class ActivationControlFlowTests
     }
 
     /// <summary>
-    /// 验证 Condition_LegacyFallback_NoBranchWiring_RunsAllSuccessors 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Condition_LegacyFallback_NoBranchWiring_RunsAllSuccessors；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -195,7 +195,7 @@ public class ActivationControlFlowTests
     }
 
     /// <summary>
-    /// 验证 Loop_IterationsBelowOne_ClampsToSingleExecution 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Loop_IterationsBelowOne_ClampsToSingleExecution；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Branch、Flow、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -218,7 +218,7 @@ public class ActivationControlFlowTests
     }
 
     /// <summary>
-    /// 验证 Loop_LegacyFallback_NoStructuredPorts_PassesThrough 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Loop_LegacyFallback_NoStructuredPorts_PassesThrough；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -241,7 +241,7 @@ public class ActivationControlFlowTests
     }
 
     /// <summary>
-    /// 验证 Loop_LegacyFallback_WithBackEdge_StillCancellable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Loop_LegacyFallback_WithBackEdge_StillCancellable；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Branch、Flow、ThrowsAsync、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -265,7 +265,7 @@ public class ActivationControlFlowTests
     }
 
     /// <summary>
-    /// 验证 Loop_StructuredPortsWired_NextOutEdgeIsPruned 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Loop_StructuredPortsWired_NextOutEdgeIsPruned；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Branch、Flow、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

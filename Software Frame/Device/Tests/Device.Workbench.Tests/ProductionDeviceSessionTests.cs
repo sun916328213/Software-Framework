@@ -21,7 +21,7 @@ namespace Device.Workbench.Tests;
 public sealed class ProductionDeviceSessionTests
 {
     /// <summary>
-    /// 验证 PersistedStartupFlowUsesTheVerifiedNewDeviceScript 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PersistedStartupFlowUsesTheVerifiedNewDeviceScript；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、ReadAllText、Combine、GetString、GetProperty；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -35,7 +35,7 @@ public sealed class ProductionDeviceSessionTests
     }
 
     /// <summary>
-    /// 验证 CreatesAllProfilesAndReleasesEveryDeviceOnce 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreatesAllProfilesAndReleasesEveryDeviceOnce；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Empty、InitializeAsync、Equal、Camera、Single；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -63,7 +63,7 @@ public sealed class ProductionDeviceSessionTests
     }
 
     /// <summary>
-    /// 验证 MissingOrDuplicateProfilesNeverCreateDevices 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MissingOrDuplicateProfilesNeverCreateDevices；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Delete、Combine、ThrowsAsync、InitializeAsync、Empty；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -84,7 +84,7 @@ public sealed class ProductionDeviceSessionTests
     }
 
     /// <summary>
-    /// 验证 FailedConnectionRollsBackAllCreatedDevicesAndAllowsRetry 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FailedConnectionRollsBackAllCreatedDevicesAndAllowsRetry；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAsync、InitializeAsync、All、Equal、Empty；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -104,7 +104,7 @@ public sealed class ProductionDeviceSessionTests
     }
 
     /// <summary>
-    /// 验证 CancellationRollsBackEvenDevicesThatWereNotConnected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CancellationRollsBackEvenDevicesThatWereNotConnected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Cancel、ThrowsAnyAsync、InitializeAsync、All、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -121,7 +121,7 @@ public sealed class ProductionDeviceSessionTests
     }
 
     /// <summary>
-    /// 验证 CleanupFailureDoesNotPreventOtherDeviceReleases 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CleanupFailureDoesNotPreventOtherDeviceReleases；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 InitializeAsync、ThrowsAsync、AsTask、DisposeAsync、Single；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -150,7 +150,7 @@ public sealed class ProductionDeviceSessionTests
         /// </summary>
         public Config() { System.IO.Directory.CreateDirectory(Directory); Write(); }
         /// <summary>
-        /// 验证 Write 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Write；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Save、Combine；具体条件和先后次序见方法体。
         /// </summary>
         public void Write()
@@ -161,7 +161,7 @@ public sealed class ProductionDeviceSessionTests
             JsonEx.Save(new[] { new ScannerProfile { Name = "scanner", DriverId = "test" } }, Path.Combine(Directory, "Scanners.json"));
         }
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Delete；具体条件和先后次序见方法体。
         /// </summary>
         public void Dispose() => System.IO.Directory.Delete(Directory, true);
@@ -179,32 +179,32 @@ public sealed class ProductionDeviceSessionTests
         public List<FakeDevice> Created { get; } = [];
         public IReadOnlyList<DeviceDriverDescriptor> AvailableDrivers => [];
         /// <summary>
-        /// 验证 Add 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Add；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         private T Add<T>(T device) where T : FakeDevice { device.Factory = this; Created.Add(device); return device; }
         /// <summary>
-        /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public ICamera Create(CameraOptions options) => Add(new Camera(options));
         /// <summary>
-        /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public ILightController Create(LightControllerOptions options) => Add(new Light(options));
         /// <summary>
-        /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public IRfidDevice Create(RfidOptions options) => Add(new Rfid(options));
         /// <summary>
-        /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public IScanner Create(ScannerOptions options) => Add(new Scanner(options));
         /// <summary>
-        /// 验证 EnumerateDevicesAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EnumerateDevicesAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ValueTask<DeviceResult<IReadOnlyList<CameraDeviceDescriptor>>> EnumerateDevicesAsync(CancellationToken ct = default) => throw new NotSupportedException();
     }
@@ -221,7 +221,7 @@ public sealed class ProductionDeviceSessionTests
         public int DisposeCalls { get; private set; }
         public bool ConnectCalled { get; private set; }
         /// <summary>
-        /// 验证 ConnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested、FromResult、Failure、Ok；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<DeviceResult> ConnectAsync(CancellationToken ct = default)
@@ -231,12 +231,12 @@ public sealed class ProductionDeviceSessionTests
             return ValueTask.FromResult(Name == Factory.FailName ? DeviceResult.Failure("connect", Name) : DeviceResult.Ok());
         }
         /// <summary>
-        /// 验证 DisconnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisconnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Ok；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<DeviceResult> DisconnectAsync(CancellationToken ct = default) { State = DeviceState.Disconnected; return ValueTask.FromResult(DeviceResult.Ok()); }
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ValueTask DisposeAsync()
         {
@@ -253,17 +253,17 @@ public sealed class ProductionDeviceSessionTests
     {
         public CameraOptions Options => options;
         /// <summary>
-        /// 验证 CaptureAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CaptureAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<ImageFrame> CaptureAsync(CancellationToken ct = default) => ValueTask.FromResult(new ImageFrame(1, 1, "Mono8", new byte[] { 0 }));
         /// <summary>
-        /// 验证 SetExposureGainAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetExposureGainAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Ok；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<DeviceResult> SetExposureGainAsync(int exposure, double gain, CancellationToken ct = default) => ValueTask.FromResult(DeviceResult.Ok());
         /// <summary>
-        /// 验证 SetTriggerAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetTriggerAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Ok；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<DeviceResult> SetTriggerAsync(CameraTriggerSettings frame, CameraTriggerSettings line, CancellationToken ct = default) => ValueTask.FromResult(DeviceResult.Ok());
@@ -277,12 +277,12 @@ public sealed class ProductionDeviceSessionTests
         public int OffCalls { get; private set; }
         public LightControllerOptions Options => options;
         /// <summary>
-        /// 验证 SetIntensityAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetIntensityAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Ok；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<DeviceResult> SetIntensityAsync(int channel, int intensity, CancellationToken ct = default) => ValueTask.FromResult(DeviceResult.Ok());
         /// <summary>
-        /// 验证 SetAllIntensityAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetAllIntensityAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、FromResult、Ok；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<DeviceResult> SetAllIntensityAsync(int intensity, CancellationToken ct = default) { Assert.Equal(0, intensity); OffCalls++; return ValueTask.FromResult(DeviceResult.Ok()); }
@@ -295,12 +295,12 @@ public sealed class ProductionDeviceSessionTests
     {
         public RfidOptions Options => options;
         /// <summary>
-        /// 验证 ReadPagesAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadPagesAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Ok；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<DeviceResult<string>> ReadPagesAsync(int page, int count, CancellationToken ct = default) => ValueTask.FromResult(DeviceResult<string>.Ok("id"));
         /// <summary>
-        /// 验证 WritePagesAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WritePagesAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Ok；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<DeviceResult> WritePagesAsync(int page, IReadOnlyList<string> pages, CancellationToken ct = default) => ValueTask.FromResult(DeviceResult.Ok());

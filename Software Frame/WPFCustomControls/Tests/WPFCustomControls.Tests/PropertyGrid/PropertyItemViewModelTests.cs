@@ -118,7 +118,7 @@ public class PropertyItemViewModelTests
         public IReadOnlyList<string> Choices { get; } = new[] { "Alpha", "Beta", "Gamma" };
 
         /// <summary>
-        /// 验证 OnChanged 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OnChanged；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private void OnChanged([System.Runtime.CompilerServices.CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -134,14 +134,14 @@ public class PropertyItemViewModelTests
         public event Action? ConfigChanged;
 
         /// <summary>
-        /// 验证 GetPortConfig 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetPortConfig；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TryGetValue；具体条件和先后次序见方法体。
         /// </summary>
         public (bool IsInput, bool IsOutput) GetPortConfig(string propertyName)
             => _store.TryGetValue(propertyName, out var v) ? v : (false, false);
 
         /// <summary>
-        /// 验证 SetPortConfig 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetPortConfig；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void SetPortConfig(string propertyName, bool isInput, bool isOutput)
         {
@@ -154,7 +154,7 @@ public class PropertyItemViewModelTests
     private static PropertyInfo P<T>(string name) => typeof(T).GetProperty(name)!;
 
     /// <summary>
-    /// 验证 Make 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Make；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 P、GetCustomAttribute；具体条件和先后次序见方法体。
     /// </summary>
     private static PropertyItemViewModel Make(object target, string propName,
@@ -179,7 +179,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Ctor_DisplayName_UsesAttrDisplayName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Ctor_DisplayName_UsesAttrDisplayName；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -193,7 +193,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Ctor_IsReadOnly_TrueWhenPrivateSetter 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Ctor_IsReadOnly_TrueWhenPrivateSetter；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、True、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -206,7 +206,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Ctor_IsBooleanAndIsNumeric_ReflectUnderlyingType 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Ctor_IsBooleanAndIsNumeric_ReflectUnderlyingType；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、Make、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -223,7 +223,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Ctor_IsCollection_TrueForListOfString 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Ctor_IsCollection_TrueForListOfString；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、True、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -236,7 +236,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Ctor_IsCollection_FalseForString 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Ctor_IsCollection_FalseForString；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -249,7 +249,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Ctor_IsNullable_TrueForNullableInt 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Ctor_IsNullable_TrueForNullableInt；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -262,7 +262,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Ctor_NumericMinMaxAndStep_LoadedFromAttr 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Ctor_NumericMinMaxAndStep_LoadedFromAttr；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Equal、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -278,7 +278,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Ctor_NumericStep_DefaultsForFloating 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Ctor_NumericStep_DefaultsForFloating；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -301,7 +301,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Value_Set_AssignsTargetProperty 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Value_Set_AssignsTargetProperty；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -314,7 +314,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Value_Set_StringToInt_Parses 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Value_Set_StringToInt_Parses；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -327,7 +327,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Value_Set_StringToEnum_ByName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Value_Set_StringToEnum_ByName；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -340,7 +340,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Value_Set_StringToEnum_ByDisplayName_Description 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Value_Set_StringToEnum_ByDisplayName_Description；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -354,7 +354,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Value_Set_EnumUnparseableString_NoOp 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Value_Set_EnumUnparseableString_NoOp；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -368,7 +368,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Value_Set_InvalidDouble_NoOp 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Value_Set_InvalidDouble_NoOp；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -382,7 +382,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Value_Set_NullOnNullable_Allows 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Value_Set_NullOnNullable_Allows；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -395,7 +395,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Value_Set_NullOnNonNullable_NoOp 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Value_Set_NullOnNonNullable_NoOp；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -408,7 +408,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Value_Set_OnReadOnly_NoOp 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Value_Set_OnReadOnly_NoOp；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -424,7 +424,7 @@ public class PropertyItemViewModelTests
     // ── 3. ClampNumeric ─────────────────────────────────────────
 
     /// <summary>
-    /// 验证 Value_Set_ClampedToMax 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Value_Set_ClampedToMax；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -437,7 +437,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Value_Set_ClampedToMin 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Value_Set_ClampedToMin；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -450,7 +450,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Value_Set_WithinRange_PassesThrough 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Value_Set_WithinRange_PassesThrough；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -477,7 +477,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 DecrementCommand_StepDown 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DecrementCommand_StepDown；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、GetValue、GetProperty、Execute、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -493,7 +493,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 IncrementCommand_ClampedToMax 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 IncrementCommand_ClampedToMax；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、GetValue、GetProperty、Execute、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -512,7 +512,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 IncrementCommand_OnNonNumeric_NoOp 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 IncrementCommand_OnNonNumeric_NoOp；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、GetValue、GetProperty、Execute、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -530,7 +530,7 @@ public class PropertyItemViewModelTests
     // ── 5. EnumOptions ──────────────────────────────────────────
 
     /// <summary>
-    /// 验证 EnumOptions_BuiltFromEnumNames_WhenNoDescription 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EnumOptions_BuiltFromEnumNames_WhenNoDescription；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、NotNull、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -545,7 +545,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 EnumOptions_UsesDescriptionAttribute 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EnumOptions_UsesDescriptionAttribute；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、NotNull、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -561,7 +561,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 EnumOptions_ForNullableEnum_PrependsNullOption 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EnumOptions_ForNullableEnum_PrependsNullOption；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetProperty、NotNull、Equal、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -588,7 +588,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 EnumOptions_ItemsSource_UsesTargetProperty 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EnumOptions_ItemsSource_UsesTargetProperty；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、NotNull、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -621,7 +621,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 PortFlags_SetIsInputPort_UpdatesConfigurable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PortFlags_SetIsInputPort_UpdatesConfigurable；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、True、GetPortConfig、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -640,7 +640,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 PortFlags_SetIsOutputPort_PreservesInputFlag 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PortFlags_SetIsOutputPort_PreservesInputFlag；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、GetPortConfig、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -661,7 +661,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 PortFlags_NullConfigurable_AlwaysFalse 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PortFlags_NullConfigurable_AlwaysFalse；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -689,7 +689,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Dispose_DetachesNotifier 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose_DetachesNotifier；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Dispose、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -704,7 +704,7 @@ public class PropertyItemViewModelTests
     }
 
     /// <summary>
-    /// 验证 Dispose_DetachesPortConfigurable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose_DetachesPortConfigurable；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Make、Dispose、SetPortConfig；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

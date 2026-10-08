@@ -14,7 +14,7 @@ namespace MotionControl.Tests;
 public sealed class InovanceTransportTests
 {
     /// <summary>
-    /// 验证 Connect_TransportFailure_IsReported 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connect_TransportFailure_IsReported；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、ConnectResult、Equal、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -30,7 +30,7 @@ public sealed class InovanceTransportTests
     }
 
     /// <summary>
-    /// 验证 ConnectAndMove_UseDomainTransportWithoutRegisterKnowledge 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectAndMove_UseDomainTransportWithoutRegisterKnowledge；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、ConnectResult、Equal、ServoOnResult；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -64,7 +64,7 @@ public sealed class InovanceTransportTests
     }
 
     /// <summary>
-    /// 验证 Move_TargetWriteFailure_DoesNotSendStartCommand 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Move_TargetWriteFailure_DoesNotSendStartCommand；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、Connect、ServoOn、MoveAbsResult；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -91,7 +91,7 @@ public sealed class InovanceTransportTests
     }
 
     /// <summary>
-    /// 验证 StopAll_ControlWriteFailure_IsReported 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 StopAll_ControlWriteFailure_IsReported；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、Connect、StopAllResult、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -116,7 +116,7 @@ public sealed class InovanceTransportTests
     }
 
     /// <summary>
-    /// 验证 SetCurrentAsOrigin_WriteFailure_IsReported 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SetCurrentAsOrigin_WriteFailure_IsReported；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、Connect、StartHomeResult、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -140,7 +140,7 @@ public sealed class InovanceTransportTests
     }
 
     /// <summary>
-    /// 验证 IoAddressOverflow_IsRejectedBeforeTransportCall 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 IoAddressOverflow_IsRejectedBeforeTransportCall；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateCard、True、Connect、SetOutputResult、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -164,7 +164,7 @@ public sealed class InovanceTransportTests
     }
 
     /// <summary>
-    /// 验证 CreateCard 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CreateCard；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static InovanceHelper CreateCard(FakeInovanceTransport transport,
         EHomeMode homeMode = EHomeMode.OriginSwitch)
@@ -203,7 +203,7 @@ public sealed class InovanceTransportTests
         private int _controlWordUpdateCount;
 
         /// <summary>
-        /// 验证 Connect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Connect；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool Connect(string ipAddress, int port, InovanceParam parameter, int requiredAxes)
         {
@@ -216,12 +216,12 @@ public sealed class InovanceTransportTests
         }
 
         /// <summary>
-        /// 验证 Disconnect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Disconnect；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Disconnect() => IsConnected = false;
 
         /// <summary>
-        /// 验证 TryReadStatus 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadStatus；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadStatus(int axis, out ushort status)
         {
@@ -230,7 +230,7 @@ public sealed class InovanceTransportTests
         }
 
         /// <summary>
-        /// 验证 UpdateControlWord 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 UpdateControlWord；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Increment；具体条件和先后次序见方法体。
         /// </summary>
         public bool UpdateControlWord(int axis, ushort setBits, ushort clearMask)
@@ -240,7 +240,7 @@ public sealed class InovanceTransportTests
         }
 
         /// <summary>
-        /// 验证 WriteTarget 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteTarget；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool WriteTarget(int axis, int position, float velocity)
         {
@@ -250,7 +250,7 @@ public sealed class InovanceTransportTests
         }
 
         /// <summary>
-        /// 验证 TryReadCurrentPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadCurrentPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadCurrentPosition(int axis, out int position)
         {
@@ -259,12 +259,12 @@ public sealed class InovanceTransportTests
         }
 
         /// <summary>
-        /// 验证 SetCurrentPosition 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetCurrentPosition；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool SetCurrentPosition(int axis, int position) => CurrentPositionWriteSucceeds;
 
         /// <summary>
-        /// 验证 TryReadInput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadInput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadInput(int index, out bool state)
         {
@@ -273,7 +273,7 @@ public sealed class InovanceTransportTests
         }
 
         /// <summary>
-        /// 验证 TryReadOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryReadOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool TryReadOutput(int index, out bool state)
         {
@@ -282,7 +282,7 @@ public sealed class InovanceTransportTests
         }
 
         /// <summary>
-        /// 验证 WriteOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public bool WriteOutput(int index, bool state)
         {
@@ -291,7 +291,7 @@ public sealed class InovanceTransportTests
         }
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Disconnect；具体条件和先后次序见方法体。
         /// </summary>
         public void Dispose() => Disconnect();

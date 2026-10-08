@@ -18,7 +18,7 @@ namespace Extension.Tests
     public class ScheduledDeletionTests
     {
         /// <summary>
-        /// 验证 CreateDateFolder 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateDateFolder；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、ToString、CreateDirectory、WriteAllText；具体条件和先后次序见方法体。
         /// </summary>
         private static string CreateDateFolder(TempWorkspace workspace, DateTime date, bool withFile = false)
@@ -31,7 +31,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Missing_root_returns_empty_result 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Missing_root_returns_empty_result；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 nameof、DeleteExpiredFiles、Combine、Empty；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -44,7 +44,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Expired_day_is_deleted_recursively 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Expired_day_is_deleted_recursively；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 nameof、CreateDateFolder、DeleteExpiredFiles、Equal、Single；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -59,7 +59,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Expiration_boundary_is_exclusive 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Expiration_boundary_is_exclusive；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 nameof、CreateDateFolder、AddDays、DeleteExpiredFiles、True；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -76,7 +76,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Non_date_numeric_tree_is_preserved 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Non_date_numeric_tree_is_preserved；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 nameof、Combine、CreateDirectory、DeleteExpiredFiles、Empty；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -92,7 +92,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Invalid_calendar_date_is_preserved 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Invalid_calendar_date_is_preserved；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 nameof、Combine、CreateDirectory、DeleteExpiredFiles、Empty；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -108,7 +108,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Disk_pressure_uses_saturating_byte_accounting 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Disk_pressure_uses_saturating_byte_accounting；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 nameof、CreateDateFolder、AddDays、DeleteExpiredFiles、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -125,7 +125,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Invalid_arguments_fail_before_background_work_starts 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Invalid_arguments_fail_before_background_work_starts；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、DeleteExpiredFiles；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -137,7 +137,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 Public_interface_has_one_operation_and_legacy_types_are_absent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Public_interface_has_one_operation_and_legacy_types_are_absent；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetMethods、Equal、nameof、Single、Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

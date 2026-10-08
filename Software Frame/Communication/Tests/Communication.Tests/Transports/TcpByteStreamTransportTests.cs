@@ -16,7 +16,7 @@ namespace Communication.Tests.Transports;
 public sealed class TcpByteStreamTransportTests
 {
     /// <summary>
-    /// 验证 Repeated_open_is_idempotent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Repeated_open_is_idempotent；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Start、ToString、AcceptTcpClientAsync、OpenAsync、True；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -46,7 +46,7 @@ public sealed class TcpByteStreamTransportTests
     }
 
     /// <summary>
-    /// 验证 Open_transport_exchanges_bytes_with_a_loopback_peer 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Open_transport_exchanges_bytes_with_a_loopback_peer；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Start、ToString、AcceptTcpClientAsync、OpenAsync、GetStream；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -87,7 +87,7 @@ public sealed class TcpByteStreamTransportTests
     }
 
     /// <summary>
-    /// 验证 Pending_read_observes_caller_cancellation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Pending_read_observes_caller_cancellation；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Start、ToString、AcceptTcpClientAsync、OpenAsync、AsTask；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -120,7 +120,7 @@ public sealed class TcpByteStreamTransportTests
     }
 
     /// <summary>
-    /// 验证 Remote_close_completes_input_and_local_close_remains_idempotent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Remote_close_completes_input_and_local_close_remains_idempotent；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Start、ToString、AcceptTcpClientAsync、OpenAsync、Dispose；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -156,7 +156,7 @@ public sealed class TcpByteStreamTransportTests
     }
 
     /// <summary>
-    /// 验证 Dispose_is_idempotent_and_prevents_reopening 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose_is_idempotent_and_prevents_reopening；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToString、DisposeAsync、ThrowsAsync、AsTask、OpenAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

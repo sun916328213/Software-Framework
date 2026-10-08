@@ -16,7 +16,7 @@ namespace Vision.Workbench.Tests.Controls;
 public sealed class BrowserWorkspaceTests
 {
     /// <summary>
-    /// 验证 SharedWorkspace_SurvivesOneViewModelDisposal_AndReleasesCardsOnce 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SharedWorkspace_SurvivesOneViewModelDisposal_AndReleasesCardsOnce；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Same、Dispose、Equal、UseDemoImage、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -48,7 +48,7 @@ public sealed class BrowserWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 Commands_FollowImageToolAndDisposalState_WithoutClosingBorrowedWorkspace 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Commands_FollowImageToolAndDisposalState_WithoutClosingBorrowedWorkspace；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 False、CanExecute、True、Execute、Dispose；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -92,7 +92,7 @@ public sealed class BrowserWorkspaceTests
     }
 
     /// <summary>
-    /// 验证 DisposedToolWorkspace_RejectsDirectCallsBeforeTouchingTool 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DisposedToolWorkspace_RejectsDirectCallsBeforeTouchingTool；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Dispose、Throws、SetImage、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -125,20 +125,20 @@ public sealed class BrowserWorkspaceTests
         public int ValidationCount { get; private set; }
         public int LoadCount { get; private set; }
         /// <summary>
-        /// 验证 Validate 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Validate；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Success；具体条件和先后次序见方法体。
         /// </summary>
         public ValidationResult Validate() { ValidationCount++; return ValidationResult.Success(); }
         /// <summary>
-        /// 验证 Run 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Run；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ToolResult Run(VisionImage? image) { RunCount++; return new(); }
         /// <summary>
-        /// 验证 EnsureLoaded 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EnsureLoaded；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void EnsureLoaded() { LoadCount++; }
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Dispose() => DisposeCount++;
     }

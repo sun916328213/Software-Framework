@@ -15,7 +15,7 @@ internal static class WpfTestHost
     private static readonly Lazy<Host> SharedHost = new(() => new Host());
 
     /// <summary>
-    /// 验证 Run 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Run；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke；具体条件和先后次序见方法体。
     /// </summary>
     public static void Run(Action action) => SharedHost.Value.Dispatcher.Invoke(action);
@@ -55,7 +55,7 @@ internal static class WpfTestHost
     }
 
     /// <summary>
-    /// 验证 EnsureResources 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EnsureResources；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
     /// </summary>
     private static void EnsureResources(Application application)

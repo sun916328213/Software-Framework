@@ -18,7 +18,7 @@ public sealed class ScriptSessionTests : IDisposable
     private readonly List<ScriptSession> _detached = new();
 
     /// <summary>
-    /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ReleaseSession；具体条件和先后次序见方法体。
     /// </summary>
     public void Dispose()
@@ -30,7 +30,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 NewItem 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NewItem；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToString、NewGuid、Add；具体条件和先后次序见方法体。
     /// </summary>
     private ScriptItem NewItem(string code)
@@ -41,7 +41,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 NewDetached 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NewDetached；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
     /// </summary>
     private ScriptSession NewDetached(string code)
@@ -52,7 +52,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 CompileSuccessMarksStatus 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CompileSuccessMarksStatus；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewDetached、CompileAsync、Equal、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -66,7 +66,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 CompileErrorReportsLine 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CompileErrorReportsLine；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewDetached、CompileAsync、Equal、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -80,7 +80,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 FailedCompileDoesNotPoisonCache 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FailedCompileDoesNotPoisonCache；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewDetached、True、RunAsync、Add、CompileAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -103,7 +103,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 RunCapturesConsoleOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RunCapturesConsoleOutput；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewDetached、RunAsync、True、Contains、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -118,7 +118,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 RepeatedExecutionReusesCache 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RepeatedExecutionReusesCache；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewDetached、True、RunAsync、Contains、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -135,7 +135,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 InputsDictionaryInjection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 InputsDictionaryInjection；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewDetached、SetInputData、RunAsync、True、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -150,7 +150,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 RuntimeErrorMarksFailure 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RuntimeErrorMarksFailure；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewDetached、RunAsync、False、Equal、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -165,7 +165,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 EmptyCodeHintsFriendly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EmptyCodeHintsFriendly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewDetached、RunAsync、False、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -179,7 +179,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 BreakpointInstrumentationStillRuns 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BreakpointInstrumentationStillRuns；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、RunAsync、True、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -196,7 +196,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 TerminateIsResponsiveAndSessionReusable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TerminateIsResponsiveAndSessionReusable；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewDetached、RunAsync、Delay、Terminate、False；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -217,7 +217,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 LoopStopsWithinTimeout 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopStopsWithinTimeout；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewDetached、LoopRunAsync、Delay、StopLoop、WhenAny；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -237,7 +237,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 ParallelSessionsDoNotCrossTalk 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ParallelSessionsDoNotCrossTalk；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewItem、GetSession、SetInputData、WhenAll、RunAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -261,7 +261,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 SameItemReusesSession 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SameItemReusesSession；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewItem、Same、GetSession；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -273,7 +273,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 ProjectContextUsingsTakeEffect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ProjectContextUsingsTakeEffect；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddSources、NewDetached、RunAsync、True、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -291,7 +291,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 ProjectContextsDoNotPolluteEachOther 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ProjectContextsDoNotPolluteEachOther；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddSources、ResolveUsings、Contains、DoesNotContain；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -310,7 +310,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 HeadlessRuntimeApiExecutesProjectItem 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 HeadlessRuntimeApiExecutesProjectItem；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ExecuteAsync、True、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -328,7 +328,7 @@ public sealed class ScriptSessionTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 HeadlessRuntimeApiCompilesProjectItem 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 HeadlessRuntimeApiCompilesProjectItem；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 False、CompileAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

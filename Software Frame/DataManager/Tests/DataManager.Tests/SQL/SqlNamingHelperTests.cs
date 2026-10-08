@@ -14,7 +14,7 @@ namespace DataManager.Tests.SQL
     public class SqlNamingHelperTests
     {
         /// <summary>
-        /// 验证 ConvertTableName_PostgreSQL_Lowercases 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConvertTableName_PostgreSQL_Lowercases；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ConvertTableName；具体条件和先后次序见方法体。
         /// </summary>
         [Theory]
@@ -25,7 +25,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 ConvertTableName_MySQL_Lowercases 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConvertTableName_MySQL_Lowercases；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ConvertTableName；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -35,7 +35,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 FormatTableName_MySQL_WrapsLowercaseWithBackticks 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FormatTableName_MySQL_WrapsLowercaseWithBackticks；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、FormatTableName；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -45,7 +45,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 FormatTableName_PostgreSQL_LowercaseNoQuotes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FormatTableName_PostgreSQL_LowercaseNoQuotes；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、FormatTableName；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -55,7 +55,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 FormatColumnName_MySQL_WrapsLowercaseWithBackticks 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FormatColumnName_MySQL_WrapsLowercaseWithBackticks；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、FormatColumnName；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -65,7 +65,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 FormatColumnList_JoinsFormattedColumns 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FormatColumnList_JoinsFormattedColumns；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FormatColumnList、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -76,7 +76,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 FormatColumnList_Empty_ReturnsEmpty 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FormatColumnList_Empty_ReturnsEmpty；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、FormatColumnList、Empty；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -86,7 +86,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 NeedsConversion_AlwaysTrue 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 NeedsConversion_AlwaysTrue；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、NeedsConversion；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -97,7 +97,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 ConvertTableName_NullOrEmpty_ReturnsAsIs 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConvertTableName_NullOrEmpty_ReturnsAsIs；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、ConvertTableName、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

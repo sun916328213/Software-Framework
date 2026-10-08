@@ -16,7 +16,7 @@ internal sealed class FakeSecsGemEventHandler(byte result = 0) : ISecsGemEventHa
     public SecsGemRemoteCommand? LastCommand { get; private set; }
 
     /// <summary>
-    /// 验证 OnRemoteCommandAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OnRemoteCommandAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
     /// </summary>
     public Task<byte> OnRemoteCommandAsync(SecsGemRemoteCommand command)

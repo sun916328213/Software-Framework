@@ -36,7 +36,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 HexEx_ToASC_正常偶数长度 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 HexEx_ToASC_正常偶数长度；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToASC；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -47,7 +47,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 HexEx_ToBytes_偶数长度直通 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 HexEx_ToBytes_偶数长度直通；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToBytes；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -58,7 +58,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 HexEx_ToBytes_奇数长度是左补零而非右补零 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 HexEx_ToBytes_奇数长度是左补零而非右补零；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToBytes；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -70,7 +70,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 HexEx_ToBytes_空串得到空数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 HexEx_ToBytes_空串得到空数组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、ToBytes；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -80,7 +80,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 HexEx_ToBytes_非法字符抛FormatException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 HexEx_ToBytes_非法字符抛FormatException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、ToBytes；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -104,7 +104,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 BinaryEx_ToDec_空串会抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BinaryEx_ToDec_空串会抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAny、ToDec；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -115,7 +115,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 BinaryEx_ToHex_按4位一组左补零 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BinaryEx_ToHex_按4位一组左补零；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToHex；具体条件和先后次序见方法体。
         /// </summary>
         [Theory]
@@ -133,7 +133,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 BinaryEx_ToASC_按8位一组右补零 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BinaryEx_ToASC_按8位一组右补零；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToASC；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -149,7 +149,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 补零方向对照_HexEx左补零_BinaryEx右补零 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 补零方向对照_HexEx左补零_BinaryEx右补零；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToBytes、ToASC、NotEqual；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -180,7 +180,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 重载决议陷阱_字符串ToHex默认绑到BinaryEx而不是ASCIIEx 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 重载决议陷阱_字符串ToHex默认绑到BinaryEx而不是ASCIIEx；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToHex、Throws；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -211,7 +211,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ASCIIEx_ToUshorts_大端按2字节打包 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ASCIIEx_ToUshorts_大端按2字节打包；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToUshorts；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -222,7 +222,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ASCIIEx_ToUshorts_小端按2字节打包 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ASCIIEx_ToUshorts_小端按2字节打包；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToUshorts；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -233,7 +233,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ASCIIEx_ToUshorts_奇数长度末尾补零字节 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ASCIIEx_ToUshorts_奇数长度末尾补零字节；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToUshorts；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -244,7 +244,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ASCIIEx_ToUshorts_空串抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ASCIIEx_ToUshorts_空串抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、ToUshorts；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -255,7 +255,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ASCIIEx_ToShorts_用的是UTF32而非UTF8_与ToUshorts结果不同 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ASCIIEx_ToShorts_用的是UTF32而非UTF8_与ToUshorts结果不同；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToUshorts、ToShorts；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -271,7 +271,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ASCIIEx_ToShorts_空串抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ASCIIEx_ToShorts_空串抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、ToShorts；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -285,7 +285,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 BoolEx_单值转换_true为1_false为0 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BoolEx_单值转换_true为1_false为0；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToShort、ToInt、ToByte；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -300,7 +300,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 BoolEx_ToShortArray_下标0对应最低位 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BoolEx_ToShortArray_下标0对应最低位；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -315,7 +315,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 BoolEx_ToShortArray_16位全true得到负一 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BoolEx_ToShortArray_16位全true得到负一；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray、Repeat、Equal、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -327,7 +327,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 BoolEx_ToShortArray_超过16位抛ArgumentException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BoolEx_ToShortArray_超过16位抛ArgumentException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -337,7 +337,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 BoolEx_ToShortArray_null抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BoolEx_ToShortArray_null抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -348,7 +348,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 BoolEx_ToShortArray_列表重载逐项转换 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BoolEx_ToShortArray_列表重载逐项转换；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToShortArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -368,7 +368,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 DecimalEx_ToBinary_不指定长度时不补零 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DecimalEx_ToBinary_不指定长度时不补零；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToBinary；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -380,7 +380,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DecimalEx_ToBinary_指定长度时按PaddingLength补零 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DecimalEx_ToBinary_指定长度时按PaddingLength补零；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToBinary；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -392,7 +392,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DecimalEx_ToHex_是小写_与同族的其他ToHex相反 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DecimalEx_ToHex_是小写_与同族的其他ToHex相反；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToHex；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -407,7 +407,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 十六进制大小写对照_ASCIIEx与BinaryEx大写_DecimalEx小写 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 十六进制大小写对照_ASCIIEx与BinaryEx大写_DecimalEx小写；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToHex；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -421,7 +421,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DecimalEx_ToASC_int按十六进制展开 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DecimalEx_ToASC_int按十六进制展开；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToASC；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -432,7 +432,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DecimalEx_ToASC_short数组默认大端 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DecimalEx_ToASC_short数组默认大端；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToASC；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -443,7 +443,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DecimalEx_ToASC_ushort数组默认大端 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DecimalEx_ToASC_ushort数组默认大端；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToASC；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -454,7 +454,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DecimalEx_ToASC_无参重载走的是小端_与显式大端结果相反 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DecimalEx_ToASC_无参重载走的是小端_与显式大端结果相反；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToASC、NotEqual；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -472,7 +472,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DecimalEx_ToASC_空数组返回空串 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DecimalEx_ToASC_空数组返回空串；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToASC；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -503,7 +503,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadOnlySpanEx_ToUInt_大端 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadOnlySpanEx_ToUInt_大端；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToUInt；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -517,7 +517,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadOnlySpanEx_ToUInt_可指定起点与长度 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadOnlySpanEx_ToUInt_可指定起点与长度；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToUInt；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -529,7 +529,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadOnlySpanEx_ToUInt_byteCount越界抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadOnlySpanEx_ToUInt_byteCount越界抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、ToUInt；具体条件和先后次序见方法体。
         /// </summary>
         [Theory]
@@ -545,7 +545,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadOnlySpanEx_ToUInt_startIndex越界抛异常 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadOnlySpanEx_ToUInt_startIndex越界抛异常；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、ToUInt；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -564,7 +564,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadOnlySpanEx_ToUInt_单字节与三字节都合法 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadOnlySpanEx_ToUInt_单字节与三字节都合法；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToUInt；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -586,7 +586,7 @@ namespace Extension.Tests
         private static readonly DateTime Sample = new DateTime(2026, 9, 18, 14, 5, 6, 789);
 
         /// <summary>
-        /// 验证 DateTimeEx_ToDateTime_带斜杠与秒 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DateTimeEx_ToDateTime_带斜杠与秒；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToDateTime；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -596,7 +596,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DateTimeEx_ToTime_与ToDate_ToYearMonth 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DateTimeEx_ToTime_与ToDate_ToYearMonth；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToTime、ToDate、ToYearMonth；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -608,7 +608,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DateTimeEx_ToDateNOSapce_无分隔符 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DateTimeEx_ToDateNOSapce_无分隔符；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToDateNOSapce；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -618,7 +618,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DateTimeEx_ToTimeMs_不补零_位数不固定 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DateTimeEx_ToTimeMs_不补零_位数不固定；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToTimeMs；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -633,7 +633,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DateTimeEx_ToYYYYMMDDHHMMSSFFF_小时用的是12小时制hh 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DateTimeEx_ToYYYYMMDDHHMMSSFFF_小时用的是12小时制hh；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToYYYYMMDDHHMMSSFFF；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -649,7 +649,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DateTimeEx_ToSeconds_基于毫秒换算 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DateTimeEx_ToSeconds_基于毫秒换算；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToSeconds、StartNew、True；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -666,7 +666,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 RegexEx_ReplaceNum_默认删除所有数字 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegexEx_ReplaceNum_默认删除所有数字；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ReplaceNum；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -677,7 +677,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegexEx_ReplaceNum_只删末尾数字时保留中间数字 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegexEx_ReplaceNum_只删末尾数字时保留中间数字；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ReplaceNum；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -689,7 +689,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegexEx_ReplaceNum_null返回null 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegexEx_ReplaceNum_null返回null；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、ReplaceNum；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -699,7 +699,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegexEx_ReplaceLetter_删除英文字母 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegexEx_ReplaceLetter_删除英文字母；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ReplaceLetter、Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -711,7 +711,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegexEx_CleanString_只保留十六进制字符 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegexEx_CleanString_只保留十六进制字符；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、CleanString；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -724,7 +724,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegexEx_RemoveControl_去掉控制符但保留可见字符 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegexEx_RemoveControl_去掉控制符但保留可见字符；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、RemoveControl；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -736,7 +736,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegexEx_SplitByDateTime_按时间块切分 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegexEx_SplitByDateTime_按时间块切分；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SplitByDateTime、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -750,7 +750,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegexEx_SplitByDateTime_空输入返回空数组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegexEx_SplitByDateTime_空输入返回空数组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、SplitByDateTime；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -761,7 +761,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegexEx_FindMatches_非全词匹配可重叠扫描 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegexEx_FindMatches_非全词匹配可重叠扫描；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FindMatches、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -774,7 +774,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegexEx_FindMatches_区分大小写开关 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegexEx_FindMatches_区分大小写开关；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、FindMatches、Single；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -787,7 +787,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegexEx_FindMatches_全词匹配会排除更长单词内的命中 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegexEx_FindMatches_全词匹配会排除更长单词内的命中；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FindMatches、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -800,7 +800,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegexEx_FindMatches_空参数返回空集合 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegexEx_FindMatches_空参数返回空集合；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Empty、FindMatches；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -812,7 +812,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegexEx_OrderByDescending_按长度降序并转义 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegexEx_OrderByDescending_按长度降序并转义；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray、OrderByDescending、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -823,7 +823,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RegexEx_OrderByDescending_结果已转义可直接拼正则 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegexEx_OrderByDescending_结果已转义可直接拼正则；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray、OrderByDescending、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -864,7 +864,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 API面_同一个ToHex在三个类里大小写约定不同 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 API面_同一个ToHex在三个类里大小写约定不同；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray、OrderBy、Select、Where、Any；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -882,7 +882,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 API面_所有扩展方法所在类型都是静态类 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 API面_所有扩展方法所在类型都是静态类；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 All、True、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

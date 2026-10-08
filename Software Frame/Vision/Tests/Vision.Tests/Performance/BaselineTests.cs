@@ -27,7 +27,7 @@ public sealed class BaselineTests
     }
 
     /// <summary>
-    /// 验证 OpenCv_GoldenPipeline_RecordsElapsed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OpenCv_GoldenPipeline_RecordsElapsed；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Rect600、Run、True、WriteLine；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -50,7 +50,7 @@ public sealed class BaselineTests
     }
 
     /// <summary>
-    /// 验证 OpenCv_TemplateMatch_RecordsElapsed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OpenCv_TemplateMatch_RecordsElapsed；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 PatternTemplate、Run、PastePattern、True、WriteLine；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

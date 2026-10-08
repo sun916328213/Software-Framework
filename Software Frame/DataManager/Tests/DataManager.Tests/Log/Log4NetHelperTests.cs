@@ -26,7 +26,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 CreateHelper 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateHelper；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private Log4NetHelper CreateHelper()
         {
@@ -43,7 +43,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 ReadAllTextShared 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadAllTextShared；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ReadToEnd；具体条件和先后次序见方法体。
         /// </summary>
         private static string ReadAllTextShared(string path)
@@ -54,7 +54,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 Add_CreatesFileContainingMessage 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Add_CreatesFileContainingMessage；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateHelper、Add、GetFiles、NotEmpty、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -69,7 +69,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 Add_FileName_ContainsDateAndIsNotHidden 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Add_FileName_ContainsDateAndIsNotHidden；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateHelper、Add、GetFileName、GetFiles、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -84,7 +84,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 Add_MultipleLevels_AllMessagesPersisted 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Add_MultipleLevels_AllMessagesPersisted；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateHelper、Add、ReadAllTextShared、GetFiles、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -102,7 +102,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 Query_ByFileName_ParsesLevelAndInfo 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Query_ByFileName_ParsesLevelAndInfo；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateHelper、Add、GetFileName、GetFiles、Query；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -121,7 +121,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 Query_ByTimeRange_FindsTodayFile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Query_ByTimeRange_FindsTodayFile；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateHelper、Add、Query、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -136,7 +136,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 Query_Multi_ByFileName_ReturnsRawLines 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Query_Multi_ByFileName_ReturnsRawLines；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateHelper、Add、GetFileName、GetFiles、Query_Multi；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -152,7 +152,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Delete；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>

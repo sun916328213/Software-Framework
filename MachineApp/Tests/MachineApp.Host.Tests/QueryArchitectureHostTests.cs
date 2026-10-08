@@ -39,7 +39,7 @@ namespace MachineApp.Host.Tests;
 public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
 {
     /// <summary>
-    /// 验证 ProductionQueryPagesKeepNavigationBindingsAndRendering 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ProductionQueryPagesKeepNavigationBindingsAndRendering；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Add、RequestNavigate、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -70,7 +70,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 CapacityReplacementFlowsThroughTheRealCommandAndChartBindingsWithoutSql 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CapacityReplacementFlowsThroughTheRealCommandAndChartBindingsWithoutSql；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Container、RegisterInstance、RegisterCapacity、RegisterTypes；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -112,7 +112,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 LogReplacementKeepsCommandsPageResetFilteringAndBoundDataGrid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LogReplacementKeepsCommandsPageResetFilteringAndBoundDataGrid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、ToArray、Select、Range、ToString；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -160,7 +160,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 GenericDataPageUsesTheInjectedQueryAndRetainsExistingRowsOnEmptyResults 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 GenericDataPageUsesTheInjectedQueryAndRetainsExistingRowsOnEmptyResults；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Container、RegisterInstance、RegisterCapacity、RegisterTypes；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -198,7 +198,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 SemiLogReplacementPreservesRawRowsInTheRealView 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SemiLogReplacementPreservesRawRowsInTheRealView；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Container、RegisterInstance、RegisterCapacity、RegisterTypes；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -223,7 +223,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 DefaultCapacityReaderResolvesLateSqlAndKeepsAllHourlyFieldsAndWrites 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DefaultCapacityReaderResolvesLateSqlAndKeepsAllHourlyFieldsAndWrites；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Container、RegisterCapacity、RegisterTypes、Resolve；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -264,7 +264,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 DefaultTableAdapterKeepsInclusiveDatesExactIdAndManagerIndexZero 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DefaultTableAdapterKeepsInclusiveDatesExactIdAndManagerIndexZero；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Container、Create、AddRange、AddHours；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -290,7 +290,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 Container 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Container；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterInstance、Resolve、Fail、ToString；具体条件和先后次序见方法体。
     /// </summary>
     private static DryIocContainerExtension Container(IContainerProvider production)
@@ -301,17 +301,17 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
         return container;
     }
     /// <summary>
-    /// 验证 Get 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Get；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetValue、GetProperty、GetType；具体条件和先后次序见方法体。
     /// </summary>
     private static object Get(object target, string property) => target.GetType().GetProperty(property)!.GetValue(target)!;
     /// <summary>
-    /// 验证 Set 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Set；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 SetValue、GetProperty、GetType；具体条件和先后次序见方法体。
     /// </summary>
     private static void Set(object target, string property, object value) => target.GetType().GetProperty(property)!.SetValue(target, value);
     /// <summary>
-    /// 验证 Render 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Render；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Measure、Arrange、UpdateLayout、Render；具体条件和先后次序见方法体。
     /// </summary>
     private static void Render(FrameworkElement view)
@@ -320,7 +320,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
         new RenderTargetBitmap(1000, 700, 96, 96, PixelFormats.Pbgra32).Render(view);
     }
     /// <summary>
-    /// 验证 Descendants 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Descendants；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetChildrenCount、GetChild、Descendants；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
@@ -329,7 +329,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
         { var child = VisualTreeHelper.GetChild(root, index); yield return child; foreach (var nested in Descendants(child)) yield return nested; }
     }
     /// <summary>
-    /// 验证 PumpUntil 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PumpUntil；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddSeconds、done、BeginInvoke、PushFrame、Sleep；具体条件和先后次序见方法体。
     /// </summary>
     private static void PumpUntil(Func<bool> done)
@@ -352,7 +352,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
     {
         public int Calls;
         /// <summary>
-        /// 验证 Read 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Read；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public IReadOnlyList<CapacityStatisticsEntry<CapacityStatisticsRow>> Read(DateTime start, DateTime end)
         { Calls++; var ok = new int[24]; var ng = new int[24]; ok[0] = row.OKCOunt1; ng[23] = row.NGCount24; return [new(row, row.Time, ok, ng)]; }
@@ -365,7 +365,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
     {
         public int Calls;
         /// <summary>
-        /// 验证 ReadAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<IEnumerable<LogInfo>> ReadAsync(DateTime start, DateTime end) { Calls++; return Task.FromResult<IEnumerable<LogInfo>>(rows); }
@@ -388,7 +388,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
         public int Calls;
         public DataRow[] Rows = [new() { ID = "one" }, new() { ID = "two" }];
         /// <summary>
-        /// 验证 Read 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Read；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public IEnumerable<DataRow> Read(DateTime start, DateTime end, string? id) { Calls++; return Rows; }
     }
@@ -400,7 +400,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
     {
         public int Calls;
         /// <summary>
-        /// 验证 ReadAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<IEnumerable<string>> ReadAsync(DateTime start, DateTime end) { Calls++; return Task.FromResult<IEnumerable<string>>(["SEMI,1", "", "SEMI,1"]); }
@@ -414,7 +414,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
     {
         public List<T> Rows { get; } = [];
         /// <summary>
-        /// 验证 Invoke 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Invoke；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList、Where、Compile、Add、CreateInstance；具体条件和先后次序见方法体。
         /// </summary>
         protected override object? Invoke(MethodInfo? method, object?[]? args)

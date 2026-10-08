@@ -14,7 +14,7 @@ namespace WPFControls.Tests.Queries;
 public class AlarmHistoryQueryTests
 {
     /// <summary>
-    /// 验证 Row 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Row；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     internal static AlarmHistoryRow Row(string info, string duration = "1.50 s") => new(1, info, "start", "end", duration);
     /// <summary>
@@ -25,7 +25,7 @@ public class AlarmHistoryQueryTests
     {
         public List<DateTime> Days { get; } = [];
         /// <summary>
-        /// 验证 ReadDayAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadDayAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、FromResult、read；具体条件和先后次序见方法体。
         /// </summary>
         public Task<IReadOnlyList<AlarmHistoryRow>> ReadDayAsync(DateTime day, CancellationToken cancellationToken)
@@ -36,7 +36,7 @@ public class AlarmHistoryQueryTests
     }
 
     /// <summary>
-    /// 验证 IncludesBothCalendarDatesRegardlessOfTimeAndAggregatesVisibleRows 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 IncludesBothCalendarDatesRegardlessOfTimeAndAggregatesVisibleRows；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Row、QueryAsync、Equal、Single、Sum；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -56,7 +56,7 @@ public class AlarmHistoryQueryTests
     }
 
     /// <summary>
-    /// 验证 EmptyHistoryAndMaximumDateAreSafe 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EmptyHistoryAndMaximumDateAreSafe；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 QueryAsync、Empty、Single；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -71,7 +71,7 @@ public class AlarmHistoryQueryTests
     }
 
     /// <summary>
-    /// 验证 ReversedRangeAndPrecancelledQueryNeverRead 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReversedRangeAndPrecancelledQueryNeverRead；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAsync、QueryAsync、ThrowsAnyAsync、Empty；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -86,7 +86,7 @@ public class AlarmHistoryQueryTests
     }
 
     /// <summary>
-    /// 验证 CancellationBetweenDaysStopsReading 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CancellationBetweenDaysStopsReading；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Cancel、ThrowsAnyAsync、QueryAsync、Single；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -101,7 +101,7 @@ public class AlarmHistoryQueryTests
     }
 
     /// <summary>
-    /// 验证 InvalidDurationFailsRatherThanPublishingMisleadingTotals 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 InvalidDurationFailsRatherThanPublishingMisleadingTotals；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAsync、QueryAsync、Row；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -116,7 +116,7 @@ public class AlarmHistoryQueryTests
     }
 
     /// <summary>
-    /// 验证 SupportsWriterCultureAndInvariantHistoricalDuration 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SupportsWriterCultureAndInvariantHistoricalDuration；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetCultureInfo、QueryAsync、Row、Equal、Single；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -135,7 +135,7 @@ public class AlarmHistoryQueryTests
     }
 
     /// <summary>
-    /// 验证 AlarmQueryConstructorDependsOnlyOnItsReaderContract 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AlarmQueryConstructorDependsOnlyOnItsReaderContract；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetParameters、Single、GetConstructors、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

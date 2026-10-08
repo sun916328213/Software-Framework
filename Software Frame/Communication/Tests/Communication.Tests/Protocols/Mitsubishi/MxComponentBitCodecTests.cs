@@ -14,7 +14,7 @@ namespace Communication.Tests.Protocols.Mitsubishi;
 public sealed class MxComponentBitCodecTests
 {
     /// <summary>
-    /// 验证 Read_window_aligns_an_arbitrary_start_to_a_sixteen_point_word 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Read_window_aligns_an_arbitrary_start_to_a_sixteen_point_word；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateReadWindow、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -28,7 +28,7 @@ public sealed class MxComponentBitCodecTests
     }
 
     /// <summary>
-    /// 验证 Read_words_are_packed_using_the_mc_bit_nibble_format 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Read_words_are_packed_using_the_mc_bit_nibble_format；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 PackReadWords、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -43,7 +43,7 @@ public sealed class MxComponentBitCodecTests
     }
 
     /// <summary>
-    /// 验证 Packed_write_payload_is_decoded_one_point_at_a_time 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Packed_write_payload_is_decoded_one_point_at_a_time；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、GetWriteValue；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]

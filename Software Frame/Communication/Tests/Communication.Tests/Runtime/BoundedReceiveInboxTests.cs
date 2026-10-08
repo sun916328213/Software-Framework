@@ -16,7 +16,7 @@ namespace Communication.Tests.Runtime;
 public sealed class BoundedReceiveInboxTests
 {
     /// <summary>
-    /// 验证 Packet_received_before_consumer_starts_is_preserved 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Packet_received_before_consumer_starts_is_preserved；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BeginGeneration、Publish、ReceiveAsync、Equal、ToArray；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -35,7 +35,7 @@ public sealed class BoundedReceiveInboxTests
     }
 
     /// <summary>
-    /// 验证 Multiple_consumers_do_not_receive_the_same_packet 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Multiple_consumers_do_not_receive_the_same_packet；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BeginGeneration、AsTask、ReceiveAsync、Publish、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -60,7 +60,7 @@ public sealed class BoundedReceiveInboxTests
     }
 
     /// <summary>
-    /// 验证 Ending_generation_releases_pending_consumer 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Ending_generation_releases_pending_consumer；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BeginGeneration、AsTask、ReceiveAsync、EndGeneration、ThrowsAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -77,7 +77,7 @@ public sealed class BoundedReceiveInboxTests
     }
 
     /// <summary>
-    /// 验证 Caller_cancellation_releases_pending_consumer 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Caller_cancellation_releases_pending_consumer；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BeginGeneration、AsTask、ReceiveAsync、Cancel、ThrowsAnyAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -95,7 +95,7 @@ public sealed class BoundedReceiveInboxTests
     }
 
     /// <summary>
-    /// 验证 Dispose_releases_pending_consumer 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose_releases_pending_consumer；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BeginGeneration、AsTask、ReceiveAsync、Dispose、ThrowsAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -112,7 +112,7 @@ public sealed class BoundedReceiveInboxTests
     }
 
     /// <summary>
-    /// 验证 Late_old_generation_end_cannot_close_reconnected_inbox 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Late_old_generation_end_cannot_close_reconnected_inbox；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BeginGeneration、EndGeneration、Publish、Equal、ReceiveAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -132,7 +132,7 @@ public sealed class BoundedReceiveInboxTests
     }
 
     /// <summary>
-    /// 验证 Reliable_stream_rejects_full_inbox_instead_of_dropping_bytes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Reliable_stream_rejects_full_inbox_instead_of_dropping_bytes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BeginGeneration、Publish、Throws、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -150,7 +150,7 @@ public sealed class BoundedReceiveInboxTests
     }
 
     /// <summary>
-    /// 验证 Datagram_inbox_keeps_latest_packets_and_reports_drop 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Datagram_inbox_keeps_latest_packets_and_reports_drop；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewGuid、EnableMeasurementEvents、SetMeasurementEventCallback、Equals、Add；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

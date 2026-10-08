@@ -24,7 +24,7 @@ namespace Vision.Workbench.Tests.Controls;
 public sealed class ToolCardViewModelTests
 {
     /// <summary>
-    /// 验证 OpenCvThreshold_RefreshRun_ShowsRealResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OpenCvThreshold_RefreshRun_ShowsRealResult；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Execute、True、SetImage、WhiteRectangle；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -50,7 +50,7 @@ public sealed class ToolCardViewModelTests
     }
 
     /// <summary>
-    /// 验证 HalconBlob_InvalidParams_ShowsValidationError_WithoutRuntime 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 HalconBlob_InvalidParams_ShowsValidationError_WithoutRuntime；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Execute、False、StartsWith；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -70,7 +70,7 @@ public sealed class ToolCardViewModelTests
     }
 
     /// <summary>
-    /// 验证 AIDetection_WithoutProvider_LoadFailsIntoStatus 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AIDetection_WithoutProvider_LoadFailsIntoStatus；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Execute、False、StartsWith；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -89,7 +89,7 @@ public sealed class ToolCardViewModelTests
     }
 
     /// <summary>
-    /// 验证 AIDetection_WithFakeProvider_RunsEndToEnd 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AIDetection_WithFakeProvider_RunsEndToEnd；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Execute、Equal、SetImage、WhiteRectangle、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -112,7 +112,7 @@ public sealed class ToolCardViewModelTests
     }
 
     /// <summary>
-    /// 验证 PropertyChanged_Fires_OnStatusUpdate 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PropertyChanged_Fires_OnStatusUpdate；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、Execute、Contains、nameof；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

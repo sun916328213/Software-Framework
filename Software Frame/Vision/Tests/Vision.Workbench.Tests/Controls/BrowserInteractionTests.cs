@@ -22,7 +22,7 @@ namespace Vision.Workbench.Tests.Controls;
 public sealed class BrowserInteractionTests(WorkbenchAppFixture host)
 {
     /// <summary>
-    /// 验证 Navigation_BindsControlsPage_RealButtonsRunToolAndAddRoi 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Navigation_BindsControlsPage_RealButtonsRunToolAndAddRoi；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、IsType、Single、Resolve、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -56,7 +56,7 @@ public sealed class BrowserInteractionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 BrowserButtons_ReflectMissingInputAndClosedViewModel 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BrowserButtons_ReflectMissingInputAndClosedViewModel；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Measure、Arrange、UpdateLayout、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -87,7 +87,7 @@ public sealed class BrowserInteractionTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 Invoke 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Invoke；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Single、OfType、Descendants、Equals、NotNull；具体条件和先后次序见方法体。
     /// </summary>
     private static void Invoke(FrameworkElement root, string caption)
@@ -98,7 +98,7 @@ public sealed class BrowserInteractionTests(WorkbenchAppFixture host)
         root.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
     }
     /// <summary>
-    /// 验证 Descendants 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Descendants；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetChildrenCount、GetChild、Descendants；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<DependencyObject> Descendants(DependencyObject root)

@@ -18,7 +18,7 @@ namespace DataManager.Tests.Manager
         private class FakeManager : ManagerBase<string, string>
         {
             /// <summary>
-            /// 验证 Config 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+            /// 测试相关入口 Config；准备条件、协作调用与结果检查以方法正文为准。
             /// 正文中的关键协作调用包括 Create；具体条件和先后次序见方法体。
             /// </summary>
             public override void Config(List<string> param)
@@ -28,7 +28,7 @@ namespace DataManager.Tests.Manager
             }
 
             /// <summary>
-            /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+            /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
             /// 正文中的关键协作调用包括 AddInternal；具体条件和先后次序见方法体。
             /// </summary>
             public override string Create(string param)
@@ -38,13 +38,13 @@ namespace DataManager.Tests.Manager
             }
 
             /// <summary>
-            /// 验证 GetName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+            /// 测试相关入口 GetName；准备条件、协作调用与结果检查以方法正文为准。
             /// </summary>
             protected override string GetName(string device) => device;
         }
 
         /// <summary>
-        /// 验证 Add_IncreasesCount 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Add_IncreasesCount；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -56,7 +56,7 @@ namespace DataManager.Tests.Manager
         }
 
         /// <summary>
-        /// 验证 IndexerByName_ReturnsMatchedItem 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 IndexerByName_ReturnsMatchedItem；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -69,7 +69,7 @@ namespace DataManager.Tests.Manager
         }
 
         /// <summary>
-        /// 验证 IndexerByName_ReturnsDefault_WhenNotFound 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 IndexerByName_ReturnsDefault_WhenNotFound；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -81,7 +81,7 @@ namespace DataManager.Tests.Manager
         }
 
         /// <summary>
-        /// 验证 IndexerByInt_ReturnsItemAtIndex 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 IndexerByInt_ReturnsItemAtIndex；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -95,7 +95,7 @@ namespace DataManager.Tests.Manager
         }
 
         /// <summary>
-        /// 验证 Remove_DecreasesCount 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Remove_DecreasesCount；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、Remove、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -108,7 +108,7 @@ namespace DataManager.Tests.Manager
         }
 
         /// <summary>
-        /// 验证 Clear_RemovesAll 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Clear_RemovesAll；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、Clear、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -122,7 +122,7 @@ namespace DataManager.Tests.Manager
         }
 
         /// <summary>
-        /// 验证 Config_CreatesAllItems 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Config_CreatesAllItems；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Config、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -134,7 +134,7 @@ namespace DataManager.Tests.Manager
         }
 
         /// <summary>
-        /// 验证 Add_DuplicateName_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Add_DuplicateName_Throws；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、Throws；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -146,7 +146,7 @@ namespace DataManager.Tests.Manager
         }
 
         /// <summary>
-        /// 验证 TryGet_FoundAndNotFound 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 TryGet_FoundAndNotFound；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、True、TryGet、Equal、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -160,7 +160,7 @@ namespace DataManager.Tests.Manager
         }
 
         /// <summary>
-        /// 验证 Items_IsReadOnlySnapshot 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Items_IsReadOnlySnapshot；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、Equal、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -174,7 +174,7 @@ namespace DataManager.Tests.Manager
         }
 
         /// <summary>
-        /// 验证 Remove_ReturnsTrueAndFalse 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Remove_ReturnsTrueAndFalse；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、True、Remove、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -187,7 +187,7 @@ namespace DataManager.Tests.Manager
         }
 
         /// <summary>
-        /// 验证 Add_ParallelUniqueNames_AllAdded 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Add_ParallelUniqueNames_AllAdded；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 For、Add、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

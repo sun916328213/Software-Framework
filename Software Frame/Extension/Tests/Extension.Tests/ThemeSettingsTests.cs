@@ -24,7 +24,7 @@ namespace Extension.Tests
     public class ThemeSettingsTests
     {
         /// <summary>
-        /// 验证 默认值_浅色加Teal加Amber 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 默认值_浅色加Teal加Amber；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 False、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -38,7 +38,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 具名参数构造_覆盖默认值 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 具名参数构造_覆盖默认值；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -52,7 +52,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 是record_按值相等 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 是record_按值相等；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、True、GetHashCode；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -67,7 +67,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 With表达式_只改指定成员 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 With表达式_只改指定成员；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、Equal、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -83,7 +83,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 是sealed_record_不是普通类 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 是sealed_record_不是普通类；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、NotNull、GetMethod；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -99,7 +99,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 属性类型全部来自BCL_所以它属于T0 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 属性类型全部来自BCL_所以它属于T0；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetProperties、NotEmpty、All、True；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -120,7 +120,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ToString_带属性名与值 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ToString_带属性名与值；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToString、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

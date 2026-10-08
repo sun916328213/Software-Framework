@@ -53,7 +53,7 @@ namespace DataManager.Tests.SQL
             Path.GetTempPath(), $"dm_p9_timeout_{Guid.NewGuid():N}.db");
 
         /// <summary>
-        /// 验证 ParamFor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ParamFor；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewGuid；具体条件和先后次序见方法体。
         /// </summary>
         private SQLParam ParamFor(ESQLToolType tool, int timeoutSeconds = 0) => new()
@@ -77,7 +77,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 CommandTimeoutOrNull_MapsZeroToNull_AndPositiveToSeconds 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CommandTimeoutOrNull_MapsZeroToNull_AndPositiveToSeconds；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -91,7 +91,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Validate_RejectsNegativeTimeout_AllowsZeroAndPositive 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Validate_RejectsNegativeTimeout_AllowsZeroAndPositive；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、Validate；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -257,7 +257,7 @@ namespace DataManager.Tests.SQL
         #endregion
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exists、Delete、SuppressFinalize；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>

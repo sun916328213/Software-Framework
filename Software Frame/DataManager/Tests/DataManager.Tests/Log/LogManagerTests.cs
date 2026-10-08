@@ -18,7 +18,7 @@ namespace DataManager.Tests.Log
     public class LogManagerTests
     {
         /// <summary>
-        /// 验证 CreateParam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateParam；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、GetTempPath；具体条件和先后次序见方法体。
         /// </summary>
         private static LogParam CreateParam(string name) => new()
@@ -30,7 +30,7 @@ namespace DataManager.Tests.Log
         };
 
         /// <summary>
-        /// 验证 Create_SeriLog_ReturnsSerilogHelper 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_SeriLog_ReturnsSerilogHelper；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、CreateParam、IsType、Equal、NotNull；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -45,7 +45,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 Create_SeriLog_SetsParam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_SeriLog_SetsParam；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、CreateParam、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -57,7 +57,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 Create_NLog_ReturnsNLogHelper 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_NLog_ReturnsNLogHelper；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateParam、Create、IsType、NotNull；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -74,7 +74,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 Create_Log4Net_ReturnsLog4NetHelper 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_Log4Net_ReturnsLog4NetHelper；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateParam、Create、IsType、NotNull；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -91,7 +91,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 Create_UnknownType_ThrowsNotSupported 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_UnknownType_ThrowsNotSupported；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateParam、Throws、Create；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -105,7 +105,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 Config_CreatesAllLogs 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Config_CreatesAllLogs；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Config、CreateParam、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -118,7 +118,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 Create_MissingFilePath_ThrowsArgumentException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_MissingFilePath_ThrowsArgumentException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateParam、Throws、Create；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -132,7 +132,7 @@ namespace DataManager.Tests.Log
         }
 
         /// <summary>
-        /// 验证 Create_DuplicateName_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create_DuplicateName_Throws；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、CreateParam、Throws；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

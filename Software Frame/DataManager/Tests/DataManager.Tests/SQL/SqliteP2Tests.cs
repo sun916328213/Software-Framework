@@ -56,7 +56,7 @@ namespace DataManager.Tests.SQL
             Path.GetTempPath(), $"dm_sqlite_p2_{Guid.NewGuid():N}.db");
 
         /// <summary>
-        /// 验证 ParamFor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ParamFor；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewGuid；具体条件和先后次序见方法体。
         /// </summary>
         private static SQLParam ParamFor<T>(string file, ESQLToolType tool = ESQLToolType.EFCore) => new()
@@ -69,7 +69,7 @@ namespace DataManager.Tests.SQL
         };
 
         /// <summary>
-        /// 验证 ServerParam 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ServerParam；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private static SQLParam ServerParam(ESQLType dbType) => new()
         {
@@ -99,7 +99,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_OnConfiguring_Postgres_ContainsHostPortDb 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_OnConfiguring_Postgres_ContainsHostPortDb；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ServerParam、GetConnectionString、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -114,7 +114,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_OnConfiguring_MySQL_ContainsServerPortDb 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_OnConfiguring_MySQL_ContainsServerPortDb；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ServerParam、GetConnectionString、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -128,7 +128,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_OnConfiguring_SqlServer_ContainsServerDb_TrustCert 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_OnConfiguring_SqlServer_ContainsServerDb_TrustCert；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ServerParam、GetConnectionString、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -142,7 +142,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_OnConfiguring_Passthrough_ConnectionStringWins 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_OnConfiguring_Passthrough_ConnectionStringWins；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ServerParam、Create、Equal、GetConnectionString；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -155,7 +155,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_OnConfiguring_UnknownDbType_ThrowsNotSupported 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_OnConfiguring_UnknownDbType_ThrowsNotSupported；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ServerParam、Create、Throws、GetConnectionString；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -199,7 +199,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_Split_UpdateAsync_DeleteAsync_DeleteAllAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_Split_UpdateAsync_DeleteAsync_DeleteAllAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、AddAsync、AddDays；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -230,7 +230,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_Split_UpdateByPredicate_CopiesNonKeyValues 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_Split_UpdateByPredicate_CopiesNonKeyValues；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、AddRange、Update；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -288,7 +288,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_SaveChangesOptimized_Error_MessageContainsPrefix 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_SaveChangesOptimized_Error_MessageContainsPrefix；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DeleteAll、Add；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -312,7 +312,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_Update_NoPkEntity_ConnectThrows_RequiresPrimaryKey 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_Update_NoPkEntity_ConnectThrows_RequiresPrimaryKey；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Throws、Connect、DisConnect；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -327,7 +327,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_DetachEntities_Over100_AfterBulkInsert 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_DetachEntities_Over100_AfterBulkInsert；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DeleteAll、Add；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -378,7 +378,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_Connect_InvalidPath_StillSetsConnectedOrThrowsCleanly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_Connect_InvalidPath_StillSetsConnectedOrThrowsCleanly；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewGuid、Combine、GetTempPath、Create、Connect；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>
@@ -427,7 +427,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_DoubleDispose_IsSafe 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_DoubleDispose_IsSafe；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Dispose、True；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -444,7 +444,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_DoubleDispose_IsSafe 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_DoubleDispose_IsSafe；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Dispose、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -459,7 +459,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_Dispose_ThenConnect_Recovers 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_Dispose_ThenConnect_Recovers；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Dispose、True；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -479,7 +479,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_Disconnect_IsIdempotent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_Disconnect_IsIdempotent；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DisConnect、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -496,7 +496,7 @@ namespace DataManager.Tests.SQL
         #endregion
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exists、Delete、SuppressFinalize；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>

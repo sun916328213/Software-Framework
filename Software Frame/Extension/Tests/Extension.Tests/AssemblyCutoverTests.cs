@@ -20,7 +20,7 @@ namespace Extension.Tests;
 public sealed class AssemblyCutoverTests
 {
     /// <summary>
-    /// 验证 OriginalAssemblyDoesNotDefineOrForwardAnyExtractedType 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OriginalAssemblyDoesNotDefineOrForwardAnyExtractedType；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、GetName、Empty、GetForwardedTypes、Parse；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -40,7 +40,7 @@ public sealed class AssemblyCutoverTests
     }
 
     /// <summary>
-    /// 验证 ExplicitOldAssemblyIdentityIsNotRedirectedToCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExplicitOldAssemblyIdentityIsNotRedirectedToCore；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、GetName、Same、ResolvePersistedType、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -56,7 +56,7 @@ public sealed class AssemblyCutoverTests
     }
 
     /// <summary>
-    /// 验证 Root 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Root；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetFullPath、Combine、GetDirectoryName；具体条件和先后次序见方法体。
     /// </summary>
     private static string Root([CallerFilePath] string file = "") =>

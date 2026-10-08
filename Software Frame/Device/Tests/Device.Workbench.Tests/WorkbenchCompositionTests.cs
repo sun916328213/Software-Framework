@@ -37,7 +37,7 @@ public sealed class WorkbenchCompositionTests
     public WorkbenchCompositionTests(WorkbenchAppFixture fixture) => _fixture = fixture;
 
     /// <summary>
-    /// 验证 AppBoot_ShowsShell_MainWindow 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AppBoot_ShowsShell_MainWindow；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、IsType、False、IsNullOrWhiteSpace；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -51,7 +51,7 @@ public sealed class WorkbenchCompositionTests
     }
 
     /// <summary>
-    /// 验证 Shell_AutoWiresMainWindowViewModel_WithDefaultNavItems 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Shell_AutoWiresMainWindowViewModel_WithDefaultNavItems；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、IsType、NotEmpty、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -67,7 +67,7 @@ public sealed class WorkbenchCompositionTests
     }
 
     /// <summary>
-    /// 验证 AppBoot_MergesHostAndSharedResources 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AppBoot_MergesHostAndSharedResources；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、ToArray、Cast、Where、Select；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -90,7 +90,7 @@ public sealed class WorkbenchCompositionTests
     }
 
     /// <summary>
-    /// 验证 PackUri_ResolvesBaml_FromForeignEntryAssembly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PackUri_ResolvesBaml_FromForeignEntryAssembly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、GetResourceStream、True；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -107,7 +107,7 @@ public sealed class WorkbenchCompositionTests
     }
 
     /// <summary>
-    /// 验证 Container_RegistersRuntimeFactories_FromHostOnly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Container_RegistersRuntimeFactories_FromHostOnly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NotNull、Resolve；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -126,7 +126,7 @@ public sealed class WorkbenchCompositionTests
     }
 
     /// <summary>
-    /// 验证 Container_ThemeService_IsSingleton 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Container_ThemeService_IsSingleton；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Same；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -139,7 +139,7 @@ public sealed class WorkbenchCompositionTests
     }
 
     /// <summary>
-    /// 验证 MainRegion_NavigatesToCameraView_ThroughPrism 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MainRegion_NavigatesToCameraView_ThroughPrism；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、RequestNavigate、Resolve、WaitUntil、Any；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

@@ -34,7 +34,7 @@ internal sealed class InMemorySecsTransport : ISecsTransport
     public event SecsLevelHandle? OnDebug;
 
     /// <summary>
-    /// 验证 ConnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ConnectAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
     /// </summary>
     public Task<bool> ConnectAsync(bool isActiveMode, string address, int port, int deviceId = 0, int bufferSize = 65535)
@@ -46,20 +46,20 @@ internal sealed class InMemorySecsTransport : ISecsTransport
     }
 
     /// <summary>
-    /// 验证 Connect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connect；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetResult、GetAwaiter、ConnectAsync；具体条件和先后次序见方法体。
     /// </summary>
     public bool Connect(bool isActiveMode, string address, int port, int deviceId = 0, int bufferSize = 65535) =>
         ConnectAsync(isActiveMode, address, port, deviceId, bufferSize).GetAwaiter().GetResult();
 
     /// <summary>
-    /// 验证 Connect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Connect；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Connect；具体条件和先后次序见方法体。
     /// </summary>
     public bool Connect() => Connect(true, "127.0.0.1", 5000);
 
     /// <summary>
-    /// 验证 CloseAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CloseAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Close；具体条件和先后次序见方法体。
     /// </summary>
     public Task CloseAsync()
@@ -69,7 +69,7 @@ internal sealed class InMemorySecsTransport : ISecsTransport
     }
 
     /// <summary>
-    /// 验证 Close 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Close；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public void Close()
     {
@@ -78,7 +78,7 @@ internal sealed class InMemorySecsTransport : ISecsTransport
     }
 
     /// <summary>
-    /// 验证 Send 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Send；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
     /// </summary>
     public Task<SecsMessage> Send(string order, Item items, bool wait = false)
@@ -89,20 +89,20 @@ internal sealed class InMemorySecsTransport : ISecsTransport
     }
 
     /// <summary>
-    /// 验证 Send 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Send；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Send；具体条件和先后次序见方法体。
     /// </summary>
     public Task<SecsMessage> Send(SecsMessage message, bool wait = false) =>
         Send($"S{message.S}F{message.F}", message.SecsItem!, wait);
 
     /// <summary>
-    /// 验证 Send 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Send；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public Task<SecsMessage> Send(string sml, bool wait = false) =>
         throw new NotSupportedException("SML parsing is outside this transport fake.");
 
     /// <summary>
-    /// 验证 ReplyAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReplyAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public Task ReplyAsync(SecsMessage message, Item items)
     {
@@ -111,47 +111,47 @@ internal sealed class InMemorySecsTransport : ISecsTransport
     }
 
     /// <summary>
-    /// 验证 EmitReceivedAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EmitReceivedAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public Task EmitReceivedAsync(SecsMessage message) =>
         OnReceive?.Invoke(message, string.Empty) ?? Task.CompletedTask;
 
     /// <summary>
-    /// 验证 MessageIn 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MessageIn；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public void MessageIn(SecsMessage message, int systemByte) { }
     /// <summary>
-    /// 验证 MessageOut 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MessageOut；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public void MessageOut(SecsMessage message, int systemByte) { }
     /// <summary>
-    /// 验证 Info 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Info；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public void Info(string message) => OnInfo?.Invoke(message);
     /// <summary>
-    /// 验证 Warning 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Warning；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public void Warning(string message) => OnWaring?.Invoke(message);
     /// <summary>
-    /// 验证 Error 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Error；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public void Error(string message) => OnError?.Invoke(message);
     /// <summary>
-    /// 验证 Error 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Error；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Error；具体条件和先后次序见方法体。
     /// </summary>
     public void Error(string message, SecsMessage secsMessage, Exception exception) => Error(message);
     /// <summary>
-    /// 验证 Error 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Error；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Error；具体条件和先后次序见方法体。
     /// </summary>
     public void Error(string message, Exception exception) => Error(message);
     /// <summary>
-    /// 验证 Debug 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Debug；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     public void Debug(string message) => OnDebug?.Invoke(message);
     /// <summary>
-    /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Close；具体条件和先后次序见方法体。
     /// </summary>
     public void Dispose() => Close();

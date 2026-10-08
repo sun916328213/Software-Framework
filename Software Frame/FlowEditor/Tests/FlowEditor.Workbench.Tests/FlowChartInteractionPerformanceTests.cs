@@ -26,7 +26,7 @@ namespace FlowEditor.Workbench.Tests;
 public class FlowChartInteractionPerformanceTests
 {
     /// <summary>
-    /// 验证 SelectingNode_SetsVisualStateBeforeSelectedNodeObserversRun 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SelectingNode_SetsVisualStateBeforeSelectedNodeObserversRun；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、CreateViewModel、nameof、SetSelectedNodes；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -48,7 +48,7 @@ public class FlowChartInteractionPerformanceTests
     }
 
     /// <summary>
-    /// 验证 RapidNodeSelection_LastClickWinsWithoutTransientUnselectedNotification 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RapidNodeSelection_LastClickWinsWithoutTransientUnselectedNotification；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、ToArray、Select、Range、AddNode；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -76,7 +76,7 @@ public class FlowChartInteractionPerformanceTests
     }
 
     /// <summary>
-    /// 验证 CtrlLeftClick_IsReservedForMultiSelection_NotCanvasPan 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CtrlLeftClick_IsReservedForMultiSelection_NotCanvasPan；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 False、ShouldStartCanvasPan、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -88,7 +88,7 @@ public class FlowChartInteractionPerformanceTests
     }
 
     /// <summary>
-    /// 验证 ToggleNodeSelection_AccumulatesAndRemovesCtrlSelections 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ToggleNodeSelection_AccumulatesAndRemovesCtrlSelections；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、AddNode、CreateViewModel、ToggleNodeSelection、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -114,7 +114,7 @@ public class FlowChartInteractionPerformanceTests
     }
 
     /// <summary>
-    /// 验证 NodeMouseDown_ShowsSelectedVisualInSameInputTurn 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NodeMouseDown_ShowsSelectedVisualInSameInputTurn；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、CreateService、AddNode、CreateViewModel、Measure；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -147,7 +147,7 @@ public class FlowChartInteractionPerformanceTests
     }
 
     /// <summary>
-    /// 验证 PendingConnectionUpdates_ReuseSinglePathVisual 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PendingConnectionUpdates_ReuseSinglePathVisual；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、CreateService、CreateViewModel、IsType、FindName；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -173,7 +173,7 @@ public class FlowChartInteractionPerformanceTests
     }
 
     /// <summary>
-    /// 验证 RepaintingConnections_ReusesExistingPathVisuals 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RepaintingConnections_ReusesExistingPathVisuals；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、New、Flow、RenderConnections、ToArray；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -203,7 +203,7 @@ public class FlowChartInteractionPerformanceTests
     }
 
     /// <summary>
-    /// 验证 LoopContainerBody_DoesNotInterceptClicksIntendedForConnections 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopContainerBody_DoesNotInterceptClicksIntendedForConnections；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Run、CreateService、AddNode、CreateViewModel、Measure；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -227,7 +227,7 @@ public class FlowChartInteractionPerformanceTests
     }
 
     /// <summary>
-    /// 验证 FindVisualChildren 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FindVisualChildren；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetChildrenCount、GetChild、FindVisualChildren；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<T> FindVisualChildren<T>(DependencyObject root)

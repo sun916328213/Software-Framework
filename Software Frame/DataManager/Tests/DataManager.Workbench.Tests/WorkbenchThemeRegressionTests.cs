@@ -31,7 +31,7 @@ namespace DataManager.Workbench.Tests
         private readonly WorkbenchAppFixture _host = host;
 
         /// <summary>
-        /// 验证 NoConfig_DefaultsComeFromAppXamlBundledTheme 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 NoConfig_DefaultsComeFromAppXamlBundledTheme；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、FindBundledTheme、NotNull、Resolve、Combine；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -72,7 +72,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Initialize_DoesNotBakeDefaultsIntoConfig 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Initialize_DoesNotBakeDefaultsIntoConfig；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、Combine、GetTempPath、NewGuid、Initialize；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -101,7 +101,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 ConfigManagerPanel_BackgroundFollowsTheme 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConfigManagerPanel_BackgroundFollowsTheme；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、Resolve、Show、UpdateLayout、SetTheme；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -144,7 +144,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 ThemeBrushKeys_UsedByControls_Resolve 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ThemeBrushKeys_UsedByControls_Resolve；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、TryFindResource、True；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -167,7 +167,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 ReadPanelBackground 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadPanelBackground；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、UpdateLayout、True；具体条件和先后次序见方法体。
         /// </summary>
         private static Color ReadPanelBackground(ConfigManagerView view, Window window)
@@ -184,11 +184,11 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 IsLight 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 IsLight；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private static bool IsLight(Color c) => (0.299 * c.R + 0.587 * c.G + 0.114 * c.B) > 128;
         /// <summary>
-        /// 验证 IsDark 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 IsDark；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 IsLight；具体条件和先后次序见方法体。
         /// </summary>
         private static bool IsDark(Color c) => !IsLight(c);

@@ -17,7 +17,7 @@ namespace SecsGem.Tests.Runtime;
 public sealed class ConfigurationContractTests
 {
     /// <summary>
-    /// 验证 Report_And_Event_Definitions_RoundTrip_Through_Core_Contract 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Report_And_Event_Definitions_RoundTrip_Through_Core_Contract；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Combine、GetTempPath、ToString、NewGuid、Create；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -57,7 +57,7 @@ public sealed class ConfigurationContractTests
     }
 
     /// <summary>
-    /// 验证 Core_Alarm_Report_Updates_Local_Alarm_State_And_Sends_S5F1 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Core_Alarm_Report_Updates_Local_Alarm_State_And_Sends_S5F1；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Create、Add、True、ReportAlarmAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

@@ -14,7 +14,7 @@ namespace MotionControl.Tests;
 public sealed class AxisPollingMonitorTests
 {
     /// <summary>
-    /// 验证 PollingException_WithoutObserver_IsReportedToTrace 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PollingException_WithoutObserver_IsReportedToTrace；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、Increment、TrySetResult、Start、WaitAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -53,7 +53,7 @@ public sealed class AxisPollingMonitorTests
     }
 
     /// <summary>
-    /// 验证 AlarmRaised_OnlyOnRisingEdge 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AlarmRaised_OnlyOnRisingEdge；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Increment、Read、TrySetResult、Start、WaitAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -81,7 +81,7 @@ public sealed class AxisPollingMonitorTests
     }
 
     /// <summary>
-    /// 验证 PollingException_IsolatedAndNextCycleContinues 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PollingException_IsolatedAndNextCycleContinues；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Increment、TrySetResult、Start、WaitAsync、FromSeconds；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -111,7 +111,7 @@ public sealed class AxisPollingMonitorTests
     }
 
     /// <summary>
-    /// 验证 Stop_SuppressesCallbacksFromInFlightRead 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Stop_SuppressesCallbacksFromInFlightRead；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Set、Wait、FromSeconds、TrySetResult、Increment；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

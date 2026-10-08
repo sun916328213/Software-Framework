@@ -103,7 +103,7 @@ public sealed class LightControllerFactoryTests
     }
 
     /// <summary>
-    /// 验证 ValidOptions 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ValidOptions；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     private static LightControllerOptions ValidOptions(string driverId) => new()
     {
@@ -123,17 +123,17 @@ public sealed class LightControllerFactoryTests
         protected override int SuccessCode => 0;
 
         /// <summary>
-        /// 验证 ConnectCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConnectCore；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override int ConnectCore() => 0;
 
         /// <summary>
-        /// 验证 DisconnectCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisconnectCore；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override int DisconnectCore() => 0;
 
         /// <summary>
-        /// 验证 SetIntensityCore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetIntensityCore；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         protected override int SetIntensityCore(int channel, int intensity) =>
             channel == 2

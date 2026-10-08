@@ -37,7 +37,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 GetDescription_有Description特性时返回描述 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDescription_有Description特性时返回描述；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetDescription；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -48,7 +48,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetDescription_没有Description特性时回退成名称 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDescription_没有Description特性时回退成名称；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetDescription；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -58,7 +58,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetDescription_空描述返回空串而不是名称 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDescription_空描述返回空串而不是名称；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetDescription；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -70,7 +70,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetDescription_未定义的枚举值返回空串 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDescription_未定义的枚举值返回空串；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetDescription；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -82,7 +82,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetDescription_null返回空串不抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDescription_null返回空串不抛；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetDescription；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -93,7 +93,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetDescription_两个重载对同一个值给出一致结果 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDescription_两个重载对同一个值给出一致结果；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetDescription、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -113,7 +113,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 GetName_按声明顺序返回全部名称 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetName_按声明顺序返回全部名称；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetName；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -125,7 +125,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetEnum_按名称解析 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetEnum_按名称解析；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetEnum；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -136,7 +136,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetEnum_区分大小写 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetEnum_区分大小写；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、GetEnum；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -147,7 +147,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetEnum_名称不存在时抛ArgumentException_null时抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetEnum_名称不存在时抛ArgumentException_null时抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、GetEnum；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -160,7 +160,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetEnum_传入纯数字字符串按底层值解析_不校验是否为已命名常量 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetEnum_传入纯数字字符串按底层值解析_不校验是否为已命名常量；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetEnum、Exception、Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -181,7 +181,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 GetAllDescriptions_返回值与描述的全量对照 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetAllDescriptions_返回值与描述的全量对照；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetAllDescriptions、Equal、ToArray、Select；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -197,7 +197,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetAllDescriptions_顺序与声明顺序一致 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetAllDescriptions_顺序与声明顺序一致；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray、Select、GetAllDescriptions、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -232,7 +232,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 API面_GetDescription有泛型与Enum两个重载 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 API面_GetDescription有泛型与Enum两个重载；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray、Where、GetMethods、Equal、Single；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

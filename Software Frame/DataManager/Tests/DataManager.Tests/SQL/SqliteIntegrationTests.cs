@@ -96,7 +96,7 @@ namespace DataManager.Tests.SQL
             Path.GetTempPath(), $"dm_sqlite_it_{Guid.NewGuid():N}.db");
 
         /// <summary>
-        /// 验证 ParamFor 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ParamFor；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewGuid；具体条件和先后次序见方法体。
         /// </summary>
         private SQLParam ParamFor<T>(ESQLToolType tool) => new()
@@ -109,7 +109,7 @@ namespace DataManager.Tests.SQL
         };
 
         /// <summary>
-        /// 验证 Dapper_CRUD_RoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_CRUD_RoundTrip；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DeleteAll、Add；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -139,7 +139,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_SplitTable_AutoRoutesByDate 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_SplitTable_AutoRoutesByDate；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Add、AddDays；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -168,7 +168,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_SplitTable_DeleteAsync_And_DeleteAllAsync_CoverAllTables 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_SplitTable_DeleteAsync_And_DeleteAllAsync_CoverAllTables；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Add、AddDays；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -201,7 +201,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_SplitTable_AddAsync_RoutesByDate 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_SplitTable_AddAsync_RoutesByDate；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、AddAsync、Contains；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -253,7 +253,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_SplitTable_PredicatePushdown_MatchesMemoryFilter 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_SplitTable_PredicatePushdown_MatchesMemoryFilter；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Add、AddDays；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -289,7 +289,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_SplitTable_PredicateQuery_FiltersServerSide 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_SplitTable_PredicateQuery_FiltersServerSide；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Add、AddDays；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -316,7 +316,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SingleEntity_Update_RoundTrips_AllTools 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SingleEntity_Update_RoundTrips_AllTools；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Add、First；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -365,7 +365,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Transaction_CommitAndRollback_AllTools 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Transaction_CommitAndRollback_AllTools；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、ExecuteInTransaction、Add；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -465,7 +465,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Transaction_Nested_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Transaction_Nested_Throws；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Throws、ExecuteInTransaction；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -485,7 +485,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Transaction_DapperSplit_IsAtomicAcrossTables 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Transaction_DapperSplit_IsAtomicAcrossTables；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Throws、ExecuteInTransaction；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -510,7 +510,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Transaction_EFCoreSplit_ThrowsNotSupported 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Transaction_EFCoreSplit_ThrowsNotSupported；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Throws、ExecuteInTransaction；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -528,7 +528,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_MonthSplitTable_RoutesAndPrunes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_MonthSplitTable_RoutesAndPrunes；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Add、GetSplitTables；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -569,7 +569,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_SplitTable_DateEquality_PruneToHitTable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_SplitTable_DateEquality_PruneToHitTable；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ParamFor、Create、Connect、Add、AddDays；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -608,7 +608,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dapper_SplitTable_DateRange_PrunesAndStaysCorrect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dapper_SplitTable_DateRange_PrunesAndStaysCorrect；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ParamFor、Create、Connect、Add、AddDays；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -647,7 +647,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_SplitTable_AutoRoutesAndLists 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_SplitTable_AutoRoutesAndLists；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Add、AddDays；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -677,7 +677,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_MonthSplitTable_RoutesAndPrunes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_MonthSplitTable_RoutesAndPrunes；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Add、ToList；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -703,7 +703,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_NonSplit_GetSplitTables_ReturnsEmpty 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_NonSplit_GetSplitTables_ReturnsEmpty；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Empty、GetSplitTables；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -724,7 +724,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_SplitTable_DateRange_PrunesAndStaysCorrect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_SplitTable_DateRange_PrunesAndStaysCorrect；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、Add、AddDays；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -753,7 +753,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 EFCore_CRUD_RoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EFCore_CRUD_RoundTrip；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DeleteAll、Add；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -782,7 +782,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 SqlSugar_CRUD_RoundTrip 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SqlSugar_CRUD_RoundTrip；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Create、ParamFor、Connect、DeleteAll、Add；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -811,7 +811,7 @@ namespace DataManager.Tests.SQL
         }
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exists、Delete、SuppressFinalize；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>

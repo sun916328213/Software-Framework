@@ -29,7 +29,7 @@ namespace Vision.Tests.Tools.AI.Halcon;
 public sealed class HalconProviderTests
 {
     /// <summary>
-    /// 验证 Provider_DeclaresNameAndAllFourCapabilities 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Provider_DeclaresNameAndAllFourCapabilities；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、True、HasFlag；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -44,7 +44,7 @@ public sealed class HalconProviderTests
     }
 
     /// <summary>
-    /// 验证 Provider_IsAvailable_DoesNotThrow 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Provider_IsAvailable_DoesNotThrow；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
     [Fact]
     public void Provider_IsAvailable_DoesNotThrow()
@@ -54,7 +54,7 @@ public sealed class HalconProviderTests
     }
 
     /// <summary>
-    /// 验证 OpenSession_UnknownType_ThrowsNotSupported 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OpenSession_UnknownType_ThrowsNotSupported；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、OpenSession；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -66,7 +66,7 @@ public sealed class HalconProviderTests
     }
 
     /// <summary>
-    /// 验证 OpenSession_MissingFile_ThrowsWithPathContext 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OpenSession_MissingFile_ThrowsWithPathContext；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、OpenSession、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -81,7 +81,7 @@ public sealed class HalconProviderTests
     }
 
     /// <summary>
-    /// 验证 CloseSession_Null_IsNoOp 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CloseSession_Null_IsNoOp；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CloseSession；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -92,7 +92,7 @@ public sealed class HalconProviderTests
     }
 
     /// <summary>
-    /// 验证 Mapper_MapsClassification_PickingTopScore 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mapper_MapsClassification_PickingTopScore；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 MapClassification、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -107,7 +107,7 @@ public sealed class HalconProviderTests
     }
 
     /// <summary>
-    /// 验证 Mapper_MapsClassification_WithoutNames_FallsBackToIds 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mapper_MapsClassification_WithoutNames_FallsBackToIds；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 MapClassification、Equal、Empty；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -119,7 +119,7 @@ public sealed class HalconProviderTests
     }
 
     /// <summary>
-    /// 验证 Mapper_MapsDetection_WithPixelBoxes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mapper_MapsDetection_WithPixelBoxes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 MapDetection、Single、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -135,7 +135,7 @@ public sealed class HalconProviderTests
     }
 
     /// <summary>
-    /// 验证 Mapper_MapsSegmentation_AndAnomaly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mapper_MapsSegmentation_AndAnomaly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 MapSegmentation、Single、Equal、Empty、MapAnomaly；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -154,7 +154,7 @@ public sealed class HalconProviderTests
     }
 
     /// <summary>
-    /// 验证 Classification_WithRoi_RunsAgainstRealModel 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Classification_WithRoi_RunsAgainstRealModel；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Rectangle、GetEnvironmentVariable、LoadModel、FromBuffer、Run；具体条件和先后次序见方法体。
     /// </summary>
     [HalconAIModelFact]
@@ -179,7 +179,7 @@ public sealed class HalconProviderTests
     }
 
     /// <summary>
-    /// 验证 Detection_WithRoi_ReturnsBoxesInOriginalImageCoordinates 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Detection_WithRoi_ReturnsBoxesInOriginalImageCoordinates；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetEnvironmentVariable、ImRead、ToVisionImage、Rectangle、LoadModel；具体条件和先后次序见方法体。
     /// </summary>
     [HalconDetectionModelFact]

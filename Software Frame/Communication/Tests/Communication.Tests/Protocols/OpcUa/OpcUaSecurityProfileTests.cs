@@ -15,7 +15,7 @@ namespace Communication.Tests.Protocols.OpcUa;
 public sealed class OpcUaSecurityProfileTests
 {
     /// <summary>
-    /// 验证 None_profile_is_supported_for_backward_compatibility 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 None_profile_is_supported_for_backward_compatibility；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、Equal、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -29,7 +29,7 @@ public sealed class OpcUaSecurityProfileTests
     }
 
     /// <summary>
-    /// 验证 SignAndEncrypt_accepts_modern_security_policies 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SignAndEncrypt_accepts_modern_security_policies；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、Equal、True；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -52,7 +52,7 @@ public sealed class OpcUaSecurityProfileTests
     }
 
     /// <summary>
-    /// 验证 Deprecated_security_policies_are_rejected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Deprecated_security_policies_are_rejected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Parse、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -71,7 +71,7 @@ public sealed class OpcUaSecurityProfileTests
     }
 
     /// <summary>
-    /// 验证 Unsecured_profile_rejects_user_credentials 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Unsecured_profile_rejects_user_credentials；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Parse、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -84,7 +84,7 @@ public sealed class OpcUaSecurityProfileTests
     }
 
     /// <summary>
-    /// 验证 Security_mode_and_policy_must_be_consistent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Security_mode_and_policy_must_be_consistent；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Parse、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -105,7 +105,7 @@ public sealed class OpcUaSecurityProfileTests
     }
 
     /// <summary>
-    /// 验证 Secure_profile_requires_at_least_2048_bit_rsa_key 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Secure_profile_requires_at_least_2048_bit_rsa_key；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Parse、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

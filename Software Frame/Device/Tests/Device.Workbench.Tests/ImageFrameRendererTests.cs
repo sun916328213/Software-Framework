@@ -16,7 +16,7 @@ namespace Device.Workbench.Tests;
 public sealed class ImageFrameRendererTests
 {
     /// <summary>
-    /// 验证 Render_Mono8_ProducesGray8Bitmap 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Render_Mono8_ProducesGray8Bitmap；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Render、Equal、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -33,7 +33,7 @@ public sealed class ImageFrameRendererTests
     }
 
     /// <summary>
-    /// 验证 Render_Bgr24_KeepsChannelOrderAndUsesBgr24 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Render_Bgr24_KeepsChannelOrderAndUsesBgr24；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Render、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -50,7 +50,7 @@ public sealed class ImageFrameRendererTests
     }
 
     /// <summary>
-    /// 验证 Render_Rgb24_SwapsChannelsForBgr24Target 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Render_Rgb24_SwapsChannelsForBgr24Target；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Render、CopyPixels、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -69,7 +69,7 @@ public sealed class ImageFrameRendererTests
     }
 
     /// <summary>
-    /// 验证 Render_Mono16_DownsamplesHighBytesToGray8 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Render_Mono16_DownsamplesHighBytesToGray8；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Render、CopyPixels、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -87,7 +87,7 @@ public sealed class ImageFrameRendererTests
     }
 
     /// <summary>
-    /// 验证 Render_ZeroSize_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Render_ZeroSize_Throws；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Render；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -99,7 +99,7 @@ public sealed class ImageFrameRendererTests
     }
 
     /// <summary>
-    /// 验证 Render_UnsupportedDataLength_ThrowsWithFormatName 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Render_UnsupportedDataLength_ThrowsWithFormatName；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Render、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -113,7 +113,7 @@ public sealed class ImageFrameRendererTests
     }
 
     /// <summary>
-    /// 验证 Render_NullFrame_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Render_NullFrame_Throws；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Render；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

@@ -20,7 +20,7 @@ namespace Communication.Tests.Runtime;
 public sealed class DataPointAutoReaderTests
 {
     /// <summary>
-    /// 验证 Address_reader_capability_can_drive_polling_without_legacy_device_interface 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Address_reader_capability_can_drive_polling_without_legacy_device_interface；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、PollOnceAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -42,7 +42,7 @@ public sealed class DataPointAutoReaderTests
     }
 
     /// <summary>
-    /// 验证 Reader_only_adapter_can_drive_polling_without_legacy_device_interface 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Reader_only_adapter_can_drive_polling_without_legacy_device_interface；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、PollOnceAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -65,7 +65,7 @@ public sealed class DataPointAutoReaderTests
     }
 
     /// <summary>
-    /// 验证 Batch_capable_device_reads_adjacent_points_through_one_operation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Batch_capable_device_reads_adjacent_points_through_one_operation；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 AddRange、PollOnceAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -87,7 +87,7 @@ public sealed class DataPointAutoReaderTests
     }
 
     /// <summary>
-    /// 验证 Failed_read_publishes_a_timestamped_bad_quality_update 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Failed_read_publishes_a_timestamped_bad_quality_update；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、PollOnceAsync、Equal、Same；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -113,7 +113,7 @@ public sealed class DataPointAutoReaderTests
     }
 
     /// <summary>
-    /// 验证 Stop_async_waits_until_the_active_read_observes_cancellation 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Stop_async_waits_until_the_active_read_observes_cancellation；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、Start、WaitAsync、FromSeconds、StopAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -138,7 +138,7 @@ public sealed class DataPointAutoReaderTests
     }
 
     /// <summary>
-    /// 验证 Disposed_reader_rejects_new_background_and_manual_polls 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Disposed_reader_rejects_new_background_and_manual_polls；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 DisposeAsync、Throws、Start、ThrowsAsync、PollOnceAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -160,7 +160,7 @@ public sealed class DataPointAutoReaderTests
     }
 
     /// <summary>
-    /// 验证 Slow_change_subscriber_does_not_block_background_scanning 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Slow_change_subscriber_does_not_block_background_scanning；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、TrySetResult、GetResult、GetAwaiter、Start；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -231,17 +231,17 @@ public sealed class DataPointAutoReaderTests
         }
 
         /// <summary>
-        /// 验证 ConnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> ConnectAsync(CancellationToken ct = default) => Task.FromResult(true);
         /// <summary>
-        /// 验证 DisconnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisconnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task DisconnectAsync(CancellationToken ct = default) => Task.CompletedTask;
 
         /// <summary>
-        /// 验证 ReadAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult、Delay、Empty；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -263,32 +263,32 @@ public sealed class DataPointAutoReaderTests
         }
 
         /// <summary>
-        /// 验证 WriteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default) =>
             Task.FromResult(true);
         /// <summary>
-        /// 验证 SendAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> SendAsync(byte[] data, CancellationToken ct = default) => Task.FromResult(true);
         /// <summary>
-        /// 验证 SendAndReceiveAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendAndReceiveAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Empty；具体条件和先后次序见方法体。
         /// </summary>
         public Task<byte[]> SendAndReceiveAsync(byte[] data, CancellationToken ct = default) =>
             Task.FromResult(Array.Empty<byte>());
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Dispose()
         {
         }
 
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
@@ -330,17 +330,17 @@ public sealed class DataPointAutoReaderTests
         }
 
         /// <summary>
-        /// 验证 ConnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> ConnectAsync(CancellationToken ct = default) => Task.FromResult(true);
         /// <summary>
-        /// 验证 DisconnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisconnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task DisconnectAsync(CancellationToken ct = default) => Task.CompletedTask;
 
         /// <summary>
-        /// 验证 ReadAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Increment、TrySetResult、FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default)
@@ -355,28 +355,28 @@ public sealed class DataPointAutoReaderTests
         }
 
         /// <summary>
-        /// 验证 WriteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default) =>
             Task.FromResult(true);
         /// <summary>
-        /// 验证 SendAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> SendAsync(byte[] data, CancellationToken ct = default) => Task.FromResult(true);
         /// <summary>
-        /// 验证 SendAndReceiveAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendAndReceiveAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Empty；具体条件和先后次序见方法体。
         /// </summary>
         public Task<byte[]> SendAndReceiveAsync(byte[] data, CancellationToken ct = default) =>
             Task.FromResult(Array.Empty<byte>());
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Dispose() { }
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
@@ -413,43 +413,43 @@ public sealed class DataPointAutoReaderTests
         }
 
         /// <summary>
-        /// 验证 ConnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> ConnectAsync(CancellationToken ct = default) => Task.FromResult(true);
         /// <summary>
-        /// 验证 DisconnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisconnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task DisconnectAsync(CancellationToken ct = default) => Task.CompletedTask;
         /// <summary>
-        /// 验证 ReadAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromException；具体条件和先后次序见方法体。
         /// </summary>
         public Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default) =>
             Task.FromException<byte[]>(error);
         /// <summary>
-        /// 验证 WriteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default) =>
             Task.FromResult(true);
         /// <summary>
-        /// 验证 SendAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> SendAsync(byte[] data, CancellationToken ct = default) => Task.FromResult(true);
         /// <summary>
-        /// 验证 SendAndReceiveAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendAndReceiveAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Empty；具体条件和先后次序见方法体。
         /// </summary>
         public Task<byte[]> SendAndReceiveAsync(byte[] data, CancellationToken ct = default) =>
             Task.FromResult(Array.Empty<byte>());
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Dispose() { }
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
@@ -487,7 +487,7 @@ public sealed class DataPointAutoReaderTests
         }
 
         /// <summary>
-        /// 验证 ReadPointsAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadPointsAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Success；具体条件和先后次序见方法体。
         /// </summary>
         public Task<IReadOnlyList<DataPointReadResult>> ReadPointsAsync(
@@ -503,42 +503,42 @@ public sealed class DataPointAutoReaderTests
         }
 
         /// <summary>
-        /// 验证 ConnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> ConnectAsync(CancellationToken ct = default) => Task.FromResult(true);
         /// <summary>
-        /// 验证 DisconnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisconnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task DisconnectAsync(CancellationToken ct = default) => Task.CompletedTask;
         /// <summary>
-        /// 验证 ReadAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task<byte[]> ReadAsync(string address, int length, CancellationToken ct = default) =>
             throw new InvalidOperationException("支持批量时不应逐点读取。");
         /// <summary>
-        /// 验证 WriteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> WriteAsync(string address, byte[] data, CancellationToken ct = default) =>
             Task.FromResult(true);
         /// <summary>
-        /// 验证 SendAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> SendAsync(byte[] data, CancellationToken ct = default) => Task.FromResult(true);
         /// <summary>
-        /// 验证 SendAndReceiveAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendAndReceiveAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Empty；具体条件和先后次序见方法体。
         /// </summary>
         public Task<byte[]> SendAndReceiveAsync(byte[] data, CancellationToken ct = default) =>
             Task.FromResult(Array.Empty<byte>());
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Dispose() { }
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
@@ -550,7 +550,7 @@ public sealed class DataPointAutoReaderTests
     private sealed class FixedTimeProvider(DateTimeOffset timestamp) : TimeProvider
     {
         /// <summary>
-        /// 验证 GetUtcNow 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetUtcNow；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override DateTimeOffset GetUtcNow() => timestamp;
     }
@@ -562,7 +562,7 @@ public sealed class DataPointAutoReaderTests
     private sealed class AddressReaderOnlyAdapter : IAddressReader
     {
         /// <summary>
-        /// 验证 ReadAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public Task<byte[]> ReadAsync(
@@ -579,7 +579,7 @@ public sealed class DataPointAutoReaderTests
     private sealed class ReaderOnlyAdapter : IDataPointBatchReader
     {
         /// <summary>
-        /// 验证 ReadPointsAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadPointsAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、Success；具体条件和先后次序见方法体。
         /// </summary>
         public Task<IReadOnlyList<DataPointReadResult>> ReadPointsAsync(

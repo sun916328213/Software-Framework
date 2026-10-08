@@ -24,7 +24,7 @@ namespace SecsGem.Tests
         private static readonly Regex OrderNamePattern = new(@"^S\d+F\d+$", RegexOptions.Compiled);
 
         /// <summary>
-        /// 验证 GetOrderTypes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetOrderTypes；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList、Where、GetTypes、IsAssignableFrom；具体条件和先后次序见方法体。
         /// </summary>
         private static List<Type> GetOrderTypes()
@@ -38,7 +38,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 Protocol_Registry_Is_A_Container_Singleton_And_Resolves_Handlers 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Protocol_Registry_Is_A_Container_Singleton_And_Resolves_Handlers；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 RegisterTypes、Resolve、Same、AutoRegisterHandlers、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -54,7 +54,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 All_Order_Types_Follow_Naming_Convention 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 All_Order_Types_Follow_Naming_Convention；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList、Where、Select、GetOrderTypes、IsMatch；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -70,7 +70,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 Core_Orders_Are_Present 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Core_Orders_Are_Present；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToHashSet、Select、GetOrderTypes、ToList、Where；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -101,7 +101,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 All_Order_Types_Have_SecsOrderAttribute 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 All_Order_Types_Have_SecsOrderAttribute；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList、Select、Where、GetOrderTypes、GetCustomAttribute；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -117,7 +117,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 SecsOrderAttribute_Names_Match_ClassNames 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SecsOrderAttribute_Names_Match_ClassNames；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList、Select、Where、GetOrderTypes、GetCustomAttribute；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -138,7 +138,7 @@ namespace SecsGem.Tests
         }
 
         /// <summary>
-        /// 验证 Every_Primary_Order_Has_Odd_Function 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Every_Primary_Order_Has_Odd_Function；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToList、Select、Where、GetOrderTypes、Match；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

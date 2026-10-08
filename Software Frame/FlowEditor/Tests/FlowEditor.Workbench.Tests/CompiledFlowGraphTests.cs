@@ -26,7 +26,7 @@ public sealed class FlowGraphPerformanceCollection
 public class CompiledFlowGraphTests
 {
     /// <summary>
-    /// 验证 Compile_1000NodeChain_Under100ms 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Compile_1000NodeChain_Under100ms；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、New、Flow、Compile、StartNew；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -52,7 +52,7 @@ public class CompiledFlowGraphTests
     }
 
     /// <summary>
-    /// 验证 Compile_LinearChain_ProducesValidTopologicalOrder 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Compile_LinearChain_ProducesValidTopologicalOrder；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、Compile、False、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -73,7 +73,7 @@ public class CompiledFlowGraphTests
     }
 
     /// <summary>
-    /// 验证 Compile_WithCycle_DetectsBackEdgeAndKeepsEntry 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Compile_WithCycle_DetectsBackEdgeAndKeepsEntry；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、Compile、True、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -93,7 +93,7 @@ public class CompiledFlowGraphTests
     }
 
     /// <summary>
-    /// 验证 IncomingConnections_GroupsByTarget_PreservingConnectionOrder 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 IncomingConnections_GroupsByTarget_PreservingConnectionOrder；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、Data、Compile、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

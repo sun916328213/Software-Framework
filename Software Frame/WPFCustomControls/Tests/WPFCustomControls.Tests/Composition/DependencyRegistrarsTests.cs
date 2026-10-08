@@ -33,7 +33,7 @@ public class DependencyRegistrarsTests
     }
 
     /// <summary>
-    /// 验证 EveryRegistrar_IsConstructibleAndNamed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EveryRegistrar_IsConstructibleAndNamed；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 DiscoverRegistrars、False、IsNullOrEmpty、GetType；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -47,7 +47,7 @@ public class DependencyRegistrarsTests
     }
 
     /// <summary>
-    /// 验证 KnownRegistrars_ArePresentInAssembly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 KnownRegistrars_ArePresentInAssembly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ToHashSet、Select、DiscoverRegistrars、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -60,7 +60,7 @@ public class DependencyRegistrarsTests
     }
 
     /// <summary>
-    /// 验证 MainModule_TypeExistsAndIsPublic 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MainModule_TypeExistsAndIsPublic；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、IsAssignableFrom；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -74,7 +74,7 @@ public class DependencyRegistrarsTests
     }
 
     /// <summary>
-    /// 验证 RegistrarImplementations_AreSealed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RegistrarImplementations_AreSealed；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Where、GetTypes、IsAssignableFrom、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

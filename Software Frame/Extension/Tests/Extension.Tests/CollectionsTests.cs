@@ -32,7 +32,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ListEx_Equal_重复元素按出现次数比较 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ListEx_Equal_重复元素按出现次数比较；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、Equal、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -45,7 +45,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ListEx_Equal_长度不同直接false 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ListEx_Equal_长度不同直接false；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 False、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -56,7 +56,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ListEx_Equal_空列表 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ListEx_Equal_空列表；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、Equal、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -67,7 +67,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ListEx_Equal_字符串走默认比较器_区分大小写 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ListEx_Equal_字符串走默认比较器_区分大小写；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、Equal、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -78,7 +78,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ListEx_Equal_null元素会抛异常_是已知限制 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ListEx_Equal_null元素会抛异常_是已知限制；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exception、Equal、NotNull；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -91,7 +91,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ListEx_Equal_null参数是NullReferenceException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ListEx_Equal_null参数是NullReferenceException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -138,7 +138,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ConcurrentList_构造可带初始集合_null等价于空 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConcurrentList_构造可带初始集合_null等价于空；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToArray、Empty；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -149,7 +149,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ConcurrentList_AddRange_与null校验 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConcurrentList_AddRange_与null校验；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 AddRange、Equal、ToArray、Throws；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -163,7 +163,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ConcurrentList_索引越界_读返回默认值_写静默忽略 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConcurrentList_索引越界_读返回默认值_写静默忽略；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、ToArray、Null；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -187,7 +187,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ConcurrentList_Insert与RemoveAt越界会抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConcurrentList_Insert与RemoveAt越界会抛；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、Insert、RemoveAt、Equal、ToArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -204,7 +204,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ConcurrentList_CopyTo 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConcurrentList_CopyTo；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CopyTo、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -217,7 +217,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ConcurrentList_枚举是快照_枚举过程中新增不影响本次枚举 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConcurrentList_枚举是快照_枚举过程中新增不影响本次枚举；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -239,7 +239,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ConcurrentList_多线程并发Add不丢数据 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConcurrentList_多线程并发Add不丢数据；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 For、Add、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -258,7 +258,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ConcurrentList_Dispose后所有成员抛ObjectDisposedException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConcurrentList_Dispose后所有成员抛ObjectDisposedException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Dispose、Throws、Add、Clear、Contains；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -280,7 +280,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ConcurrentList_GetEnumerator是迭代器方法_Dispose后取枚举器不抛_枚举时才抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConcurrentList_GetEnumerator是迭代器方法_Dispose后取枚举器不抛_枚举时才抛；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Dispose、GetEnumerator、NotNull、Throws；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -300,7 +300,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ConcurrentList_Remove依赖IndexOf_先查再删 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConcurrentList_Remove依赖IndexOf_先查再删；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、Remove、Equal、ToArray；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -346,7 +346,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 AddRange_只触发一次Reset_逐项Add被抑制 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddRange_只触发一次Reset_逐项Add被抑制；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewObserved、AddRange、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -362,7 +362,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 AddRange_空集合不触发任何通知 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddRange_空集合不触发任何通知；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewObserved、AddRange、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -377,7 +377,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 AddRange_null抛ArgumentNullException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddRange_null抛ArgumentNullException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewObserved、Throws、AddRange；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -388,7 +388,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 AddRange_结束后补发Count与Item的PropertyChanged 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddRange_结束后补发Count与Item的PropertyChanged；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewObserved、AddRange、Contains、nameof；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -403,7 +403,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 RemoveRange_只触发一次Reset 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RemoveRange_只触发一次Reset；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewObserved、RemoveRange、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -419,7 +419,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReplaceAll_先清空再填充_只触发一次Reset 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReplaceAll_先清空再填充_只触发一次Reset；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewObserved、ReplaceAll、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -434,7 +434,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 嵌套抑制_只有最外层结束才触发一次Reset 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 嵌套抑制_只有最外层结束才触发一次Reset；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewObserved、SuppressNotifications、Add、True、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -462,7 +462,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 抑制期间即使只Add一个元素_结束后也只发Reset 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 抑制期间即使只Add一个元素_结束后也只发Reset；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewObserved、SuppressNotifications、Add、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -480,7 +480,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 未抑制时走基类行为_逐项通知 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 未抑制时走基类行为_逐项通知；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewObserved、Add、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -496,7 +496,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 抑制期间清空_结束时不因_hasChanges为false而漏发 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 抑制期间清空_结束时不因_hasChanges为false而漏发；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewObserved、SuppressNotifications、Clear、Empty、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

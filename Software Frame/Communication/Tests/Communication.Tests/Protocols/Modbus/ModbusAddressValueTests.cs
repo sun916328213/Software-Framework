@@ -13,7 +13,7 @@ namespace Communication.Tests.Protocols.Modbus;
 public sealed class ModbusAddressValueTests
 {
     /// <summary>
-    /// 验证 Supported_address_formats_map_to_a_zero_based_value 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Supported_address_formats_map_to_a_zero_based_value；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -34,7 +34,7 @@ public sealed class ModbusAddressValueTests
     }
 
     /// <summary>
-    /// 验证 Invalid_addresses_are_rejected_instead_of_reading_register_zero 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Invalid_addresses_are_rejected_instead_of_reading_register_zero；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Parse；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -47,7 +47,7 @@ public sealed class ModbusAddressValueTests
     }
 
     /// <summary>
-    /// 验证 Parser_preserves_the_typed_address_and_explicit_element_quantity 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Parser_preserves_the_typed_address_and_explicit_element_quantity；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ParseValue、Equal、Parse；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

@@ -15,7 +15,7 @@ namespace Communication.Tests.Compatibility;
 public sealed class OpcUaServerCompatibilityTests
 {
     /// <summary>
-    /// 验证 Server_adapter_exposes_registered_nodes_and_owned_lifecycle 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Server_adapter_exposes_registered_nodes_and_owned_lifecycle；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterNode、IsAssignableFrom、True、ConnectAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -55,14 +55,14 @@ public sealed class OpcUaServerCompatibilityTests
         public IReadOnlyCollection<string> Nodes => _values.Keys.ToArray();
 
         /// <summary>
-        /// 验证 RegisterNode 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RegisterNode；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray；具体条件和先后次序见方法体。
         /// </summary>
         public void RegisterNode(string nodeId, byte[] initialValue) =>
             _values[nodeId] = initialValue.ToArray();
 
         /// <summary>
-        /// 验证 StartAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StartAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ValueTask StartAsync(CancellationToken cancellationToken)
         {
@@ -71,7 +71,7 @@ public sealed class OpcUaServerCompatibilityTests
         }
 
         /// <summary>
-        /// 验证 StopAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StopAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ValueTask StopAsync(CancellationToken cancellationToken)
         {
@@ -84,19 +84,19 @@ public sealed class OpcUaServerCompatibilityTests
         }
 
         /// <summary>
-        /// 验证 Read 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Read；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray；具体条件和先后次序见方法体。
         /// </summary>
         public byte[] Read(string nodeId) => _values[nodeId].ToArray();
 
         /// <summary>
-        /// 验证 Write 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Write；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ToArray；具体条件和先后次序见方法体。
         /// </summary>
         public void Write(string nodeId, byte[] value) => _values[nodeId] = value.ToArray();
 
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 StopAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>

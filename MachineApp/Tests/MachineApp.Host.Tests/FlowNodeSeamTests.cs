@@ -32,7 +32,7 @@ namespace MachineApp.Host.Tests;
 public sealed class FlowNodeSeamTests
 {
     /// <summary>
-    /// 验证 NodeDefinitionsKeepWindowConstructionAndConcreteRoslynOutsideExecution 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NodeDefinitionsKeepWindowConstructionAndConcreteRoslynOutsideExecution；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Exists、Combine、NotNull、ReadAllText、DoesNotContain；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -53,7 +53,7 @@ public sealed class FlowNodeSeamTests
     }
 
     /// <summary>
-    /// 验证 ScriptExecutionUsesInjectedRuntimeAndReleasesEachIndependentSession 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ScriptExecutionUsesInjectedRuntimeAndReleasesEachIndependentSession；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、ExecuteAsync、Equal、NotSame、Single；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -83,7 +83,7 @@ public sealed class FlowNodeSeamTests
     }
 
     /// <summary>
-    /// 验证 EmptyScriptKeepsNoOpBehaviorWithoutCreatingSession 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 EmptyScriptKeepsNoOpBehaviorWithoutCreatingSession；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ExecuteAsync、Null、Empty；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -98,7 +98,7 @@ public sealed class FlowNodeSeamTests
     }
 
     /// <summary>
-    /// 验证 ScriptFailureKeepsResultAndDiagnosticAndReleasesSession 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ScriptFailureKeepsResultAndDiagnosticAndReleasesSession；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAsync、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -114,7 +114,7 @@ public sealed class FlowNodeSeamTests
     }
 
     /// <summary>
-    /// 验证 SessionThrowsOrCancelsStillReleasesAndPreservesOriginalException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SessionThrowsOrCancelsStillReleasesAndPreservesOriginalException；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ExceptionAsync、ExecuteAsync、Same、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -132,7 +132,7 @@ public sealed class FlowNodeSeamTests
     }
 
     /// <summary>
-    /// 验证 ReflectionFactoryUsesRegisteredScriptPortsAndPreservesDocumentIdentity 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReflectionFactoryUsesRegisteredScriptPortsAndPreservesDocumentIdentity；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterService、Add、ToNodeDocument、Combine、GetTempPath；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -169,7 +169,7 @@ public sealed class FlowNodeSeamTests
     }
 
     /// <summary>
-    /// 验证 DefaultScriptAdapterKeepsRealRoslynInputAndResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DefaultScriptAdapterKeepsRealRoslynInputAndResult；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -183,7 +183,7 @@ public sealed class FlowNodeSeamTests
     }
 
     /// <summary>
-    /// 验证 PrismFactoryHonorsHostRuntimeReplacement 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 PrismFactoryHonorsHostRuntimeReplacement；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterInstance、RegisterTypes、IsType、Create、Resolve；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -203,7 +203,7 @@ public sealed class FlowNodeSeamTests
     }
 
     /// <summary>
-    /// 验证 DefaultVisualExecutorKeepsToolInputRunAndResultOrder 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DefaultVisualExecutorKeepsToolInputRunAndResultOrder；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Execute、Equal、Null；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -219,7 +219,7 @@ public sealed class FlowNodeSeamTests
     }
 
     /// <summary>
-    /// 验证 VisualNodeUsesReplaceableExecutionAndUpdatesCountBeforeFailure 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 VisualNodeUsesReplaceableExecutionAndUpdatesCountBeforeFailure；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 SetExecutionAdapter、ThrowsAsync、ExecuteAsync、Equal、Same；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -256,7 +256,7 @@ public sealed class FlowNodeSeamTests
     {
         public NodeModel? LastNode { get; private set; }
         /// <summary>
-        /// 验证 Open 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Open；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Open(NodeModel node) => LastNode = node;
     }
@@ -275,7 +275,7 @@ public sealed class FlowNodeSeamTests
         public string? Code { get; private set; }
         public IReadOnlyList<ScriptReference> References { get; private set; } = [];
         /// <summary>
-        /// 验证 CreateDetachedSession 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateDetachedSession；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 getCode、Add；具体条件和先后次序见方法体。
         /// </summary>
         public IScriptSession CreateDetachedSession(string title, Func<string> getCode,
@@ -285,28 +285,28 @@ public sealed class FlowNodeSeamTests
             var session = new RecordingSession(Success, RunError); Created.Add(session); return session;
         }
         /// <summary>
-        /// 验证 ReleaseSession 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReleaseSession；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public void ReleaseSession(IScriptSession session) => Released.Add((RecordingSession)session);
         /// <summary>
-        /// 验证 GetSession 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetSession；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public IScriptSession GetSession(ScriptItem item) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 FindSession 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FindSession；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public IScriptSession? FindSession(ScriptItem item) => null;
         /// <summary>
-        /// 验证 ReleaseSession 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReleaseSession；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void ReleaseSession(ScriptItem item) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task<ScriptExecutionResult> ExecuteAsync(ScriptProjectItem script, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 CompileAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CompileAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task<bool> CompileAsync(ScriptProjectItem script, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
@@ -332,44 +332,44 @@ public sealed class FlowNodeSeamTests
         public event Action? StateChanged { add { } remove { } }
         public event PropertyChangedEventHandler? PropertyChanged { add { } remove { } }
         /// <summary>
-        /// 验证 RunAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RunAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FromResult、FromException；具体条件和先后次序见方法体。
         /// </summary>
         public Task<bool> RunAsync() => error is null ? Task.FromResult(success) : Task.FromException<bool>(error);
         /// <summary>
-        /// 验证 SetInputData 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetInputData；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void SetInputData(object? data) => Inputs = data;
         /// <summary>
-        /// 验证 LoopRunAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 LoopRunAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task LoopRunAsync() => throw new NotSupportedException();
         /// <summary>
-        /// 验证 CompileAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CompileAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task<bool> CompileAsync() => throw new NotSupportedException();
         /// <summary>
-        /// 验证 PreCompileAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 PreCompileAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task PreCompileAsync(string code) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 Terminate 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Terminate；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void Terminate() { }
         /// <summary>
-        /// 验证 StopLoop 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 StopLoop；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void StopLoop() { }
         /// <summary>
-        /// 验证 FlushOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FlushOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void FlushOutput() { }
         /// <summary>
-        /// 验证 SetOutput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetOutput；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void SetOutput(string output) { }
         /// <summary>
-        /// 验证 SetStatus 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetStatus；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public void SetStatus(string statusText) { }
     }
@@ -383,11 +383,11 @@ public sealed class FlowNodeSeamTests
         public int RunCount { get; private set; }
         public override object EditableParameters { get; } = new object();
         /// <summary>
-        /// 验证 Validate 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Validate；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override ValidationResult Validate() => new();
         /// <summary>
-        /// 验证 Run 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Run；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public override void Run()
@@ -395,7 +395,7 @@ public sealed class FlowNodeSeamTests
             RunCount++; Results.Add(new ToolResult()); ToolState = E_ToolState.RunCompleted; RunMessage = "done";
         }
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Reset；具体条件和先后次序见方法体。
         /// </summary>
         public override void Dispose() => Reset();
@@ -408,7 +408,7 @@ public sealed class FlowNodeSeamTests
     public sealed class RecordingVisionNode : VisionToolNodeBase<RecordingTool>
     {
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested、RunTool；具体条件和先后次序见方法体。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct) { ct.ThrowIfCancellationRequested(); RunTool(); return Task.CompletedTask; }
@@ -422,7 +422,7 @@ public sealed class FlowNodeSeamTests
     {
         public HalconToolSession? Tool { get; private set; }
         /// <summary>
-        /// 验证 Execute 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Execute；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public VisionNodeExecutionResult Execute(HalconToolSession tool, HObject? image)
         {

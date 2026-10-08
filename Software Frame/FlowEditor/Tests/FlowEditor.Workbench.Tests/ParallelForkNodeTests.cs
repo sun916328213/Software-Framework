@@ -34,7 +34,7 @@ public class ParallelForkNodeTests
             new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult、WaitAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -45,14 +45,14 @@ public class ParallelForkNodeTests
         }
 
         /// <summary>
-        /// 验证 Complete 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Complete；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult；具体条件和先后次序见方法体。
         /// </summary>
         public void Complete() => _release.TrySetResult();
     }
 
     /// <summary>
-    /// 验证 DefaultNode_HasTwoIndependentFlowOutputs 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DefaultNode_HasTwoIndependentFlowOutputs；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Select、All、Single；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -67,7 +67,7 @@ public class ParallelForkNodeTests
     }
 
     /// <summary>
-    /// 验证 ForkAndAndMerge_StartTogetherAndJoinAfterAllBranches 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ForkAndAndMerge_StartTogetherAndJoinAfterAllBranches；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、FromFork、ToMerge、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -112,7 +112,7 @@ public class ParallelForkNodeTests
     }
 
     /// <summary>
-    /// 验证 Validator_RejectsForkWithoutCommonAndMerge 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Validator_RejectsForkWithoutCommonAndMerge；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、FromFork、Analyze、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -136,7 +136,7 @@ public class ParallelForkNodeTests
     }
 
     /// <summary>
-    /// 验证 Toolbox_UsesForkAndKeepsOldContainerForFileCompatibilityOnly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Toolbox_UsesForkAndKeepsOldContainerForFileCompatibilityOnly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Single、GetCustomAttributes、Empty、IsType、CreateInstance；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -150,7 +150,7 @@ public class ParallelForkNodeTests
     }
 
     /// <summary>
-    /// 验证 FromFork 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FromFork；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 First；具体条件和先后次序见方法体。
     /// </summary>
     private static ConnectionModel FromFork(
@@ -163,7 +163,7 @@ public class ParallelForkNodeTests
     };
 
     /// <summary>
-    /// 验证 ToMerge 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ToMerge；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 First；具体条件和先后次序见方法体。
     /// </summary>
     private static ConnectionModel ToMerge(
@@ -176,7 +176,7 @@ public class ParallelForkNodeTests
     };
 
     /// <summary>
-    /// 验证 WaitUntilAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WaitUntilAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、condition、Delay；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

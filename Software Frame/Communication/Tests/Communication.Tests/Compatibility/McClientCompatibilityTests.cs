@@ -18,7 +18,7 @@ namespace Communication.Tests.Compatibility;
 public sealed class McClientCompatibilityTests
 {
     /// <summary>
-    /// 验证 Mc_communication_timeout_follows_the_common_timeout_when_not_overridden 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mc_communication_timeout_follows_the_common_timeout_when_not_overridden；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -30,7 +30,7 @@ public sealed class McClientCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Explicit_mc_communication_timeout_preserves_the_legacy_override 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Explicit_mc_communication_timeout_preserves_the_legacy_override；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -48,7 +48,7 @@ public sealed class McClientCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Mx_component_class_not_registered_error_explains_the_required_runtime 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mx_component_class_not_registered_error_explains_the_required_runtime；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -64,7 +64,7 @@ public sealed class McClientCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Mx_component_error_can_include_the_vendor_message 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mx_component_error_can_include_the_vendor_message；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -80,7 +80,7 @@ public sealed class McClientCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Mx_component_backend_can_be_created_in_direct_mode 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mx_component_backend_can_be_created_in_direct_mode；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -95,7 +95,7 @@ public sealed class McClientCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Mx_component_rejects_an_invalid_logical_station_before_connect 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mx_component_rejects_an_invalid_logical_station_before_connect；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Contains、nameof；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -114,7 +114,7 @@ public sealed class McClientCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Mx_backend_rejects_a_non_positive_communication_timeout 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mx_backend_rejects_a_non_positive_communication_timeout；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -131,7 +131,7 @@ public sealed class McClientCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Direct_mx_adapter_shares_concurrent_disposal_and_cannot_be_reused 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Direct_mx_adapter_shares_concurrent_disposal_and_cannot_be_reused；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 WhenAll、Select、Range、AsTask、DisposeAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -147,7 +147,7 @@ public sealed class McClientCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Mc_client_can_read_through_a_non_socket_adapter 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mc_client_can_read_through_a_non_socket_adapter；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 False、Equal、Parse、True、ConnectAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -175,7 +175,7 @@ public sealed class McClientCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Mx_component_connection_event_identifies_the_logical_station 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mx_component_connection_event_identifies_the_logical_station；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、ConnectAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -201,7 +201,7 @@ public sealed class McClientCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Mc_client_preserves_word_write_conversion_for_backend_adapters 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mc_client_preserves_word_write_conversion_for_backend_adapters；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ConnectAsync、True、WriteAsync、NotNull、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -226,7 +226,7 @@ public sealed class McClientCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Mc_client_rejects_an_oversized_write_before_executing_the_adapter 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mc_client_rejects_an_oversized_write_before_executing_the_adapter；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ThrowsAsync、WriteAsync、False；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -250,7 +250,7 @@ public sealed class McClientCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Mc_client_accepts_the_mc_maximum_write_quantity 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Mc_client_accepts_the_mc_maximum_write_quantity；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、WriteAsync、NotNull、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -275,7 +275,7 @@ public sealed class McClientCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Legacy_mc_read_uses_official_three_e_codec_and_connection_session 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Legacy_mc_read_uses_official_three_e_codec_and_connection_session；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 IsAssignableFrom、True、ConnectAsync、ReadAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -326,7 +326,7 @@ public sealed class McClientCompatibilityTests
         public bool IsOpen { get; private set; }
 
         /// <summary>
-        /// 验证 OpenAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 OpenAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask OpenAsync(CancellationToken cancellationToken = default)
@@ -337,7 +337,7 @@ public sealed class McClientCompatibilityTests
         }
 
         /// <summary>
-        /// 验证 CloseAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CloseAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested、CompleteAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -351,7 +351,7 @@ public sealed class McClientCompatibilityTests
         }
 
         /// <summary>
-        /// 验证 ReadRequestAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadRequestAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ReadAsync、ToArray、Slice、AdvanceTo、GetPosition；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -369,14 +369,14 @@ public sealed class McClientCompatibilityTests
         }
 
         /// <summary>
-        /// 验证 WriteResponseAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WriteResponseAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteAsync；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<FlushResult> WriteResponseAsync(ReadOnlyMemory<byte> response) =>
             _responses.Writer.WriteAsync(response);
 
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CloseAsync、CompleteAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -399,7 +399,7 @@ public sealed class McClientCompatibilityTests
         public ConnectionState State { get; private set; } = ConnectionState.Disconnected;
 
         /// <summary>
-        /// 验证 ConnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ConnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask ConnectAsync(CancellationToken cancellationToken = default)
@@ -410,7 +410,7 @@ public sealed class McClientCompatibilityTests
         }
 
         /// <summary>
-        /// 验证 DisconnectAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisconnectAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask DisconnectAsync(CancellationToken cancellationToken = default)
@@ -421,7 +421,7 @@ public sealed class McClientCompatibilityTests
         }
 
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested、verifyRequest、FromResult；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<McResponse> ExecuteAsync(
@@ -434,7 +434,7 @@ public sealed class McClientCompatibilityTests
         }
 
         /// <summary>
-        /// 验证 DisposeAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DisposeAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ValueTask DisposeAsync()
         {

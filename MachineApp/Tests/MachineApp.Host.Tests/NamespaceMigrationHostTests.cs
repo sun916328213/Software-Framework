@@ -29,7 +29,7 @@ namespace MachineApp.Host.Tests;
 public sealed class NamespaceMigrationHostTests(ProductionFixture fixture)
 {
     /// <summary>
-    /// 验证 AllDeclaredPublicApiNamesPreserveBaselineAndExplicitControlsAdditions 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AllDeclaredPublicApiNamesPreserveBaselineAndExplicitControlsAdditions；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Read、EnumerateObject、Select、EnumerateArray、GetString；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -65,7 +65,7 @@ public sealed class NamespaceMigrationHostTests(ProductionFixture fixture)
         }
 
     /// <summary>
-    /// 验证 ExactLegacyNamesResolveThroughEverySharedResolverIncludingEarlierAliases 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExactLegacyNamesResolveThroughEverySharedResolverIncludingEarlierAliases；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 EnumerateArray、GetProperty、Read、GetString、Load；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -112,7 +112,7 @@ public sealed class NamespaceMigrationHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 OriginalCatalogMetadataAndOldFlowDocumentsSurviveMigration 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OriginalCatalogMetadataAndOldFlowDocumentsSurviveMigration；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、ToArray、EnumerateArray、Read；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -171,7 +171,7 @@ public sealed class NamespaceMigrationHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 AllTenMigratedViewModelsNavigateAndRenderUnderOriginalPublicViewNames 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 AllTenMigratedViewModelsNavigateAndRenderUnderOriginalPublicViewNames；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、RegisterTypes、Resolve、Add、Where；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -203,7 +203,7 @@ public sealed class NamespaceMigrationHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 ExternalPluginCompilesAndExecutesAgainstTheNewUiLibraryNamespace 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ExternalPluginCompilesAndExecutesAgainstTheNewUiLibraryNamespace；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Select、Distinct、Concat、Split、GetData；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -237,7 +237,7 @@ public sealed class NamespaceMigrationHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 ProductionScriptRuntimeUsesTheExtractedCoreAssembly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ProductionScriptRuntimeUsesTheExtractedCoreAssembly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ExecuteAsync、True、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -262,7 +262,7 @@ public sealed class NamespaceMigrationHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 Root 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Root；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Exists、Combine；具体条件和先后次序见方法体。
     /// </summary>
     private static string Root()
@@ -273,7 +273,7 @@ public sealed class NamespaceMigrationHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 验证 Read 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Read；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Parse、ReadAllText、Combine、Root、Clone；具体条件和先后次序见方法体。
     /// </summary>
     private static JsonElement Read(string name)

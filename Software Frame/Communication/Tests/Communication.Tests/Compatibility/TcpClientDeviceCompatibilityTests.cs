@@ -20,7 +20,7 @@ namespace Communication.Tests.Compatibility;
 public sealed class TcpClientDeviceCompatibilityTests
 {
     /// <summary>
-    /// 验证 Legacy_tcp_client_uses_connection_seam_and_one_receive_owner 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Legacy_tcp_client_uses_connection_seam_and_one_receive_owner；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Start、ToString、TrySetResult、AcceptTcpClientAsync、IsAssignableFrom；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -78,7 +78,7 @@ public sealed class TcpClientDeviceCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Legacy_tcp_client_reconnects_with_a_new_transport_generation_after_remote_close 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Legacy_tcp_client_reconnects_with_a_new_transport_generation_after_remote_close；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 EnableMeasurementEvents、SetMeasurementEventCallback、Add、TrySetResult、Start；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -164,7 +164,7 @@ public sealed class TcpClientDeviceCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Slow_data_subscriber_does_not_block_request_response_completion 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Slow_data_subscriber_does_not_block_request_response_completion；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Start、ToString、TrySetResult、Wait、AcceptTcpClientAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -223,7 +223,7 @@ public sealed class TcpClientDeviceCompatibilityTests
     }
 
     /// <summary>
-    /// 验证 Full_data_event_queue_drops_oldest_notification_and_emits_metric 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Full_data_event_queue_drops_oldest_notification_and_emits_metric；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Start、EnableMeasurementEvents、SetMeasurementEventCallback、TrySetResult、ToString；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>

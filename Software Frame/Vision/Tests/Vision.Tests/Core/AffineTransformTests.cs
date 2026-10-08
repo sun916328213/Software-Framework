@@ -19,7 +19,7 @@ namespace Vision.Tests.Core;
 public sealed class AffineTransformTests
 {
     /// <summary>
-    /// 验证 Identity_TransformsToSelf_AndInverts 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Identity_TransformsToSelf_AndInverts；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Transform、TransformInverse、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -32,7 +32,7 @@ public sealed class AffineTransformTests
     }
 
     /// <summary>
-    /// 验证 ScaleTranslate_MapsAndInverts 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ScaleTranslate_MapsAndInverts；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal、Transform、TransformInverse、True、DistanceTo；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -45,7 +45,7 @@ public sealed class AffineTransformTests
     }
 
     /// <summary>
-    /// 验证 Singular_ThrowsOnInverse 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Singular_ThrowsOnInverse；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 False、Throws、Inverse、TransformInverse；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -58,7 +58,7 @@ public sealed class AffineTransformTests
     }
 
     /// <summary>
-    /// 验证 Compose_AppliesChildFirst 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Compose_AppliesChildFirst；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Compose、Equal、Transform；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -71,7 +71,7 @@ public sealed class AffineTransformTests
     }
 
     /// <summary>
-    /// 验证 FromPose_RoundTrips_WithTryToPose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FromPose_RoundTrips_WithTryToPose；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromPose、True、TryToPose、Equal、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -89,7 +89,7 @@ public sealed class AffineTransformTests
     }
 
     /// <summary>
-    /// 验证 FromPointPairs_RecoversKnownAffine 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FromPointPairs_RecoversKnownAffine；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Cos、Sin、Add、Transform、FromPointPairs；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -113,7 +113,7 @@ public sealed class AffineTransformTests
     }
 
     /// <summary>
-    /// 验证 FromPointPairs_RejectsBadInput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FromPointPairs_RejectsBadInput；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、FromPointPairs、ToList、Take；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -128,7 +128,7 @@ public sealed class AffineTransformTests
     }
 
     /// <summary>
-    /// 验证 HalconMatrixString_RoundTrips 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 HalconMatrixString_RoundTrips；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromHalconMatrixString、Equal、ToMatrixString、Throws；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -148,7 +148,7 @@ public sealed class AffineTransformTests
     }
 
     /// <summary>
-    /// 验证 MapBox_ScalesSizeByColumnNorms 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MapBox_ScalesSizeByColumnNorms；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 MapBox、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -160,7 +160,7 @@ public sealed class AffineTransformTests
     }
 
     /// <summary>
-    /// 验证 Json_RoundTrips 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Json_RoundTrips；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Deserialize、Serialize、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

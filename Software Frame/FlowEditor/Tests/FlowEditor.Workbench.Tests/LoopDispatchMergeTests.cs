@@ -20,7 +20,7 @@ namespace FlowEditor.Workbench.Tests;
 public class LoopDispatchMergeTests
 {
     /// <summary>
-    /// 验证 Loop_WithDispatchAndOrMerge_RunsExactIterationsThenCompletes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Loop_WithDispatchAndOrMerge_RunsExactIterationsThenCompletes；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、FromPort、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -69,7 +69,7 @@ public class LoopDispatchMergeTests
     }
 
     /// <summary>
-    /// 验证 LoopIndex_DrivesDispatch_EachIterationExecutesExactlyOneBranch 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopIndex_DrivesDispatch_EachIterationExecutesExactlyOneBranch；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、FromPort、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -110,7 +110,7 @@ public class LoopDispatchMergeTests
     }
 
     /// <summary>
-    /// 验证 LoopDispatch_UnmatchedLaterIteration_ReportsErrorAndNeverCompletesLoop 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 LoopDispatch_UnmatchedLaterIteration_ReportsErrorAndNeverCompletesLoop；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、FromPort、ThrowsAsync、ExecuteAsync、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -150,7 +150,7 @@ public class LoopDispatchMergeTests
     }
 
     /// <summary>
-    /// 验证 FromPort 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FromPort；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 First；具体条件和先后次序见方法体。
     /// </summary>
     private static ConnectionModel FromPort(

@@ -20,7 +20,7 @@ namespace DataManager.Workbench.Tests;
 public sealed class ProviderFactoryCompositionTests
 {
     /// <summary>
-    /// 验证 HostProviderFactoriesReachDefaultManagersAfterRepeatedRegistration 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 HostProviderFactoriesReachDefaultManagersAfterRepeatedRegistration；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterInstance、RegisterTypes、Resolve、Same、Throws；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -52,7 +52,7 @@ public sealed class ProviderFactoryCompositionTests
     }
 
     /// <summary>
-    /// 验证 DefaultProviderFactoriesBelongToTheirContainers 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DefaultProviderFactoriesBelongToTheirContainers；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterTypes、NotSame、Resolve；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -84,7 +84,7 @@ public sealed class ProviderFactoryCompositionTests
     {
         public int Calls { get; private set; }
         /// <summary>
-        /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ISQL<T> Create<T>(SQLParam parameter) where T : class, new()
         { Calls++; throw new FactoryProbeException(); }
@@ -97,7 +97,7 @@ public sealed class ProviderFactoryCompositionTests
     {
         public int Calls { get; private set; }
         /// <summary>
-        /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public ILog Create(LogParam parameter) { Calls++; throw new FactoryProbeException(); }
     }
@@ -109,7 +109,7 @@ public sealed class ProviderFactoryCompositionTests
     {
         public int Calls { get; private set; }
         /// <summary>
-        /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public IExcel Create(ExcelParam parameter) { Calls++; throw new FactoryProbeException(); }
     }

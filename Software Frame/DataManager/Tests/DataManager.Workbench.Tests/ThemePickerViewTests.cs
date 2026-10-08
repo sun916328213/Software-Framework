@@ -40,7 +40,7 @@ namespace DataManager.Workbench.Tests
         private readonly WorkbenchAppFixture _host = host;
 
         /// <summary>
-        /// 验证 NoThemeInjected_FallsBackToSelfOwnedService 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 NoThemeInjected_FallsBackToSelfOwnedService；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、NotNull、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -57,7 +57,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 InjectedTheme_IsTheSharedSourceOfTruth 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 InjectedTheme_IsTheSharedSourceOfTruth；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、Resolve、Same、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -77,7 +77,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 SegmentButtons_SetExplicitState 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SegmentButtons_SetExplicitState；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、Resolve、RedirectThemeConfig、ShowInWindow、SetTheme；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -112,7 +112,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 SegmentButtons_AreNotToggles 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SegmentButtons_AreNotToggles；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、Resolve、RedirectThemeConfig、ShowInWindow、Execute；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -145,7 +145,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 SegmentButtons_EachBoundToItsOwnCommand 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SegmentButtons_EachBoundToItsOwnCommand；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、ShowInWindow、Same、FindLightButton、FindDarkButton；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -168,7 +168,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 ExternalThemeChange_PullsSelectionIntoControl 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExternalThemeChange_PullsSelectionIntoControl；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、Resolve、RedirectThemeConfig、ShowInWindow、SetTheme；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -201,7 +201,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 SegmentHighlight_FollowsThemeState 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SegmentHighlight_FollowsThemeState；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、Resolve、RedirectThemeConfig、ShowInWindow、SetTheme；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -239,7 +239,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 SegmentChrome_FollowsThemeAndStaysDistinctFromItsContainer 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SegmentChrome_FollowsThemeAndStaysDistinctFromItsContainer；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、Resolve、RedirectThemeConfig、ShowInWindow、SetTheme；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -957,7 +957,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 RelativeLuminance 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 RelativeLuminance；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Pow、Channel；具体条件和先后次序见方法体。
         /// </summary>
         private static double RelativeLuminance(Color c)
@@ -984,7 +984,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 ShowColorPickersFalse_HidesPickersButKeepsSegmentButtons 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ShowColorPickersFalse_HidesPickersButKeepsSegmentButtons；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、ShowInWindow、Equal、FindColorPickerPanel、FindLightButton；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -1016,7 +1016,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Pickers_OnlyOfferColorsThatCanBePreviewed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Pickers_OnlyOfferColorsThatCanBePreviewed；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、NotEmpty、All、NotNull、Resolve；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -1037,7 +1037,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 SwatchColor_MatchesTheAppliedThemeBrush 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SwatchColor_MatchesTheAppliedThemeBrush；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、Resolve、RedirectThemeConfig、SetTheme、FindResource；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -1065,14 +1065,14 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 FindLightButton 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FindLightButton；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FindName；具体条件和先后次序见方法体。
         /// </summary>
         private static Button FindLightButton(ThemePickerView view) =>
             (Button)view.FindName("LightThemeButton")!;
 
         /// <summary>
-        /// 验证 FindDarkButton 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 FindDarkButton；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 FindName；具体条件和先后次序见方法体。
         /// </summary>
         private static Button FindDarkButton(ThemePickerView view) =>
@@ -1133,7 +1133,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Pump 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Pump；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 UpdateLayout、Invoke；具体条件和先后次序见方法体。
         /// </summary>
         private static void Pump(Window window)

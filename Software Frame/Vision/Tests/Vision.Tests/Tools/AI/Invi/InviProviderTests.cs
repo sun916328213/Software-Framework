@@ -26,7 +26,7 @@ public sealed class InviProviderTests : IDisposable
     private readonly List<FakeInviNativeApi> _fakes = [];
 
     /// <summary>
-    /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FreeJson；具体条件和先后次序见方法体。
     /// </summary>
     public void Dispose()
@@ -36,7 +36,7 @@ public sealed class InviProviderTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 NewFake 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NewFake；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
     /// </summary>
     private FakeInviNativeApi NewFake()
@@ -47,14 +47,14 @@ public sealed class InviProviderTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 TestImage 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TestImage；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 WhiteRectangle；具体条件和先后次序见方法体。
     /// </summary>
     private static Vision.Core.Imaging.VisionImage TestImage() =>
         SyntheticImages.WhiteRectangle(64, 64, 10, 10, 30, 30);
 
     /// <summary>
-    /// 验证 DetectionJson 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DetectionJson；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Serialize；具体条件和先后次序见方法体。
     /// </summary>
     private static string DetectionJson() => JsonSerializer.Serialize(new[]
@@ -93,7 +93,7 @@ public sealed class InviProviderTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 OpenSession_AnomalyType_ThrowsNotSupported 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OpenSession_AnomalyType_ThrowsNotSupported；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewFake、Throws、OpenSession；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -117,7 +117,7 @@ public sealed class InviProviderTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 Helper_ZeroManagerHandle_ThrowsAndDisposesNative 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Helper_ZeroManagerHandle_ThrowsAndDisposesNative；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewFake、Throws、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -130,7 +130,7 @@ public sealed class InviProviderTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 Helper_ModelLoadFailure_LeavesNoState_AndRetryWorks 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Helper_ModelLoadFailure_LeavesNoState_AndRetryWorks；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewFake、Add、Throws、InitModel、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -150,7 +150,7 @@ public sealed class InviProviderTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 Helper_ReleaseFailure_KeepsState 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Helper_ReleaseFailure_KeepsState；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewFake、Add、InitModel、Throws、ReleaseModel；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -167,7 +167,7 @@ public sealed class InviProviderTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 Helper_Dispose_IsIdempotent 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Helper_Dispose_IsIdempotent；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewFake、InitModel、Dispose、Equal、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -208,7 +208,7 @@ public sealed class InviProviderTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 OpenSession_ManagerFailure_Throws_AndLeavesNoSession 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 OpenSession_ManagerFailure_Throws_AndLeavesNoSession；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewFake、Throws、OpenSession；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -222,7 +222,7 @@ public sealed class InviProviderTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 CloseSession_Failure_Throws_AndKeepsLoadedState 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CloseSession_Failure_Throws_AndKeepsLoadedState；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewFake、OpenSession、Add、Throws、CloseSession；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -242,7 +242,7 @@ public sealed class InviProviderTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 Session_RunAfterDispose_Throws 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Session_RunAfterDispose_Throws；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewFake、OpenSession、Dispose、Throws、Run；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -257,7 +257,7 @@ public sealed class InviProviderTests : IDisposable
     }
 
     /// <summary>
-    /// 验证 Session_RunEmptyImage_ReturnsFailedResult 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Session_RunEmptyImage_ReturnsFailedResult；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 NewFake、OpenSession、Run、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

@@ -14,7 +14,7 @@ namespace SecsGem.Tests.Core;
 public sealed class SecsGemOptionsTests
 {
     /// <summary>
-    /// 验证 Default_Hsms_Options_Are_Valid 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Default_Hsms_Options_Are_Valid；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Validate；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -24,7 +24,7 @@ public sealed class SecsGemOptionsTests
     }
 
     /// <summary>
-    /// 验证 Port_Outside_Tcp_Range_Is_Rejected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Port_Outside_Tcp_Range_Is_Rejected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Validate；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -38,7 +38,7 @@ public sealed class SecsGemOptionsTests
     }
 
     /// <summary>
-    /// 验证 Device_Id_Outside_Hsms_Range_Is_Rejected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Device_Id_Outside_Hsms_Range_Is_Rejected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Validate；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -52,7 +52,7 @@ public sealed class SecsGemOptionsTests
     }
 
     /// <summary>
-    /// 验证 Empty_Address_Is_Rejected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Empty_Address_Is_Rejected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Validate；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -64,7 +64,7 @@ public sealed class SecsGemOptionsTests
     }
 
     /// <summary>
-    /// 验证 Nonpositive_Buffer_Size_Is_Rejected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Nonpositive_Buffer_Size_Is_Rejected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Throws、Validate；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
