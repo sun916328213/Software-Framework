@@ -68,7 +68,7 @@ namespace DataManager.Workbench
             () => { (MainWindow.DataContext as IDisposable)?.Dispose(); return ValueTask.CompletedTask; },
             () => { Container.Resolve<SqlWorkspace<TestEntity>>().CancelInFlight(); return ValueTask.CompletedTask; },
             () => WorkbenchLifetime.CloseRegionAsync(Container.Resolve<IRegionManager>(), RegionNames.MainRegion),
-            () => { Container.Resolve<SqlWorkspace<TestEntity>>().Dispose(); return ValueTask.CompletedTask; },
+            () => Container.Resolve<SqlWorkspace<TestEntity>>().DisposeAsync(),
             () => { Container.Resolve<LogWorkspace>().Dispose(); return ValueTask.CompletedTask; });
             (MainWindow?.DataContext as DataManager.Workbench.ViewModels.MainWindowViewModel)?.SelectFirst();
         }

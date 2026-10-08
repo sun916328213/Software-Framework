@@ -26,7 +26,7 @@ namespace DataManager.Workbench.Tests
         private readonly WorkbenchAppFixture _host = host;
 
         /// <summary>
-        /// 验证 AppBoot_NavigateAllViews_NoErrors 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AppBoot_NavigateAllViews_NoErrors；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Invoke、Resolve、RequestNavigate、nameof；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -40,10 +40,19 @@ namespace DataManager.Workbench.Tests
                 regionManager.RequestNavigate(RegionNames.MainRegion, nameof(ExcelView));
 
                 // 直接构造再验一遍解析（含需区域管理器的 MainWindow）
-                _ = new MainWindow();
-                _ = new SqlView();
-                _ = new LogView();
-                _ = new ExcelView();
+                var probeWindow = new MainWindow();
+                try
+                {
+                    _ = new SqlView();
+                    _ = new LogView();
+                    _ = new ExcelView();
+                }
+                finally
+                {
+                    try { (probeWindow.DataContext as IDisposable)?.Dispose(); }
+                    finally { probeWindow.Close(); }
+                }
+                Assert.DoesNotContain(probeWindow, Application.Current.Windows.Cast<Window>());
             });
         }
 

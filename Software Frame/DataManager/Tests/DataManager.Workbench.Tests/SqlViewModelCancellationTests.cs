@@ -30,7 +30,7 @@ namespace DataManager.Workbench.Tests
             Path.GetTempPath(), $"dm_wb_cancel_b_{Guid.NewGuid():N}.db");
 
         /// <summary>
-        /// 验证 Profile 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Profile；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private static SQLParam Profile(string name, string file) => new()
         {
@@ -41,7 +41,7 @@ namespace DataManager.Workbench.Tests
         };
 
         /// <summary>
-        /// 验证 Create 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Clear、Profile、Add；具体条件和先后次序见方法体。
         /// </summary>
         private (SqlWorkspace<TestEntity> Workspace, SqlViewModel<TestEntity> Vm) Create()
@@ -56,7 +56,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 WaitUntil 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitUntil；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 StartNew、cond、Sleep；具体条件和先后次序见方法体。
         /// </summary>
         private static void WaitUntil(Func<bool> cond, SqlViewModel<TestEntity> vm, string what, int timeoutMs = 30000)
@@ -213,10 +213,9 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// P9-3 边界记录：EF Core + SQLite 在「库级锁等待」中抛出的是 provider 的
-        /// <see cref="SqliteException"/>（SQLITE_BUSY），而不是 <see cref="OperationCanceledException"/>。
-        /// 即 Token 已交给 EF 原生异步 API，但「运行中被阻塞的语句能否中断」由 ADO.NET provider 决定，
-        /// 不是本库能保证的取消语义——把该边界显式锁住，避免被误当成已实现的取消。
+        /// EF Core + SQLite 的库级锁等待应上报 provider 的 SQLITE_BUSY 错误。
+        /// 先等待查询命令完成，再取消；立即取消可能在后台操作入场前生效，不能用于断言锁等待结果。
+        /// 此用例不证明运行中的 SQLite 语句可被取消，具体中断能力仍由 provider 决定。
         ///
         /// 三个环境细节（都必要，否则锁拿不到或读不被阻塞）：
         /// ① <c>Pooling=False</c>：Microsoft.Data.Sqlite 默认连接池会把物理连接（及其文件句柄）
@@ -225,7 +224,7 @@ namespace DataManager.Workbench.Tests
         /// ③ <c>PRAGMA journal_mode=DELETE</c>：WAL 模式下读不被写阻塞，必须归位到回滚日志模式。
         /// </summary>
         [Fact]
-        public void EFCore_Sqlite_LockWait_SurfacesProviderError_NotCancellation()
+        public async Task EFCore_Sqlite_LockWait_SurfacesProviderErrorAsync()
         {
             var workspace = new SqlWorkspace<TestEntity>(new SQLManager());
             var vm = new SqlViewModel<TestEntity>(workspace);
@@ -255,10 +254,9 @@ namespace DataManager.Workbench.Tests
                     lockCmd.ExecuteNonQuery();
                 }
 
-                // 查询会在 provider 层撞上独占锁：Token 已交出去，但 Microsoft.Data.Sqlite
-                // 不响应取消，只按 Default Timeout 超时后抛 SQLITE_BUSY。
-                vm.QueryAllCommand.Execute(null);
-                vm.CancelInFlight();   // 取消在途操作
+                // Execute 不保证后台查询已入场。等待完整命令，验证真正进入 provider 的锁等待错误。
+                await vm.QueryAllCommand.ExecuteAsync(null);
+                vm.CancelInFlight();
 
                 WaitUntil(() => vm.OutputText.Contains("✗ 查询全部"), vm, "锁等待按 provider 错误收场", 30000);
                 Assert.Contains("database is locked", vm.OutputText);
@@ -267,7 +265,7 @@ namespace DataManager.Workbench.Tests
         }
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Exists、Delete、SuppressFinalize；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>

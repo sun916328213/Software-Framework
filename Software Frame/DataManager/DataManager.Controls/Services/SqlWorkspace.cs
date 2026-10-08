@@ -24,7 +24,7 @@ namespace DataManager.Controls.Services
     /// P9-5：长操作（连接/查询/清表）走可取消 Token；重连、切换档案与释放时先取消在途操作，
     /// 已释放或已取消的操作不再回写界面。
     /// </summary>
-    public sealed class SqlWorkspace<T> : IDisposable
+    public sealed class SqlWorkspace<T> : IDisposable, IAsyncDisposable
         where T : class, Models.ISqlEntity, new()
     {
         private readonly ISQLManager _sqlManager;
@@ -38,7 +38,8 @@ namespace DataManager.Controls.Services
         /// 提前 Dispose 会让注册抛 ObjectDisposedException；无定时器的 CTS 无托管外资源，交给 GC 即可。
         /// </summary>
         private CancellationTokenSource? _operationCts;
-        private bool _disposed;
+        private volatile bool _disposed;
+        private readonly SemaphoreSlim _operationGate = new(1, 1);
 
         /// <summary>页状态（单例 Workspace 持有，VM 直接暴露）。</summary>
         public Models.SqlPageModel<T> Model { get; } = new();
@@ -75,23 +76,30 @@ namespace DataManager.Controls.Services
         /// <summary>
         /// P9-5：释放——先取消在途操作，再断开并释放 SQL 实例；此后一切界面回写都被丢弃。
         /// </summary>
-        public void Dispose()
+        public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();
+
+        /// <summary>Cancel pending work, drain entered provider operations, then release the database.</summary>
+        public async ValueTask DisposeAsync()
         {
-            if (_disposed)
-                return;
             _disposed = true;
             CancelInFlight();
-            _operationCts = null;
-
-            var db = _db;
-            _db = null;
-            _currentKey = null;
-            _currentParam = null;
-            if (db is null)
-                return;
-            try { db.DisConnect(); } catch { }
-            try { _sqlManager.Remove(db); } catch { }
-            try { db.Dispose(); } catch { }
+            await _operationGate.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                _operationCts = null;
+                var db = _db;
+                _db = null;
+                _currentKey = null;
+                _currentParam = null;
+                if (db is null) return;
+                await Task.Run(() =>
+                {
+                    try { db.DisConnect(); } catch { }
+                    try { _sqlManager.Remove(db); } catch { }
+                    try { db.Dispose(); } catch { }
+                }).ConfigureAwait(false);
+            }
+            finally { _operationGate.Release(); }
         }
 
         /// <summary>
@@ -135,17 +143,22 @@ namespace DataManager.Controls.Services
                 return _db;
 
             CancelInFlight();
-
-            if (_db != null)
+            _operationGate.Wait();
+            try
             {
-                try { _db.DisConnect(); } catch { }
-                _sqlManager.Remove(_db);
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                if (_db != null && _currentKey == key) return _db;
+                if (_db != null)
+                {
+                    try { _db.DisConnect(); } catch { }
+                    _sqlManager.Remove(_db);
+                }
+                _db = _sqlManager.Create<T>(param);
+                _currentKey = key;
+                _currentParam = param;
+                return _db;
             }
-
-            _db = _sqlManager.Create<T>(param);
-            _currentKey = key;
-            _currentParam = param;
-            return _db;
+            finally { _operationGate.Release(); }
         }
 
         /// <summary>
@@ -157,7 +170,11 @@ namespace DataManager.Controls.Services
         {
             var db = EnsureDb(Model.SelectedProfile());
             var token = BeginOperation();
-            await Task.Run(() => db.Connect(), token);
+            await WithDbAsync(db, token, () =>
+            {
+                db.Connect();
+                return Task.FromResult(true);
+            }).ConfigureAwait(false);
             PostToModel(token, () =>
             {
                 Model.IsConnected = true;
@@ -173,7 +190,9 @@ namespace DataManager.Controls.Services
         {
             // P9-5：先取消在途操作再断开，避免断开后仍有任务回写“已连接”。
             CancelInFlight();
-            _db?.DisConnect();
+            _operationGate.Wait();
+            try { _db?.DisConnect(); }
+            finally { _operationGate.Release(); }
             Model.IsConnected = false;
             Model.StatusText = "未连接";
         }
@@ -187,8 +206,13 @@ namespace DataManager.Controls.Services
         {
             var db = EnsureDb(Model.SelectedProfile());
             var token = BeginOperation();
-            await Task.Run(() => db.Connect(), token);
-            await Task.Run(() => db.DisConnect(), token);
+            await WithDbAsync(db, token, () =>
+            {
+                db.Connect();
+                try { token.ThrowIfCancellationRequested(); }
+                finally { db.DisConnect(); }
+                return Task.FromResult(true);
+            }).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -204,21 +228,22 @@ namespace DataManager.Controls.Services
         /// 执行添加操作；对应入口为 AddNew。
         /// 正文中的关键协作调用包括 Add、EnsureCurrent、NewEntity；具体条件和先后次序见方法体。
         /// </summary>
-        public void AddNew() => EnsureCurrent().Add(NewEntity());
+        public void AddNew() => WithDb(db => db.Add(NewEntity()));
 
         /// <summary>
         /// 执行添加操作；对应入口为 AddNewBatch。
         /// 正文中的关键协作调用包括 AddRange、EnsureCurrent、Select、Range、NewEntity；具体条件和先后次序见方法体。
         /// </summary>
         public void AddNewBatch(int count) =>
-            EnsureCurrent().AddRange(Enumerable.Range(1, count).Select(_ => NewEntity()));
+            WithDb(db => db.AddRange(Enumerable.Range(1, count).Select(_ => NewEntity())));
 
         /// <summary>查询全部（可取消；取消/释放后不回写结果集）。</summary>
         public async Task QueryAllAsync()
         {
             var db = EnsureCurrent();
             var token = BeginOperation();
-            var data = (await db.QueryAsync(token)).ToList();
+            var data = await WithDbAsync(db, token, async () =>
+                (await db.QueryAsync(token).ConfigureAwait(false)).ToList()).ConfigureAwait(false);
             PostToModel(token, () => Model.Results = new ObservableCollection<T>(data));
         }
 
@@ -229,11 +254,11 @@ namespace DataManager.Controls.Services
         public void UpdateSelected(T selected)
         {
             ArgumentNullException.ThrowIfNull(selected);
-            EnsureCurrent().Update(x => x.Id == selected.Id, new T
+            WithDb(db => db.Update(x => x.Id == selected.Id, new T
             {
                 Name = selected.Name + "_改",
                 CreateTime = DateTime.Now,
-            });
+            }));
         }
 
         /// <summary>
@@ -243,7 +268,7 @@ namespace DataManager.Controls.Services
         public void DeleteSelected(T selected)
         {
             ArgumentNullException.ThrowIfNull(selected);
-            EnsureCurrent().Delete(x => x.Id == selected.Id);
+            WithDb(db => db.Delete(x => x.Id == selected.Id));
         }
 
         /// <summary>
@@ -252,7 +277,7 @@ namespace DataManager.Controls.Services
         /// </summary>
         public void DeleteAll()
         {
-            EnsureCurrent().DeleteAll();
+            WithDb(db => db.DeleteAll());
             DispatcherEx.UIInvokeSafe(() => Model.Results.Clear());
         }
 
@@ -261,7 +286,11 @@ namespace DataManager.Controls.Services
         {
             var db = EnsureCurrent();
             var token = BeginOperation();
-            await db.DeleteAllAsync(token);
+            await WithDbAsync(db, token, async () =>
+            {
+                await db.DeleteAllAsync(token).ConfigureAwait(false);
+                return true;
+            }).ConfigureAwait(false);
             PostToModel(token, () => Model.Results.Clear());
         }
 
@@ -269,9 +298,41 @@ namespace DataManager.Controls.Services
         public IReadOnlyList<string> GetSplitTableNames()
         {
             var db = EnsureDb(Model.SelectedProfile());
-            if (db is ISplitTableNameProvider split)
-                return split.GetSplitTables().ToList();
-            throw new NotSupportedException("当前实例不支持分表名查询");
+            _operationGate.Wait();
+            try
+            {
+                CheckCurrent(db);
+                if (db is ISplitTableNameProvider split) return split.GetSplitTables().ToList();
+                throw new NotSupportedException("当前实例不支持分表名查询");
+            }
+            finally { _operationGate.Release(); }
+        }
+
+        private void CheckCurrent(ISQL<T> db)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            if (!ReferenceEquals(db, _db)) throw new OperationCanceledException("Database profile changed.");
+        }
+
+        private void WithDb(Action<ISQL<T>> operation)
+        {
+            var db = EnsureCurrent();
+            _operationGate.Wait();
+            try { CheckCurrent(db); operation(db); }
+            finally { _operationGate.Release(); }
+        }
+
+        private async Task<TResult> WithDbAsync<TResult>(ISQL<T> db, CancellationToken token, Func<Task<TResult>> operation)
+        {
+            await _operationGate.WaitAsync(token).ConfigureAwait(false);
+            try
+            {
+                token.ThrowIfCancellationRequested();
+                CheckCurrent(db);
+                // Providers may capture their entry context; synchronous drain must not wait on the UI.
+                return await Task.Run(operation, token).ConfigureAwait(false);
+            }
+            finally { _operationGate.Release(); }
         }
 
         /// <summary>
