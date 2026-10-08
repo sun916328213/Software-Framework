@@ -1,4 +1,4 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
 // 本文件定义：ResourceMonitorService。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：WPFControls、Extension.UI.Controls、Extension.Platform.Diagnostics、Extension.Platform.Native、Extension.Platform.Memory、Extension.Platform.Processes。导入不代表所有类型都会在运行时加载。
@@ -29,10 +29,10 @@ namespace WPFControls.ProgramControl.Services
         public ResourceMonitorModel Model { get; private set; }
 
         // CPU性能计数器
-        private CpuMonitorEx cpuMonitor;
+        private CpuMonitorEx? cpuMonitor;
        
         // 内存性能计数器
-        private PerformanceCounter ramCounter;
+        private PerformanceCounter? ramCounter;
      
         private readonly object lockObject = new object();
         
@@ -41,6 +41,7 @@ namespace WPFControls.ProgramControl.Services
         
          //刷新任务
         Timer? refreshTimer;
+        private bool _disposed;
 
 
         /// <summary>
@@ -89,30 +90,36 @@ namespace WPFControls.ProgramControl.Services
         /// </summary>
         private void InitializePerformanceCounters()
         {
-            try
+            lock (lockObject)
             {
-                // 使用改进的CpuMonitor类来获取CPU使用率
-                // 这个类直接使用与任务管理器相同的性能计数器，结果更准确
-                cpuMonitor = new  CpuMonitorEx();
-                
-                // 内存使用率计数器
+                if (_disposed) return;
+
                 try
                 {
-                    ramCounter = new PerformanceCounter("Memory", "Available MBytes");
-                    // 预先调用一次以初始化计数器
-                    ramCounter.NextValue();
+                    // 使用改进的CpuMonitor类来获取CPU使用率
+                    // 这个类直接使用与任务管理器相同的性能计数器，结果更准确
+                    cpuMonitor = new  CpuMonitorEx();
+                    
+                    // 内存使用率计数器
+                    try
+                    {
+                        ramCounter = new PerformanceCounter("Memory", "Available MBytes");
+                        // 预先调用一次以初始化计数器
+                        ramCounter.NextValue();
+                    }
+                    catch
+                    {
+                        // 如果无法创建内存计数器，将ramCounter设置为null
+                        ramCounter = null;
+                    }
                 }
                 catch
                 {
-                    // 如果无法创建内存计数器，将ramCounter设置为null
+                    // 如果无法初始化性能计数器，将所有计数器设置为null
+                    cpuMonitor = null;
                     ramCounter = null;
                 }
-            }
-            catch
-            {
-                // 如果无法初始化性能计数器，将所有计数器设置为null
-                cpuMonitor = null;
-                ramCounter = null;
+            
             }
         }
         
@@ -124,6 +131,7 @@ namespace WPFControls.ProgramControl.Services
         {
             lock (lockObject)
             {
+                ObjectDisposedException.ThrowIf(_disposed, this);
                 if (refreshTimer != null) return;
 
                 refreshTimer = new Timer(interval);
@@ -157,28 +165,40 @@ namespace WPFControls.ProgramControl.Services
         {
             try
             {
-                // 在线程池线程上采集数据（PerformanceCounter、WMI 等是阻塞 IO）
-                var cpuUsage = ReadSystemCpu();
-                var (memUsage, memRate) = ReadSystemMemory();
-                var (diskUsage, diskRate) = ReadDisk("D");
-
-                // 将 UI 更新调度到 UI 线程
-                var dispatcher = System.Windows.Application.Current?.Dispatcher;
-                if (dispatcher == null) return;
-                dispatcher.Invoke(() =>
+                float cpu;
+                (float Usage, string Rate) memory;
+                (double Usage, string Rate) disk;
+                lock (lockObject)
                 {
-                    Model.SystemCPU = cpuUsage;
-                    Model.SystemCPURate = $"{cpuUsage:F1}%";
-                    Model.SystemMemory = memUsage;
-                    Model.SystemMemoryRate = memRate;
-                    Model.Disk = diskUsage;
-                    Model.DiskRate = diskRate;
-                });
+                    if (_disposed || refreshTimer == null || !ReferenceEquals(sender, refreshTimer)) return;
+                    cpu = ReadSystemCpu();
+                    memory = ReadSystemMemory();
+                    disk = ReadDisk("D");
+                }
+                // Do not wait for the UI while shutdown may be running there.
+                _ = System.Windows.Application.Current?.Dispatcher.BeginInvoke(
+                    new Action(() => PublishSample(sender, cpu, memory, disk)));
             }
-            catch
+            catch { }
+        }
+
+        private void PublishSample(object? timer, float cpu, (float Usage, string Rate) memory, (double Usage, string Rate) disk)
+        {
+            try
             {
-                // 忽略刷新资源信息时的异常
+                lock (lockObject)
+                {
+                    // A stopped timer's queued sample cannot enter a restarted generation.
+                    if (_disposed || refreshTimer == null || !ReferenceEquals(timer, refreshTimer)) return;
+                    Model.SystemCPU = cpu;
+                    Model.SystemCPURate = $"{cpu:F1}%";
+                    Model.SystemMemory = memory.Usage;
+                    Model.SystemMemoryRate = memory.Rate;
+                    Model.Disk = disk.Usage;
+                    Model.DiskRate = disk.Rate;
+                }
             }
+            catch { } // Preserve the previous callback's subscriber-failure boundary.
         }
 
         /// <summary>
@@ -248,28 +268,34 @@ namespace WPFControls.ProgramControl.Services
         /// </summary>
         public void CalCPUSystem()
         {
-            try
+            lock (lockObject)
             {
-                if (cpuMonitor != null)
+                if (_disposed) return;
+
+                try
                 {
-                    // 直接从Windows系统性能计数器读取系统CPU使用率
-                    // 这种方法与任务管理器使用相同的数据源，结果更准确
-                    float cpuUsage = cpuMonitor.GetSystemCpuUsage();
-                    
-                    // 系统CPU使用率显示（百分比）- 与任务管理器保持一致
-                    Model.SystemCPU = cpuUsage;
-                    Model.SystemCPURate = $"{cpuUsage:F1}%"; // 在数值基础上添加百分号
+                    if (cpuMonitor != null)
+                    {
+                        // 直接从Windows系统性能计数器读取系统CPU使用率
+                        // 这种方法与任务管理器使用相同的数据源，结果更准确
+                        float cpuUsage = cpuMonitor.GetSystemCpuUsage();
+                        
+                        // 系统CPU使用率显示（百分比）- 与任务管理器保持一致
+                        Model.SystemCPU = cpuUsage;
+                        Model.SystemCPURate = $"{cpuUsage:F1}%"; // 在数值基础上添加百分号
+                    }
+                    else
+                    {
+                        Model.SystemCPU = 0;
+                        Model.SystemCPURate = "0.0%";
+                    }
                 }
-                else
+                catch
                 {
                     Model.SystemCPU = 0;
                     Model.SystemCPURate = "0.0%";
                 }
-            }
-            catch
-            {
-                Model.SystemCPU = 0;
-                Model.SystemCPURate = "0.0%";
+            
             }
         }
         
@@ -278,28 +304,34 @@ namespace WPFControls.ProgramControl.Services
         /// </summary>
         public void CalCPU()
         {
-            try
+            lock (lockObject)
             {
-                if (cpuMonitor != null)
+                if (_disposed) return;
+
+                try
                 {
-                    // 直接从Windows系统性能计数器读取进程CPU使用率
-                    // 这种方法与任务管理器使用相同的数据源，结果更准确
-                    float processCpuUsage = cpuMonitor.GetProcessCpuUsage();
-                    
-                    // CPU使用率显示（百分比）- 当前程序的CPU使用量，与任务管理器保持一致
-                    Model.CPU = processCpuUsage;
-                    Model.CPURate = $"{processCpuUsage:F1}%"; // 在数值基础上添加百分号
+                    if (cpuMonitor != null)
+                    {
+                        // 直接从Windows系统性能计数器读取进程CPU使用率
+                        // 这种方法与任务管理器使用相同的数据源，结果更准确
+                        float processCpuUsage = cpuMonitor.GetProcessCpuUsage();
+                        
+                        // CPU使用率显示（百分比）- 当前程序的CPU使用量，与任务管理器保持一致
+                        Model.CPU = processCpuUsage;
+                        Model.CPURate = $"{processCpuUsage:F1}%"; // 在数值基础上添加百分号
+                    }
+                    else
+                    {
+                        Model.CPU = 0;
+                        Model.CPURate = "0.0%";
+                    }
                 }
-                else
+                catch
                 {
                     Model.CPU = 0;
                     Model.CPURate = "0.0%";
                 }
-            }
-            catch
-            {
-                Model.CPU = 0;
-                Model.CPURate = "0.0%";
+            
             }
         }
         
@@ -308,36 +340,42 @@ namespace WPFControls.ProgramControl.Services
         /// </summary>
         public void CalMemory()
         {
-            try
+            lock (lockObject)
             {
-                // 获取当前进程的内存使用情况
-                var currentProcess = Process.GetCurrentProcess();
-                var workingSet = currentProcess.WorkingSet64; // 当前工作集（物理内存）
+                if (_disposed) return;
 
-                // 转换为GB
-                double workingSetGB = workingSet / (1024.0 * 1024.0 * 1024.0);
-
-                // 获取系统总内存
-                if (totalSystemMemory <= 0)
+                try
                 {
-                    GetTotalSystemMemory();
+                    // 获取当前进程的内存使用情况
+                    var currentProcess = Process.GetCurrentProcess();
+                    var workingSet = currentProcess.WorkingSet64; // 当前工作集（物理内存）
+
+                    // 转换为GB
+                    double workingSetGB = workingSet / (1024.0 * 1024.0 * 1024.0);
+
+                    // 获取系统总内存
+                    if (totalSystemMemory <= 0)
+                    {
+                        GetTotalSystemMemory();
+                    }
+
+                    // 转换总内存为GB
+                    double totalSystemMemoryGB = totalSystemMemory / 1024.0;
+
+                    // 计算内存使用率（基于工作集与系统总内存的比例）
+                    double memoryUsage = totalSystemMemory > 0 ? (workingSetGB / totalSystemMemoryGB) * 100 : 0;
+
+                    // Memory属性存储内存使用率数值（用于ProgressBar，0-100范围）
+                    Model.Memory = memoryUsage;
+                    // MemoryRate属性存储"使用GB/总量GB"格式的字符串
+                    Model.MemoryRate = $"{workingSetGB:F1}GB/{totalSystemMemoryGB:F1}GB";
                 }
-
-                // 转换总内存为GB
-                double totalSystemMemoryGB = totalSystemMemory / 1024.0;
-
-                // 计算内存使用率（基于工作集与系统总内存的比例）
-                double memoryUsage = totalSystemMemory > 0 ? (workingSetGB / totalSystemMemoryGB) * 100 : 0;
-
-                // Memory属性存储内存使用率数值（用于ProgressBar，0-100范围）
-                Model.Memory = memoryUsage;
-                // MemoryRate属性存储"使用GB/总量GB"格式的字符串
-                Model.MemoryRate = $"{workingSetGB:F1}GB/{totalSystemMemoryGB:F1}GB";
-            }
-            catch
-            {
-                Model.Memory = 0;
-                Model.MemoryRate = "0GB/0GB";
+                catch
+                {
+                    Model.Memory = 0;
+                    Model.MemoryRate = "0GB/0GB";
+                }
+            
             }
         }
         
@@ -346,47 +384,53 @@ namespace WPFControls.ProgramControl.Services
         /// </summary>
         public void CalMemorySystem()
         {
-            try
+            lock (lockObject)
             {
-                if (ramCounter != null)
+                if (_disposed) return;
+
+                try
                 {
-                    // 获取可用内存（MB）
-                    float availableMemory = ramCounter.NextValue();
-
-                    // 如果总内存为0，尝试重新获取
-                    if (totalSystemMemory <= 0)
+                    if (ramCounter != null)
                     {
-                        GetTotalSystemMemory();
+                        // 获取可用内存（MB）
+                        float availableMemory = ramCounter.NextValue();
+
+                        // 如果总内存为0，尝试重新获取
+                        if (totalSystemMemory <= 0)
+                        {
+                            GetTotalSystemMemory();
+                        }
+
+                        // 计算已使用内存
+                        float usedMemory = (float)totalSystemMemory - availableMemory;
+
+                        // 确保使用内存不为负数
+                        usedMemory = Math.Max(0, usedMemory);
+
+                        // 转换为GB
+                        float usedMemoryGB = usedMemory / 1024.0f;
+                        float totalSystemMemoryGB = (float)totalSystemMemory / 1024.0f;
+
+                        // 计算内存使用率
+                        float memoryUsage = totalSystemMemoryGB > 0 ? (usedMemoryGB / totalSystemMemoryGB) * 100 : 0;
+
+                        // SystemMemory属性存储内存使用率数值（用于ProgressBar，0-100范围）
+                        Model.SystemMemory = memoryUsage;
+                        // SystemMemoryRate属性存储"使用GB/总量GB"格式的字符串
+                        Model.SystemMemoryRate = $"{usedMemoryGB:F1}GB/{totalSystemMemoryGB:F1}GB";
                     }
-
-                    // 计算已使用内存
-                    float usedMemory = (float)totalSystemMemory - availableMemory;
-
-                    // 确保使用内存不为负数
-                    usedMemory = Math.Max(0, usedMemory);
-
-                    // 转换为GB
-                    float usedMemoryGB = usedMemory / 1024.0f;
-                    float totalSystemMemoryGB = (float)totalSystemMemory / 1024.0f;
-
-                    // 计算内存使用率
-                    float memoryUsage = totalSystemMemoryGB > 0 ? (usedMemoryGB / totalSystemMemoryGB) * 100 : 0;
-
-                    // SystemMemory属性存储内存使用率数值（用于ProgressBar，0-100范围）
-                    Model.SystemMemory = memoryUsage;
-                    // SystemMemoryRate属性存储"使用GB/总量GB"格式的字符串
-                    Model.SystemMemoryRate = $"{usedMemoryGB:F1}GB/{totalSystemMemoryGB:F1}GB";
+                    else
+                    {
+                        Model.SystemMemory = 0;
+                        Model.SystemMemoryRate = "0GB/0GB";
+                    }
                 }
-                else
+                catch
                 {
                     Model.SystemMemory = 0;
                     Model.SystemMemoryRate = "0GB/0GB";
                 }
-            }
-            catch
-            {
-                Model.SystemMemory = 0;
-                Model.SystemMemoryRate = "0GB/0GB";
+            
             }
         }
         
@@ -435,9 +479,16 @@ namespace WPFControls.ProgramControl.Services
         /// </summary>
         public void Dispose()
         {
-            StopAutoRefresh();
-            cpuMonitor?.Dispose();
-            ramCounter?.Dispose();
+            lock (lockObject)
+            {
+                if (_disposed) return;
+                _disposed = true;
+
+                StopAutoRefresh();
+                cpuMonitor?.Dispose();
+                ramCounter?.Dispose();
+            
+            }
         }
     }
 }
