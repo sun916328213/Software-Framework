@@ -66,15 +66,20 @@ namespace DataManager.Workbench
             base.OnInitialized();
         _lifetime = new WorkbenchLifetime(MainWindow,
             () => { (MainWindow.DataContext as IDisposable)?.Dispose(); return ValueTask.CompletedTask; },
-            () => { Container.Resolve<SqlWorkspace<TestEntity>>().CancelInFlight(); return ValueTask.CompletedTask; },
+            () =>
+            {
+                Container.Resolve<SqlWorkspace<TestEntity>>().CancelInFlight();
+                Container.Resolve<LogWorkspace>().CancelInFlight();
+                return ValueTask.CompletedTask;
+            },
             () => WorkbenchLifetime.CloseRegionAsync(Container.Resolve<IRegionManager>(), RegionNames.MainRegion),
             () => Container.Resolve<SqlWorkspace<TestEntity>>().DisposeAsync(),
-            () => { Container.Resolve<LogWorkspace>().Dispose(); return ValueTask.CompletedTask; });
+            () => Container.Resolve<LogWorkspace>().DisposeAsync());
             (MainWindow?.DataContext as DataManager.Workbench.ViewModels.MainWindowViewModel)?.SelectFirst();
         }
 
         /// <summary>
-        /// P9-5：退出前先取消在途数据库操作，再释放 SQL 实例——
+        /// P9-5 / T08：退出前先取消在途操作（SQL + 日志），再释放各自实例——
         /// 保证关闭工作台后不会再有后台任务继续跑并回写界面。
         /// </summary>
         protected override void OnExit(ExitEventArgs e)
