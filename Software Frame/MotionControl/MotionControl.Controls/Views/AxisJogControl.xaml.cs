@@ -81,14 +81,20 @@ public partial class AxisJogControl : UserControl
     /// </summary>
     private void OnJogDown(object sender, MouseButtonEventArgs e)
     {
-        if (sender is not Button button || ViewModel is null)
+        if (sender is not Button button || ViewModel is not { } axis)
             return;
         var direction = Equals(button.Tag, "Negative") ? EDirection.Negative : EDirection.Positive;
-        if (!ViewModel.JogStartCommand.CanExecute(direction)) return;
+        if (!axis.JogStartCommand.CanExecute(direction)) return;
         StopJog();
-        _jogAxis = ViewModel;
-        button.CaptureMouse();
-        _jogAxis.JogStartCommand.Execute(direction);
+        _jogAxis = axis;
+        // 捕获可能同步触发失捕或绑定变更；只在本次点动仍持有捕获时启动。
+        if (!button.CaptureMouse() || !button.IsMouseCaptured || !ReferenceEquals(_jogAxis, axis))
+        {
+            StopJog();
+            e.Handled = true;
+            return;
+        }
+        axis.JogStartCommand.Execute(direction);
         e.Handled = true;
     }
 

@@ -1,4 +1,4 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // MotionControl 模块：运动契约、控制卡适配和验证界面；实际轴状态、命令结果及释放顺序遵守设备实现。
 // 本文件定义：ModbusTcpClient。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：System.Net.Sockets。导入不代表所有类型都会在运行时加载。
@@ -208,9 +208,8 @@ namespace MotionControl.Runtime.Vendors.Inovance
 
             _stream.Write(request, 0, request.Length);
 
-            var header = ReadExact(_stream, MbapHeaderLength);
-            if (header == null)
-                return CloseMalformedConnection();
+            var header = new byte[MbapHeaderLength];
+            _stream.ReadExactly(header);
 
             int responseLength = (header[4] << 8) | header[5];
             if (responseLength is < 2 or > MaximumMbapLength ||
@@ -220,33 +219,12 @@ namespace MotionControl.Runtime.Vendors.Inovance
 
             var response = new byte[6 + responseLength];
             Buffer.BlockCopy(header, 0, response, 0, header.Length);
-            var body = ReadExact(_stream, responseLength - 1);
-            if (body == null)
-                return CloseMalformedConnection();
-            Buffer.BlockCopy(body, 0, response, MbapHeaderLength, body.Length);
+            _stream.ReadExactly(response.AsSpan(MbapHeaderLength, responseLength - 1));
 
             var responseFunction = response[7];
             if (responseFunction != request[7] && responseFunction != (request[7] | 0x80))
                 return CloseMalformedConnection();
             return response;
-        }
-
-        /// <summary>
-        /// 读取当前实现提供的数据；对应入口为 ReadExact。
-        /// 正文中的关键协作调用包括 Read；具体条件和先后次序见方法体。
-        /// </summary>
-        private static byte[]? ReadExact(Stream stream, int count)
-        {
-            var buffer = new byte[count];
-            var received = 0;
-            while (received < count)
-            {
-                int n = stream.Read(buffer, received, count - received);
-                if (n <= 0)
-                    return null;
-                received += n;
-            }
-            return buffer;
         }
 
         /// <summary>

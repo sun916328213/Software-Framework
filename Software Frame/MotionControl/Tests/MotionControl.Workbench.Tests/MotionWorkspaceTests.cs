@@ -9,8 +9,6 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using System.Windows.Input;
 using System.Windows.Media;
-using MotionControl.Controls.Services;
-using MotionControl.Controls.ViewModels;
 using MotionControl.Controls.Views;
 using MotionControl.Core.Definitions;
 using MotionControl.Runtime.Services;
@@ -25,7 +23,7 @@ namespace MotionControl.Workbench.Tests;
 public sealed class MotionWorkspaceTests(WorkbenchAppFixture host)
 {
     /// <summary>
-    /// 验证 ControlsAndPage_ShareAxisModel_AndPreserveInputAcrossAxisSwitch 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ControlsAndPage_ShareAxisModel_AndPreserveInputAcrossAxisSwitch；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Connect、IsAssignableFrom、Same、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -61,7 +59,7 @@ public sealed class MotionWorkspaceTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 RefreshSubscriptions_FollowLoadReloadAndCardChange 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 RefreshSubscriptions_FollowLoadReloadAndCardChange；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Connect、For、Add、Show；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -101,7 +99,7 @@ public sealed class MotionWorkspaceTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 Workspace_UsesInjectedFactory_AndLeavesHostCardsConnected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Workspace_UsesInjectedFactory_AndLeavesHostCardsConnected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Add、Create、True、ConnectResult；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -133,7 +131,7 @@ public sealed class MotionWorkspaceTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 Navigation_ResolvesControlsPageAndInjectedWorkspace_WithoutConnecting 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Navigation_ResolvesControlsPageAndInjectedWorkspace_WithoutConnecting；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、IsType、nameof、SetAutoWireViewModel；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -157,7 +155,7 @@ public sealed class MotionWorkspaceTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 ActiveJog_StopsOriginalAxis_OnAxisSwitchOrLostCapture 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ActiveJog_StopsOriginalAxis_OnAxisSwitchOrLostCapture；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Connect、Show、Drain、True；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
@@ -178,11 +176,18 @@ public sealed class MotionWorkspaceTests(WorkbenchAppFixture host)
                 Drain();
                 Assert.True(jog.ViewModel!.SetServo(true).IsSuccess);
                 var button = Descendants(jog).OfType<Button>().Single(b => Equals(b.Tag, "Positive"));
+                window.Activate();
+                button.Focus();
+                Drain();
+                var captureEvents = new List<string>();
+                button.GotMouseCapture += (_, _) => captureEvents.Add("GotCapture");
+                button.LostMouseCapture += (_, _) => captureEvents.Add("LostCapture");
+                button.MouseLeave += (_, _) => captureEvents.Add("MouseLeave");
                 button.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left)
                 {
                     RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent,
                 });
-                Assert.True(card.ReadAxisStatus(0).Value.Moving);
+                Assert.True(card.ReadAxisStatus(0).Value.Moving, $"Active={window.IsActive}, Captured={button.IsMouseCaptured}, Events={string.Join(",", captureEvents)}, Message={jog.ViewModel.LastMessage}, Enabled={card.ReadAxisStatus(0).Value.Enabled}");
                 if (switchAxis) jog.AxisIndex = 1;
                 else button.ReleaseMouseCapture();
                 Assert.False(card.ReadAxisStatus(0).Value.Moving);
@@ -191,8 +196,37 @@ public sealed class MotionWorkspaceTests(WorkbenchAppFixture host)
         });
     }
 
+    /// <summary>捕获鼠标时立即失捕，点动必须保持停止且不抛出空引用。</summary>
+    [Fact]
+    public void JogCaptureLostDuringMouseDown_DoesNotStartMotionOrThrow()
+    {
+        host.Invoke(() =>
+        {
+            using var workspace = new MotionWorkspace();
+            workspace.Connect();
+            var card = workspace.Model.SelectedCard!;
+            var jog = new AxisJogControl { MotionCard = card };
+            var window = new Window { Content = jog, Width = 700, Height = 500 };
+            try
+            {
+                window.Show();
+                Drain();
+                Assert.True(jog.ViewModel!.SetServo(true).IsSuccess);
+                var button = Descendants(jog).OfType<Button>().Single(b => Equals(b.Tag, "Positive"));
+                button.GotMouseCapture += (_, _) => button.ReleaseMouseCapture();
+                button.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left)
+                {
+                    RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent,
+                });
+                Assert.False(button.IsMouseCaptured);
+                Assert.False(card.ReadAxisStatus(0).Value.Moving);
+            }
+            finally { window.Close(); Drain(); }
+        });
+    }
+
     /// <summary>
-    /// 验证 Descendants 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Descendants；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetChildrenCount、GetChild、Descendants；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
@@ -206,7 +240,7 @@ public sealed class MotionWorkspaceTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 Drain 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Drain；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke；具体条件和先后次序见方法体。
     /// </summary>
     private static void Drain() => Application.Current.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);

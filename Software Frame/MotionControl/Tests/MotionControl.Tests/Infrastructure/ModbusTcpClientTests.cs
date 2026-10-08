@@ -12,8 +12,21 @@ namespace MotionControl.Tests;
 /// </summary>
 public sealed class ModbusTcpClientTests
 {
+    [Theory]
+    [InlineData(3)]
+    [InlineData(8)]
+    public void TruncatedResponse_ClosesConnectionAndReturnsFailure(int length)
+    {
+        using var stream = new ScriptedModbusStream(request =>
+            BuildResponse(request, 0x03, [0x02, 0x00, 0x01])[..length], maxReadChunk: 2);
+        using var client = new ModbusTcpClient(stream);
+
+        Assert.Null(client.ReadHoldingRegisters(1, 0, 1));
+        Assert.False(client.IsConnected);
+    }
+
     /// <summary>
-    /// 验证 ReadHoldingRegisters_FragmentedResponse_IsReassembledAndValidated 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReadHoldingRegisters_FragmentedResponse_IsReassembledAndValidated；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildResponse、ReadHoldingRegisters、NotNull、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -31,7 +44,7 @@ public sealed class ModbusTcpClientTests
     }
 
     /// <summary>
-    /// 验证 ReadHoldingRegisters_ExceptionResponse_DoesNotReadBeyondDeclaredLength 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ReadHoldingRegisters_ExceptionResponse_DoesNotReadBeyondDeclaredLength；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildResponse、ReadHoldingRegisters、Null、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -48,7 +61,7 @@ public sealed class ModbusTcpClientTests
     }
 
     /// <summary>
-    /// 验证 ResponseWithWrongTransactionId_IsRejectedAndConnectionClosed 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ResponseWithWrongTransactionId_IsRejectedAndConnectionClosed；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildResponse、ReadHoldingRegisters、Null、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -69,7 +82,7 @@ public sealed class ModbusTcpClientTests
     }
 
     /// <summary>
-    /// 验证 WriteSingleRegister_WrongEcho_IsRejected 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WriteSingleRegister_WrongEcho_IsRejected；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 BuildResponse、ToArray、AsSpan、WriteSingleRegister、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -89,7 +102,7 @@ public sealed class ModbusTcpClientTests
     }
 
     /// <summary>
-    /// 验证 BuildResponse 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 BuildResponse；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CopyTo；具体条件和先后次序见方法体。
     /// </summary>
     private static byte[] BuildResponse(byte[] request, byte functionCode, byte[] payload)
@@ -128,12 +141,12 @@ public sealed class ModbusTcpClientTests
         }
 
         /// <summary>
-        /// 验证 Flush 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Flush；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override void Flush() { }
 
         /// <summary>
-        /// 验证 Read 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Read；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Min、BlockCopy；具体条件和先后次序见方法体。
         /// </summary>
         public override int Read(byte[] buffer, int offset, int count)
@@ -150,7 +163,7 @@ public sealed class ModbusTcpClientTests
         }
 
         /// <summary>
-        /// 验证 Write 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Write；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 respond、ToArray、AsSpan；具体条件和先后次序见方法体。
         /// </summary>
         public override void Write(byte[] buffer, int offset, int count)
@@ -160,11 +173,11 @@ public sealed class ModbusTcpClientTests
         }
 
         /// <summary>
-        /// 验证 Seek 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Seek；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
         /// <summary>
-        /// 验证 SetLength 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SetLength；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public override void SetLength(long value) => throw new NotSupportedException();
     }
