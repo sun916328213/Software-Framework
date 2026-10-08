@@ -10,6 +10,7 @@ using DataManager.Workbench.Models;
 using DataManager.Core.SQL.Definition;
 using DataManager.Runtime.SQL.Definition;
 using Extension.Core.Conversion;
+using DataManager.Controls.Configuration;
 using DataManager.Controls.Models;
 using DataManager.Controls.Services;
 using DataManager.Controls.ViewModels;
@@ -18,54 +19,44 @@ using System.ComponentModel;
 namespace DataManager.Workbench.Tests
 {
     /// <summary>
-    /// SQL 连接档案：行模型通知、增删保底、新文件（Config/SqlConnections.json）往返。
+    /// SQL 连接档案：行模型通知、增删保底、新文件（&lt;ConfigRoot&gt;\SqlConnections.json）往返。
     /// 持久化走 ConfigManager 控件保存按钮，此处用同格式的 <see cref="JsonEx"/> 读写验证兼容性。
-    /// 注意：含数据库密码明文，仅限本机调试工作台使用；测前后原样恢复配置文件。
+    /// 注意：含数据库密码明文，仅限本机调试工作台使用。
+    /// 配置目录由 <see cref="ConfigRoot.CreateTemporary"/> 隔离，测试结束整棵删除——
+    /// 不再备份/删写真实工作区 Config，也不再与其他测试类抢同一份文件。
     /// </summary>
     public class SqlConnectionStoreTests : IDisposable
     {
-        private static string ProfilePath => new SqlPageModel<TestEntity>().FullPath!;
+        private readonly ConfigRoot _configRoot = ConfigRoot.CreateTemporary();
 
-        private readonly string? _configBackup;
+        private string ProfilePath => new SqlPageModel<TestEntity>(_configRoot).FullPath!;
 
         /// <summary>
         /// 初始化 SqlConnectionStoreTests 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
-        /// 正文中的关键协作调用包括 Exists、ReadAllText、Delete；具体条件和先后次序见方法体。
+        /// 正文中的关键协作调用包括 CreateDirectory；具体条件和先后次序见方法体。
         /// </summary>
         public SqlConnectionStoreTests()
         {
-            _configBackup = File.Exists(ProfilePath)
-                ? File.ReadAllText(ProfilePath)
-                : null;
-            if (File.Exists(ProfilePath))
-                File.Delete(ProfilePath);
+            // 页面模型/工作区只读不建目录，这里显式建好本测试独占的配置目录。
+            Directory.CreateDirectory(_configRoot.Directory);
         }
 
         /// <summary>
         /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
-        /// 正文中的关键协作调用包括 Restore、SuppressFinalize；具体条件和先后次序见方法体。
+        /// 正文中的关键协作调用包括 Exists、Delete、SuppressFinalize；具体条件和先后次序见方法体。
+        /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>
         public void Dispose()
         {
-            Restore(ProfilePath, _configBackup);
+            // 只清本测试自己的临时目录；清理本身出错不影响测试结果，也不吞测试中的原异常。
+            try
+            {
+                if (Directory.Exists(_configRoot.Directory))
+                    Directory.Delete(_configRoot.Directory, recursive: true);
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
             GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// 测试相关入口 Restore；准备条件、协作调用与结果检查以方法正文为准。
-        /// 正文中的关键协作调用包括 Exists、Delete、WriteAllText；具体条件和先后次序见方法体。
-        /// </summary>
-        private static void Restore(string path, string? backup)
-        {
-            if (backup is null)
-            {
-                if (File.Exists(path))
-                    File.Delete(path);
-            }
-            else
-            {
-                File.WriteAllText(path, backup);
-            }
         }
 
         /// <summary>
@@ -97,7 +88,7 @@ namespace DataManager.Workbench.Tests
         [Fact]
         public void Ctor_WithoutConfig_HasExactlyOneProfile()
         {
-            var vm = new SqlViewModel<TestEntity>(new SqlWorkspace<TestEntity>(new SQLManager()));
+            var vm = new SqlViewModel<TestEntity>(new SqlWorkspace<TestEntity>(new SQLManager(), _configRoot));
             Assert.Single(vm.Model.DataCollection);
             Assert.NotNull(vm.Model.SelectedConnection);
         }
@@ -109,7 +100,7 @@ namespace DataManager.Workbench.Tests
         [Fact]
         public void AddRemove_ViaManagerCallbacks_UpdatesSelectionAndCount()
         {
-            var vm = new SqlViewModel<TestEntity>(new SqlWorkspace<TestEntity>(new SQLManager()));
+            var vm = new SqlViewModel<TestEntity>(new SqlWorkspace<TestEntity>(new SQLManager(), _configRoot));
             // 模拟控件增加按钮：空行已由控件加入，回调命名选中（保存由控件保存按钮完成）。
             vm.Model.DataCollection.Add(new SQLParam());
             vm.OnConnectionAddedExternally();
@@ -133,7 +124,7 @@ namespace DataManager.Workbench.Tests
         [Fact]
         public void DeleteLastRow_RestoresDefault()
         {
-            var vm = new SqlViewModel<TestEntity>(new SqlWorkspace<TestEntity>(new SQLManager()));
+            var vm = new SqlViewModel<TestEntity>(new SqlWorkspace<TestEntity>(new SQLManager(), _configRoot));
             vm.Model.DataCollection.Clear();
             vm.OnConnectionDeletedExternally();
             Assert.Single(vm.Model.DataCollection);
@@ -147,7 +138,7 @@ namespace DataManager.Workbench.Tests
         [Fact]
         public void SaveLoad_RoundTripsAllFields()
         {
-            var vm = new SqlViewModel<TestEntity>(new SqlWorkspace<TestEntity>(new SQLManager()));
+            var vm = new SqlViewModel<TestEntity>(new SqlWorkspace<TestEntity>(new SQLManager(), _configRoot));
             vm.Model.SelectedConnection!.Name = "主库";
             vm.Model.SelectedConnection.ServerIP = "10.0.0.1";
             vm.Model.SelectedConnection.Port = "5433";
@@ -162,7 +153,7 @@ namespace DataManager.Workbench.Tests
             // 与控件保存按钮同格式落盘，再新起 VM 读回。
             JsonEx.Save(vm.Model.DataCollection.ToList(), ProfilePath);
 
-            var reloaded = new SqlViewModel<TestEntity>(new SqlWorkspace<TestEntity>(new SQLManager()));
+            var reloaded = new SqlViewModel<TestEntity>(new SqlWorkspace<TestEntity>(new SQLManager(), _configRoot));
             Assert.Equal(2, reloaded.Model.DataCollection.Count);
             var primary = Assert.Single(reloaded.Model.DataCollection, p => p.Name == "主库");
             Assert.Equal("10.0.0.1", primary.ServerIP);

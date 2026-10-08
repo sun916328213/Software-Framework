@@ -8,6 +8,7 @@ using DataManager.Core.Excel;
 using DataManager.Runtime.Excel;
 using Extension.UI.Controls;
 using Extension.Core.Conversion;
+using DataManager.Controls.Configuration;
 using DataManager.Core.Excel.Definition;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -27,15 +28,23 @@ namespace DataManager.Controls.Services
         private string? _currentKey;
 
         /// <summary>页状态（单例 Workspace 持有，VM 直接暴露）。</summary>
-        public Models.ExcelPageModel<T> Model { get; } = new();
+        public Models.ExcelPageModel<T> Model { get; }
+
+        /// <summary>生产默认：配置落在 <see cref="ConfigRoot.Default"/>（即 &lt;BaseDirectory&gt;\Config）。</summary>
+        public ExcelWorkspace(IExcelManager excelManager) : this(excelManager, ConfigRoot.Default)
+        {
+        }
 
         /// <summary>
         /// 初始化 ExcelWorkspace 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
         /// 正文中的关键协作调用包括 LoadProfiles；具体条件和先后次序见方法体。
+        /// 传入自己的 <see cref="ConfigRoot"/> 可把本工作区读写配置的目录隔离到临时位置。
         /// </summary>
-        public ExcelWorkspace(IExcelManager excelManager)
+        public ExcelWorkspace(IExcelManager excelManager, ConfigRoot configRoot)
         {
+            ArgumentNullException.ThrowIfNull(configRoot);
             _excelManager = excelManager;
+            Model = new Models.ExcelPageModel<T>(configRoot);
             LoadProfiles();
         }
 

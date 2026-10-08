@@ -5,6 +5,7 @@
 using DataManager.Controls;
 using DataManager.Core;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DataManager.Controls.Configuration;
 using DataManager.Core.Excel.Definition;
 using DataManager.Core.Log.Definition;
 using System.Collections.ObjectModel;
@@ -29,13 +30,19 @@ namespace DataManager.Controls.Models
     /// </summary>
     public partial class ExcelPageModel<T> : ConfigManagerModel<ExcelParam> where T : IExcelTestEntity
     {
+        /// <summary>生产默认落盘位置（<see cref="ConfigRoot.Default"/>，即 &lt;BaseDirectory&gt;\Config）。</summary>
+        public ExcelPageModel() : this(ConfigRoot.Default)
+        {
+        }
+
         /// <summary>
         /// 初始化 ExcelPageModel 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
-        /// 正文中的关键协作调用包括 Combine；具体条件和先后次序见方法体。
+        /// 测试/工作台会话传入自己的 <see cref="ConfigRoot"/> 即可把配置目录隔离到临时位置。
         /// </summary>
-        public ExcelPageModel()
+        public ExcelPageModel(ConfigRoot configRoot)
         {
-            FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config");
+            ArgumentNullException.ThrowIfNull(configRoot);
+            FilePath = configRoot.Directory;
             FileName = "ExcelConfig.json";
         }
 

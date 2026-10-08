@@ -5,6 +5,7 @@
 using DataManager.Controls;
 using DataManager.Core;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DataManager.Controls.Configuration;
 using DataManager.Core.SQL.Definition;
 using DataManager.Runtime.SQL.Definition;
 using System.Collections.ObjectModel;
@@ -31,14 +32,20 @@ namespace DataManager.Controls.Models
     /// </summary>
     public partial class SqlPageModel<T> : ConfigManagerModel<SQLParam> where T : ISqlEntity
     {
+        /// <summary>生产默认落盘位置（<see cref="ConfigRoot.Default"/>，即 &lt;BaseDirectory&gt;\Config）。</summary>
+        public SqlPageModel() : this(ConfigRoot.Default)
+        {
+        }
+
         /// <summary>
         /// 初始化 SqlPageModel 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
-        /// 正文中的关键协作调用包括 Combine；具体条件和先后次序见方法体。
+        /// 落盘位置一次给定（基类 FilePath/FileName；完整路径走基类 FullPath）。
+        /// 测试/工作台会话传入自己的 <see cref="ConfigRoot"/> 即可把配置目录隔离到临时位置。
         /// </summary>
-        public SqlPageModel()
+        public SqlPageModel(ConfigRoot configRoot)
         {
-            // 落盘位置一次给定（基类 FilePath/FileName；完整路径走基类 FullPath）。
-            FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config");
+            ArgumentNullException.ThrowIfNull(configRoot);
+            FilePath = configRoot.Directory;
             FileName = "SqlConnections.json";
         }
 

@@ -5,6 +5,7 @@
 using DataManager.Controls;
 using DataManager.Core;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DataManager.Controls.Configuration;
 using DataManager.Core.Log.Definition;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -18,13 +19,19 @@ namespace DataManager.Controls.Models
     /// </summary>
     public partial class LogPageModel : ConfigManagerModel<LogParam>
     {
+        /// <summary>生产默认落盘位置（<see cref="ConfigRoot.Default"/>，即 &lt;BaseDirectory&gt;\Config）。</summary>
+        public LogPageModel() : this(ConfigRoot.Default)
+        {
+        }
+
         /// <summary>
         /// 初始化 LogPageModel 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
-        /// 正文中的关键协作调用包括 Combine；具体条件和先后次序见方法体。
+        /// 测试/工作台会话传入自己的 <see cref="ConfigRoot"/> 即可把配置目录隔离到临时位置。
         /// </summary>
-        public LogPageModel()
+        public LogPageModel(ConfigRoot configRoot)
         {
-            FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config");
+            ArgumentNullException.ThrowIfNull(configRoot);
+            FilePath = configRoot.Directory;
             FileName = "LogConfig.json";
         }
 
