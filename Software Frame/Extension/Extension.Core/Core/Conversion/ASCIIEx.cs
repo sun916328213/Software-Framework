@@ -23,20 +23,8 @@ namespace Extension.Core.Conversion
         /// <returns></returns>
         public static string ToHex(this string data, bool uppercase = true)
         {
-            // 将ASCII字符串转换为字节数组
-            byte[] asciiBytes = Encoding.UTF8.GetBytes(data);
-
-            // 使用StringBuilder高效拼接字符串
-            StringBuilder hexBuilder = new StringBuilder(asciiBytes.Length * 2);
-
-            // 转换每个字节为十六进制
-            foreach (byte b in asciiBytes)
-            {
-                // 根据参数选择大小写格式
-                string hexFormat = uppercase ? "X2" : "x2";
-                hexBuilder.Append(b.ToString(hexFormat));
-            }
-            return hexBuilder.ToString();
+            string hex = Convert.ToHexString(Encoding.UTF8.GetBytes(data));
+            return uppercase ? hex : hex.ToLowerInvariant();
         }
 
         /// <summary>

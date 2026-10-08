@@ -1,4 +1,4 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // Extension 模块：共享基础能力与集成适配；Extension.Core 保持轻量，WPF 和厂商 SDK 集成归其他部分。
 // 本文件定义：PriorityItem、BatchItem、ProducerConsumerConfig、ConfigurableProducerConsumer、PriorityQueueProducerConsumer。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：Extension.Patterns.Pipelines.ProducerConsumer、System、System.Collections.Concurrent、System.Collections.Generic、System.Threading、System.Threading.Channels。导入不代表所有类型都会在运行时加载。
@@ -377,62 +377,12 @@ namespace Extension.Patterns.Pipelines.ProducerConsumer.Advanced
             _producedCount = 0;
             _consumedCount = 0;
 
-            var tasks = new List<Task>();
-            var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            await ProducerConsumerTasks.RunAsync(
+                producerCount, consumerCount,
+                (id, token) => ProduceAsync(id, () => produceFunc(id - 1), token),
+                (id, token) => ConsumeAsync(id, consumeAction, token),
+                rethrowErrors: false, cancellationToken);
 
-            try
-            {
-                // 创建并启动生产者任务
-                for (int i = 0; i < producerCount; i++)
-                {
-                    int producerId = i + 1;
-                    // 为每个生产者创建一个包装函数，捕获索引
-                    int index = i;
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await ProduceAsync(producerId, () => produceFunc(index), cts.Token);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            // 任务被取消是正常的，忽略异常
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"[Producer-{producerId}] 发生异常: {ex.Message}");
-                        }
-                    }, cts.Token));
-                }
-
-                // 创建并启动消费者任务
-                for (int i = 0; i < consumerCount; i++)
-                {
-                    int consumerId = i + 1;
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await ConsumeAsync(consumerId, consumeAction, cts.Token);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            // 任务被取消是正常的，忽略异常
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"[Consumer-{consumerId}] 发生异常: {ex.Message}");
-                        }
-                    }, cts.Token));
-                }
-
-                // 等待所有任务完成
-                await Task.WhenAll(tasks);
-            }
-            finally
-            {
-                cts.Dispose();
-            }
         }
 
         /// <summary>

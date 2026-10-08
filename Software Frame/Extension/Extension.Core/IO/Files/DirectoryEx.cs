@@ -96,7 +96,7 @@ namespace Extension.IO.Files
         /// <returns></returns>
         public static string GetParent(this string pPath)
         {
-            DirectoryInfo dirInfo = Directory.GetParent(pPath);
+            var dirInfo = Directory.GetParent(pPath);
             if (dirInfo != null)
             {
                 return dirInfo.FullName;
@@ -110,14 +110,9 @@ namespace Extension.IO.Files
         /// </summary>
         /// <param name="pPath"></param>
         /// <returns></returns>
-        public static string GetParentSecond(this string pPath)
+        public static string? GetParentSecond(this string pPath)
         {
-            DirectoryInfo dirInfo = Directory.GetParent(pPath).Parent;
-            if (dirInfo != null)
-            {
-                return dirInfo.FullName;
-            }
-            return null;
+            return Directory.GetParent(pPath)?.Parent?.FullName;
         }
 
         /// <summary>
@@ -127,12 +122,7 @@ namespace Extension.IO.Files
         /// <returns></returns>
         public static string GetDirName(this string pPath)
         {
-            var dirInfo = new DirectoryInfo(pPath);
-            if (dirInfo != null)
-            {
-                return dirInfo.Name;
-            }
-            return null;
+            return new DirectoryInfo(pPath).Name;
         }
 
         /// <summary>

@@ -21,11 +21,9 @@ namespace Extension.Tests
     /// <para>
     /// 钉住的 6 处「只在运行时暴露」的行为（硬规则 1：只记录不顺手改）：
     /// <list type="number">
-    /// <item><b><c>GetParentSecond</c> 对根路径抛 <c>NullReferenceException</c></b>
-    /// —— 它直接 <c>Directory.GetParent(pPath).Parent</c>，**没做第一层 null 检查**
-    /// （<c>GetParent</c> 做了，所以同一根路径下一个安全一个崩）；</item>
-    /// <item><b><c>GetDirName</c> 的 null 检查是死代码</b>：<c>new DirectoryInfo(...)</c> 永不返回 null
-    /// （空串直接抛 <c>ArgumentException</c>）⇒ <c>return null</c> 不可达；</item>
+    /// <item><b><c>GetParentSecond</c> 对根路径返回 null</b>
+    /// —— 根目录不存在上二级目录，与 <c>GetParent</c> 的缺失父目录约定一致；</item>
+    /// <item><b><c>GetDirName</c> 对合法路径返回名称</b>，空串直接抛 <c>ArgumentException</c>；</item>
     /// <item><b><c>CreatDir</c> / <c>GetPath</c> 的月、日**不补零**</b>
     /// ⇒ 生成 <c>2026\9\18</c> 而不是 <c>2026\09\18</c>，跨月排序（字符串序）会错乱；</item>
     /// <item><b><c>CreatDir</c> 名不副实</b>：叫 Creat 但**只拼路径、不落盘**，
@@ -52,7 +50,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 JudgeDirExist_多级目录不存在时_递归创建 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 JudgeDirExist_多级目录不存在时_递归创建；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、JudgeDirExist、True、Exists；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -67,7 +65,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 JudgeDirExist_目录已存在时_幂等且不抛 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 JudgeDirExist_目录已存在时_幂等且不抛；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、Exception、JudgeDirExist、True、Exists；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -86,7 +84,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 GetFiles_过滤是包含匹配_既非前缀也非后缀 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetFiles_过滤是包含匹配_既非前缀也非后缀；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、Equal、GetFiles、Empty；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -105,7 +103,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetFiles_返回FileInfo数组_可读长度 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetFiles_返回FileInfo数组_可读长度；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、GetFiles、Single、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -122,7 +120,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetFiles_目录不存在时_抛DirectoryNotFoundException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetFiles_目录不存在时_抛DirectoryNotFoundException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Throws、GetFiles、Combine；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -138,7 +136,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 CreatDir_结构是基路径加年月日加产品ID 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreatDir_结构是基路径加年月日加产品ID；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Segments、CreatDir、Equal、ToString、InRange；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -160,7 +158,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetPath_月日不补零_一月二日是1与2而不是01与02 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetPath_月日不补零_一月二日是1与2而不是01与02；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、Combine、GetPath；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -172,7 +170,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 CreatDir_pID为null时_少一层 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreatDir_pID为null时_少一层；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、Segments、CreatDir；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -184,7 +182,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 CreatDir_pID为空字符串时_同样少一层 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreatDir_pID为空字符串时_同样少一层；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、Segments、CreatDir；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -198,7 +196,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 CreatDir_名不副实_只拼路径不落盘 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreatDir_名不副实_只拼路径不落盘；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreatDir、False、Exists；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -216,7 +214,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 ReadFile_目录不存在_返回null 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadFile_目录不存在_返回null；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、ReadFile、Combine；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -228,7 +226,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadFile_目录存在但没有子目录_返回空字典 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadFile_目录存在但没有子目录_返回空字典；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、ReadFile、NotNull、Empty；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -244,7 +242,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadFile_按一级子目录名分组 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadFile_按一级子目录名分组；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、Combine、ReadFile、Equal、Single；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -263,7 +261,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 ReadFile_不递归_子目录里的文件不计入 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ReadFile_不递归_子目录里的文件不计入；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WriteFile、Combine、ReadFile、Single、Empty；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -283,7 +281,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 GetParent_返回上一级 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetParent_返回上一级；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、CreateDirectory、Equal、GetParent；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -297,7 +295,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetParent_根路径返回null_有null检查 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetParent_根路径返回null_有null检查；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Null、GetParent；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -307,7 +305,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetParentSecond_返回上二级 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetParentSecond_返回上二级；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、CreateDirectory、Equal、GetParentSecond；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -321,16 +319,14 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetParentSecond_根路径抛NullReferenceException_第一层没做null检查 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
-        /// 正文中的关键协作调用包括 Throws、GetParentSecond；具体条件和先后次序见方法体。
+        /// 根目录及其直接子目录没有上二级目录，应返回 null。
         /// </summary>
         [Fact]
-        public void GetParentSecond_根路径抛NullReferenceException_第一层没做null检查()
+        public void GetParentSecond_没有上二级目录时返回null()
         {
-            // 对比 GetParent（同一条根路径返回 null，安全）：
-            // GetParentSecond 写的是 Directory.GetParent(pPath).Parent，
-            // 第一层 GetParent 返回 null 后立刻解引用 ⇒ NRE。
-            Assert.Throws<NullReferenceException>(() => @"C:\".GetParentSecond());
+            var root = Path.GetPathRoot(Path.GetTempPath()) ?? throw new InvalidOperationException();
+            Assert.Null(root.GetParentSecond());
+            Assert.Null(Path.Combine(root, "child").GetParentSecond());
         }
 
         // ══════════════════════════════════════════════════════════════════
@@ -338,7 +334,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 GetDirName_返回最后一段_忽略尾分隔符 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDirName_返回最后一段_忽略尾分隔符；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、Equal、GetDirName；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -352,7 +348,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetDirName_不校验路径是否存在 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDirName_不校验路径是否存在；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetDirName、Combine；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -364,7 +360,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetDirName_根路径返回根自身 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDirName_根路径返回根自身；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Equal、GetDirName；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -374,7 +370,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 GetDirName_的null检查不可达_永不返回null 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetDirName_的null检查不可达_永不返回null；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NotNull、GetDirName、Combine、Throws；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -394,7 +390,7 @@ namespace Extension.Tests
         // ══════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// 验证 DirCopy_递归复制并保留目录结构 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DirCopy_递归复制并保留目录结构；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、WriteFile、DirCopy、Equal、ReadAllText；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -416,7 +412,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DirCopy_覆盖已存在的目标文件 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DirCopy_覆盖已存在的目标文件；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、WriteFile、DirCopy、Equal、ReadAllText；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -435,7 +431,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DirCopy_源路径带尾分隔符时_文件会落到目标目录之外 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DirCopy_源路径带尾分隔符时_文件会落到目标目录之外；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Combine、WriteFile、DirCopy、True、Exists；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -461,7 +457,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DirCopy_源目录不存在时_抛DirectoryNotFoundException 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DirCopy_源目录不存在时_抛DirectoryNotFoundException；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowsAsync、DirCopy、Combine；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -475,7 +471,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DirCopy_是扩展方法且返回Task 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DirCopy_是扩展方法且返回Task；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 GetMethod、True、IsDefined、Equal；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -504,7 +500,7 @@ namespace Extension.Tests
         }
 
         /// <summary>
-        /// 验证 DirectoryEx_是静态类 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 DirectoryEx_是静态类；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 True、Empty、GetConstructors；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]

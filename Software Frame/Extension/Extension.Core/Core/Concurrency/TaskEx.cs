@@ -125,7 +125,7 @@ namespace Extension.Core.Concurrency
             TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
 
             // 注册取消令牌回调：当令牌触发取消时，完成任务完成源
-            using (token.Register(s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
+            using (token.Register(() => tcs.TrySetResult(true)))
             {
                 // 如果取消已请求，立即抛出异常
                 if (token.IsCancellationRequested)
@@ -159,7 +159,7 @@ namespace Extension.Core.Concurrency
             TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
 
             // 注册取消令牌回调：当令牌触发取消时，完成任务完成源
-            using (token.Register(s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
+            using (token.Register(() => tcs.TrySetResult(true)))
             {
                 // 如果取消已请求，立即抛出异常
                 if (token.IsCancellationRequested)

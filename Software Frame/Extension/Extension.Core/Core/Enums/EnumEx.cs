@@ -39,12 +39,12 @@ namespace Extension.Core.Enums
                 return string.Empty;
 
             Type enumType = value.GetType();
-            string enumName = Enum.GetName(enumType, value);
+            var enumName = Enum.GetName(enumType, value);
 
             if (enumName == null)
                 return string.Empty;
 
-            FieldInfo fieldInfo = enumType.GetField(enumName);
+            var fieldInfo = enumType.GetField(enumName);
             if (fieldInfo == null)
                 return enumName;
 
@@ -79,7 +79,7 @@ namespace Extension.Core.Enums
         /// <returns>枚举值和描述信息的数组</returns>
         public static (T Value, string Description)[] GetAllDescriptions<T>() where T : Enum
         {
-            T[] values = Enum.GetValues(typeof(T)) as T[];
+            var values = (T[])Enum.GetValues(typeof(T));
             var result = new (T Value, string Description)[values.Length];
 
             for (int i = 0; i < values.Length; i++)
