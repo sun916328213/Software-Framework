@@ -41,19 +41,13 @@ namespace MachineApp.Business.Flow
         /// <summary>
         /// 关闭
         /// </summary>
-        public void Closed()
+        public async Task ClosedAsync()
         {
-            _errors.TryExecute(() =>
-            {
-                GlobalData.Save();
-                _printer().Close();
-
-                _plc().StopRefresh();
-                _secsRuntime.DisconnectAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-
-                _devices().DisposeAsync().AsTask()
-                    .ConfigureAwait(false).GetAwaiter().GetResult();
-            });
+            _errors.TryExecute(GlobalData.Save);
+            _errors.TryExecute(() => _printer().Close());
+            await _errors.TryExecuteAsync(() => _plc().StopRefreshAsync());
+            await _errors.TryExecuteAsync(() => _secsRuntime.DisconnectAsync());
+            await _errors.TryExecuteAsync(async () => await _devices().DisposeAsync());
         }
     }
 }

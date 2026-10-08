@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using WPFControls.ProgramControl.Services;
 using WPFControls.WindowUI;
 using WPFCustomControls.Window.Views;
+using WPFCustomControls.Workbench;
 
 namespace MachineApp
 {
@@ -27,6 +28,9 @@ namespace MachineApp
 
             Container = container;
             InitializeComponent();
+            _ = new WorkbenchLifetime(this,
+                () => new ValueTask(container.Resolve<AutoProcess>().StopAsync()),
+                () => new ValueTask(container.Resolve<Close>().ClosedAsync()));
         }
 
         /// <summary>
