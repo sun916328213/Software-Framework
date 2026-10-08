@@ -29,25 +29,6 @@ namespace WPFControls.Controls.Resources
         
         #endregion
         
-        #region Properties
-        
-        /// <summary>
-        /// 获取资源字典
-        /// </summary>
-        private ResourceDictionary ResourceDictionary
-        {
-            get
-            {
-                if (_resourceDictionary == null)
-                {
-                    LoadResourceDictionary();
-                }
-                return _resourceDictionary;
-            }
-        }
-        
-        #endregion
-        
         #region Private Methods
         
         /// <summary>

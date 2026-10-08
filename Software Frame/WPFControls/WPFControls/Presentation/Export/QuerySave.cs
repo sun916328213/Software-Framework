@@ -53,10 +53,6 @@ namespace WPFControls.Method
                     messagePrompt.Show();
                 }
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
             finally
             {
                 fileLoading.Close();

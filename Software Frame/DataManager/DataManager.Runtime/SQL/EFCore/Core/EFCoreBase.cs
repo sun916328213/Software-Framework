@@ -528,8 +528,6 @@ namespace DataManager.Runtime.SQL.EFCore
             var scoped = ScopedForQuery();
             try
             {
-                if (scoped.Count == 1)
-                    return scoped[0].Set<T>().AsNoTracking().ToList();
                 var all = new List<T>();
                 foreach (var s in scoped)
                     all.AddRange(s.Set<T>().AsNoTracking().ToList());
@@ -551,8 +549,6 @@ namespace DataManager.Runtime.SQL.EFCore
             var scoped = ScopedForQuery();
             try
             {
-                if (scoped.Count == 1)
-                    return await scoped[0].Set<T>().AsNoTracking().ToListAsync(cancellationToken);
                 var all = new List<T>();
                 foreach (var s in scoped)
                 {
@@ -575,8 +571,6 @@ namespace DataManager.Runtime.SQL.EFCore
             var scoped = ScopedForQuery(predicate);
             try
             {
-                if (scoped.Count == 1)
-                    return scoped[0].Set<T>().Where(predicate).AsNoTracking().ToList();
                 var all = new List<T>();
                 foreach (var s in scoped)
                     all.AddRange(s.Set<T>().Where(predicate).AsNoTracking().ToList());
@@ -600,8 +594,6 @@ namespace DataManager.Runtime.SQL.EFCore
             var scoped = ScopedForQuery(predicate);
             try
             {
-                if (scoped.Count == 1)
-                    return await scoped[0].Set<T>().Where(predicate).AsNoTracking().ToListAsync(cancellationToken);
                 var all = new List<T>();
                 foreach (var s in scoped)
                 {

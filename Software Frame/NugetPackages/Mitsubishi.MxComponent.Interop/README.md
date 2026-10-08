@@ -43,6 +43,11 @@ using ActSupportMsg64Lib;
 （`ActUtlType64Lib` / `ActSupportMsg64Lib`）；其余 4 个作为通用内部二进制容器保留，
 供仓库内其他项目按需使用。
 
+`Communication.Runtime` 使用标准 COM 类型嵌入（C# `/link`）：只把上述两组实际使用的接口加入
+编译器，使用接口的 CoClass 信息激活 COM，GUID、DispId 和调用签名由契约测试核对。
+其 `PackageReference` 设置 `PrivateAssets="compile"`，避免把 RCW 编译引用传播给所有消费者；
+本包的六个运行时资产仍按原规则复制。Runtime 保持 AnyCPU，Windows x64 连接守卫继续生效。
+
 ## 打包说明（维护者）
 
 - 本工程是纯二进制包装项目：`IncludeBuildOutput=false`，不产出自己的程序集。
