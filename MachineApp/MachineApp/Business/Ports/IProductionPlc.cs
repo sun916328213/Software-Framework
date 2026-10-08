@@ -21,6 +21,12 @@ public interface IProductionPlc
     /// 处理当前类型提供的操作；对应入口为 StopRefresh。
     /// </summary>
     void StopRefresh();
+    /// <summary>异步退出入口；旧实现保持同步回退，生产 PLCTool 提供真正的异步断开。</summary>
+    Task StopRefreshAsync()
+    {
+        StopRefresh();
+        return Task.CompletedTask;
+    }
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 TriggerReply。
     /// </summary>

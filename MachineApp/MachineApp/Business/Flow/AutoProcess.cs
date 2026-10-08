@@ -1,4 +1,4 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // MachineApp 模块：具体机型的应用宿主，负责机型业务、导航选择、数据库实体和生产设备生命周期。
 // 本文件定义：AutoProcess。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：MachineApp.Business.Ports、MachineApp.Infra.Device、Extension.UI.Controls、Extension.Core.Conversion、Extension.Core.Enums、Extension.IO.Files。导入不代表所有类型都会在运行时加载。
@@ -151,102 +151,127 @@ namespace MachineApp.Business.Flow
         /// </summary>
         private void Update()
         {
+            if (_stopped || _timer != null) return;
             _PLCMethod.Refresh();//设置刷新任务
             _ResourceMonitorService.StartAutoRefresh();///刷新系统资源
 
 
-            Action action = new Action(async () =>
-            {
-                try
-                {
-                    var now = DateTime.Now;
-
-                    if (now.Minute % 2 == 0 && now.Second == 0)//5分钟读一次
-                    {
-                        //读取OK NG
-                        ReadCount();
-                        //更新每天统计信息
-                        _BulletinBoardService.ShowData_Day(new List<WPFControls.Controls.Models.Charts.LineSeries>
-                        {
-                            new WPFControls.Controls.Models.Charts.LineSeries {
-                                SeriesName="OK",
-                                Value=new System.Collections.ObjectModel.ObservableCollection<double>{ 10},
-                                Color= ColorHelper.Color_Green,
-                            },
-                            new WPFControls.Controls.Models.Charts.LineSeries {
-                                SeriesName="NG",
-                                Value=new System.Collections.ObjectModel.ObservableCollection<double>{ 20,20,30,40,130,20,0},
-                                Color= ColorHelper.Color_Red,
-                            },
-                            new WPFControls.Controls.Models.Charts.LineSeries {
-                                SeriesName="Total",
-                                Value=new System.Collections.ObjectModel.ObservableCollection<double>{ 120,120,130,140,230,120,0},
-                                Color= ColorHelper.Color_Blue,
-                            }
-                        });
-                    }
-                    else if (now.Hour == 0)
-                    {
-                        /// 更新每月统计信息
-                        _BulletinBoardService.ShowData_Month(new List<WPFControls.Controls.Models.Charts.LineSeries> {
-                        new WPFControls.Controls.Models.Charts.LineSeries
-                        {
-                            SeriesName = "OK",
-                            Value = new System.Collections.ObjectModel.ObservableCollection<double> { 10, 120 },
-                            Color = ColorHelper.Color_Blue,
-                        },
-                        new WPFControls.Controls.Models.Charts.LineSeries
-                        {
-                            SeriesName = "NG",
-                            Value = new System.Collections.ObjectModel.ObservableCollection<double> { 20, 20 },
-                            Color = ColorHelper.Color_Red,
-                        }
-                    });
-                    }
-
-
-                    // P5：PLC 状态改为真实连接状态；断线后自动反映 Offline。
-                    var plcstatus = _PLCMethod.IsOnline ? ELinkStatus.Online : ELinkStatus.Offline;
-                    if (plcstatus == ELinkStatus.Online)
-                    {
-                        await RefreshSystem();
-                        RefreshAlarm();
-                    }
-
-                    // 更新统计信息（在UI线程上执行）
-                    _StatisticService.UpdateID("12345678");
-
-                    _StatisticService.UpdateCount(10, 200);
-                    _StatisticService.UpdateRunTime(_AlarmInfoService.TotalAlarmTime == 0 ? 100 : 500, 800);
-                    _StatisticService.UpdateSecsMode(_SecsMethod.CurrentMode);
-                    _StatisticService.UpdatePLC(plcstatus);
-                    _StatisticService.UpdateSecsStatus(_secsRuntime.GetState().IsConnected ? ELinkStatus.Online : ELinkStatus.Offline);
-                    _StatisticService.UpdateTime();
-
-
-                    // 在后台线程执行耗时操作
-                    Task.Run(() =>
-                    {
-                        // 每小时检查一次（当分钟为0且秒为0时）
-                        if (now.Minute / 10 == 0 && now.Second == 0)
-                        {
-                            ScheduledDeletion.DeleteExpiredFiles(GlobalData.Path_Image, GlobalData.SaveImageDay);
-                        }
-                        if (now.Second == 0)
-                            GC.Collect();
-                    });
-                }
-                catch (Exception ex)
-                {
-                    string message = string.Join("\r\n", ex.Message, ex.StackTrace);
-                    _LogInfoService.AddRunInfo(message);
-                }
-            });
+            Action action = async () => await TickAsync(DateTime.Now);
 
             // 创建定时器，间隔1000毫秒，启用防重入机制
-            action.DispatcherTimer(1000);
+            _timer = action.DispatcherTimer(1000);
         }
 
+
+        private bool _isUpdating;
+        private bool _stopped;
+        private System.Windows.Threading.DispatcherTimer? _timer;
+        private Task _updateTask = Task.CompletedTask;
+
+        private Task TickAsync(DateTime now)
+        {
+            if (_stopped || _isUpdating) return Task.CompletedTask;
+            return _updateTask = UpdateAsync(now);
+        }
+
+        /// <summary>在窗口的 UI 线程停止新刷新，等待已开始的刷新结束后再释放设备。</summary>
+        public async Task StopAsync()
+        {
+            _stopped = true;
+            _timer?.Stop();
+            _ResourceMonitorService.StopAutoRefresh();
+            // This task belongs to this timer and starts on the same UI dispatcher.
+            // Shutdown drains it asynchronously; no thread synchronously waits here.
+#pragma warning disable VSTHRD003
+            await _updateTask.ConfigureAwait(false);
+#pragma warning restore VSTHRD003
+        }
+
+        private async Task UpdateAsync(DateTime now)
+        {
+            if (_stopped || _isUpdating) return;
+            _isUpdating = true;
+            try
+            {
+
+                if (now.Minute % 2 == 0 && now.Second == 0)//5分钟读一次
+                {
+                    //读取OK NG
+                    ReadCount();
+                    //更新每天统计信息
+                    _BulletinBoardService.ShowData_Day(new List<WPFControls.Controls.Models.Charts.LineSeries>
+                    {
+                        new WPFControls.Controls.Models.Charts.LineSeries {
+                            SeriesName="OK",
+                            Value=new System.Collections.ObjectModel.ObservableCollection<double>{ 10},
+                            Color= ColorHelper.Color_Green,
+                        },
+                        new WPFControls.Controls.Models.Charts.LineSeries {
+                            SeriesName="NG",
+                            Value=new System.Collections.ObjectModel.ObservableCollection<double>{ 20,20,30,40,130,20,0},
+                            Color= ColorHelper.Color_Red,
+                        },
+                        new WPFControls.Controls.Models.Charts.LineSeries {
+                            SeriesName="Total",
+                            Value=new System.Collections.ObjectModel.ObservableCollection<double>{ 120,120,130,140,230,120,0},
+                            Color= ColorHelper.Color_Blue,
+                        }
+                    });
+                }
+                else if (now.Hour == 0)
+                {
+                    /// 更新每月统计信息
+                    _BulletinBoardService.ShowData_Month(new List<WPFControls.Controls.Models.Charts.LineSeries> {
+                    new WPFControls.Controls.Models.Charts.LineSeries
+                    {
+                        SeriesName = "OK",
+                        Value = new System.Collections.ObjectModel.ObservableCollection<double> { 10, 120 },
+                        Color = ColorHelper.Color_Blue,
+                    },
+                    new WPFControls.Controls.Models.Charts.LineSeries
+                    {
+                        SeriesName = "NG",
+                        Value = new System.Collections.ObjectModel.ObservableCollection<double> { 20, 20 },
+                        Color = ColorHelper.Color_Red,
+                    }
+                });
+                }
+
+
+                // P5：PLC 状态改为真实连接状态；断线后自动反映 Offline。
+                var plcstatus = _PLCMethod.IsOnline ? ELinkStatus.Online : ELinkStatus.Offline;
+                if (plcstatus == ELinkStatus.Online)
+                {
+                    await RefreshSystem();
+                    RefreshAlarm();
+                }
+
+                // 更新统计信息（在UI线程上执行）
+                _StatisticService.UpdateID("12345678");
+
+                _StatisticService.UpdateCount(10, 200);
+                _StatisticService.UpdateRunTime(_AlarmInfoService.TotalAlarmTime == 0 ? 100 : 500, 800);
+                _StatisticService.UpdateSecsMode(_SecsMethod.CurrentMode);
+                _StatisticService.UpdatePLC(plcstatus);
+                _StatisticService.UpdateSecsStatus(_secsRuntime.GetState().IsConnected ? ELinkStatus.Online : ELinkStatus.Offline);
+                _StatisticService.UpdateTime();
+
+
+                // 清理方法内部已使用后台任务；等待它完成，异常进入下面的日志分支。
+                if (now.Minute == 0 && now.Second == 0)
+                {
+                    await ScheduledDeletion.DeleteExpiredFiles(GlobalData.Path_Image, GlobalData.SaveImageDay);
+                }
+                if (now.Second == 0)
+                    await Task.Run(GC.Collect);
+            }
+            catch (Exception ex)
+            {
+                string message = string.Join("\r\n", ex.Message, ex.StackTrace);
+                _LogInfoService.AddRunInfo(message);
+            }
+            finally { _isUpdating = false; }
+        }
 
         /// <summary>
         /// 读取当前实现提供的数据；对应入口为 ReadCount。

@@ -30,6 +30,7 @@ public sealed class PlcService : IDisposable, IAsyncDisposable
     private readonly McClientDevice _device;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly Timer _heartbeat;
+    private volatile bool _heartbeatEnabled;
     private int _heartbeatRunning;
     private int _disposed;
     private volatile bool _isConnected;
@@ -62,12 +63,19 @@ public sealed class PlcService : IDisposable, IAsyncDisposable
     public bool IsConnected => _isConnected && _disposed == 0;
 
     /// <summary>幂等连接；已连接直接返回 true。</summary>
-    public async Task<bool> ConnectAsync(CancellationToken ct = default)
+    public Task<bool> ConnectAsync(CancellationToken ct = default) => ConnectCoreAsync(ct, heartbeatOnly: false);
+
+    internal Task<bool> ConnectHeartbeatAsync() => ConnectCoreAsync(CancellationToken.None, heartbeatOnly: true);
+
+    private async Task<bool> ConnectCoreAsync(CancellationToken ct, bool heartbeatOnly)
     {
         ObjectDisposedException.ThrowIf(_disposed != 0, this);
         await _gate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
+            // A callback may have queued at the gate before StopHeartbeat disabled it.
+            ObjectDisposedException.ThrowIf(_disposed != 0, this);
+            if (heartbeatOnly && !_heartbeatEnabled) return false;
             if (_device.State == ConnectionState.Connected)
             {
                 SetConnected(true);
@@ -126,14 +134,22 @@ public sealed class PlcService : IDisposable, IAsyncDisposable
     /// <summary>启动 Online 心跳：掉线自动重连尝试，异常仅标记 Offline。</summary>
     public void StartHeartbeat()
     {
-        ObjectDisposedException.ThrowIf(_disposed != 0, this);
-        _heartbeat.Change(HeartbeatInterval, HeartbeatInterval);
+        lock (_heartbeat)
+        {
+            ObjectDisposedException.ThrowIf(_disposed != 0, this);
+            _heartbeatEnabled = true;
+            _heartbeat.Change(HeartbeatInterval, HeartbeatInterval);
+        }
     }
 
     /// <summary>停止心跳；重复调用安全。</summary>
     public void StopHeartbeat()
     {
-        _heartbeat.Change(Timeout.Infinite, Timeout.Infinite);
+        lock (_heartbeat)
+        {
+            _heartbeatEnabled = false;
+            _heartbeat.Change(Timeout.Infinite, Timeout.Infinite);
+        }
     }
 
     /// <summary>读取 1 个寄存器并按 Int16 解码。</summary>
@@ -303,7 +319,7 @@ public sealed class PlcService : IDisposable, IAsyncDisposable
     /// </summary>
     private async Task TickAsync()
     {
-        if (_disposed != 0)
+        if (_disposed != 0 || !_heartbeatEnabled)
         {
             return;
         }
@@ -312,7 +328,7 @@ public sealed class PlcService : IDisposable, IAsyncDisposable
         {
             if (!IsConnected)
             {
-                await ConnectAsync().ConfigureAwait(false);
+                await ConnectHeartbeatAsync().ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException)
