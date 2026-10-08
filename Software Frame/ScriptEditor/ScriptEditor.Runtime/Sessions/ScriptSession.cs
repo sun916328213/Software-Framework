@@ -369,10 +369,14 @@ public sealed class ScriptSession : ObservableObject, IScriptSession
         // 任意 _inputData 类型（含 class）通过 dynamic 调度都能正确解析，缓存 key 稳定。
         var globalsType = typeof(ScriptGlobals);
 
-        _executionCts?.Cancel();
-        _executionCts?.Dispose();
-        _executionCts = new CancellationTokenSource();
-        var ct = _executionCts.Token;
+        var localExecutionCts = new CancellationTokenSource();
+        CancellationTokenSource? previousExecutionCts;
+        lock (_sync)
+        {
+            previousExecutionCts = _executionCts;
+            _executionCts = localExecutionCts;
+        }
+        var ct = localExecutionCts.Token;
         var startTime = DateTime.Now;
 
         string? finalOutput = null;
@@ -381,6 +385,7 @@ public sealed class ScriptSession : ObservableObject, IScriptSession
 
         try
         {
+            await CancelSourceAsync(previousExecutionCts);
             var rawCode = _getCode();
             if (string.IsNullOrWhiteSpace(rawCode))
             {
@@ -503,6 +508,11 @@ public sealed class ScriptSession : ObservableObject, IScriptSession
         }
         finally
         {
+            lock (_sync)
+            {
+                if (ReferenceEquals(_executionCts, localExecutionCts)) _executionCts = null;
+            }
+            localExecutionCts.Dispose();
             if (!isLoopMode)
             {
                 IsRunning = false;
@@ -554,7 +564,9 @@ public sealed class ScriptSession : ObservableObject, IScriptSession
     /// <summary>终止当前执行。</summary>
     public void Terminate()
     {
-        _executionCts?.Cancel();
+        CancellationTokenSource? source;
+        lock (_sync) source = _executionCts;
+        CancelSource(source);
         IsRunning = false;
         StatusText = "正在终止...";
     }
@@ -564,11 +576,12 @@ public sealed class ScriptSession : ObservableObject, IScriptSession
     {
         int myGeneration;
         CancellationTokenSource localCts;
+        CancellationTokenSource? previousLoopCts;
 
         lock (_loopLock)
         {
             // 取消旧循环（旧循环的 finally 会自行清理）
-            _loopCts?.Cancel();
+            previousLoopCts = _loopCts;
 
             localCts = new CancellationTokenSource();
             _loopCts = localCts;
@@ -587,6 +600,7 @@ public sealed class ScriptSession : ObservableObject, IScriptSession
 
         try
         {
+            await CancelSourceAsync(previousLoopCts);
             while (!ct.IsCancellationRequested)
             {
                 await Task.Delay(Math.Max(20, LoopInterval), ct);
@@ -607,7 +621,6 @@ public sealed class ScriptSession : ObservableObject, IScriptSession
                 // 只有当前代际才清理 _loopCts 和重置状态，避免覆盖新版循环的状态
                 if (isCurrentGeneration)
                 {
-                    _loopCts?.Dispose();
                     _loopCts = null;
                 }
             }
@@ -616,8 +629,9 @@ public sealed class ScriptSession : ObservableObject, IScriptSession
             {
                 IsRunning = false;
                 IsLooping = false;
+                StatusText = "循环已停止...";
             }
-            StatusText = "循环已停止...";
+            localCts.Dispose();
         }
     }
 
@@ -625,13 +639,27 @@ public sealed class ScriptSession : ObservableObject, IScriptSession
     public void StopLoop()
     {
         StatusText = "正在停止循环...";
-        lock (_sync)
-        {
-            _loopCts?.Cancel();
-            _executionCts?.Cancel();
-        }
+        CancellationTokenSource? loop;
+        CancellationTokenSource? execution;
+        lock (_loopLock) loop = _loopCts;
+        lock (_sync) execution = _executionCts;
+        CancelSource(loop);
+        CancelSource(execution);
         IsLooping = false;
         IsRunning = false;
+    }
+
+    private static async Task CancelSourceAsync(CancellationTokenSource? source)
+    {
+        if (source == null) return;
+        try { await source.CancelAsync().ConfigureAwait(false); }
+        catch (ObjectDisposedException) { } // The owning invocation already completed.
+    }
+
+    private static void CancelSource(CancellationTokenSource? source)
+    {
+        try { source?.Cancel(); }
+        catch (ObjectDisposedException) { }
     }
 
     /// <summary>耗时文本格式化（编译/执行统一 "xx.xx ms"）。</summary>

@@ -405,7 +405,6 @@ public static class ScriptExecutionService
                 }
             });
 
-            writer.Flush();
             var consoleOutput = writer.GetBuffer();
 
             var output = new StringBuilder();
