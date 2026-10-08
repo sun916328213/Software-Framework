@@ -1,4 +1,4 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // Communication 模块：连接、协议适配及通信界面；主动请求应答与被动数据接收需遵守所用连接的实际契约。
 // 本文件定义：HttpServerDevice。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：Communication.Core.Protocols.Http、System.Net、System.Text、Communication.Core.Abstractions、Communication.Core、Communication.Runtime.Core。导入不代表所有类型都会在运行时加载。
@@ -19,9 +19,8 @@ namespace Communication.Runtime.Protocols.Http
     {
         private new HttpParam Param => (HttpParam)base.Param;
         private readonly IHttpServerListener _listener;
-        private readonly SemaphoreSlim _lifecycleGate = new(1, 1);
+        private readonly HttpServerLifecycle _lifecycle;
         private readonly Dictionary<string, Func<HttpListenerContext, Task>> _handlers = new();
-        private ConnectionState _state = ConnectionState.Disconnected;
 
         /// <summary>请求处理委托字典，key = "GET:/api/data"</summary>
         public IReadOnlyDictionary<string, Func<HttpListenerContext, Task>> Handlers => _handlers;
@@ -36,6 +35,8 @@ namespace Communication.Runtime.Protocols.Http
         {
             ArgumentNullException.ThrowIfNull(listener);
             _listener = listener;
+            _lifecycle = new HttpServerLifecycle(listener, this, () => _disposed,
+                OnConnectionStateChanged, OnErrorOccurred);
             ProtocolType = global::Communication.Core.ProtocolType.Http;
         }
 
@@ -43,7 +44,7 @@ namespace Communication.Runtime.Protocols.Http
         public override DeviceRole Role => DeviceRole.Server;
 
         /// <summary>新连接边界暴露的显式生命周期状态。</summary>
-        public ConnectionState State => _state;
+        public ConnectionState State => _lifecycle.State;
 
         /// <summary>
         /// 注册路由处理器
@@ -59,84 +60,43 @@ namespace Communication.Runtime.Protocols.Http
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>
-        public override async Task<bool> ConnectAsync(CancellationToken ct = default)
-        {
-            await _lifecycleGate.WaitAsync(ct).ConfigureAwait(false);
-            try
-            {
-                ObjectDisposedException.ThrowIf(_disposed, this);
-                if (_state == ConnectionState.Connected)
+        public override Task<bool> ConnectAsync(CancellationToken ct = default)
+            => _lifecycle.ConnectAsync(ct,
+                prepare: () =>
                 {
-                    return true;
-                }
+                    var baseUri = new Uri(Param.BaseUrl);
+                    _listener.AddPrefix(baseUri.GetLeftPart(UriPartial.Authority) + "/");
 
-                _state = ConnectionState.Connecting;
-                var baseUri = new Uri(Param.BaseUrl);
-                _listener.AddPrefix(baseUri.GetLeftPart(UriPartial.Authority) + "/");
-
-                // 预注册路由
-                foreach (var route in Param.Routes)
+                    // 预注册路由
+                    foreach (var route in Param.Routes)
+                    {
+                        var key = $"{route.Method.ToUpperInvariant()}:{route.Path}";
+                        if (!_handlers.ContainsKey(key))
+                            _handlers[key] = null!; // 占位
+                    }
+                },
+                startReceiveLoop: () =>
                 {
-                    var key = $"{route.Method.ToUpperInvariant()}:{route.Path}";
-                    if (!_handlers.ContainsKey(key))
-                        _handlers[key] = null!; // 占位
-                }
-
-                _listener.Start();
-                _receiveLoopCts?.Dispose();
-                _receiveLoopCts = new CancellationTokenSource();
-                _receiveLoopTask = ListenAsync(_receiveLoopCts.Token);
-                _state = ConnectionState.Connected;
-                OnConnectionStateChanged(true, $"HTTP服务器已启动: {Param.BaseUrl}");
-                return true;
-            }
-            catch (OperationCanceledException)
-            {
-                _state = ConnectionState.Disconnected;
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _state = ConnectionState.Faulted;
-                OnErrorOccurred(ex);
-                OnConnectionStateChanged(false, ex.Message);
-                return false;
-            }
-            finally
-            {
-                _lifecycleGate.Release();
-            }
-        }
+                    _receiveLoopCts?.Dispose();
+                    _receiveLoopCts = new CancellationTokenSource();
+                    _receiveLoopTask = ListenAsync(_receiveLoopCts.Token);
+                },
+                message: $"HTTP服务器已启动: {Param.BaseUrl}");
 
         /// <summary>
         /// 执行断开连接操作；对应入口为 DisconnectAsync。
         /// 正文中的关键协作调用包括 ConfigureAwait、WaitAsync、Stop、WaitForReceiveLoopAsync、WaitForBackgroundOperationsAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
-        public override async Task DisconnectAsync(CancellationToken ct = default)
-        {
-            await _lifecycleGate.WaitAsync(ct).ConfigureAwait(false);
-            try
-            {
-                if (_state == ConnectionState.Disconnected)
+        public override Task DisconnectAsync(CancellationToken ct = default)
+            => _lifecycle.DisconnectAsync(ct,
+                cancelReceiveLoop: () => _receiveLoopCts?.Cancel(),
+                drain: async () =>
                 {
-                    return;
-                }
-
-                _state = ConnectionState.Stopping;
-                _receiveLoopCts?.Cancel();
-                _listener.Stop();
-                // Stop 会解除 GetContextAsync；随后等待可保证断开返回时不再接收新请求。
-                await WaitForReceiveLoopAsync().ConfigureAwait(false);
-                await WaitForBackgroundOperationsAsync().ConfigureAwait(false);
-                _state = ConnectionState.Disconnected;
-                OnConnectionStateChanged(false, "HTTP服务器已停止");
-            }
-            finally
-            {
-                _lifecycleGate.Release();
-            }
-        }
+                    await WaitForReceiveLoopAsync().ConfigureAwait(false);
+                    await WaitForBackgroundOperationsAsync().ConfigureAwait(false);
+                },
+                message: "HTTP服务器已停止");
 
         /// <summary>
         /// 处理当前类型提供的操作；对应入口为 ListenAsync。
@@ -293,11 +253,10 @@ namespace Communication.Runtime.Protocols.Http
         {
             if (disposing)
             {
-                _listener.Dispose();
-                _lifecycleGate.Dispose();
+                _lifecycle.Dispose();
             }
             base.Dispose(disposing);
-            _state = ConnectionState.Disposed;
+            _lifecycle.State = ConnectionState.Disposed;
         }
     }
 }

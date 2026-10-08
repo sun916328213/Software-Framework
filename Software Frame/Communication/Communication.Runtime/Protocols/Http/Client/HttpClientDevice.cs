@@ -1,4 +1,4 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // Communication 模块：连接、协议适配及通信界面；主动请求应答与被动数据接收需遵守所用连接的实际契约。
 // 本文件定义：HttpClientDevice。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：Communication.Core.Protocols.Http、System.Net.Http.Headers、System.Text、Communication.Core.Abstractions、Communication.Core、Communication.Runtime.Core。导入不代表所有类型都会在运行时加载。
@@ -18,8 +18,8 @@ namespace Communication.Runtime.Protocols.Http;
 public class HttpClientDevice : CommunicationDeviceBase, IConnection, IAddressReader, IAddressWriter
 {
     private new HttpParam Param => (HttpParam)base.Param;
-    private readonly HttpMessageHandler? _injectedHandler;
-    private HttpClient? _httpClient;
+    private readonly HttpClientSession _clientSession;
+    private HttpClient? _httpClient => _clientSession.Client;
     private ConnectionState _state = ConnectionState.Disconnected;
 
     /// <summary>使用生产 HTTP handler 创建设备。</summary>
@@ -33,7 +33,7 @@ public class HttpClientDevice : CommunicationDeviceBase, IConnection, IAddressRe
     /// </summary>
     public HttpClientDevice(HttpParam param, HttpMessageHandler? handler) : base(param)
     {
-        _injectedHandler = handler;
+        _clientSession = new HttpClientSession(handler);
         ProtocolType = global::Communication.Core.ProtocolType.Http;
     }
 
@@ -60,26 +60,7 @@ public class HttpClientDevice : CommunicationDeviceBase, IConnection, IAddressRe
         _state = ConnectionState.Connecting;
         try
         {
-            HttpMessageHandler handler;
-            var disposeHandler = _injectedHandler is null;
-            if (_injectedHandler is not null)
-            {
-                handler = _injectedHandler;
-            }
-            else
-            {
-                handler = CreateProductionHandler();
-            }
-
-            _httpClient = new HttpClient(handler, disposeHandler)
-            {
-                BaseAddress = new Uri(Param.BaseUrl),
-                Timeout = TimeSpan.FromMilliseconds(TimeoutMs),
-            };
-            foreach (var header in Param.Headers)
-            {
-                _httpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
-            }
+            _clientSession.Open(Param.BaseUrl, TimeoutMs, Param.IgnoreSslErrors, Param.Headers);
 
             _state = ConnectionState.Connected;
             OnConnectionStateChanged(true, $"HTTP客户端就绪: {Param.BaseUrl}");
@@ -103,8 +84,7 @@ public class HttpClientDevice : CommunicationDeviceBase, IConnection, IAddressRe
     {
         ct.ThrowIfCancellationRequested();
         _state = ConnectionState.Stopping;
-        _httpClient?.Dispose();
-        _httpClient = null;
+        _clientSession.Close();
         _state = ConnectionState.Disconnected;
         OnConnectionStateChanged(false, "HTTP客户端已关闭");
         return Task.CompletedTask;
@@ -207,20 +187,6 @@ public class HttpClientDevice : CommunicationDeviceBase, IConnection, IAddressRe
         new(DisconnectAsync(cancellationToken));
 
     /// <summary>
-    /// 创建当前实现提供的对象或结果；对应入口为 CreateProductionHandler。
-    /// </summary>
-    private HttpClientHandler CreateProductionHandler()
-    {
-        var handler = new HttpClientHandler();
-        if (Param.IgnoreSslErrors)
-        {
-            // 仅显式配置时关闭证书校验，默认保持平台安全策略。
-            handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
-        }
-        return handler;
-    }
-
-    /// <summary>
     /// 获取当前实现提供的值或对象；对应入口为 GetConnectedClient。
     /// </summary>
     private HttpClient GetConnectedClient() =>
@@ -237,8 +203,7 @@ public class HttpClientDevice : CommunicationDeviceBase, IConnection, IAddressRe
     {
         if (disposing)
         {
-            _httpClient?.Dispose();
-            _httpClient = null;
+            _clientSession.Close();
         }
         base.Dispose(disposing);
     }

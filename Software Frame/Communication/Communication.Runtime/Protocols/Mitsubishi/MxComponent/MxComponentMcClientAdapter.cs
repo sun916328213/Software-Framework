@@ -20,8 +20,8 @@ internal sealed class MxComponentMcClientAdapter : IMcClientAdapter
     private readonly string _password;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _disposeSync = new();
-    private ActUtlType64Class? _control;
-    private ActSupportMsg64Class? _supportMessages;
+    private ActUtlType64? _control;
+    private ActSupportMsg64? _supportMessages;
     private Task? _disposeTask;
     private volatile bool _disposeStarted;
 
@@ -68,7 +68,7 @@ internal sealed class MxComponentMcClientAdapter : IMcClientAdapter
             State = ConnectionState.Connecting;
             try
             {
-                _control ??= new ActUtlType64Class();
+                _control ??= new ActUtlType64();
                 _control.ActLogicalStationNumber = _logicalStationNumber;
                 _control.ActPassword = _password;
                 ThrowForError(_control.Open(), "Open");
@@ -351,7 +351,7 @@ internal sealed class MxComponentMcClientAdapter : IMcClientAdapter
     {
         try
         {
-            _supportMessages ??= new ActSupportMsg64Class();
+            _supportMessages ??= new ActSupportMsg64();
             var message = string.Empty;
             return _supportMessages.GetErrorMessage(errorCode, out message) == 0 &&
                    !string.IsNullOrWhiteSpace(message)

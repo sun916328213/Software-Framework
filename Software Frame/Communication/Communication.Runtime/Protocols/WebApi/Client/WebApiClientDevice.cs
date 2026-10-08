@@ -1,4 +1,4 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // Communication 模块：连接、协议适配及通信界面；主动请求应答与被动数据接收需遵守所用连接的实际契约。
 // 本文件定义：WebApiClientDevice。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：Communication.Core.Protocols.WebApi、System.Net.Http.Headers、System.Text、System.Text.Json、Communication.Core.Abstractions、Communication.Core。导入不代表所有类型都会在运行时加载。
@@ -9,6 +9,7 @@ using System.Text.Json;
 using Communication.Core.Abstractions;
 using Communication.Core;
 using Communication.Runtime.Core;
+using Communication.Runtime.Protocols.Http;
 
 namespace Communication.Runtime.Protocols.WebApi;
 
@@ -19,8 +20,8 @@ namespace Communication.Runtime.Protocols.WebApi;
 public class WebApiClientDevice : CommunicationDeviceBase, IConnection, IAddressReader, IAddressWriter
 {
     private new WebApiParam Param => (WebApiParam)base.Param;
-    private readonly HttpMessageHandler? _injectedHandler;
-    private HttpClient? _httpClient;
+    private readonly HttpClientSession _clientSession;
+    private HttpClient? _httpClient => _clientSession.Client;
     private ConnectionState _state = ConnectionState.Disconnected;
 
     /// <summary>使用生产 HTTP handler 创建 WebApi 客户端。</summary>
@@ -33,7 +34,7 @@ public class WebApiClientDevice : CommunicationDeviceBase, IConnection, IAddress
     /// </summary>
     public WebApiClientDevice(WebApiParam param, HttpMessageHandler? handler) : base(param)
     {
-        _injectedHandler = handler;
+        _clientSession = new HttpClientSession(handler);
         ProtocolType = global::Communication.Core.ProtocolType.WebApi;
     }
 
@@ -60,27 +61,17 @@ public class WebApiClientDevice : CommunicationDeviceBase, IConnection, IAddress
         _state = ConnectionState.Connecting;
         try
         {
-            var disposeHandler = _injectedHandler is null;
-            var handler = _injectedHandler ?? CreateProductionHandler();
-            _httpClient = new HttpClient(handler, disposeHandler)
-            {
-                BaseAddress = new Uri(Param.BaseUrl),
-                Timeout = TimeSpan.FromMilliseconds(Param.OperationTimeoutMs),
-            };
-            _httpClient.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
-            foreach (var header in Param.Headers)
-            {
-                _httpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
-            }
+            _clientSession.Open(Param.BaseUrl, Param.OperationTimeoutMs, Param.IgnoreSslErrors,
+                Param.Headers, client => client.DefaultRequestHeaders.Accept.Add(
+                    new MediaTypeWithQualityHeaderValue("application/json")));
             if (!string.IsNullOrEmpty(Param.BearerToken))
             {
-                _httpClient.DefaultRequestHeaders.Authorization =
+                _httpClient!.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", Param.BearerToken);
             }
             if (!string.IsNullOrEmpty(Param.ApiKey))
             {
-                _httpClient.DefaultRequestHeaders.Add(Param.ApiKeyHeaderName, Param.ApiKey);
+                _httpClient!.DefaultRequestHeaders.Add(Param.ApiKeyHeaderName, Param.ApiKey);
             }
 
             _state = ConnectionState.Connected;
@@ -105,8 +96,7 @@ public class WebApiClientDevice : CommunicationDeviceBase, IConnection, IAddress
     {
         ct.ThrowIfCancellationRequested();
         _state = ConnectionState.Stopping;
-        _httpClient?.Dispose();
-        _httpClient = null;
+        _clientSession.Close();
         _state = ConnectionState.Disconnected;
         OnConnectionStateChanged(false, "WebApi客户端已关闭");
         return Task.CompletedTask;
@@ -246,20 +236,6 @@ public class WebApiClientDevice : CommunicationDeviceBase, IConnection, IAddress
     }
 
     /// <summary>
-    /// 创建当前实现提供的对象或结果；对应入口为 CreateProductionHandler。
-    /// </summary>
-    private HttpClientHandler CreateProductionHandler()
-    {
-        var handler = new HttpClientHandler();
-        if (Param.IgnoreSslErrors)
-        {
-            // 仅显式配置时关闭证书校验，默认保持平台安全策略。
-            handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
-        }
-        return handler;
-    }
-
-    /// <summary>
     /// 创建当前实现提供的对象或结果；对应入口为 CreateContent。
     /// 正文中的关键协作调用包括 ThrowIfNull；具体条件和先后次序见方法体。
     /// </summary>
@@ -303,8 +279,7 @@ public class WebApiClientDevice : CommunicationDeviceBase, IConnection, IAddress
     {
         if (disposing)
         {
-            _httpClient?.Dispose();
-            _httpClient = null;
+            _clientSession.Close();
         }
         base.Dispose(disposing);
     }

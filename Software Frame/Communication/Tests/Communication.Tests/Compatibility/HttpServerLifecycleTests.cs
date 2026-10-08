@@ -19,8 +19,35 @@ namespace Communication.Tests.Compatibility;
 /// </summary>
 public sealed class HttpServerLifecycleTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task FailedStart_RetryReconnectAndCanceledDisconnect_PreserveState(bool webApi)
+    {
+        var listener = new ScriptedHttpServerListener { FailuresRemaining = 1 };
+        await using Communication.Runtime.Core.CommunicationDeviceBase server = webApi
+            ? new WebApiServerDevice(new WebApiParam { BaseUrl = "http://localhost/", ApiPrefix = "/api" }, listener)
+            : new HttpServerDevice(new HttpParam { BaseUrl = "http://localhost/" }, listener);
+        var connection = (IConnection)server;
+
+        Assert.False(await server.ConnectAsync());
+        Assert.Equal(ConnectionState.Faulted, connection.State);
+        Assert.True(await server.ConnectAsync());
+        await server.DisconnectAsync();
+        Assert.True(await server.ConnectAsync());
+        Assert.True(await server.ConnectAsync());
+        using var canceled = new CancellationTokenSource();
+        canceled.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => server.DisconnectAsync(canceled.Token));
+        Assert.Equal(ConnectionState.Connected, connection.State);
+        await server.DisconnectAsync();
+        Assert.Equal(ConnectionState.Disconnected, connection.State);
+        Assert.Equal(2, listener.StopCount);
+        Assert.Equal(3, listener.StartCount);
+    }
+
     /// <summary>
-    /// 验证 Http_server_connection_seam_stops_owned_listener_loop 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Http_server_connection_seam_stops_owned_listener_loop；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 IsAssignableFrom、True、ConnectAsync、Equal、DisconnectAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -44,7 +71,7 @@ public sealed class HttpServerLifecycleTests
     }
 
     /// <summary>
-    /// 验证 WebApi_server_connection_seam_stops_owned_listener_loop 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WebApi_server_connection_seam_stops_owned_listener_loop；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 IsAssignableFrom、True、ConnectAsync、Equal、DisconnectAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -69,7 +96,7 @@ public sealed class HttpServerLifecycleTests
     }
 
     /// <summary>
-    /// 验证 Tcp_server_connection_seam_stops_owned_accept_loop 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Tcp_server_connection_seam_stops_owned_accept_loop；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 IsAssignableFrom、True、ConnectAsync、Equal、DisconnectAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -99,6 +126,8 @@ public sealed class HttpServerLifecycleTests
     /// </summary>
     private sealed class ScriptedHttpServerListener : IHttpServerListener
     {
+        public int FailuresRemaining { get; set; }
+        public int StartCount { get; private set; }
         private TaskCompletionSource<HttpListenerContext> _pending = NewPending();
 
         public bool IsListening { get; private set; }
@@ -106,23 +135,25 @@ public sealed class HttpServerLifecycleTests
         public List<string> Prefixes { get; } = new();
 
         /// <summary>
-        /// 验证 AddPrefix 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AddPrefix；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
         public void AddPrefix(string prefix) => Prefixes.Add(prefix);
 
         /// <summary>
-        /// 验证 Start 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Start；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewPending；具体条件和先后次序见方法体。
         /// </summary>
         public void Start()
         {
+            StartCount++;
+            if (FailuresRemaining-- > 0) throw new IOException("Scripted start failure");
             IsListening = true;
             _pending = NewPending();
         }
 
         /// <summary>
-        /// 验证 Stop 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Stop；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetCanceled；具体条件和先后次序见方法体。
         /// </summary>
         public void Stop()
@@ -134,18 +165,18 @@ public sealed class HttpServerLifecycleTests
         }
 
         /// <summary>
-        /// 验证 GetContextAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 GetContextAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         public Task<HttpListenerContext> GetContextAsync() => _pending.Task;
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Stop；具体条件和先后次序见方法体。
         /// </summary>
         public void Dispose() => Stop();
 
         /// <summary>
-        /// 验证 NewPending 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 NewPending；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private static TaskCompletionSource<HttpListenerContext> NewPending() =>
             new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -166,7 +197,7 @@ public sealed class HttpServerLifecycleTests
         public int LocalPort { get; private set; }
 
         /// <summary>
-        /// 验证 Start 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Start；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 NewPending；具体条件和先后次序见方法体。
         /// </summary>
         public void Start(int backlog)
@@ -176,7 +207,7 @@ public sealed class HttpServerLifecycleTests
         }
 
         /// <summary>
-        /// 验证 Stop 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Stop；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetCanceled；具体条件和先后次序见方法体。
         /// </summary>
         public void Stop()
@@ -188,7 +219,7 @@ public sealed class HttpServerLifecycleTests
         }
 
         /// <summary>
-        /// 验证 AcceptTcpClientAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 AcceptTcpClientAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 WaitAsync；具体条件和先后次序见方法体。
         /// </summary>
         public ValueTask<System.Net.Sockets.TcpClient> AcceptTcpClientAsync(
@@ -196,13 +227,13 @@ public sealed class HttpServerLifecycleTests
             new(_pending.Task.WaitAsync(cancellationToken));
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Stop；具体条件和先后次序见方法体。
         /// </summary>
         public void Dispose() => Stop();
 
         /// <summary>
-        /// 验证 NewPending 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 NewPending；准备条件、协作调用与结果检查以方法正文为准。
         /// </summary>
         private static TaskCompletionSource<System.Net.Sockets.TcpClient> NewPending() =>
             new(TaskCreationOptions.RunContinuationsAsynchronously);

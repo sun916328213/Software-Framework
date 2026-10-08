@@ -15,8 +15,32 @@ namespace Communication.Tests.Protocols.Http;
 /// </summary>
 public sealed class HttpClientDeviceTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ReconnectAndDispose_PreserveInjectedHandlerOwnership(bool webApi)
+    {
+        using var handler = new ScriptedHandler(
+            new HttpResponseMessage(HttpStatusCode.OK),
+            new HttpResponseMessage(HttpStatusCode.OK));
+        await using Communication.Runtime.Core.CommunicationDeviceBase device = webApi
+            ? new Communication.Runtime.Protocols.WebApi.WebApiClientDevice(
+                new Communication.Core.Protocols.WebApi.WebApiParam { BaseUrl = "http://localhost/" }, handler)
+            : new HttpClientDevice(new HttpParam { BaseUrl = "http://localhost/" }, handler);
+
+        Assert.True(await device.ConnectAsync());
+        await device.ReadAsync("status", 0);
+        await device.DisconnectAsync();
+        Assert.False(handler.Disposed);
+        Assert.True(await device.ConnectAsync());
+        await device.ReadAsync("status", 0);
+        await device.DisposeAsync();
+        Assert.False(handler.Disposed);
+        Assert.Equal(2, handler.RequestCount);
+    }
+
     /// <summary>
-    /// 验证 Injected_http_handler_supports_connection_seam_and_read_retry 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Injected_http_handler_supports_connection_seam_and_read_retry；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 IsAssignableFrom、True、ConnectAsync、Equal、ReadAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -44,7 +68,7 @@ public sealed class HttpClientDeviceTests
     }
 
     /// <summary>
-    /// 验证 Post_failure_is_not_retried_implicitly 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Post_failure_is_not_retried_implicitly；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 True、ConnectAsync、ThrowsAsync、WriteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -78,9 +102,16 @@ public sealed class HttpClientDeviceTests
         private readonly Queue<HttpResponseMessage> _responses = new(responses);
 
         public int RequestCount { get; private set; }
+        public bool Disposed { get; private set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            Disposed = true;
+            base.Dispose(disposing);
+        }
 
         /// <summary>
-        /// 验证 SendAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 SendAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested、FromResult、Dequeue；具体条件和先后次序见方法体。
         /// </summary>
         protected override Task<HttpResponseMessage> SendAsync(
