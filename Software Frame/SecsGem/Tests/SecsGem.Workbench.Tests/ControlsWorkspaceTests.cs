@@ -13,7 +13,6 @@ using SecsGem.Controls.Views;
 using SecsGem.Runtime;
 using SecsGem.Runtime.Manager;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 
@@ -26,7 +25,7 @@ namespace SecsGem.Workbench.Tests;
 public sealed class ControlsWorkspaceTests(WorkbenchAppFixture host)
 {
     /// <summary>
-    /// 验证 MultiplePages_ShareState_DisposingOneLeavesWorkspaceUsable 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 MultiplePages_ShareState_DisposingOneLeavesWorkspaceUsable；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、nameof、NotNull、NotSame；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -60,7 +59,7 @@ public sealed class ControlsWorkspaceTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 WorkspaceDispose_DoesNotDisposeInjectedRuntime 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WorkspaceDispose_DoesNotDisposeInjectedRuntime；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Subscribe、Dispose、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -80,7 +79,7 @@ public sealed class ControlsWorkspaceTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 CommandsAndRealButtons_FollowConnectionParametersAndSelection 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 CommandsAndRealButtons_FollowConnectionParametersAndSelection；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Create、Measure、Arrange；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -138,7 +137,7 @@ public sealed class ControlsWorkspaceTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 DisposedBorrower_DisablesOnlyOwnCommands_ClosedWorkspaceDisablesAll 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DisposedBorrower_DisablesOnlyOwnCommands_ClosedWorkspaceDisablesAll；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Add、Dispose、Throws；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -177,14 +176,14 @@ public sealed class ControlsWorkspaceTests(WorkbenchAppFixture host)
     {
         public int DisposeCount { get; private set; }
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Dispose；具体条件和先后次序见方法体。
         /// </summary>
         protected override void Dispose(bool disposing) { DisposeCount++; base.Dispose(disposing); }
     }
 
     /// <summary>
-    /// 验证 TerminalPrompt_FollowsLightAndDarkForeground 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TerminalPrompt_FollowsLightAndDarkForeground；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、Show、Initialize、IsAssignableFrom；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -214,7 +213,7 @@ public sealed class ControlsWorkspaceTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
-    /// 验证 Descendants 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Descendants；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetChildrenCount、GetChild、Descendants；具体条件和先后次序见方法体。
     /// </summary>
     private static IEnumerable<DependencyObject> Descendants(DependencyObject root)

@@ -18,8 +18,6 @@ using SecsGem.Runtime.Manager;
 using SecsGem.Tests.Infrastructure;
 using SecsGem.Runtime.Variable;
 using SecsGem.Runtime.Variable.Data;
-using SecsGem.Core;
-using SecsGem.Runtime;
 using SecsGem.Runtime.Transport;
 using ProtocolRegistry = SecsGem.Runtime.Protocol.Registry.SecsMessageRegistry;
 using Secs4Net;
@@ -42,7 +40,7 @@ namespace SecsGem.Tests.Integration
         private static SecsGemRuntime CreateControl() => CreateControl(out _);
 
         /// <summary>
-        /// 验证 CreateControl 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CreateControl；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 RegisterSingleton、RegisterTypes、Resolve、Same；具体条件和先后次序见方法体。
         /// </summary>
         private static SecsGemRuntime CreateControl(out TestPrismContainer container)
@@ -78,7 +76,7 @@ namespace SecsGem.Tests.Integration
             public int CallCount;
 
             /// <summary>
-            /// 验证 OnRemoteCommandAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+            /// 测试相关入口 OnRemoteCommandAsync；准备条件、协作调用与结果检查以方法正文为准。
             /// 正文中的关键协作调用包括 FromResult；具体条件和先后次序见方法体。
             /// </summary>
             public Task<byte> OnRemoteCommandAsync(SecsGemRemoteCommand command)
@@ -96,7 +94,7 @@ namespace SecsGem.Tests.Integration
         private sealed class TestEquipmentDataProvider : IEquipmentDataProvider
         {
             /// <summary>
-            /// 验证 GetVariableValues 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+            /// 测试相关入口 GetVariableValues；准备条件、协作调用与结果检查以方法正文为准。
             /// </summary>
             public IReadOnlyDictionary<string, object?> GetVariableValues() =>
                 new Dictionary<string, object?> { ["LotId"] = "LOT-42" };
@@ -112,7 +110,7 @@ namespace SecsGem.Tests.Integration
             public string Message { get; private set; }
 
             /// <summary>
-            /// 验证 Show 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+            /// 测试相关入口 Show；准备条件、协作调用与结果检查以方法正文为准。
             /// </summary>
             public void Show(string title, string message)
             {
@@ -122,7 +120,7 @@ namespace SecsGem.Tests.Integration
         }
 
         /// <summary>
-        /// 验证 Terminal_Message_Uses_Protocol_Parser_And_Display 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Terminal_Message_Uses_Protocol_Parser_And_Display；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateControl、Resolve、L、B、A；具体条件和先后次序见方法体。
         /// </summary>
         [Theory]
@@ -147,7 +145,7 @@ namespace SecsGem.Tests.Integration
         }
 
         /// <summary>
-        /// 验证 Terminal_Message_Is_Published_Without_A_Wpf_Display 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Terminal_Message_Is_Published_Without_A_Wpf_Display；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateControl、Resolve、L、B、A；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -175,7 +173,7 @@ namespace SecsGem.Tests.Integration
         }
 
         /// <summary>
-        /// 验证 CoreContract_Refreshes_Configured_Variable_From_Equipment 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 CoreContract_Refreshes_Configured_Variable_From_Equipment；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 CreateControl、SetEquipmentDataProvider、Equal、GetState、False；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
@@ -200,7 +198,7 @@ namespace SecsGem.Tests.Integration
         }
 
         /// <summary>
-        /// 验证 Disconnect_Records_Offline_Mode_Without_A_Host 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Disconnect_Records_Offline_Mode_Without_A_Host；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Start、FromSeconds、CreateControl、UpdateSEMIMode、Equal；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -226,7 +224,7 @@ namespace SecsGem.Tests.Integration
         }
 
         /// <summary>
-        /// 验证 WaitUntilAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitUntilAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 condition、ConfigureAwait、Delay；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -242,7 +240,7 @@ namespace SecsGem.Tests.Integration
         }
 
         /// <summary>
-        /// 验证 Connect_Then_S1F13_Should_Get_S1F14_Reply 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Connect_Then_S1F13_Should_Get_S1F14_Reply；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Start、FromSeconds、CreateControl、ConfigureAwait、ConnectAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -283,7 +281,7 @@ namespace SecsGem.Tests.Integration
         }
 
         /// <summary>
-        /// 验证 S2F41_RemoteCommand_Should_Invoke_Handler_And_Reply_S2F42_HCACK 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 S2F41_RemoteCommand_Should_Invoke_Handler_And_Reply_S2F42_HCACK；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Start、FromSeconds、CreateControl、SetEventHandler、ConfigureAwait；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -344,7 +342,7 @@ namespace SecsGem.Tests.Integration
         }
 
         /// <summary>
-        /// 验证 Unknown_Order_Should_Get_Auto_S9F7_Fallback_Instead_Of_T3_Timeout 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Unknown_Order_Should_Get_Auto_S9F7_Fallback_Instead_Of_T3_Timeout；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Start、FromSeconds、CreateControl、ConfigureAwait、ConnectAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -373,7 +371,7 @@ namespace SecsGem.Tests.Integration
         }
 
         /// <summary>
-        /// 验证 Multiple_Receive_Subscribers_Are_Awaited_Before_Reply_Context_Closes 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Multiple_Receive_Subscribers_Are_Awaited_Before_Reply_Context_Closes；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Start、FromSeconds、RegisterSingleton、ConfigureAwait、ReplyAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
@@ -427,7 +425,7 @@ namespace SecsGem.Tests.Integration
         }
 
         /// <summary>
-        /// 验证 S5F1_Alarm_Is_Acknowledged_By_Host_S5F2 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 S5F1_Alarm_Is_Acknowledged_By_Host_S5F2；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Start、FromSeconds、CreateControl、ConfigureAwait、ConnectAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -458,7 +456,7 @@ namespace SecsGem.Tests.Integration
         }
 
         /// <summary>
-        /// 验证 S6F11_Event_Is_Acknowledged_By_Host_S6F12 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 S6F11_Event_Is_Acknowledged_By_Host_S6F12；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Start、FromSeconds、CreateControl、Add、Update；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -502,7 +500,7 @@ namespace SecsGem.Tests.Integration
         }
 
         /// <summary>
-        /// 验证 Manual_Sml_Send_Uses_The_Workbench_Message_Format 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Manual_Sml_Send_Uses_The_Workbench_Message_Format；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Start、FromSeconds、CreateControl、ConfigureAwait、ConnectAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
