@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 中文阅读说明：项目构建声明。
 WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
 目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
@@ -8,7 +8,7 @@ WPFControls 模块：可复用业务界面及模块装配，页面可用性与�
     <Platform>AnyCPU</Platform>
     <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
     <OutputType>Library</OutputType>
-    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

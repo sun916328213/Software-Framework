@@ -6,6 +6,8 @@ Extension 模块：共享基础能力与集成适配；Extension.Core 保持轻�
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Platform>AnyCPU</Platform>
+    <!-- 当前独立插件引用的是厂商 Requires32Bit/混合模式 DLL，只能在 x86 进程中使用。 -->
+    <PlatformTarget>x86</PlatformTarget>
     <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
     <OutputType>Library</OutputType>
     <TargetFramework>net9.0-windows7.0</TargetFramework>

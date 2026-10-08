@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 中文阅读说明：项目构建声明。
 MachineApp 模块：具体机型的应用宿主，负责机型业务、导航选择、数据库实体和生产设备生命周期。
 目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
@@ -9,7 +9,7 @@ MachineApp 模块：具体机型的应用宿主，负责机型业务、导航选
     <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
     <OutputType>WinExe</OutputType>
     <IsIntegrationHost>true</IsIntegrationHost>
-    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ApplicationIcon>Resources\图标.ico</ApplicationIcon>

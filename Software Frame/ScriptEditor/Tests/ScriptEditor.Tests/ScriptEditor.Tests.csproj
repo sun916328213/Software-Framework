@@ -27,6 +27,6 @@ ScriptEditor 模块：脚本持久化模型、运行时编译执行和编辑器�
     <ProjectReference Include="..\..\ScriptEditor.Runtime\ScriptEditor.Runtime.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\Samples\Sample.taskproj" Link="Samples\Sample.taskproj" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Fixtures\Sample.taskproj" TargetPath="Samples\Sample.taskproj" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

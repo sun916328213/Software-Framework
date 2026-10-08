@@ -34,8 +34,21 @@ Communication 模块：连接、协议适配及通信界面；主动请求应答
     <PackageReference Include="Prism.Core" Version="8.1.97" />
     <PackageReference Include="System.IO.Ports" Version="8.0.0" />
     <PackageReference Include="System.IO.Pipelines" Version="10.0.2" />
-    <!-- MX Component RCW 由内部 NuGet 包提供；项目 AnyCPU，运行时限定 Windows x64（由 adapter 运行时守卫负责）。 -->
-    <PackageReference Include="Mitsubishi.MxComponent.Interop" Version="5.0.0-internal.3" />
+    <!-- COM 接口嵌入当前程序集；编译引用不传播，运行时资产及 Windows x64 守卫保留。 -->
+    <PackageReference Include="Mitsubishi.MxComponent.Interop" Version="5.0.0-internal.3" PrivateAssets="compile" />
   </ItemGroup>
+
+  <Target Name="EmbedMxComponentInteropTypes" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <MxComponentInteropReference Include="@(Reference)" Condition="'%(Filename)' == 'Interop.ActUtlType64Lib' or '%(Filename)' == 'Interop.ActSupportMsg64Lib'" />
+      <!-- 仅供 C# /link 嵌入的接口不构成托管运行时程序集依赖。NuGet runtime 资产仍照常复制。 -->
+      <Reference Remove="@(Reference)" Condition="'%(NuGetPackageId)' == 'Mitsubishi.MxComponent.Interop'" />
+    </ItemGroup>
+  </Target>
+  <Target Name="AddEmbeddedMxComponentReferences" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferencePath Include="@(MxComponentInteropReference)" EmbedInteropTypes="true" Private="false" />
+    </ItemGroup>
+  </Target>
 
 </Project>

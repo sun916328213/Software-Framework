@@ -33,9 +33,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workbench", "Workbench", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{4CD6FD37-42AB-4852-BE3A-204F12307156}"
 	ProjectSection(SolutionItems) = preProject
-		ARCHITECTURE.md = ARCHITECTURE.md
-		ARCHITECTURE_OPTIMIZATION_PLAN.md = ARCHITECTURE_OPTIMIZATION_PLAN.md
-		ARCHITECTURE_MAINTENANCE_AUDIT.md = ARCHITECTURE_MAINTENANCE_AUDIT.md
+		..\..\Documentation\Refactoring\Software-Architecture-Analysis-and-Refactoring-Plan-2026-10-03.md = ..\..\Documentation\Refactoring\Software-Architecture-Analysis-and-Refactoring-Plan-2026-10-03.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Adapters", "Adapters", "{18877FB5-33B3-492A-8E24-062B936A6A50}"

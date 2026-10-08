@@ -24,7 +24,6 @@ SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Prism.Core" Version="8.1.97" />
-    <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.2" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Protocol\Messages\S9\ReadMe.txt" />
