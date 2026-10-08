@@ -21,7 +21,7 @@ namespace FlowEditor.Workbench.Tests;
 public sealed class P3NamingGovernanceTests
 {
     /// <summary>
-    /// 验证 FlowEditorDirectory 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 FlowEditorDirectory；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Exists、Combine；具体条件和先后次序见方法体。
     /// </summary>
     private static string FlowEditorDirectory()
@@ -33,7 +33,7 @@ public sealed class P3NamingGovernanceTests
     }
 
     /// <summary>
-    /// 验证 WorkspaceDirectory 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WorkspaceDirectory；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetParent、FlowEditorDirectory；具体条件和先后次序见方法体。
     /// </summary>
     private static string WorkspaceDirectory() =>
@@ -41,7 +41,7 @@ public sealed class P3NamingGovernanceTests
         ?? throw new DirectoryNotFoundException("无法定位工作区目录。");
 
     /// <summary>
-    /// 验证 SlnProjectPaths 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SlnProjectPaths；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ReadAllText、ToList、Select、Matches；具体条件和先后次序见方法体。
     /// </summary>
     private static IReadOnlyList<string> SlnProjectPaths(string slnPath)
@@ -53,7 +53,7 @@ public sealed class P3NamingGovernanceTests
     }
 
     /// <summary>
-    /// 验证 TestProjects_Naming_Matches_RepoConvention 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 TestProjects_Naming_Matches_RepoConvention；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FlowEditorDirectory、Combine、True、Exists、False；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -71,27 +71,23 @@ public sealed class P3NamingGovernanceTests
         Assert.False(File.Exists(Path.Combine(solutionDirectory, "FlowEditor.Tests", "FlowEditor.Test.csproj")));
     }
 
-    /// <summary>模块级架构文档应归属解决方案，而非 Controls 控件项目。</summary>
+    /// <summary>集中维护的架构文档必须存在，并可从模块解决方案访问。</summary>
     [Fact]
-    public void ArchitectureDocuments_LiveAtSolutionRoot()
+    public void ArchitectureDocuments_ReferenceCentralDocumentation()
     {
         var solutionDirectory = FlowEditorDirectory();
         var solution = File.ReadAllText(Path.Combine(solutionDirectory, "FlowEditor.sln"));
-        foreach (var name in new[]
-                 {
-                     "ARCHITECTURE.md",
-                     "ARCHITECTURE_OPTIMIZATION_PLAN.md",
-                     "ARCHITECTURE_MAINTENANCE_AUDIT.md"
-                 })
-        {
-            Assert.True(File.Exists(Path.Combine(solutionDirectory, name)), $"模块架构文档未在解决方案根目录: {name}");
-            Assert.False(File.Exists(Path.Combine(solutionDirectory, "FlowEditor.Controls", name)));
-            Assert.Contains($"\t\t{name} = {name}", solution, StringComparison.Ordinal);
-        }
+        const string document = @"..\..\Documentation\Refactoring\Software-Architecture-Analysis-and-Refactoring-Plan-2026-10-03.md";
+        Assert.True(File.Exists(Path.GetFullPath(document, solutionDirectory)), $"架构文档缺失: {document}");
+        Assert.Contains($"\t\t{document} = {document}", solution, StringComparison.Ordinal);
+        foreach (Match section in Regex.Matches(solution, @"ProjectSection\(SolutionItems\)[^\r\n]*\r?\n(?<items>[\s\S]*?)EndProjectSection"))
+            foreach (Match item in Regex.Matches(section.Groups["items"].Value, @"(?m)^[ \t]*[^\r\n=]+ = (?<path>[^\r\n]+)"))
+                Assert.True(File.Exists(Path.GetFullPath(item.Groups["path"].Value.Trim(), solutionDirectory)),
+                    $"解决方案文档引用不存在: {item.Groups["path"].Value}");
     }
 
     /// <summary>
-    /// 验证 Solutions_ReferenceExistingProjects_AfterRename 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Solutions_ReferenceExistingProjects_AfterRename；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Combine、FlowEditorDirectory、WorkspaceDirectory、GetDirectoryName、SlnProjectPaths；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -127,7 +123,7 @@ public sealed class P3NamingGovernanceTests
     }
 
     /// <summary>
-    /// 验证 NoInfrastructureCatchAll_InSolutions 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 NoInfrastructureCatchAll_InSolutions；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Combine、FlowEditorDirectory、WorkspaceDirectory、DoesNotContain、ReadAllText；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -145,7 +141,7 @@ public sealed class P3NamingGovernanceTests
     }
 
     /// <summary>
-    /// 验证 Controls_MayDependOnRuntime_ButNotReverse 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Controls_MayDependOnRuntime_ButNotReverse；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FlowEditorDirectory、ReadAllText、Combine、Contains、DoesNotContain；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -161,7 +157,7 @@ public sealed class P3NamingGovernanceTests
     }
 
     /// <summary>
-    /// 验证 SampleNodes_CarryStableIds 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 SampleNodes_CarryStableIds；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetCustomAttribute、NotNull、False、IsNullOrWhiteSpace、Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

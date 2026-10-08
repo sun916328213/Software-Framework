@@ -50,7 +50,7 @@ public class ExecutionEngineTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 EnterNode 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 EnterNode；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </remarks>
         public IDisposable EnterNode(string? nodeName)
@@ -61,7 +61,7 @@ public class ExecutionEngineTests
 
         /// <inheritdoc />
         /// <remarks>
-        /// 验证 BumpRun 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 BumpRun；准备条件、协作调用与结果检查以方法正文为准。
         /// </remarks>
         public void BumpRun() => BumpCount++;
     }
@@ -77,7 +77,7 @@ public class ExecutionEngineTests
         public int MaxActive;
 
         /// <summary>
-        /// 验证 Enter 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Enter；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Increment、CompareExchange；具体条件和先后次序见方法体。
         /// </summary>
         public void Enter()
@@ -92,13 +92,13 @@ public class ExecutionEngineTests
         }
 
         /// <summary>
-        /// 验证 Exit 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Exit；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Decrement；具体条件和先后次序见方法体。
         /// </summary>
         public void Exit() => Interlocked.Decrement(ref _active);
 
         /// <summary>
-        /// 验证 WaitForPeer 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 WaitForPeer；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 SignalAndWait、FromSeconds；具体条件和先后次序见方法体。
         /// </summary>
         public void WaitForPeer(CancellationToken token)
@@ -108,7 +108,7 @@ public class ExecutionEngineTests
         }
 
         /// <summary>
-        /// 验证 Dispose 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Dispose；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Dispose；具体条件和先后次序见方法体。
         /// </summary>
         public void Dispose() => _rendezvous.Dispose();
@@ -121,7 +121,7 @@ public class ExecutionEngineTests
     private sealed class SynchronousWorkNode(ConcurrencyProbe probe) : NodeModel
     {
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 Enter、WaitForPeer、Exit；具体条件和先后次序见方法体。
         /// </summary>
         public override Task ExecuteAsync(CancellationToken ct)
@@ -152,7 +152,7 @@ public class ExecutionEngineTests
             new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         /// <summary>
-        /// 验证 ExecuteAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 ExecuteAsync；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult、WaitAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
@@ -163,13 +163,43 @@ public class ExecutionEngineTests
         }
 
         /// <summary>
-        /// 验证 Complete 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+        /// 测试相关入口 Complete；准备条件、协作调用与结果检查以方法正文为准。
         /// 正文中的关键协作调用包括 TrySetResult；具体条件和先后次序见方法体。
         /// </summary>
         public void Complete() => _release.TrySetResult();
     }
 
     // ── DAG 模式 ──
+
+    [Fact]
+    public async Task Dag_ConcurrentRuns_KeepCancellationAndOrderIsolated()
+    {
+        var first = new ControlledNode { Name = "First" };
+        var second = new ControlledNode { Name = "Second" };
+        var firstVm = new NodeViewModel(first);
+        var secondVm = new NodeViewModel(second);
+        var order = new List<NodeViewModel>();
+        using var cancellation = new CancellationTokenSource();
+        var firstRun = _engine.ExecuteAsync([firstVm], [], cancellation.Token, _ => { });
+        var secondRun = _engine.ExecuteAsync([secondVm], [], CancellationToken.None, _ => { }, executionOrder: order);
+        try
+        {
+            await Task.WhenAll(first.Started.Task, second.Started.Task).WaitAsync(TimeSpan.FromSeconds(5));
+            cancellation.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => firstRun.WaitAsync(TimeSpan.FromSeconds(5)));
+            Assert.False(secondRun.IsCompleted);
+            second.Complete();
+            await secondRun.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.Equal([secondVm], order);
+            Assert.Equal(NodeStatus.Success, secondVm.Status);
+        }
+        finally
+        {
+            cancellation.Cancel();
+            first.Complete();
+            second.Complete();
+        }
+    }
 
     [Fact]
     public async Task Dag_InjectedLogContext_IsUsedWithoutRuntimeDependingOnDesktopLogger()
@@ -191,7 +221,7 @@ public class ExecutionEngineTests
     }
 
     /// <summary>
-    /// 验证 Dag_Chain_ExecutesInTopologicalOrderAndPropagatesData 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dag_Chain_ExecutesInTopologicalOrderAndPropagatesData；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、Data、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -213,7 +243,7 @@ public class ExecutionEngineTests
     }
 
     /// <summary>
-    /// 验证 Dag_NodeFails_DownstreamSkippedButIndependentBranchRuns 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dag_NodeFails_DownstreamSkippedButIndependentBranchRuns；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、ThrowsAsync、ExecuteAsync、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -241,7 +271,7 @@ public class ExecutionEngineTests
     }
 
     /// <summary>
-    /// 验证 Dag_OneOutputToTwoSynchronousTools_RunsBothBranchesConcurrently 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dag_OneOutputToTwoSynchronousTools_RunsBothBranchesConcurrently；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、ExecuteAsync、Flow、Equal；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -263,7 +293,7 @@ public class ExecutionEngineTests
     }
 
     /// <summary>
-    /// 验证 Dag_TwoActiveBranchesRejoin_WaitsForBothBeforeRunningJoin 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Dag_TwoActiveBranchesRejoin_WaitsForBothBeforeRunningJoin；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、ExecuteAsync、Flow、WaitAsync、FromSeconds；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -314,7 +344,7 @@ public class ExecutionEngineTests
     }
 
     /// <summary>
-    /// 验证 Cycle_ForkedBranchesRemainConcurrentBeforeAndMerge 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Cycle_ForkedBranchesRemainConcurrentBeforeAndMerge；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 New、Flow、ToMergeInput、ThrowsAnyAsync、ExecuteAsync；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -393,7 +423,7 @@ public class ExecutionEngineTests
     }
 
     /// <summary>
-    /// 验证 Execute_EmptyCanvas_LogsAndReturns 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Execute_EmptyCanvas_LogsAndReturns；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ExecuteAsync、Single、Contains；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -408,7 +438,7 @@ public class ExecutionEngineTests
     }
 
     /// <summary>
-    /// 验证 WaitUntilAsync 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 WaitUntilAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 FromSeconds、condition、Delay；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
@@ -420,7 +450,7 @@ public class ExecutionEngineTests
     }
 
     /// <summary>
-    /// 验证 ToMergeInput 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ToMergeInput；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 First；具体条件和先后次序见方法体。
     /// </summary>
     private static ConnectionModel ToMergeInput(

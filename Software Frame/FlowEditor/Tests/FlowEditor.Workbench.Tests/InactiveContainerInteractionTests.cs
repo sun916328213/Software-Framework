@@ -4,6 +4,10 @@
 // 直接导入的协作命名空间包括：System.IO、System.Windows、FlowEditor.Controls.Core、FlowEditor.Core、FlowEditor.Runtime、FlowEditor.Controls.Nodes.FlowControl。导入不代表所有类型都会在运行时加载。
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using FlowEditor.Controls.Views;
 using FlowEditor.Controls.Core;
 using FlowEditor.Core;
 using FlowEditor.Runtime;
@@ -19,8 +23,65 @@ namespace FlowEditor.Workbench.Tests;
 /// </summary>
 public class InactiveContainerInteractionTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ContainerTitle_RoutedMouseEventsSelectCaptureAndRelease(bool executionContainer)
+    {
+        WpfTestHost.Run(() =>
+        {
+            var application = Application.Current;
+            var shutdownMode = application.ShutdownMode;
+            application.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            var service = TestFlowEditorFactory.CreateService();
+            var vm = TestFlowEditorFactory.CreateViewModel(service);
+            var node = executionContainer
+                ? service.Canvas.AddNode(new LoopContainerNode { X = 100, Y = 100 })
+                : service.Canvas.AddNode(new InactiveNodeContainerNode { X = 100, Y = 100 });
+            UserControl view = executionContainer ? new ExecutionContainerView() : new InactiveNodeContainerView();
+            view.DataContext = node;
+            var canvas = new Canvas();
+            canvas.Children.Add(view);
+            var chart = new FlowChartView { DataContext = vm, Content = canvas };
+            var window = new Window { Content = chart, Width = 700, Height = 500, ShowInTaskbar = false, ShowActivated = false };
+            try
+            {
+                window.Show();
+                window.UpdateLayout();
+                var title = Assert.IsAssignableFrom<UIElement>(view.FindName("TitleBar"));
+                var down = new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left)
+                    { RoutedEvent = UIElement.MouseLeftButtonDownEvent };
+                title.RaiseEvent(down);
+                Assert.True(down.Handled);
+                Assert.True(node.IsSelected);
+                Assert.Same(title, Mouse.Captured);
+                title.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, Environment.TickCount)
+                    { RoutedEvent = UIElement.MouseMoveEvent });
+                title.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left)
+                    { RoutedEvent = UIElement.MouseLeftButtonUpEvent });
+                Assert.NotSame(title, Mouse.Captured);
+                var releasedPosition = new Point(node.X, node.Y);
+                title.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, Environment.TickCount)
+                    { RoutedEvent = UIElement.MouseMoveEvent });
+                Assert.Equal(releasedPosition, new Point(node.X, node.Y));
+
+                var thumb = Assert.Single(Assert.IsType<Grid>(view.Content).Children.OfType<Thumb>());
+                var before = view.Width;
+                thumb.RaiseEvent(new DragDeltaEventArgs(30, 20) { RoutedEvent = Thumb.DragDeltaEvent });
+                window.UpdateLayout();
+                Assert.Equal(before + 30, view.Width);
+                thumb.RaiseEvent(new DragCompletedEventArgs(30, 20, false) { RoutedEvent = Thumb.DragCompletedEvent });
+            }
+            finally
+            {
+                window.Close();
+                application.ShutdownMode = shutdownMode;
+            }
+        });
+    }
+
     /// <summary>
-    /// 验证 DragContainer_MovesContainedNodesBySameDelta 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 DragContainer_MovesContainedNodesBySameDelta；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 CreateService、CreateViewModel、AddNode、SetSelectedNodes、BeginNodeDrag；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -46,7 +107,7 @@ public class InactiveContainerInteractionTests
     }
 
     /// <summary>
-    /// 验证 Container_ExposesResizableDimensions 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 Container_ExposesResizableDimensions；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 GetProperty、True；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
@@ -60,7 +121,7 @@ public class InactiveContainerInteractionTests
     }
 
     /// <summary>
-    /// 验证 ContainerView_UsesSameSelectedStateAsNodes_AndCanvasSizeIsBound 所表达的回归场景；准备条件、动作和断言以本测试正文为准。
+    /// 测试相关入口 ContainerView_UsesSameSelectedStateAsNodes_AndCanvasSizeIsBound；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 ReadAllText、Combine、Contains；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]

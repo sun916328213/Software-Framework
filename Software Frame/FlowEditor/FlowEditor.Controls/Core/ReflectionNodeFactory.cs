@@ -1,4 +1,4 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // FlowEditor 模块：流程模型、执行和编辑器协作；Core、Runtime 与 Controls 分别承担模型契约、执行能力和界面职责。
 // 本文件定义：INodeFactory、ReflectionNodeFactory。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：FlowEditor.Controls、FlowEditor.Core、FlowEditor.Runtime、System.Collections.Concurrent、System.Reflection、System.Text.Json。导入不代表所有类型都会在运行时加载。
@@ -110,7 +110,7 @@ public sealed class ReflectionNodeFactory : INodeFactory
     /// <inheritdoc />
     /// <remarks>
     /// 创建当前实现提供的对象或结果；对应入口为 Create。
-    /// 正文中的关键协作调用包括 ThrowIfNull、TryResolve、ResolveType、Capture、RestoreMissingNode；具体条件和先后次序见方法体。
+    /// 正文中的关键协作调用包括 ThrowIfNull、TryResolve、ResolveType、Capture、RestoreNodeState；具体条件和先后次序见方法体。
     /// </remarks>
     public NodeModel Create(NodeDocumentModel descriptor)
     {
@@ -124,7 +124,7 @@ public sealed class ReflectionNodeFactory : INodeFactory
             if (!AllowMissingNodes)
                 throw new TypeLoadException($"无法找到节点类型: {descriptor.TypeName}");
             var missing = Nodes.MissingNode.Capture(descriptor);
-            RestoreMissingNode(missing, descriptor);
+            RestoreNodeState(missing, descriptor);
             return missing;
         }
         if (!typeof(NodeModel).IsAssignableFrom(type))
@@ -132,7 +132,21 @@ public sealed class ReflectionNodeFactory : INodeFactory
 
         var node = Create(type);
 
-        // 基础字段
+        RestoreNodeState(node, descriptor);
+
+        // 附加属性
+        ApplyProperties(node, descriptor.Properties);
+
+        return node;
+    }
+
+    /// <summary>
+    /// 还原基础字段与自定义端口，保留持久化标识和连线引用。
+    /// </summary>
+    /// <param name="node">待填充的节点。</param>
+    /// <param name="descriptor">原始节点文档。</param>
+    private static void RestoreNodeState(NodeModel node, NodeDocumentModel descriptor)
+    {
         node.Id = descriptor.Id;
         node.Name = descriptor.Name;
         node.X = descriptor.X;
@@ -147,41 +161,8 @@ public sealed class ReflectionNodeFactory : INodeFactory
         node.RetryCount = descriptor.RetryCount;
         node.RetryDelayMs = descriptor.RetryDelayMs;
         node.TimeoutMs = descriptor.TimeoutMs;
-
-        // 自定义端口：按名去重还原（节点构造函数可能已创建默认自定义端口，
-        // 直接追加会产生同名重复端口导致运行期读写错位），保留描述符中的原始 ID
         RestorePorts(node, input: true, descriptor.CustomInputPorts);
         RestorePorts(node, input: false, descriptor.CustomOutputPorts);
-
-        // 附加属性
-        ApplyProperties(node, descriptor.Properties);
-
-        return node;
-    }
-
-    /// <summary>
-    /// 还原占位节点：基础字段、自定义端口与原始配置全部保留，连线可继续引用。
-    /// </summary>
-    /// <param name="missing">待填充的占位节点。</param>
-    /// <param name="descriptor">原始节点文档。</param>
-    private static void RestoreMissingNode(Nodes.MissingNode missing, NodeDocumentModel descriptor)
-    {
-        missing.Id = descriptor.Id;
-        missing.Name = descriptor.Name;
-        missing.X = descriptor.X;
-        missing.Y = descriptor.Y;
-        missing.IsInEnabled = descriptor.IsInEnabled;
-        missing.IsOutEnabled = descriptor.IsOutEnabled;
-        missing.Permission = descriptor.Permission;
-        missing.IsExcludedFromExecution = descriptor.IsExcludedFromExecution;
-        missing.ParentExecutionContainerId = descriptor.ParentExecutionContainerId;
-        missing.ExecutionLaneId = descriptor.ExecutionLaneId;
-        missing.ErrorPolicy = descriptor.ErrorPolicy;
-        missing.RetryCount = descriptor.RetryCount;
-        missing.RetryDelayMs = descriptor.RetryDelayMs;
-        missing.TimeoutMs = descriptor.TimeoutMs;
-        RestorePorts(missing, input: true, descriptor.CustomInputPorts);
-        RestorePorts(missing, input: false, descriptor.CustomOutputPorts);
     }
 
     /// <summary>按名称复用或创建自定义端口，并恢复持久化标识与类型。</summary>

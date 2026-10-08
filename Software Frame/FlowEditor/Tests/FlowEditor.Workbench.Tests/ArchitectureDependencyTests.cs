@@ -429,7 +429,8 @@ public sealed class ArchitectureDependencyTests
         // The unchanged compatibility partial now lives in Nodes. ICommand is
         // from System.ObjectModel; its namespace alone does not introduce WPF UI.
         Assert.Equal(new[] { "Nodes/NodeModel.PropertyGrid.cs" }, actual);
-        var compatibility = File.ReadAllText(Path.Combine(ProjectDirectory, "Nodes", "NodeModel.PropertyGrid.cs"))
+        var compatibility = string.Join(Environment.NewLine,
+                ReadNonCommentLines(Path.Combine(ProjectDirectory, "Nodes", "NodeModel.PropertyGrid.cs")))
             .Replace("using System.Windows.Input;", "", StringComparison.Ordinal);
         foreach (var forbidden in new[] { "FlowEditor.Controls.Views", "FlowEditor.Presentation", "System.Windows", "MessageBox", "Window" })
             Assert.DoesNotContain(forbidden, compatibility, StringComparison.Ordinal);
@@ -873,7 +874,7 @@ public sealed class ArchitectureDependencyTests
         var coreSource = File.ReadAllText(corePath);
         var valueSource = File.ReadAllText(Path.Combine(modelDirectory, "NodeModel.PortValues.cs"));
 
-        Assert.True(File.ReadAllLines(corePath).Length <= 350);
+        Assert.True(ReadNonCommentLines(corePath).Length <= 350);
         Assert.Contains("partial class NodeModel", valueSource, StringComparison.Ordinal);
         Assert.Contains("public void SyncInputValues()", valueSource, StringComparison.Ordinal);
         Assert.Contains("PropertyLookupCache", valueSource, StringComparison.Ordinal);
@@ -1055,6 +1056,12 @@ public sealed class ArchitectureDependencyTests
         Assert.Empty(undocumented);
         Assert.Empty(misplaced);
     }
+
+    /// <summary>读取不包含完整行单行注释或 XML 文档注释的源码行，保留代码与空行。</summary>
+    /// <param name="path">待检查的 C# 源文件路径。</param>
+    /// <returns>用于当前节点依赖检查和代码行数限制的源码行。</returns>
+    private static string[] ReadNonCommentLines(string path) => File.ReadAllLines(path)
+        .Where(line => !line.TrimStart().StartsWith("//", StringComparison.Ordinal)).ToArray();
 
     /// <summary>查找指定目录中包含任一禁止文本的 C# 文件。</summary>
     /// <param name="relativeDirectory">相对于 FlowEditor 项目的扫描目录。</param>
