@@ -1,4 +1,4 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // FlowNodes 模块：WPF 流程节点与执行、编辑协作的集成；新增或迁移节点需同时核对节点目录、执行契约和持久化类型身份。
 // 本文件定义：VisionToolNodeBase、IVisionToolNode。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：Vision.Tools.Halcon.Sessions、FlowNodes.Presentation.NodeEditing、FlowNodes.Vision.Execution、FlowNodes.Vision.Contracts、FlowNodes、FlowEditor.Controls.Nodes。导入不代表所有类型都会在运行时加载。
@@ -26,7 +26,7 @@ namespace FlowNodes.Vision.SingleTool.Definition
 {
     /// <summary>
     /// 视觉工具节点基类：封装视觉工具的注册/还原、生命周期、编辑器窗口、编辑按钮等重复逻辑。
-    /// 子类只需提供 [FlowTool] 特性、输入输出属性与 ExecuteAsync 即可。
+    /// 子类提供 [FlowTool] 特性和输入输出属性；有额外执行步骤时覆盖 ExecuteAsync。
     /// </summary>
     /// <typeparam name="T">视觉工具类型（如 BlobSession、ShapeMatchSession、ImageFileSession），须有无参构造。</typeparam>
     public abstract class VisionToolNodeBase<T> : NodeModel, IVisionToolNode, IVisionNodeEditorSource where T : HalconToolSession, new()
@@ -67,6 +67,14 @@ namespace FlowNodes.Vision.SingleTool.Definition
         /// <summary>最近一次执行产生的 IToolResult 结果列表（可绑定到输出端口，作为统一输出）。</summary>
         [JsonIgnore]
         public List<IToolResult> Results => visionTool.Results?.ToList() ?? new List<IToolResult>();
+
+        /// <summary>取消检查后运行工具；额外输出由具体节点覆盖。</summary>
+        public override async Task ExecuteAsync(CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            RunTool();
+            await Task.CompletedTask;
+        }
 
         /// <summary>统一执行：注册工具、赋入图像并运行，随后刷新结果计数。</summary>
         protected void RunTool()

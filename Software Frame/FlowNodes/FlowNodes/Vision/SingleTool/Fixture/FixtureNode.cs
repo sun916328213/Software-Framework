@@ -27,11 +27,6 @@ namespace FlowNodes.Vision.SingleTool.Fixture
         /// 正文中的关键协作调用包括 ThrowIfCancellationRequested、RunTool；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
-        public override async Task ExecuteAsync(CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-RunTool();
-            await Task.CompletedTask;
-        }
+
     }
 }
