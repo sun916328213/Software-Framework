@@ -171,7 +171,7 @@ namespace MachineApp.Business.Station
             catch (Exception ex)
             {
                 _LogInfoService.AddRunInfo(ex.Message, ELogLevel.SysError);
-                throw ex;
+                throw;
             }
         }
 

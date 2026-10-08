@@ -157,10 +157,10 @@ namespace MachineApp.Business.Station
                 //}
                 return info;
             }
-            catch(Exception ex)
+            catch
             {
                 _LogInfoService.AddRunInfo(StationName + Message.热封相机拍照失败.GetMessage());
-                throw ex;
+                throw;
             }
         }
 

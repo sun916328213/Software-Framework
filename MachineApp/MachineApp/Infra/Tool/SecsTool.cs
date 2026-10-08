@@ -13,7 +13,6 @@ using SecsGem.Controls;
 using SecsGem.Core;
 using SecsGem.Runtime;
 using Secs4Net;
-using SecsGem.Core;
 using System;
 using System.Threading.Tasks;
 using WPFControls.Controls.Diagnostics;
@@ -86,30 +85,21 @@ namespace MachineApp.Infra.Tool
         /// <param name="action_Online_Remote">在线远程程序</param>
         public async Task Run(Func<Task> action_Offline, Func<Task> action_Online_Local, Func<Task> action_Online_Remote)
         {
-            try
+            Func<Task> func = null;
+            switch (CurrentMode)
             {
-
-                Func<Task> func = null;
-
-                switch (CurrentMode)
-                {
-                    case ESecsMode.Offline:
-                        func = action_Offline;
-                        break;
-                    case ESecsMode.Online_Local:
-                        func = action_Online_Local;
-                        break;
-                    case ESecsMode.Online_Remote:
-                        func = action_Online_Remote;
-                        break;
-                }
-                if (func != null)
-                    await func();
+                case ESecsMode.Offline:
+                    func = action_Offline;
+                    break;
+                case ESecsMode.Online_Local:
+                    func = action_Online_Local;
+                    break;
+                case ESecsMode.Online_Remote:
+                    func = action_Online_Remote;
+                    break;
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            if (func != null)
+                await func();
         }
  
         /// <summary>

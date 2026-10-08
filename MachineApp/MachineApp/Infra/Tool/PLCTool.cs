@@ -82,7 +82,7 @@ namespace MachineApp.Infra.Tool
             try
             {
                 _plc.StartHeartbeat();
-                _ = _plc.ConnectAsync().ContinueWith(
+                _ = _plc.ConnectHeartbeatAsync().ContinueWith(
                     t =>
                     {
                         if (t.IsFaulted)
@@ -118,11 +118,14 @@ namespace MachineApp.Infra.Tool
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>
         public void StopRefresh()
+            => StopRefreshAsync().GetAwaiter().GetResult();
+
+        public async Task StopRefreshAsync()
         {
             try
             {
                 _plc.StopHeartbeat();
-                _plc.DisconnectAsync().GetAwaiter().GetResult();
+                await _plc.DisconnectAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {

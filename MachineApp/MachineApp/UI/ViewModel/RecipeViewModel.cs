@@ -5,6 +5,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Extension.Core.Conversion;
+using Extension.Integration.Cloning;
 using MachineApp.UI.Model;
 using MachineApp.UI.WindowUI;
 using Prism.Ioc;
@@ -173,34 +174,15 @@ namespace MachineApp.UI.ViewModel
 
             AddCommand = new RelayCommand(() =>
                {
-                   CurRecipe = new CRecipe() { ID = (Datas.Count + 1).ToString() };
-
-                   RecipeSetting recipeSetting;
-                   recipeSetting = new RecipeSetting();
-                   recipeSetting.DataContext = this;
-                   if ((bool)recipeSetting.ShowDialog())
-                   {
-                     Model.Add(CurRecipe);
-                   }
-                   recipeSetting.Close();
+                   EditRecipe(new CRecipe() { ID = (Datas.Count + 1).ToString() }, Model.Add);
                });
 
             ModifyCommand = new RelayCommand(() =>
             {
                 if (CurRecipe != null && CurRecipe.ID != null)
                 {
-                    CurRecipeLabelDir_First = Model.GetCurRecipeLabelDir(1);
-                
-                    CurRecipeLabelDir_Second = Model.GetCurRecipeLabelDir(2);
-               
-                    RecipeSetting recipeSetting;
-                    recipeSetting = new RecipeSetting();
-                    recipeSetting.DataContext = this;
-                    if ((bool)recipeSetting.ShowDialog())
-                    {
-                        Model.Modify(SelectIndex, CurRecipe);
-                    }
-                    recipeSetting.Close();
+                    var index = SelectIndex;
+                    EditRecipe(CurRecipe.DeepClone(), recipe => Model.Modify(index, recipe));
                 }
             });
 
@@ -221,6 +203,34 @@ namespace MachineApp.UI.ViewModel
                 Model.Save();
                 //更新后存储
             });
+        }
+
+        private void EditRecipe(CRecipe draft, Action<CRecipe> commit)
+        {
+            var original = CurRecipe;
+            var committed = false;
+            var dialog = new RecipeSetting { DataContext = this };
+            try
+            {
+                CurRecipe = draft;
+                CurRecipeLabelDir_First = Model.GetCurRecipeLabelDir(1);
+                CurRecipeLabelDir_Second = Model.GetCurRecipeLabelDir(2);
+                if (dialog.ShowDialog() == true)
+                {
+                    var confirmed = CurRecipe;
+                    commit(confirmed);
+                    // Replacing the selected grid item can clear the two-way selection binding.
+                    CurRecipe = confirmed;
+                    committed = true;
+                }
+            }
+            finally
+            {
+                if (!committed) CurRecipe = original;
+                CurRecipeLabelDir_First = Model.GetCurRecipeLabelDir(1);
+                CurRecipeLabelDir_Second = Model.GetCurRecipeLabelDir(2);
+                dialog.Close();
+            }
         }
     }
 }
