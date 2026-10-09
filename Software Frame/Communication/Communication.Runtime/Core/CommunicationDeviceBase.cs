@@ -134,6 +134,44 @@ namespace Communication.Runtime.Core
             ErrorOccurred?.Invoke(this, new CommunicationErrorEventArgs(ex, DeviceName));
         }
 
+        // ===== 失败上下文（T13）=====
+        //
+        // 冻结的 ICommunicationDevice.ConnectAsync / SendAsync 只能返回 bool，失败原因在
+        // 这个边界上被压缩掉了。各设备的 IConnection / IRequestReplyClient 桥若只是抛一句
+        // 固定文案的 IOException，调用方就永远看不到「DNS 解析失败」「连接被拒绝」「超时」
+        // 这类真正能指导排查的原因，也看不到失败的是哪个端点。
+        //
+        // 约定：bool 型入口在 catch 里改用 RecordFailure(ex)（它会顺手触发 OnErrorOccurred），
+        // 桥再用 CreateFailureException(operation, endpoint) 把 cause 与端点还原出来。
+
+        /// <summary>最近一次 <c>bool</c> 型入口记录下来的原始失败异常；无失败时为 <see langword="null"/>。</summary>
+        protected Exception? LastFailure { get; private set; }
+
+        /// <summary>开始一次可能失败的 legacy 操作，清除上一次保留的失败原因，避免把旧失败当成新原因。</summary>
+        protected void BeginFailureScope() => LastFailure = null;
+
+        /// <summary>记录失败原异常并上报错误事件；bool 型入口的 catch 分支用它替代直接调用 <see cref="OnErrorOccurred"/>。</summary>
+        protected void RecordFailure(Exception ex)
+        {
+            LastFailure = ex;
+            OnErrorOccurred(ex);
+        }
+
+        /// <summary>
+        /// 把 <c>bool</c> 型失败结果展开为携带原异常 cause 与端点上下文的异常。
+        /// </summary>
+        /// <param name="operation">操作名，例如「TCP 客户端连接」。</param>
+        /// <param name="endpoint">端点描述，例如 <c>127.0.0.1:502</c>；由调用方给出该设备真正连接的目标。</param>
+        /// <returns>携带 <see cref="Exception.InnerException"/> 的 <see cref="IOException"/>；无记录时 cause 为 null 且文案如实说明。</returns>
+        protected IOException CreateFailureException(string operation, string endpoint)
+        {
+            var cause = LastFailure;
+            var detail = cause is null
+                ? "底层未提供失败原因"
+                : $"{cause.GetType().Name}: {cause.Message}";
+            return new IOException($"{operation}失败（{endpoint}）：{detail}", cause);
+        }
+
         /// <summary>
         /// 创建当前实现提供的对象或结果；对应入口为 CreateEventDiagnosticContext。
         /// 正文中的关键协作调用包括 ToString；具体条件和先后次序见方法体。

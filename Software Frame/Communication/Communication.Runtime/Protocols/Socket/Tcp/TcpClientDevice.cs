@@ -62,6 +62,9 @@ public class TcpClientDevice : CommunicationDeviceBase, IConnection, IRawSender,
     /// <summary>新连接 seam 暴露的显式状态。</summary>
     public ConnectionState State => _state;
 
+    /// <summary>失败诊断用的端点描述（host:port）。</summary>
+    private string EndpointText => $"{Param.ServerIP}:{Param.Port}";
+
     /// <inheritdoc />
     /// <remarks>
     /// 发起连接操作；对应入口为 ConnectAsync。
@@ -75,6 +78,8 @@ public class TcpClientDevice : CommunicationDeviceBase, IConnection, IRawSender,
         await _lifecycleGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
+            // T13：清掉上一次尝试留下的失败原因，避免把旧失败误当成这一次的 cause。
+            BeginFailureScope();
             if (_state == ConnectionState.Connected)
             {
                 return true;
@@ -107,7 +112,7 @@ public class TcpClientDevice : CommunicationDeviceBase, IConnection, IRawSender,
         {
             EndReceiveGeneration(_receiveGeneration);
             _state = ConnectionState.Faulted;
-            OnErrorOccurred(ex);
+            RecordFailure(ex);
             OnConnectionStateChanged(false, ex.Message);
             return false;
         }
@@ -253,12 +258,13 @@ public class TcpClientDevice : CommunicationDeviceBase, IConnection, IRawSender,
         EnsureConnected();
         try
         {
+            BeginFailureScope();
             await _transport.Output.WriteAsync(data, ct).ConfigureAwait(false);
             return true;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            OnErrorOccurred(ex);
+            RecordFailure(ex);
             return false;
         }
     }
@@ -288,7 +294,8 @@ public class TcpClientDevice : CommunicationDeviceBase, IConnection, IRawSender,
         {
             if (!await SendAsync(data, ct).ConfigureAwait(false))
             {
-                throw new IOException("TCP 数据发送失败。");
+                // T13：发送失败同样要带上底层原因与端点。
+                throw CreateFailureException("TCP 数据发送", EndpointText);
             }
             return await response.Task
                 .WaitAsync(TimeSpan.FromMilliseconds(TimeoutMs), ct)
@@ -335,7 +342,8 @@ public class TcpClientDevice : CommunicationDeviceBase, IConnection, IRawSender,
     {
         if (!await ConnectAsync(cancellationToken).ConfigureAwait(false))
         {
-            throw new IOException("TCP 客户端连接失败。");
+            // T13：把 bool 失败展开成带 cause 与端点的异常，而不是一句没有信息的固定文案。
+            throw CreateFailureException("TCP 客户端连接", EndpointText);
         }
     }
 
