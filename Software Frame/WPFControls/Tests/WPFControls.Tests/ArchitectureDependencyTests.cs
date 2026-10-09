@@ -224,6 +224,40 @@ namespace WPFControls.Tests
             Assert.DoesNotContain("SaveCallbackCommand", viewModel, StringComparison.Ordinal);
         }
 
+        /// <summary>
+        /// T12b：报警信息设置页的保存同样必须走**页面命令**（<c>SaveCommand</c>），不得回退到控件内置的
+        /// <c>SaveData</c> + <c>SaveCallback</c> 回调。
+        ///
+        /// <para>
+        /// 为什么必须钉住：内置 <c>SaveData</c> 是 <c>JsonEx.Save</c>（往 <c>Alarm.csv</c> 写
+        /// <b>JSON</b>！），而 <c>SaveCallback?.Invoke()</c> 写在 try/catch <b>之外</b> ——
+        /// ① 写盘窗口期文件内容是 JSON，进程若在此刻退出，下次 <c>Load</c> 会拿
+        /// <c>CSVEx.ReadCsv</c> 去读 JSON；② CSV 覆盖失败时文件就永久停在 JSON 上。
+        /// </para>
+        ///
+        /// <para>
+        /// 另外 <c>SaveCallbackCommand</c> 是个 <c>Action</c>，内容是
+        /// <c>async () =&gt; { await Service.Save(); }</c> —— async-void lambda（VSTHRD101），
+        /// 写盘失败（CSV 被 Excel 占住）时异常逃逸出来直接崩进程。
+        /// </para>
+        /// </summary>
+        [Fact]
+        public void AlarmPage_BindsSaveCommandInsteadOfSaveCallback()
+        {
+            var xaml = File.ReadAllText(Path.Combine(
+                ProjectDirectory, "Features", "Alarm", "Views", "AlarmInfoManagerView.xaml"));
+
+            Assert.Contains("SaveCommand=\"{Binding SaveCommand}\"", xaml, StringComparison.Ordinal);
+            // 只禁「属性」本身，不禁止注释里提到这个历史名字（保留改动原因便于后人阅读）。
+            Assert.DoesNotContain("SaveCallback=", xaml, StringComparison.Ordinal);
+
+            var viewModel = File.ReadAllText(Path.Combine(
+                ProjectDirectory, "Features", "Alarm", "ViewModels", "AlarmInfoManagerViewModel.cs"));
+
+            Assert.Contains("public IAsyncRelayCommand SaveCommand { get; }", viewModel, StringComparison.Ordinal);
+            Assert.DoesNotContain("SaveCallbackCommand", viewModel, StringComparison.Ordinal);
+        }
+
         /// <summary>扫描指定目录下命中禁止模式的「文件 :: 依赖」对。</summary>
         /// <param name="relativeDirectories">相对 WPFControls 工程目录的扫描目录。</param>
         /// <param name="pattern">用于识别越界依赖的正则（同时覆盖 using 与完全限定名）。</param>
