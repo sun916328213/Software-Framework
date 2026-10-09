@@ -388,4 +388,18 @@ FodyWeavers.xsd
 /.workbuddy-ai/
 /Documentation
 /.github/workflows
-/Build
+# Build/ 主体仍忽略（一次性取证产物、厂商清单、本机输出），但以下内容必须纳管：
+#   - TestSupport/  ：7 个已入库 Workbench 测试工程的编译依赖，缺它干净克隆必然编译不过
+#   - *.ps1         ：验收入口脚本，丢了整条验收链断掉
+#   - PROVENANCE.md ：Build/ 不在 Git 时唯一的来源凭据
+#   - Baselines/*.json：验收基线本体；PROVENANCE 记录的原始基线已永久丢失，
+#                       现存的是重建物，但重建物丢了同样无法复现
+#   - Dependencies/  ：厂商依赖清单（17 个 artifact）；缺失则无法预检环境完整性
+/Build/*
+!/Build/TestSupport/
+!/Build/Baselines/
+!/Build/Dependencies/
+!/Build/PROVENANCE.md
+!/Build/*.ps1
+# 一次性取证工具与中间产物：只服务 P-01 那次恢复，本身不是验收入口
+/Build/_recovery/
