@@ -22,7 +22,7 @@ public class SerialPortDevice : CommunicationDeviceBase, IConnection, IRawSender
     private new SerialParam Param => (SerialParam)base.Param;
     private readonly IByteStreamTransport _transport;
     private readonly SemaphoreSlim _lifecycleGate = new(1, 1);
-    private readonly StringBuilder _receiveText = new();
+    private DelimitedFrameReader? _frameReader;
     private TaskCompletionSource<byte[]>? _pendingResponse;
     private ConnectionState _state = ConnectionState.Disconnected;
     private long _receiveGeneration;
@@ -68,6 +68,10 @@ public class SerialPortDevice : CommunicationDeviceBase, IConnection, IRawSender
             }
 
             _state = ConnectionState.Connecting;
+            // T15：分帧读取器按连接代际重建，避免把上一个连接遗留的半帧拼到新连接上。
+            _frameReader = string.IsNullOrEmpty(Param.Delimiter)
+                ? null
+                : DelimitedFrameReader.ForDelimiter(Encoding.UTF8.GetBytes(Param.Delimiter));
             await _transport.OpenAsync(ct).ConfigureAwait(false);
             _receiveLoopCts?.Dispose();
             _receiveLoopCts = new CancellationTokenSource();
@@ -131,13 +135,17 @@ public class SerialPortDevice : CommunicationDeviceBase, IConnection, IRawSender
 
     /// <summary>
     /// 处理接收操作；对应入口为 ReceiveLoopAsync。
-    /// 正文中的关键协作调用包括 ConfigureAwait、ReadAsync、ToArray、OnPacketReceived、PublishDelimitedFrames；具体条件和先后次序见方法体。
+    /// 正文中的关键协作调用包括 ConfigureAwait、ReadAsync、ToArray、TrySetResult、PublishReceived；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// 方法内使用锁保护部分共享操作；锁外操作的并发约束仍需结合调用者核对。
     /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
     /// </summary>
     private async Task ReceiveLoopAsync(CancellationToken ct, long receiveGeneration)
     {
+        // T15：循环结束的原因必须被如实带出去。改造前这里既没有 finally 也没有原因，
+        // 于是「字节流结束」「收件箱满」「分帧缓冲超限」全部静默退化成「什么都没发生」——
+        // 设备继续对外报告 Connected，而接收循环已经死了。
+        string? stopReason = null;
         try
         {
             while (!ct.IsCancellationRequested)
@@ -153,13 +161,16 @@ public class SerialPortDevice : CommunicationDeviceBase, IConnection, IRawSender
                         // 在发布事件前固定关联对象，事件处理器新建的请求不能认领当前旧数据。
                         pendingResponse = _pendingResponse;
                     }
-                    OnPacketReceived(data, Param.PortName);
-                    PublishDelimitedFrames(data);
+                    // 请求关联是可靠内部路径，必须先完成，不能等待用户事件处理器（与 TcpClientDevice 对齐）。
+                    // 收件箱满时 OnPacketReceived 会抛异常，若把关联放在它后面，等待中的请求就会一直挂到超时。
                     pendingResponse?.TrySetResult(data);
+                    PublishReceived(data, Param.PortName);
                 }
                 _transport.Input.AdvanceTo(buffer.End);
                 if (result.IsCompleted)
                 {
+                    // 底层字节流被正常结束（端口被外部关闭/拔出）才是真正的「对端下线」。
+                    stopReason = "串口字节流已结束";
                     break;
                 }
             }
@@ -174,37 +185,40 @@ public class SerialPortDevice : CommunicationDeviceBase, IConnection, IRawSender
         }
         catch (Exception ex)
         {
-            EndReceiveGeneration(receiveGeneration);
-            _state = ConnectionState.Faulted;
+            stopReason = ex.Message;
             OnErrorOccurred(ex);
-            OnConnectionStateChanged(false, ex.Message);
+        }
+        finally
+        {
+            if (!ct.IsCancellationRequested && _state == ConnectionState.Connected)
+            {
+                EndReceiveGeneration(receiveGeneration);
+                _state = ConnectionState.Faulted;
+                OnConnectionStateChanged(false, stopReason ?? "接收循环已结束");
+            }
         }
     }
 
     /// <summary>
-    /// 处理当前类型提供的操作；对应入口为 PublishDelimitedFrames。
-    /// 正文中的关键协作调用包括 IsNullOrEmpty、Append、GetString、ToString、IndexOf；具体条件和先后次序见方法体。
+    /// 发布一段接收字节（T15）：可靠收件箱<b>永远</b>拿到未分帧的原始块；
+    /// 旧 <c>DataReceived</c> 事件在配置了分包结束符时只承载<b>完整帧</b>，否则承载原始块。
     /// </summary>
-    private void PublishDelimitedFrames(byte[] data)
+    /// <remarks>
+    /// 改造前是「原始块进收件箱 + 原始块进事件 + 帧进事件」：订阅者会同时收到原始块与它的各个帧，
+    /// 同一批数据投递两遍。现在原始块只走收件箱、帧只走事件，两条路径各自闭合。
+    /// </remarks>
+    private void PublishReceived(byte[] data, string endpoint)
     {
-        if (string.IsNullOrEmpty(Param.Delimiter))
+        var reader = _frameReader;
+        if (reader is null)
         {
+            // 没有分包结束符：事件与收件箱都拿原始块（与改造前一致）。
+            OnPacketReceived(data, endpoint);
             return;
         }
 
-        _receiveText.Append(Encoding.UTF8.GetString(data));
-        while (true)
-        {
-            var text = _receiveText.ToString();
-            var index = text.IndexOf(Param.Delimiter, StringComparison.Ordinal);
-            if (index < 0)
-            {
-                return;
-            }
-            var frame = text[..index];
-            OnDataReceived(Encoding.UTF8.GetBytes(frame), Param.PortName);
-            _receiveText.Remove(0, index + Param.Delimiter.Length);
-        }
+        OnPacketReceived(data, endpoint, raiseDataReceivedEvent: false);
+        reader.Append(data, frame => OnDataReceived(frame, endpoint));
     }
 
     /// <inheritdoc />

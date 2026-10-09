@@ -89,16 +89,26 @@ namespace Communication.Runtime.Core
         }
 
         /// <summary>
-        /// 将原始字节块或完整数据报写入可靠收件箱，同时保留旧 DataReceived 事件。
+        /// 将原始字节块或完整数据报写入可靠收件箱，并（可选）同时保留旧 DataReceived 事件。
         /// 分隔符产生的兼容帧只能调用 <see cref="OnDataReceived"/>，避免在收件箱中重复报文。
         /// </summary>
-        protected void OnPacketReceived(byte[] data, string? remoteAddress = null)
+        /// <param name="data">本次接收的原始字节块或完整数据报。</param>
+        /// <param name="remoteAddress">远端端点或串口名；无法确定时为 <see langword="null"/>。</param>
+        /// <param name="raiseDataReceivedEvent">
+        /// 是否把同一个字节块也交给旧 <see cref="DataReceived"/> 事件。配置了分包结束符的设备应传
+        /// <see langword="false"/>：此时事件的契约是「一个完整帧」，原始块再发一遍会让订阅者
+        /// 同时收到原始块与帧 —— 同一批数据被投递两遍（T15）。
+        /// </param>
+        protected void OnPacketReceived(byte[] data, string? remoteAddress = null, bool raiseDataReceivedEvent = true)
         {
             ArgumentNullException.ThrowIfNull(data);
             var context = CreateEventDiagnosticContext();
             (_receiveInbox ?? throw new InvalidOperationException("该设备未启用被动接收能力。"))
                 .Publish(new ReceivedPacket(data, remoteAddress), context);
-            OnDataReceived(data, remoteAddress);
+            if (raiseDataReceivedEvent)
+            {
+                OnDataReceived(data, remoteAddress);
+            }
         }
 
         /// <summary>为具体原始传输 adapter 启用被动接收能力。</summary>
