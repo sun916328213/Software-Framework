@@ -26,6 +26,11 @@ internal static class QueryComposition
     {
         // 只提供通用查询服务和默认 reader；产能的具体数据库实体、reader/store 由机型宿主提供。
         // 每项注册都先检查已有契约，保留宿主定制实现，避免模块加载顺序把替换静默覆盖。
+        //
+        // T11：SqlTableQueryReader<T> 的构造参数是 Func<ISQL<T>>，因此
+        // 「宿主必须注册 ISQL<T>」是这套默认 reader 能工作的前提（缺注册会明确失败，
+        // 不会退回「索引 0」）。宿主侧注册见 MachineApp 的 SqlInstanceComposition；
+        // 宿主也可整体替换 ITableQueryReader<>（下面的 IsRegistered 检查会保留它）。
         if (!registry.IsRegistered(typeof(ITableQueryReader<>)))
             registry.RegisterSingleton(typeof(ITableQueryReader<>), typeof(SqlTableQueryReader<>));
         if (!registry.IsRegistered(typeof(ITableQueryService<>)))

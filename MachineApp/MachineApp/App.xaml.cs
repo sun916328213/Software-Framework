@@ -153,6 +153,9 @@ namespace MachineApp
             WPFControlsComposition.RegisterServices(containerRegistry);
             containerRegistry.RegisterSingleton<FlowNodes.Device.ICameraProvider, ProductionFlowCameraProvider>();
             containerRegistry.RegisterSingleton<MainWindow>();
+            // T11：先按类型暴露 ISQL<CSQLData> / ISQL<CapacityStatisticsInfo>，下面的产能端口
+            // 与通用查询页（DataQueryView）都经它取实例，不再依赖 SQLManager 的注册序号。
+            MachineApp.Infra.Persistence.SqlInstanceComposition.Register(containerRegistry);
             MachineApp.Infra.Persistence.PackingPersistenceComposition.RegisterCapacity(containerRegistry);
 
 

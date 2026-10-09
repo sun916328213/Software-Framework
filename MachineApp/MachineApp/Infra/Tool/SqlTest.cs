@@ -27,7 +27,11 @@ namespace MachineApp.Infra.Tool
     /// </summary>
     public class DbTestManager
     {
-        private readonly SQLManager _sqlManager;
+        /// <summary>
+        /// T11：主库（<see cref="CSQLData"/>）的 typed 获取函数。存函数而不是实例 ——
+        /// 该类型的构造不保证发生在启动脚本建库之后，构造期取实例可能抛。
+        /// </summary>
+        private readonly Func<ISQL<CSQLData>> _getSql;
         internal   LogInfoService _LogInfoService => _container.Resolve<LogInfoService>();
         // 各站点实例
         private readonly Load _load;
@@ -45,7 +49,9 @@ namespace MachineApp.Infra.Tool
         public DbTestManager(IContainerProvider container)
         {
             _container = container;
-            _sqlManager = container.Resolve<SQLManager>();
+            // T11：改从容器按类型取主库（宿主在 SqlInstanceComposition 里登记），
+            // 不再 container.Resolve<SQLManager>() 后用 _sqlManager[0] 猜实体身份。
+            _getSql = () => _container.Resolve<ISQL<CSQLData>>();
             // 初始化所有站点实例
             _load = container.Resolve<Load>();
             _readID = container.Resolve<ReadID>();
@@ -62,7 +68,7 @@ namespace MachineApp.Infra.Tool
         {
             try
             {
-                var ef = _sqlManager[0] as ISQL<CSQLData>;
+                var ef = _getSql();
             
                 var testSqlData = new CSQLData
                 {

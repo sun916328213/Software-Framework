@@ -1,10 +1,9 @@
 ﻿// 【中文阅读说明】
 // MachineApp 模块：具体机型的应用宿主，负责机型业务、导航选择、数据库实体和生产设备生命周期。
 // 本文件定义：UnLoad。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：MachineApp.Infra.Persistence.Entities、DataManager.Core.SQL、DataManager.Runtime.SQL、Extension.Core.Conversion、Extension.UI.Controls、DataManager.Core.Log.Definition。导入不代表所有类型都会在运行时加载。
+// 直接导入的协作命名空间包括：MachineApp.Infra.Persistence.Entities、DataManager.Core.SQL、Extension.Core.Conversion、Extension.UI.Controls、DataManager.Core.Log.Definition。导入不代表所有类型都会在运行时加载。
 using MachineApp.Infra.Persistence.Entities;
 using DataManager.Core.SQL;
-using DataManager.Runtime.SQL;
 using Extension.Core.Conversion;
 using Extension.UI.Controls;
 using DataManager.Core.Log.Definition;
@@ -35,7 +34,14 @@ namespace MachineApp.Business.Station
         internal readonly UnLoad _UnLoad;
         internal readonly ALDetect _ALDetect;
         internal readonly HumidityCard _HumidityCard;
-        internal readonly SQLManager _SQLManager;
+
+        /// <summary>
+        /// T11：主库（<see cref="CSQLData"/>）的 typed 获取函数。
+        /// 存 <see cref="Func{TResult}"/> 而**不是**实例：站点实例可能先于启动脚本
+        /// （<c>02_初始化工具</c>）构造，那一刻数据库还没 <c>Create</c>/<c>Connect</c>，
+        /// 构造期取实例会直接抛。真正的取实例推迟到 <see cref="AddSQL"/>。
+        /// </summary>
+        internal readonly Func<ISQL<CSQLData>> _GetSql;
 
         /// <summary>
         /// 初始化 UnLoad 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
@@ -49,7 +55,7 @@ namespace MachineApp.Business.Station
             Func<HeatSeal> getHeatSeal,
             Func<ALDetect> getALDetect,
             Func<HumidityCard> getHumidityCard,
-            Func<SQLManager> getSQLManager) : base(services)
+            Func<ISQL<CSQLData>> getSql) : base(services)
         {
             _Load = getLoad();
             _ReadID = getReadID();
@@ -60,7 +66,7 @@ namespace MachineApp.Business.Station
             _ALDetect = getALDetect();
             _HumidityCard = getHumidityCard();
 
-            _SQLManager = getSQLManager();
+            _GetSql = getSql;
         }
 
         internal string StationName = EProcess.出站流程.ToString();
@@ -120,8 +126,9 @@ namespace MachineApp.Business.Station
         public void AddSQL(string id)
         {
 
-            //_SQLManager[0].DeleteAll<CSQLData>();
-
+            // T11：按**类型**取主库实例，不再用 (ISQL<CSQLData>)_SQLManager[0]
+            // 这种「注册序号即实体身份」的取法（序号会随 Create 顺序变化）。
+            ISQL<CSQLData> db = _GetSql();
             //记录
             CSQLData sQLData = new CSQLData
             {
@@ -136,7 +143,6 @@ namespace MachineApp.Business.Station
                     HeatSeal = _HeatSeal.GetAndRemove(id),
                 }
             };
-            ISQL<CSQLData> db = (ISQL<CSQLData>) _SQLManager[0];
             db.Add(sQLData);
            
             var check = db.Query(x => x.ID == id).FirstOrDefault();

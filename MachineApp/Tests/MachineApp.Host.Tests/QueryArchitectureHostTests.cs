@@ -264,22 +264,39 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
     }
 
     /// <summary>
-    /// 测试相关入口 DefaultTableAdapterKeepsInclusiveDatesExactIdAndManagerIndexZero；准备条件、协作调用与结果检查以方法正文为准。
+    /// 测试相关入口 DefaultTableAdapterUsesTypedSqlInstanceAndKeepsInclusiveDatesAndExactId；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Container、Create、AddRange、AddHours；具体条件和先后次序见方法体。
     /// </summary>
+    /// <remarks>
+    /// T11 改写了本用例：改造前它叫 <c>...AndManagerIndexZero</c>，把「实体身份 = SQLManager 的 0 号位」
+    /// 当成**要保留的行为**锁死（<c>(ISQL&lt;DataRow&gt;)manager[0]</c>）。
+    /// 现在锁的是相反的性质：**索引 0 放别的实体也不影响结果** ——
+    /// 宿主按类型登记 <c>ISQL&lt;DataRow&gt;</c>（与 <c>SqlInstanceComposition</c> 同一做法），
+    /// reader 按类型取实例。若退回 <c>manager[0]</c> 强转，这里会直接 <c>InvalidCastException</c>。
+    /// 日期边界（含当日、次日 0 点前）与 id 精确匹配的既有语义不变。
+    /// </summary>
     [Fact]
-    public void DefaultTableAdapterKeepsInclusiveDatesExactIdAndManagerIndexZero()
+    public void DefaultTableAdapterUsesTypedSqlInstanceAndKeepsInclusiveDatesAndExactId()
     {
         fixture.Invoke(production =>
         {
             var container = Container(production);
             var sql = DispatchProxy.Create<ISQL<DataRow>, SqlProbe<DataRow>>();
             var probe = (SqlProbe<DataRow>)(object)sql;
+            probe.Name = "S3-typed";
             var day = new DateTime(2026, 10, 1);
             probe.Rows.AddRange([new() { ID = "a", Time = day }, new() { ID = "a", Time = day.AddDays(1).AddHours(16) },
                 new() { ID = "b", Time = day }, new() { ID = "a", Time = day.AddDays(2) }]);
-            var manager = new SQLManager(); manager.Add(sql);
-            container.RegisterInstance(manager);
+
+            // 0 号位故意放**另一个实体**：旧实现 (ISQL<DataRow>)manager[0] 会在这里强转失败。
+            var manager = new SQLManager();
+            var other = DispatchProxy.Create<ISQL<CapacityStatisticsInfo>, SqlProbe<CapacityStatisticsInfo>>();
+            ((SqlProbe<CapacityStatisticsInfo>)(object)other).Name = "S3-other";
+            manager.Add(other);
+            manager.Add(sql);
+
+            container.RegisterSingleton<ISQL<DataRow>>(
+                _ => MachineApp.Infra.Persistence.SqlInstanceComposition.Require<DataRow>(manager));
             PackingPersistenceComposition.RegisterCapacity(container);
             new WPFControls.WPFControlsModule().RegisterTypes(container);
             var query = container.Resolve<ITableQueryService<DataRow>>();
@@ -412,6 +429,11 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
     /// </summary>
     public class SqlProbe<T> : DispatchProxy
     {
+        /// <summary>
+        /// 实例名（<c>SQLParam.Name</c>）。T11：改成可设置 ——
+        /// 同一个 <see cref="SQLManager"/> 里放多个探针时名字必须互不相同，否则 Add 会因重名抛错。
+        /// </summary>
+        public string Name { get; set; } = "S3-probe";
         public List<T> Rows { get; } = [];
         /// <summary>
         /// 测试相关入口 Invoke；准备条件、协作调用与结果检查以方法正文为准。
@@ -419,7 +441,7 @@ public sealed class QueryArchitectureHostTests(ProductionFixture fixture)
         /// </summary>
         protected override object? Invoke(MethodInfo? method, object?[]? args)
         {
-            if (method!.Name == "get_SQLParam") return new SQLParam { Name = "S3-probe" };
+            if (method!.Name == "get_SQLParam") return new SQLParam { Name = Name };
             if (method.Name == "Query") return args is { Length: 1 } && args[0] is Expression<Func<T, bool>> predicate
                 ? Rows.Where(predicate.Compile()).ToList() : Rows.ToList();
             if (method.Name == "Add" && args![0] is T row) Rows.Add(row);
