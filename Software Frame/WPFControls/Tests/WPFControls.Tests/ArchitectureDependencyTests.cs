@@ -258,6 +258,47 @@ namespace WPFControls.Tests
             Assert.DoesNotContain("SaveCallbackCommand", viewModel, StringComparison.Ordinal);
         }
 
+        /// <summary>
+        /// T12c：SEMI 配置页（SECS ReportInfo / EventInfo）的两个保存按钮必须绑**页面命令**，
+        /// 不得回退到控件内置的 <c>SaveData</c> + <c>SaveCallback</c>。
+        ///
+        /// <para>
+        /// 这一页比 Log / Alarm 两页更严重：内置 <c>SaveData</c> 的开头是
+        /// <c>if (string.IsNullOrEmpty(FilePath) || string.IsNullOrEmpty(FileName)) { MessageBox.Show(...); return; }</c>，
+        /// 而本页两个 <c>ConfigManagerView</c> **都没有**设置 <c>FilePath</c> / <c>FileName</c>
+        /// （它们绑的是内存里的 SECS 表）⇒ 早退分支在 <c>SaveCallback?.Invoke()</c> <b>之前</b>
+        /// ⇒ 点"保存"只弹一个"请检查文件路径"的框，回调**一次都不会被调用**，两个按钮形同虚设。
+        /// </para>
+        ///
+        /// <para>
+        /// 所以这里除了钉住"绑的是 SaveCommand"，还钉住"本页没有 FilePath/FileName" ——
+        /// 后者是"内置路径在本页根本走不通"的事实依据。将来若真给这两张表配了磁盘文件，
+        /// 本断言会变红，提醒重新评估这一页该走哪条保存路径。
+        /// </para>
+        /// </summary>
+        [Fact]
+        public void SemiManagerPage_BindsSaveCommandInsteadOfSaveCallback()
+        {
+            var xaml = File.ReadAllText(Path.Combine(
+                ProjectDirectory, "Features", "Log", "Views", "SEMIManagerView.xaml"));
+
+            Assert.Contains("SaveCommand=\"{Binding ReportSaveCommand}\"", xaml, StringComparison.Ordinal);
+            Assert.Contains("SaveCommand=\"{Binding EventSaveCommand}\"", xaml, StringComparison.Ordinal);
+            // 只禁「属性」本身，不禁止注释里提到这个历史名字（保留改动原因便于后人阅读）。
+            Assert.DoesNotContain("SaveCallback=", xaml, StringComparison.Ordinal);
+            // 内置 SaveData 在 FilePath/FileName 为空时直接 return ⇒ 本页必须绕开它。
+            Assert.DoesNotContain("FilePath=", xaml, StringComparison.Ordinal);
+            Assert.DoesNotContain("FileName=", xaml, StringComparison.Ordinal);
+
+            var viewModel = File.ReadAllText(Path.Combine(
+                ProjectDirectory, "Features", "Log", "ViewModels", "SEMIManagerViewModel.cs"));
+
+            Assert.Contains("public ICommand ReportSaveCommand { get; }", viewModel, StringComparison.Ordinal);
+            Assert.Contains("public ICommand EventSaveCommand { get; }", viewModel, StringComparison.Ordinal);
+            Assert.DoesNotContain("public Action ReportSaveCommand", viewModel, StringComparison.Ordinal);
+            Assert.DoesNotContain("public Action EventSaveCommand", viewModel, StringComparison.Ordinal);
+        }
+
         /// <summary>扫描指定目录下命中禁止模式的「文件 :: 依赖」对。</summary>
         /// <param name="relativeDirectories">相对 WPFControls 工程目录的扫描目录。</param>
         /// <param name="pattern">用于识别越界依赖的正则（同时覆盖 using 与完全限定名）。</param>

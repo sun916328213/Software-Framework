@@ -27,31 +27,60 @@ WPFControls 模块：可复用业务界面及模块装配，页面可用性与�
         </i:EventTrigger>
     </i:Interaction.Triggers>
 
-    <UniformGrid Rows="2">
-        <Border Style="{StaticResource Border_Style}">
-            <wpfcc:ConfigManagerView
-                AddVisibility="Collapsed"
-                DeleteVisibility="Collapsed"
-                Title="SEMI ReportInfo"
-                IsReadOnly="True"
-                ItemsSource="{Binding Datas.Reports}"
-                RowHeight="38"
-                SaveCallback="{Binding ReportSaveCommand}"
-                SelectVisibility="Collapsed" />
-        </Border>
+    <!--
+        T12c：两张表都**不设** FilePath / FileName（它们绑的是内存里的 SECS 表，不是磁盘文件），
+        而控件内置 SaveData 在 FilePath/FileName 为空时**直接 return** ⇒ 早退分支会让 SaveCallback
+        永远不被调用，两个保存按钮形同虚设。改绑 SaveCommand 后内置路径整条不再执行。
+        状态行说清保存的是哪张 SECS 表（表格本身是只读快照，编辑内容不参与保存）。
+    -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-        <Border Grid.Row="2" Style="{StaticResource Border_Style}">
-            <wpfcc:ConfigManagerView
-                AddVisibility="Collapsed"
-                DeleteVisibility="Collapsed"
-                Title="SEMI EventInfo"
-                IsReadOnly="True"
-                ItemsSource="{Binding Datas.Events}"
-                RowHeight="38"
-                SaveCallback="{Binding EventSaveCommand}"
-                SelectVisibility="Collapsed" />
-        </Border>
-    </UniformGrid>
+        <UniformGrid Grid.Row="0" Rows="2">
+            <Border Style="{StaticResource Border_Style}">
+                <wpfcc:ConfigManagerView
+                    AddVisibility="Collapsed"
+                    DeleteVisibility="Collapsed"
+                    Title="SEMI ReportInfo"
+                    IsReadOnly="True"
+                    ItemsSource="{Binding Datas.Reports}"
+                    RowHeight="38"
+                    SaveCommand="{Binding ReportSaveCommand}"
+                    SelectVisibility="Collapsed" />
+            </Border>
 
+            <Border Style="{StaticResource Border_Style}">
+                <wpfcc:ConfigManagerView
+                    AddVisibility="Collapsed"
+                    DeleteVisibility="Collapsed"
+                    Title="SEMI EventInfo"
+                    IsReadOnly="True"
+                    ItemsSource="{Binding Datas.Events}"
+                    RowHeight="38"
+                    SaveCommand="{Binding EventSaveCommand}"
+                    SelectVisibility="Collapsed" />
+            </Border>
+        </UniformGrid>
 
+        <!-- 结果行：保存失败时明确写"未改变"；加载失败也走这一行。空串时本行不占位。 -->
+        <TextBlock
+            x:Name="StatusLine"
+            Grid.Row="1"
+            Margin="8,4,8,6"
+            Text="{Binding StatusText}"
+            TextWrapping="Wrap">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding StatusText}" Value="">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+    </Grid>
 </UserControl>
