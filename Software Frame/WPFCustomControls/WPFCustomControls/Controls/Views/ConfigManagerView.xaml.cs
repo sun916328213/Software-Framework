@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using WPFCustomControls.Window.Views;
 
 namespace WPFCustomControls.Controls
@@ -240,27 +241,127 @@ namespace WPFCustomControls.Controls
         }
 
 
-        // 内部命令
-        public RelayCommand SelectCommand { get; }
-        public RelayCommand LockCommand { get; }
-        public RelayCommand SaveCommand { get; }
-        public RelayCommand AddCommand { get; }
-        public RelayCommand DeleteCommand { get; }
+        // 内部命令默认实现（T10）
+        //
+        // 5 个按钮的 Command 是**可被外部覆盖的依赖属性**（见下方 seam 区）。
+        // 依赖属性元数据默认是 null，由 CoerceValueCallback 折成这里的默认实现
+        // ⇒「没人设置 = 内置行为」，15 个既有宿主零改动。
+        private readonly RelayCommand _defaultSelectCommand;
+        private readonly RelayCommand _defaultLockCommand;
+        private readonly RelayCommand _defaultSaveCommand;
+        private readonly RelayCommand _defaultAddCommand;
+        private readonly RelayCommand _defaultDeleteCommand;
+
+        // 外部 Command seam（T10）-------------------------------------------------------------------
+        //
+        // 与本仓库既有约定一致（QueryView / AddUserView / DeletUserView / LoginView 都是
+        // 「ICommand 依赖属性 + 宿主注入」）。区别在于本控件 5 个按钮**自带默认行为**，
+        // 所以这里不是「宿主必须提供」，而是「宿主可选覆盖」：
+        //   未设置 ⇒ 依赖属性由构造函数写成内置 RelayCommand（改造前行为，逐字保留）；
+        //   已设置 ⇒ 走宿主提供的命令（可用 CanExecute 控制按钮可用性）。
+        //
+        // 「没有命令」只有一种含义：依赖属性为 null（显式设 null 或 ClearValue 都算），
+        // 此时按钮禁用。**不额外把 null 折回内置** —— 那会让「显式 null」与「ClearValue」
+        // 两条本该等价的路径得到不同结果（coerce 只在「设过值」那条路上生效），
+        // 留下一个很难查的不一致。
+        //
+        // ⚠️ 覆盖只替换**命令体**，不接管 *Callback 回调：宿主若覆盖 SaveCommand，
+        // 内置的 JsonEx.Save 与 SaveCallback 都不会再执行，需自行处理落盘与通知。
+        // 反过来，未覆盖时 SaveCallback 等回调语义与改造前完全一致。
+        //
+        // ⚠️ 内置默认必须写成依赖属性的**本地值**（见构造函数），不能只写成 CLR getter 的
+        // ?? 回退：XAML 的 {Binding Path=SaveCommand} 经 DependencyPropertyDescriptor
+        // 直接读**依赖属性本身**（GetValue），**绕过 CLR getter**。只写在 getter 里，
+        // 会出现「view.SaveCommand 读出内置命令、而按钮绑到 null 并静默禁用」的诡异状态。
+
+        public static readonly DependencyProperty SelectCommandProperty =
+            DependencyProperty.Register("SelectCommand", typeof(ICommand), typeof(ConfigManagerView), new PropertyMetadata(null));
+
+        public static readonly DependencyProperty LockCommandProperty =
+            DependencyProperty.Register("LockCommand", typeof(ICommand), typeof(ConfigManagerView), new PropertyMetadata(null));
+
+        public static readonly DependencyProperty SaveCommandProperty =
+            DependencyProperty.Register("SaveCommand", typeof(ICommand), typeof(ConfigManagerView), new PropertyMetadata(null));
+
+        public static readonly DependencyProperty AddCommandProperty =
+            DependencyProperty.Register("AddCommand", typeof(ICommand), typeof(ConfigManagerView), new PropertyMetadata(null));
+
+        public static readonly DependencyProperty DeleteCommandProperty =
+            DependencyProperty.Register("DeleteCommand", typeof(ICommand), typeof(ConfigManagerView), new PropertyMetadata(null));
+
+        /// <summary>选择指令。未设置时走内置 <see cref="SelecItem"/>。</summary>
+        [Bindable(true)]
+        [Category("自定义属性"), Description("选择指令（留空使用内置行为）"), DisplayName("选择指令")]
+        public ICommand SelectCommand
+        {
+            get { return (ICommand)GetValue(SelectCommandProperty); }
+            set { SetValue(SelectCommandProperty, value); }
+        }
+
+        /// <summary>上锁/解锁指令。未设置时走内置 <see cref="Lock"/>。</summary>
+        [Bindable(true)]
+        [Category("自定义属性"), Description("上锁/解锁指令（留空使用内置行为）"), DisplayName("上锁/解锁指令")]
+        public ICommand LockCommand
+        {
+            get { return (ICommand)GetValue(LockCommandProperty); }
+            set { SetValue(LockCommandProperty, value); }
+        }
+
+        /// <summary>保存指令。未设置时走内置 <see cref="SaveData"/>。</summary>
+        [Bindable(true)]
+        [Category("自定义属性"), Description("保存指令（留空使用内置行为）"), DisplayName("保存指令")]
+        public ICommand SaveCommand
+        {
+            get { return (ICommand)GetValue(SaveCommandProperty); }
+            set { SetValue(SaveCommandProperty, value); }
+        }
+
+        /// <summary>增加指令。未设置时走内置 <see cref="AddItem"/>。</summary>
+        [Bindable(true)]
+        [Category("自定义属性"), Description("增加指令（留空使用内置行为）"), DisplayName("增加指令")]
+        public ICommand AddCommand
+        {
+            get { return (ICommand)GetValue(AddCommandProperty); }
+            set { SetValue(AddCommandProperty, value); }
+        }
+
+        /// <summary>删除指令。未设置时走内置 <see cref="DeleteItem"/>。</summary>
+        [Bindable(true)]
+        [Category("自定义属性"), Description("删除指令（留空使用内置行为）"), DisplayName("删除指令")]
+        public ICommand DeleteCommand
+        {
+            get { return (ICommand)GetValue(DeleteCommandProperty); }
+            set { SetValue(DeleteCommandProperty, value); }
+        }
 
         /// <summary>
-        /// 初始化 ConfigManagerView 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
-        /// 正文中的关键协作调用包括 InitializeComponent、Clear、Add；具体条件和先后次序见方法体。
+        /// 初始化 ConfigManagerView 实例及其协作对象。
+        ///
+        /// <para>
+        /// <b>顺序有约束</b>：内置命令必须早于 <see cref="InitializeComponent"/> 写进依赖属性。
+        /// XAML 里 5 个按钮的 <c>Command</c> 绑定在加载时就会求值一次；那一刻若依赖属性还是
+        /// null，按钮会停在「无命令」状态（表现为禁用），此后也不会自动重新求值 ——
+        /// 因为依赖属性的值并没有再变过。
+        /// </para>
         /// </summary>
         public ConfigManagerView()
         {
+            // T10：内置命令先于 InitializeComponent（理由见上方 <summary>）。
+            // 必须写成依赖属性的**本地值**，不能只放在 CLR getter 的 ?? 回退里 ——
+            // XAML 绑定读的是依赖属性本身，看不到 getter。
+            _defaultSelectCommand = new RelayCommand(SelecItem);
+            _defaultLockCommand = new RelayCommand(Lock);
+            _defaultSaveCommand = new RelayCommand(SaveData);
+            _defaultAddCommand = new RelayCommand(AddItem);
+            _defaultDeleteCommand = new RelayCommand(DeleteItem);
+            SelectCommand = _defaultSelectCommand;
+            LockCommand = _defaultLockCommand;
+            SaveCommand = _defaultSaveCommand;
+            AddCommand = _defaultAddCommand;
+            DeleteCommand = _defaultDeleteCommand;
+
             InitializeComponent();
             DataGridColumns = new ObservableCollection<System.Windows.Controls.DataGridColumn>();
-            // 初始化内部命令
-            SelectCommand = new RelayCommand(SelecItem);
-            LockCommand = new RelayCommand(Lock);
-            SaveCommand = new RelayCommand(SaveData);
-            AddCommand = new RelayCommand(AddItem);
-            DeleteCommand = new RelayCommand(DeleteItem);
 
             Loaded += (s, e) =>
             {
