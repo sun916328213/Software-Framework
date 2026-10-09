@@ -20,15 +20,45 @@ WPFControls 模块：可复用业务界面及模块装配，页面可用性与�
     prism:ViewModelLocator.AutoWireViewModel="True"
     mc:Ignorable="d">
 
-    <!--  日志统一配置界面（仿 CamManagerView）：内嵌 DeviceManagerView 编辑保存 Config\LogConfig.json  -->
-    <wpfcc:ConfigManagerView
-        Title="{Binding Datas.Name}"
-        AddVisibility="Collapsed"
-        DeleteVisibility="Collapsed"
-        FileName="{Binding Datas.FileName}"
-        FilePath="{Binding Datas.FilePath}"
-        IsReadOnly="True"
-        ItemsSource="{Binding Datas.DataCollection}"
-        SaveCallback="{Binding SaveCallbackCommand}"
-        SelectVisibility="Collapsed" />
+    <!--
+        日志统一配置界面（仿 CamManagerView）：内嵌 ConfigManagerView 编辑 Config\LogConfig.json。
+        T12a：保存不再走 SaveCallback（控件内置写盘 + 事后回调），改绑页面自己的 SaveCommand ——
+        落盘与生效由 LogConfigService.Save 统一负责，成功/失败结果落在下方状态行。
+    -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <wpfcc:ConfigManagerView
+            Grid.Row="0"
+            Title="{Binding Datas.Name}"
+            AddVisibility="Collapsed"
+            DeleteVisibility="Collapsed"
+            FileName="{Binding Datas.FileName}"
+            FilePath="{Binding Datas.FilePath}"
+            IsReadOnly="True"
+            ItemsSource="{Binding Datas.DataCollection}"
+            SaveCommand="{Binding SaveCommand}"
+            SelectVisibility="Collapsed" />
+
+        <!-- 保存结果：失败时明确写"未生效"，绝不在写盘失败时显示成功。空串时本行不占位。 -->
+        <TextBlock
+            x:Name="StatusLine"
+            Grid.Row="1"
+            Margin="8,4,8,6"
+            Text="{Binding StatusText}"
+            TextWrapping="Wrap">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding StatusText}" Value="">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+    </Grid>
 </UserControl>

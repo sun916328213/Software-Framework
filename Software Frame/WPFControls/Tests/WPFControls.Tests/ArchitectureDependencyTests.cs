@@ -191,6 +191,39 @@ namespace WPFControls.Tests
             Assert.DoesNotContain("Connect(", composition);
         }
 
+        /// <summary>
+        /// T12a：日志配置页的保存必须走**页面命令**（<c>SaveCommand</c>），不得回退到控件内置的
+        /// <c>SaveData</c> + <c>SaveCallback</c> 回调。
+        ///
+        /// <para>
+        /// 为什么必须钉住：内置 <c>SaveData</c> 的 <c>SaveCallback?.Invoke()</c> 写在 try/catch
+        /// <b>之外</b> —— 写盘失败时照样回调重载，会用磁盘上的<b>旧配置</b>覆盖运行中的日志实例
+        /// （用户看到"保存出错"，实际改动被静默回退）。
+        /// </para>
+        ///
+        /// <para>
+        /// 与 T10 已锁定的 seam 合起来即是「真实按钮 → 页面命令」：
+        /// <c>DataManager.Workbench.Tests/ConfigManagerCommandSeamTests</c> 已证明按钮绑的就是控件的
+        /// <c>SaveCommand</c> 依赖属性（且设置后内置行为不再发生），本用例钉住该属性绑的是页面命令。
+        /// </para>
+        /// </summary>
+        [Fact]
+        public void LogConfigPage_BindsSaveCommandInsteadOfSaveCallback()
+        {
+            var xaml = File.ReadAllText(Path.Combine(
+                ProjectDirectory, "Features", "Log", "Views", "LogConfigView.xaml"));
+
+            Assert.Contains("SaveCommand=\"{Binding SaveCommand}\"", xaml, StringComparison.Ordinal);
+            // 只禁「属性」本身，不禁止注释里提到这个历史名字（保留改动原因便于后人阅读）。
+            Assert.DoesNotContain("SaveCallback=", xaml, StringComparison.Ordinal);
+
+            var viewModel = File.ReadAllText(Path.Combine(
+                ProjectDirectory, "Features", "Log", "ViewModels", "LogConfigViewModel.cs"));
+
+            Assert.Contains("public ICommand SaveCommand { get; }", viewModel, StringComparison.Ordinal);
+            Assert.DoesNotContain("SaveCallbackCommand", viewModel, StringComparison.Ordinal);
+        }
+
         /// <summary>扫描指定目录下命中禁止模式的「文件 :: 依赖」对。</summary>
         /// <param name="relativeDirectories">相对 WPFControls 工程目录的扫描目录。</param>
         /// <param name="pattern">用于识别越界依赖的正则（同时覆盖 using 与完全限定名）。</param>
