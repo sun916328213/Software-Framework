@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using DataManager.Controls.Models;
 using DataManager.Controls.Services;
 using DataManager.Core.Excel.Definition;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -21,38 +22,64 @@ namespace DataManager.Controls.ViewModels
     /// 行实体由宿主提供，只约束 <see cref="IExcelTestEntity"/>。
     /// 追加/更新仅 EPPlus 可用（行内 ToolType 变更经 INPC 联动命令可用性）。
     /// </summary>
-    public partial class ExcelViewModel<T> : ObservableObject
+    public partial class ExcelViewModel<T> : ObservableObject, IDisposable
         where T : class, IExcelTestEntity, new()
     {
         private readonly ExcelWorkspace<T> _workspace;
+        private readonly PropertyChangedEventHandler _onModelPropertyChanged;
+        private readonly NotifyCollectionChangedEventHandler _onProfilesChanged;
+        private bool _disposed;
 
         /// <summary>页状态（Workspace 持有）。</summary>
         public ExcelPageModel<T> Model => _workspace.Model;
 
         /// <summary>
         /// 初始化 ExcelViewModel 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
-        /// 正文中的关键协作调用包括 AttachRow、FirstOrDefault、RefreshEpplusCommands、nameof、NotifyCanExecuteChanged；具体条件和先后次序见方法体。
+        /// T09：三处订阅（档案集合、Model 属性、当前行）全部保存为具名委托，
+        /// 页面退场时由 <see cref="Dispose"/> 逐一摘除。
         /// </summary>
         public ExcelViewModel(ExcelWorkspace<T> workspace)
         {
             _workspace = workspace;
-            // Model 与 VM 同生命周期，此处订阅仅刷新命令可用性。
+            // Model 归单例 Workspace 所有、比本 VM 活得久：订阅必须可退订（T09）。
+            _onModelPropertyChanged = OnModelPropertyChanged;
+            _onProfilesChanged = OnProfilesChanged;
             AttachRow(Model.SelectedExcelParam ?? Model.DataCollection.FirstOrDefault());
-            Model.DataCollection.CollectionChanged += (_, _) =>
+            Model.DataCollection.CollectionChanged += _onProfilesChanged;
+            Model.PropertyChanged += _onModelPropertyChanged;
+        }
+
+        /// <summary>档案集合增删 ⇒ 重新挂当前行并刷新命令可用性。</summary>
+        private void OnProfilesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            AttachRow(Model.SelectedExcelParam ?? Model.DataCollection.FirstOrDefault());
+            RefreshEpplusCommands();
+        }
+
+        /// <summary>选中行/选中档案变化 ⇒ 刷新命令可用性（选中档案还要重挂行订阅）。</summary>
+        private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Model.SelectedEntity))
+                UpdateSelectedCommand.NotifyCanExecuteChanged();
+            if (e.PropertyName == nameof(Model.SelectedExcelParam))
             {
-                AttachRow(Model.SelectedExcelParam ?? Model.DataCollection.FirstOrDefault());
+                AttachRow(Model.SelectedExcelParam);
                 RefreshEpplusCommands();
-            };
-            Model.PropertyChanged += (_, e) =>
-            {
-                if (e.PropertyName == nameof(Model.SelectedEntity))
-                    UpdateSelectedCommand.NotifyCanExecuteChanged();
-                if (e.PropertyName == nameof(Model.SelectedExcelParam))
-                {
-                    AttachRow(Model.SelectedExcelParam);
-                    RefreshEpplusCommands();
-                }
-            };
+            }
+        }
+
+        /// <summary>
+        /// T09：页面退场时退订（幂等）——档案集合订阅、Model 属性订阅、当前行订阅全部摘除。
+        /// **只摘本 VM 自己的订阅**：Workspace 是宿主共享的单例，按 T03 §2「共享实例不释放」
+        /// 不得在此释放或取消在途操作。
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            Model.PropertyChanged -= _onModelPropertyChanged;
+            Model.DataCollection.CollectionChanged -= _onProfilesChanged;
+            AttachRow(null);
         }
 
         /// <summary>供 XAML 绑定的保存回调（控件已落盘，此处记日志）。</summary>

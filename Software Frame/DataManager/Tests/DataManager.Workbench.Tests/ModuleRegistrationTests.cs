@@ -6,6 +6,7 @@ using DataManager.Workbench;
 using DataManager.Core;
 using DataManager.Controls;
 using DataManager.Controls.Services;
+using DataManager.Controls.ViewModels;
 using DataManager.Core.Excel;
 using DataManager.Runtime.Excel;
 using DataManager.Core.Log;
@@ -13,12 +14,15 @@ using DataManager.Runtime.Log;
 using DataManager.Runtime;
 using DataManager.Core.SQL;
 using DataManager.Runtime.SQL;
+using DataManager.Workbench.Infrastructure;
 using DataManager.Workbench.Models;
 using Prism.DryIoc;
 using Prism.Ioc;
 using Prism.Modularity;
+using Prism.Regions;
 using System.Reflection;
 using System.Reflection.PortableExecutable;
+using System.Windows;
 
 namespace DataManager.Workbench.Tests;
 
@@ -245,5 +249,80 @@ public sealed class ModuleWorkbenchCompositionTests(WorkbenchAppFixture host)
                 container.Resolve<SqlWorkspace<TestEntity>>());
             Assert.Same(container.Resolve<LogWorkspace>(), container.Resolve<LogWorkspace>());
         });
+    }
+
+    /// <summary>
+    /// T09「实际重建/复用验证」（走真实区域导航，不是直接 Resolve）：
+    /// ① 每个页面类型在区域里**只有一个**视图实例——导航走开再回来复用**同一个视图与同一个 VM**，
+    ///    视图数不增长（所以泄漏不是"每次导航一个 VM"，而是"退场时从不退订"）；
+    /// ② 页面 VM 实现了 <see cref="IDisposable"/>——这正是
+    ///    <c>WorkbenchLifetime.CloseRegionAsync</c> 在区域退役时用来退订的判据（T03 关闭合同）；
+    ///    改造前这里是静默空操作，订阅会一直留到进程结束。
+    /// </summary>
+    [Fact]
+    public void NavigatedPages_ReuseOneViewModel_AndAreDisposable()
+    {
+        IRegionManager? resolved = null;
+        _host.Invoke(() => resolved = Prism.Ioc.ContainerLocator.Container.Resolve<IRegionManager>());
+        var regions = resolved ?? throw new InvalidOperationException("未取得 IRegionManager");
+
+        Navigate(regions, nameof(DataManager.Controls.Views.SqlView));
+        var sqlFirst = FindView(regions, nameof(DataManager.Controls.Views.SqlView));
+        Assert.IsType<SqlViewModel<TestEntity>>(sqlFirst.DataContext);
+
+        Navigate(regions, nameof(DataManager.Controls.Views.ExcelView));
+        var excel = FindView(regions, nameof(DataManager.Controls.Views.ExcelView));
+        Assert.IsType<ExcelViewModel<ExcelPerson>>(excel.DataContext);
+
+        var viewsAfterExcel = 0;
+        _host.Invoke(() => viewsAfterExcel = Region(regions).Views.Count());
+
+        Navigate(regions, nameof(DataManager.Controls.Views.SqlView));
+        var sqlSecond = FindView(regions, nameof(DataManager.Controls.Views.SqlView));
+
+        // 复用：导航回退既不新建视图，也不换 VM。
+        Assert.Same(sqlFirst.View, sqlSecond.View);
+        Assert.Same(sqlFirst.DataContext, sqlSecond.DataContext);
+        _host.Invoke(() => Assert.Equal(viewsAfterExcel, Region(regions).Views.Count()));
+
+        // 可释放：区域退役时 CloseRegionAsync 靠 IDisposable 退订。
+        Assert.IsAssignableFrom<IDisposable>(sqlFirst.DataContext);
+        Assert.IsAssignableFrom<IDisposable>(excel.DataContext);
+    }
+
+    /// <summary>
+    /// 视图句柄。<c>DataContext</c> 是依赖属性，只能在 UI 线程上读——
+    /// 所以在 <c>_host.Invoke</c> 内一次性取出，测试体里只碰这两个快照。
+    /// </summary>
+    private sealed record PageHandle(FrameworkElement View, object? DataContext);
+
+    private static IRegion Region(IRegionManager regions) => regions.Regions[RegionNames.MainRegion];
+
+    private PageHandle FindView(IRegionManager regions, string viewName)
+    {
+        PageHandle? found = null;
+        _host.Invoke(() =>
+        {
+            var view = Region(regions).Views.OfType<FrameworkElement>()
+                .FirstOrDefault(candidate => candidate.GetType().Name == viewName);
+            if (view is not null) found = new PageHandle(view, view.DataContext);
+        });
+        return found ?? throw new InvalidOperationException($"区域中没有 {viewName} 视图");
+    }
+
+    /// <summary>发起导航并等它成为区域活动视图（导航回调经 Dispatcher 完成）。</summary>
+    private void Navigate(IRegionManager regions, string viewName)
+    {
+        _host.Invoke(() => regions.RequestNavigate(RegionNames.MainRegion, viewName, _ => { }));
+        var deadline = DateTime.UtcNow.AddSeconds(15);
+        while (DateTime.UtcNow < deadline)
+        {
+            var active = "";
+            _host.Invoke(() => active = Region(regions).ActiveViews.OfType<FrameworkElement>()
+                .Select(view => view.GetType().Name).FirstOrDefault() ?? "");
+            if (active == viewName) return;
+            Thread.Sleep(25);
+        }
+        throw new TimeoutException($"导航到 {viewName} 超时（ActiveViews 未切换）");
     }
 }

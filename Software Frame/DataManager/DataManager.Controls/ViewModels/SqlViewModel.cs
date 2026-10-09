@@ -11,6 +11,7 @@ using DataManager.Controls.Models;
 using DataManager.Controls.Services;
 using DataManager.Core.SQL.Definition;
 using DataManager.Runtime.SQL.Definition;
+using System.ComponentModel;
 
 namespace DataManager.Controls.ViewModels
 {
@@ -19,30 +20,49 @@ namespace DataManager.Controls.ViewModels
     /// 行实体由宿主提供（如工作台的演示实体），此处只约束 <see cref="ISqlEntity"/>。
     /// 状态在 Model，流程在 Workspace；运行输出/忙指示/计时是纯展示层反馈，留在此处。
     /// </summary>
-    public partial class SqlViewModel<T> : ObservableObject
+    public partial class SqlViewModel<T> : ObservableObject, IDisposable
         where T : class, ISqlEntity, new()
     {
         private readonly SqlWorkspace<T> _workspace;
+        private readonly PropertyChangedEventHandler _onModelPropertyChanged;
+        private bool _disposed;
 
         /// <summary>页状态（Workspace 持有）。</summary>
         public SqlPageModel<T> Model => _workspace.Model;
 
         /// <summary>
         /// 初始化 SqlViewModel 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
-        /// 正文中的关键协作调用包括 nameof、NotifyCanExecuteChanged；具体条件和先后次序见方法体。
+        /// T09：订阅保存为具名委托，页面退场时由 <see cref="Dispose"/> 精确摘除。
         /// </summary>
         public SqlViewModel(SqlWorkspace<T> workspace)
         {
             _workspace = workspace;
-            // Model 与 VM 同生命周期（单例 Workspace 常驻），此处订阅仅刷新命令可用性。
-            Model.PropertyChanged += (_, e) =>
+            // Model 归单例 Workspace 所有、比本 VM 活得久：订阅必须可退订，
+            // 否则页面退场后 Model 的事件链会一直持有本 VM（T09）。
+            _onModelPropertyChanged = OnModelPropertyChanged;
+            Model.PropertyChanged += _onModelPropertyChanged;
+        }
+
+        /// <summary>选中行变化 ⇒ 刷新行操作命令的可用性。</summary>
+        private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Model.SelectedEntity))
             {
-                if (e.PropertyName == nameof(Model.SelectedEntity))
-                {
-                    UpdateSelectedCommand.NotifyCanExecuteChanged();
-                    DeleteSelectedCommand.NotifyCanExecuteChanged();
-                }
-            };
+                UpdateSelectedCommand.NotifyCanExecuteChanged();
+                DeleteSelectedCommand.NotifyCanExecuteChanged();
+            }
+        }
+
+        /// <summary>
+        /// T09：页面退场时退订（幂等）。**只摘除本 VM 自己的订阅**——
+        /// Workspace 是宿主共享的单例，按 T03 §2「共享实例不释放」不得在此释放或取消在途操作
+        /// （页面重建时取消会误伤新页面正在跑的操作）。
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            Model.PropertyChanged -= _onModelPropertyChanged;
         }
 
         /// <summary>供 XAML 绑定的增加回调（命名 + 选中；保存由控件保存按钮完成）。</summary>
