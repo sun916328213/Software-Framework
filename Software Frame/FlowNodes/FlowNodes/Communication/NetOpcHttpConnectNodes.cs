@@ -1,10 +1,9 @@
 // 【中文阅读说明】
 // FlowNodes 模块：WPF 流程节点与执行、编辑协作的集成；新增或迁移节点需同时核对节点目录、执行契约和持久化类型身份。
 // 本文件定义：NetOpcUaConnectNode、NetHttpConnectNode、NetWebApiConnectNode。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：FlowNodes、Communication.Core、Communication.Runtime.Core、Communication.Core.Protocols.Http、Communication.Runtime.Protocols.Http、Communication.Core.Protocols.OpcUa。导入不代表所有类型都会在运行时加载。
+// 直接导入的协作命名空间包括：FlowNodes、Communication.Core、Communication.Core.Protocols.Http、Communication.Runtime.Protocols.Http、Communication.Core.Protocols.OpcUa。导入不代表所有类型都会在运行时加载。
 using FlowNodes;
 using Communication.Core;
-using Communication.Runtime.Core;
 using Communication.Core.Protocols.Http;
 using Communication.Runtime.Protocols.Http;
 using Communication.Core.Protocols.OpcUa;
@@ -25,7 +24,7 @@ internal class NetOpcUaConnectNode : NetConnectNodeBase
     /// <summary>
     /// 初始化 NetOpcUaConnectNode 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// </summary>
-    public NetOpcUaConnectNode(CommunicationManager manager) : base(manager) { }
+    public NetOpcUaConnectNode(ICommunicationManager manager) : base(manager) { }
 
     public override ProtocolType Protocol => ProtocolType.OpcUa;
     protected override string DefaultDeviceName => "OpcUA1";
@@ -91,7 +90,7 @@ internal class NetHttpConnectNode : NetConnectNodeBase
     /// <summary>
     /// 初始化 NetHttpConnectNode 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// </summary>
-    public NetHttpConnectNode(CommunicationManager manager) : base(manager) { }
+    public NetHttpConnectNode(ICommunicationManager manager) : base(manager) { }
 
     public override ProtocolType Protocol => ProtocolType.Http;
     protected override string DefaultDeviceName => "Http1";
@@ -138,7 +137,7 @@ internal class NetWebApiConnectNode : NetConnectNodeBase
     /// <summary>
     /// 初始化 NetWebApiConnectNode 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// </summary>
-    public NetWebApiConnectNode(CommunicationManager manager) : base(manager) { }
+    public NetWebApiConnectNode(ICommunicationManager manager) : base(manager) { }
 
     public override ProtocolType Protocol => ProtocolType.WebApi;
     protected override string DefaultDeviceName => "WebAPI1";

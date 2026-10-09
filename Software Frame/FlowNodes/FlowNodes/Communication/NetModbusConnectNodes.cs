@@ -1,11 +1,10 @@
 // 【中文阅读说明】
 // FlowNodes 模块：WPF 流程节点与执行、编辑协作的集成；新增或迁移节点需同时核对节点目录、执行契约和持久化类型身份。
 // 本文件定义：NetModbusTcpConnectNode、NetModbusRtuConnectNode。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：FlowNodes、System.IO.Ports、Communication.Core、Communication.Runtime.Core、Communication.Core.Protocols.Modbus.ModbusRtu、Communication.Runtime.Protocols.Modbus.ModbusRtu。导入不代表所有类型都会在运行时加载。
+// 直接导入的协作命名空间包括：FlowNodes、System.IO.Ports、Communication.Core、Communication.Core.Protocols.Modbus.ModbusRtu、Communication.Runtime.Protocols.Modbus.ModbusRtu。导入不代表所有类型都会在运行时加载。
 using FlowNodes;
 using System.IO.Ports;
 using Communication.Core;
-using Communication.Runtime.Core;
 using Communication.Core.Protocols.Modbus.ModbusRtu;
 using Communication.Runtime.Protocols.Modbus.ModbusRtu;
 using Communication.Core.Protocols.Modbus.ModbusTcp;
@@ -24,7 +23,7 @@ internal class NetModbusTcpConnectNode : NetConnectNodeBase
     /// <summary>
     /// 初始化 NetModbusTcpConnectNode 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// </summary>
-    public NetModbusTcpConnectNode(CommunicationManager manager) : base(manager) { }
+    public NetModbusTcpConnectNode(ICommunicationManager manager) : base(manager) { }
 
     public override ProtocolType Protocol => ProtocolType.ModbusTcp;
     protected override string DefaultDeviceName => "ModbusTCP1";
@@ -80,7 +79,7 @@ internal class NetModbusRtuConnectNode : NetConnectNodeBase
     /// <summary>
     /// 初始化 NetModbusRtuConnectNode 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// </summary>
-    public NetModbusRtuConnectNode(CommunicationManager manager) : base(manager) { }
+    public NetModbusRtuConnectNode(ICommunicationManager manager) : base(manager) { }
 
     public override ProtocolType Protocol => ProtocolType.ModbusRtu;
     protected override string DefaultDeviceName => "ModbusRTU1";

@@ -1,10 +1,9 @@
 // 【中文阅读说明】
 // FlowNodes 模块：WPF 流程节点与执行、编辑协作的集成；新增或迁移节点需同时核对节点目录、执行契约和持久化类型身份。
 // 本文件定义：NetTcpConnectNode、NetUdpConnectNode。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：FlowNodes、Communication.Core、Communication.Runtime.Core、Communication.Core.Protocols.Socket、Communication.Runtime.Protocols.Socket、FlowEditor.Controls.Core。导入不代表所有类型都会在运行时加载。
+// 直接导入的协作命名空间包括：FlowNodes、Communication.Core、Communication.Core.Protocols.Socket、Communication.Runtime.Protocols.Socket、FlowEditor.Controls.Core。导入不代表所有类型都会在运行时加载。
 using FlowNodes;
 using Communication.Core;
-using Communication.Runtime.Core;
 using Communication.Core.Protocols.Socket;
 using Communication.Runtime.Protocols.Socket;
 using FlowEditor.Controls.Core;
@@ -21,7 +20,7 @@ internal class NetTcpConnectNode : NetConnectNodeBase
     /// <summary>
     /// 初始化 NetTcpConnectNode 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// </summary>
-    public NetTcpConnectNode(CommunicationManager manager) : base(manager) { }
+    public NetTcpConnectNode(ICommunicationManager manager) : base(manager) { }
 
     public override ProtocolType Protocol => ProtocolType.Tcp;
     protected override string DefaultDeviceName => "TCP1";
@@ -79,7 +78,7 @@ internal class NetUdpConnectNode : NetConnectNodeBase
     /// <summary>
     /// 初始化 NetUdpConnectNode 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// </summary>
-    public NetUdpConnectNode(CommunicationManager manager) : base(manager) { }
+    public NetUdpConnectNode(ICommunicationManager manager) : base(manager) { }
 
     public override ProtocolType Protocol => ProtocolType.Udp;
     protected override string DefaultDeviceName => "UDP1";

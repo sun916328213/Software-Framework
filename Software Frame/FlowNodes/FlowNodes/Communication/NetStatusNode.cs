@@ -1,10 +1,9 @@
 // 【中文阅读说明】
 // FlowNodes 模块：WPF 流程节点与执行、编辑协作的集成；新增或迁移节点需同时核对节点目录、执行契约和持久化类型身份。
 // 本文件定义：NetStatusNode。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：FlowNodes、Communication.Core、Communication.Runtime.Core、Communication.Core.Abstractions、FlowEditor.Controls.Core、FlowEditor.Core。导入不代表所有类型都会在运行时加载。
+// 直接导入的协作命名空间包括：FlowNodes、Communication.Core、Communication.Core.Abstractions、FlowEditor.Controls.Core、FlowEditor.Core。导入不代表所有类型都会在运行时加载。
 using FlowNodes;
 using Communication.Core;
-using Communication.Runtime.Core;
 using Communication.Core.Abstractions;
 using FlowEditor.Controls.Core;
 using FlowEditor.Core;
@@ -25,7 +24,7 @@ internal class NetStatusNode : NetDeviceNodeBase
     /// <summary>
     /// 初始化 NetStatusNode 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// </summary>
-    public NetStatusNode(CommunicationManager manager) : base(manager) { }
+    public NetStatusNode(ICommunicationManager manager) : base(manager) { }
 
     private bool _isConnected;
     /// <summary>是否已连接。</summary>

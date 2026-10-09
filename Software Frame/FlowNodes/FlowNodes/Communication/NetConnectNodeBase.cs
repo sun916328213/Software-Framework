@@ -1,10 +1,9 @@
 // 【中文阅读说明】
 // FlowNodes 模块：WPF 流程节点与执行、编辑协作的集成；新增或迁移节点需同时核对节点目录、执行契约和持久化类型身份。
 // 本文件定义：NetConnectNodeBase。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：FlowNodes、Communication.Core、Communication.Runtime.Core、FlowEditor.Controls.Nodes、FlowEditor.Core.Nodes、WPFCustomControls.PropertyGrid.Core.Models。导入不代表所有类型都会在运行时加载。
+// 直接导入的协作命名空间包括：FlowNodes、Communication.Core、FlowEditor.Controls.Nodes、FlowEditor.Core.Nodes、WPFCustomControls.PropertyGrid.Core.Models。导入不代表所有类型都会在运行时加载。
 using FlowNodes;
 using Communication.Core;
-using Communication.Runtime.Core;
 using FlowEditor.Controls.Nodes;
 using FlowEditor.Core.Nodes;
 using WPFCustomControls.PropertyGrid.Core.Models;
@@ -18,13 +17,13 @@ namespace FlowNodes.Communication;
 /// </summary>
 internal abstract class NetConnectNodeBase : NodeModel
 {
-    protected readonly CommunicationManager Manager;
+    protected readonly ICommunicationManager Manager;
 
     /// <summary>
     /// 初始化 NetConnectNodeBase 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// 正文中的关键协作调用包括 nameof；具体条件和先后次序见方法体。
     /// </summary>
-    protected NetConnectNodeBase(CommunicationManager manager)
+    protected NetConnectNodeBase(ICommunicationManager manager)
     {
         Manager = manager ?? throw new ArgumentNullException(nameof(manager));
     }

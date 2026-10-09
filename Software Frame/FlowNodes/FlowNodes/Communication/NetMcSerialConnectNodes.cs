@@ -1,11 +1,10 @@
 // 【中文阅读说明】
 // FlowNodes 模块：WPF 流程节点与执行、编辑协作的集成；新增或迁移节点需同时核对节点目录、执行契约和持久化类型身份。
 // 本文件定义：NetMcConnectNode、NetSerialConnectNode。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：FlowNodes、System.IO.Ports、Communication.Core、Communication.Runtime.Core、Communication.Core.Protocols.Mitsubishi、Communication.Runtime.Protocols.Mitsubishi。导入不代表所有类型都会在运行时加载。
+// 直接导入的协作命名空间包括：FlowNodes、System.IO.Ports、Communication.Core、Communication.Core.Protocols.Mitsubishi、Communication.Runtime.Protocols.Mitsubishi。导入不代表所有类型都会在运行时加载。
 using FlowNodes;
 using System.IO.Ports;
 using Communication.Core;
-using Communication.Runtime.Core;
 using Communication.Core.Protocols.Mitsubishi;
 using Communication.Runtime.Protocols.Mitsubishi;
 using Communication.Core.Protocols.Serial;
@@ -24,7 +23,7 @@ internal class NetMcConnectNode : NetConnectNodeBase
     /// <summary>
     /// 初始化 NetMcConnectNode 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// </summary>
-    public NetMcConnectNode(CommunicationManager manager) : base(manager) { }
+    public NetMcConnectNode(ICommunicationManager manager) : base(manager) { }
 
     public override ProtocolType Protocol => ProtocolType.MitsubishiMc;
     protected override string DefaultDeviceName => "MC1";
@@ -89,7 +88,7 @@ internal class NetSerialConnectNode : NetConnectNodeBase
     /// <summary>
     /// 初始化 NetSerialConnectNode 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// </summary>
-    public NetSerialConnectNode(CommunicationManager manager) : base(manager) { }
+    public NetSerialConnectNode(ICommunicationManager manager) : base(manager) { }
 
     public override ProtocolType Protocol => ProtocolType.Serial;
     protected override string DefaultDeviceName => "Serial1";

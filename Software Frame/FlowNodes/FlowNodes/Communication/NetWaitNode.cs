@@ -1,11 +1,10 @@
 // 【中文阅读说明】
 // FlowNodes 模块：WPF 流程节点与执行、编辑协作的集成；新增或迁移节点需同时核对节点目录、执行契约和持久化类型身份。
 // 本文件定义：NetWaitNode。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：FlowNodes.Communication.CommunicationNew、FlowNodes、Communication.Core、Communication.Runtime.Core、FlowEditor.Controls.Core、FlowEditor.Core。导入不代表所有类型都会在运行时加载。
+// 直接导入的协作命名空间包括：FlowNodes.Communication.CommunicationNew、FlowNodes、Communication.Core、FlowEditor.Controls.Core、FlowEditor.Core。导入不代表所有类型都会在运行时加载。
 using FlowNodes.Communication.CommunicationNew;
 using FlowNodes;
 using Communication.Core;
-using Communication.Runtime.Core;
 using FlowEditor.Controls.Core;
 using FlowEditor.Core;
 using FlowEditor.Runtime;
@@ -27,7 +26,7 @@ internal class NetWaitNode : NetDeviceNodeBase
     /// <summary>
     /// 初始化 NetWaitNode 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// </summary>
-    public NetWaitNode(CommunicationManager manager) : base(manager) { }
+    public NetWaitNode(ICommunicationManager manager) : base(manager) { }
 
     private string _address = "D100";
     [NodeProperty(DisplayName = "地址", Group = "1.基础", Order = 1, Description = "Modbus:HR0/40001；MC:D100/M10；OPC:ns=2;s=Tag；HTTP:/api/data")]

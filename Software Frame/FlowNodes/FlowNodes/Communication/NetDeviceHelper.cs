@@ -1,12 +1,11 @@
 // 【中文阅读说明】
 // FlowNodes 模块：WPF 流程节点与执行、编辑协作的集成；新增或迁移节点需同时核对节点目录、执行契约和持久化类型身份。
 // 本文件定义：NetDeviceHelper。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：FlowNodes.Communication.CommunicationNew、FlowNodes、Communication.Core.Abstractions、Communication.Core、Communication.Runtime.Core、Communication.Core.Protocols.Http。导入不代表所有类型都会在运行时加载。
+// 直接导入的协作命名空间包括：FlowNodes.Communication.CommunicationNew、FlowNodes、Communication.Core.Abstractions、Communication.Core、Communication.Core.Protocols.Http。导入不代表所有类型都会在运行时加载。
 using FlowNodes.Communication.CommunicationNew;
 using FlowNodes;
 using Communication.Core.Abstractions;
 using Communication.Core;
-using Communication.Runtime.Core;
 using Communication.Core.Protocols.Http;
 using Communication.Runtime.Protocols.Http;
 using Communication.Core.Protocols.Mitsubishi;
@@ -29,14 +28,15 @@ namespace FlowNodes.Communication;
 
 /// <summary>
 /// 新通讯节点的共享逻辑：设备查找、连接/断开（含 <see cref="IConnection"/> 快捷路径，
-/// 与 Communication.Workbench 的 CommunicationSessionService 保持一致）、文本/HEX 编解码。
+/// 与 Communication.Workbench 的 CommunicationSessionService 保持一致）、能力判定、文本/HEX 编解码。
+/// 管理器只依赖 Core 契约 <see cref="ICommunicationManager"/>，不依赖 Runtime 实现。
 /// </summary>
 internal static class NetDeviceHelper
 {
     private const string StagingMarker = ".__connecting__.";
 
     /// <summary>按设备名称查找管理器中的设备，找不到则抛异常（走节点容错路径）。</summary>
-    public static ICommunicationDevice GetDeviceOrThrow(CommunicationManager manager, string deviceName)
+    public static ICommunicationDevice GetDeviceOrThrow(ICommunicationManager manager, string deviceName)
     {
         if (string.IsNullOrWhiteSpace(deviceName))
             throw new InvalidOperationException("新通讯节点未配置设备名称，请先用「新通讯连接」创建设备。");
@@ -47,12 +47,12 @@ internal static class NetDeviceHelper
     }
 
     /// <summary>按用户可见名称查找设备；名称不区分大小写。</summary>
-    public static ICommunicationDevice? FindDevice(CommunicationManager manager, string deviceName)
+    public static ICommunicationDevice? FindDevice(ICommunicationManager manager, string deviceName)
         => manager.Devices.FirstOrDefault(device =>
             string.Equals(device.DeviceName, deviceName.Trim(), StringComparison.OrdinalIgnoreCase));
 
     /// <summary>管理器中已创建的设备名称列表（供操作节点的设备下拉）。</summary>
-    public static List<string> DeviceNames(CommunicationManager manager)
+    public static List<string> DeviceNames(ICommunicationManager manager)
         => manager.Devices
             .Select(device => device.DeviceName)
             .Where(name => !string.IsNullOrWhiteSpace(name) && !name.Contains(StagingMarker, StringComparison.Ordinal))
@@ -79,26 +79,34 @@ internal static class NetDeviceHelper
             throw new InvalidOperationException($"新通讯设备 [{device.DeviceName}] 未连接，请先执行连接节点。");
     }
 
-    /// <summary>是否支持按协议地址主动读取。</summary>
-    public static bool SupportsAddressAccess(ICommunicationDevice device) => device.ProtocolType is
-        ProtocolType.ModbusTcp or
-        ProtocolType.ModbusRtu or
-        ProtocolType.MitsubishiMc or
-        ProtocolType.OpcUa or
-        ProtocolType.Http or
-        ProtocolType.WebApi;
+    // ===== 能力判定（T14）=====
+    //
+    // 判定必须以设备**真实实现的能力接口**为准，不能按 ProtocolType 枚举猜。枚举把客户端与服务端压进
+    // 同一个值（Http / WebApi 同时覆盖 client 与 server），于是 HttpServerDevice / WebApiServerDevice
+    // 会被误判成「支持按地址读写」：节点因此绕开自己那条「请改用接收/发送节点」的提示，改为把基类
+    // ReadAsync / WriteAsync 抛出的 NotSupportedException 当成失败原因报出去。
+    // 接口判定与节点真正调用的成员同源，检查与调用不会再各说各话。
 
-    /// <summary>是否由 CommunicationNew 的接收循环发布被动数据。</summary>
-    public static bool SupportsPassiveReceive(ICommunicationDevice device) => device.ProtocolType is
-        ProtocolType.Tcp or ProtocolType.Udp or ProtocolType.Serial;
+    /// <summary>是否支持按协议地址读写（读取与写入能力同时具备）。</summary>
+    public static bool SupportsAddressAccess(ICommunicationDevice device) =>
+        device is IAddressReader && device is IAddressWriter;
+
+    /// <summary>是否由接收循环发布被动数据。</summary>
+    /// <remarks>
+    /// 泛型实参写全名并带 <c>global::</c> 前缀，两个理由：
+    /// 一是本命名空间嵌在 <c>FlowNodes</c> 下，裸写 <c>Communication.Core</c> 会被解析成
+    /// <c>FlowNodes.Communication.Core</c> 而编译不过（CS0234），必须从 <c>global::</c> 起头；
+    /// 二是本模块另有一个同名的 <c>NetReceiveInbox.ReceivedPacket</c>（嵌套 record，是 FlowNodes
+    /// 自己收件箱的载荷），写全名可以避免读者把两者当成同一个契约。
+    /// </remarks>
+    public static bool SupportsPassiveReceive(ICommunicationDevice device) =>
+        device is IReceiveSource<global::Communication.Core.Abstractions.ReceivedPacket>;
 
     /// <summary>是否支持原始报文发送。</summary>
-    public static bool SupportsRawSend(ICommunicationDevice device) => device.ProtocolType is
-        ProtocolType.Tcp or ProtocolType.Udp or ProtocolType.Serial;
+    public static bool SupportsRawSend(ICommunicationDevice device) => device is IRawSender;
 
     /// <summary>是否支持一次请求对应一次回复。</summary>
-    public static bool SupportsRequestReply(ICommunicationDevice device) =>
-        device.Role == DeviceRole.Client && SupportsRawSend(device);
+    public static bool SupportsRequestReply(ICommunicationDevice device) => device is IRequestReplyClient;
 
     /// <summary>在替换现有设备前验证参数，避免无效配置破坏可用链路。</summary>
     public static void ValidateConnectionParam(CommunicationParam param)
