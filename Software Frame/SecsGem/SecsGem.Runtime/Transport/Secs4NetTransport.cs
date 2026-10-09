@@ -11,6 +11,8 @@ using SecsGem.Runtime.Variable;
 using Secs4Net;
 using Secs4Net.Sml;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ConnectionState = Secs4Net.ConnectionState;
@@ -108,6 +110,23 @@ namespace SecsGem.Runtime.Transport
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
+        /// 当前代际的接收循环任务。Close/Dispose 会 await 它，确保返回时该代际的接收分发已真正结束。
+        /// </summary>
+        private Task _receiveLoopTask;
+
+        /// <summary>
+        /// 关闭完成任务的单一所有者：重复 Close/CloseAsync/Dispose 都返回同一个最终结果（幂等）。
+        /// </summary>
+        private Task _closeTask;
+        private readonly object _closeSync = new object();
+
+        /// <summary>
+        /// 当前代际已发出但尚未结束的回复通知任务（OnReply 的即发即忘回调），关闭时一并排空。
+        /// </summary>
+        private readonly List<Task> _pendingNotifications = new List<Task>();
+        private readonly object _notificationSync = new object();
+
+        /// <summary>
         /// 当前正在处理的主消息包装器。
         /// 接收循环为串行分发，ReplyAsync 直接使用它回包，替代旧的轮询缓存列表（修复并发同S/F回错包问题）。
         /// </summary>
@@ -182,19 +201,31 @@ namespace SecsGem.Runtime.Transport
             _logger = this;
             if (IsConnected) return true;
 
-            // 清理现有连接
-            _secsGem?.Dispose();
-            if (_connector != null)
+            // 先等待上一次关闭真正结束，避免旧代际的接收循环/连接释放与新连接重叠
+            Task previousClose;
+            lock (_closeSync) { previousClose = _closeTask; }
+            if (previousClose != null)
             {
-                await _connector.DisposeAsync().ConfigureAwait(false);
+                try { await previousClose.ConfigureAwait(false); } catch { }
             }
 
-            // Close() 会释放CTS，重连前重建（支持断开后重新连接）
-            if (_cancellationTokenSource == null || _cancellationTokenSource.IsCancellationRequested)
+            // 清理未走 Close 的残留连接
+            _secsGem?.Dispose();
+            _secsGem = null;
+            if (_connector != null)
             {
-                _cancellationTokenSource?.Dispose();
-                _cancellationTokenSource = new CancellationTokenSource();
+                var stale = _connector;
+                _connector = null;
+                stale.ConnectionChanged -= OnConnectionChanged;
+                try { await stale.DisposeAsync().ConfigureAwait(false); } catch { }
             }
+
+            // 上一轮 Close 已释放 CTS，这里重建（支持断开后重新连接）
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = new CancellationTokenSource();
+
+            // 允许新一轮关闭
+            lock (_closeSync) { _closeTask = null; }
 
             DeviceID = (ushort)DeviceId;
 
@@ -217,7 +248,8 @@ namespace SecsGem.Runtime.Transport
             // 开启连接
             _connector.Start(_cancellationTokenSource.Token);
 
-            _ = RunPrimaryLoopAsync();
+            // 持有接收循环任务，关闭时可等待它真正结束
+            _receiveLoopTask = RunPrimaryLoopAsync();
             return true;
         }
 
@@ -241,41 +273,110 @@ namespace SecsGem.Runtime.Transport
         }
 
         /// <summary>
-        /// 异步关闭连接
+        /// 异步关闭连接：取消接收循环 → await 接收循环结束 → await 连接释放 → 释放 CTS。
+        /// 幂等：重复调用返回同一个最终完成 Task；该 Task 完成即代表当前代际已结束。
         /// </summary>
-        /// <returns>关闭结果</returns>
+        /// <returns>关闭完成结果</returns>
         public virtual Task CloseAsync()
         {
-            return Task.Run(Close);
+            lock (_closeSync)
+            {
+                // Task.Run 保证 _closeTask 先落位再执行，避免同步重入产生第二个关闭流程
+                return _closeTask ??= Task.Run(CloseCoreAsync);
+            }
         }
 
         /// <summary>
-        /// 同步关闭连接：先取消接收循环，再按序释放资源
+        /// 同步关闭连接（向后兼容入口）：阻塞等待 CloseAsync 的同一最终结果。
         /// </summary>
         public virtual void Close()
         {
-            var wasConnected = IsConnected;
-            if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
+            try
             {
-                _cancellationTokenSource.Cancel();
+                CloseAsync().GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"关闭连接异常: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 关闭实现：不丢弃任何异步释放任务，也不提前释放仍在使用的 CTS。
+        /// 接收循环结束与连接释放都被 await，返回后不再有当前代际的接收/回复任务。
+        /// </summary>
+        private async Task CloseCoreAsync()
+        {
+            var wasConnected = IsConnected;
+
+            // 1) 请求取消（此时接收循环仍在使用 CTS，不能释放）
+            try { _cancellationTokenSource?.Cancel(); }
+            catch (ObjectDisposedException) { }
+
+            // 2) 等待当前代际接收循环真正结束（返回后不再有该代际的接收分发）
+            var loop = _receiveLoopTask;
+            _receiveLoopTask = null;
+            if (loop != null)
+            {
+                try { await loop.ConfigureAwait(false); } catch { }
             }
 
-            // 确保按正确顺序释放资源
-            if (_connector != null)
+            // 3) 解绑并 await 连接释放（不再丢弃 DisposeAsync 的返回值）
+            var connector = _connector;
+            _connector = null;
+            if (connector != null)
             {
-                _connector.ConnectionChanged -= OnConnectionChanged;
-                _ = _connector.DisposeAsync();
+                connector.ConnectionChanged -= OnConnectionChanged;
+                try { await connector.DisposeAsync().ConfigureAwait(false); }
+                catch (Exception ex) { RaiseError($"释放HSMS连接异常: {ex.Message}"); }
             }
 
             _secsGem?.Dispose();
-
-            _currentPrimary = null;
             _secsGem = null;
+            _currentPrimary = null;
             IsConnected = false;
+
+            // 4) 排空当前代际已发出的回复通知任务（返回后不再有晚回写）
+            await DrainNotificationsAsync().ConfigureAwait(false);
+
             if (wasConnected)
             {
                 OnConnectChanged?.Invoke(this, ConnectionState.Retry);
             }
+
+            // 5) 接收循环已结束，安全释放 CTS（避免早释放导致接收循环读到已释放对象）
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
+        }
+
+        /// <summary>
+        /// 记录一个即发即忘的回复通知任务，供关闭时排空。
+        /// </summary>
+        private void TrackNotification(Task task)
+        {
+            if (task == null) return;
+            lock (_notificationSync)
+            {
+                _pendingNotifications.RemoveAll(t => t.IsCompleted);
+                _pendingNotifications.Add(task);
+            }
+        }
+
+        /// <summary>
+        /// 等待当前代际所有未完成的回复通知任务结束。
+        /// </summary>
+        private async Task DrainNotificationsAsync()
+        {
+            Task[] pending;
+            lock (_notificationSync)
+            {
+                pending = _pendingNotifications.Where(t => !t.IsCompleted).ToArray();
+                _pendingNotifications.Clear();
+            }
+
+            if (pending.Length == 0) return;
+            try { await Task.WhenAll(pending).ConfigureAwait(false); }
+            catch { /* 单条通知的异常已在其自身内捕获并上报 */ }
         }
 
         #endregion
@@ -535,11 +636,11 @@ namespace SecsGem.Runtime.Transport
                     if (handler != null)
                     {
                         string data = $"[0x{systembyte:X8}] {msg.ToSml()}\n";
-                        _ = System.Threading.Tasks.Task.Run(async () =>
+                        TrackNotification(System.Threading.Tasks.Task.Run(async () =>
                         {
                             try { await handler.Invoke(msg, data).ConfigureAwait(false); }
                             catch (Exception ex) { RaiseError($"OnReply处理异常: {ex.Message}"); }
-                        });
+                        }));
                     }
                 }
             }
@@ -643,9 +744,10 @@ namespace SecsGem.Runtime.Transport
                 {
                     try
                     {
+                        // Close 会等待接收循环与连接释放真正结束，并自行释放 CTS
                         Close();
 
-                        // 释放CancellationTokenSource放在Close之后（Close中还要用Token取消循环）
+                        // 兜底：Close 异常路径未走到 CTS 释放时，此处补一次（成功路径下已为 null）
                         _cancellationTokenSource?.Dispose();
                         _cancellationTokenSource = null;
                     }
