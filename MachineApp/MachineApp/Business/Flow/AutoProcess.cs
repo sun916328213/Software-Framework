@@ -332,19 +332,18 @@ namespace MachineApp.Business.Flow
                 //获取PLC模式
                 var Mode = _PLCMethod.ReadData(StationName, PLCSystem.PLC_Mode, 0, false);
 
-                //模式改变
-                if (Mode != CurMode && Mode == ESecsMode.Offline.ToString())
+                // 模式改变。CurMode 必须跟着 PLC 每次变化更新，否则它永远停在 Offline，
+                // 下面的离线分支再也触发不了。
+                // 只对"转离线"做动作：ONLINE-REMOTE 按 GEM Control State Model 只能由
+                // Host 的 S1F17 进入，设备端主动把模式推成 Remote 等于替操作员把控制权交给 Host。
+                if (Mode != CurMode)
                 {
                     CurMode = Mode;
-                    if (!await _secsRuntime.GoOfflineAsync().ConfigureAwait(false))
-                        throw new InvalidOperationException("SECS/GEM offline request failed");
-                    _StatisticService.UpdateSecsMode(EnumEx.GetEnum<ESecsMode>(CurMode));
-                }
-                else if (Mode != CurMode && Mode != ESecsMode.Offline.ToString())
-                {
-                    CurMode = Mode;
-                    if (!await _secsRuntime.GoOnlineRemoteAsync().ConfigureAwait(false))
-                        throw new InvalidOperationException("SECS/GEM online request failed");
+                    if (Mode == ESecsMode.Offline.ToString())
+                    {
+                        if (!await _secsRuntime.GoOfflineAsync().ConfigureAwait(false))
+                            throw new InvalidOperationException("SECS/GEM offline request failed");
+                    }
                     _StatisticService.UpdateSecsMode(EnumEx.GetEnum<ESecsMode>(CurMode));
                 }
 

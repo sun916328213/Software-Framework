@@ -32,7 +32,7 @@ namespace SecsGem.Runtime.Variable
         /// VID ID集合
         /// </summary>
         [NotMapped]
-        internal List<string> VIDID { get; set; }
+        internal List<string> VIDID { get; set; } = new();
 
         
         /// <summary>
@@ -40,8 +40,12 @@ namespace SecsGem.Runtime.Variable
         /// </summary>
         public string VID_Collection
         {
-            get => string.Join(",", VIDID);
-            set => VIDID = value.Split(',').ToList();
+            // 空报表是合法的（CSV 里空格子会被 ReadCsv 跳过，VIDID 就是空列表而不是 null）；
+            // 原来这里 Join(null) 直接抛 "Value cannot be null"，新增/删除时全表映射扫到这一行就炸。
+            get => VIDID == null ? string.Empty : string.Join(",", VIDID);
+            set => VIDID = string.IsNullOrWhiteSpace(value)
+                ? new List<string>()
+                : value.Split(',').Select(x => x.Trim()).Where(x => x.Length > 0).ToList();
         }
         /// <summary>
         /// VID信息集合
@@ -66,6 +70,38 @@ namespace SecsGem.Runtime.Variable
         }
 
         /// <summary>
+        /// 缺 CSV 时的打底报表，引用写裸 ID，与 SVID/ECID 的默认项对得上：
+        /// Clock / DeviceMode / DeviceStatus / DeviceInfo(设备名+版本)。
+        /// </summary>
+        protected override void LoadDefaults()
+        {
+            foreach (var r in ProtectedItems()) Datas.Add(r);
+        }
+
+        /// <summary>
+        /// 受保护的常用报表：界面上删掉后，下次 <c>Load</c> 按 ID 补回来。
+        /// </summary>
+        protected override void EnsureDefaults()
+        {
+            foreach (var r in ProtectedItems())
+            {
+                if (Datas.All(x => x.ID != r.ID))
+                {
+                    Datas.Add(r);
+                    System.Diagnostics.Debug.WriteLine($"ReportID 缺常用项 {r.ID}_{r.Name}，已补回");
+                }
+            }
+        }
+
+        private static System.Collections.Generic.IEnumerable<ReportInfo> ProtectedItems()
+        {
+            yield return new ReportInfo { ID = "1", Name = "Clock", VID_Collection = "101" };
+            yield return new ReportInfo { ID = "11", Name = "DeviceMode", VID_Collection = "102" };
+            yield return new ReportInfo { ID = "12", Name = "DeviceStatus", VID_Collection = "103" };
+            yield return new ReportInfo { ID = "13", Name = "DeviceInfo", VID_Collection = "104,105" };
+        }
+
+        /// <summary>
         /// 更新ReportID数据
         /// </summary>
         /// <param name="pVIDData">CVID数据集合</param>
@@ -73,8 +109,11 @@ namespace SecsGem.Runtime.Variable
         {
             ///复制_ReportID
             List<ReportInfo> rptcopy = Datas.ToList();
-            ///vid数据集合
-            Dictionary<string, VIDInfo> viddata = pVIDData.ToDictionary(s => s.ID, s => s);
+            ///vid数据集合。VID 的 ID 跨表唯一（VIDManager.Load 会校验），所以键就是裸 ID。
+            ///配置里写成 "SVID:102" 也能认，NormalizeId 会剥掉前缀。
+            Dictionary<string, VIDInfo> viddata = new Dictionary<string, VIDInfo>(pVIDData.Count);
+            foreach (var v in pVIDData)
+                viddata[VIDInfo.NormalizeId(v.ID)] = v;
 
             foreach (ReportInfo r1 in rptcopy)
             {
@@ -84,12 +123,13 @@ namespace SecsGem.Runtime.Variable
                 //更新VID
                 for (int i = 0; i < vididlist.Count; i++)
                 {
-                    var key = vididlist[i];
-                    VIDInfo vid; //更新数据
-                    if (viddata.TryGetValue(key, out vid))
-                        r1.VIDInfo.Add(vid);
-                    else
-                        throw new System.Exception("VID not exist in ReportID");
+                    var key = VIDInfo.NormalizeId(vididlist[i] ?? string.Empty);
+                    if (key.Length == 0) continue;
+
+                    if (!viddata.TryGetValue(key, out var vid))
+                        throw new Exception($"VID not exist in ReportID: {vididlist[i]}");
+
+                    r1.VIDInfo.Add(vid);
                 }
             }
         }

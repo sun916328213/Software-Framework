@@ -62,13 +62,13 @@ MachineApp 模块：具体机型的应用宿主，负责机型业务、导航选
     <None Include="Config\SecsJson\ReportID\ReportID.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Config\SecsJson\VID\DVID.csv">
+    <None Include="Config\SecsJson\DVID\DVID.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Config\SecsJson\VID\ECID.csv">
+    <None Include="Config\SecsJson\ECID\ECID.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Config\SecsJson\VID\SVID.csv">
+    <None Include="Config\SecsJson\SVID\SVID.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

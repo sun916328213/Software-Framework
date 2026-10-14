@@ -23,6 +23,15 @@ internal sealed class InMemorySecsTransport : ISecsTransport
     public string? LastSentOrder { get; private set; }
     public Item? LastSentItem { get; private set; }
     public Item? LastReplyItem { get; private set; }
+    /// <summary>全部已发报文（含 order），用于断言一次操作里发了哪几条。</summary>
+    public List<(string Order, Item Item)> Sent { get; } = new();
+    /// <summary>设置后，匹配该 order 的 Send 永不完成（模拟 Host 不回 S6F12）。</summary>
+    public string? HangOnOrder { get; set; }
+    /// <summary>
+    /// 设置后，匹配该 order 的 Send 返回 null（模拟会话未建立/连接已断开时
+    /// <c>Secs4NetTransport.Send</c> 的行为：early-return null 而不是抛异常）。
+    /// </summary>
+    public string? NullOnOrder { get; set; }
 
     public event EventHandler<ConnectionState>? OnConnectChanged;
     public event SecsHandle? OnSend;
@@ -85,6 +94,9 @@ internal sealed class InMemorySecsTransport : ISecsTransport
     {
         LastSentOrder = order;
         LastSentItem = items;
+        Sent.Add((order, items));
+        if (HangOnOrder == order) return new TaskCompletionSource<SecsMessage>().Task;
+        if (NullOnOrder == order) return Task.FromResult<SecsMessage>(null);
         return Task.FromResult(new SecsMessage(1, 2));
     }
 
@@ -104,8 +116,15 @@ internal sealed class InMemorySecsTransport : ISecsTransport
     /// <summary>
     /// 测试相关入口 ReplyAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
+    /// <summary>
+    /// 对齐 secs4net 的 <c>PrimaryMessageWrapper.TryReplyAsync</c>：主消息没置 W 位时
+    /// 它**抛异常**（不是返回 false），见 secs4net-base/src/Secs4Net/PrimaryMessageWrapper.cs:27。
+    /// 这个语义必须复刻，否则测不出"回包抛异常把事件触发一起带走"的回归。
+    /// </summary>
     public Task ReplyAsync(SecsMessage message, Item items)
     {
+        if (message != null && !message.ReplyExpected)
+            throw new InvalidOperationException("The message does not need to reply");
         LastReplyItem = items;
         return Task.CompletedTask;
     }

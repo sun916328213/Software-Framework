@@ -38,15 +38,18 @@ namespace SecsGem.Runtime.Variable
         /// Report 名称集合
         /// </summary>
         [NotMapped]
-        internal List<string> ReportID { get; set; }
+        internal List<string> ReportID { get; set; } = new();
 
         /// <summary>
         /// 显示Report 名称集合
         /// </summary>
         public string ReportID_Collection
         {
-            get => string.Join(",", ReportID);
-            set => ReportID = value?.Split(',').ToList() ?? new List<string>();
+            // 同 ReportInfo.VID_Collection：空事件合法，Join(null) 会炸新增/删除时的全表映射。
+            get => ReportID == null ? string.Empty : string.Join(",", ReportID);
+            set => ReportID = string.IsNullOrWhiteSpace(value)
+                ? new List<string>()
+                : value.Split(',').Select(x => x.Trim()).Where(x => x.Length > 0).ToList();
         }
         /// <summary>
         /// CEID 启用状态
@@ -66,8 +69,41 @@ namespace SecsGem.Runtime.Variable
         /// <summary>
         /// 构造函数
         /// </summary>
-        public CEID( )  
+        public CEID( )
         {
+        }
+
+        /// <summary>
+        /// 缺 CSV 时的打底事件：控制状态那五条。
+        /// 五条全挂 DeviceMode/DeviceStatus 报表，事件自带状态值，Host 才拿得到新模式。
+        /// </summary>
+        protected override void LoadDefaults()
+        {
+            foreach (var e in ProtectedItems()) Datas.Add(e);
+        }
+
+        /// <summary>
+        /// 受保护的常用事件：界面上删掉后，下次 <c>Load</c> 按 ID 补回来。
+        /// </summary>
+        protected override void EnsureDefaults()
+        {
+            foreach (var e in ProtectedItems())
+            {
+                if (Datas.All(x => x.ID != e.ID))
+                {
+                    Datas.Add(e);
+                    System.Diagnostics.Debug.WriteLine($"CEID 缺常用项 {e.ID}_{e.Name}，已补回");
+                }
+            }
+        }
+
+        private static System.Collections.Generic.IEnumerable<CEIDInfo> ProtectedItems()
+        {
+            yield return new CEIDInfo { ID = "101", Name = "Device Status", ReportID_Collection = "1,13,12" };
+            yield return new CEIDInfo { ID = "102", Name = "Device Mode", ReportID_Collection = "1,13,11" };
+            yield return new CEIDInfo { ID = "103", Name = "Device Online", ReportID_Collection = "1,13,11" };
+            yield return new CEIDInfo { ID = "104", Name = "Device Offline", ReportID_Collection = "1,13,11" };
+            yield return new CEIDInfo { ID = "105", Name = "Device Local", ReportID_Collection = "1,13,11" };
         }
 
         /// <summary>

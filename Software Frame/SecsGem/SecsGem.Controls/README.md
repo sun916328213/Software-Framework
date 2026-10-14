@@ -9,7 +9,7 @@
 
 `SecsWorkspace` 在模块内注册为单例，`SecsView` 为独立页面实例。释放 View/VM 不会释放共享 Workspace；释放 Workspace 只停止轮询并退订事件，不释放注入的 `SecsGemRuntime`。
 
-工作台的 `SecsWorkbenchView` 和 `SecsWorkbenchViewModel` 保留原名称作为薄兼容入口。App 负责启动模块、导航主页及退出释放。仅独立工作台显式启用示例 HCACK 远程命令处理器和 WPF 终端显示；通用 Controls 页面不会替换宿主的远程命令处理器。运行时所有者负责清除工作台处理器并释放运行时。
+工作台直接通过 Prism 导航到 `SecsView`，不再有 `SecsWorkbenchView` 包装层。App 负责启动模块、导航主页及退出释放；仅独立工作台显式启用示例 HCACK 远程命令处理器和 WPF 终端显示（在 `App.OnInitialized` 里设置，通用 Controls 页面不会替换宿主的远程命令处理器）。运行时所有者负责清除工作台处理器并释放运行时。壳层 `MainWindow` 放在 `SecsGem.Workbench.Views` 下，DataContext 交给 Prism `ViewModelLocator` 按 Views→ViewModels 约定注入。
 
 浅色背景使用动态 `MaterialDesign.Brush.Card.Background`，与 Device.Controls 一致；页头使用共享 `PageHeaderView`。S10 终端文字使用动态 Foreground，不再使用阴影颜色。
 

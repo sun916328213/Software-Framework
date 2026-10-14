@@ -1,0 +1,4 @@
+ID,Name,DataTypeName,Value
+101,Clock,ASCII,
+102,DeviceMode,U2,
+103,DeviceStatus,U2,

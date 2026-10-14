@@ -23,5 +23,10 @@ namespace SecsGem.Runtime.Variable
         }
         public override string FileName { get; set; } = "DVID.csv";
 
+        public override string Category { get; } = "DVID";
+
+        public override string FilePath { get; set; } = "Config//SecsJson//DVID";
+
+        /// <summary>设备变量因机型而异，没有通用打底项，缺 CSV 就是空的。</summary>
     }
 }

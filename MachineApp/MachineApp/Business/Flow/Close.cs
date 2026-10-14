@@ -46,7 +46,8 @@ namespace MachineApp.Business.Flow
             _errors.TryExecute(GlobalData.Save);
             _errors.TryExecute(() => _printer().Close());
             await _errors.TryExecuteAsync(() => _plc().StopRefreshAsync());
-            await _errors.TryExecuteAsync(() => _secsRuntime.DisconnectAsync());
+            // 先下线（S6F11 通知 Host）再断连接；通知超时也不阻断关闭
+            await _errors.TryExecuteAsync(() => _secsRuntime.ShutdownAsync(TimeSpan.FromSeconds(5)));
             await _errors.TryExecuteAsync(async () => await _devices().DisposeAsync());
         }
     }

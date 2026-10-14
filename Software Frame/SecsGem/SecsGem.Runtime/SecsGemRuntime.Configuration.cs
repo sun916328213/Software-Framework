@@ -3,6 +3,10 @@
 // 本文件定义：SecsGemRuntime。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：SecsGem.Core。导入不代表所有类型都会在运行时加载。
 using SecsGem.Core;
+using SecsGem.Runtime.Variable;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SecsGem.Runtime;
 
@@ -47,4 +51,90 @@ public partial class SecsGemRuntime : ISecsGemConfiguration
     /// 正文中的关键协作调用包括 Save；具体条件和先后次序见方法体。
     /// </summary>
     public void SaveEvents() => _vidManager.CEID.Save();
+
+    /// <summary>
+    /// 把 <paramref name="reports"/> 写入 <c>ReportID</c> 表并落盘。
+    /// </summary>
+    public void SaveReports(IEnumerable<SecsGemReportDefinition> reports)
+    {
+        var table = _vidManager.ReportID;
+        EnsureLoaded(table);
+        Merge(table, reports as IReadOnlyList<SecsGemReportDefinition> ?? reports.ToArray(),
+            idOfItem: x => x.ID,
+            idOfDef: x => x.Id,
+            create: x => new ReportInfo { ID = x.Id, Name = x.Name, VIDID = SplitList(x.VariableIds) },
+            apply: (item, def) => { item.Name = def.Name; item.VIDID = SplitList(def.VariableIds); });
+        table.Save();
+    }
+
+    /// <summary>
+    /// 把 <paramref name="events"/> 写入 <c>CEID</c> 表并落盘。
+    /// </summary>
+    public void SaveEvents(IEnumerable<SecsGemEventDefinition> events)
+    {
+        var table = _vidManager.CEID;
+        EnsureLoaded(table);
+        Merge(table, events as IReadOnlyList<SecsGemEventDefinition> ?? events.ToArray(),
+            idOfItem: x => x.ID,
+            idOfDef: x => x.Id,
+            create: x => new CEIDInfo { ID = x.Id, Name = x.Name, ReportID = SplitList(x.ReportIds), Enable = x.Enabled },
+            apply: (item, def) =>
+            {
+                item.Name = def.Name;
+                item.ReportID = SplitList(def.ReportIds);
+                item.Enable = def.Enabled;
+            });
+        table.Save();
+    }
+
+    /// <summary>
+    /// 表还空着才读盘。没读就 <c>Save()</c> 会把 <c>ReportID.csv</c> / <c>CEID.csv</c> 写成空表 ——
+    /// 调用方完全可能没走过 <c>Load</c> 就点了保存，那属于静默截断配置文件。
+    /// </summary>
+    private static void EnsureLoaded<T>(DataBase<T> table) where T : new()
+    {
+        if (table.Datas.Count == 0) table.Load();
+    }
+
+    /// <summary>
+    /// 把 <paramref name="incoming"/> 按 ID 合进 <paramref name="table"/>：已存在的改字段、
+    /// 缺的新建、多余的删掉，落盘由调用方做。
+    /// <para>
+    /// 刻意**不就地替换整个 <c>Datas</c>**：<c>CEIDInfo.ReportInfo</c>（CEID.cs:36）持有
+    /// <c>ReportInfo</c> 实例引用，换新实例会让 CEID 的缓存指向孤儿；<c>ReportInfo.VIDInfo</c>
+    /// 字段也会一并丢掉（得靠 <c>ReportID.Update</c> 重建）。
+    /// </para>
+    /// </summary>
+    private static void Merge<TItem, TDef>(
+        DataBase<TItem> table,
+        IReadOnlyList<TDef> incoming,
+        Func<TItem, string> idOfItem,
+        Func<TDef, string> idOfDef,
+        Func<TDef, TItem> create,
+        Action<TItem, TDef> apply)
+        where TItem : new()
+    {
+        var existing = table.Datas.ToDictionary(idOfItem, StringComparer.Ordinal);
+        foreach (var def in incoming)
+        {
+            if (!existing.Remove(idOfDef(def), out var item))
+            {
+                item = create(def);
+                table.Datas.Add(item);
+            }
+            apply(item, def);
+        }
+        foreach (var orphan in existing.Values)
+            table.Datas.Remove(orphan);
+    }
+
+    /// <summary>
+    /// 逗号分隔串拆成列表。空串得到**空列表**而不是 <c>{""}</c> ——
+    /// <c>ReportInfo.VID_Collection</c> 的 setter 直接 <c>Split(',')</c>，空串会留下一个空 ID，
+    /// 之后 <c>ReportID.Update()</c> 会抛 "VID not exist in ReportID"。
+    /// </summary>
+    private static List<string> SplitList(string csv)
+        => string.IsNullOrWhiteSpace(csv)
+            ? new List<string>()
+            : csv.Split(',').Select(x => x.Trim()).Where(x => x.Length > 0).ToList();
 }

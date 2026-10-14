@@ -24,9 +24,9 @@ namespace SecsGem.Tests.Infrastructure
         private TcpClient _client;
         private NetworkStream _stream;
 
-        // HSMS Session Type 常量
-        // 注意：secs4net-base 本地 fork 的取值与 SEMI E37 标准不同（标准: Select.req=5/Rsp=6），
-        // 此处与 fork 的 MessageType 枚举保持一致，否则握手无法完成。
+        // HSMS Session Type 常量 —— 与 SEMI E37 一致（Select.req=0x01/rsp=0x02），
+        // 和 secs4net-base 的 MessageType 枚举相同。不要改成别的"标准值"：
+        // 之前这里有条注释声称标准是 5/6，那是错的，按它改会让握手永远完不成。
         public const byte StypeData = 0x00;
         public const byte StypeSelectReq = 0x01;
         public const byte StypeSelectRsp = 0x02;

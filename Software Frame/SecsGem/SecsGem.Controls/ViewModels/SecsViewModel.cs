@@ -19,7 +19,7 @@ public partial class SecsViewModel : ObservableObject, IDisposable
     private bool _disposed;
     protected SecsWorkspace Workspace { get; }
     public SecsPageModel Model => Workspace.Model;
-    public ObservableCollection<string> Messages => Model.Messages;
+    public ObservableCollection<LogRow> Messages => Model.Messages;
     /// <summary>
     /// 初始化 SecsViewModel 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// 正文中的关键协作调用包括 AddHandler；具体条件和先后次序见方法体。
@@ -39,7 +39,10 @@ public partial class SecsViewModel : ObservableObject, IDisposable
         if (e.PropertyName is nameof(Model.IsConnected) or nameof(Model.IsClosed) or
             nameof(Model.Address) or nameof(Model.PortText) or nameof(Model.DeviceIdText) or
             nameof(Model.ConnectionModeIndex) or nameof(Model.Sml) or nameof(Model.SelectedVariable) or
-            nameof(Model.SelectedEvent) or nameof(Model.SelectedAlarm))
+            nameof(Model.NewVariableId) or nameof(Model.NewVariableName) or
+            nameof(Model.NewReportId) or nameof(Model.NewReportName) or
+            nameof(Model.NewEventId) or nameof(Model.NewEventName) or
+            nameof(Model.SelectedEvent) or nameof(Model.SelectedReport) or nameof(Model.SelectedAlarm))
             RefreshCommands();
     }
     /// <summary>
@@ -48,12 +51,17 @@ public partial class SecsViewModel : ObservableObject, IDisposable
     private bool CanUseWorkspace() => !_disposed && !Model.IsClosed;
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 CanConnect。
-    /// 正文中的关键协作调用包括 CanUseWorkspace、IsNullOrWhiteSpace、TryParse；具体条件和先后次序见方法体。
+    /// <para>
+    /// DeviceID 只在被动模式（ConnectionModeIndex==1）下参与通信；主动模式下填什么都不该
+    /// 影响连接，所以这一路不校验它 —— 原实现在两种模式下都要求 0-32767，
+    /// 填 40000 时连接按钮直接变灰，连试都试不了。
+    /// </para>
     /// </summary>
     private bool CanConnect() => CanUseWorkspace() && !Model.IsConnected &&
         !string.IsNullOrWhiteSpace(Model.Address) && Model.ConnectionModeIndex is 0 or 1 &&
         int.TryParse(Model.PortText, out var port) && port is >= 1 and <= 65535 &&
-        int.TryParse(Model.DeviceIdText, out var id) && id is >= 0 and <= 32767;
+        (Model.ConnectionModeIndex == 0 ||
+            (int.TryParse(Model.DeviceIdText, out var id) && id is >= 0 and <= 32767));
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 CanUseConnection。
     /// 正文中的关键协作调用包括 CanUseWorkspace；具体条件和先后次序见方法体。
@@ -69,6 +77,12 @@ public partial class SecsViewModel : ObservableObject, IDisposable
     /// 正文中的关键协作调用包括 CanUseWorkspace；具体条件和先后次序见方法体。
     /// </summary>
     private bool CanSetVariable() => CanUseWorkspace() && Model.SelectedVariable != null;
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 CanAddVariable。
+    /// 正文中的关键协作调用包括 CanUseWorkspace、IsNullOrWhiteSpace；具体条件和先后次序见方法体。
+    /// </summary>
+    private bool CanAddVariable() => CanUseWorkspace() &&
+        !string.IsNullOrWhiteSpace(Model.NewVariableId) && !string.IsNullOrWhiteSpace(Model.NewVariableName);
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 CanReportEvent。
     /// 正文中的关键协作调用包括 CanUseConnection；具体条件和先后次序见方法体。
@@ -88,12 +102,19 @@ public partial class SecsViewModel : ObservableObject, IDisposable
         ConnectCommand.NotifyCanExecuteChanged();
         DisconnectCommand.NotifyCanExecuteChanged();
         EstablishCommand.NotifyCanExecuteChanged();
-        OnlineCommand.NotifyCanExecuteChanged();
+        OnlineLocalCommand.NotifyCanExecuteChanged();
+        OnlineRemoteCommand.NotifyCanExecuteChanged();
         OfflineCommand.NotifyCanExecuteChanged();
         LoadConfigCommand.NotifyCanExecuteChanged();
         LoadSampleCommand.NotifyCanExecuteChanged();
         SendSmlCommand.NotifyCanExecuteChanged();
         SetVariableCommand.NotifyCanExecuteChanged();
+        AddVariableCommand.NotifyCanExecuteChanged();
+        DeleteVariableCommand.NotifyCanExecuteChanged();
+        AddReportCommand.NotifyCanExecuteChanged();
+        DeleteReportCommand.NotifyCanExecuteChanged();
+        AddEventCommand.NotifyCanExecuteChanged();
+        DeleteEventCommand.NotifyCanExecuteChanged();
         RefreshCatalogNowCommand.NotifyCanExecuteChanged();
         ReportEventCommand.NotifyCanExecuteChanged();
         RaiseAlarmCommand.NotifyCanExecuteChanged();
@@ -108,6 +129,14 @@ public partial class SecsViewModel : ObservableObject, IDisposable
     public string Sml { get => Model.Sml; set => Model.Sml = value; }
     public bool WaitForReply { get => Model.WaitForReply; set => Model.WaitForReply = value; }
     public string VariableValue { get => Model.VariableValue; set => Model.VariableValue = value; }
+    public string NewVariableId { get => Model.NewVariableId; set => Model.NewVariableId = value; }
+    public string NewVariableName { get => Model.NewVariableName; set => Model.NewVariableName = value; }
+    public string NewReportId { get => Model.NewReportId; set => Model.NewReportId = value; }
+    public string NewReportName { get => Model.NewReportName; set => Model.NewReportName = value; }
+    public string NewReportVids { get => Model.NewReportVids; set => Model.NewReportVids = value; }
+    public string NewEventId { get => Model.NewEventId; set => Model.NewEventId = value; }
+    public string NewEventName { get => Model.NewEventName; set => Model.NewEventName = value; }
+    public string NewEventReports { get => Model.NewEventReports; set => Model.NewEventReports = value; }
     public string Hcack { get => Model.Hcack; set => Model.Hcack = value; }
     public string ConnectionStatus { get => Model.ConnectionStatus; set => Model.ConnectionStatus = value; }
     public string ModeStatus { get => Model.ModeStatus; set => Model.ModeStatus = value; }
@@ -118,6 +147,7 @@ public partial class SecsViewModel : ObservableObject, IDisposable
     public IEnumerable<AlarmInfo> Alarms { get => Model.Alarms; set => Model.Alarms = value; }
     public VariableRow? SelectedVariable { get => Model.SelectedVariable; set => Model.SelectedVariable = value; }
     public CEIDInfo? SelectedEvent { get => Model.SelectedEvent; set => Model.SelectedEvent = value; }
+    public ReportInfo? SelectedReport { get => Model.SelectedReport; set => Model.SelectedReport = value; }
     public AlarmInfo? SelectedAlarm { get => Model.SelectedAlarm; set => Model.SelectedAlarm = value; }
     /// <summary>
     /// 发起连接操作；对应入口为 ConnectAsync。
@@ -138,11 +168,17 @@ public partial class SecsViewModel : ObservableObject, IDisposable
     [RelayCommand(CanExecute = nameof(CanUseConnection))]
     private Task EstablishAsync() => CanUseConnection() ? Workspace.EstablishAsync() : Task.CompletedTask;
     /// <summary>
-    /// 处理对应通知、事件或生命周期回调；对应入口为 OnlineAsync。
-    /// 正文中的关键协作调用包括 nameof、CanUseConnection、OnlineAsync；具体条件和先后次序见方法体。
+    /// 处理对应通知、事件或生命周期回调；对应入口为 OnlineLocalAsync。
+    /// 正文中的关键协作调用包括 nameof、CanUseConnection、OnlineLocalAsync；具体条件和先后次序见方法体。
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanUseConnection))]
-    private Task OnlineAsync() => CanUseConnection() ? Workspace.OnlineAsync() : Task.CompletedTask;
+    private Task OnlineLocalAsync() => CanUseConnection() ? Workspace.OnlineLocalAsync() : Task.CompletedTask;
+    /// <summary>
+    /// 处理对应通知、事件或生命周期回调；对应入口为 OnlineRemoteAsync。
+    /// 正文中的关键协作调用包括 nameof、CanUseConnection、OnlineRemoteAsync；具体条件和先后次序见方法体。
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanUseConnection))]
+    private Task OnlineRemoteAsync() => CanUseConnection() ? Workspace.OnlineRemoteAsync() : Task.CompletedTask;
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 OfflineAsync。
     /// 正文中的关键协作调用包括 nameof、CanUseConnection、OfflineAsync；具体条件和先后次序见方法体。
@@ -179,6 +215,64 @@ public partial class SecsViewModel : ObservableObject, IDisposable
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanUseWorkspace))]
     private void RefreshCatalogNow() { if (CanUseWorkspace()) Workspace.RefreshCatalogNow(); }
+    /// <summary>
+    /// 执行新增操作；对应入口为 AddVariable。
+    /// 正文中的关键协作调用包括 nameof、CanAddVariable、AddVariable；具体条件和先后次序见方法体。
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanAddVariable))]
+    private void AddVariable() { if (CanAddVariable()) Workspace.AddVariable(); }
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 CanDeleteVariable。
+    /// </summary>
+    private bool CanDeleteVariable() => CanUseWorkspace() && Model.SelectedVariable != null;
+    /// <summary>
+    /// 执行删除操作；对应入口为 DeleteVariable。
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanDeleteVariable))]
+    private void DeleteVariable() { if (CanDeleteVariable()) Workspace.DeleteVariable(); }
+
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 CanAddReport。
+    /// 正文中的关键协作调用包括 CanUseWorkspace、IsNullOrWhiteSpace；具体条件和先后次序见方法体。
+    /// </summary>
+    private bool CanAddReport() => CanUseWorkspace() &&
+        !string.IsNullOrWhiteSpace(Model.NewReportId) && !string.IsNullOrWhiteSpace(Model.NewReportName);
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 CanAddEvent。
+    /// 正文中的关键协作调用包括 CanUseWorkspace、IsNullOrWhiteSpace；具体条件和先后次序见方法体。
+    /// </summary>
+    private bool CanAddEvent() => CanUseWorkspace() &&
+        !string.IsNullOrWhiteSpace(Model.NewEventId) && !string.IsNullOrWhiteSpace(Model.NewEventName);
+    /// <summary>
+    /// 执行新增操作；对应入口为 AddReport。
+    /// 正文中的关键协作调用包括 nameof、CanAddReport、AddReport；具体条件和先后次序见方法体。
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanAddReport))]
+    private void AddReport() { if (CanAddReport()) Workspace.AddReport(); }
+    /// <summary>
+    /// 执行新增操作；对应入口为 AddEvent。
+    /// 正文中的关键协作调用包括 nameof、CanAddEvent、AddEvent；具体条件和先后次序见方法体。
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanAddEvent))]
+    private void AddEvent() { if (CanAddEvent()) Workspace.AddEvent(); }
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 CanDeleteReport。
+    /// </summary>
+    private bool CanDeleteReport() => CanUseWorkspace() && Model.SelectedReport != null;
+    /// <summary>
+    /// 执行删除操作；对应入口为 DeleteReport。
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanDeleteReport))]
+    private void DeleteReport() { if (CanDeleteReport()) Workspace.DeleteReport(); }
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 CanDeleteEvent。
+    /// </summary>
+    private bool CanDeleteEvent() => CanUseWorkspace() && Model.SelectedEvent != null;
+    /// <summary>
+    /// 执行删除操作；对应入口为 DeleteEvent。
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanDeleteEvent))]
+    private void DeleteEvent() { if (CanDeleteEvent()) Workspace.DeleteEvent(); }
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 ReportEventAsync。
     /// 正文中的关键协作调用包括 nameof、CanReportEvent、ReportEventAsync；具体条件和先后次序见方法体。

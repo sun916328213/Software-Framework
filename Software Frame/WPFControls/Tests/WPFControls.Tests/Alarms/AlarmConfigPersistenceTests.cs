@@ -476,9 +476,13 @@ public sealed class AlarmConfigPersistenceTests
 
         public Task EstablishCommunicationAsync() => throw new NotSupportedException();
 
+        public Task<bool> GoOnlineLocalAsync() => throw new NotSupportedException();
+
         public Task<bool> GoOnlineRemoteAsync() => throw new NotSupportedException();
 
         public Task<bool> GoOfflineAsync() => throw new NotSupportedException();
+
+        public Task ShutdownAsync(TimeSpan notifyTimeout) => throw new NotSupportedException();
 
         public void SetVariable(string name, object value) => throw new NotSupportedException();
 

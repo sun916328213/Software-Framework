@@ -193,11 +193,11 @@ namespace MachineApp.Business.Flow
             {
                 _SecsMethod.Update(VIDOrder.FOSBID, ID);  //更新VID数据
                 _LogInfoService.AddRunInfo(StationName.ToString() + ":" + LangSwitchEx.GetMessage(Message.开始));
-                await _SecsMethod.SendS6F11(EventOrder.ReadFOSB_Star);
+                await _SecsMethod.SendS6F11(EventOrder.ReadFOSB_Start);
                 switch (StationName)
                 {
                     case EProcess.进站流程:
-                        await _SecsMethod.SendS6F11(EventOrder.ReadFOSB_Star);
+                        await _SecsMethod.SendS6F11(EventOrder.ReadFOSB_Start);
                         break;
                     case EProcess.配件流程:
                         await _SecsMethod.SendS6F11(EventOrder.PlaceDesiccant_Start);
@@ -206,7 +206,7 @@ namespace MachineApp.Business.Flow
                         await _SecsMethod.SendS6F11(EventOrder.HeatSeal_Start);
                         break;
                     case EProcess.贴标流程:
-                        await _SecsMethod.SendS6F11(EventOrder.LabelProcess_Satrt);
+                        await _SecsMethod.SendS6F11(EventOrder.LabelProcess_Start);
                         break;
                 }
             });

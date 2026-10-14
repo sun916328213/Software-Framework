@@ -1,4 +1,4 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
 // 本文件定义：SEMIManagerViewModel。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：WPFControls.ProgramControl.ViewModels、WPFControls、CommunityToolkit.Mvvm.ComponentModel、CommunityToolkit.Mvvm.Input、Extension.Core.Conversion、Prism.Ioc、System、System.Collections.ObjectModel、System.Windows.Input、WPFControls.ProgramControl.Models、WPFControls.ProgramControl.Services。导入不代表所有类型都会在运行时加载。
@@ -38,10 +38,17 @@ namespace WPFControls.ProgramControl.ViewModels.Log
     /// </para>
     ///
     /// <para>
-    /// ⚠️ <b>本页的表格是只读快照。</b><c>ISecsGemConfiguration.SaveReports()</c> **不接受任何参数** ——
-    /// 它保存的是 <c>SecsGemRuntime</c> 自己那张表，不是 <c>Datas.Reports</c>。
-    /// 所以状态行只说"已保存 SECS ReportInfo 配置表"，**不**声称表格里的内容被保存了。
-    /// 把表格编辑写回磁盘需要给契约加 <c>SaveReports(IEnumerable&lt;...&gt;)</c> 重载，属独立任务（见报告 §8）。
+    /// ⚠️ <b>表格目前仍是只读的</b>（XAML 两个 <c>ConfigManagerView</c> 都是 <c>IsReadOnly="True"</c>，
+    /// <c>Add</c>/<c>Delete</c> 都 <c>Collapsed</c>），所以用户现在还改不了任何东西。
+    /// </para>
+    ///
+    /// <para>
+    /// <b>M02：保存链路已接通。</b>此前调的是无参 <c>ISecsGemConfiguration.SaveReports()</c> ——
+    /// 它序列化 <c>SecsGemRuntime</c> 自己那张表，与 <c>Datas.Reports</c> 毫无关系，
+    /// 状态行那句"已保存"是假的。现在契约加了 <c>SaveReports(IEnumerable&lt;...&gt;)</c> 重载，
+    /// <c>SEMIManagerService</c> 把页面上那一行原样传下去，状态行才名副其实。
+    /// 再开编辑还差一步：<c>SecsGemReportDefinition</c> 是 record，属性只读，
+    /// DataGrid 直接改格子得靠「整条 <c>with</c> 替换」或换可变行类型。
     /// </para>
     /// </summary>
     internal class SEMIManagerViewModel : ObservableObject

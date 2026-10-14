@@ -1,0 +1,25 @@
+{
+  "Version": 1,
+  "Files": [
+    {
+      "FileName": "01_初始化控件.cs",
+      "ScriptId": "251652e5-bd42-4731-abe3-777f8fd280c3",
+      "ContentHash": "CD35DEFFE25B319E"
+    },
+    {
+      "FileName": "02_初始化工具.cs",
+      "ScriptId": "73814210-ab4e-4825-8bf8-7f044b079471",
+      "ContentHash": "90A18720F40793A6"
+    },
+    {
+      "FileName": "04_初始化硬件.cs",
+      "ScriptId": "c39b31a2-ffc4-4d08-a2f1-a854ad302d32",
+      "ContentHash": "EEED33465D0E4597"
+    },
+    {
+      "FileName": "05_初始化后台.cs",
+      "ScriptId": "c78fc52c-3df8-49b8-8495-88563db33037",
+      "ContentHash": "779B4819C4D4CF7E"
+    }
+  ]
+}

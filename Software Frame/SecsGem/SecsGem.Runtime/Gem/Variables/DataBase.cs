@@ -24,9 +24,9 @@ namespace SecsGem.Runtime.Variable
     public abstract class DataBase<T> : IData<T> where T : new()
     {
         /// <summary>
-        /// 文件路径
+        /// 文件路径。每个表一个目录（SVID/DVID/ECID/CEID/ReportID/Alarm），由子类各自指定。
         /// </summary>
-        public virtual string FilePath { get; set; } = "Config//SecsJson//VID";
+        public abstract string FilePath { get; set; }
 
         public abstract string FileName { get; set; }
 
@@ -41,7 +41,9 @@ namespace SecsGem.Runtime.Variable
         public virtual void Load()
         {
             string path = Path.Combine(FilePath, FileName);
-            if (!File.Exists(path)) return;
+            // CSV 不存在时用内置默认项兜底：SecsGem.Workbench 等宿主根本不带 Config 目录，
+            // 原实现直接跳过，VID/Report/CEID 全空 → S6F11 组包失败、控制状态事件无处可报。
+            if (!File.Exists(path)) { LoadDefaults(); return; }
 
             var datas = CSVEx.ReadCsv<T>(path);
 
@@ -50,9 +52,25 @@ namespace SecsGem.Runtime.Variable
             {
                 Datas.Add(item);
             }
+
+            // 文件存在也要补：常用项（控制状态的 VID/报表/事件）就算在界面上被删掉，
+            // 下次加载也得补回来，否则 S6F11 组包缺变量、控制状态事件无处可报。
+            // 只补缺的 ID，不清用户自己的行、不覆盖用户改过的名字。
+            EnsureDefaults();
         }
 
 
+
+        /// <summary>
+        /// CSV 缺失时载入的内置默认项。基类为空，由需要打底的具体表覆写。
+        /// </summary>
+        protected virtual void LoadDefaults() { }
+
+        /// <summary>
+        /// CSV 存在时，把被删掉的受保护项（常用项）按 ID 补回来。
+        /// 基类空实现；SVID/ECID/ReportID/CEID 各自覆写，用户自己的行不受影响。
+        /// </summary>
+        protected virtual void EnsureDefaults() { }
 
         /// <summary>
         /// 保存数据到文件（同步落盘）。

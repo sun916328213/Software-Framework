@@ -23,7 +23,7 @@ namespace MachineApp.Business.Order
 
         public static string Process_Start { get; set; } = "Process Start";
         public static string Process_End { get; set; } = "Process End";
-        public static string ProcessAbortComplete { get; set; } = "ProcessAbortComplete";
+        public static string Process_AbortComplete { get; set; } = "Process Abort Complete";
 
         public static string Load_Request { get; set; } = "Load Request";
         public static string Load_ReadID_Success { get; set; } = "Load ReadID Success";
@@ -36,7 +36,7 @@ namespace MachineApp.Business.Order
         public static string Recipe_Select_Fail { get; set; } = "Recipe Select Fail";
         public static string Recipe_Update { get; set; } = "Recipe Update";
 
-        public static string ReadFOSB_Star { get; set; } = "ReadFOSB Star";
+        public static string ReadFOSB_Start { get; set; } = "ReadFOSB Start";
         public static string ReadFOSB_Success { get; set; } = "ReadFOSB Success";
         public static string ReadFOSB_Fail { get; set; } = "ReadFOSB Fail";
         public static string ReadFOSB_End { get; set; } = "ReadFOSB End";
@@ -52,7 +52,7 @@ namespace MachineApp.Business.Order
         public static string HeatSeal_Vision_Fail { get; set; } = "HeatSeal Vision Fail";
         public static string HeatSeal_End { get; set; } = "HeatSeal End";
 
-        public static string LabelProcess_Satrt { get; set; }  = "LabelProcess Satrt";
+        public static string LabelProcess_Start { get; set; }  = "LabelProcess Start";
         public static string Label_Print { get; set; }  = "Label Print";
         public static string LabelInfo { get; set; } = "LabelInfo";
         public static string LabelInfo_Check_Success { get; set; }  = "LabelInfo Check Success";

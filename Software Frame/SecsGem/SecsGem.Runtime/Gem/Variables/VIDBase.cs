@@ -44,6 +44,31 @@ namespace SecsGem.Runtime.Variable
         /// 数据类型Secs格式
         /// </summary>
         public SecsFormat DataType { get; set; }
+
+        /// <summary>
+        /// 所属表：SVID / DVID / ECID。由 <see cref="VIDBase.Category"/> 在加载时写入。
+        /// </summary>
+        public string Category { get; set; }
+
+        /// <summary>
+        /// 带类别前缀的展示用 ID，形如 <c>SVID:102</c>。
+        /// <para>
+        /// 只用于诊断信息和界面显示 —— 索引与报表引用都用裸 ID，前提是 ID 跨表唯一
+        /// （由 <c>VIDManager.Load</c> 强制校验，重号直接抛）。
+        /// </para>
+        /// </summary>
+        public string QualifiedId => string.IsNullOrEmpty(Category) ? ID : $"{Category}:{ID}";
+
+        /// <summary>
+        /// 把 "SVID:102" 这种带类别前缀的写法也认下来，返回裸 ID。
+        /// 报表/配置里两种写法都能用，避免手工粘贴带前缀的引用直接失效。
+        /// </summary>
+        public static string NormalizeId(string id)
+        {
+            var trimmed = (id ?? string.Empty).Trim();
+            var colon = trimmed.IndexOf(':');
+            return colon < 0 ? trimmed : trimmed[(colon + 1)..];
+        }
     }
 
     /// <summary>
@@ -53,33 +78,34 @@ namespace SecsGem.Runtime.Variable
     public abstract class VIDBase :  DataBase<VIDInfo>
     {
         /// <summary>
-        /// 文件路径
+        /// 文件路径由子类指定（SVID/DVID/ECID 各一个目录），基类不再给默认目录。
         /// </summary>
-        public override string FilePath { get; set; } = "Config//SecsJson//VID";
-   
+
         public override string FileName { get; set; }
+
+        /// <summary>本表的名字，SVID/DVID/ECID。VID 的 ID 只在本表内唯一。</summary>
+        public abstract string Category { get; }
 
         public override ConcurrentList<VIDInfo> Datas { get; set; } =new ConcurrentList<VIDInfo>();
 
-     
+
 
         /// <summary>
         /// 执行加载操作；对应入口为 Load。
-        /// 正文中的关键协作调用包括 Combine、Exists、ReadCsv、Clear、GetEnum；具体条件和先后次序见方法体。
+        /// <para>
+        /// 修复：原实现文件缺失时 throw "File Not Exist!!"，Config() 整条失败，
+        /// 且默认项无从载入。现在交给基类兜底（见 <see cref="DataBase{T}.Load"/>），这里只补 DataType 与分类。
+        /// </para>
         /// </summary>
         public override void Load()
         {
-            string path = Path.Combine(FilePath, FileName);
-            if (!File.Exists(path)) throw new Exception("File Not Exist!!");
+            base.Load();
 
-            var datas = CSVEx.ReadCsv<VIDInfo>(path);
-
-            Datas.Clear();
-            foreach (var item in datas)
+            foreach (var item in Datas)
             {
                 item.DataType = EnumEx.GetEnum<SecsFormat>(item.DataTypeName);
-                Datas.Add(item);
-            }    
+                item.Category = Category;
+            }
         }
  
     }

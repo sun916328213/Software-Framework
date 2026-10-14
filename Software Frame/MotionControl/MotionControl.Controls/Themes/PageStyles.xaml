@@ -9,7 +9,7 @@ MotionControl 模块：运动契约、控制卡适配和验证界面；实际轴
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="pack://application:,,,/WPFCustomControls;component/Resources/CompactControlStyles.xaml" />
     </ResourceDictionary.MergedDictionaries>
-    <Style x:Key="MotionInput" TargetType="TextBox" BasedOn="{StaticResource CompactOutlinedTextBox}">
+    <Style x:Key="MotionInput" TargetType="TextBox" BasedOn="{StaticResource CompactTextBox}">
         <Setter Property="Height" Value="32" />
         <Setter Property="MinHeight" Value="32" />
     </Style>

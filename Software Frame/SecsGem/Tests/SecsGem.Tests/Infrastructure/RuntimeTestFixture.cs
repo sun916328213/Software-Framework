@@ -9,6 +9,7 @@ using DataManager.Core.Log;
 using DataManager.Runtime.Log;
 using SecsGem.Core;
 using SecsGem.Runtime;
+using SecsGem.Runtime.Transport;
 using SecsGem.Tests.Fakes;
 using SecsGem.Runtime.Variable;
 using SecsGem.Runtime.Variable.Data;
@@ -26,6 +27,30 @@ internal static class RuntimeTestFixture
     /// </summary>
     internal static SecsGemRuntime Create(InMemorySecsTransport transport)
     {
+        var container = NewContainer();
+        var runtime = new SecsGemRuntime(container, transport);
+        container.RegisterInstance(typeof(SecsGemRuntime), runtime);
+        return runtime;
+    }
+
+    /// <summary>
+    /// 用真实传输（Secs4NetTransport）装配运行时。
+    /// <para>
+    /// 与 <see cref="Create(InMemorySecsTransport)"/> 的区别：这里走真的 HSMS 套接字收发，
+    /// 才能覆盖 secs4net 内部"报文在建通道之前被丢弃"的那段路径 —— 假传输把它整段绕开了。
+    /// </para>
+    /// </summary>
+    internal static SecsGemRuntime CreateReal()
+    {
+        var container = NewContainer();
+        var transport = new Secs4NetTransport(container);
+        var runtime = new SecsGemRuntime(container, transport);
+        container.RegisterInstance(typeof(SecsGemRuntime), runtime);
+        return runtime;
+    }
+
+    private static TestPrismContainer NewContainer()
+    {
         var container = new TestPrismContainer();
         container.RegisterSingleton(typeof(LogManager), () => new LogManager());
         foreach (var type in new[]
@@ -37,8 +62,6 @@ internal static class RuntimeTestFixture
             container.RegisterSingleton(type, type);
         }
         new SecsGemModule().RegisterTypes(container);
-        var runtime = new SecsGemRuntime(container, transport);
-        container.RegisterInstance(typeof(SecsGemRuntime), runtime);
-        return runtime;
+        return container;
     }
 }

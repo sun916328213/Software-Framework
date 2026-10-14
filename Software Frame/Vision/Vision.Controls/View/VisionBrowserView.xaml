@@ -88,7 +88,7 @@ Vision 模块：视觉工具模型、算法适配和编辑展示；厂商能力�
             <StackPanel Grid.Row="1">
                 <TextBlock Text="AI Provider（三家切换）："
                     Margin="0,4,0,4" />
-                <ComboBox Style="{StaticResource CompactOutlinedComboBox}" md:HintAssist.Hint="AI Provider" AutomationProperties.Name="AI Provider"
+                    <ComboBox Style="{StaticResource CompactComboBox}" md:HintAssist.Hint="AI Provider" AutomationProperties.Name="AI Provider"
                     ItemsSource="{Binding Browser.ProviderEntries, RelativeSource={RelativeSource AncestorType=UserControl}}"
                     DisplayMemberPath="Name"
                     SelectedValuePath="Name"

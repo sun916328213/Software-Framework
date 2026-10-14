@@ -1,152 +1,678 @@
 <!--
-中文阅读说明：界面与资源声明。
-SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。
-绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+    中文阅读说明：界面与资源声明。
+    SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。
+    绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
 -->
-<UserControl x:Class="SecsGem.Controls.Views.SecsView"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:SecsGem.Controls.Views"
-        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
-        xmlns:common="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
-        Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
-        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
-    <UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/SecsGem.Controls;component/Themes/PageStyles.xaml"/>
-    </ResourceDictionary.MergedDictionaries></ResourceDictionary></UserControl.Resources>
+<UserControl
+    x:Class="SecsGem.Controls.Views.SecsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:SecsGem.Controls.Views"
+    xmlns:custcontrols="clr-namespace:WPFCustomControls.Controls;assembly=WPFCustomControls"
+    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/SecsGem.Controls;component/Themes/PageStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!--  ScrollBar_Style 带 x:Key 不会自动生效，滚动条要在这层再套一次隐式样式  -->
+            <Style BasedOn="{StaticResource ScrollBar_Style}" TargetType="ScrollBar" />
+        </ResourceDictionary>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
-            <RowDefinition Height="*" MinHeight="180" />
-            <RowDefinition Height="150" MinHeight="100" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="1.5*" MinHeight="300" />
+            <RowDefinition Height="*" MinHeight="200" />
         </Grid.RowDefinitions>
-        <common:PageHeaderView Title="SECS/GEM" SubTitle="协议联调 · 消息监视" IconKind="LanConnect" Margin="0,0,0,8"/>
-        <md:Card Grid.Row="1" Style="{StaticResource SecsCard}" Margin="0,0,0,8">
+
+        <custcontrols:PageHeaderView
+            Title="SECS/GEM"
+            Margin="0,0,0,8"
+            IconKind="LanConnect"
+            SubTitle="协议联调 · 消息监视" />
+
+        <md:Card
+            Grid.Row="1"
+            Grid.ColumnSpan="2"
+            Margin="0,0,0,12"
+            Style="{StaticResource SecsCard}">
             <StackPanel>
                 <WrapPanel VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                    <TextBlock Text="模式" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <ComboBox x:Name="ConnectionMode" Width="100" SelectedIndex="{Binding Model.ConnectionModeIndex}" Margin="0,0,12,0" Style="{StaticResource CompactOutlinedComboBox}">
-                        <ComboBoxItem Content="主动" />
-                        <ComboBoxItem Content="被动" />
-                    </ComboBox>
+                    <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                        <TextBlock
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            Text="模式" />
+                        <ComboBox
+                            x:Name="ConnectionMode"
+                            Width="100"
+                            Margin="0,0,12,0"
+                            SelectedIndex="{Binding Model.ConnectionModeIndex}"
+                            Style="{StaticResource CompactComboBox}">
+                            <ComboBoxItem Content="主动" />
+                            <ComboBoxItem Content="被动" />
+                        </ComboBox>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                    <TextBlock Text="地址" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <TextBox x:Name="AddressBox" Width="130" Text="{Binding Model.Address, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,12,0"  Style="{StaticResource CompactOutlinedTextBox}" />
+                    <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                        <TextBlock
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            Text="地址" />
+                        <TextBox
+                            x:Name="AddressBox"
+                            Width="130"
+                            Margin="0,0,12,0"
+                            Style="{StaticResource CompactTextBox}"
+                            Text="{Binding Model.Address, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                    <TextBlock Text="端口" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <TextBox x:Name="PortBox" Width="65" Text="{Binding Model.PortText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,12,0"  Style="{StaticResource CompactOutlinedTextBox}" />
+                    <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                        <TextBlock
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            Text="端口" />
+                        <TextBox
+                            x:Name="PortBox"
+                            Width="90"
+                            Margin="0,0,12,0"
+                            Style="{StaticResource CompactTextBox}"
+                            Text="{Binding Model.PortText, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                    <TextBlock Text="Device ID" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <TextBox x:Name="DeviceIdBox" Width="60" Text="{Binding Model.DeviceIdText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,12,0"  Style="{StaticResource CompactOutlinedTextBox}" />
+                    <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                        <TextBlock
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            Text="Device ID" />
+                        <TextBox
+                            x:Name="DeviceIdBox"
+                            Width="80"
+                            Margin="0,0,12,0"
+                            Style="{StaticResource CompactTextBox}"
+                            Text="{Binding Model.DeviceIdText, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
-                    <Button Content="连接" Command="{Binding ConnectCommand}" Margin="0,0,8,4"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="连接" />
-                    <Button Content="断开" Command="{Binding DisconnectCommand}"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="断开" />
+                    <Button
+                        Width="80"
+                        MinHeight="32"
+                        Margin="12,0,8,4"
+                        AutomationProperties.Name="连接"
+                        Command="{Binding ConnectCommand}"
+                        Content="连接"
+                        Style="{StaticResource CompactOutlinedButton}" />
+                    <Button
+                        Width="80"
+                        MinHeight="32"
+                        AutomationProperties.Name="断开"
+                        Command="{Binding DisconnectCommand}"
+                        Content="断开"
+                        Style="{StaticResource CompactOutlinedButton}" />
                 </WrapPanel>
-                <controls:SecsOverviewView x:Name="Overview" ConnectionStatus="{Binding Model.ConnectionStatus}" ModeStatus="{Binding Model.ModeStatus}" DeviceStatus="{Binding Model.DeviceStatus}" MinHeight="56" Margin="0,8,0,0" />
+                <controls:SecsOverviewView
+                    x:Name="Overview"
+                    MinHeight="56"
+                    Margin="0,8,0,0"
+                    ConnectionStatus="{Binding Model.ConnectionStatus}"
+                    DeviceStatus="{Binding Model.DeviceStatus}"
+                    ModeStatus="{Binding Model.ModeStatus}" />
             </StackPanel>
         </md:Card>
-        <TabControl Grid.Row="2" Background="{DynamicResource MaterialDesign.Brush.Card.Background}">
-            <TabItem Header="通信与消息">
-                <Grid Margin="12">
-                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                    <WrapPanel>
-                        <Button Content="建立通信 S1F13" Command="{Binding EstablishCommand}" Margin="0,0,8,4"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="建立通信 S1F13" />
-                        <Button Content="Online Remote" Command="{Binding OnlineCommand}" Margin="0,0,8,4"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="Online Remote" />
-                        <Button Content="Offline" Command="{Binding OfflineCommand}" Margin="0,0,8,4"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="Offline" />
-                        <Button Content="加载 GEM 配置" Command="{Binding LoadConfigCommand}" Margin="0,0,8,4"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="加载 GEM 配置" />
-                        <Button Content="载入内存示例" Command="{Binding LoadSampleCommand}"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="载入内存示例" />
-                    </WrapPanel>
-                    <TextBlock Grid.Row="1" Margin="0,8,0,4" Text="手工发送 SML（例如 'S1F1' W；多行消息可附 SECS Item）" />
-                    <Grid Grid.Row="2">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                        <TextBox x:Name="SmlBox" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Text="{Binding Model.Sml, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas"  Style="{StaticResource CompactMultilineTextBox}" />
-                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                            <CheckBox x:Name="WaitReplyBox" Content="等待回复" IsChecked="{Binding Model.WaitForReply}" Margin="0,0,0,4" />
-                            <Button Content="发送" Command="{Binding SendSmlCommand}"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="发送" />
-                        </StackPanel>
+
+        <md:Card
+            Grid.Row="2"
+            ScrollViewer.HorizontalScrollBarVisibility="Visible"
+            ScrollViewer.VerticalScrollBarVisibility="Visible"
+            Style="{StaticResource SecsCard}">
+
+            <TabControl>
+                <TabItem Header="通信与消息">
+                    <Grid Margin="12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <WrapPanel>
+                            <Button
+                                MinHeight="32"
+                                Margin="0,0,8,0"
+                                AutomationProperties.Name="建立通信 S1F13"
+                                Command="{Binding EstablishCommand}"
+                                Content="建立通信 S1F13"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                            <Button
+                                MinHeight="32"
+                                Margin="0,0,8,0"
+                                AutomationProperties.Name="上线本地"
+                                Command="{Binding OnlineLocalCommand}"
+                                Content="上线本地"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                            <Button
+                                MinHeight="32"
+                                Margin="0,0,8,0"
+                                AutomationProperties.Name="上线远程"
+                                Command="{Binding OnlineRemoteCommand}"
+                                Content="上线远程"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                            <Button
+                                MinHeight="32"
+                                Margin="0,0,8,0"
+                                AutomationProperties.Name="Offline"
+                                Command="{Binding OfflineCommand}"
+                                Content="Offline"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                            <Button
+                                MinHeight="32"
+                                Margin="0,0,8,0"
+                                AutomationProperties.Name="加载 GEM 配置"
+                                Command="{Binding LoadConfigCommand}"
+                                Content="加载 GEM 配置"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                            <Button
+                                MinHeight="32"
+                                AutomationProperties.Name="载入内存示例"
+                                Command="{Binding LoadSampleCommand}"
+                                Content="载入内存示例"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                        </WrapPanel>
+                        <TextBlock
+                            Grid.Row="1"
+                            Margin="0,12,0,12"
+                            Text="手工发送 SML（例如 'S1F1' W；多行消息可附 SECS Item）" />
+                        <Grid Grid.Row="2" VerticalAlignment="Bottom">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox
+                                x:Name="SmlBox"
+                                VerticalAlignment="Bottom"
+                                AcceptsReturn="True"
+                                FontFamily="Consolas"
+                                Style="{StaticResource CompactMultilineTextBox}"
+                                Text="{Binding Model.Sml, UpdateSourceTrigger=PropertyChanged}"
+                                VerticalScrollBarVisibility="Auto" />
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Bottom">
+                                <CheckBox
+                                    x:Name="WaitReplyBox"
+                                    Margin="0,0,0,4"
+                                    Content="等待回复"
+                                    IsChecked="{Binding Model.WaitForReply}" />
+                                <Button
+                                    MinHeight="32"
+                                    AutomationProperties.Name="发送"
+                                    Command="{Binding SendSmlCommand}"
+                                    Content="发送"
+                                    Style="{StaticResource CompactOutlinedButton}" />
+                            </StackPanel>
+                        </Grid>
                     </Grid>
-                </Grid>
-            </TabItem>
-            <TabItem Header="变量 SVID/DVID/ECID">
-                <Grid Margin="12">
-                    <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                    <DataGrid x:Name="VariableGrid" ItemsSource="{Binding Model.Variables}" SelectedItem="{Binding Model.SelectedVariable}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" Style="{StaticResource MaterialDesignDataGrid}">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="分类" Binding="{Binding Category}" Width="90" />
-                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="90" />
-                            <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="*" />
-                            <DataGridTextColumn Header="格式" Binding="{Binding Format}" Width="100" />
-                            <DataGridTextColumn Header="当前值" Binding="{Binding Value}" Width="2*" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                    <WrapPanel Grid.Row="1" Margin="0,8,0,0">
-                        <TextBlock Text="新值" VerticalAlignment="Center" Margin="0,0,8,0" />
-                        <TextBox x:Name="VariableValueBox" Text="{Binding Model.VariableValue, UpdateSourceTrigger=PropertyChanged}" Width="220" Margin="0,0,8,0"  Style="{StaticResource CompactOutlinedTextBox}" />
-                        <Button Content="写入选中变量" Command="{Binding SetVariableCommand}" Margin="0,0,8,0"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="写入选中变量" />
-                        <Button Content="刷新" Command="{Binding RefreshCatalogNowCommand}"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="刷新" />
-                    </WrapPanel>
-                </Grid>
-            </TabItem>
-            <TabItem Header="事件与报表">
-                <Grid Margin="12">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                    <DataGrid x:Name="EventGrid" ItemsSource="{Binding Model.Events}" SelectedItem="{Binding Model.SelectedEvent}" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,0,8,0" Style="{StaticResource MaterialDesignDataGrid}">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="CEID" Binding="{Binding ID}" Width="75" />
-                            <DataGridTextColumn Header="事件" Binding="{Binding Name}" Width="*" />
-                            <DataGridTextColumn Header="Report IDs" Binding="{Binding ReportID_Collection}" Width="*" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                    <DataGrid Grid.Column="1" x:Name="ReportGrid" ItemsSource="{Binding Model.Reports}" AutoGenerateColumns="False" IsReadOnly="True" Margin="5,0,0,0" Style="{StaticResource MaterialDesignDataGrid}">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Report ID" Binding="{Binding ID}" Width="90" />
-                            <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="*" />
-                            <DataGridTextColumn Header="VID IDs" Binding="{Binding VID_Collection}" Width="*" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                    <Button Grid.Row="1" Content="上报选中 CEID (S6F11)" Command="{Binding ReportEventCommand}" Margin="0,8,5,0"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="上报选中 CEID (S6F11)" />
-                </Grid>
-            </TabItem>
-            <TabItem Header="报警">
-                <Grid Margin="12">
-                    <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                    <DataGrid x:Name="AlarmGrid" ItemsSource="{Binding Model.Alarms}" SelectedItem="{Binding Model.SelectedAlarm}" AutoGenerateColumns="False" IsReadOnly="True" Style="{StaticResource MaterialDesignDataGrid}">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="ALID" Binding="{Binding ID}" Width="90" />
-                            <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="*" />
-                            <DataGridCheckBoxColumn Header="启用" Binding="{Binding Enable}" Width="75" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                    <WrapPanel Grid.Row="1" Margin="0,8,0,0">
-                        <Button Content="选中报警触发 (S5F1)" Command="{Binding RaiseAlarmCommand}" Margin="0,0,8,0"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="选中报警触发 (S5F1)" />
-                        <Button Content="选中报警复位 (S5F1)" Command="{Binding ResetAlarmCommand}"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="选中报警复位 (S5F1)" />
-                    </WrapPanel>
-                </Grid>
-            </TabItem>
-            <TabItem Header="远程命令与 S10">
-                <StackPanel Margin="12">
-                    <TextBlock Text="收到 S2F41 后，工作台记录命令与参数并按下方 HCACK 应答。" Margin="0,0,0,10" />
-                    <WrapPanel>
-                        <TextBlock Text="HCACK" VerticalAlignment="Center" Margin="0,0,8,0" />
-                        <TextBox x:Name="HcackBox" Width="60" Text="{Binding Model.Hcack, UpdateSourceTrigger=PropertyChanged}"  Style="{StaticResource CompactOutlinedTextBox}" />
-                    </WrapPanel>
-                    <TextBlock Text="S10 Terminal 将在收到 Host 消息时弹出提示窗。" Margin="0,12,0,8" />
-                    <Button Content="预览 S10 提示窗" Width="160" HorizontalAlignment="Left" Command="{Binding PreviewTerminalCommand}"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="预览 S10 提示窗" />
-                </StackPanel>
-            </TabItem>
-        </TabControl>
-        <Grid Grid.Row="3" Margin="0,8,0,0">
-            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-            <DockPanel>
-                <Button Content="清空" DockPanel.Dock="Right" HorizontalAlignment="Right" Command="{Binding ClearLogCommand}"  Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="清空" />
-                <TextBlock Text="消息监视器" Style="{StaticResource SecsSectionTitle}" VerticalAlignment="Center" />
-            </DockPanel>
-            <ListBox Grid.Row="1" x:Name="MessageLog" ItemsSource="{Binding Model.Messages}" FontFamily="Consolas" />
-        </Grid>
+                </TabItem>
+                <TabItem Header="变量 SVID/DVID/ECID">
+                    <Grid Margin="12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <custcontrols:DataGridView
+                            x:Name="VariableGrid"
+                            AutoGenerateColumns="False"
+                            Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                            IsReadOnly="True"
+                            ItemsSource="{Binding Model.Variables}"
+                            SelectedItem="{Binding Model.SelectedVariable}"
+                            SelectionMode="Single">
+                            <custcontrols:DataGridView.Columns>
+                                <DataGridTextColumn
+                                    Width="80"
+                                    Binding="{Binding Category}"
+                                    Header="分类" />
+                                <DataGridTextColumn
+                                    Width="80"
+                                    Binding="{Binding Id}"
+                                    Header="ID" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding Name}"
+                                    Header="名称" />
+                                <DataGridTextColumn
+                                    Width="100"
+                                    Binding="{Binding Format}"
+                                    Header="格式" />
+                                <DataGridTextColumn
+                                    Width="2*"
+                                    Binding="{Binding Value}"
+                                    Header="当前值" />
+                            </custcontrols:DataGridView.Columns>
+                        </custcontrols:DataGridView>
+                        <WrapPanel Grid.Row="1" Margin="0,8,0,0">
+                            <TextBlock
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                Text="新值" />
+                            <TextBox
+                                x:Name="VariableValueBox"
+                                Width="220"
+                                Margin="0,0,8,0"
+                                Style="{StaticResource CompactTextBox}"
+                                Text="{Binding Model.VariableValue, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button
+                                MinHeight="32"
+                                Margin="0,0,8,0"
+                                AutomationProperties.Name="写入选中变量"
+                                Command="{Binding SetVariableCommand}"
+                                Content="写入选中变量"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                            <Button
+                                MinHeight="32"
+                                AutomationProperties.Name="刷新"
+                                Command="{Binding RefreshCatalogNowCommand}"
+                                Content="刷新"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                        </WrapPanel>
+                        <WrapPanel Grid.Row="2" Margin="0,8,0,0">
+                            <TextBlock
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                Text="新增" />
+                            <ComboBox
+                                x:Name="NewVariableCategoryBox"
+                                Width="85"
+                                Margin="0,0,12,0"
+                                SelectedIndex="{Binding Model.NewVariableCategoryIndex}"
+                                Style="{StaticResource CompactComboBox}">
+                                <ComboBoxItem Content="SVID" />
+                                <ComboBoxItem Content="DVID" />
+                                <ComboBoxItem Content="ECID" />
+                            </ComboBox>
+                            <TextBlock
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                Text="ID" />
+                            <TextBox
+                                x:Name="NewVariableIdBox"
+                                Width="80"
+                                Margin="0,0,12,0"
+                                Style="{StaticResource CompactTextBox}"
+                                Text="{Binding Model.NewVariableId, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                Text="名称" />
+                            <TextBox
+                                x:Name="NewVariableNameBox"
+                                Width="150"
+                                Margin="0,0,12,0"
+                                Style="{StaticResource CompactTextBox}"
+                                Text="{Binding Model.NewVariableName, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                Text="格式" />
+                            <ComboBox
+                                x:Name="NewVariableFormatBox"
+                                Width="95"
+                                Margin="0,0,12,0"
+                                ItemsSource="{Binding Model.VariableFormats}"
+                                SelectedItem="{Binding Model.NewVariableFormat}"
+                                Style="{StaticResource CompactComboBox}" />
+                            <Button
+                                MinHeight="32"
+                                AutomationProperties.Name="新增变量"
+                                Command="{Binding AddVariableCommand}"
+                                Content="新增变量"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                            <Button
+                                MinHeight="32"
+                                Margin="12,0,0,0"
+                                AutomationProperties.Name="删除选中变量"
+                                Command="{Binding DeleteVariableCommand}"
+                                Content="删除选中变量"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                        </WrapPanel>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="事件与报表">
+                    <Grid Margin="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+
+                        </Grid.RowDefinitions>
+                        <custcontrols:DataGridView
+                            x:Name="EventGrid"
+                            Margin="8,0"
+                            AutoGenerateColumns="False"
+                            Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                            IsReadOnly="True"
+                            ItemsSource="{Binding Model.Events}"
+                            SelectedItem="{Binding Model.SelectedEvent}">
+                            <custcontrols:DataGridView.Columns>
+                                <DataGridTextColumn
+                                    Width="75"
+                                    Binding="{Binding ID}"
+                                    Header="CEID" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding Name}"
+                                    Header="事件" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding ReportID_Collection}"
+                                    Header="Report IDs" />
+                            </custcontrols:DataGridView.Columns>
+                        </custcontrols:DataGridView>
+                        <custcontrols:DataGridView
+                            x:Name="ReportGrid"
+                            Grid.Column="1"
+                            Margin="8,0"
+                            AutoGenerateColumns="False"
+                            Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                            IsReadOnly="True"
+                            ItemsSource="{Binding Model.Reports}"
+                            SelectedItem="{Binding Model.SelectedReport}">
+                            <custcontrols:DataGridView.Columns>
+                                <DataGridTextColumn
+                                    Width="90"
+                                    Binding="{Binding ID}"
+                                    Header="Report ID" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding Name}"
+                                    Header="名称" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding VID_Collection}"
+                                    Header="VID IDs" />
+                            </custcontrols:DataGridView.Columns>
+                        </custcontrols:DataGridView>
+
+                        <StackPanel
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2">
+                            <WrapPanel>
+                                <TextBlock
+                                    Width="100"
+                                    Margin="0,0,12,0"
+                                    VerticalAlignment="Center"
+                                    Text="新增Report信息:"
+                                    TextAlignment="Center" />
+                                <TextBox
+                                    x:Name="NewReportIdBox"
+                                    Width="90"
+                                    Margin="0,0,12,0"
+                                    md:HintAssist.Hint="ReportID"
+                                    Style="{StaticResource CompactTextBox}"
+                                    Text="{Binding Model.NewReportId, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox
+                                    x:Name="NewReportNameBox"
+                                    Width="150"
+                                    Margin="0,0,12,0"
+                                    md:HintAssist.Hint="ReportName"
+                                    Style="{StaticResource CompactTextBox}"
+                                    Text="{Binding Model.NewReportName, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                    Width="70"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Text="VID IDs"
+                                    TextAlignment="Center" />
+                                <TextBox
+                                    x:Name="NewReportVidsBox"
+                                    Width="130"
+                                    Margin="0,0,12,0"
+                                    md:HintAssist.Hint=",隔开"
+                                    Style="{StaticResource CompactTextBox}"
+                                    Text="{Binding Model.NewReportVids, UpdateSourceTrigger=PropertyChanged}" />
+
+
+                                <Button
+                                    MinHeight="32"
+                                    AutomationProperties.Name="新增报表"
+                                    Command="{Binding AddReportCommand}"
+                                    Content="新增报表"
+                                    Style="{StaticResource CompactOutlinedButton}" />
+                                <Button
+                                    MinHeight="32"
+                                    Margin="12,0,0,0"
+                                    AutomationProperties.Name="删除选中报表"
+                                    Command="{Binding DeleteReportCommand}"
+                                    Content="删除选中报表"
+                                    Style="{StaticResource CompactOutlinedButton}" />
+                            </WrapPanel>
+                            <TextBlock Height="5" />
+                            <WrapPanel>
+                                <TextBlock
+                                    Width="100"
+                                    Margin="0,0,12,0"
+                                    VerticalAlignment="Center"
+                                    Text="新增Event信息:" />
+                                <TextBox
+                                    x:Name="NewEventIdBox"
+                                    Width="90"
+                                    Margin="0,0,12,0"
+                                    md:HintAssist.Hint="EventID"
+                                    Style="{StaticResource CompactTextBox}"
+                                    Text="{Binding Model.NewEventId, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox
+                                    x:Name="NewEventNameBox"
+                                    Width="150"
+                                    Margin="0,0,12,0"
+                                    md:HintAssist.Hint="EventName"
+                                    Style="{StaticResource CompactTextBox}"
+                                    Text="{Binding Model.NewEventName, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                    Width="70"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Text="Report IDs:"
+                                    TextAlignment="Center" />
+                                <TextBox
+                                    x:Name="NewEventReportsBox"
+                                    Width="130"
+                                    Margin="0,0,12,0"
+                                    md:HintAssist.Hint=",隔开"
+                                    Style="{StaticResource CompactTextBox}"
+                                    Text="{Binding Model.NewEventReports, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <Button
+                                    MinHeight="32"
+                                    AutomationProperties.Name="新增事件"
+                                    Command="{Binding AddEventCommand}"
+                                    Content="新增事件"
+                                    Style="{StaticResource CompactOutlinedButton}" />
+                                <Button
+                                    MinHeight="32"
+                                    Margin="12,0,0,0"
+                                    AutomationProperties.Name="删除选中事件"
+                                    Command="{Binding DeleteEventCommand}"
+                                    Content="删除选中事件"
+                                    Style="{StaticResource CompactOutlinedButton}" />
+                            </WrapPanel>
+                        </StackPanel>
+
+
+
+                        <WrapPanel
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom">
+                            <Button
+                                Width="120"
+                                MinHeight="32"
+                                AutomationProperties.Name="上报选中 CEID (S6F11)"
+                                Command="{Binding ReportEventCommand}"
+                                Content="上报选中 CEID (S6F11)"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                        </WrapPanel>
+
+                    </Grid>
+                </TabItem>
+                <TabItem Header="报警">
+                    <Grid Margin="12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <custcontrols:DataGridView
+                            x:Name="AlarmGrid"
+                            AutoGenerateColumns="False"
+                            Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                            IsReadOnly="True"
+                            ItemsSource="{Binding Model.Alarms}"
+                            SelectedItem="{Binding Model.SelectedAlarm}">
+                            <custcontrols:DataGridView.Columns>
+                                <DataGridTextColumn
+                                    Width="90"
+                                    Binding="{Binding ID}"
+                                    Header="ALID" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding Description}"
+                                    Header="描述" />
+                                <DataGridCheckBoxColumn
+                                    Width="75"
+                                    Binding="{Binding Enable}"
+                                    Header="启用" />
+                            </custcontrols:DataGridView.Columns>
+                        </custcontrols:DataGridView>
+                        <WrapPanel Grid.Row="1" Margin="0,8,0,0">
+                            <Button
+                                MinHeight="32"
+                                Margin="0,0,8,0"
+                                AutomationProperties.Name="选中报警触发 (S5F1)"
+                                Command="{Binding RaiseAlarmCommand}"
+                                Content="选中报警触发 (S5F1)"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                            <Button
+                                MinHeight="32"
+                                AutomationProperties.Name="选中报警复位 (S5F1)"
+                                Command="{Binding ResetAlarmCommand}"
+                                Content="选中报警复位 (S5F1)"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                        </WrapPanel>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="远程命令与 S10">
+                    <StackPanel Margin="12">
+                        <TextBlock Margin="0,0,0,10" Text="收到 S2F41 后，工作台记录命令与参数并按下方 HCACK 应答。" />
+                        <WrapPanel>
+                            <TextBlock
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                Text="HCACK" />
+                            <TextBox
+                                x:Name="HcackBox"
+                                Width="60"
+                                Style="{StaticResource CompactTextBox}"
+                                Text="{Binding Model.Hcack, UpdateSourceTrigger=PropertyChanged}" />
+                        </WrapPanel>
+                        <TextBlock Margin="0,12,0,8" Text="S10 Terminal 将在收到 Host 消息时弹出提示窗。" />
+                        <Button
+                            Width="160"
+                            MinHeight="32"
+                            HorizontalAlignment="Left"
+                            AutomationProperties.Name="预览 S10 提示窗"
+                            Command="{Binding PreviewTerminalCommand}"
+                            Content="预览 S10 提示窗"
+                            Style="{StaticResource CompactOutlinedButton}" />
+                    </StackPanel>
+                </TabItem>
+            </TabControl>
+        </md:Card>
+
+        <md:Card
+            Grid.Row="3"
+            Margin="0,12,0,0"
+            Style="{StaticResource SecsCard}">
+            <Grid>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="350" />
+                </Grid.ColumnDefinitions>
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            DockPanel.Dock="Left"
+                            Style="{StaticResource SecsSectionTitle}"
+                            Text="消息监视器" />
+                        <Button
+                            MinHeight="32"
+                            HorizontalAlignment="Right"
+                            AutomationProperties.Name="清空"
+                            Command="{Binding ClearLogCommand}"
+                            Content="清空"
+                            Style="{StaticResource CompactOutlinedButton}" />
+                    </DockPanel>
+
+                    <custcontrols:DataGridView
+                        x:Name="MessageLog"
+                        AutoGenerateColumns="False"
+                        Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                        FontFamily="Consolas"
+                        HeadersVisibility="Column"
+                        IsReadOnly="True"
+                        ItemsSource="{Binding Model.Messages}"
+                        SelectedItem="{Binding Model.SelectedLog}"
+                        Style="{StaticResource MaterialDesignDataGrid}"
+                        VerticalScrollBarVisibility="Auto">
+                        <custcontrols:DataGridView.Columns>
+                            <DataGridTextColumn
+                                Width="105"
+                                Binding="{Binding Time}"
+                                Header="时间" />
+                            <DataGridTextColumn
+                                Width="75"
+                                Binding="{Binding Kind}"
+                                Header="种类" />
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Summary}"
+                                Header="内容摘要" />
+                        </custcontrols:DataGridView.Columns>
+                    </custcontrols:DataGridView>
+                </DockPanel>
+
+                <Separator
+                    Grid.RowSpan="2"
+                    Grid.Column="1"
+                    Margin="4"
+                    Style="{StaticResource SeparatorVertical_Style}" />
+
+                <DockPanel Grid.Column="2">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        DockPanel.Dock="Top"
+                        Style="{StaticResource SecsSectionTitle}"
+                        Text="具体消息" />
+                    <TextBox
+                        Margin="4"
+                        Padding="0,10"
+                        VerticalAlignment="Bottom"
+                        HorizontalScrollBarVisibility="Auto"
+                        IsReadOnly="True"
+                        Text="{Binding Model.SelectedLog.Text, Mode=OneWay}"
+                        TextWrapping="Wrap"
+                        ToolTip="选中上面任意一行，这里显示全文，可复制"
+                        VerticalScrollBarVisibility="Auto" />
+                </DockPanel>
+
+            </Grid>
+        </md:Card>
+
     </Grid>
 </UserControl>

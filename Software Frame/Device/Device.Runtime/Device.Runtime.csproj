@@ -19,8 +19,7 @@ Device 模块：设备契约、驱动适配、工作区及界面；真实连接�
   <ItemGroup>
     <ProjectReference Include="..\Device.Core\Device.Core.csproj" />
     <!-- P11：Device.Runtime 为 Runtime 层，直接引用 Communication.Runtime；旧兼容路径经门面保留。 -->
-    <ProjectReference Include="..\..\Communication\Communication.Runtime\Communication.Runtime.csproj"
-                      AdditionalProperties="ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch=None" />
+    <ProjectReference Include="..\..\Communication\Communication.Runtime\Communication.Runtime.csproj" AdditionalProperties="ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch=None" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Basler.Pylon">
@@ -46,7 +45,9 @@ Device 模块：设备契约、驱动适配、工作区及界面；真实连接�
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Update="native\CSTControllerDll.dll" CopyToOutputDirectory="PreserveNewest" TargetPath="CSTControllerDll.dll" />
-    <None Update="native\OPTController.dll" CopyToOutputDirectory="PreserveNewest" TargetPath="OPTController.dll" />
+    <None Update="native\Opt\OPTController.dll" CopyToOutputDirectory="PreserveNewest" TargetPath="OPTController.dll" />
+    <!-- CST 光源：CommonToolDll 负责串口/IP 连接，ControllerDll 负责光源协议。 -->
+    <None Update="native\Cst\CommonToolDll.dll" CopyToOutputDirectory="PreserveNewest" TargetPath="CommonToolDll.dll" />
+    <None Update="native\Cst\ControllerDll.dll" CopyToOutputDirectory="PreserveNewest" TargetPath="ControllerDll.dll" />
   </ItemGroup>
 </Project>

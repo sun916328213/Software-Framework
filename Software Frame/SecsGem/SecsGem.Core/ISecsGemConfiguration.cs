@@ -16,12 +16,28 @@ public interface ISecsGemConfiguration
     IReadOnlyList<SecsGemEventDefinition> LoadEvents();
     /// <summary>
     /// 执行保存操作；对应入口为 SaveReports。
+    /// 存的是**运行时自己那张表**的当前状态 —— 调用方在界面上改了什么，这里一概看不到。
     /// </summary>
     void SaveReports();
     /// <summary>
     /// 执行保存操作；对应入口为 SaveEvents。
+    /// 同 <see cref="SaveReports()"/>：存的是运行时自己的表，不含调用方的编辑。
     /// </summary>
     void SaveEvents();
+
+    /// <summary>
+    /// 把 <paramref name="reports"/> 给出的报表定义写入配置并落盘。
+    /// <para>
+    /// 这是页面上编辑内容唯一能落盘的路径：<see cref="SaveReports()"/> 只序列化运行时内存里那份，
+    /// 而 <see cref="LoadReports"/> 返回的是映射出来的快照，两者之间没有任何连接。
+    /// </para>
+    /// </summary>
+    void SaveReports(IEnumerable<SecsGemReportDefinition> reports);
+
+    /// <summary>
+    /// 把 <paramref name="events"/> 给出的事件定义写入配置并落盘。语义同 <see cref="SaveReports(IEnumerable{SecsGemReportDefinition})"/>。
+    /// </summary>
+    void SaveEvents(IEnumerable<SecsGemEventDefinition> events);
 }
 
 /// <summary>

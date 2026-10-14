@@ -48,12 +48,16 @@ namespace WPFControls.ProgramControl.Services.Log
         /// 处理当前类型提供的操作；对应入口为 ReportSave。
         /// 正文中的关键协作调用包括 SaveReports；具体条件和先后次序见方法体。
         /// </summary>
-        public void ReportSave() => _configuration.SaveReports();
+        public void ReportSave()
+            => _configuration.SaveReports(
+                Model.Reports ?? throw new InvalidOperationException("报表尚未加载，不能保存"));
         /// <summary>
         /// 处理当前类型提供的操作；对应入口为 EventSave。
         /// 正文中的关键协作调用包括 SaveEvents；具体条件和先后次序见方法体。
         /// </summary>
-        public void EventSave() => _configuration.SaveEvents();
+        public void EventSave()
+            => _configuration.SaveEvents(
+                Model.Events ?? throw new InvalidOperationException("事件尚未加载，不能保存"));
 
     }
 }

@@ -10,6 +10,8 @@ using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
 using Prism.Ioc;
 using Prism.Regions;
+using SecsGem.Controls.ViewModels;
+using SecsGem.Controls.Views;
 using SecsGem.Workbench.ViewModels;
 
 namespace SecsGem.Workbench.Tests;
@@ -30,7 +32,7 @@ public sealed class MvvmInteractionTests(WorkbenchAppFixture host)
         host.Invoke(() =>
         {
             var page = Home();
-            var vm = Assert.IsType<SecsWorkbenchViewModel>(page.DataContext);
+            var vm = Assert.IsType<SecsViewModel>(page.DataContext);
             Invoke(page, "载入内存示例");
             var tabs = Descendants(page).OfType<TabControl>().Single();
             tabs.SelectedIndex = 1;
@@ -40,7 +42,7 @@ public sealed class MvvmInteractionTests(WorkbenchAppFixture host)
             ((TextBox)page.FindName("VariableValueBox")).SetCurrentValue(TextBox.TextProperty, "MVVM-LOT");
             Invoke(page, "写入选中变量");
             Assert.Equal("MVVM-LOT", vm.Variables.Single(v => v.Name == "LotId").Value);
-            Assert.Contains(vm.Messages, m => m.Contains("LotId = MVVM-LOT"));
+            Assert.Contains(vm.Messages, m => m.Text.Contains("LotId = MVVM-LOT"));
             tabs.SelectedIndex = 0;
         });
     }
@@ -55,15 +57,15 @@ public sealed class MvvmInteractionTests(WorkbenchAppFixture host)
     {
         var task = host.Invoke(() =>
         {
-            var vm = Assert.IsType<SecsWorkbenchViewModel>(Home().DataContext);
+            var vm = Assert.IsType<SecsViewModel>(Home().DataContext);
             vm.PortText = "invalid";
             return vm.ConnectCommand.ExecuteAsync(null);
         });
         await task;
         host.Invoke(() =>
         {
-            var vm = Assert.IsType<SecsWorkbenchViewModel>(Home().DataContext);
-            Assert.Contains(vm.Messages, m => m.Contains("[错误]") && m.Contains("连接:"));
+            var vm = Assert.IsType<SecsViewModel>(Home().DataContext);
+            Assert.Contains(vm.Messages, m => m.Kind == "错误" && m.Text.Contains("连接:"));
             Assert.Equal("未连接", vm.ConnectionStatus);
             vm.PortText = "5000";
         });
@@ -73,7 +75,7 @@ public sealed class MvvmInteractionTests(WorkbenchAppFixture host)
     /// 测试相关入口 Home；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 IsType、Single、Resolve；具体条件和先后次序见方法体。
     /// </summary>
-    private static SecsWorkbenchView Home() => Assert.IsType<SecsWorkbenchView>(
+    private static SecsView Home() => Assert.IsType<SecsView>(
         Assert.Single(ContainerLocator.Container.Resolve<IRegionManager>().Regions["SecsRegion"].ActiveViews));
 
     /// <summary>

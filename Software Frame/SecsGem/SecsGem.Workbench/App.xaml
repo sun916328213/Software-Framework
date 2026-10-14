@@ -15,6 +15,7 @@ SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和
             <ResourceDictionary.MergedDictionaries>
                 <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Teal" SecondaryColor="Amber" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/WPFCustomControls;component/Resources/Resources.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/WPFCustomControls;component/Resources/WorkbenchStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

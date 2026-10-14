@@ -56,6 +56,8 @@ namespace SecsGem.Runtime.Order.S1
                             Add(ref Items, vids[item]);
                     }
                 }
+                // shortcut: 上面的空请求分支返回全部三类变量（SVID/DVID/ECID），与标准"S1F4 只回 SVID"不符。
+                // 改动会变 S1F4 的线上行为，等确认 Host 侧不依赖现状后再收敛。
 
                 Item SecsItem = Item.L(Items.ToArray());
                 return SecsItem;

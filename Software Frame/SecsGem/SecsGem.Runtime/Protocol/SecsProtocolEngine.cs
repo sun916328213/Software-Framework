@@ -20,6 +20,7 @@ internal sealed class SecsProtocolEngine
     private readonly ISecsTransport _transport;
     private readonly Func<string, Item, bool, Task<SecsMessage>> _send;
     private readonly Func<SecsMessage, Item, Task> _reply;
+    private readonly Action<string> _error;
 
     /// <summary>
     /// 初始化 SecsProtocolEngine 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
@@ -29,13 +30,15 @@ internal sealed class SecsProtocolEngine
         SecsDataBinding binding,
         ISecsTransport transport,
         Func<string, Item, bool, Task<SecsMessage>> send,
-        Func<SecsMessage, Item, Task> reply)
+        Func<SecsMessage, Item, Task> reply,
+        Action<string> error = null)
     {
         _registry = registry;
         _binding = binding;
         _transport = transport;
         _send = send;
         _reply = reply;
+        _error = error;
     }
 
     /// <summary>
@@ -56,8 +59,26 @@ internal sealed class SecsProtocolEngine
         var handler = _registry.GetHandler(order)
             ?? throw new InvalidOperationException($"未找到对应的处理器: {order}");
         var item = await handler.GetReplyItemAsync(message).ConfigureAwait(false);
-        await _reply(message, item).ConfigureAwait(false);
-        EventHelper.TriggerEvent(order);
+
+        // 回包失败绝不能吞掉事件。
+        // Host 的主消息没带 W 位时，secs4net 的 TryReplyAsync 直接抛
+        // SecsException("The message does not need to reply")（PrimaryMessageWrapper.cs:27）；
+        // 重复回包时它返回 false，Secs4NetTransport.ReplyAsync 转成 InvalidOperationException。
+        // 原来这两条都直接冲出去，后面的 TriggerEvent 永远执行不到 ——
+        // 现象是 Host 明确发了 S1F17/S1F15，ConnectManager 的监听却一次都没跑。
+        // 事件表达的是"Host 发来了这条请求"，跟回没回上包是两件事。
+        try
+        {
+            await _reply(message, item).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _error?.Invoke($"{order} 回包未发出（不影响该消息的后续处理）: {ex.Message}");
+        }
+
+        // 把回包 item 一并带出：监听方（如 ConnectManager.Online_HtoE）需要区分
+        // "收到请求"与"接受请求"——ONLACK=2(NOT_READY) 被拒时不得切控制状态。
+        EventHelper.TriggerEvent(order, item);
     }
 
     /// <summary>
@@ -92,7 +113,16 @@ internal sealed class SecsProtocolEngine
 
         try
         {
-            await _send(order, item, wait).ConfigureAwait(false);
+            var reply = await _send(order, item, wait).ConfigureAwait(false);
+
+            // 修复：传输层在会话未建立（没 Selected）或连接已断开时返回 null 而不是抛异常
+            //（Secs4NetTransport.Send 的三处 early-return）。原来这里不检查，S6F11 发出去
+            // 没有任何回音也算"成功" —— 现象是"发送正常"，实际 Host 什么都没收到；
+            // 而标准 Host 在 Selected 之前本来就不会发任何数据，于是收发两边一起"正常"地没动静。
+            // wait=false 的即发即忘保持原语义，只对明确要求等应答的负责。
+            if (wait && reply == null)
+                throw new InvalidOperationException(
+                    $"{order} 没有收到应答：会话未建立（HSMS 未 Selected）或连接已断开");
         }
         catch (SecsException ex)
         {

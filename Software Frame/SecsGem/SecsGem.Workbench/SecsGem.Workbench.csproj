@@ -20,6 +20,25 @@ SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和
     <ProjectReference Include="..\SecsGem.Runtime\SecsGem.Runtime.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <!-- 出厂 GEM 配置：路径与运行时一致（Config\SecsJson\<表>\<表>.csv，相对工作目录）。
+         文件缺失时 DataBase.LoadDefaults() 兜底，这里给的是可编辑的实体文件。 -->
+    <None Include="Config\SecsJson\SVID\SVID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\SecsJson\DVID\DVID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\SecsJson\ECID\ECID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\SecsJson\CEID\CEID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Config\SecsJson\ReportID\ReportID.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
     <PackageReference Include="Prism.DryIoc" Version="8.1.97" />

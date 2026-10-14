@@ -47,6 +47,8 @@ namespace SecsGem.Runtime
         private readonly VIDManager _vidManager;
         private readonly StatusManager _statusManager;
         private readonly MessageRegistry _messageRegistry;
+        private CancellationTokenSource? _controlListenerCts;
+        private Task? _controlListener;
 
         /// <summary>S10 终端消息事件；宿主也可通过 TerminalDisplay 指定显示方式。</summary>
         public event Action<string, string>? TerminalMessageReceived;
@@ -77,7 +79,7 @@ namespace SecsGem.Runtime
             _statusManager.SetConnection(_transport.IsConnected);
             _messageRegistry.AutoRegisterHandlers();
             _dataBinding = new SecsDataBinding(_vidManager);
-            _protocolEngine = new SecsProtocolEngine(_messageRegistry, _dataBinding, _transport, Send, ReplyAsync);
+            _protocolEngine = new SecsProtocolEngine(_messageRegistry, _dataBinding, _transport, Send, ReplyAsync, RaiseError);
             _transport.OnReceive += SecsBase_OnReceiveAsync;
             _transport.OnReply += SecsBase_OnReply;
             _transport.OnConnectChanged += SecsControl_OnConnectChanged;
@@ -110,6 +112,9 @@ namespace SecsGem.Runtime
             {
                 _vidManager.Load();
                 _container.Resolve<DeviceManager>().Load(_vidManager.VIDDic_Name);
+                // 表加载完才配名字：StatusManager 靠名字找 VID/CEID，顺序反了等于没配。
+                // 这四个名字对应 DataBase.LoadDefaults 的打底项，不另造。
+                _statusManager.Config("DeviceStatus", "DeviceMode", "Device Status", "Device Mode");
             }
             catch (Exception ex)
             {
@@ -190,18 +195,25 @@ namespace SecsGem.Runtime
         }
 
         /// <summary>
-        /// 上报采集事件（S6F11），等待 Host 的 S6F12 确认
+        /// 上报采集事件（S6F11），等待 Host 的 S6F12 确认（时限默认 5 秒，见方法体说明）
         /// </summary>
         /// <param name="pCEID">事件对象</param>
         /// <returns>发送是否成功</returns>
-        public async Task<bool> S6F11EventReportSendAsync(CEIDInfo pCEID)
+        public async Task<bool> S6F11EventReportSendAsync(CEIDInfo pCEID, TimeSpan? replyTimeout = null)
         {
             if (pCEID == null) return false;
             try
             {
                 RefreshEquipmentData();
-                await SendItem("S6F11", true, new S6F11Info() { CEID = pCEID }).ConfigureAwait(false);
+                await SendItem("S6F11", true, new S6F11Info() { CEID = pCEID })
+                    .WaitAsync(replyTimeout ?? TimeSpan.FromSeconds(5)).ConfigureAwait(false);
                 return true;
+            }
+            catch (TimeoutException)
+            {
+                // Host 不回 S6F12 时 secs4net 本来要挂到 T3（默认 45s）才抛，界面点一次按钮干等 45 秒没法用。
+                RaiseError("S6F11 已发出，但 Host 未在时限内回 S6F12（该 CEID 可能未被订阅）");
+                return false;
             }
             catch (Exception ex)
             {
@@ -230,25 +242,34 @@ namespace SecsGem.Runtime
         public Task EstablishCommunicationAsync() => SendItem("S1F13", true);
 
         /// <summary>
-        /// 设备请求上线远程控制（S1F17 + 更新模式 + 上报 Device Online 事件）
+        /// 设备请求进 Online_Local
         /// </summary>
         /// <returns>是否成功</returns>
-        public async Task<bool> GoOnlineRemoteAsync()
+        public Task<bool> GoOnlineLocalAsync() => GoOnlineAsync(connect => connect.Online_Local_EtoH(), "上线本地");
+
+        /// <summary>
+        /// 设备请求进 Online_Remote
+        /// </summary>
+        /// <returns>是否成功</returns>
+        public Task<bool> GoOnlineRemoteAsync() => GoOnlineAsync(connect => connect.Online_Remote_EtoH(), "上线远程");
+
+        /// <summary>上线入口共用的异常收敛：失败只上报错误并返回 false，不外抛。</summary>
+        private async Task<bool> GoOnlineAsync(Func<ConnectManager, Task> action, string operation)
         {
             try
             {
-                await _container.Resolve<ConnectManager>().Online_EtoH().ConfigureAwait(false);
+                await action(_container.Resolve<ConnectManager>()).ConfigureAwait(false);
                 return true;
             }
             catch (Exception ex)
             {
-                RaiseError($"上线远程失败: {ex.Message}");
+                RaiseError($"{operation}失败: {ex.Message}");
                 return false;
             }
         }
 
         /// <summary>
-        /// 设备请求下线（S1F15 + 更新模式 + 上报 Device Offline 事件）
+        /// 设备请求下线（更新 SEMI 模式 + 上报 Device Offline 事件）
         /// </summary>
         /// <returns>是否成功</returns>
         public async Task<bool> GoOfflineAsync()
@@ -263,6 +284,32 @@ namespace SecsGem.Runtime
                 RaiseError($"下线失败: {ex.Message}");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 关闭前的有序下线（GEM Control State Model §10.2 + HSMS Connection State Diagram）：
+        /// 控制状态转 OFFLINE + S6F11 上报 → 断 HSMS/TCP。
+        /// <para>
+        /// EQ 侧不发 S1F15（Host→Equipment）；关闭时"通知 Host 我下线了"靠 S6F11 状态变更事件。
+        /// 该通知是尽力而为：Host 不回 S6F12 时最多等 <paramref name="notifyTimeout"/>，
+        /// 超时只告警继续关闭 —— 关闭必须完成，不能被 Host 拖住。
+        /// </para>
+        /// </summary>
+        public async Task ShutdownAsync(TimeSpan notifyTimeout)
+        {
+            if (IsConnected)
+            {
+                try
+                {
+                    // GoOfflineAsync 内部 S6F11 是 wait=true，会等 S6F12；这里必须加上限
+                    await GoOfflineAsync().WaitAsync(notifyTimeout).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    RaiseWarning($"下线通知未完成({ex.GetType().Name})，继续关闭连接");
+                }
+            }
+            await CloseAsync().ConfigureAwait(false);
         }
         #endregion
 
@@ -334,6 +381,11 @@ namespace SecsGem.Runtime
 
         /// <summary>
         /// 接收回复数据 Host被动->Device
+        /// <para>
+        /// 注意：偶数 F 的应答经 secs4net 内部的应答匹配直接回到发送处，不经过主消息通道，
+        /// 所以这个方法实际不会被调用到（<c>DispatchPrimaryAsync</c> 只处理奇数 F 的主消息）。
+        /// 保留空实现，不要在这里加逻辑。
+        /// </para>
         /// </summary>
         /// <param name="pSecsMessage">SecsMessage格式数据</param>
         /// <param name="pData">SecsMessage转string数据</param>

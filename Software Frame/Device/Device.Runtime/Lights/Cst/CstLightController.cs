@@ -14,6 +14,10 @@ namespace Device.Runtime.Lights.Cst;
 internal sealed class CstLightController : SerialLightControllerBase
 {
     private const int CstSuccess = 10_000;
+
+    /// <summary>厂商接口的连接类型：RS232 串口。</summary>
+    private const int Rs232Mode = 1;
+
     private long _controllerHandle;
 
     /// <summary>使用 CST 光源配置创建适配器。</summary>
@@ -58,31 +62,35 @@ internal sealed class CstLightController : SerialLightControllerBase
     /// 正文中的关键协作调用包括 SetDigitalValue；具体条件和先后次序见方法体。
     /// </remarks>
     protected override int SetIntensityCore(int channel, int intensity) =>
-        NativeMethods.SetDigitalValue(channel, intensity, _controllerHandle);
+        NativeMethods.SetDigitalValue(Rs232Mode, channel, intensity, _controllerHandle);
 
     /// <summary>
     /// NativeMethods 的类型定义。Device 模块：设备契约、驱动适配、工作区及界面；真实连接和释放顺序由设备生命周期约定决定。
     /// </summary>
     private static class NativeMethods
     {
-        private const string LibraryName = "CSTControllerDll.dll";
+        /// <summary>连接管理 DLL：串口打开与释放。</summary>
+        private const string TransportLibrary = "CommonToolDll.dll";
+
+        /// <summary>光源协议 DLL：通道亮度读写。</summary>
+        private const string ProtocolLibrary = "ControllerDll.dll";
 
         /// <summary>
         /// 创建当前实现提供的对象或结果；对应入口为 CreateSerialPort。
         /// </summary>
-        [DllImport(LibraryName, EntryPoint = "CST_CreateSerialPort", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(TransportLibrary, EntryPoint = "CreateSerialPort", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int CreateSerialPort(int serialPortIndex, out long controllerHandle);
 
         /// <summary>
         /// 处理当前类型提供的操作；对应入口为 ReleaseSerialPort。
         /// </summary>
-        [DllImport(LibraryName, EntryPoint = "CST_ReleaseSerialPort", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(TransportLibrary, EntryPoint = "ReleaseSerialPort", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int ReleaseSerialPort(long controllerHandle);
 
         /// <summary>
         /// 设置当前实现管理的值或状态；对应入口为 SetDigitalValue。
         /// </summary>
-        [DllImport(LibraryName, EntryPoint = "CST_SetDigitalValue", CallingConvention = CallingConvention.Cdecl)]
-        internal static extern int SetDigitalValue(int channel, int intensity, long controllerHandle);
+        [DllImport(ProtocolLibrary, EntryPoint = "SetDigitalValue", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int SetDigitalValue(int connectType, int channel, int intensity, long controllerHandle);
     }
 }

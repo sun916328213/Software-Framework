@@ -1,0 +1,5 @@
+ID,Name,VID_Collection
+1,Clock,"101"
+11,DeviceMode,"102"
+12,DeviceStatus,"103"
+13,DeviceInfo,"104,105"

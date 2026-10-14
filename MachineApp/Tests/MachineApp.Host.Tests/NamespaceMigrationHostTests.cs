@@ -1,4 +1,4 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // MachineApp 模块：具体机型的应用宿主，负责机型业务、导航选择、数据库实体和生产设备生命周期。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
 // 本文件定义：NamespaceMigrationHostTests。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：System.IO、System.Reflection、System.Text.Json、System.Windows、System.Windows.Media、System.Windows.Media.Imaging。导入不代表所有类型都会在运行时加载。
@@ -32,7 +32,7 @@ public sealed class NamespaceMigrationHostTests(ProductionFixture fixture)
     /// 测试相关入口 AllDeclaredPublicApiNamesPreserveBaselineAndExplicitControlsAdditions；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Read、EnumerateObject、Select、EnumerateArray、GetString；具体条件和先后次序见方法体。
     /// </summary>
-    [Fact]
+    [Fact(Skip = "历史基线 Architecture-S4-public-types.json 已随 /Build 永久丢失且不可重建（P-01 取证确认无备份、无 git 悬空对象、无会话转录）。该测试校验「当前公开类型清单 == 迁移前快照」，参照系已不存在；重新捕获等于拿今天当昨天，会把重构中可能改错的面固化为正确。恢复条件与替代方案评估见 Documentation/Refactoring/Lost-Baseline-Tests-Record.md。")]
     public void AllDeclaredPublicApiNamesPreserveBaselineAndExplicitControlsAdditions()
     {
         var baseline = Read("Architecture-S4-public-types.json");
@@ -68,7 +68,7 @@ public sealed class NamespaceMigrationHostTests(ProductionFixture fixture)
     /// 测试相关入口 ExactLegacyNamesResolveThroughEverySharedResolverIncludingEarlierAliases；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 EnumerateArray、GetProperty、Read、GetString、Load；具体条件和先后次序见方法体。
     /// </summary>
-    [Fact]
+    [Fact(Skip = "历史基线 Architecture-S4-migrations.json 已随 /Build 永久丢失且不可重建（S4/S5 是校验器非生成器，依赖链 Architecture-S3→S4→S5 全断）。曾评估用 FrameworkTypeAliases.json（863 条）替代，实测否决：别名表把泛型接口记成开泛型（如 IReceiveSource 无反引号而实际是 IReceiveSource<TPacket>），且 IsVisible 断言与「旧程序集名一对多」均不成立。把缺数据换成数据缺陷更糟。详见 Documentation/Refactoring/Lost-Baseline-Tests-Record.md。")]
     public void ExactLegacyNamesResolveThroughEverySharedResolverIncludingEarlierAliases()
     {
         foreach (var rename in Read("Architecture-S4-migrations.json").GetProperty("typeRenames").EnumerateArray())
@@ -115,7 +115,7 @@ public sealed class NamespaceMigrationHostTests(ProductionFixture fixture)
     /// 测试相关入口 OriginalCatalogMetadataAndOldFlowDocumentsSurviveMigration；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、Resolve、ToArray、EnumerateArray、Read；具体条件和先后次序见方法体。
     /// </summary>
-    [Fact]
+    [Fact(Skip = "历史基线 Architecture-S2-nodes.json 已随 /Build 永久丢失且不可重建。该测试校验「节点目录元数据在迁移后保持不变」，参照系是节点目录的全量序列化数据；FrameworkTypeAliases.json 只记录类型改名、不含节点元数据，无法替代。重新捕获会把当时的节点定义固化为正确。详见 Documentation/Refactoring/Lost-Baseline-Tests-Record.md。")]
     public void OriginalCatalogMetadataAndOldFlowDocumentsSurviveMigration()
     {
         fixture.Invoke(container =>
@@ -174,31 +174,86 @@ public sealed class NamespaceMigrationHostTests(ProductionFixture fixture)
     /// 测试相关入口 AllTenMigratedViewModelsNavigateAndRenderUnderOriginalPublicViewNames；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Invoke、RegisterTypes、Resolve、Add、Where；具体条件和先后次序见方法体。
     /// </summary>
+    /// <summary>
+    /// 当前全部已注册 View 的导航与渲染 —— <b>与历史基线无关</b>的等价能力。
+    /// <para>
+    /// 原测试的取名列表读 <c>Architecture-S4-migrations.json</c>（已永久丢失，见
+    /// <c>Documentation/Refactoring/Lost-Baseline-Tests-Record.md</c>），因而整条被 Skip。
+    /// 但它真正验证的能力 —— <b>「视图能按注册名导航到、DataContext 正确、能测量布局并渲染成位图」</b> ——
+    /// 与那份基线无关。基线只用来决定「测哪十个」。
+    /// </para>
+    /// <para>
+    /// 改为枚举 <c>WPFControls.ProgramControl.ViewModels</c> 下实际存在的 ViewModel。当前 19 个，
+    /// 原基线 10 个 —— <strong>覆盖严格更大</strong>，测试意图（这些视图可用）未被削弱。
+    /// 原记录担心的「扩到 29 个改变意图」，是因为连同子命名空间一起枚举；这里只限本命名空间。
+    /// 且<strong>逐个断言</strong>，任一失败都会指名道姓，不会静默通过。
+    /// </para>
+    /// <para>
+    /// <b>能力上的实质降级（必须知道）：</b>本测试不再能发现「某个 ViewModel 被改过名 / 被漏掉」——
+    /// 原测试靠与迁移快照比对才能发现。现在只能发现「当前存在的视图坏了」。
+    /// </para>
+    /// </summary>
     [Fact]
-    public void AllTenMigratedViewModelsNavigateAndRenderUnderOriginalPublicViewNames()
+    public void EveryRegisteredViewInThisNamespaceNavigatesAndRenders()
     {
         fixture.Invoke(container =>
         {
             new WPFControls.WPFControlsModule().RegisterTypes((IContainerRegistry)container);
             var manager = container.Resolve<IRegionManager>();
             var region = new Region();
-            manager.Regions.Add("S4NamespaceAcceptance", region);
-            foreach (var rename in Read("Architecture-S4-migrations.json").GetProperty("typeRenames").EnumerateArray()
-                         .Where(value => value.GetProperty("oldType").GetString()!.StartsWith("WPFControls.ProgramControl.ViewModels.")))
+            manager.Regions.Add("NamespaceAcceptance", region);
+
+            var assembly = typeof(WPFControls.ProgramControl.ViewModels.StartupFlowViewModel).Assembly;
+            var viewModels = assembly.GetTypes()
+                .Where(t => t.Namespace == "WPFControls.ProgramControl.ViewModels"
+                        && t.Name.EndsWith("ViewModel", StringComparison.Ordinal))
+                .OrderBy(t => t.Name, StringComparer.Ordinal)
+                .ToArray();
+            Assert.NotEmpty(viewModels);
+
+            var failures = new List<string>();
+            foreach (var vm in viewModels)
             {
-                var modelName = rename.GetProperty("newType").GetString()!;
-                var viewName = modelName.Split('.').Last().Replace("ViewModel", "View", StringComparison.Ordinal);
-                NavigationResult? result = null;
-                manager.RequestNavigate("S4NamespaceAcceptance", viewName, value => result = value);
-                Assert.True(result?.Result, result?.Error?.ToString());
-                var view = Assert.IsAssignableFrom<FrameworkElement>(Assert.Single(region.ActiveViews, value => value.GetType().Name == viewName));
-                Assert.Equal("WPFControls.ProgramControl.Views." + viewName, view.GetType().FullName);
-                Assert.Equal(modelName, view.DataContext?.GetType().FullName);
-                if (viewName == "PrintView") Assert.NotSame(view, container.Resolve<object>(viewName));
-                else Assert.Same(view, container.Resolve<object>(viewName));
-                view.Measure(new Size(1000, 700)); view.Arrange(new Rect(0, 0, 1000, 700)); view.UpdateLayout();
-                new RenderTargetBitmap(1000, 700, 96, 96, PixelFormats.Pbgra32).Render(view);
+                var viewName = vm.Name.Replace("ViewModel", "View", StringComparison.Ordinal);
+                try
+                {
+                    if (assembly.GetType("WPFControls.ProgramControl.Views." + viewName) == null)
+                    {
+                        failures.Add($"{vm.Name}: 对应的 View {viewName} 不存在");
+                        continue;
+                    }
+
+                    NavigationResult? result = null;
+                    manager.RequestNavigate("NamespaceAcceptance", viewName, value => result = value);
+                    if (result?.Result != true)
+                    {
+                        failures.Add($"{viewName}: 导航失败 {result?.Error}");
+                        continue;
+                    }
+
+                    var view = Assert.IsAssignableFrom<FrameworkElement>(
+                        Assert.Single(region.ActiveViews, value => value.GetType().Name == viewName));
+                    Assert.Equal("WPFControls.ProgramControl.Views." + viewName, view.GetType().FullName);
+                    Assert.Equal(vm.FullName, view.DataContext?.GetType().FullName);
+
+                    // PrintView 是特例：容器里解析到的不是同一个实例
+                    if (viewName == "PrintView") Assert.NotSame(view, container.Resolve<object>(viewName));
+                    else Assert.Same(view, container.Resolve<object>(viewName));
+
+                    view.Measure(new Size(1000, 700));
+                    view.Arrange(new Rect(0, 0, 1000, 700));
+                    view.UpdateLayout();
+                    new RenderTargetBitmap(1000, 700, 96, 96, PixelFormats.Pbgra32).Render(view);
+                }
+                catch (Exception ex)
+                {
+                    failures.Add($"{viewName}: {ex.GetType().Name}: {ex.Message}");
+                }
             }
+
+            Assert.True(failures.Count == 0,
+                "以下视图无法导航或渲染（逐一列出，不静默通过）："
+                + Environment.NewLine + string.Join(Environment.NewLine, failures));
         });
     }
 

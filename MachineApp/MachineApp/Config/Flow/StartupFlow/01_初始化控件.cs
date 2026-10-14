@@ -70,18 +70,18 @@ public class Script
         {
         async ()  =>
              {
-             
-                 //_StatisticService.UpdateDeviceStatus(EDeviceStatus.Ready);
-                 //_ = _secsRuntime.GoOnlineRemoteAsync();
+                 _StatisticService.UpdateDeviceStatus(EDeviceStatus.Ready);
+                 _ = _secsRuntime.GoOnlineLocalAsync();
              },
          () =>
              {
                  _StatisticService.UpdateDeviceStatus(EDeviceStatus.Running);
-                 _ = _secsRuntime.GoOfflineAsync();
+                 _ = _secsRuntime.GoOnlineRemoteAsync();
              },
          () =>
              {
                  _StatisticService.UpdateDeviceStatus(EDeviceStatus.Idle);
+                   _ = _secsRuntime.GoOfflineAsync();
              },
 
          () =>

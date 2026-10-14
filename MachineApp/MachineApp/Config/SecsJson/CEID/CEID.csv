@@ -1,12 +1,13 @@
 ID,Name,ReportID_Collection
 101,Device Status,"1,13,12"
 102,Device Mode,"1,13,11"
-103,Device Online,"1,13"
-104,Device Offline,"1,13"
+103,Device Online,"1,13,11"
+104,Device Offline,"1,13,11"
+105,Device Local,"1,13,11"
 
 201,Process Start,"1,2"
 202,Process End,"1,2"
-203,ProcessAbortComplete,"1,2"
+203,Process Abort Complete,"1,2"
 
 301,Load Request,"1,14"
 302,Load ReadID Success,"1,2"
@@ -19,7 +20,7 @@ ID,Name,ReportID_Collection
 403,Recipe Select Fail,"1,2,3"
 404,Recipe Update,"1,3,7,8,9"
 
-501,ReadFOSB Star,"1,2"
+501,ReadFOSB Start,"1,2"
 502,ReadFOSB Success,"1,2"
 503,ReadFOSB Fail,"1,2"
 506,ReadFOSB End,"1,2"
@@ -35,7 +36,7 @@ ID,Name,ReportID_Collection
 706,HeatSeal Vision Fail,"1,2,6"
 707,HeatSeal End,"1,2"
 
-801,LabelProcess Satrt,"1,2"
+801,LabelProcess Start,"1,2"
 802,Label Print,"1,2,9"
 805,LabelInfo,"1,2,5"
 806,LabelInfo Check Success,"1,2"

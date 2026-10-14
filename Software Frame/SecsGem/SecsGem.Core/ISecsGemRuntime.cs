@@ -27,12 +27,30 @@ public interface ISecsGemRuntime : IDisposable
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 GoOnlineRemoteAsync。
     /// </summary>
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 GoOnlineLocalAsync。
+    /// 操作员侧进 Online_Local：只改 SEMI 模式并上报 S6F11，不发 S1F17（Host→Equipment）。
+    /// </summary>
+    Task<bool> GoOnlineLocalAsync();
+
+    /// <summary>
+    /// 处理当前类型提供的操作；对应入口为 GoOnlineRemoteAsync。
+    /// 操作员侧进 Online_Remote：只改 SEMI 模式并上报 S6F11，不发 S1F17（Host→Equipment）。
+    /// </summary>
     Task<bool> GoOnlineRemoteAsync();
 
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 GoOfflineAsync。
     /// </summary>
     Task<bool> GoOfflineAsync();
+
+    /// <summary>
+    /// 关闭前的有序下线：先把控制状态转 OFFLINE 并上报 S6F11(ControlStateChange)，
+    /// 再断 HSMS/TCP。EQ 不发 S1F15（那是 Host→Equipment），关闭时靠状态变更事件通知 Host。
+    /// 下线通知是尽力而为——超时或失败都只告警，不阻断关闭。
+    /// </summary>
+    /// <param name="notifyTimeout">等待下线通知（含 S6F12 应答）的上限。</param>
+    Task ShutdownAsync(TimeSpan notifyTimeout);
 
     /// <summary>
     /// 设置当前实现管理的值或状态；对应入口为 SetVariable。

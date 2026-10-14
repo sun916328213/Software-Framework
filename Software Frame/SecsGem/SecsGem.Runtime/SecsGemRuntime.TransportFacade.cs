@@ -4,6 +4,8 @@
 // 直接导入的协作命名空间包括：SecsGem.Core、SecsGem.Runtime、Secs4Net。导入不代表所有类型都会在运行时加载。
 using SecsGem.Core;
 using SecsGem.Runtime;
+using SecsGem.Runtime.Manager;
+using Prism.Ioc;
 using Secs4Net;
 
 namespace SecsGem.Runtime;
@@ -83,7 +85,34 @@ public partial class SecsGemRuntime : ISecsGemLogger
     /// 正文中的关键协作调用包括 ConnectAsync；具体条件和先后次序见方法体。
     /// </summary>
     public virtual Task<bool> ConnectAsync(bool isActiveMode, string address, int port, int deviceId = 0, int bufferSize = 65535) =>
-        _transport.ConnectAsync(isActiveMode, address, port, deviceId, bufferSize);
+        StartControlListener(
+            _transport.ConnectAsync(isActiveMode, address, port, deviceId, bufferSize));
+
+    /// <summary>
+    /// 连接建立后启动 Host 主动控制消息的监听（S1F13/S1F17/S1F15 → 切状态 + S6F11 上报）。
+    /// 不监听就不会有人在 Host 下发 S1F17 后切控制状态——收发分离的另一半。
+    /// </summary>
+    private async Task<bool> StartControlListener(Task<bool> connect)
+    {
+        if (!await connect.ConfigureAwait(false)) return false;
+        if (_controlListenerCts == null)
+        {
+            _controlListenerCts = new CancellationTokenSource();
+            var token = _controlListenerCts.Token;
+            _controlListener = Task.Run(
+                async () =>
+                {
+                    try
+                    {
+                        await _container.Resolve<ConnectManager>().WaitOnlineAndOfflineAsync(token).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) { /* 释放时取消，正常结束 */ }
+                    catch (Exception ex) { RaiseError($"控制消息监听异常: {ex.Message}"); }
+                },
+                CancellationToken.None);
+        }
+        return true;
+    }
 
     /// <summary>
     /// 发起连接操作；对应入口为 Connect。
@@ -212,6 +241,8 @@ public partial class SecsGemRuntime : ISecsGemLogger
         _disposed = true;
         if (!disposing) return;
 
+        _controlListenerCts?.Cancel();
+        _controlListenerCts?.Dispose();
         _transport.OnReceive -= SecsBase_OnReceiveAsync;
         _transport.OnReply -= SecsBase_OnReply;
         _transport.OnConnectChanged -= SecsControl_OnConnectChanged;

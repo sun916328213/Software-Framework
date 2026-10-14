@@ -58,7 +58,12 @@ namespace SecsGem.Runtime.Manager
         public Dictionary<string, VIDInfo> VIDDic_Name { get; private set; } = new Dictionary<string, VIDInfo>();
 
         /// <summary>
-        /// 所有VID字典集合 Key=VID.ID
+        /// 所有VID字典集合 Key=VID.ID。
+        /// <para>
+        /// 前提是 VID 的 ID 在 SVID/DVID/ECID 三张表之间也唯一（本项目的配置约定）。
+        /// <see cref="Load"/> 会强制校验这一点：发现跨表重号直接抛，而不是让后写的静默覆盖先写的
+        /// —— 覆盖的后果是 <c>ReportID.Update</c> 组出错误的 report，而且极难排查。
+        /// </para>
         /// </summary>
         public Dictionary<string, VIDInfo> VIDDic_ID { get; private set; } = new Dictionary<string, VIDInfo>();
 
@@ -82,7 +87,24 @@ namespace SecsGem.Runtime.Manager
 
             foreach (var vid in VIDList)
             {
-                VIDDic_Name[vid.Name] = vid;
+                // ID 必须跨表唯一——VIDDic_ID 和 ReportID 的引用都是裸 ID。重复就直接失败：
+                // 静默覆盖会让 report 组错内容，而现场只表现为"报的值不对"。
+                if (VIDDic_ID.TryGetValue(vid.ID, out var sameId))
+                    throw new InvalidOperationException(
+                        $"VID ID {vid.ID} 重复：{sameId.Category}:{sameId.Name} 与 {vid.Category}:{vid.Name}。" +
+                        "VID 的 ID 必须在 SVID/DVID/ECID 之间全局唯一");
+
+                // Category 缺失时 QualifiedId 会退化成裸 ID，只影响诊断信息与报表显示。
+                if (string.IsNullOrEmpty(vid.Category))
+                    System.Diagnostics.Debug.WriteLine(
+                        $"警告: VID \"{vid.Name}\"(ID {vid.ID}) 没带 Category，报表引用会显示成裸 ID");
+
+                if (VIDDic_Name.TryGetValue(vid.Name, out var sameName) && sameName.QualifiedId != vid.QualifiedId)
+                    System.Diagnostics.Debug.WriteLine(
+                        $"警告: VID 名字 \"{vid.Name}\" 在 {sameName.QualifiedId} 和 {vid.QualifiedId} 上重复，按名字更新只会命中先注册的那个");
+                else
+                    VIDDic_Name[vid.Name] = vid;
+
                 VIDDic_ID[vid.ID] = vid;
             }
 
@@ -241,14 +263,12 @@ namespace SecsGem.Runtime.Manager
  
 
         /// <summary>
-        /// 获取VID 根据ID
+        /// 按 ID 取 VID。ID 跨表唯一（见 <see cref="Load"/> 的校验），所以裸 ID 就够。
         /// </summary>
-        /// <param name="ID"></param>
-        /// <returns></returns>
         public VIDInfo GetVIDByID(string ID)
         {
             if (string.IsNullOrEmpty(ID)) return null;
-            VIDDic_ID.TryGetValue(ID, out VIDInfo vID);
+            VIDDic_ID.TryGetValue(VIDInfo.NormalizeId(ID), out VIDInfo vID);
             return vID;
         }
 
@@ -274,26 +294,15 @@ namespace SecsGem.Runtime.Manager
             List<string> result = new List<string>(VIDList.Count);
             foreach (var vid in VIDList)
             {
-                result.Add($"{vid.ID}_{vid.Name}");
+                result.Add($"{vid.QualifiedId}_{vid.Name}");
             }
             return result;
         }
- 
+
         /// <summary>
-        /// 根据ID获取值 
+        /// 根据 ID 取值。
         /// </summary>
-        /// <param name="id">ID</param>
-        /// <returns></returns>
-        public string GetValueById(string id)
-        {
-            if (string.IsNullOrEmpty(id)) return null;
-            
-            if (VIDDic_ID.TryGetValue(id, out VIDInfo vID))
-            {
-                return vID.Value?.ToString();
-            }
-            return null;
-        }
+        public string GetValueById(string id) => GetVIDByID(id)?.Value?.ToString();
 
         /// <summary>
         /// 根据名称获取值  

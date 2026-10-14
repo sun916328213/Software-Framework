@@ -39,16 +39,36 @@ public sealed class SecsGemOptionsTests
 
     /// <summary>
     /// 测试相关入口 Device_Id_Outside_Hsms_Range_Is_Rejected；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Throws、Validate；具体条件和先后次序见方法体。
+    /// <para>
+    /// 只在被动模式下成立 —— DeviceID 在那里才用来选会话。
+    /// </para>
     /// </summary>
     [Theory]
     [InlineData(-1)]
     [InlineData(32768)]
-    public void Device_Id_Outside_Hsms_Range_Is_Rejected(int deviceId)
+    public void Device_Id_Outside_Hsms_Range_Is_Rejected_In_Passive_Mode(int deviceId)
     {
-        var options = new SecsGemOptions { DeviceId = deviceId };
+        var options = new SecsGemOptions { IsActiveMode = false, DeviceId = deviceId };
 
         Assert.Throws<ArgumentOutOfRangeException>(() => options.Validate());
+    }
+
+    /// <summary>
+    /// 主动模式下 DeviceID 不参与通信，填什么都不该挡住连接。
+    /// <para>
+    /// 原实现在两种模式下都要求 0-32767，用户填 40000 时工作台的连接按钮直接变灰，
+    /// 连试都试不了；这里钉住"主动模式不过问这个值"。
+    /// </para>
+    /// </summary>
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(40000)]
+    [InlineData(65535)]
+    public void Device_Id_Is_Ignored_In_Active_Mode(int deviceId)
+    {
+        var options = new SecsGemOptions { IsActiveMode = true, DeviceId = deviceId };
+
+        options.Validate();     // 不抛
     }
 
     /// <summary>

@@ -31,7 +31,10 @@ namespace Extension.IO.Csv
             if (data == null) throw new ArgumentNullException(nameof(data));
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("文件路径不能为空", nameof(filePath));
 
-            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            // 只导出可写的属性：只读计算属性（如 VIDInfo.QualifiedId）写进 CSV 后读不回来，
+            // PropertyInfo.SetValue 对没有 setter 的属性会抛。
+            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => p.CanWrite).ToArray();
             if (properties.Length == 0) throw new InvalidOperationException("没有可导出的公共属性");
 
             // 处理编码参数默认值

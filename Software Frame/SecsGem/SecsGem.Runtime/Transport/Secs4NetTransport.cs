@@ -194,6 +194,14 @@ namespace SecsGem.Runtime.Transport
         /// <param name="DeviceId">设备ID</param>
         /// <param name="BufferSize">接收缓冲区大小</param>
         /// <returns>连接结果</returns>
+        /// <summary>
+        /// 被动模式下的 DeviceID 归一到 15 位。
+        /// 原来这里是无检查的 <c>(ushort)DeviceId</c>：负数会变成 65535、70000 会绕回 4464，
+        /// 发出去的报文头带着一个谁都不认的值，Host 直接丢弃。
+        /// </summary>
+        private static ushort ClampDeviceId(int deviceId) =>
+            (ushort)Math.Clamp(deviceId, 0, 32767);
+
         public virtual async Task<bool> ConnectAsync(bool IsActiveMode, string Address, int Port, int DeviceId = 0, int BufferSize = 65535)
         {
             ThrowIfDisposed();
@@ -227,7 +235,10 @@ namespace SecsGem.Runtime.Transport
             // 允许新一轮关闭
             lock (_closeSync) { _closeTask = null; }
 
-            DeviceID = (ushort)DeviceId;
+            // DeviceID 只在被动模式下有意义。主动模式下标准规定报文头恒为 0，
+            // 而且 secs4net 收报文时会按 header.DeviceId != DeviceId 丢弃不匹配的报文
+            // （SecsGem.cs:149）—— 留着用户填的值，Host 发来的消息会被静默丢掉。
+            DeviceID = IsActiveMode ? (ushort)0 : ClampDeviceId(DeviceId);
 
             // 配置连接参数
             options = Options.Create(new Secs4Net.SecsGemOptions
@@ -242,6 +253,13 @@ namespace SecsGem.Runtime.Transport
             // 初始化连接组件
             _connector = new HsmsConnection(options, _logger);
             _secsGem = new Secs4Net.SecsGem(options, _connector, _logger);
+
+            // 记录生效的连接身份：排查"Host 发来的报文收不到"时先看这一行。
+            // secs4net 收报文会按 header.DeviceId != DeviceId 静默丢弃（SecsGem.cs:149），
+            // 被丢掉的消息连 trace 都不会有，所以这里必须把实际用的值写下来。
+            log?.Add(IsActiveMode
+                ? $"[HSMS] 主动模式：设备拨号连 {Address}:{Port}（要求 Host 在该端口监听）DeviceID=0（忽略配置值 {DeviceId}）"
+                : $"[HSMS] 被动模式：设备在 {Address}:{Port} 监听，等 Host 拨进来（端口被占用会直接绑定失败）DeviceID={DeviceID}");
 
             // 绑定连接状态事件
             _connector.ConnectionChanged += OnConnectionChanged;
@@ -391,15 +409,20 @@ namespace SecsGem.Runtime.Transport
         {
             if (_secsGem == null) return;
 
-            var enumerator = _secsGem.GetPrimaryMessageAsync().GetAsyncEnumerator(_cancellationTokenSource.Token);
+            // 必须在启动时取到本代际的令牌：CloseCoreAsync 会把 _cancellationTokenSource 置 null，
+            // 重连又会换成一个新实例，finally 里再读字段会 NRE 或者读到"下一代"的取消状态。
+            var token = _cancellationTokenSource.Token;
+            var received = 0;
+            var enumerator = _secsGem.GetPrimaryMessageAsync().GetAsyncEnumerator(token);
             try
             {
                 while (await enumerator.MoveNextAsync().ConfigureAwait(false) &&
-                       !_cancellationTokenSource.Token.IsCancellationRequested)
+                       !token.IsCancellationRequested)
                 {
                     var wrapper = enumerator.Current;
                     if (wrapper == null) continue;
 
+                    received++;
                     await DispatchPrimaryAsync(wrapper).ConfigureAwait(false);
                 }
             }
@@ -409,10 +432,15 @@ namespace SecsGem.Runtime.Transport
             }
             catch (Exception ex)
             {
-                RaiseError($"接收主消息循环异常: {ex.Message}");
+                RaiseError($"接收主消息循环异常（共收到 {received} 条）: {ex.Message}");
             }
             finally
             {
+                // 通道关闭却没有取消请求 = 接收循环自己死了。之后 Host 再发什么都进不来，
+                // 而现象与"根本没连上"完全一样，必须留痕。
+                if (!token.IsCancellationRequested)
+                    RaiseError($"接收主消息循环已退出（共收到 {received} 条），HSMS 通道关闭且未在重连");
+
                 if (enumerator != null)
                 {
                     await enumerator.DisposeAsync().ConfigureAwait(false);
@@ -495,6 +523,9 @@ namespace SecsGem.Runtime.Transport
         void OnConnectionChanged(object obj, Secs4Net.ConnectionState e)
         {
             IsConnected = e == ConnectionState.Selected;
+            // 链路状态是"收不到任何报文"时唯一能看的东西：secs4net 只在 Select 完成后才把主消息
+            // 投进通道，没到 Selected 就一条都收不到，而 DispatchPrimaryAsync 的 trace 也是空的。
+            log?.Add($"[HSMS] 链路状态 → {e}{(e == ConnectionState.Selected ? "（已选中，可以收主机报文）" : "")}\n");
             OnConnectChanged?.Invoke(obj, e);
         }
 

@@ -14,18 +14,18 @@ using Prism.Ioc;
 using SecsGem.Runtime.Manager;
 using Secs4Net;
 using System;
+using System.Threading.Tasks;
 
 
 namespace SecsGem.Runtime.Order.S1
 {
     /// <summary>
-    /// 离线结果
+    /// OFLACK：下线应答码。GEM Control State Model §6.2 定义只有 0=OK。
     /// </summary>
-    public enum EOfflineResult
+    public enum EOfflineResult : byte
     {
-        OfflineSuccess=0,
-        OfflineFail=1,
-        AlreadyOffline=2
+        /// <summary>接受，设备转 OFFLINE。</summary>
+        Ok = 0
     }
 
     /// <summary>
@@ -35,46 +35,18 @@ namespace SecsGem.Runtime.Order.S1
     class S1F15 : SecsOrderBase
     {
         /// <summary>
-        /// 获取当前实现提供的值或对象；对应入口为 GetReplyItem。
-        /// 正文中的关键协作调用包括 B；具体条件和先后次序见方法体。
-        /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
+        /// 收到 S1F15（Host 请求下线）：只回 OFLACK。
+        /// 状态切换与 S6F11(Device Offline) 上报由 <c>ConnectManager.Offline_HtoE</c> 在
+        /// 引擎触发 "S1F15" 事件后完成，保证 S1F16 先于 S6F11 出去。
         /// </summary>
-        public override Item GetReplyItem(SecsMessage pSecsMessage)
-        {
-            try
-            {
-                Item SecsItem;
-                if (StatusManager.CurrentMode != ESecsMode.Online_Local)
-                {
-                    if (StatusManager.CurrentStatus != EDeviceStatus. Running)
-                    {
-                        SecsItem = Item.B((byte)EOfflineResult.OfflineSuccess); //Success
-                        return SecsItem;
-                    }
-                    else
-                    {
-                        SecsItem = Item.B((byte)EOfflineResult.OfflineFail);//Fail
-                        return SecsItem;
-                    }
-                }
-                else
-                {
-                    SecsItem = Item.B((byte)EOfflineResult.AlreadyOffline);//Fail
-                    return SecsItem;
-                }
-            }
-            catch (Exception ex)
-            {
-                string message = ex.Message + ex.StackTrace;
-                return null;
-            }
-        }
+        public override Item GetReplyItem(SecsMessage pSecsMessage) => Item.B((byte)EOfflineResult.Ok);
 
         /// <summary>
-        /// 获取当前实现提供的值或对象；对应入口为 GetSendItem。
+        /// 获取发送数据。S1F15 是 Offline Request，按 E5 只能 Host→Equipment，
+        /// 设备端不发起，返回 null 让引擎明确报"该指令不可发"而不是组个空包出去。
         /// </summary>
         public override Item GetSendItem(params object[] pData)
-        { 
+        {
             return null;
         }
     }

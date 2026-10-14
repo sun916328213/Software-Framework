@@ -113,6 +113,88 @@ public sealed class SecsTransportShutdownTests
     }
 
     /// <summary>
+    /// 主动模式下 DeviceID 填什么都不影响连接和收发。
+    /// <para>
+    /// 这是端到端的：真的走一遍 HSMS 握手，再双向各发一条。
+    /// <list type="bullet">
+    /// <item>握手能成 —— 原来无检查的 <c>(ushort)DeviceId</c> 会把 40000 绕成别的值；</item>
+    /// <item>报文头 DeviceID 是 0 —— 主动模式的标准要求；</item>
+    /// <item>Host 发来的消息设备收得到 —— secs4net 收报文时按
+    /// <c>header.DeviceId != DeviceId</c> 静默丢弃不匹配的（SecsGem.cs:149），
+    /// 留着用户填的值，Host 的报文会全部消失且无任何报错。</item>
+    /// </list>
+    /// </para>
+    /// </summary>
+    [Theory(Timeout = 30000)]
+    [InlineData(40000)]
+    [InlineData(-1)]
+    [InlineData(32768)]
+    public async Task Active_Mode_Ignores_Device_Id_And_Still_Connects_And_Talks(int deviceId)
+    {
+        using var host = HsmsHostSimulator.Start();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+        using var transport = CreateTransport();
+
+        await transport.ConnectAsync(true, "127.0.0.1", host.Port, deviceId).ConfigureAwait(false);
+        await host.WaitForDeviceAsync(cts.Token).ConfigureAwait(false);
+        await host.CompleteSelectAsync(cts.Token).ConfigureAwait(false);
+        await WaitUntilAsync(() => transport.IsConnected, TimeSpan.FromSeconds(5), "设备进入 Selected").ConfigureAwait(false);
+
+        Assert.Equal((ushort)0, transport.DeviceID);      // 主动模式强制 0
+
+        int received = 0;
+        transport.OnReceive += (_, _) => { Interlocked.Increment(ref received); return Task.CompletedTask; };
+
+        // 设备 → Host：报文头 DeviceID 必须是 0
+        await transport.Send("S1F1", Item.L(), false).ConfigureAwait(false);
+        var fromDevice = await host.ReadMessageAsync(cts.Token).ConfigureAwait(false);
+        Assert.Equal(0, (fromDevice.DeviceIdHigh << 8) | fromDevice.DeviceIdLow);
+        Assert.Equal(1, fromDevice.S);
+        Assert.Equal(1, fromDevice.F);
+
+        // Host → 设备：Host 用 0 发，设备必须收到（原来被 secs4net 的过滤静默丢掉）
+        host.SendDataMessage(1, 13, true, 0, 0x0000_0A0A, Array.Empty<byte>(), cts.Token);
+        await WaitUntilAsync(() => Volatile.Read(ref received) == 1, TimeSpan.FromSeconds(5), "设备收到 S1F13").ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Host 的 DeviceId 和本端对不上时，secs4net 回 S9F1 并丢弃报文（不改 secs4net，这是既定行为）。
+    /// <para>
+    /// 这个测试是给现场排查用的：如果 FASTSIM 发了 S1F15 但设备没反应，先看 FASTSIM 有没有收到
+    /// S9F1 —— 收到了就是 DeviceId 没对上（主动模式下本端恒为 0，见
+    /// <c>Active_Mode_Ignores_Device_Id_And_Still_Connects_And_Talks</c>）。
+    /// </para>
+    /// </summary>
+    [Fact(Timeout = 30000)]
+    public async Task Host_Device_Id_Mismatch_Gets_S9F1_And_No_Delivery()
+    {
+        using var host = HsmsHostSimulator.Start();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+        using var transport = CreateTransport();
+
+        await transport.ConnectAsync(true, "127.0.0.1", host.Port, 0).ConfigureAwait(false);
+        await host.WaitForDeviceAsync(cts.Token).ConfigureAwait(false);
+        await host.CompleteSelectAsync(cts.Token).ConfigureAwait(false);
+        await WaitUntilAsync(() => transport.IsConnected, TimeSpan.FromSeconds(5), "设备进入 Selected").ConfigureAwait(false);
+        Assert.Equal((ushort)0, transport.DeviceID);
+
+        int received = 0;
+        transport.OnReceive += (_, _) => { Interlocked.Increment(ref received); return Task.CompletedTask; };
+
+        // Host 用 0x1234 发，本端是 0 → 对不上
+        host.SendDataMessage(1, 13, true, 0x1234, 0x0000_0B0B, Array.Empty<byte>(), cts.Token);
+
+        // 设备回 S9F1（Unrecognized Device Id）
+        var reply = await host.ReadMessageAsync(cts.Token).ConfigureAwait(false);
+        Assert.Equal(9, reply.S);
+        Assert.Equal(1, reply.F);
+
+        // 报文没有被送达
+        await Task.Delay(300).ConfigureAwait(false);
+        Assert.Equal(0, Volatile.Read(ref received));
+    }
+
+    /// <summary>
     /// 并发多次 CloseAsync 共享同一个完成 Task，全部成功完成。
     /// </summary>
     [Fact(Timeout = 30000)]

@@ -34,10 +34,9 @@ namespace SecsGem.Runtime.Order.S1
         
 
         /// <summary>
-        /// 获取发送数据
+        /// 获取发送数据。S1F1 是 Are You There Request，按 E5 只能 Host→Equipment，
+        /// 设备端不发起，返回 null 让引擎明确报"该指令不可发"而不是组个空包出去。
         /// </summary>
-        /// <param name="pData"></param>
-        /// <returns></returns>
         public override Item GetSendItem(params object[] pData)
         {
             return null;

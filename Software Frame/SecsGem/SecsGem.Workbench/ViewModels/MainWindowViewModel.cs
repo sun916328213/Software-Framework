@@ -5,7 +5,7 @@
 using Extension.UI.Theme;
 using Prism.Regions;
 using WPFCustomControls.Workbench;
-using SecsGem.Workbench;
+using SecsGem.Controls.Views;
 
 namespace SecsGem.Workbench.ViewModels;
 
@@ -23,7 +23,7 @@ public sealed class MainWindowViewModel : WorkbenchNavigationViewModel<Workbench
     /// 正文中的关键协作调用包括 nameof；具体条件和先后次序见方法体。
     /// </summary>
     public MainWindowViewModel(IRegionManager regions, ThemeService theme)
-        : base(regions, theme, MainRegion, [new("SECS/GEM", nameof(SecsWorkbenchView))], [new("SECS/GEM", nameof(SecsWorkbenchView))])
+        : base(regions, theme, MainRegion, [new("SECS/GEM", nameof(SecsView))], [new("SECS/GEM", nameof(SecsView))])
     {
     }
 }

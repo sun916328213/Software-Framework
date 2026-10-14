@@ -1,0 +1,6 @@
+ID,Name,ReportID_Collection
+101,Device Status,"1,13,12"
+102,Device Mode,"1,13,11"
+103,Device Online,"1,13,11"
+104,Device Offline,"1,13,11"
+105,Device Local,"1,13,11"

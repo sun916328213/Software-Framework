@@ -3,6 +3,7 @@
 // 本文件定义：WorkbenchCompositionTests。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：SecsGem.Workbench、SecsGem.Controls、System.Windows、DataManager.Core.Log、DataManager.Runtime.Log、Prism.Ioc。导入不代表所有类型都会在运行时加载。
 using SecsGem.Workbench;
+using SecsGem.Workbench.Views;
 using SecsGem.Controls;
 using System.Windows;
 using DataManager.Core.Log;
@@ -170,7 +171,7 @@ public sealed class WorkbenchCompositionTests
     /// 正文中的关键协作调用包括 Invoke、GetResourceStream、True；具体条件和先后次序见方法体。
     /// </summary>
     [Theory]
-    [InlineData("pack://application:,,,/SecsGem.Workbench;component/MainWindow.xaml")]
+    [InlineData("pack://application:,,,/SecsGem.Workbench;component/Views/MainWindow.xaml")]
     [InlineData("pack://application:,,,/SecsGem.Controls;component/Views/SecsOverviewView.xaml")]
     [InlineData("pack://application:,,,/SecsGem.Controls;component/Terminal/MessagePrompt.xaml")]
     public void PackUri_ResolvesBaml_FromForeignEntryAssembly(string packUri)

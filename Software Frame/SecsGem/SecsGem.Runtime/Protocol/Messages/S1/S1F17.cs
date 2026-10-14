@@ -13,18 +13,24 @@ using Extension.Automation.Secs;
 using Prism.Ioc;
 using Secs4Net;
 using System;
+using System.Threading.Tasks;
 
 
 namespace SecsGem.Runtime.Order.S1
 {
     /// <summary>
-    /// 在线结果
+    /// ONLACK：上线应答码。取值必须与 GEM Control State Model §6.4 一致——
+    /// 1 表示"已在线"而不是"失败"，2 才是"设备状态不允许"。
+    /// 原枚举把 1/2 写成 OnlineFail/AlreadyOnline，语义整个错位。
     /// </summary>
-    public enum EOnflineResult
+    public enum EOnflineResult : byte
     {
-        OnlineSuccess,
-        OnlineFail,
-        AlreadyOnline
+        /// <summary>接受，设备转 ON-LINE REMOTE。</summary>
+        Accepted = 0,
+        /// <summary>不接受：设备已经在线。</summary>
+        AlreadyOnline = 1,
+        /// <summary>不接受：设备状态不允许上线（联锁、维护中）。</summary>
+        NotReady = 2
     }
 
     /// <summary>
@@ -35,43 +41,28 @@ namespace SecsGem.Runtime.Order.S1
     {
      
         /// <summary>
-        /// 获取当前实现提供的值或对象；对应入口为 GetReplyItem。
-        /// 正文中的关键协作调用包括 GetDeviceMode、GetDeviceStatus、B；具体条件和先后次序见方法体。
-        /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
+        /// 收到 S1F17（Host 请求上线）：只判定并回 ONLACK，不在这里切状态。
+        /// <para>
+        /// 收发分离：引擎回完 S1F18 后会 <c>EventHelper.TriggerEvent("S1F17")</c>，
+        /// 由 <c>ConnectManager.Online_HtoE</c> 切控制状态并上报 S6F11(Device Online)。
+        /// 这样 S1F18 一定先于 S6F11 出去（§10.1 的顺序要求），且状态切换点只有一处。
+        /// </para>
         /// </summary>
-        public override Item GetReplyItem(SecsMessage pSecsMessage )
+        public override Item GetReplyItem(SecsMessage pSecsMessage)
         {
-            try
-            {
-                Item SecsItem;
-                if ( SecsGemRuntime.GetDeviceMode() != ESecsMode.Online_Remote)
-                {
-                    if ( SecsGemRuntime.GetDeviceStatus() != EDeviceStatus.Running)
-                    {
-                        SecsItem = Item.B((byte)EOnflineResult.OnlineSuccess); //Success
-                        return SecsItem;
-                    }
-                    else
-                    {
-                        SecsItem = Item.B((byte)EOnflineResult.OnlineFail); //Success
-                        return SecsItem;
-                    }
-                }
-                else
-                {
-                    SecsItem = Item.B((byte)EOnflineResult.OnlineFail); //Success
-                    return SecsItem;
-                }
-            }
-            catch (Exception ex)
-            {
-                string message = ex.Message + ex.StackTrace;
-                return null;
-            }
+            if (SecsGemRuntime.GetDeviceMode() != ESecsMode.Offline)
+                return Item.B((byte)EOnflineResult.AlreadyOnline);
+
+            // 设备运行中不允许被 Host 拉上线
+            if (SecsGemRuntime.GetDeviceStatus() == EDeviceStatus.Running)
+                return Item.B((byte)EOnflineResult.NotReady);
+
+            return Item.B((byte)EOnflineResult.Accepted);
         }
 
         /// <summary>
-        /// 获取发送数据
+        /// 获取发送数据。S1F17 是 Online Request，按 E5 只能 Host→Equipment，
+        /// 设备端不发起，返回 null 让引擎明确报"该指令不可发"而不是组个空包出去。
         /// </summary>
         public override Item GetSendItem(params object[] pData)
         {

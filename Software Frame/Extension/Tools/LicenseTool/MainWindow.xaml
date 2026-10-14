@@ -20,7 +20,7 @@ Extension 模块：共享基础能力与集成适配；Extension.Core 保持轻�
             <Setter Property="Margin" Value="0,0,8,8" />
             <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
         </Style>
-        <Style TargetType="TextBox" BasedOn="{StaticResource CompactOutlinedTextBox}">
+        <Style TargetType="TextBox" BasedOn="{StaticResource CompactTextBox}">
             <Setter Property="MinHeight" Value="32" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Padding" Value="8,4" />

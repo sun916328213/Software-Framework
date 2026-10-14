@@ -16,6 +16,11 @@ public class SecsGemOptions
     /// <remarks>
     /// 处理当前类型提供的操作；对应入口为 Validate。
     /// 正文中的关键协作调用包括 IsNullOrWhiteSpace、nameof；具体条件和先后次序见方法体。
+    /// <para>
+    /// DeviceID 只在被动（Secondary）模式下有意义 —— 那是设备拨 Host、用它选会话。
+    /// 主动（Primary）模式下标准规定报文头 DeviceID 恒为 0，所以这一路不校验它：
+    /// 用户填什么都不该影响连接和收发。
+    /// </para>
     /// </remarks>
     public void Validate()
     {
@@ -23,8 +28,9 @@ public class SecsGemOptions
             throw new ArgumentException("HSMS address is required.", nameof(IpAddress));
         if (Port is < 1 or > 65535)
             throw new ArgumentOutOfRangeException(nameof(Port), "TCP port must be between 1 and 65535.");
-        if (DeviceId is < 0 or > 32767)
-            throw new ArgumentOutOfRangeException(nameof(DeviceId), "HSMS device ID must fit in 15 bits.");
+        if (!IsActiveMode && DeviceId is < 0 or > 32767)
+            throw new ArgumentOutOfRangeException(nameof(DeviceId),
+                "被动模式下 HSMS device ID 必须是 15 位（0-32767）；主动模式下该值不参与通信。");
         if (BufferSize <= 0)
             throw new ArgumentOutOfRangeException(nameof(BufferSize), "Buffer size must be positive.");
     }

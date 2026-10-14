@@ -96,6 +96,9 @@ namespace SecsGem.Runtime.Manager
         /// 更新SEMI模式。
         /// 修复：模式状态始终写入（断线时也要能写 Offline，否则重连后 Host 拿到错误模式）；
         /// 仅在线时触发 VID 更新与 CEID 事件上报。
+        /// 缺 VID 名保护：<c>Mode_VIDName</c> 只有调过 <see cref="Config"/> 才有值，
+        /// 而 TriggerEvent 对空名直接抛"指令名称不能为空"，会把上/下线整个打断。
+        /// 未配置时退化成"只记状态不推 VID"，与 DeviceManager.Load 的缺键保护同一口径。
         /// </summary>
         /// <param name="pSecsMode">SEMI模式</param>
         /// <exception cref="Exception"></exception>
@@ -107,7 +110,21 @@ namespace SecsGem.Runtime.Manager
                 {
                     if (_state.SetMode(pSecsMode))
                     {
+                        if (string.IsNullOrEmpty(pVIDName))
+                        {
+                            System.Diagnostics.Debug.WriteLine("警告: 未配置模式VID名(SecsGemRuntime.Config 时 StatusManager.Config)，本次只更新模式状态");
+                            return;
+                        }
                         Mode_VIDName = pVIDName;
+
+                        // 先把值写进 VID，再让调用方发 S6F11：S6F11.GetSendItem 组包时会
+                        // UpdateCEID() 读当时的 VID 快照，值没写进去，report 里 DeviceMode
+                        // 会因为 `vid.Value != null` 被整条跳过，Host 收不到模式。
+                        if (VIDManager.GetVIDByName(Mode_VIDName) is null)
+                            System.Diagnostics.Debug.WriteLine($"警告: VID 表没有 \"{Mode_VIDName}\"，模式值无法写入变量");
+                        else
+                            VIDManager.UpdateVID(Mode_VIDName, CurrentMode);
+
                         EventHelper.TriggerEvent(Mode_VIDName);
                         _state.MarkModeReported();
                     }
@@ -121,6 +138,7 @@ namespace SecsGem.Runtime.Manager
 
         /// <summary>
         /// 更新设备状态。门禁策略与 UpdateSEMIMode 相同：状态始终记录，事件仅在线触发。
+        /// 缺 VID 名保护同 <see cref="UpdateSEMIMode"/>：未配置时只记状态不推 VID。
         /// </summary>
         /// <param name="pStatus">设备状态</param>
         /// <exception cref="Exception"></exception>
@@ -132,6 +150,11 @@ namespace SecsGem.Runtime.Manager
                 {
                     if (_state.SetStatus(pStatus))
                     {
+                        if (string.IsNullOrEmpty(pVIDName))
+                        {
+                            System.Diagnostics.Debug.WriteLine("警告: 未配置状态VID名，本次只更新设备状态");
+                            return;
+                        }
                         Status_VIDName = pVIDName;
                         EventHelper.TriggerEvent(Status_VIDName);
                         _state.MarkStatusReported();
@@ -145,7 +168,13 @@ namespace SecsGem.Runtime.Manager
         }
 
         /// <summary>
-        /// 启动状态监控
+        /// 启动状态监控。
+        /// <para>
+        /// shortcut: 无人调用，启动它会让 ConnectManager 的模式上报重复一次 —— 这里的
+        /// SEMIModeChangedAsync 与 ConnectManager.SendControlStateChangedAsync 发的是同一条
+        /// CEID "Device Mode"。VID 值已在 <see cref="UpdateSEMIMode"/> 内联写入，不再需要轮询。
+        /// 要真正启用监控，得先删掉 ConnectManager 那边的 CEID 上报，或给循环加开关。
+        /// </para>
         /// </summary>
         /// <param name="secsControl">Secs控制器</param>
         /// <param name="token">取消令牌</param>

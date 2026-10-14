@@ -37,9 +37,17 @@ namespace WPFControls.Tests;
 /// </para>
 ///
 /// <para>
-/// 与 T12a/T12b 不同，这里**故意不加校验**：<c>SaveReports()</c> 不接受任何参数，它保存的是
-/// <c>SecsGemRuntime</c> 自己那张表，**不是** <c>Datas.Reports</c> —— 拿 <c>Datas.Reports</c> 做校验
-/// 只会给出"拦住了什么"的假象。表格是只读快照，这一点已记在报告 §8 的移交里。
+    /// M02 之后本页存的是<strong>页面上那张表</strong>：契约加了
+    /// <c>SaveReports(IEnumerable&lt;SecsGemReportDefinition&gt;)</c> 重载，
+    /// <c>SEMIManagerService</c> 把 <c>Model.Reports</c> 原样传下去。
+    /// 此前调的是无参 <c>SaveReports()</c> —— 它序列化 <c>SecsGemRuntime</c> 自己那张表，
+    /// 与本页显示的内容毫无关系，状态行那句"已保存"是假的。
+    /// </para>
+///
+/// <para>
+/// 不过表格目前仍是<strong>只读</strong>（XAML 两个 <c>ConfigManagerView</c> 都是
+/// <c>IsReadOnly="True"</c>，<c>Add</c>/<c>Delete</c> 都 <c>Collapsed</c>），
+/// 所以契约虽然通了，用户还改不了东西 —— 开启编辑是另一件事，见下两条用例。
 /// </para>
 /// </summary>
 public sealed class SEMIManagerSaveCommandTests
@@ -57,6 +65,7 @@ public sealed class SEMIManagerSaveCommandTests
         var viewModel = CreateViewModel(configuration);
 
         Assert.Equal(string.Empty, viewModel.StatusText);
+        viewModel.LoadCommand.Execute(null);   // 页面 Loaded 会先加载；未加载的表拒绝保存
         viewModel.ReportSaveCommand.Execute(null);
 
         Assert.Equal(1, configuration.SaveReportsCalls);
@@ -71,13 +80,83 @@ public sealed class SEMIManagerSaveCommandTests
     {
         var configuration = new RecordingConfiguration();
         var viewModel = CreateViewModel(configuration);
-
+        viewModel.LoadCommand.Execute(null);   // 同上：先加载再保存
         viewModel.EventSaveCommand.Execute(null);
 
         Assert.Equal(0, configuration.SaveReportsCalls);
         Assert.Equal(1, configuration.SaveEventsCalls);
         Assert.StartsWith("已保存", viewModel.StatusText, StringComparison.Ordinal);
         Assert.Contains("EventInfo", viewModel.StatusText, StringComparison.Ordinal);
+    }
+
+    // ============================================================ M02：存的是页面上那张表
+
+    /// <summary>
+    /// 保存必须把页面上那一行的<strong>内容</strong>交给契约，而不只是喊一声"保存过"。
+    /// 改造前 <c>ReportSave()</c> 调无参 <c>SaveReports()</c>，页面内容全程没参与 ——
+    /// 这正是"表格编辑永远存不下去"的根因。
+    /// </summary>
+    [Fact]
+    public void ReportSaveCommand_PassesTheRowsShownOnTheGrid()
+    {
+        var configuration = new RecordingConfiguration
+        {
+            Reports = [new SecsGemReportDefinition("7", "原名", "1,2")],
+        };
+        var viewModel = CreateViewModel(configuration);
+        viewModel.LoadCommand.Execute(null);
+
+        // record 不可变，只能整条替换 —— 这也是 XAML 现在 IsReadOnly=True 的原因之一
+        viewModel.Datas.Reports[0] = viewModel.Datas.Reports[0] with { Name = "改过的名" };
+
+        viewModel.ReportSaveCommand.Execute(null);
+
+        var saved = Assert.Single(configuration.SavedReports!);
+        Assert.Equal("7", saved.Id);
+        Assert.Equal("改过的名", saved.Name);
+        Assert.Equal("1,2", saved.VariableIds);
+    }
+
+    /// <summary>事件表同理。</summary>
+    [Fact]
+    public void EventSaveCommand_PassesTheRowsShownOnTheGrid()
+    {
+        var configuration = new RecordingConfiguration
+        {
+            Events = [new SecsGemEventDefinition("9", "原名", "7", true)],
+        };
+        var viewModel = CreateViewModel(configuration);
+        viewModel.LoadCommand.Execute(null);
+        viewModel.Datas.Events[0] = viewModel.Datas.Events[0] with { Enabled = false };
+
+        viewModel.EventSaveCommand.Execute(null);
+
+        var saved = Assert.Single(configuration.SavedEvents!);
+        Assert.Equal("9", saved.Id);
+        Assert.False(saved.Enabled);
+    }
+
+    /// <summary>
+    /// 没加载过就保存必须拒绝，而不是拿一张空表去覆盖磁盘上的 <c>ReportID.csv</c>。
+    /// 静默截断配置文件属于不可逆的数据丢失，比抛异常严重得多。
+    /// </summary>
+    [Fact]
+    public void SaveCommands_RefuseToWriteATableThatWasNeverLoaded()
+    {
+        var configuration = new RecordingConfiguration
+        {
+            Reports = [new SecsGemReportDefinition("7", "A", "1")],
+            Events = [new SecsGemEventDefinition("9", "B", "7", true)],
+        };
+        var viewModel = CreateViewModel(configuration);   // 故意不执行 LoadCommand
+
+        viewModel.ReportSaveCommand.Execute(null);
+        viewModel.EventSaveCommand.Execute(null);
+
+        Assert.Equal(0, configuration.SaveReportsCalls);
+        Assert.Equal(0, configuration.SaveEventsCalls);
+        Assert.DoesNotContain("已保存", viewModel.StatusText, StringComparison.Ordinal);
+        Assert.Contains("尚未加载", viewModel.StatusText, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -109,6 +188,7 @@ public sealed class SEMIManagerSaveCommandTests
             SaveReportsFailure = new IOException("ReportID.csv 正被另一个进程占用"),
         };
         var viewModel = CreateViewModel(configuration);
+        viewModel.LoadCommand.Execute(null);   // 同上：先加载再保存
 
         Assert.Null(Record.Exception(() => viewModel.ReportSaveCommand.Execute(null)));
 
@@ -127,6 +207,7 @@ public sealed class SEMIManagerSaveCommandTests
             SaveEventsFailure = new UnauthorizedAccessException("CEID.csv 只读"),
         };
         var viewModel = CreateViewModel(configuration);
+        viewModel.LoadCommand.Execute(null);   // 同上：先加载再保存
 
         Assert.Null(Record.Exception(() => viewModel.EventSaveCommand.Execute(null)));
 
@@ -206,6 +287,12 @@ public sealed class SEMIManagerSaveCommandTests
 
         public int SaveEventsCalls { get; private set; }
 
+        /// <summary>最近一次经重载传入的报表定义；页面上的行必须原样到达契约，不能被换掉。</summary>
+        public List<SecsGemReportDefinition>? SavedReports { get; private set; }
+
+        /// <summary>最近一次经重载传入的事件定义。</summary>
+        public List<SecsGemEventDefinition>? SavedEvents { get; private set; }
+
         public Exception? LoadFailure { get; set; }
 
         public Exception? SaveReportsFailure { get; set; }
@@ -234,6 +321,18 @@ public sealed class SEMIManagerSaveCommandTests
         {
             SaveEventsCalls++;
             if (SaveEventsFailure is not null) throw SaveEventsFailure;
+        }
+
+        public void SaveReports(IEnumerable<SecsGemReportDefinition> reports)
+        {
+            SavedReports = reports.ToList();
+            SaveReports();
+        }
+
+        public void SaveEvents(IEnumerable<SecsGemEventDefinition> events)
+        {
+            SavedEvents = events.ToList();
+            SaveEvents();
         }
     }
 }

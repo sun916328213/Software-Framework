@@ -53,32 +53,41 @@ public sealed class HostAsyncBoundaryTests(ProductionFixture fixture)
     {
         var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var reads = 0;
+        var modeReads = 0;
         var plc = Proxy<IProductionPlc>(name => name switch
         {
             "get_IsOnline" => true,
             "ReadData" => Read(),
             _ => throw new NotSupportedException(name)
         });
-        string Read() { reads++; return "OnlineRemote"; }
+        // AutoProcess.CurMode 初值是 "Offline"，非 Offline 的首个上报只用于让它跟随更新；
+        // 第二次模式上报给 Offline 才构成跳变，触发 GoOfflineAsync（仅剩的 SECS 入口）。
+        // RefreshSystem 先读 DeviceStatus 再读 Mode：奇数次=状态，偶数次=模式。
+        string Read()
+        {
+            reads++;
+            return reads % 2 == 0 ? (modeReads++ == 0 ? "OnlineLocal" : "Offline") : "Idle";
+        }
         var secs = Proxy<ISecsGemRuntime>(name => name switch
         {
-            "GoOnlineRemoteAsync" => release.Task,
+            "GoOfflineAsync" => release.Task,
             "GetState" => new SecsGemState(false, SecsGemMode.Offline, SecsGemEquipmentStatus.Idle),
             _ => throw new NotSupportedException(name)
         });
         var process = CreateProcess(new Log(), plc, secs);
         var now = new DateTime(2026, 10, 4, 12, 1, 1);
-        var pending = RefreshAsync(process, now);
+        await RefreshAsync(process, now);          // 预热：CurMode 跟随到 OnlineLocal，不触发 SECS
+        var pending = RefreshAsync(process, now);  // 本次读到 Offline，挂在 GoOfflineAsync 上
         try
         {
             Assert.False(pending.IsCompleted);
-            Assert.Equal(2, reads);
-            await RefreshAsync(process, now);
-            Assert.Equal(2, reads);
+            Assert.Equal(4, reads);
+            await RefreshAsync(process, now);      // 门禁仍被占用，这次应被跳过
+            Assert.Equal(4, reads);
         }
         finally { release.TrySetResult(true); await pending; }
         await RefreshAsync(process, now);
-        Assert.Equal(4, reads);
+        Assert.Equal(6, reads);
     }
 
     [Fact]
@@ -141,15 +150,23 @@ public sealed class HostAsyncBoundaryTests(ProductionFixture fixture)
     {
         var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var reads = 0;
+        var modeReads = 0;
         var plc = Proxy<IProductionPlc>(name => name == "ReadData" ? Read() : true);
-        string Read() { reads++; return "OnlineRemote"; }
-        var secs = Proxy<ISecsGemRuntime>(name => name == "GoOnlineRemoteAsync" ?
+        // 同 RefreshSkipsReentry：先让 CurMode 跟随到 OnlineLocal，下一次报 Offline 才会挂住。
+        // RefreshSystem 先读 DeviceStatus 再读 Mode：奇数次=状态，偶数次=模式。
+        string Read()
+        {
+            reads++;
+            return reads % 2 == 0 ? (modeReads++ == 0 ? "OnlineLocal" : "Offline") : "Idle";
+        }
+        var secs = Proxy<ISecsGemRuntime>(name => name == "GoOfflineAsync" ?
             release.Task.WaitAsync(TimeSpan.FromSeconds(10)) :
             new SecsGemState(false, SecsGemMode.Offline, SecsGemEquipmentStatus.Idle));
         var process = CreateProcess(new Log(), plc, secs);
         Task? tick = null;
         Task? stop = null;
         var now = new DateTime(2026, 10, 4, 12, 1, 1);
+        await RefreshAsync(process, now);   // 预热
         try
         {
             fixture.Invoke(_ =>
@@ -162,13 +179,13 @@ public sealed class HostAsyncBoundaryTests(ProductionFixture fixture)
                 Assert.False(tick.IsCompleted);
                 stop = (Task)stopMethod.Invoke(process, null)!;
                 Assert.False(stop.IsCompleted);
-                Assert.Equal(2, reads);
+                Assert.Equal(4, reads);
             });
             release.SetResult(true);
             await stop!.WaitAsync(TimeSpan.FromSeconds(10));
             await tick!;
             await RefreshAsync(process, now);
-            Assert.Equal(2, reads);
+            Assert.Equal(4, reads);
         }
         finally { release.TrySetResult(true); if (tick != null) await tick.WaitAsync(TimeSpan.FromSeconds(10)); }
     }

@@ -81,9 +81,11 @@ namespace MachineApp.Business.Flow
             {
                  async ()  =>
                  {
-             
-                     //_StatisticService.UpdateDeviceStatus(EDeviceStatus.Ready);
-                     //_ = _secsRuntime.GoOnlineRemoteAsync();
+                     _StatisticService.UpdateDeviceStatus(EDeviceStatus.Ready);
+                     // 进 Online_Local：操作员保留控制权，Host 的 S2F41 远程命令会被拒。
+                     // ONLINE-REMOTE 只由 Host 的 S1F17 进入（Control State Model 迁移表 #5/#7），
+                     // 设备端不主动发起。S6F11(Device Mode) 由 GoOnlineLocalAsync 内部上报。
+                     _ = _secsRuntime.GoOnlineLocalAsync();
                  },
                  () =>
                      {

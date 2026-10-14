@@ -3,6 +3,7 @@
 // 本文件定义：App。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：WPFCustomControls.Workbench、System.Windows、Extension.UI.Theme、Prism.DryIoc、Prism.Ioc、Prism.Modularity。导入不代表所有类型都会在运行时加载。
 using WPFCustomControls.Workbench;
+using SecsGem.Workbench.Views;
 using System.Windows;
 using Extension.UI.Theme;
 using Prism.DryIoc;
@@ -42,9 +43,6 @@ public partial class App : PrismApplication
     protected override void RegisterTypes(IContainerRegistry registry)
     {
         registry.RegisterSingleton<ThemeService>();
-        registry.Register<ViewModels.MainWindowViewModel>();
-        registry.RegisterSingleton<MainWindow>();
-        registry.RegisterSingleton(typeof(object), typeof(SecsWorkbenchView), nameof(SecsWorkbenchView));
     }
     /// <summary>
     /// 配置当前对象或组合入口；对应入口为 ConfigureModuleCatalog。
@@ -63,10 +61,53 @@ public partial class App : PrismApplication
     {
         Container.Resolve<ThemeService>().Initialize();
         base.OnInitialized();
+
+        // Secs4NetTransport 的收发/链路日志按名字取 "SEMILog"（Secs4NetTransport.cs:35）。
+        // 不注册的话那个索引返回 null，所有 log?.Add 全部静默丢弃 —— 现场排查"报文收不到"时
+        // 一行痕迹都没有，等于瞎猜。这里建一个落到工作台目录下的文件日志。
+        var logManager = Container.Resolve<DataManager.Runtime.Log.LogManager>();
+        if (logManager.TryGet("SEMILog", out var existing) && existing != null)
+        {
+            // 已注册则不重复创建
+        }
+        else
+        {
+            try
+            {
+                logManager.Create(new DataManager.Core.Log.Definition.LogParam
+                {
+                    Name = "SEMILog",
+                    FilePath = System.IO.Path.Combine(AppContext.BaseDirectory, "Config", "Log", "SEMILog.txt"),
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"SEMILog 创建失败（收发日志将不可见）: {ex.Message}");
+            }
+        }
+
+        // 原 SecsWorkbenchView 构造函数里的两件事：独立工作台才启用 WPF 终端显示和示例 HCACK 远程命令处理器，
+        // 通用 Controls 页面不替换宿主的远程命令处理器。
+        var runtime = Container.Resolve<SecsGem.Runtime.SecsGemRuntime>();
+        runtime.TerminalDisplay = new SecsGem.Controls.Terminal.WpfTerminalDisplay();
+        // 载入 Config\SecsJson 的 VID/ReportID/CEID，并绑定 StatusManager 的四个名字。
+        // 必须在任何 Connect/上下线之前：S6F11 组包、Host 侧 S1F17 判定、控制状态上报全靠这张表，
+        // 表空时这些路径静默跳过而不报错。工作台源码不带 Config 目录，走 DataBase.LoadDefaults 的打底项。
+        try { runtime.Config(); }
+        catch (Exception ex) { Console.Error.WriteLine($"GEM 配置加载失败（继续启动）：{ex.Message}"); }
+        Container.Resolve<SecsGem.Controls.Services.SecsWorkspace>().EnableWorkbenchCommandHandler();
         _lifetime = new WorkbenchLifetime(MainWindow,
             () => { (MainWindow.DataContext as IDisposable)?.Dispose(); return ValueTask.CompletedTask; },
             () => WorkbenchLifetime.CloseRegionAsync(Container.Resolve<IRegionManager>(), ViewModels.MainWindowViewModel.MainRegion),
-            () => { Container.Resolve<SecsGem.Controls.Services.SecsWorkspace>().Dispose(); Container.Resolve<SecsGem.Runtime.SecsGemRuntime>().SetEventHandler(null); Container.Resolve<SecsGem.Runtime.SecsGemRuntime>().Dispose(); return ValueTask.CompletedTask; });
+            // 关闭前先下线：控制状态转 OFFLINE + S6F11 通知 Host，再断连接，最后才释放运行时
+            async () =>
+            {
+                var runtime = Container.Resolve<SecsGem.Runtime.SecsGemRuntime>();
+                Container.Resolve<SecsGem.Controls.Services.SecsWorkspace>().Dispose();
+                runtime.SetEventHandler(null);
+                try { await runtime.ShutdownAsync(TimeSpan.FromSeconds(5)); }
+                finally { runtime.Dispose(); }
+            });
         (MainWindow?.DataContext as ViewModels.MainWindowViewModel)?.SelectFirst();
     }
     /// <summary>

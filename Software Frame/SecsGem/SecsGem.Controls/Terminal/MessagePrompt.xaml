@@ -1,7 +1,7 @@
 <!--
-中文阅读说明：界面与资源声明。
-SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。
-绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+    中文阅读说明：界面与资源声明。
+    SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。
+    绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
 -->
 <Window
     x:Class="SecsGem.Controls.Terminal.MessagePrompt"
@@ -12,11 +12,11 @@ SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     x:Name="Window"
     Width="400"
-   MinHeight="230"
+    MinHeight="230"
     MaxHeight="600"
-    SizeToContent="Height"
     AllowsTransparency="True"
     Background="Transparent"
+    SizeToContent="Height"
     Topmost="True"
     WindowStartupLocation="CenterScreen"
     WindowStyle="None"
@@ -43,39 +43,42 @@ SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和
             <Grid>
 
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
+
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="8" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="8" />
+
                 </Grid.RowDefinitions>
 
-                <ScrollViewer Grid.Row="1" MaxHeight="400" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Orientation="Vertical">
-                    <TextBlock
-                        Margin="0,0,0,8"
-                        FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-                        Text="{Binding ElementName=Window, Path=Title}">
+                <ScrollViewer
+                    Grid.Row="0"
+                    MaxHeight="400"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            FontSize="20"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                            Text="{Binding ElementName=Window, Path=Title}" />
 
-                    </TextBlock>
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            FontSize="16"
+                            Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                            Text="{Binding ElementName=Window, Path=Message}"
+                            TextWrapping="Wrap" />
 
-                    <TextBlock
-                        Margin="0,0,0,8"
-                        FontSize="16" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-                        Text="{Binding ElementName=Window, Path=Message}"
-                       TextWrapping="Wrap">
-
-                    </TextBlock>
-
-                </StackPanel>
+                    </StackPanel>
                 </ScrollViewer>
 
                 <Separator
-                    Grid.Row="2"
+                    Grid.Row="1"
                     Margin="0,0,0,0"
                     Style="{StaticResource MaterialDesignSeparator}" />
 
-                <Grid Grid.Row="3" Grid.Column="0">
+                <Grid Grid.Row="2" Grid.Column="0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
@@ -83,18 +86,22 @@ SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和
                     <Button
                         Grid.Column="1"
                         Width="100"
+                        MinHeight="32"
                         HorizontalAlignment="Center"
+                        AutomationProperties.Name="OK"
                         Click="Button_Click"
                         Content="OK"
-                        Style="{StaticResource CompactOutlinedButton}" MinHeight="32" AutomationProperties.Name="OK" />
+                        Style="{StaticResource CompactOutlinedButton}" />
                     <Button
                         Grid.Column="0"
                         Width="100"
+                        MinHeight="32"
                         HorizontalAlignment="Center"
+                        AutomationProperties.Name="Cancel"
                         Click="Button_Click_1"
                         Content="Cancel"
                         Style="{StaticResource CompactOutlinedButton}"
-                        Visibility="{Binding ElementName=Window, Path=Visibility_Cancel}" MinHeight="32" AutomationProperties.Name="Cancel" />
+                        Visibility="{Binding ElementName=Window, Path=Visibility_Cancel}" />
                 </Grid>
             </Grid>
         </materialDesign:Card>
