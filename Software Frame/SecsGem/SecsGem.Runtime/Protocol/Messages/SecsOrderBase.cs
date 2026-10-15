@@ -8,6 +8,7 @@ using Prism.Ioc;
 using SecsGem.Runtime.Protocol.Building;
 using SecsGem.Runtime.Protocol.Parsing;
 using SecsGem.Runtime.Manager;
+using SecsGem.Runtime.Variable;
 using Secs4Net;
 using SecsGem.Runtime;
 using System;
@@ -27,6 +28,7 @@ namespace SecsGem.Runtime.Order
         internal VIDManager VIDManager => ContainerProvider?.Resolve<VIDManager>();
         internal DeviceManager DeviceManager => ContainerProvider?.Resolve<DeviceManager>();
         internal StatusManager StatusManager => ContainerProvider?.Resolve<StatusManager>();
+        internal TraceManager TraceManager => ContainerProvider?.Resolve<TraceManager>();
 
         /// <summary>
         /// 初始化 SecsOrderBase 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
@@ -114,6 +116,17 @@ namespace SecsGem.Runtime.Order
         {
             SecsGemRuntime?.RaiseErrorPublic($"组包失败，本条回 S9F7: {ex.Message}");
             return null;
+        }
+
+        /// <summary>
+        /// 按 ID 取设备常量（ECID 表里的项）。S2F13/S2F15/S2F29 都是 ECID 专用，
+        /// 不能拿 <c>GetVIDByID</c> 直接当 ECID 用——那个会命中 SVID/DVID，
+        /// 结果是把采样变量当常量回给 Host。
+        /// </summary>
+        protected VIDInfo FindECID(string pId)
+        {
+            var vid = VIDManager?.GetVIDByID(pId);
+            return vid != null && vid.Category == "ECID" ? vid : null;
         }
 
         /// <summary>一条链接请求里的"一组"：LinkId 是被改的对象，Members 是挂上去的 ID 列表。</summary>

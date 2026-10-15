@@ -1,13 +1,9 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。
 // 本文件定义：SS6F1、S6F1。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：SecsGem.Core、SecsGem.Core.Order、SecsGem.Runtime、SecsGem.Runtime.Order、Extension.Core.Conversion、Prism.Ioc。导入不代表所有类型都会在运行时加载。
-using SecsGem.Core;
+// 直接导入的协作命名空间包括：SecsGem.Core.Order、SecsGem.Runtime.Order、SecsGem.Runtime.Manager、Secs4Net、System、System.Collections.Generic。导入不代表所有类型都会在运行时加载。
 using SecsGem.Core.Order;
-using SecsGem.Runtime;
 using SecsGem.Runtime.Order;
-using Extension.Core.Conversion;
-using Prism.Ioc;
 using SecsGem.Runtime.Manager;
 using Secs4Net;
 using System;
@@ -21,26 +17,42 @@ namespace SecsGem.Runtime.Order.S6
     public struct SS6F1 
     {
         /// <summary>
-        /// TRID
+        /// Trace 标识，必须与 S2F23 下发的一致
         /// </summary>
         public string TRID { get; set; }
         /// <summary>
-        /// Number
+        /// 采样序号，从 1 开始
         /// </summary>
         public string SMPLN { get; set; }
         /// <summary>
-        /// 时间 yyyymmyyddhhmmsscc
+        /// 采样时间 yyyyMMddHHmmssff
         /// </summary>
         public string STIME { get; set; }
         /// <summary>
-        /// VID ID集合
+        /// SVID ID集合。SV 为空时按这些 ID 现场取值（兼容旧调用）。
         /// </summary>
         public List<string> VID { get; set; }
+        /// <summary>
+        /// 采样快照值，优先于 <see cref="VID"/>。
+        /// <para>
+        /// TraceManager 在采样那一刻就取好值放进这里：如果等到组包时再按 ID 取值，
+        /// 组包与采样之间变量被改写，报出去的就不是那一刻的值了。
+        /// </para>
+        /// </summary>
+        public List<Item> SV { get; set; }
+        /// <summary>
+        /// TRID 的格式，取 S2F23 下发时的格式。
+        /// </summary>
+        public SecsFormat TRIDType { get; set; }
     }
 
     /// <summary>
-    /// S6F1 的类型定义。SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。
-    /// 继承或实现的契约：SecsOrderBase。具体约束按这些契约及各成员实现解释。
+    /// Trace Data Send E->H（E5 S6F1）。
+    /// <para>
+    /// 报文体 <c>L[4] &lt;TRID&gt; &lt;SMPLN&gt; &lt;STIME&gt; &lt;L[n] SV&gt;</c>。
+    /// TRID 格式与 S2F23 一致、SMPLN 用 U4、STIME 用 16 位 <c>yyyyMMddHHmmssff</c>
+    /// （与 S2F18 的 TIME 同格式；GEM 里 STIME 的具体格式本应由 TimeFormat ECV 决定，本设备统一取值）。
+    /// </para>
     /// </summary>
     [SecsOrder("S6F1")]
     class   S6F1:SecsOrderBase
@@ -48,34 +60,46 @@ namespace SecsGem.Runtime.Order.S6
        
         /// <summary>
         /// 获取当前实现提供的值或对象；对应入口为 GetSendItem。
-        /// 正文中的关键协作调用包括 GetVIDByID、AddData、Add、ToYYYYMMDDHHMMSSFFF、L；具体条件和先后次序见方法体。
+        /// 正文中的关键协作调用包括 GetVIDByID、AddData、Add、L；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>
         public override Item GetSendItem(params object[] pData )
         {
             try
             {
-                if (pData == null) return null;
+                if (pData == null || pData.Length == 0) return null;
 
 
-                SS6F1 s2F23 = (SS6F1)pData[0];
-                VIDManager vIDManager = (VIDManager)pData[1];
+                SS6F1 data = (SS6F1)pData[0];
 
-                List<Item> vid_vlaue = new List<Item>();
-
-                foreach (var item in s2F23.VID)
+                List<Item> sv;
+                if (data.SV != null)
                 {
-                    var vid = vIDManager.GetVIDByID(item);
-                    Item viditem = AddData(vid.Value, vid.DataType);
-                    vid_vlaue.Add(viditem);
+                    // TraceManager 走这条路：值在采样时已取好。
+                    sv = data.SV;
+                }
+                else
+                {
+                    // 兼容旧调用：只给 ID，按当前值现场取值。
+                    VIDManager vIDManager = (VIDManager)pData[1];
+                    sv = new List<Item>();
+                    foreach (var item in data.VID ?? new List<string>())
+                    {
+                        var vid = vIDManager.GetVIDByID(item);
+                        sv.Add(AddData(vid?.Value, vid?.DataType ?? SecsFormat.ASCII));
+                    }
                 }
 
-                Item TRID = AddData(s2F23.TRID, SecsFormat.U2);
-                Item SMPLN = AddData(s2F23.SMPLN, SecsFormat.U2);
-                Item time = AddData(DateTime.Now.ToYYYYMMDDHHMMSSFFF(), SecsFormat.ASCII);
-                Item SecsItem = Item.L(TRID, SMPLN, time, Item.L(vid_vlaue.ToArray()));
+                // SecsFormat 的默认值 0 是 List：没显式给 TRIDType 时落到 U4，
+                // 否则 AddData 会走 List 分支返回 null，整条 S6F1 组包失败。
+                var tridType = data.TRIDType == SecsFormat.List ? SecsFormat.U4 : data.TRIDType;
+                Item TRID = AddData(data.TRID, tridType);
+                Item SMPLN = AddData(data.SMPLN, SecsFormat.U4);
+                Item time = AddData(
+                    string.IsNullOrEmpty(data.STIME) ? DateTime.Now.ToString("yyyyMMddHHmmssff") : data.STIME,
+                    SecsFormat.ASCII);
 
-                return SecsItem;
+                return Item.L(TRID, SMPLN, time, Item.L(sv.ToArray()));
             }
             catch (Exception ex)
             {

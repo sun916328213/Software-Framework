@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+中文阅读说明：应用程序清单（验证宿主 SecsGem.Workbench 专用）。
+本文件声明进程启动时请求的权限级别；只影响本 Workbench 宿主，生产机型宿主 MachineApp 不走这里。
+
+为什么需要 requireAdministrator：
+S2F31（设置系统时间）依赖 kernel32!SetLocalTime，该 API 要求进程令牌内含 SeSystemtimePrivilege。
+UAC 会从"未提权"的标准令牌里直接删除这条特权（而不是仅仅禁用它），进程内任何代码都补不出来：
+AdjustTokenPrivileges 会返回 true 但 GetLastError=1300，SetLocalTime 必然以 1314 失败。
+因此以普通方式启动时 S2F31 只能回 TIACK=1；只有提权令牌里该特权才存在（默认禁用，
+由 S2F31 内的 EnableSystemTimePrivilege 显式启用），SetLocalTime 才能成功、TIACK=0。
+-->
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="1.0.0.0" name="SecsGem.Workbench.app" />
+
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
+    <security>
+      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <!-- 每次启动弹一次 UAC，换来令牌内的 SeSystemtimePrivilege。 -->
+        <requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <!-- Windows 7 / 8 / 8.1 / 10 / 11，逐条声明以适配当前系统版本。 -->
+      <supportedOS Id="{35138b9a-5d96-4fbd-8e2d-a2440225f93a}" />
+      <supportedOS Id="{4a2f28e3-53b9-4441-ba9c-d69d4a4a6e38}" />
+      <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}" />
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
+    </application>
+  </compatibility>
+</assembly>

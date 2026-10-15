@@ -1,4 +1,4 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
 // 本文件定义：SecsOrderCatalogTests。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：SecsGem.Controls、System.Reflection、System.Text.RegularExpressions、SecsGem.Core.Order、SecsGem.Runtime.Order、SecsGem.Runtime。导入不代表所有类型都会在运行时加载。
@@ -81,7 +81,7 @@ namespace SecsGem.Tests
                 // S1 设备状态与通信
                 "S1F1", "S1F3", "S1F11", "S1F13", "S1F15", "S1F17", "S1F23",
                 // S2 设备控制
-                "S2F23", "S2F33", "S2F35", "S2F37", "S2F41",
+                "S2F13", "S2F15", "S2F17", "S2F23", "S2F29", "S2F31", "S2F33", "S2F35", "S2F37", "S2F41",
                 // S5 报警
                 "S5F1", "S5F3", "S5F5", "S5F7",
                 // S6 数据上报

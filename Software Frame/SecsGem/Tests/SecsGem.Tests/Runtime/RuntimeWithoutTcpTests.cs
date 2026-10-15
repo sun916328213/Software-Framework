@@ -1,4 +1,4 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
 // 本文件定义：RuntimeWithoutTcpTests。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：SecsGem.Tests、Secs4Net、SecsGem.Core、SecsGem.Tests.Fakes、SecsGem.Tests.Infrastructure、SecsGem.Runtime.Variable。导入不代表所有类型都会在运行时加载。
@@ -8,8 +8,10 @@ using SecsGem.Core;
 using SecsGem.Tests.Fakes;
 using SecsGem.Tests.Infrastructure;
 using SecsGem.Runtime.Variable;
+using SecsGem.Runtime.Manager;
 using Extension.Automation.Device;
 using Extension.Automation.Secs;
+using System.Globalization;
 using Xunit;
 
 namespace SecsGem.Tests.Runtime;
@@ -891,12 +893,13 @@ public sealed class RuntimeWithoutTcpTests
                     Item.U2(1),
                     Item.L(
                         Item.L(Item.U2(11), Item.L(Item.U2(103))),
-                        Item.L(Item.U2(12), Item.L(Item.U2(999999)))))
+                        Item.L(Item.U2(12), Item.L(Item.U4(999999)))))
             });
             Assert.Null(transport.LastReplyItem);                                  // S9F7
             Assert.Equal("102", Rpt(catalog, 11));                                 // 11 没被改
             Assert.Equal("103", Rpt(catalog, 12));                                 // 12 也没轮到
-            Assert.DoesNotContain("999999", File.ReadAllText(Path.Combine(empty, "ReportID.csv")));
+            // 配置表只有落盘才会生成 CSV；失败路径不应落盘（旧行为是先写盘再抛）。
+            Assert.False(File.Exists(Path.Combine(empty, "ReportID.csv")), "引用不成立时不应落盘 ReportID.csv");
 
             // 同理，报表不存在也不改任何一组
             await transport.EmitReceivedAsync(new SecsMessage(2, 33, true)
@@ -917,12 +920,12 @@ public sealed class RuntimeWithoutTcpTests
                     Item.U2(1),
                     Item.L(
                         Item.L(Item.U2(102), Item.L(Item.U2(12))),
-                        Item.L(Item.U2(103), Item.L(Item.U2(88888)))))
+                        Item.L(Item.U2(103), Item.L(Item.U4(88888)))))
             });
             Assert.Null(transport.LastReplyItem);
             Assert.Equal("1/13/11", Evt(catalog, 102));
             Assert.Equal("1/13/11", Evt(catalog, 103));
-            Assert.DoesNotContain("88888", File.ReadAllText(Path.Combine(empty, "CEID.csv")));
+            Assert.False(File.Exists(Path.Combine(empty, "CEID.csv")), "引用不成立时不应落盘 CEID.csv");
         }
         finally
         {
@@ -930,11 +933,309 @@ public sealed class RuntimeWithoutTcpTests
         }
     }
 
-    private static string Rpt(VIDManager catalog, int id) =>
-        string.Join("/", catalog.ReportID.GetDatas().Single(x => x.ID == id.ToString()).VIDInfo.Select(v => v.ID));
+    /// <summary>
+    /// S2F13 取设备常量：空请求 = 全要、点名按请求顺序回、不存在的 ECID 回 L:0 占位。
+    /// 占位而不是丢包，是因为 S2F14 的值与 S2F13 的 ID 必须同序，
+    /// 少回一项会让 Host 把后一项的值当成前一项的（错位比缺值更危险）。
+    /// </summary>
+    [Fact]
+    public async Task S2F13_Returns_Ecv_In_Request_Order_And_Placeholder_For_Unknown_Ecid()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+        var catalog = runtime.VariableManager;
+        var empty = Path.Combine(Path.GetTempPath(), "SecsGemTests", Guid.NewGuid().ToString("N"));
+        catalog.SVID.FilePath = empty;
+        catalog.DVID.FilePath = empty;
+        catalog.ECID.FilePath = empty;
+        catalog.CEID.FilePath = empty;
+        catalog.ReportID.FilePath = empty;
+        try
+        {
+            runtime.Config();   // 默认项：ECID 104 DeviceName / 105 DeviceSoftWare
+            await ((ISecsGemRuntime)runtime).ConnectAsync(new SecsGem.Core.SecsGemOptions());
+            catalog.UpdateVID("DeviceName", "Packing_001");
 
-    private static string Evt(VIDManager catalog, int id) =>
-        string.Join("/", catalog.CEID.GetDatas().Single(x => x.ID == id.ToString()).ReportInfo.Select(r => r.ID));
+            // 空请求 → 全部 ECID
+            await transport.EmitReceivedAsync(new SecsMessage(2, 13, true) { SecsItem = Item.L() });
+            var all = transport.LastReplyItem!;
+            Assert.Equal(2, all.Items.Length);
+            Assert.Equal("Packing_001", all.Items[0].GetString());
+
+            // 点名 104 + 一个不存在的 999
+            await transport.EmitReceivedAsync(new SecsMessage(2, 13, true)
+            {
+                SecsItem = Item.L(Item.U4(104), Item.U4(999))
+            });
+            var reply = transport.LastReplyItem!;
+            Assert.Equal(2, reply.Items.Length);
+            Assert.Equal("Packing_001", reply.Items[0].GetString());
+            Assert.Equal(SecsFormat.List, reply.Items[1].Format);   // 占位 L:0
+            Assert.Empty(reply.Items[1].Items);
+        }
+        finally
+        {
+            if (Directory.Exists(empty)) Directory.Delete(empty, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// S2F15 写设备常量：全部认得才写、任一不认识就整条不落并回 EAC=1。
+    /// 回归：原先是边校验边写，第一个认得第二个不认得时第一个已经被改掉，
+    /// 现场表现是"常量改了一半，Host 却收到拒绝码"。
+    /// </summary>
+    [Fact]
+    public async Task S2F15_Writes_Constants_Only_When_Every_Ecid_Is_Known()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+        var catalog = runtime.VariableManager;
+        var empty = Path.Combine(Path.GetTempPath(), "SecsGemTests", Guid.NewGuid().ToString("N"));
+        catalog.SVID.FilePath = empty;
+        catalog.DVID.FilePath = empty;
+        catalog.ECID.FilePath = empty;
+        catalog.CEID.FilePath = empty;
+        catalog.ReportID.FilePath = empty;
+        try
+        {
+            runtime.Config();
+            await ((ISecsGemRuntime)runtime).ConnectAsync(new SecsGem.Core.SecsGemOptions());
+
+            // 合法一对：104 = "LOT-A"
+            await transport.EmitReceivedAsync(new SecsMessage(2, 15, true)
+            {
+                SecsItem = Item.L(Item.L(Item.U4(104), Item.A("LOT-A")))
+            });
+            Assert.Equal((byte)0, transport.LastReplyItem!.GetMemory<byte>().Span[0]);
+            Assert.Equal("LOT-A", catalog.VIDDic_ID["104"].Value);
+
+            // 第二对里 ECID 999 不认识 → EAC=1，且 104 不再被改
+            await transport.EmitReceivedAsync(new SecsMessage(2, 15, true)
+            {
+                SecsItem = Item.L(
+                    Item.L(Item.U4(104), Item.A("LOT-B")),
+                    Item.L(Item.U4(999), Item.A("X")))
+            });
+            Assert.Equal((byte)1, transport.LastReplyItem!.GetMemory<byte>().Span[0]);
+            Assert.Equal("LOT-A", catalog.VIDDic_ID["104"].Value);
+        }
+        finally
+        {
+            if (Directory.Exists(empty)) Directory.Delete(empty, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// S2F29 回设备常量名录：L[n] L[6]{ECID, ECNAME, ECMIN, ECMAX, ECDEF, UNITS}。
+    /// 本仓库 ECID 表没有 MIN/MAX/DEF/UNITS 四列，按标准"未知给空项"回。
+    /// </summary>
+    [Fact]
+    public async Task S2F29_Returns_Namelist_With_Empty_Min_Max_Default_Units()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+        var catalog = runtime.VariableManager;
+        var empty = Path.Combine(Path.GetTempPath(), "SecsGemTests", Guid.NewGuid().ToString("N"));
+        catalog.SVID.FilePath = empty;
+        catalog.DVID.FilePath = empty;
+        catalog.ECID.FilePath = empty;
+        catalog.CEID.FilePath = empty;
+        catalog.ReportID.FilePath = empty;
+        try
+        {
+            runtime.Config();
+            await ((ISecsGemRuntime)runtime).ConnectAsync(new SecsGem.Core.SecsGemOptions());
+
+            await transport.EmitReceivedAsync(new SecsMessage(2, 29, true) { SecsItem = Item.L() });
+            var reply = transport.LastReplyItem!;
+            Assert.Equal(2, reply.Items.Length);
+
+            var first = reply.Items[0];
+            Assert.Equal(6, first.Items.Length);
+            Assert.Equal(104u, first.Items[0].GetMemory<uint>().Span[0]);
+            Assert.Equal("DeviceName", first.Items[1].GetString());
+            Assert.Equal(SecsFormat.ASCII, first.Items[2].Format);   // ECMIN：空 ASCII
+            Assert.Empty(first.Items[5].GetString());                // UNITS：空
+        }
+        finally
+        {
+            if (Directory.Exists(empty)) Directory.Delete(empty, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// S2F17 回时间、S2F31 把 Host 下发的时间设到本机时钟（原生 <c>SetLocalTime</c>）。
+    /// 两条都用 24 小时制 16 位 <c>yyyyMMddHHmmssff</c>（本设备没定义 TimeFormat ECV，统一取值）。
+    /// </summary>
+    [Fact]
+    public async Task S2F17_And_S2F31_Exchange_Time_In_One_Format()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+
+        // 本用例只读默认项，不落盘（无需临时目录）。
+        runtime.Config();
+        await ((ISecsGemRuntime)runtime).ConnectAsync(new SecsGem.Core.SecsGemOptions());
+
+        await transport.EmitReceivedAsync(new SecsMessage(2, 17, true) { SecsItem = Item.L() });
+        var time = transport.LastReplyItem!.GetString();
+        Assert.Equal(16, time.Length);
+        Assert.True(DateTime.TryParseExact(
+            time, "yyyyMMddHHmmssff", CultureInfo.InvariantCulture, DateTimeStyles.None, out _));
+
+        // S2F31 的请求体就是裸 TIME（不是列表）。被设值就用 S2F17 刚回显的当前时间：
+        // 持有 SeSystemtimePrivilege 时 SetLocalTime 只是把时钟拨回原位、无副作用；
+        // 普通权限进程会失败、按标准回 TIACK=1 —— 两种结果都算通过，不把 0 写死。
+        await transport.EmitReceivedAsync(new SecsMessage(2, 31, true) { SecsItem = Item.A(time) });
+        byte tiack = transport.LastReplyItem!.GetMemory<byte>().Span[0];
+        Assert.True(tiack is 0 or 1, $"S2F31 合法时间应回 TIACK 0(已设置) / 1(缺 SeSystemtimePrivilege)，实际 {tiack}");
+
+        // 格式不认识必须回 1：这条不依赖权限，断言保持确定性。
+        await transport.EmitReceivedAsync(new SecsMessage(2, 31, true) { SecsItem = Item.A("not-a-time") });
+        Assert.Equal((byte)1, transport.LastReplyItem!.GetMemory<byte>().Span[0]);
+    }
+
+    /// <summary>
+    /// S2F23 起一条 Trace：TIAACK=0，并按 REPGSZ 分组把 S6F1 周期推给 Host。
+    /// <para>
+    /// 回归：原实现把 <c>GetData</c> 的方法体整行注释掉、<c>Register</c> 没人调用，
+    /// Host 发 S2F23 只拿到一个空应答，一条 S6F1 都收不到。
+    /// </para>
+    /// <para>
+    /// 这里 DSPER 用毫秒写法 "50"（兼容路径）让用例跑得快；标准 hhmmss 的解析在本方法末尾直接断言。
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task S2F23_Starts_Trace_And_Pushes_S6F1()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+        var catalog = runtime.VariableManager;
+        var empty = Path.Combine(Path.GetTempPath(), "SecsGemTests", Guid.NewGuid().ToString("N"));
+        catalog.SVID.FilePath = empty;
+        catalog.DVID.FilePath = empty;
+        catalog.ECID.FilePath = empty;
+        catalog.CEID.FilePath = empty;
+        catalog.ReportID.FilePath = empty;
+        try
+        {
+            runtime.Config();
+            await ((ISecsGemRuntime)runtime).ConnectAsync(new SecsGem.Core.SecsGemOptions());
+
+            // TRID=7、周期 50ms、总量 2、分组 2 → 一条 S6F1，SV 两项（102/103）
+            await transport.EmitReceivedAsync(new SecsMessage(2, 23, true)
+            {
+                SecsItem = Item.L(
+                    Item.U4(7), Item.A("50"), Item.U4(2), Item.U4(2),
+                    Item.L(Item.U2(102), Item.U2(103)))
+            });
+            Assert.Equal((byte)0, transport.LastReplyItem!.GetMemory<byte>().Span[0]);
+
+            await WaitUntil(() => transport.Sent.Any(x => x.Order == "S6F1"));
+
+            var s6f1 = transport.Sent.Single(x => x.Order == "S6F1").Item;
+            Assert.Equal(7u, s6f1.Items[0].GetMemory<uint>().Span[0]);   // TRID 与 S2F23 同格式
+            Assert.Equal(2u, s6f1.Items[1].GetMemory<uint>().Span[0]);   // SMPLN
+            Assert.Equal(16, s6f1.Items[2].GetString().Length);          // STIME
+            Assert.Equal(4, s6f1.Items[3].Items.Length);                 // SV：REPGSZ=2 个采样 × 2 个 SVID
+
+            // 标准 DSPER 的解析：hhmmss / hhmmsscc
+            Assert.True(TraceManager.TryParseDsper("000010", out var tenSeconds));
+            Assert.Equal(10_000, tenSeconds);
+            Assert.True(TraceManager.TryParseDsper("00001050", out var tenSecondsHalf));
+            Assert.Equal(10_500, tenSecondsHalf);
+            Assert.False(TraceManager.TryParseDsper("109999", out _));   // 分钟 99 非法
+        }
+        finally
+        {
+            if (Directory.Exists(empty)) Directory.Delete(empty, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// S2F23 的三个拒绝码 + 终止：周期非法回 3、SVID 未知回 4、REPGSZ 非法回 5；
+    /// TOTSMP=0 终止该 TRID 后不再产生 S6F1。
+    /// </summary>
+    [Fact]
+    public async Task S2F23_Rejects_Bad_Period_Unknown_Svid_And_Bad_Repgsz_And_Terminates()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+        var catalog = runtime.VariableManager;
+        var empty = Path.Combine(Path.GetTempPath(), "SecsGemTests", Guid.NewGuid().ToString("N"));
+        catalog.SVID.FilePath = empty;
+        catalog.DVID.FilePath = empty;
+        catalog.ECID.FilePath = empty;
+        catalog.CEID.FilePath = empty;
+        catalog.ReportID.FilePath = empty;
+        try
+        {
+            runtime.Config();
+            await ((ISecsGemRuntime)runtime).ConnectAsync(new SecsGem.Core.SecsGemOptions());
+
+            // 周期非法（10:99:99）
+            await transport.EmitReceivedAsync(new SecsMessage(2, 23, true)
+            {
+                SecsItem = Item.L(Item.U4(1), Item.A("109999"), Item.U4(1), Item.U4(1), Item.L(Item.U2(102)))
+            });
+            Assert.Equal((byte)3, transport.LastReplyItem!.GetMemory<byte>().Span[0]);
+
+            // SVID 未知
+            await transport.EmitReceivedAsync(new SecsMessage(2, 23, true)
+            {
+                SecsItem = Item.L(Item.U4(2), Item.A("50"), Item.U4(1), Item.U4(1), Item.L(Item.U4(99999)))
+            });
+            Assert.Equal((byte)4, transport.LastReplyItem!.GetMemory<byte>().Span[0]);
+
+            // REPGSZ 非法
+            await transport.EmitReceivedAsync(new SecsMessage(2, 23, true)
+            {
+                SecsItem = Item.L(Item.U4(3), Item.A("50"), Item.U4(5), Item.A("abc"), Item.L(Item.U2(102)))
+            });
+            Assert.Equal((byte)5, transport.LastReplyItem!.GetMemory<byte>().Span[0]);
+
+            // 拒绝的三条一条 S6F1 都不该发出去
+            Assert.DoesNotContain(transport.Sent, x => x.Order == "S6F1");
+
+            // 起一条长 Trace：周期 50ms、总量 100、每采样一条
+            await transport.EmitReceivedAsync(new SecsMessage(2, 23, true)
+            {
+                SecsItem = Item.L(Item.U4(9), Item.A("50"), Item.U4(100), Item.U4(1), Item.L(Item.U2(102)))
+            });
+            Assert.Equal((byte)0, transport.LastReplyItem!.GetMemory<byte>().Span[0]);
+            await WaitUntil(() => transport.Sent.Any(x => x.Order == "S6F1"));
+
+            // TOTSMP=0 终止同一个 TRID
+            await transport.EmitReceivedAsync(new SecsMessage(2, 23, true)
+            {
+                SecsItem = Item.L(Item.U4(9), Item.A("50"), Item.U4(0), Item.U4(1), Item.L(Item.U2(102)))
+            });
+            Assert.Equal((byte)0, transport.LastReplyItem!.GetMemory<byte>().Span[0]);
+
+            // 先给在途的一条落地，再看两个采样窗口里条数是否不再增长
+            await Task.Delay(250);
+            int settled = transport.Sent.Count(x => x.Order == "S6F1");
+            await Task.Delay(250);
+            Assert.Equal(settled, transport.Sent.Count(x => x.Order == "S6F1"));
+        }
+        finally
+        {
+            if (Directory.Exists(empty)) Directory.Delete(empty, recursive: true);
+        }
+    }
+
+    private static string Rpt(VIDManager catalog, int id)
+    {
+        // ReportInfo.VIDInfo 是按需重建的派生视图（S6F11/S1F23 才会先刷新），这里读之前先补一次。
+        catalog.UpdateCEID();
+        return string.Join("/", catalog.ReportID.GetDatas().Single(x => x.ID == id.ToString()).VIDInfo.Select(v => v.ID));
+    }
+
+    private static string Evt(VIDManager catalog, int id)
+    {
+        catalog.UpdateCEID();
+        return string.Join("/", catalog.CEID.GetDatas().Single(x => x.ID == id.ToString()).ReportInfo.Select(r => r.ID));
+    }
 
     /// <summary>监听在后台跑，等它真正切完状态，最多 2 秒。</summary>
     private static async Task WaitUntil(Func<bool> condition)

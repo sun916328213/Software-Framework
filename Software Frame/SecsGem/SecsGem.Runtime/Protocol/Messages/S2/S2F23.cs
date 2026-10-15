@@ -1,18 +1,14 @@
-﻿// 【中文阅读说明】
+// 【中文阅读说明】
 // SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。
 // 本文件定义：S2F23Info、S2F23。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：SecsGem.Core、SecsGem.Core.Order、SecsGem.Runtime、SecsGem.Runtime.Order、Extension.Core.Concurrency、Prism.Ioc。导入不代表所有类型都会在运行时加载。
-using SecsGem.Core;
+// 直接导入的协作命名空间包括：SecsGem.Core.Order、SecsGem.Runtime.Order、SecsGem.Runtime.Manager、Secs4Net、System、System.Collections.Generic、System.Linq。导入不代表所有类型都会在运行时加载。
 using SecsGem.Core.Order;
-using SecsGem.Runtime;
 using SecsGem.Runtime.Order;
-using Extension.Core.Concurrency;
-using Prism.Ioc;
+using SecsGem.Runtime.Manager;
 using Secs4Net;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace SecsGem.Runtime.Order.S2
 {
@@ -23,49 +19,61 @@ namespace SecsGem.Runtime.Order.S2
     public struct S2F23Info
     {
         /// <summary>
-        /// ID 
+        /// Trace 标识，同一条 Trace 的 S6F1 都用它
         /// </summary>
         public string TRID { get; set; }
         /// <summary>
-        /// 采样间隔，单位毫秒
+        /// 数据采样周期，标准为 A[6] "hhmmss"（可选 A[8] "hhmmsscc"）。
+        /// 历史写法是纯数字毫秒，<c>TraceManager.TryParseDsper</c> 两种都认。
         /// </summary>
         public string DSPER { get; set; }
         /// <summary>
-        /// 总采样数
+        /// 总采样数；0 表示终止该 TRID 的 Trace
         /// </summary>
         public string TOTSMP { get; set; }
         /// <summary>
-        /// 告分组大小，每5个采样生成一个报告
+        /// 报告分组大小，每 REPGSZ 个采样发一条 S6F1；0 表示每个采样各发一条
         /// </summary>
         public string REPGSZ { get; set; }
         /// <summary>
-        /// VID ID集合
+        /// SVID ID集合
         /// </summary>
-        public List<string>  VID { get; set; }
+        public List<string> VID { get; set; }
+        /// <summary>
+        /// TRID 在请求里的格式。S6F1 的 TRID 要与 S2F23 下发时一致，不能固定写死。
+        /// </summary>
+        public SecsFormat TRIDType { get; set; }
     }
 
     /// <summary>
-    /// Trace Process sensor H->E  
+    /// Trace Initialize Send H->E（E5 S2F23），回 S2F24 TIAACK；采样数据由 S6F1 周期上报。
+    /// <para>
+    /// 请求体 <c>L[5] &lt;TRID&gt; &lt;DSPER&gt; &lt;TOTSMP&gt; &lt;REPGSZ&gt; &lt;L[n] SVID&gt;</c>。
+    /// 校验与 trace 的启停都交给 <see cref="TraceManager"/>，本处理器只负责解析请求体、
+    /// 把 TIAACK 回出去。
+    /// </para>
+    /// <para>
+    /// 原实现把请求转成 <c>S2F23Info</c> 后扔进 <c>EventHelper.TriggerEvent("S2F23", …)</c> 就回 B(0)，
+    /// 既没人订阅、又和引擎自己触发的 "S2F23"（事件数据是回包 Item）撞在同一个事件名上；
+    /// 现在改成直接调 TraceManager，去掉这条没有消费者的广播。
+    /// </para>
     /// </summary>
-    /// <remarks>
-    /// S2F23 的类型定义。SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。
-    /// 继承或实现的契约：SecsOrderBase。具体约束按这些契约及各成员实现解释。
-    /// </remarks>
     [SecsOrder("S2F23")]
     class S2F23 : SecsOrderBase
     {
-    
         /// <summary>
         /// 获取当前实现提供的值或对象；对应入口为 GetReplyItem。
-        /// 正文中的关键协作调用包括 SecsItemToList、ToList、Skip、B、Run；具体条件和先后次序见方法体。
+        /// 正文中的关键协作调用包括 SecsItemToList、Skip、Start、B；具体条件和先后次序见方法体。
         /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
         /// </summary>
-        public override Item GetReplyItem(SecsMessage pSecsMessage )
+        public override Item GetReplyItem(SecsMessage pSecsMessage)
         {
             try
             {
                 var data = SecsItemToList(pSecsMessage.SecsItem);
-       
+                if (data == null || data.Count < 4)
+                    throw new Exception("S2F23 请求体不足：至少要有 TRID/DSPER/TOTSMP/REPGSZ 四项");
+
                 S2F23Info s2F23 = new S2F23Info()
                 {
                     TRID = data[0],
@@ -73,23 +81,29 @@ namespace SecsGem.Runtime.Order.S2
                     TOTSMP = data[2],
                     REPGSZ = data[3],
                     VID = data.Skip(4).ToList(),
+                    TRIDType = ResolveTridFormat(pSecsMessage.SecsItem),
                 };
- 
-                Item SecsItem = Item.B(0); //Success;  
 
-                Task.Run(() =>
-                {
-                    // 触发字典中对应指令的事件，并传递s2F23数据对象
-                    EventHelper.TriggerEvent("S2F23", s2F23);
-                });
-
-                return SecsItem;
+                // S2F24 的 TIAACK：0=接受，其余见 TraceManager.Start 的返回码说明。
+                byte tiaack = TraceManager?.Start(s2F23) ?? 3; // 3 = 周期非法（拿不到 TraceManager 时不可能接受）
+                return Item.B(tiaack);
             }
             catch (Exception ex)
             {
                 return Fail(ex);  //  解析失败 返回null TryReplyAsync()中replyMessage=null  触发S9F7 
             }
         }
+
+        /// <summary>
+        /// 取 TRID 的格式（请求体 L[5] 的第一项）。SecsFormat 的默认值 0 是 List，
+        /// 这里必须挡掉——否则 S6F1 组包会走 List 分支，把 TRID 字符串弄丢。
+        /// </summary>
+        private static SecsFormat ResolveTridFormat(Item body)
+        {
+            if (body?.Format == SecsFormat.List && body.Items.Length > 0 && body.Items[0].Format != SecsFormat.List)
+                return body.Items[0].Format;
+
+            return SecsFormat.U4;
+        }
     }
 }
-
