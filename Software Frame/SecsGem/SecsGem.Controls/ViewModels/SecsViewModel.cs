@@ -36,6 +36,21 @@ public partial class SecsViewModel : ObservableObject, IDisposable
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e)
     {
         OnPropertyChanged(e.PropertyName);
+        // 选中行变化时回填输入框：新增与修改共用同一套框，不回填的话
+        // 改一个 VID 列表得整段重打。ID 也带出来，好让"保存修改"能发现你把 ID 改了。
+        if (e.PropertyName == nameof(Model.SelectedReport))
+        {
+            Model.NewReportId = Model.SelectedReport?.ID ?? "";
+            Model.NewReportName = Model.SelectedReport?.Name ?? "";
+            Model.NewReportVids = Model.SelectedReport?.VID_Collection ?? "";
+        }
+        if (e.PropertyName == nameof(Model.SelectedEvent))
+        {
+            Model.NewEventId = Model.SelectedEvent?.ID ?? "";
+            Model.NewEventName = Model.SelectedEvent?.Name ?? "";
+            Model.NewEventReports = Model.SelectedEvent?.ReportID_Collection ?? "";
+            Model.NewEventEnable = Model.SelectedEvent?.Enable ?? true;
+        }
         if (e.PropertyName is nameof(Model.IsConnected) or nameof(Model.IsClosed) or
             nameof(Model.Address) or nameof(Model.PortText) or nameof(Model.DeviceIdText) or
             nameof(Model.ConnectionModeIndex) or nameof(Model.Sml) or nameof(Model.SelectedVariable) or
@@ -113,8 +128,10 @@ public partial class SecsViewModel : ObservableObject, IDisposable
         DeleteVariableCommand.NotifyCanExecuteChanged();
         AddReportCommand.NotifyCanExecuteChanged();
         DeleteReportCommand.NotifyCanExecuteChanged();
+        SetReportCommand.NotifyCanExecuteChanged();
         AddEventCommand.NotifyCanExecuteChanged();
         DeleteEventCommand.NotifyCanExecuteChanged();
+        SetEventCommand.NotifyCanExecuteChanged();
         RefreshCatalogNowCommand.NotifyCanExecuteChanged();
         ReportEventCommand.NotifyCanExecuteChanged();
         RaiseAlarmCommand.NotifyCanExecuteChanged();
@@ -264,6 +281,25 @@ public partial class SecsViewModel : ObservableObject, IDisposable
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanDeleteReport))]
     private void DeleteReport() { if (CanDeleteReport()) Workspace.DeleteReport(); }
+    /// <summary>
+    /// 处理对应通知、事件或生命周期回调；对应入口为 CanSetReport。
+    /// 正文中的关键协作调用包括 CanUseWorkspace；具体条件和先后次序见方法体。
+    /// </summary>
+    private bool CanSetReport() => CanUseWorkspace() && Model.SelectedReport != null;
+    /// <summary>
+    /// 执行修改操作；对应入口为 SetReport。
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanSetReport))]
+    private void SetReport() { if (CanSetReport()) Workspace.SetReport(); }
+    /// <summary>
+    /// 处理对应通知、事件或生命周期回调；对应入口为 CanSetEvent。
+    /// </summary>
+    private bool CanSetEvent() => CanUseWorkspace() && Model.SelectedEvent != null;
+    /// <summary>
+    /// 执行修改操作；对应入口为 SetEvent。
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanSetEvent))]
+    private void SetEvent() { if (CanSetEvent()) Workspace.SetEvent(); }
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 CanDeleteEvent。
     /// </summary>

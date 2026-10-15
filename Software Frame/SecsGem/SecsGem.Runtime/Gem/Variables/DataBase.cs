@@ -105,6 +105,19 @@ namespace SecsGem.Runtime.Variable
 
 
         /// <summary>
+        /// 引用列表去重保序：Host 用 S2F33/S2F35 点名时可能把同一个 ID 发两遍，
+        /// 直接存进表里会让 S6F11 把同一个值连发两次。空段（Host 发了空格子）也一并丢掉。
+        /// </summary>
+        protected static List<string> Dedup(List<string> ids)
+        {
+            return (ids ?? new List<string>())
+                .Select(x => x?.Trim())
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Distinct()
+                .ToList();
+        }
+
+        /// <summary>
         /// 获取当前实现提供的值或对象；对应入口为 GetDatas。
         /// </summary>
         public virtual List<T> GetDatas()

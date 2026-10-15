@@ -6,6 +6,7 @@ using SecsGem.Runtime;
 using SecsGem.Runtime.Manager;
 using SecsGem.Runtime.Variable;
 using SecsGem.Core;
+using Extension.Core.Conversion;
 
 namespace SecsGem.Runtime.DataBinding;
 
@@ -13,14 +14,16 @@ namespace SecsGem.Runtime.DataBinding;
 internal sealed class SecsDataBinding
 {
     private readonly VIDManager _manager;
+    private readonly StatusManager _status;
     private IEquipmentDataProvider? _provider;
 
     /// <summary>
     /// 初始化 SecsDataBinding 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// </summary>
-    internal SecsDataBinding(VIDManager manager)
+    internal SecsDataBinding(VIDManager manager, StatusManager status)
     {
         _manager = manager;
+        _status = status;
     }
 
     internal VIDManager Manager => _manager;
@@ -56,10 +59,16 @@ internal sealed class SecsDataBinding
 
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 Refresh。
-    /// 正文中的关键协作调用包括 GetVariableValues、TryGetValue；具体条件和先后次序见方法体。
+    /// <para>
+    /// 修复：原来没配 provider 就直接 return，Clock/DeviceMode/DeviceStatus 永远是
+    /// CSV 里的陈旧值（甚至 null），S1F3/S1F11 回出去的全是死的。
+    /// 现在系统变量每次都刷（引擎在 S1F3/S1F11 回包前调这里），外部快照有才叠加。
+    /// </para>
     /// </summary>
     internal void Refresh()
     {
+        RefreshSystemVids();
+
         var provider = _provider;
         if (provider == null) return;
 
@@ -72,5 +81,27 @@ internal sealed class SecsDataBinding
                 vid.Value = value!;
             }
         }
+    }
+
+    /// <summary>
+    /// 刷新系统变量：Clock=当前时间，模式/状态=状态机当前值。
+    /// <para>
+    /// 只写存在的变量（缺名或缺变量就跳过，不抛——回包不能因为少个变量就整体失败，
+    /// 缺的那个 S1F3 组包时按原有逻辑处理）。名字走 <c>StatusManager</c> 的配置，
+    /// 不在这里硬编；Clock 沿用 S6F11 的既有写法。
+    /// </para>
+    /// </summary>
+    private void RefreshSystemVids()
+    {
+        if (_manager.GetVIDByName("Clock") != null)
+            _manager.UpdateVID("Clock", System.DateTime.Now.ToYYYYMMDDHHMMSSFFF());
+
+        var modeName = _status.Mode_VIDName;
+        if (!string.IsNullOrEmpty(modeName) && _manager.GetVIDByName(modeName) != null)
+            _manager.UpdateVID(modeName, _status.CurrentMode);
+
+        var statusName = _status.Status_VIDName;
+        if (!string.IsNullOrEmpty(statusName) && _manager.GetVIDByName(statusName) != null)
+            _manager.UpdateVID(statusName, _status.CurrentStatus);
     }
 }

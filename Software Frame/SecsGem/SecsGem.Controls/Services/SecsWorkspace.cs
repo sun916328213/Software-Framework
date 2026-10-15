@@ -2,6 +2,7 @@
 // SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。
 // 本文件定义：SecsWorkspace、Lease、WorkbenchCommandHandler。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：SecsGem.Controls.Models、System.Collections.ObjectModel、System.Windows.Threading、SecsGem.Runtime.Variable、SecsGem.Runtime.Manager、SecsGem.Core。导入不代表所有类型都会在运行时加载。
+using Extension.Core.Concurrency;
 using SecsGem.Controls.Models;
 using System.Collections.ObjectModel;
 using System.Windows.Threading;
@@ -22,6 +23,13 @@ public sealed class SecsWorkspace : IDisposable
     private bool _disposed;
     private readonly DispatcherTimer _stateTimer;
     private int _subscriptions;
+    /// <summary>
+    /// Host 改配置类指令的监听：S2F33 改报表挂的变量、S2F35 改事件挂的报表、S2F37 改事件使能。
+    /// 三个 handler 改的都是运行时目录的内存表，界面快照必须重刷，否则改完页面上还是旧的。
+    /// 引擎在每条收到的主消息回包后都会按 order 名触发事件（ReceiveAsync 末尾），
+    /// 到这里时目录已经改完，直接刷就行。
+    /// </summary>
+    private readonly Action<CEventArgs> _onHostConfigChanged;
     public SecsPageModel Model { get; } = new();
     public ObservableCollection<LogRow> Messages => Model.Messages;
 
@@ -44,6 +52,11 @@ public sealed class SecsWorkspace : IDisposable
         _runtime.OnError += OnError;
         _stateTimer = new DispatcherTimer(DispatcherPriority.Background, dispatcher) { Interval = TimeSpan.FromSeconds(1) };
         _stateTimer.Tick += OnStateTick;
+
+        _onHostConfigChanged = _ => Post(RefreshCatalog);
+        EventHelper.RegisterEvent("S2F33", _onHostConfigChanged);
+        EventHelper.RegisterEvent("S2F35", _onHostConfigChanged);
+        EventHelper.RegisterEvent("S2F37", _onHostConfigChanged);
 
         RefreshState();
         RefreshCatalog();
@@ -480,7 +493,7 @@ public sealed class SecsWorkspace : IDisposable
         {
             _runtime.SaveEvents(_catalog.CEID.GetDatas()
                 .Select(x => new SecsGemEventDefinition(x.ID, x.Name, x.ReportID_Collection, x.Enable))
-                .Append(new SecsGemEventDefinition(id, name, string.Join(",", reports), true)));
+                .Append(new SecsGemEventDefinition(id, name, string.Join(",", reports), Model.NewEventEnable)));
             RefreshCatalog();
             AddLog("配置", $"已新增事件 {id}_{name}（Report {string.Join(",", reports)}）");
         }
@@ -553,6 +566,104 @@ public sealed class SecsWorkspace : IDisposable
         catch (Exception ex)
         {
             AddLog("错误", $"删除事件: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 修改选中 Report 的名称与 VID 列表并落盘；对应入口为 SetReport。
+    /// <para>
+    /// 和 <see cref="AddReport"/> 同一套校验与落盘路径（<c>SaveReports</c> 的 Merge），
+    /// 只是把"新增一行"换成"替换选中那一行"。VID 引用解析不了就地拒绝并点名，
+    /// 别让运行时 Update 抛 —— 那会变成一条没头没尾的 S9F7。
+    /// </para>
+    /// </summary>
+    public void SetReport()
+    {
+        if (_disposed) return;
+        if (Model.SelectedReport is not { } selected)
+        {
+            AddLog("提示", "请先选择要修改的报表");
+            return;
+        }
+        // 输入框与新增共用，ID 也带出来了。改 ID 等于删一个再加一个，
+        // 这里直接拒绝，别让人以为改成功了（这坑之前在 S2F35 上踩过一次）。
+        var typedId = Model.NewReportId?.Trim();
+        if (!string.IsNullOrEmpty(typedId) && typedId != selected.ID)
+        {
+            AddLog("提示", $"ID 不能改（当前 {selected.ID}）；要换 ID 请新增一行再删旧的");
+            return;
+        }
+        var name = Model.NewReportName?.Trim();
+        if (string.IsNullOrEmpty(name))
+        {
+            AddLog("提示", "Report 名称不能为空");
+            return;
+        }
+        var vids = SplitIds(Model.NewReportVids);
+        var unknown = vids.Where(v => !ResolveReportVid(v)).ToArray();
+        if (unknown.Length != 0)
+        {
+            AddLog("提示", $"VID {string.Join(",", unknown)} 不存在");
+            return;
+        }
+        try
+        {
+            _runtime.SaveReports(_catalog.ReportID.GetDatas()
+                .Select(x => x.ID == selected.ID
+                    ? new SecsGemReportDefinition(x.ID, name, string.Join(",", vids))
+                    : new SecsGemReportDefinition(x.ID, x.Name, x.VID_Collection)));
+            RefreshCatalog();
+            AddLog("配置", $"已修改 Report {selected.ID}_{name}（VID {string.Join(",", vids)}）");
+        }
+        catch (Exception ex)
+        {
+            AddLog("错误", $"修改 Report: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 修改选中 CEID 的名称、报表列表与使能并落盘；对应入口为 SetEvent。
+    /// 与 <see cref="AddEvent"/> 同一套校验与落盘路径（<c>SaveEvents</c>）。
+    /// </summary>
+    public void SetEvent()
+    {
+        if (_disposed) return;
+        if (Model.SelectedEvent is not { } selected)
+        {
+            AddLog("提示", "请先选择要修改的事件");
+            return;
+        }
+        var typedId = Model.NewEventId?.Trim();
+        if (!string.IsNullOrEmpty(typedId) && typedId != selected.ID)
+        {
+            AddLog("提示", $"ID 不能改（当前 {selected.ID}）；要换 ID 请新增一行再删旧的");
+            return;
+        }
+        var name = Model.NewEventName?.Trim();
+        if (string.IsNullOrEmpty(name))
+        {
+            AddLog("提示", "事件名称不能为空");
+            return;
+        }
+        var reports = SplitIds(Model.NewEventReports);
+        var unknown = reports.Where(r => _catalog.ReportID.Datas.All(x => x.ID != r)).ToArray();
+        if (unknown.Length != 0)
+        {
+            AddLog("提示", $"Report {string.Join(",", unknown)} 不存在");
+            return;
+        }
+        try
+        {
+            _runtime.SaveEvents(_catalog.CEID.GetDatas()
+                .Select(x => x.ID == selected.ID
+                    ? new SecsGemEventDefinition(x.ID, name, string.Join(",", reports), Model.NewEventEnable)
+                    : new SecsGemEventDefinition(x.ID, x.Name, x.ReportID_Collection, x.Enable)));
+            RefreshCatalog();
+            AddLog("配置", $"已修改事件 {selected.ID}_{name}（Report {string.Join(",", reports)}）");
+        }
+        catch (Exception ex)
+        {
+            AddLog("错误", $"修改事件: {ex.Message}");
         }
     }
 
@@ -741,6 +852,9 @@ public sealed class SecsWorkspace : IDisposable
         Model.IsConnected = false;
         _stateTimer.Stop();
         _stateTimer.Tick -= OnStateTick;
+        EventHelper.UnregisterEvent("S2F33", _onHostConfigChanged);
+        EventHelper.UnregisterEvent("S2F35", _onHostConfigChanged);
+        EventHelper.UnregisterEvent("S2F37", _onHostConfigChanged);
         _runtime.OnConnectChanged -= OnConnectChanged;
         _runtime.OnSend -= OnSend;
         _runtime.OnReceive -= OnReceive;

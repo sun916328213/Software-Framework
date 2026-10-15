@@ -465,6 +465,197 @@ public sealed class ControlsWorkspaceTests(WorkbenchAppFixture host)
     }
 
     /// <summary>
+    /// Host 改配置类指令（S2F33/S2F35/S2F37）触发后，界面快照必须重刷。
+    /// <para>
+    /// 回归：三个 handler 只改运行时目录的内存表，从不通知界面，改完页面上还是旧的。
+    /// 引擎在每条收到的主消息回包后都按 order 名触发事件，这里直接模拟那一步：
+    /// 外部删掉一行 → 触发事件 → 界面快照里消失。不断言 handler 解析本身（引擎级另有覆盖）。
+    /// </para>
+    /// </summary>
+    [Theory]
+    [InlineData("S2F33")]
+    [InlineData("S2F35")]
+    [InlineData("S2F37")]
+    public void Host_Config_Change_Events_Refresh_The_Catalog_Snapshot(string order)
+    {
+        host.Invoke(() =>
+        {
+            var container = ContainerLocator.Container;
+            var catalog = container.Resolve<VIDManager>();
+            var root = Path.Combine(Path.GetTempPath(), "SecsGemControlsTests", Guid.NewGuid().ToString("N"));
+            var originalReportPath = catalog.ReportID.FilePath;
+            var originalEventPath = catalog.CEID.FilePath;
+            catalog.ReportID.FilePath = root;
+            catalog.CEID.FilePath = root;
+            catalog.ReportID.Datas.Clear();
+            catalog.CEID.Datas.Clear();
+            catalog.ReportID.Datas.Add(new ReportInfo { ID = "77", Name = "Gone", VID_Collection = "1" });
+            catalog.CEID.Datas.Add(new CEIDInfo { ID = "88", Name = "Gone", ReportID_Collection = "77", Enable = true });
+            try
+            {
+                using var runtime = new ObservedRuntime(container);
+                using var workspace = new SecsWorkspace(runtime, catalog, Dispatcher.CurrentDispatcher);
+                using var vm = new SecsViewModel(workspace);
+                _ = vm;
+
+                Assert.Contains(workspace.Model.Reports, x => x.ID == "77");
+                Assert.Contains(workspace.Model.Events, x => x.ID == "88");
+
+                // 模拟目录在界面之外被改掉（S2F33/S2F35/S2F37 干的就是这个）
+                foreach (var stale in catalog.ReportID.Datas.Where(x => x.ID == "77").ToArray())
+                    catalog.ReportID.Datas.Remove(stale);
+                foreach (var stale in catalog.CEID.Datas.Where(x => x.ID == "88").ToArray())
+                    catalog.CEID.Datas.Remove(stale);
+
+                Extension.Core.Concurrency.EventHelper.TriggerEvent(order);
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+
+                Assert.DoesNotContain(workspace.Model.Reports, x => x.ID == "77");
+                Assert.DoesNotContain(workspace.Model.Events, x => x.ID == "88");
+            }
+            finally
+            {
+                catalog.ReportID.Datas.Clear();
+                catalog.CEID.Datas.Clear();
+                catalog.ReportID.FilePath = originalReportPath;
+                catalog.CEID.FilePath = originalEventPath;
+                if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+            }
+        });
+    }
+
+    /// <summary>
+    /// 事件与报表可以手动改：选中行回填修改框 → 改值 → 保存落盘；引用不合法就地拒绝。
+    /// <para>
+    /// 回归：表格是 <c>IsReadOnly=True</c>，原来只有"新增/删除"，选中行改不掉 ——
+    /// 要改名或调 VID/报表清单只能去改 CSV，或等 Host 用 S2F33/S2F35 推过来。
+    /// </para>
+    /// </summary>
+    [Fact]
+    public void Selected_Report_And_Event_Can_Be_Edited_By_Hand()
+    {
+        host.Invoke(() =>
+        {
+            var container = ContainerLocator.Container;
+            var catalog = container.Resolve<VIDManager>();
+            var root = Path.Combine(Path.GetTempPath(), "SecsGemControlsTests", Guid.NewGuid().ToString("N"));
+            var originalSvidPath = catalog.SVID.FilePath;
+            var originalReportPath = catalog.ReportID.FilePath;
+            var originalEventPath = catalog.CEID.FilePath;
+            var tag = Guid.NewGuid().ToString("N")[..6];
+            var vidA = "6" + tag[..5];
+            var vidB = "5" + tag[..5];
+            catalog.SVID.FilePath = root;
+            catalog.ReportID.FilePath = root;
+            catalog.CEID.FilePath = root;
+            catalog.SVID.Datas.Clear();
+            catalog.ReportID.Datas.Clear();
+            catalog.CEID.Datas.Clear();
+            var a = new VIDInfo { ID = vidA, Name = "A_" + tag, Value = "", DataType = SecsFormat.ASCII, Category = "SVID" };
+            var b = new VIDInfo { ID = vidB, Name = "B_" + tag, Value = "", DataType = SecsFormat.ASCII, Category = "SVID" };
+            foreach (var v in new[] { a, b })
+            {
+                catalog.SVID.Datas.Add(v);
+                catalog.VIDList.Add(v);
+                catalog.VIDDic_Name[v.Name] = v;
+                catalog.VIDDic_ID[v.ID] = v;
+            }
+            catalog.ReportID.Datas.Add(new ReportInfo { ID = "70", Name = "R0", VID_Collection = vidA });
+            catalog.ReportID.Datas.Add(new ReportInfo { ID = "69", Name = "R9", VID_Collection = vidB });
+            catalog.CEID.Datas.Add(new CEIDInfo { ID = "80", Name = "E0", ReportID_Collection = "70", Enable = true });
+            try
+            {
+                using var runtime = new ObservedRuntime(container);
+                using var workspace = new SecsWorkspace(runtime, catalog, Dispatcher.CurrentDispatcher);
+                using var vm = new SecsViewModel(workspace);
+
+                // 选中 Report：共用输入框要回填现有值，否则用户得整段重打
+                // 回归：新命令漏进 RefreshCommands 时 CanExecuteChanged 从不触发，
+                // WPF 就一直按初始的 false 把按钮画灰 —— 输入框都回填了，按钮还是点不了。
+                var reportRequery = 0;
+                var eventRequery = 0;
+                vm.SetReportCommand.CanExecuteChanged += (_, _) => reportRequery++;
+                vm.SetEventCommand.CanExecuteChanged += (_, _) => eventRequery++;
+
+                vm.SelectedReport = workspace.Model.Reports.Single(x => x.ID == "70");
+                Assert.True(reportRequery > 0);
+                Assert.True(vm.SetReportCommand.CanExecute(null));
+                Assert.Equal("70", vm.Model.NewReportId);
+                Assert.Equal("R0", vm.Model.NewReportName);
+                Assert.Equal(vidA, vm.Model.NewReportVids);
+
+                vm.Model.NewReportName = "R0_改名";
+                vm.Model.NewReportVids = $"{vidB}, {vidA}";   // 换序 + 带空格，顺带验证切分
+                Assert.True(vm.SetReportCommand.CanExecute(null));
+                vm.SetReportCommand.Execute(null);
+                var report = catalog.ReportID.GetDatas().Single(x => x.ID == "70");
+                Assert.Equal("R0_改名", report.Name);
+                Assert.Equal($"{vidB},{vidA}", report.VID_Collection);
+
+                // 引用不存在的 VID：就地拒绝并点名，不写盘
+                vm.Model.NewReportVids = "999999";
+                vm.SetReportCommand.Execute(null);
+                Assert.Equal($"{vidB},{vidA}", catalog.ReportID.GetDatas().Single(x => x.ID == "70").VID_Collection);
+                Assert.Contains("999999", workspace.Model.Messages.Last().Text);
+
+                // 改 ID 要明确拒绝，不能静默当成改了（ID 是键，改=删一个加一个）
+                vm.Model.NewReportId = "700";
+                vm.Model.NewReportName = "R0_改名2";
+                vm.SetReportCommand.Execute(null);
+                Assert.Equal("R0_改名", catalog.ReportID.GetDatas().Single(x => x.ID == "70").Name);
+                Assert.Contains("ID 不能改", workspace.Model.Messages.Last().Text);
+
+                // 选中 Event：回填 + 改报表清单与使能
+                vm.SelectedEvent = workspace.Model.Events.Single(x => x.ID == "80");
+                Assert.True(eventRequery > 0);
+                Assert.True(vm.SetEventCommand.CanExecute(null));
+                Assert.Equal("80", vm.Model.NewEventId);
+                Assert.Equal("E0", vm.Model.NewEventName);
+                Assert.Equal("70", vm.Model.NewEventReports);
+                Assert.True(vm.Model.NewEventEnable);
+
+                vm.Model.NewEventName = "E0_改名";
+                vm.Model.NewEventReports = "69,70";
+                vm.Model.NewEventEnable = false;
+                vm.SetEventCommand.Execute(null);
+                var evt = catalog.CEID.GetDatas().Single(x => x.ID == "80");
+                Assert.Equal("E0_改名", evt.Name);
+                Assert.Equal("69,70", evt.ReportID_Collection);
+                Assert.False(evt.Enable);
+
+                // 引用不存在的 Report：同样拒绝
+                vm.Model.NewEventReports = "88888";
+                vm.SetEventCommand.Execute(null);
+                Assert.Equal("69,70", catalog.CEID.GetDatas().Single(x => x.ID == "80").ReportID_Collection);
+
+                // 落盘验证
+                var reportCsv = File.ReadAllText(Path.Combine(root, "ReportID.csv"));
+                Assert.Contains("R0_改名", reportCsv);
+                Assert.Contains($"{vidB},{vidA}", reportCsv);
+                var ceidCsv = File.ReadAllText(Path.Combine(root, "CEID.csv"));
+                Assert.Contains("E0_改名", ceidCsv);
+                Assert.Contains("69,70", ceidCsv);
+            }
+            finally
+            {
+                foreach (var v in new[] { a, b })
+                {
+                    catalog.SVID.Datas.Remove(v);
+                    catalog.VIDList.Remove(v);
+                    catalog.VIDDic_Name.Remove(v.Name);
+                    catalog.VIDDic_ID.Remove(v.ID);
+                }
+                catalog.ReportID.Datas.Clear();
+                catalog.CEID.Datas.Clear();
+                catalog.SVID.FilePath = originalSvidPath;
+                catalog.ReportID.FilePath = originalReportPath;
+                catalog.CEID.FilePath = originalEventPath;
+                if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+            }
+        });
+    }
+
+    /// <summary>
     /// ObservedRuntime 的类型定义。SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
     /// 继承或实现的契约：SecsGemRuntime。具体约束按这些契约及各成员实现解释。
     /// </summary>

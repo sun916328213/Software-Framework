@@ -58,8 +58,7 @@ namespace SecsGem.Runtime.Order.S1
             }
             catch (Exception ex)
             {
-                string message = ex.Message + ex.StackTrace;
-                return null;    
+                return Fail(ex);    
             }
         }
 

@@ -127,7 +127,7 @@
 
             <TabControl>
                 <TabItem Header="通信与消息">
-                    <Grid Margin="12">
+                    <Grid Margin="8">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -213,7 +213,7 @@
                     </Grid>
                 </TabItem>
                 <TabItem Header="变量 SVID/DVID/ECID">
-                    <Grid Margin="12">
+                    <Grid Margin="8">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
@@ -338,7 +338,7 @@
                     </Grid>
                 </TabItem>
                 <TabItem Header="事件与报表">
-                    <Grid Margin="12">
+                    <Grid Margin="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
@@ -369,6 +369,24 @@
                                     Width="*"
                                     Binding="{Binding ReportID_Collection}"
                                     Header="Report IDs" />
+                                <DataGridCheckBoxColumn
+                                    Width="70"
+                                    Binding="{Binding Enable, Mode=OneWay}"
+                                    Header="启用">
+                                    <DataGridCheckBoxColumn.CellStyle>
+                                        <Style BasedOn="{StaticResource MaterialDesignDataGridCell}" TargetType="DataGridCell">
+                                            <Setter Property="Padding" Value="0" />
+                                            <Setter Property="HorizontalContentAlignment" Value="Left" />
+                                        </Style>
+                                    </DataGridCheckBoxColumn.CellStyle>
+                                    <DataGridCheckBoxColumn.ElementStyle>
+                                        <Style BasedOn="{StaticResource MaterialDesignCheckBox}" TargetType="CheckBox">
+                                            <Setter Property="Margin" Value="12,0,0,0" />
+                                            <Setter Property="Focusable" Value="False" />
+                                        </Style>
+                                    </DataGridCheckBoxColumn.ElementStyle>
+                                </DataGridCheckBoxColumn>
+
                             </custcontrols:DataGridView.Columns>
                         </custcontrols:DataGridView>
                         <custcontrols:DataGridView
@@ -402,10 +420,10 @@
                             Grid.ColumnSpan="2">
                             <WrapPanel>
                                 <TextBlock
-                                    Width="100"
+                                    Width="70"
                                     Margin="0,0,12,0"
                                     VerticalAlignment="Center"
-                                    Text="新增Report信息:"
+                                    Text="Report信息:"
                                     TextAlignment="Center" />
                                 <TextBox
                                     x:Name="NewReportIdBox"
@@ -449,14 +467,22 @@
                                     Command="{Binding DeleteReportCommand}"
                                     Content="删除选中报表"
                                     Style="{StaticResource CompactOutlinedButton}" />
+                                <Button
+                                    Width="125"
+                                    MinHeight="32"
+                                    Margin="12,0,0,0"
+                                    AutomationProperties.Name="保存选中报表"
+                                    Command="{Binding SetReportCommand}"
+                                    Content="保存选中Report"
+                                    Style="{StaticResource CompactOutlinedButton}" />
                             </WrapPanel>
-                            <TextBlock Height="5" />
+                            <TextBlock Height="10" />
                             <WrapPanel>
                                 <TextBlock
-                                    Width="100"
+                                    Width="70"
                                     Margin="0,0,12,0"
                                     VerticalAlignment="Center"
-                                    Text="新增Event信息:" />
+                                    Text="Event信息:" />
                                 <TextBox
                                     x:Name="NewEventIdBox"
                                     Width="90"
@@ -498,6 +524,20 @@
                                     Command="{Binding DeleteEventCommand}"
                                     Content="删除选中事件"
                                     Style="{StaticResource CompactOutlinedButton}" />
+                                <!--  启用位只在编辑区改：DataGrid 是 IsReadOnly，列上放勾点不动反而误导  -->
+                                <CheckBox
+                                    Margin="12,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Content="启用"
+                                    IsChecked="{Binding Model.NewEventEnable, Mode=TwoWay}" />
+                                <Button
+                                    Width="125"
+                                    MinHeight="32"
+                                    Margin="12,0,0,0"
+                                    AutomationProperties.Name="保存选中事件"
+                                    Command="{Binding SetEventCommand}"
+                                    Content="保存选中Event"
+                                    Style="{StaticResource CompactOutlinedButton}" />
                             </WrapPanel>
                         </StackPanel>
 
@@ -517,10 +557,11 @@
                                 Style="{StaticResource CompactOutlinedButton}" />
                         </WrapPanel>
 
+                        <!--  新增与修改共用上面两行输入框：选中行会回填，改完按"保存选中…"落盘  -->
                     </Grid>
                 </TabItem>
                 <TabItem Header="报警">
-                    <Grid Margin="12">
+                    <Grid Margin="8">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
@@ -565,7 +606,7 @@
                     </Grid>
                 </TabItem>
                 <TabItem Header="远程命令与 S10">
-                    <StackPanel Margin="12">
+                    <StackPanel Margin="8">
                         <TextBlock Margin="0,0,0,10" Text="收到 S2F41 后，工作台记录命令与参数并按下方 HCACK 应答。" />
                         <WrapPanel>
                             <TextBlock

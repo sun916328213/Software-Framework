@@ -143,12 +143,17 @@ namespace SecsGem.Runtime.Variable
         {
             ReportInfo reportid = Datas.FirstOrDefault(x => x.ID == pReportID);
 
-            //如果ReportID不存在
-            if (reportid != null)
-            {
-                reportid.VIDID = pVIDID;
-                Save();
-            }
+            // 报表不存在必须报错，不能静默跳过再回 Success：
+            // Host 会以为这次链接成功了，实际数据仍旧挂在原来那个报表下面
+            //（现场表现：第二条链接请求"没生效"，且所有变量看起来都归第一个报表）。
+            // 抛出去由 S2F33 转成 S9F7，Host 立刻知道该 RPTID 不存在。
+            if (reportid == null)
+                throw new Exception($"Report ID No Exist: {pReportID}");
+
+            // 去重保序：Host 重复点同一个 VID 时，报表里只留一份，
+            // 否则 S6F11 会把同一个值连发两遍，S1F23 的事件 VID 名录也会重复。
+            reportid.VIDID = Dedup(pVIDID);
+            Save();
         }
     }
 }

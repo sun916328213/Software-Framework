@@ -50,12 +50,12 @@
         x:Key="CompactTextBox"
         BasedOn="{StaticResource MaterialDesignFloatingHintTextBox}"
         TargetType="TextBox">
-        <Setter Property="Height" Value="32" />
-        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="MinHeight" Value="28" />
         <Setter Property="Padding" Value="8,2" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="HorizontalAlignment" Value="Center" />
-
+        <Setter Property="md:HintAssist.FloatingOffset" Value="0,-15" />
     </Style>
     <Style
         x:Key="CompactComboBox"

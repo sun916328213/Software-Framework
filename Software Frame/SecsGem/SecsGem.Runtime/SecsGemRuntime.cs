@@ -78,7 +78,7 @@ namespace SecsGem.Runtime
             _messageRegistry = container.Resolve<MessageRegistry>();
             _statusManager.SetConnection(_transport.IsConnected);
             _messageRegistry.AutoRegisterHandlers();
-            _dataBinding = new SecsDataBinding(_vidManager);
+            _dataBinding = new SecsDataBinding(_vidManager, _statusManager);
             _protocolEngine = new SecsProtocolEngine(_messageRegistry, _dataBinding, _transport, Send, ReplyAsync, RaiseError);
             _transport.OnReceive += SecsBase_OnReceiveAsync;
             _transport.OnReply += SecsBase_OnReply;

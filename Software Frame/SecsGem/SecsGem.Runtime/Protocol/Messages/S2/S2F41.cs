@@ -56,8 +56,7 @@ namespace SecsGem.Runtime.Order.S2
             }
             catch (Exception ex)
             {
-                string message = ex.Message + ex.StackTrace;
-                return null;  //  解析失败 返回null TryReplyAsync()中replyMessage=null  触发S9F7 
+                return Fail(ex);  //  解析失败 返回null TryReplyAsync()中replyMessage=null  触发S9F7 
             }
         }
 

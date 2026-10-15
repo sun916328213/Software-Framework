@@ -79,7 +79,7 @@ namespace SecsGem.Tests
             string[] expected =
             {
                 // S1 设备状态与通信
-                "S1F1", "S1F3", "S1F11", "S1F13", "S1F15", "S1F17",
+                "S1F1", "S1F3", "S1F11", "S1F13", "S1F15", "S1F17", "S1F23",
                 // S2 设备控制
                 "S2F23", "S2F33", "S2F35", "S2F37", "S2F41",
                 // S5 报警

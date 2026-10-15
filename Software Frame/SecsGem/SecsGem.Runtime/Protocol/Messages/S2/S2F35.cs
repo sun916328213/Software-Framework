@@ -31,27 +31,41 @@ namespace SecsGem.Runtime.Order.S2
         {
             try
             {
-                var data = SecsItemToList(pSecsMessage.SecsItem);
-           
-                //解析数据
-                string dataid = data[0];
-                string eventid = data[1];
-                List<string> reportid = data.Skip(2).ToList();
- 
-                //修改ReportID挂载数据
-                VIDManager. ReportID.Modify(eventid, reportid);
+                // 按组解析，不用 SecsItemToList 平铺：一条里可能有多组 <DATAID, CEID, L[RPTID]>
+                // （产线 Host 实测 CEID 105 与 CEID 104 同发），平铺后第二个 CEID
+                // 会被当成报表 ID 挂到第一个事件上，然后报 S9F7。
+                var groups = SplitLinkGroups(pSecsMessage.SecsItem);
+                if (groups.Count == 0) throw new Exception("S2F35 请求体解析不出任何一组链接");
+
+                // 同 S2F33：先整条校验再落盘，别留下半截链接配置。
+                foreach (var g in groups)
+                {
+                    if (!VIDManager.CEID.Datas.Any(c => c.ID == g.LinkId))
+                        throw new Exception($"Collection Event ID 不存在: {g.LinkId}");
+
+                    var missing = g.Members.Where(m => !VIDManager.ReportID.Datas.Any(r => r.ID == m)).ToArray();
+                    if (missing.Length != 0)
+                        throw new Exception($"事件 {g.LinkId} 的 Report 不存在: {string.Join(",", missing)}");
+                }
+
+                foreach (var g in groups)
+                {
+                    // S2F35 是"事件↔报表链接"：改的是 CEID 挂的报表，不是报表挂的变量。
+                    // 原实现误调 ReportID.Modify(eventid, ...)，事件 ID 在报表里永远找不到，
+                    // Host 的链接请求静默无事发生，还回 Success。CEID.Modify 找不到会抛，转 S9F7。
+                    VIDManager.CEID.Modify(g.LinkId, g.Members);
+                }
 
                 //刷新数据
-                VIDManager. ReportID.Update(VIDManager.VIDList.ToList()); //刷新ReportID数据
-                VIDManager. CEID.Update(VIDManager. ReportID.GetDatas());//刷新CEID数据
+                VIDManager.ReportID.Update(VIDManager.VIDList.ToList()); //刷新ReportID数据
+                VIDManager.CEID.Update(VIDManager.ReportID.GetDatas());//刷新CEID数据
 
                 Item SecsItem = Item.B(0); //Success;  
                 return SecsItem;
             }
             catch (Exception ex)
             {
-                string message = ex.Message + ex.StackTrace;
-                return null;  //  解析失败 返回null TryReplyAsync()中replyMessage=null  触发S9F7 
+                return Fail(ex);  //  解析失败 返回null TryReplyAsync()中replyMessage=null  触发S9F7，原因进 SEMILog
             }
         }
     }

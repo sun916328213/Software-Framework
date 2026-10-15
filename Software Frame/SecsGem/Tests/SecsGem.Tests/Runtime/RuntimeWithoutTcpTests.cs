@@ -479,6 +479,463 @@ public sealed class RuntimeWithoutTcpTests
         }
     }
 
+    /// <summary>
+    /// S1F3/S1F11 回之前必须先刷系统变量。
+    /// <para>
+    /// 回归：<c>SecsDataBinding.Refresh</c> 没配 provider 就直接 return，
+    /// Clock/DeviceMode/DeviceStatus 永远是 CSV 里的陈旧值（默认项里甚至是 null），
+    /// S1F3 回出去全是死的。S1F11 虽然只回名录不回值，但走同一个 Refresh，
+    /// 刷完后 SVID 表里的值也得是新的。
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task S1F3_And_S1F11_Refresh_System_Vids_Before_Replying()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+        var catalog = runtime.VariableManager;
+        var empty = Path.Combine(Path.GetTempPath(), "SecsGemTests", Guid.NewGuid().ToString("N"));
+        catalog.SVID.FilePath = empty;
+        catalog.DVID.FilePath = empty;
+        catalog.ECID.FilePath = empty;
+        catalog.CEID.FilePath = empty;
+        catalog.ReportID.FilePath = empty;
+        try
+        {
+            runtime.Config();   // 默认项 + StatusManager 四个名字
+            ISecsGemRuntime service = runtime;
+            await service.ConnectAsync(new SecsGem.Core.SecsGemOptions());
+            Assert.True(await service.GoOnlineRemoteAsync());
+            runtime.StateManager.UpdateDeviceStatus("DeviceStatus", EDeviceStatus.Running);
+
+            // S1F3 点名要 101/102/103
+            await transport.EmitReceivedAsync(new SecsMessage(1, 3, true)
+            {
+                SecsItem = Item.L(Item.U2(101), Item.U2(102), Item.U2(103))
+            });
+
+            var reply = transport.LastReplyItem!;
+            Assert.Equal(3, reply.Items.Length);
+            Assert.Equal(17, reply.Items[0].GetString().Length);                       // Clock=当前时间，不是 null
+            Assert.Equal((ushort)ESecsMode.Online_Remote, reply.Items[1].GetMemory<ushort>().Span[0]);
+            Assert.Equal((ushort)EDeviceStatus.Running, reply.Items[2].GetMemory<ushort>().Span[0]);
+
+            // S1F11：把 Clock 值清掉再查，查完必须被刷回来
+            catalog.UpdateVID("Clock", null);
+            await transport.EmitReceivedAsync(new SecsMessage(1, 11, true) { SecsItem = Item.L() });
+            Assert.NotNull(transport.LastReplyItem);   // 名录正常回出
+            Assert.False(string.IsNullOrEmpty(catalog.GetVIDByName("Clock")!.Value as string));
+        }
+        finally
+        {
+            if (Directory.Exists(empty)) Directory.Delete(empty, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// S1F23 事件名录：空请求回全部，点名回指定的，不认识的跳过（不断言 S9F7）。
+    /// <para>
+    /// 回包结构（E5 S1F24）：L[n] &lt;L[3] &lt;U4 CEID&gt; &lt;A CENAME&gt; &lt;L[a] &lt;U4 VID&gt;&gt;&gt;。
+    /// CENAME 暂用 Name；每个事件的 VID 取自它挂的报表（去重保序）。
+    /// 设备端不发 S1F23（Host→Equipment），发就报组包失败。
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task S1F23_Replies_The_Collection_Event_Namelist()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+        var empty = Path.Combine(Path.GetTempPath(), "SecsGemTests", Guid.NewGuid().ToString("N"));
+        var catalog = runtime.VariableManager;
+        catalog.SVID.FilePath = empty;
+        catalog.DVID.FilePath = empty;
+        catalog.ECID.FilePath = empty;
+        catalog.CEID.FilePath = empty;
+        catalog.ReportID.FilePath = empty;
+        try
+        {
+            runtime.Config();   // 默认项：CEID 101-105，report 1/11/12/13
+            ISecsGemRuntime service = runtime;
+            await service.ConnectAsync(new SecsGem.Core.SecsGemOptions());
+
+            // 空请求 = 全要：5 条事件
+            await transport.EmitReceivedAsync(new SecsMessage(1, 23, true) { SecsItem = Item.L() });
+            var all = transport.LastReplyItem!;
+            Assert.Equal(5, all.Items.Length);
+
+            // CEID 102 Device Mode：report "1,13,11" → VID 101,104,105,102
+            var mode = all.Items.Single(e => e.Items[0].GetMemory<uint>().Span[0] == 102);
+            Assert.Equal("Device Mode", mode.Items[1].GetString());
+            Assert.Equal(new uint[] { 101, 104, 105, 102 },
+                mode.Items[2].Items.Select(v => v.GetMemory<uint>().Span[0]));
+
+            // 点名要 103：只回一条
+            await transport.EmitReceivedAsync(new SecsMessage(1, 23, true)
+            {
+                SecsItem = Item.L(Item.U4(103))
+            });
+            var one = transport.LastReplyItem!;
+            Assert.Single(one.Items);
+            Assert.Equal(103u, one.Items[0].Items[0].GetMemory<uint>().Span[0]);
+            Assert.Equal("Device Online", one.Items[0].Items[1].GetString());
+
+            // 不认识的 CEID：跳过，回空列表而不是 S9F7
+            await transport.EmitReceivedAsync(new SecsMessage(1, 23, true)
+            {
+                SecsItem = Item.L(Item.U4(999))
+            });
+            Assert.Equal(0, transport.LastReplyItem!.Items.Length);
+
+            // 设备端不发 S1F23
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => runtime.SendItem("S1F23", false));
+            Assert.Contains("组包失败", ex.Message);
+        }
+        finally
+        {
+            if (Directory.Exists(empty)) Directory.Delete(empty, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// 本设备 S1F3 按全表解析 ID：Host 点名 DVID/ECID 也能查到，按请求顺序回值。
+    /// 前提是 ID 跨表全局唯一（<c>VIDManager.Load</c> 强制校验），裸 ID 无歧义。
+    /// </summary>
+    [Fact]
+    public async Task S1F3_Resolves_Dvid_And_Ecid_By_Id_In_Request_Order()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+        var catalog = runtime.VariableManager;
+        var empty = Path.Combine(Path.GetTempPath(), "SecsGemTests", Guid.NewGuid().ToString("N"));
+        catalog.SVID.FilePath = empty;
+        catalog.DVID.FilePath = empty;
+        catalog.ECID.FilePath = empty;
+        catalog.CEID.FilePath = empty;
+        catalog.ReportID.FilePath = empty;
+        try
+        {
+            runtime.Config();   // 默认项：SVID 101-103 + ECID 104/105
+            var dvid = new VIDInfo { ID = "200", Name = "SubstrateID", Value = "S1", DataType = SecsFormat.ASCII, Category = "DVID" };
+            catalog.DVID.Datas.Add(dvid);
+            catalog.VIDList.Add(dvid);
+            catalog.VIDDic_Name[dvid.Name] = dvid;
+            catalog.VIDDic_ID[dvid.ID] = dvid;
+            catalog.UpdateVID("DeviceName", "Packing_001");   // 对应产线 ECID.csv 里同名变量的值
+
+            ISecsGemRuntime service = runtime;
+            await service.ConnectAsync(new SecsGem.Core.SecsGemOptions());
+            Assert.True(await service.GoOnlineRemoteAsync());   // live 模式=2，S1F3 回的必须是它而不是手填值
+
+            // 故意打乱类别顺序点名：DVID、ECID、SVID 各一个
+            await transport.EmitReceivedAsync(new SecsMessage(1, 3, true)
+            {
+                SecsItem = Item.L(Item.U4(200), Item.U4(104), Item.U4(102))
+            });
+
+            var reply = transport.LastReplyItem!;
+            Assert.Equal(3, reply.Items.Length);
+            Assert.Equal("S1", reply.Items[0].GetString());
+            Assert.Equal("Packing_001", reply.Items[1].GetString());   // ECID 默认值（MachineApp 配置同名）
+            Assert.Equal((ushort)2, reply.Items[2].GetMemory<ushort>().Span[0]);
+        }
+        finally
+        {
+            if (Directory.Exists(empty)) Directory.Delete(empty, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// S2F33 改报表挂的变量，S2F35 改事件挂的报表（不是报表挂的变量）。
+    /// <para>
+    /// 回归：S2F35 原实现误调 <c>ReportID.Modify(eventid, …)</c>，事件 ID 在报表里
+    /// 永远找不到，Host 的链接请求静默无事发生，还回 Success。
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task S2F33_Changes_Report_Vids_And_S2F35_Links_Event_To_Report()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+        var catalog = runtime.VariableManager;
+        var empty = Path.Combine(Path.GetTempPath(), "SecsGemTests", Guid.NewGuid().ToString("N"));
+        catalog.SVID.FilePath = empty;
+        catalog.DVID.FilePath = empty;
+        catalog.ECID.FilePath = empty;
+        catalog.CEID.FilePath = empty;
+        catalog.ReportID.FilePath = empty;
+        try
+        {
+            runtime.Config();   // 默认项：report 11→"102"，CEID 102→"1,13,11"
+            ISecsGemRuntime service = runtime;
+            await service.ConnectAsync(new SecsGem.Core.SecsGemOptions());
+
+            // S2F33：DATAID=1，RPTID=11，VID 改成 103
+            await transport.EmitReceivedAsync(new SecsMessage(2, 33, true)
+            {
+                SecsItem = Item.L(Item.U2(1), Item.U2(11), Item.U2(103))
+            });
+            Assert.Equal((byte)0, transport.LastReplyItem?.GetMemory<byte>().Span[0]);
+            Assert.Equal("103", catalog.ReportID.GetDatas().Single(x => x.ID == "11").VID_Collection);
+
+            // S2F35：DATAID=1，CEID=102，挂 report 12
+            await transport.EmitReceivedAsync(new SecsMessage(2, 35, true)
+            {
+                SecsItem = Item.L(Item.U2(1), Item.U2(102), Item.U2(12))
+            });
+            Assert.Equal((byte)0, transport.LastReplyItem?.GetMemory<byte>().Span[0]);
+            Assert.Equal("12", catalog.CEID.GetDatas().Single(x => x.ID == "102").ReportID_Collection);
+        }
+        finally
+        {
+            if (Directory.Exists(empty)) Directory.Delete(empty, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// 连发两条 S2F33 / S2F35 时的关联图：
+    /// 重复 VID 不进表；第一条改完不污染第二条（不出现"全部挂到第一个下面"）。
+    /// </summary>
+    [Fact]
+    public async Task S2F33_And_S2F35_Stay_Clean_Across_Repeated_Modifies()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+        var catalog = runtime.VariableManager;
+        var empty = Path.Combine(Path.GetTempPath(), "SecsGemTests", Guid.NewGuid().ToString("N"));
+        catalog.SVID.FilePath = empty;
+        catalog.DVID.FilePath = empty;
+        catalog.ECID.FilePath = empty;
+        catalog.CEID.FilePath = empty;
+        catalog.ReportID.FilePath = empty;
+        try
+        {
+            runtime.Config();
+            ISecsGemRuntime service = runtime;
+            await service.ConnectAsync(new SecsGem.Core.SecsGemOptions());
+
+            string Rpt(int id) => string.Join("/", catalog.ReportID.GetDatas().Single(x => x.ID == id.ToString()).VIDInfo.Select(v => v.ID));
+            string Evt(int id) => string.Join("/", catalog.CEID.GetDatas().Single(x => x.ID == id.ToString()).ReportInfo.Select(r => r.ID));
+
+            // 重复 VID：同一个 ID 点两次，只应留一份
+            await transport.EmitReceivedAsync(new SecsMessage(2, 33, true)
+            {
+                SecsItem = Item.L(Item.U2(1), Item.U2(11), Item.L(Item.U2(103), Item.U2(103), Item.U2(104)))
+            });
+            Assert.Equal("103/104", Rpt(11));
+
+            // 第二条 S2F33：改别的报表，11 不能被带偏
+            await transport.EmitReceivedAsync(new SecsMessage(2, 33, true)
+            {
+                SecsItem = Item.L(Item.U2(1), Item.U2(12), Item.L(Item.U2(105)))
+            });
+            Assert.Equal("103/104", Rpt(11));
+            Assert.Equal("105", Rpt(12));
+
+            // 第一条 S2F35
+            await transport.EmitReceivedAsync(new SecsMessage(2, 35, true)
+            {
+                SecsItem = Item.L(Item.U2(1), Item.U2(102), Item.L(Item.U2(12)))
+            });
+            Assert.Equal("12", Evt(102));
+
+            // 第二条 S2F35：改另一个事件，102 不能被带偏
+            await transport.EmitReceivedAsync(new SecsMessage(2, 35, true)
+            {
+                SecsItem = Item.L(Item.U2(1), Item.U2(103), Item.L(Item.U2(13)))
+            });
+            Assert.Equal("12", Evt(102));
+            Assert.Equal("13", Evt(103));
+
+            // 落盘也要对：第二遍不能把第一遍的关联盖掉（重启后仍是这样）
+            string rptCsv = File.ReadAllText(Path.Combine(empty, "ReportID.csv"));
+            string ceidCsv = File.ReadAllText(Path.Combine(empty, "CEID.csv"));
+            Assert.Contains("11,DeviceMode,\"103,104\"", rptCsv.Replace("\r\n", "|"));
+            Assert.Contains("12,DeviceStatus,105", rptCsv.Replace("\r\n", "|"));
+            Assert.Contains("102,Device Mode,12,", ceidCsv.Replace("\r\n", "|"));
+            Assert.Contains("103,Device Online,13,", ceidCsv.Replace("\r\n", "|"));
+
+            // 静默失败是第二条链接"看起来没生效"的根源：报表/事件不存在时必须转 S9F7，
+            // 不能回 Success —— Host 会以为挂上了，数据其实还挂在第一个报表下面。
+            await transport.EmitReceivedAsync(new SecsMessage(2, 33, true)
+            {
+                SecsItem = Item.L(Item.U2(1), Item.U2(77), Item.L(Item.U2(104)))
+            });
+            Assert.Null(transport.LastReplyItem);
+            await transport.EmitReceivedAsync(new SecsMessage(2, 35, true)
+            {
+                SecsItem = Item.L(Item.U2(1), Item.U2(999), Item.L(Item.U2(11)))
+            });
+            Assert.Null(transport.LastReplyItem);
+
+            // 报错不能污染已有链接：11 仍然是 103/104，102 仍然挂 12
+            Assert.Equal("103/104", Rpt(11));
+            Assert.Equal("12", Evt(102));
+        }
+        finally
+        {
+            if (Directory.Exists(empty)) Directory.Delete(empty, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// 一条 S2F33 / S2F35 里带多组定义（产线 Host 实测报文形状）。
+    /// <para>
+    /// 回归：原来用 SecsItemToList 平铺取 data[0]/data[1]/Skip(2)，键和值的对应关系全丢 ——
+    /// 第二组的 RPTID 被当成 VID 塞进第一组报表（S2F33），或第二个 CEID 被当成报表挂上去（S2F35），
+    /// 结果报 S9F7，现场看起来就是"第二条链接不生效、变量全挂在第一个报表下面"。
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task S2F33_And_S2F35_Accept_Multiple_Groups_In_One_Message()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+        var catalog = runtime.VariableManager;
+        var empty = Path.Combine(Path.GetTempPath(), "SecsGemTests", Guid.NewGuid().ToString("N"));
+        catalog.SVID.FilePath = empty;
+        catalog.DVID.FilePath = empty;
+        catalog.ECID.FilePath = empty;
+        catalog.CEID.FilePath = empty;
+        catalog.ReportID.FilePath = empty;
+        try
+        {
+            runtime.Config();
+            ISecsGemRuntime service = runtime;
+            await service.ConnectAsync(new SecsGem.Core.SecsGemOptions());
+
+            string Rpt(int id) => string.Join("/", catalog.ReportID.GetDatas().Single(x => x.ID == id.ToString()).VIDInfo.Select(v => v.ID));
+            string Evt(int id) => string.Join("/", catalog.CEID.GetDatas().Single(x => x.ID == id.ToString()).ReportInfo.Select(r => r.ID));
+
+            // 三种形状都要认（成员平铺 / 标准 L[3] / Host 的两层多组），这里逐个发一遍：
+            //   a) L[3] <1> <13> <104> <104>            成员平铺，无内层 L
+            //   b) L[2] <1> <La>                        外层 DATAID 与 La 平级
+            //        La  L2b<13, Lb<104,104>>
+            //            L2b<12, Lb<103,104>>          每组只有 RPTID + Lb 两项
+            await transport.EmitReceivedAsync(new SecsMessage(2, 33, true)
+            {
+                SecsItem = Item.L(Item.U2(1), Item.U2(13), Item.U2(104), Item.U2(104))
+            });
+            Assert.NotNull(transport.LastReplyItem);
+            Assert.Equal("104", Rpt(13));   // 平铺写法里的重复 ID 也要去重
+
+            await transport.EmitReceivedAsync(new SecsMessage(2, 33, true)
+            {
+                SecsItem = Item.L(
+                    Item.U2(1),
+                    Item.L(
+                        Item.L(Item.U2(13), Item.L(Item.U2(104), Item.U2(104))),
+                        Item.L(Item.U2(12), Item.L(Item.U2(103), Item.U2(104)))))
+            });
+            Assert.NotNull(transport.LastReplyItem);   // 两组都认，不会 S9F7
+            Assert.Equal((byte)0, transport.LastReplyItem!.GetMemory<byte>().Span[0]);
+            Assert.Equal("104", Rpt(13));        // 组内重复 VID 去重，且 13 丢掉了原有的 105
+            Assert.Equal("103/104", Rpt(12));    // 第二组的数据不许跑到第一组去
+
+            // S2F36: L[2] <L[3] <U2 1> <U2 105> <L[2] <U2 1> <U2 13>>>
+            //            <L[3] <U2 1> <U2 104> <L[2] <U2 1> <U2 13>>>>
+            await transport.EmitReceivedAsync(new SecsMessage(2, 35, true)
+            {
+                SecsItem = Item.L(
+                    Item.U2(1),
+                    Item.L(
+                        Item.L(Item.U2(105), Item.L(Item.U2(1), Item.U2(13))),
+                        Item.L(Item.U2(104), Item.L(Item.U2(12)))))
+            });
+            Assert.NotNull(transport.LastReplyItem);
+            Assert.Equal("1/13", Evt(105));   // 105 不再挂着默认的 11
+            Assert.Equal("12", Evt(104));    // 第二组的数据不许跑到第一组去
+
+            // 标准 L[3] 写法（成员带内层 L）也要认
+            await transport.EmitReceivedAsync(new SecsMessage(2, 35, true)
+            {
+                SecsItem = Item.L(Item.U2(1), Item.U2(105), Item.L(Item.U2(13), Item.U2(11)))
+            });
+            Assert.Equal("13/11", Evt(105));
+        }
+        finally
+        {
+            if (Directory.Exists(empty)) Directory.Delete(empty, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// 引用不成立时整条不改、也不落盘（S2F33/S2F35 同一条规则）。
+    /// <para>
+    /// 回归：原顺序是"先 Modify 写盘、再由 Update 抛"，含无效 VID 的半截配置进了 CSV，
+    /// 之后每次组包（S6F11/S1F23）都在同一处失败 —— 现场看着像配置整体坏了。
+    /// 多组时也必须"全有或全无"，不能前面几组生效、后面一组失败。
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task S2F33_And_S2F35_Apply_Nothing_When_A_Reference_Is_Bad()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+        var catalog = runtime.VariableManager;
+        var empty = Path.Combine(Path.GetTempPath(), "SecsGemTests", Guid.NewGuid().ToString("N"));
+        catalog.SVID.FilePath = empty;
+        catalog.DVID.FilePath = empty;
+        catalog.ECID.FilePath = empty;
+        catalog.CEID.FilePath = empty;
+        catalog.ReportID.FilePath = empty;
+        try
+        {
+            runtime.Config();
+            ISecsGemRuntime service = runtime;
+            await service.ConnectAsync(new SecsGem.Core.SecsGemOptions());
+
+            // 第一组合法、第二组含不存在的 VID：两组都不能生效
+            await transport.EmitReceivedAsync(new SecsMessage(2, 33, true)
+            {
+                SecsItem = Item.L(
+                    Item.U2(1),
+                    Item.L(
+                        Item.L(Item.U2(11), Item.L(Item.U2(103))),
+                        Item.L(Item.U2(12), Item.L(Item.U2(999999)))))
+            });
+            Assert.Null(transport.LastReplyItem);                                  // S9F7
+            Assert.Equal("102", Rpt(catalog, 11));                                 // 11 没被改
+            Assert.Equal("103", Rpt(catalog, 12));                                 // 12 也没轮到
+            Assert.DoesNotContain("999999", File.ReadAllText(Path.Combine(empty, "ReportID.csv")));
+
+            // 同理，报表不存在也不改任何一组
+            await transport.EmitReceivedAsync(new SecsMessage(2, 33, true)
+            {
+                SecsItem = Item.L(
+                    Item.U2(1),
+                    Item.L(
+                        Item.L(Item.U2(11), Item.L(Item.U2(104))),
+                        Item.L(Item.U2(7777), Item.L(Item.U2(104)))))
+            });
+            Assert.Null(transport.LastReplyItem);
+            Assert.Equal("102", Rpt(catalog, 11));
+
+            // S2F35 一样：第二个 CEID 引用不存在的 Report，第一个也不生效
+            await transport.EmitReceivedAsync(new SecsMessage(2, 35, true)
+            {
+                SecsItem = Item.L(
+                    Item.U2(1),
+                    Item.L(
+                        Item.L(Item.U2(102), Item.L(Item.U2(12))),
+                        Item.L(Item.U2(103), Item.L(Item.U2(88888)))))
+            });
+            Assert.Null(transport.LastReplyItem);
+            Assert.Equal("1/13/11", Evt(catalog, 102));
+            Assert.Equal("1/13/11", Evt(catalog, 103));
+            Assert.DoesNotContain("88888", File.ReadAllText(Path.Combine(empty, "CEID.csv")));
+        }
+        finally
+        {
+            if (Directory.Exists(empty)) Directory.Delete(empty, recursive: true);
+        }
+    }
+
+    private static string Rpt(VIDManager catalog, int id) =>
+        string.Join("/", catalog.ReportID.GetDatas().Single(x => x.ID == id.ToString()).VIDInfo.Select(v => v.ID));
+
+    private static string Evt(VIDManager catalog, int id) =>
+        string.Join("/", catalog.CEID.GetDatas().Single(x => x.ID == id.ToString()).ReportInfo.Select(r => r.ID));
+
     /// <summary>监听在后台跑，等它真正切完状态，最多 2 秒。</summary>
     private static async Task WaitUntil(Func<bool> condition)
     {

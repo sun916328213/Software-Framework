@@ -36,6 +36,8 @@ public partial class SecsPageModel : ObservableObject
     [ObservableProperty] private string _newEventId = "";
     [ObservableProperty] private string _newEventName = "";
     [ObservableProperty] private string _newEventReports = "";
+    /// <summary>事件的启用位；新增与修改共用（新增默认开）。</summary>
+    [ObservableProperty] private bool _newEventEnable = true;
     [ObservableProperty] private string _hcack = "0";
     [ObservableProperty] private string _connectionStatus = "未连接";
     [ObservableProperty] private string _modeStatus = "Offline";

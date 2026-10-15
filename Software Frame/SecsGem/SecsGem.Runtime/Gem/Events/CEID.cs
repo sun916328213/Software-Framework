@@ -149,7 +149,8 @@ namespace SecsGem.Runtime.Variable
                 var data = Datas.FirstOrDefault (x=>x.ID == pCEID);
                 if (data == null) throw new Exception("Event ID NoExist!!");
 
-                data.ReportID = pReportID ?? new List<string>(); // /刷新ReportID挂载VID格式
+                // 去重保序，同 ReportID.Modify：Host 重复点同一个报表只挂一份。
+                data.ReportID = Dedup(pReportID); // /刷新ReportID挂载VID格式
                 Save();
             }
             catch (Exception ex)

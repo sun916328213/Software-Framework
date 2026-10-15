@@ -17,7 +17,8 @@ using System.Linq;
 namespace SecsGem.Runtime.Order.S1
 {
     /// <summary>
-    /// 获取所选设备状态请求 获取VID SVID H->E
+    /// 获取所选设备状态请求 H->E。本设备按 SVID/DVID/ECID 全表解析 ID，
+    /// 空请求回全部三类变量（见方法内注释）。
     /// </summary>
     [SecsOrder("S1F3")]
     class S1F3 : SecsOrderBase
@@ -48,7 +49,6 @@ namespace SecsGem.Runtime.Order.S1
                 }
                 else
                 {
-                    var svid = data[0];
                     Dictionary<string, VIDInfo> vids = _VID.ToDictionary(s => s.ID, s => s);
                     foreach (var item in data)
                     {
@@ -56,16 +56,16 @@ namespace SecsGem.Runtime.Order.S1
                             Add(ref Items, vids[item]);
                     }
                 }
-                // shortcut: 上面的空请求分支返回全部三类变量（SVID/DVID/ECID），与标准"S1F4 只回 SVID"不符。
-                // 改动会变 S1F4 的线上行为，等确认 Host 侧不依赖现状后再收敛。
+                // 注意：本设备 S1F3 按全表解析 ID，Host 可以点名 SVID/DVID/ECID 任意一类，
+                // 空请求回全部三类。这是设备特性（ID 跨表全局唯一，所以裸 ID 无歧义），不是 bug，
+                // 不要"收敛"成只回 SVID。
 
                 Item SecsItem = Item.L(Items.ToArray());
                 return SecsItem;
             }
             catch (Exception ex)
             {
-                string message = ex.Message + ex.StackTrace;
-                return null;  //  解析失败 返回null TryReplyAsync()中replyMessage=null  触发S9F7 
+                return Fail(ex);  //  解析失败 返回null TryReplyAsync()中replyMessage=null  触发S9F7 
             }
         }
 
