@@ -44,7 +44,7 @@ namespace SecsGem.Runtime.Order.S5
                 }
 
                 if (Items.Count == 0) return null;
-                Item SecsItem = Item.L(Items.ToArray()); ;
+                Item SecsItem = Item.L(Items.ToArray());
                 return SecsItem;
             }
             else

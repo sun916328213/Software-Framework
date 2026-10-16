@@ -3,6 +3,9 @@
 // 本文件定义：RuntimeWithoutTcpTests。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：SecsGem.Tests、Secs4Net、SecsGem.Core、SecsGem.Tests.Fakes、SecsGem.Tests.Infrastructure、SecsGem.Runtime.Variable。导入不代表所有类型都会在运行时加载。
 using SecsGem.Tests;
+using System;
+using System.IO;
+using System.Linq;
 using Secs4Net;
 using SecsGem.Core;
 using SecsGem.Tests.Fakes;
@@ -1255,4 +1258,58 @@ public sealed class RuntimeWithoutTcpTests
     /// shortcut: 固定 150ms，若监听启动变慢请改为可观测的就位信号。
     /// </summary>
     private static Task LetControlListenerSettle() => Task.Delay(150);
+
+    /// <summary>
+    /// S5F3：单条、标准多条列表、空列表（全量开关）都要改 Enable 并回 B(0)。
+    /// 原实现只读 data[1]：多条时只生效第一条，空列表直接越界进 S9F7。
+    /// </summary>
+    [Fact]
+    public async Task S5F3_DisableAndEnable_Single_Multi_And_All_Alarms()
+    {
+        var transport = new InMemorySecsTransport();
+        using var runtime = RuntimeTestFixture.Create(transport);
+        ISecsGemRuntime service = runtime;
+        await service.ConnectAsync(new SecsGem.Core.SecsGemOptions());
+        var alarm = runtime.VariableManager.Alarm;
+        var root = Path.Combine(Path.GetTempPath(), "secs_s5f3_" + Guid.NewGuid().ToString("N"));
+        var originalPath = alarm.FilePath;
+        alarm.FilePath = Path.Combine(root, "Alarm");
+        try
+        {
+            alarm.Datas.Add(new AlarmInfo { ID = "11", Description = "A", Enable = true });
+            alarm.Datas.Add(new AlarmInfo { ID = "12", Description = "B", Enable = true });
+
+            // 单条禁用
+            await transport.EmitReceivedAsync(new SecsMessage(5, 3, true)
+            {
+                SecsItem = Item.L(Item.B(0), Item.L(Item.A("11")))
+            });
+            Assert.Equal((byte)0, transport.LastReplyItem.GetMemory<byte>().Span[0]);
+            Assert.False(alarm.Datas.First(x => x.ID == "11").Enable);
+            Assert.True(alarm.Datas.First(x => x.ID == "12").Enable);
+
+            // 标准多条列表一次全禁
+            await transport.EmitReceivedAsync(new SecsMessage(5, 3, true)
+            {
+                SecsItem = Item.L(Item.B(0), Item.L(Item.A("11"), Item.A("12")))
+            });
+            Assert.Equal((byte)0, transport.LastReplyItem.GetMemory<byte>().Span[0]);
+            Assert.True(alarm.Datas.All(x => !x.Enable));
+
+            // 空列表 = 全量启用
+            await transport.EmitReceivedAsync(new SecsMessage(5, 3, true)
+            {
+                SecsItem = Item.L(Item.B(1), Item.L())
+            });
+            Assert.Equal((byte)0, transport.LastReplyItem.GetMemory<byte>().Span[0]);
+            Assert.True(alarm.Datas.All(x => x.Enable));
+            Assert.True(File.Exists(Path.Combine(root, "Alarm", "Alarm.csv")));
+        }
+        finally
+        {
+            alarm.Datas.Clear();
+            alarm.FilePath = originalPath;
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
 }

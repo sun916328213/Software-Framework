@@ -259,6 +259,7 @@ namespace SecsGem.Runtime.Manager
 
             ReportID.Save();
             CEID.Save();
+            Alarm.Save();
         }
  
 

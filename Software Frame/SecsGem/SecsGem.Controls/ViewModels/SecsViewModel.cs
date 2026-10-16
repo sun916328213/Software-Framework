@@ -51,12 +51,19 @@ public partial class SecsViewModel : ObservableObject, IDisposable
             Model.NewEventReports = Model.SelectedEvent?.ReportID_Collection ?? "";
             Model.NewEventEnable = Model.SelectedEvent?.Enable ?? true;
         }
+        if (e.PropertyName == nameof(Model.SelectedAlarm))
+        {
+            Model.NewAlarmId = Model.SelectedAlarm?.ID ?? "";
+            Model.NewAlarmDescription = Model.SelectedAlarm?.Description ?? "";
+            Model.NewAlarmEnable = Model.SelectedAlarm?.Enable ?? true;
+        }
         if (e.PropertyName is nameof(Model.IsConnected) or nameof(Model.IsClosed) or
             nameof(Model.Address) or nameof(Model.PortText) or nameof(Model.DeviceIdText) or
             nameof(Model.ConnectionModeIndex) or nameof(Model.Sml) or nameof(Model.SelectedVariable) or
             nameof(Model.NewVariableId) or nameof(Model.NewVariableName) or
             nameof(Model.NewReportId) or nameof(Model.NewReportName) or
             nameof(Model.NewEventId) or nameof(Model.NewEventName) or
+            nameof(Model.NewAlarmId) or nameof(Model.NewAlarmDescription) or
             nameof(Model.SelectedEvent) or nameof(Model.SelectedReport) or nameof(Model.SelectedAlarm))
             RefreshCommands();
     }
@@ -134,6 +141,9 @@ public partial class SecsViewModel : ObservableObject, IDisposable
         SetEventCommand.NotifyCanExecuteChanged();
         RefreshCatalogNowCommand.NotifyCanExecuteChanged();
         ReportEventCommand.NotifyCanExecuteChanged();
+        AddAlarmCommand.NotifyCanExecuteChanged();
+        DeleteAlarmCommand.NotifyCanExecuteChanged();
+        SetAlarmCommand.NotifyCanExecuteChanged();
         RaiseAlarmCommand.NotifyCanExecuteChanged();
         ResetAlarmCommand.NotifyCanExecuteChanged();
         PreviewTerminalCommand.NotifyCanExecuteChanged();
@@ -154,6 +164,9 @@ public partial class SecsViewModel : ObservableObject, IDisposable
     public string NewEventId { get => Model.NewEventId; set => Model.NewEventId = value; }
     public string NewEventName { get => Model.NewEventName; set => Model.NewEventName = value; }
     public string NewEventReports { get => Model.NewEventReports; set => Model.NewEventReports = value; }
+    public string NewAlarmId { get => Model.NewAlarmId; set => Model.NewAlarmId = value; }
+    public string NewAlarmDescription { get => Model.NewAlarmDescription; set => Model.NewAlarmDescription = value; }
+    public bool NewAlarmEnable { get => Model.NewAlarmEnable; set => Model.NewAlarmEnable = value; }
     public string Hcack { get => Model.Hcack; set => Model.Hcack = value; }
     public string ConnectionStatus { get => Model.ConnectionStatus; set => Model.ConnectionStatus = value; }
     public string ModeStatus { get => Model.ModeStatus; set => Model.ModeStatus = value; }
@@ -309,6 +322,16 @@ public partial class SecsViewModel : ObservableObject, IDisposable
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanDeleteEvent))]
     private void DeleteEvent() { if (CanDeleteEvent()) Workspace.DeleteEvent(); }
+    private bool CanAddAlarm() => CanUseWorkspace() &&
+        !string.IsNullOrWhiteSpace(Model.NewAlarmId) && !string.IsNullOrWhiteSpace(Model.NewAlarmDescription);
+    [RelayCommand(CanExecute = nameof(CanAddAlarm))]
+    private void AddAlarm() { if (CanAddAlarm()) Workspace.AddAlarm(); }
+    private bool CanDeleteAlarm() => CanUseWorkspace() && Model.SelectedAlarm != null;
+    [RelayCommand(CanExecute = nameof(CanDeleteAlarm))]
+    private void DeleteAlarm() { if (CanDeleteAlarm()) Workspace.DeleteAlarm(); }
+    private bool CanSetAlarm() => CanUseWorkspace() && Model.SelectedAlarm != null;
+    [RelayCommand(CanExecute = nameof(CanSetAlarm))]
+    private void SetAlarm() { if (CanSetAlarm()) Workspace.SetAlarm(); }
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 ReportEventAsync。
     /// 正文中的关键协作调用包括 nameof、CanReportEvent、ReportEventAsync；具体条件和先后次序见方法体。

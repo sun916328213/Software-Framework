@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-中文阅读说明：界面与资源声明。
-WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，供业务界面与工作台复用。
-绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+    中文阅读说明：界面与资源声明。
+    WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，供业务界面与工作台复用。
+    绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
 -->
 
 <ResourceDictionary
@@ -180,7 +180,7 @@ WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，
         x:Key="ScrollBar_Style"
         BasedOn="{StaticResource MaterialDesignScrollBar}"
         TargetType="{x:Type ScrollBar}">
-        <Setter Property="materialDesign:ScrollBarAssist.ButtonsVisibility" Value="Visible" />
+        <Setter Property="materialDesign:ScrollBarAssist.ButtonsVisibility" Value="Collapsed" />
         <Setter Property="materialDesign:ScrollBarAssist.ThumbCornerRadius" Value="4" />
         <Setter Property="materialDesign:ScrollBarAssist.ThumbHeight" Value="8" />
         <Setter Property="materialDesign:ScrollBarAssist.ThumbWidth" Value="8" />

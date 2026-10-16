@@ -423,7 +423,7 @@
                                     Width="70"
                                     Margin="0,0,12,0"
                                     VerticalAlignment="Center"
-                                    Text="Report信息:"
+                                    Text="Report信息"
                                     TextAlignment="Center" />
                                 <TextBox
                                     x:Name="NewReportIdBox"
@@ -467,6 +467,7 @@
                                     Command="{Binding DeleteReportCommand}"
                                     Content="删除选中报表"
                                     Style="{StaticResource CompactOutlinedButton}" />
+                                <Separator Margin="12,0,0,0" Style="{StaticResource SeparatorVertical_Style}" />
                                 <Button
                                     Width="125"
                                     MinHeight="32"
@@ -482,7 +483,7 @@
                                     Width="70"
                                     Margin="0,0,12,0"
                                     VerticalAlignment="Center"
-                                    Text="Event信息:" />
+                                    Text="Event信息" />
                                 <TextBox
                                     x:Name="NewEventIdBox"
                                     Width="90"
@@ -501,7 +502,7 @@
                                     Width="70"
                                     Margin="0,0,8,0"
                                     VerticalAlignment="Center"
-                                    Text="Report IDs:"
+                                    Text="Report IDs"
                                     TextAlignment="Center" />
                                 <TextBox
                                     x:Name="NewEventReportsBox"
@@ -524,6 +525,7 @@
                                     Command="{Binding DeleteEventCommand}"
                                     Content="删除选中事件"
                                     Style="{StaticResource CompactOutlinedButton}" />
+                                <Separator Margin="12,0,0,0" Style="{StaticResource SeparatorVertical_Style}" />
                                 <!--  启用位只在编辑区改：DataGrid 是 IsReadOnly，列上放勾点不动反而误导  -->
                                 <CheckBox
                                     Margin="12,0,0,0"
@@ -565,6 +567,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <custcontrols:DataGridView
                             x:Name="AlarmGrid"
@@ -585,24 +588,85 @@
                                 <DataGridCheckBoxColumn
                                     Width="75"
                                     Binding="{Binding Enable}"
-                                    Header="启用" />
+                                    Header="启用">
+                                    <DataGridCheckBoxColumn.CellStyle>
+                                        <Style BasedOn="{StaticResource MaterialDesignDataGridCell}" TargetType="DataGridCell">
+                                            <Setter Property="Padding" Value="0" />
+                                            <Setter Property="HorizontalContentAlignment" Value="Left" />
+                                        </Style>
+                                    </DataGridCheckBoxColumn.CellStyle>
+                                    <DataGridCheckBoxColumn.ElementStyle>
+                                        <Style BasedOn="{StaticResource MaterialDesignCheckBox}" TargetType="CheckBox">
+                                            <Setter Property="Margin" Value="12,0,0,0" />
+                                            <Setter Property="Focusable" Value="False" />
+                                        </Style>
+                                    </DataGridCheckBoxColumn.ElementStyle>
+                                </DataGridCheckBoxColumn>
                             </custcontrols:DataGridView.Columns>
                         </custcontrols:DataGridView>
                         <WrapPanel Grid.Row="1" Margin="0,8,0,0">
+                            <TextBlock
+                                Width="60"
+                                Margin="0,0,2,0"
+                                VerticalAlignment="Center"
+                                Text="报警信息" />
+                            <TextBox
+                                x:Name="NewAlarmIdBox"
+                                Width="70"
+                                Margin="0,0,12,0"
+                                md:HintAssist.Hint="ALID"
+                                Style="{StaticResource CompactTextBox}"
+                                Text="{Binding Model.NewAlarmId, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox
+                                x:Name="NewAlarmDescriptionBox"
+                                Width="220"
+                                Margin="0,0,12,0"
+                                md:HintAssist.Hint="报警描述"
+                                Style="{StaticResource CompactTextBox}"
+                                Text="{Binding Model.NewAlarmDescription, UpdateSourceTrigger=PropertyChanged}" />
                             <Button
                                 MinHeight="32"
-                                Margin="0,0,8,0"
+                                AutomationProperties.Name="新增报警"
+                                Command="{Binding AddAlarmCommand}"
+                                Content="新增报警"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                            <Button
+                                MinHeight="32"
+                                Margin="12,0,0,0"
+                                AutomationProperties.Name="删除选中报警"
+                                Command="{Binding DeleteAlarmCommand}"
+                                Content="删除选中报警"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                            <CheckBox
+                                Margin="12,0,0,0"
+                                VerticalAlignment="Center"
+                                Content="启用"
+                                IsChecked="{Binding Model.NewAlarmEnable, Mode=TwoWay}" />
+                            <Button
+                                Width="125"
+                                MinHeight="32"
+                                Margin="12,0,0,0"
+                                AutomationProperties.Name="保存选中报警"
+                                Command="{Binding SetAlarmCommand}"
+                                Content="保存选中报警"
+                                Style="{StaticResource CompactOutlinedButton}" />
+                            <Separator Margin="12,0,0,0" Style="{StaticResource SeparatorVertical_Style}" />
+                            <Button
+                                MinHeight="32"
+                                Margin="12,0,0,0"
                                 AutomationProperties.Name="选中报警触发 (S5F1)"
                                 Command="{Binding RaiseAlarmCommand}"
                                 Content="选中报警触发 (S5F1)"
                                 Style="{StaticResource CompactOutlinedButton}" />
                             <Button
                                 MinHeight="32"
+                                Margin="12,0,0,0"
                                 AutomationProperties.Name="选中报警复位 (S5F1)"
                                 Command="{Binding ResetAlarmCommand}"
                                 Content="选中报警复位 (S5F1)"
                                 Style="{StaticResource CompactOutlinedButton}" />
                         </WrapPanel>
+
                     </Grid>
                 </TabItem>
                 <TabItem Header="远程命令与 S10">

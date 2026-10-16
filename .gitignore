@@ -403,3 +403,5 @@ FodyWeavers.xsd
 !/Build/*.ps1
 # 一次性取证工具与中间产物：只服务 P-01 那次恢复，本身不是验收入口
 /Build/_recovery/
+/.agents
+/.pi

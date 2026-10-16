@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Controls;
 using Secs4Net;
+using Extension.Core.Concurrency;
 using SecsGem.Runtime.Variable;
 using Extension.UI.Theme;
 using Prism.Ioc;
@@ -711,5 +712,55 @@ public sealed class ControlsWorkspaceTests(WorkbenchAppFixture host)
             yield return child;
             foreach (var item in Descendants(child)) yield return item;
         }
+    }
+
+    /// <summary>
+    /// Host 发 S5F3 改使能后界面必须刷新；“保存选中报警”改描述+启用并落盘。
+    /// 前者靠 S5F3 的事件订阅触发 RefreshCatalog（原来只订了 S2F33/35/37，报警页永远是旧的）。
+    /// </summary>
+    [Fact]
+    public void S5F3_HostEnableChange_RefreshesAlarmGrid_AndSetAlarmPersistsEnable()
+    {
+        host.Invoke(() =>
+        {
+            var container = ContainerLocator.Container;
+            var catalog = container.Resolve<VIDManager>();
+            var root = Path.Combine(Path.GetTempPath(), "SecsGemControlsTests", Guid.NewGuid().ToString("N"));
+            var originalPath = catalog.Alarm.FilePath;
+            catalog.Alarm.FilePath = root;
+            catalog.Alarm.Datas.Add(new AlarmInfo { ID = "91", Description = "GridAlarm", Enable = true });
+            try
+            {
+                using var runtime = new ObservedRuntime(container);
+                using var workspace = new SecsWorkspace(runtime, catalog, Dispatcher.CurrentDispatcher);
+                using var vm = new SecsViewModel(workspace);
+                void Flush() => Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+                Assert.Contains(workspace.Model.Alarms, x => x.ID == "91" && x.Enable);
+
+                // 模拟引擎在 S5F3 回包后做的事：表已改 + 触发事件
+                catalog.Alarm.SetEnable("91", false);
+                catalog.Alarm.Save();
+                EventHelper.TriggerEvent("S5F3");
+                Flush();
+                Assert.Contains(workspace.Model.Alarms, x => x.ID == "91" && !x.Enable);
+
+                // 界面改启用：选中回填 + 保存落盘
+                vm.SelectedAlarm = workspace.Model.Alarms.First(x => x.ID == "91");
+                Assert.False(vm.NewAlarmEnable);
+                vm.NewAlarmDescription = "GridAlarm2";
+                vm.NewAlarmEnable = true;
+                Assert.True(vm.SetAlarmCommand.CanExecute(null));
+                vm.SetAlarmCommand.Execute(null);
+                Assert.Equal("GridAlarm2", catalog.Alarm.Datas.First(x => x.ID == "91").Description);
+                Assert.True(catalog.Alarm.Datas.First(x => x.ID == "91").Enable);
+                Assert.True(File.Exists(Path.Combine(root, "Alarm.csv")));
+            }
+            finally
+            {
+                foreach (var stale in catalog.Alarm.Datas.Where(x => x.ID == "91").ToArray()) catalog.Alarm.Datas.Remove(stale);
+                catalog.Alarm.FilePath = originalPath;
+                if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+            }
+        });
     }
 }

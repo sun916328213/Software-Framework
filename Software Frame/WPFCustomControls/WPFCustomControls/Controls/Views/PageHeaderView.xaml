@@ -1,7 +1,7 @@
 <!--
-中文阅读说明：界面与资源声明。
-WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，供业务界面与工作台复用。
-绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+    中文阅读说明：界面与资源声明。
+    WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，供业务界面与工作台复用。
+    绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
 -->
 <UserControl
     x:Class="WPFCustomControls.Controls.PageHeaderView"
@@ -29,16 +29,28 @@ WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，
 
     <!--  页面页头：图标 + 标题 + 副标题。纯展示，无 VM 耦合。  -->
     <Grid>
-        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
         <materialDesign:PackIcon
             Width="28"
             Height="28"
             VerticalAlignment="Center"
             Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
             Kind="{Binding ElementName=Root, Path=IconKind}" />
-        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
-            <TextBlock TextWrapping="Wrap" Style="{StaticResource CtlPageTitle}" Text="{Binding ElementName=Root, Path=Title}" />
-            <TextBlock TextWrapping="Wrap" Style="{StaticResource CtlPageSubTitle}" Text="{Binding ElementName=Root, Path=SubTitle}" />
+        <StackPanel
+            Grid.Column="1"
+            Margin="12,0,0,0"
+            VerticalAlignment="Center">
+            <TextBlock
+                Style="{StaticResource CtlPageTitle}"
+                Text="{Binding ElementName=Root, Path=Title}"
+                TextWrapping="Wrap" />
+            <TextBlock
+                Style="{StaticResource CtlPageSubTitle}"
+                Text="{Binding ElementName=Root, Path=SubTitle}"
+                TextWrapping="Wrap" />
         </StackPanel>
     </Grid>
 </UserControl>

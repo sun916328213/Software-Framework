@@ -24,8 +24,9 @@ public sealed class SecsWorkspace : IDisposable
     private readonly DispatcherTimer _stateTimer;
     private int _subscriptions;
     /// <summary>
-    /// Host 改配置类指令的监听：S2F33 改报表挂的变量、S2F35 改事件挂的报表、S2F37 改事件使能。
-    /// 三个 handler 改的都是运行时目录的内存表，界面快照必须重刷，否则改完页面上还是旧的。
+    /// Host 改配置类指令的监听：S2F33 改报表挂的变量、S2F35 改事件挂的报表、S2F37 改事件使能、
+    /// S5F3 改报警使能。
+    /// 这些 handler 改的都是运行时目录的内存表，界面快照必须重刷，否则改完页面上还是旧的。
     /// 引擎在每条收到的主消息回包后都会按 order 名触发事件（ReceiveAsync 末尾），
     /// 到这里时目录已经改完，直接刷就行。
     /// </summary>
@@ -57,6 +58,7 @@ public sealed class SecsWorkspace : IDisposable
         EventHelper.RegisterEvent("S2F33", _onHostConfigChanged);
         EventHelper.RegisterEvent("S2F35", _onHostConfigChanged);
         EventHelper.RegisterEvent("S2F37", _onHostConfigChanged);
+        EventHelper.RegisterEvent("S5F3", _onHostConfigChanged);
 
         RefreshState();
         RefreshCatalog();
@@ -678,6 +680,108 @@ public sealed class SecsWorkspace : IDisposable
         var colon = key.IndexOf(':');
         if (colon >= 0) key = key[(colon + 1)..];
         return _catalog.VIDDic_ID.ContainsKey(key);
+    }
+
+    /// <summary>
+    /// 新增一个报警并落盘；对应入口为 AddAlarm。
+    /// 报警是叶子（S5F1 上报时按 ID 查表），直接加行即可。
+    /// </summary>
+    public void AddAlarm()
+    {
+        if (_disposed) return;
+        var id = Model.NewAlarmId?.Trim();
+        var description = Model.NewAlarmDescription?.Trim();
+        if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(description))
+        {
+            AddLog("提示", "请填写 ALID 和报警描述");
+            return;
+        }
+        if (_catalog.Alarm.Datas.Any(x => x.ID == id))
+        {
+            AddLog("提示", $"报警 {id} 已存在");
+            return;
+        }
+        try
+        {
+            _catalog.Alarm.Datas.Add(new AlarmInfo { ID = id, Description = description, Code = 0, Enable = Model.NewAlarmEnable });
+            _catalog.Alarm.Save();
+            RefreshCatalog();
+            AddLog("配置", $"已新增报警 {id}_{description}");
+        }
+        catch (Exception ex)
+        {
+            AddLog("错误", $"新增报警: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 删除选中的报警并落盘；对应入口为 DeleteAlarm。
+    /// </summary>
+    public void DeleteAlarm()
+    {
+        if (_disposed) return;
+        if (Model.SelectedAlarm is not { } selected)
+        {
+            AddLog("提示", "请先选择要删除的报警");
+            return;
+        }
+        try
+        {
+            foreach (var stale in _catalog.Alarm.Datas.Where(x => x.ID == selected.ID).ToArray())
+                _catalog.Alarm.Datas.Remove(stale);
+            _catalog.Alarm.Save();
+            Model.SelectedAlarm = null;
+            RefreshCatalog();
+            AddLog("配置", $"已删除报警 {selected.ID}_{selected.Description}");
+        }
+        catch (Exception ex)
+        {
+            AddLog("错误", $"删除报警: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 修改选中报警的描述并落盘；对应入口为 SetAlarm。
+    /// 与 <see cref="SetEvent"/> 同一套思路：ID 不让改，改描述就地落盘。
+    /// </summary>
+    public void SetAlarm()
+    {
+        if (_disposed) return;
+        if (Model.SelectedAlarm is not { } selected)
+        {
+            AddLog("提示", "请先选择要修改的报警");
+            return;
+        }
+        var typedId = Model.NewAlarmId?.Trim();
+        if (!string.IsNullOrEmpty(typedId) && typedId != selected.ID)
+        {
+            AddLog("提示", $"ID 不能改（当前 {selected.ID}）；要换 ID 请新增一行再删旧的");
+            return;
+        }
+        var description = Model.NewAlarmDescription?.Trim();
+        if (string.IsNullOrEmpty(description))
+        {
+            AddLog("提示", "报警描述不能为空");
+            return;
+        }
+        try
+        {
+            var item = _catalog.Alarm.Datas.FirstOrDefault(x => x.ID == selected.ID);
+            if (item == null)
+            {
+                AddLog("提示", $"报警 {selected.ID} 不存在");
+                return;
+            }
+            item.Description = description;
+            item.Enable = Model.NewAlarmEnable;
+            _catalog.Alarm.Save();
+            RefreshCatalog();
+            AddLog("配置", $"已修改报警 {selected.ID}_{description}");
+        }
+        catch (Exception ex)
+        {
+            AddLog("错误", $"修改报警: {ex.Message}");
+        }
     }
 
     /// <summary>逗号分隔的 ID 列表；空串得到空列表，避免 ReportInfo.VID_Collection 留下空 ID。</summary>

@@ -34,29 +34,31 @@ namespace SecsGem.Runtime.Order.S5
             {
                 //解析数据
                 var data = SecsItemToList(pSecsMessage.SecsItem);
- 
+                if (data == null || data.Count == 0)
+                    throw new Exception("S5F3 body 为空");
+
                 //格式
-                bool enable = data[0] == "1"?true:false ;
-                string ids = data[1];
+                bool enable = data[0] == "1";
 
                 Alarm alarm = VIDManager. Alarm;
 
+                // ALID 形状有两种：标准列表平铺（Flatten 后是 data[1..] 逐个），
+                // 或单个逗号串（部分 Host 的写法）；空 = 全量开关。
+                var ids = data.Skip(1)
+                    .SelectMany(s => (s ?? string.Empty).Split(','))
+                    .Select(s => s.Trim())
+                    .Where(s => s.Length > 0)
+                    .ToArray();
                 if (ids.Length == 0)
                 {
-                    alarm.GetDatas().Select(s => s.Enable = enable);
+                    foreach (var s in alarm.GetDatas()) s.Enable = enable;
                 }
-                else if (ids.Contains(","))  ////多个报警信息
+                else
                 {
-                    var idarray = ids.Split(',');
-                    //遍历_alarmcopy 将匹配的报警信息启用
-                    foreach (var id in idarray)
+                    foreach (var id in ids)
                     {
                         alarm.SetEnable(id, enable);
                     }
-                }
-                else  //单个报警信息
-                {
-                    alarm.SetEnable(ids, enable);
                 }
                 alarm.Save();
                 SecsItem = Item.B(0);//succsee
