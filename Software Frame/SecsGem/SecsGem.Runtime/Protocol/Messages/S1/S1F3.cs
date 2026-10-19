@@ -20,6 +20,24 @@ namespace SecsGem.Runtime.Order.S1
     /// 获取所选设备状态请求 H->E。本设备按 SVID/DVID/ECID 全表解析 ID，
     /// 空请求回全部三类变量（见方法内注释）。
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：请求已配置的 VID=1001、1002，假设其类型分别为 U4、ASCII。
+    /// <code><![CDATA[
+    /// 'S1F3'W                         // Host→设备，请求应答
+    /// <L [2]                          // 查询两个已配置变量
+    ///     <U4 [1] 1001>               // VID：第一个变量 ID
+    ///     <U4 [1] 1002>               // VID：第二个变量 ID
+    /// >
+    /// .
+    /// 'S1F4'                          // 设备→Host，变量值应答
+    /// <L [2]                          // 仅含值，类型由配置决定
+    ///     <U4 [1] 1>                  // VID=1001 的示例值
+    ///     <A [4] 'IDLE'>              // VID=1002 的示例值
+    /// >
+    /// .
+    /// ]]></code>
+    /// 回复只含值，不带 ID；值类型取自配置，未知 ID 当前跳过。L[0] 请求全部变量；本实现包括 SVID/DVID/ECID。
+    /// </remarks>
     [SecsOrder("S1F3")]
     class S1F3 : SecsOrderBase
     {

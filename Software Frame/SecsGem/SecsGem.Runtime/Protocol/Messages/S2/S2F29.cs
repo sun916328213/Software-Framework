@@ -24,6 +24,29 @@ namespace SecsGem.Runtime.Order.S2
     /// ECID 用 U4 回，与 S1F23 回 CEID 的惯例一致。
     /// </para>
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：假设 ECID=3001、名称 Limit、类型 U4；当前配置未提供范围、默认值和单位。
+    /// <code><![CDATA[
+    /// 'S2F29'W                        // Host→设备，请求常量名录
+    /// <L [1]                          // 请求一个常量；L[0] 为全部
+    ///     <U4 [1] 3001>               // ECID：常量 ID
+    /// >
+    /// .
+    /// 'S2F30'                         // 设备→Host，常量名录应答
+    /// <L [1]                          // 一条常量说明
+    ///     <L [6]                      // 六个固定位置字段
+    ///         <U4 [1] 3001>           // ECID：常量 ID
+    ///         <A [5] 'Limit'>         // ECNAME：名称
+    ///         <U4 [0]>                // ECMIN：未知，空项，不是 0
+    ///         <U4 [0]>                // ECMAX：未知，空项，不是 0
+    ///         <U4 [0]>                // ECDEF：未知，空项，不是 0
+    ///         <A [0] ''>              // UNITS：未知，空字符串
+    ///     >
+    /// >
+    /// .
+    /// ]]></code>
+    /// 六项为 ECID、ECNAME、ECMIN、ECMAX、ECDEF、UNITS；三个空数值项类型随配置，不是数值 0。空请求取全部。
+    /// </remarks>
     [SecsOrder("S2F29")]
     class S2F29 : SecsOrderBase
     {

@@ -17,7 +17,30 @@ namespace SecsGem.Runtime.Order.S2
     /// <summary>  
     /// 修改ReportID中的VID H->E  
     /// </summary>  
-     [SecsOrder("S2F33")]
+     /// <remarks>
+    /// 指令格式示例：DATAID=1，将已有报告 RPTID=100 关联到已有 VID=1001、1002；会修改并保存配置。
+    /// <code><![CDATA[
+    /// 'S2F33'W                        // Host→设备，修改报告定义
+    /// <L [2]                          // DATAID、报告定义列表
+    ///     <U4 [1] 1>                  // DATAID：本次定义标识
+    ///     <L [1]                      // 一组报告定义
+    ///         <L [2]                  // RPTID、VID 列表
+    ///             <U4 [1] 100>        // RPTID：已有报告 ID
+    ///             <L [2]              // 报告关联两个已有变量
+    ///                 <U4 [1] 1001>   // VID：第一个变量
+    ///                 <U4 [1] 1002>   // VID：第二个变量
+    ///             >
+    ///         >
+    ///     >
+    /// >
+    /// .
+    /// 'S2F34'                         // 设备→Host，报告定义应答
+    /// <B [1] 0x00>                    // DRACK：0=接受
+    /// .
+    /// ]]></code>
+    /// DRACK=0 接受；报告/VID 必须已经存在。当前是修改既有报告的实现，不把示例当成任意新建报告能力。
+    /// </remarks>
+    [SecsOrder("S2F33")]
     class S2F33 : SecsOrderBase
     {
       

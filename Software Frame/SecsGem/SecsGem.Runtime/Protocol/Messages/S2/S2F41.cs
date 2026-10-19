@@ -20,6 +20,34 @@ namespace SecsGem.Runtime.Order.S2
     /// <summary>  
     /// 主机命令发送/主机命令确认 H->E  
     /// </summary>  
+    /// <remarks>
+    /// 指令格式示例：主机发送 RCMD=START、参数 MODE=AUTO；命令/参数必须由宿主业务约定，非通用固定命令。
+    /// <code><![CDATA[
+    /// 'S2F41'W                        // Host→设备，远程命令
+    /// <L [2]                          // RCMD、命令参数列表
+    ///     <A [5] 'START'>             // RCMD：示例命令，宿主必须明确支持
+    ///     <L [1]                      // 一个命令参数
+    ///         <L [2]                  // CPNAME、CPVAL
+    ///             <A [4] 'MODE'>      // CPNAME：参数名
+    ///             <A [4] 'AUTO'>      // CPVAL：参数值
+    ///         >
+    ///     >
+    /// >
+    /// .
+    /// 'S2F42'                         // 设备→Host，远程命令确认
+    /// <L [2]                          // HCACK、参数确认列表
+    ///     <B [1] 0x00>                // HCACK：本例为接受，实际由业务回调决定
+    ///     <L [1]                      // 一项参数确认
+    ///         <L [2]                  // CPNAME、CPACK
+    ///             <A [4] 'MODE'>      // CPNAME：对应的参数名
+    ///             <B [1] 0x00>        // CPACK：当前实现固定为 0
+    ///         >
+    ///     >
+    /// >
+    /// .
+    /// ]]></code>
+    /// 应答首项 HCACK 来自业务回调，本例为接受；参数项为 CPNAME、CPACK（当前固定 0）。命令可能有设备副作用。
+    /// </remarks>
     [SecsOrder("S2F41")]
     class S2F41 : SecsOrderBase
     {

@@ -18,6 +18,20 @@ namespace SecsGem.Runtime.Order.S7
     /// 方向：S7F19 H→E / S7F20 E→H。
     /// 请求无正文；回复 L[n] A PPID，空目录为 L[0]。不会自动读取 MachineApp 配方库。
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：假设内存目录只有两份工作台示例配方。
+    /// <code><![CDATA[
+    /// 'S7F19'W                        // Host→设备，查询配方目录
+    /// .                              // 无正文；带 L[0] 也会被拒绝
+    /// 'S7F20'                         // 设备→Host，目录应答
+    /// <L [2]                          // 平铺 PPID 列表，不含配方正文
+    ///     <A [9] 'DEMO-FAST'>          // PPID：第一个配方
+    ///     <A [12] 'DEMO-PRECISE'>      // PPID：第二个配方
+    /// >
+    /// .
+    /// ]]></code>
+    /// 空目录回 L[0]；实际数量取自内存库。此处不是多套一层 L[1] 的目录，也不返回当前应用配方标记。
+    /// </remarks>
     [SecsOrder("S7F19")]
     class S7F19 : SecsOrderBase
     {

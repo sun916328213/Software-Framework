@@ -54,6 +54,23 @@ namespace SecsGem.Runtime.Order.S6
     /// （与 S2F18 的 TIME 同格式；GEM 里 STIME 的具体格式本应由 TimeFormat ECV 决定，本设备统一取值）。
     /// </para>
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：对应 S2F23 TRID=1 的第一个采样；TraceManager 当前用 W=0 发送。
+    /// <code><![CDATA[
+    /// 'S6F1'                          // 设备→Host，W=0，当前不等待 S6F2
+    /// <L [4]                          // TRID、SMPLN、STIME、采样值列表
+    ///     <U4 [1] 1>                  // TRID：类型保持与 S2F23 下发一致
+    ///     <U4 [1] 1>                  // SMPLN：采样序号，从 1 开始
+    ///     <A [16] '2026010212345600'>  // STIME：yyyyMMddHHmmssff，本地采样时间
+    ///     <L [2]                      // 两个采样值，顺序对应请求的 SVID
+    ///         <U4 [1] 1>              // SV：第一个变量的快照值
+    ///         <A [4] 'IDLE'>          // SV：第二个变量的快照值
+    ///     >
+    /// >
+    /// .
+    /// ]]></code>
+    /// SVID 数量/类型依实际 Trace 配置；本例需下发两个 SVID。若其他调用方显式选择 W=1，确认消息为 S6F2，ACKC6 为 B[1]。
+    /// </remarks>
     [SecsOrder("S6F1")]
     class   S6F1:SecsOrderBase
     {

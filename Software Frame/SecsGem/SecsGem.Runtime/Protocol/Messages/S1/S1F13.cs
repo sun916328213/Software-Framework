@@ -16,7 +16,26 @@ namespace SecsGem.Runtime.Order.S1
     /// <summary>
     /// 通信建立请求/通信建立请求确认 H<->E
     /// </summary>
-     [SecsOrder("S1F13")]
+     /// <remarks>
+    /// 指令格式示例：Host 建立通信；设备主动发起时正文改为 L[2] MDLN、SOFTREV。
+    /// <code><![CDATA[
+    /// 'S1F13'W                        // Host→设备，请求建立通信
+    /// <L [0]                          // Host 发起示例：空设备信息列表
+    /// >
+    /// .
+    /// 'S1F14'                         // 设备→Host，建立通信应答
+    /// <L [2]                          // COMMACK 与设备信息
+    ///     <B [1] 0x00>                // COMMACK：0=接受
+    ///     <L [2]                      // 型号/版本
+    ///         <A [9] 'WORKBENCH'>     // MDLN：设备型号
+    ///         <A [3] '1.0'>           // SOFTREV：软件版本
+    ///     >
+    /// >
+    /// .
+    /// ]]></code>
+    /// 首项 COMMACK=0 为接受；型号/版本取自设备配置，本例不是固定值。
+    /// </remarks>
+    [SecsOrder("S1F13")]
     class S1F13 : SecsOrderBase
     {
       

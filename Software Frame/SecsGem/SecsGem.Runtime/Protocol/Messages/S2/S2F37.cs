@@ -18,7 +18,24 @@ namespace SecsGem.Runtime.Order.S2
     /// <summary>  
   /// 开启或者关闭Event H->E  
   /// </summary>  
-      [SecsOrder("S2F37")]
+      /// <remarks>
+    /// 指令格式示例：启用已配置事件 CEID=101；关闭时把 Boolean 改为 False。
+    /// <code><![CDATA[
+    /// 'S2F37'W                        // Host→设备，启用/禁用事件
+    /// <L [2]                          // CEED、CEID 列表
+    ///     <Boolean [1] True>          // CEED：True=启用，False=禁用
+    ///     <L [1]                      // 显式列出要修改的事件
+    ///         <U4 [1] 101>            // CEID：已有事件 ID
+    ///     >
+    /// >
+    /// .
+    /// 'S2F38'                         // 设备→Host，事件开关应答
+    /// <B [1] 0x00>                    // ERACK：0=接受
+    /// .
+    /// ]]></code>
+    /// 两项为 CEED、CEID 列表；ERACK=0 接受。当前只修改列出的已知事件，空 CEID 列表不会自动作用于全部事件。
+    /// </remarks>
+    [SecsOrder("S2F37")]
     class S2F37 : SecsOrderBase
     {
      

@@ -10,7 +10,20 @@ public struct SS9F13
     public string Message { get; set; }
 }
 
-/// <summary>S9F13：会话超时，L[2] A MEXP、A EDID，W=0；不是 T3 的别名。</summary>
+/// <summary>S9F13：会话超时，不是 T3 事务应答超时。</summary>
+/// <remarks>
+/// 指令格式示例：DEMO-FAST 已得到 S7F2 许可，却没有在会话期限内发送 S7F3。
+/// <code><![CDATA[
+/// 'S9F13'                         // 设备→Host，W=0，无应答
+/// <L [2]                          // MEXP、EDID，不是 MHEAD/SHEAD
+///     <A [4] 'S7F3'>               // MEXP：预期消息，非空 ASCII；对应 SS9F13.Order
+///     <A [9] 'DEMO-FAST'>          // EDID：预期数据标识，本场景为 PPID；对应 SS9F13.Message
+/// >
+/// .
+/// ]]></code>
+/// ASCII 数量按实际内容填写；EDID 可空，不是自由异常说明。当前工作台等待 30 秒，项目可显式配置。
+/// 本通知自身的 System Bytes 不能用于结束无关 T3；超时不创建或自动切换配方。
+/// </remarks>
 [SecsOrder("S9F13")]
 internal sealed class S9F13 : SecsOrderBase
 {

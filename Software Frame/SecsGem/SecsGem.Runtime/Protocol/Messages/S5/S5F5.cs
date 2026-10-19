@@ -20,6 +20,26 @@ namespace SecsGem.Runtime.Order.S5
     /// <summary>
     /// 报警信息List H->E
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：查询已有报警 2001，假设当前 Code=1。
+    /// <code><![CDATA[
+    /// 'S5F5'W                         // Host→设备，请求报警列表
+    /// <L [1]                          // 单个查询项；L[0] 查询全部
+    ///     <A [4] '2001'>              // ALID：当前按首项读取；批量可用逗号串
+    /// >
+    /// .
+    /// 'S5F6'                          // 设备→Host，报警列表应答
+    /// <L [1]                          // 本例匹配一条报警
+    ///     <L [3]                      // ALCD、ALID、ALTX
+    ///         <B [1] 0x80>            // ALCD：本实现将 Code 左移七位
+    ///         <A [4] '2001'>          // ALID：ASCII 报警 ID
+    ///         <A [9] 'Door open'>     // ALTX：报警描述
+    ///     >
+    /// >
+    /// .
+    /// ]]></code>
+    /// 当前多个查询 ID 从首个字符串按逗号拆分，不会逐项处理任意 ALID 列表；无匹配返回 null，走 S9F7。
+    /// </remarks>
     [SecsOrder("S5F5")]
     class S5F5 : SecsOrderBase
     {

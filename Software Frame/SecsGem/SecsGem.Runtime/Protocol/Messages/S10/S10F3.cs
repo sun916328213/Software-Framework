@@ -15,6 +15,21 @@ namespace SecsGem.Runtime.Order.S10
     /// <summary>
     /// 显示Host信息 H->E
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：Host 向终端显示一条文本。
+    /// <code><![CDATA[
+    /// 'S10F3'W                        // Host→设备，单条终端显示
+    /// <L [2]                          // TID、TEXT
+    ///     <B [1] 0x00>                // TID：终端标识，本例为 0
+    ///     <A [5] 'Hello'>             // TEXT：显示文本，ASCII 字节数为 5
+    /// >
+    /// .
+    /// 'S10F4'                         // 设备→Host，终端确认
+    /// <B [1] 0x00>                    // ACKC10：当前处理成功为 0
+    /// .
+    /// ]]></code>
+    /// 当前处理器统一平铺全部叶子项交给 TerminalDisplay，包含 TID；不是仅抽取 TEXT。解析/显示失败返回 null，走 S9F7。
+    /// </remarks>
     [SecsOrder("S10F3")]
     class S10F3:SecsOrderBase
     {

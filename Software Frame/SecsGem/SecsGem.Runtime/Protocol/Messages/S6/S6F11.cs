@@ -31,6 +31,30 @@ namespace SecsGem.Runtime.Order.S6
     /// <summary>
     /// 发送事件 E->H
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：假设已配置 CEID=101、RPTID=100，报告包含 U4 和 ASCII 两个有效值。
+    /// <code><![CDATA[
+    /// 'S6F11'W                        // 设备→Host，事件上报，请求确认
+    /// <L [3]                          // DATAID、CEID、报告列表
+    ///     <A [1] '1'>                 // DATAID：当前为 ASCII 计数，1～100 循环
+    ///     <U2 [1] 101>                // CEID：当前事件 ID 使用 U2
+    ///     <L [1]                      // 一份关联报告
+    ///         <L [2]                  // RPTID、报告值列表
+    ///             <U2 [1] 100>        // RPTID：当前报告 ID 使用 U2
+    ///             <L [2]              // V：按报告配置顺序，只含值不含 VID
+    ///                 <U4 [1] 1>      // 第一个变量值，类型依配置
+    ///                 <A [4] 'IDLE'>  // 第二个变量值，类型依配置
+    ///             >
+    ///         >
+    ///     >
+    /// >
+    /// .
+    /// 'S6F12'                         // Host→设备，事件确认示例
+    /// <B [1] 0x00>                    // ACKC6：Host 接受；实际码由 Host 返回
+    /// .
+    /// ]]></code>
+    /// DATAID/CEID/RPTID 的上述类型是当前实现，不假装全部为 U4；当前 null 变量值会被跳过，实际报告数量取自配置。
+    /// </remarks>
     [SecsOrder("S6F11")]
     class S6F11:SecsOrderBase
     {

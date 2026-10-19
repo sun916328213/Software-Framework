@@ -19,6 +19,29 @@ namespace SecsGem.Runtime.Order.S1
     /// <summary>
     /// 采集事件名录请求 Collection Event Namelist Request H->E
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：假设已配置事件 CEID=101（名称 Ready），关联 VID=1001、1002。
+    /// <code><![CDATA[
+    /// 'S1F23'W                        // Host→设备，请求事件名录
+    /// <L [1]                          // 请求一个事件；L[0] 为全部
+    ///     <U4 [1] 101>                // CEID：事件 ID
+    /// >
+    /// .
+    /// 'S1F24'                         // 设备→Host，事件名录应答
+    /// <L [1]                          // 一条事件说明
+    ///     <L [3]                      // CEID、CENAME、关联 VID
+    ///         <U4 [1] 101>            // CEID：事件 ID
+    ///         <A [5] 'Ready'>         // CENAME：事件名称
+    ///         <L [2]                  // 事件关联的变量，去重保序
+    ///             <U4 [1] 1001>       // VID：第一个变量 ID
+    ///             <U4 [1] 1002>       // VID：第二个变量 ID
+    ///         >
+    ///     >
+    /// >
+    /// .
+    /// ]]></code>
+    /// 三项为 CEID、CENAME、去重后的关联 VID 列表；L[0] 查询全部，未知 CEID 跳过。
+    /// </remarks>
     [SecsOrder("S1F23")]
     class S1F23 : SecsOrderBase
     {

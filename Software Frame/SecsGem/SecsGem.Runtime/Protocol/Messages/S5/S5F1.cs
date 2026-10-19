@@ -22,6 +22,24 @@ namespace SecsGem.Runtime.Order.S5
     /// <summary>
     /// 发送报警信息 E->H
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例（按当前实际组包，外层多一层 L[1]，不是标准平铺 L[3]）：
+    /// <code><![CDATA[
+    /// 'S5F1'W                         // 设备→Host，报警上报，请求确认
+    /// <L [1]                          // 当前实现的报警外层列表
+    ///     <L [3]                      // 一条报警：ALCD、ALID、ALTX
+    ///         <B [1] 0x80>            // ALCD：本实现 Code=1 左移七位；解除为 0x00
+    ///         <A [4] '2001'>          // ALID：配置中的报警 ID，当前为 ASCII
+    ///         <A [9] 'Door open'>     // ALTX：报警描述，取自配置
+    ///     >
+    /// >
+    /// .
+    /// 'S5F2'                          // Host→设备，确认示例
+    /// <B [1] 0x00>                    // ACKC5：Host 接受；实际码由 Host 返回
+    /// .
+    /// ]]></code>
+    /// 仅对启用且 Code=0/1 的报警组包。示例值需替换为现场配置，不在注释修改中改变现有线上结构。
+    /// </remarks>
     [SecsOrder("S5F1")]
     class S5F1 : SecsOrderBase
     {

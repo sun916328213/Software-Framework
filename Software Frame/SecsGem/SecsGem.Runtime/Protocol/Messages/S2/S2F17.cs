@@ -17,6 +17,17 @@ namespace SecsGem.Runtime.Order.S2
     /// 这样 Host 侧对这两条时间只需一套解析规则。
     /// </para>
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：请求无正文；回复设备当时的本地时间，不是固定示例时间。
+    /// <code><![CDATA[
+    /// 'S2F17'W                        // Host→设备，读取时间
+    /// .                              // 无正文
+    /// 'S2F18'                         // 设备→Host，时间应答
+    /// <A [16] '2026010212345600'>      // TIME：yyyyMMddHHmmssff，设备本地时间
+    /// .
+    /// ]]></code>
+    /// TIME 当前为 yyyyMMddHHmmssff：示例表示 2026-01-02 12:34:56.00；不是 L[1] 包裹的字符串。
+    /// </remarks>
     [SecsOrder("S2F17")]
     class S2F17 : SecsOrderBase
     {

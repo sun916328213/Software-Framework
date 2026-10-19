@@ -21,6 +21,24 @@ namespace SecsGem.Runtime.Order.S2
     /// 而不是丢包或错位回值——错位会让 Host 把 B 的值当成 A 的。
     /// </para>
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：假设 ECID=3001 是 U4 常量，3002 是 ASCII 常量。
+    /// <code><![CDATA[
+    /// 'S2F13'W                        // Host→设备，读取常量
+    /// <L [2]                          // 两个 ECID；L[0] 为全部
+    ///     <U4 [1] 3001>               // ECID：第一个常量
+    ///     <U4 [1] 3002>               // ECID：第二个常量
+    /// >
+    /// .
+    /// 'S2F14'                         // 设备→Host，常量值应答
+    /// <L [2]                          // 按请求顺序返回 ECV
+    ///     <U4 [1] 100>                // ECV：ECID=3001 的示例值
+    ///     <A [4] 'AUTO'>              // ECV：ECID=3002 的示例值
+    /// >
+    /// .
+    /// ]]></code>
+    /// 请求为 ECID 列表，回复为同序 ECV，不带 ECID；类型/值依配置。未知 ID 对应 L[0] 占位；空请求取全部。
+    /// </remarks>
     [SecsOrder("S2F13")]
     class S2F13 : SecsOrderBase
     {

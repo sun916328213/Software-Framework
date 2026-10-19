@@ -15,6 +15,20 @@ namespace SecsGem.Runtime.Order.S1
     /// <summary>
     /// 在线确认请求/在线数据 H<->E
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：Host 在线探测，无正文（不是 L[0]）；设备回型号和版本。
+    /// <code><![CDATA[
+    /// 'S1F1'W                         // Host→设备，W=1，请求应答
+    /// .                              // 无正文，不是 L[0]
+    /// 'S1F2'                          // 设备→Host，W=0
+    /// <L [2]                          // 两项设备信息
+    ///     <A [9] 'WORKBENCH'>          // MDLN：设备型号，取自配置
+    ///     <A [3] '1.0'>                // SOFTREV：软件版本，取自配置
+    /// >
+    /// .
+    /// ]]></code>
+    /// MDLN/SOFTREV 来自设备配置；本例为示例值。当前 GetSendItem 返回 null，不支持从此组包入口主动发起。
+    /// </remarks>
     [SecsOrder("S1F1")]
     class S1F1:SecsOrderBase
     {
@@ -34,8 +48,7 @@ namespace SecsGem.Runtime.Order.S1
         
 
         /// <summary>
-        /// 获取发送数据。S1F1 是 Are You There Request，按 E5 只能 Host→Equipment，
-        /// 设备端不发起，返回 null 让引擎明确报"该指令不可发"而不是组个空包出去。
+        /// 当前处理器未实现设备主动发送组包，返回 null；这是实现限制，不表示 S1F1 协议只允许 Host 发起。
         /// </summary>
         public override Item GetSendItem(params object[] pData)
         {

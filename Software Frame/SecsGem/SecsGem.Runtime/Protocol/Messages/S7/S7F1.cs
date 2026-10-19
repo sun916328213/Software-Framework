@@ -8,6 +8,21 @@ namespace SecsGem.Runtime.Order.S7;
 /// 本接收方向：S7F1 H→E / S7F2 E→H（标准允许双向事务）。
 /// 请求：PPID、字节长度；回复：PPGNT，0=允许。本实现仅做基本许可判断。
 /// </summary>
+/// <remarks>
+/// 指令格式示例：申请下载工作台示例配方的 62 字节 JSON 正文；许可不表示已入库或应用。
+/// <code><![CDATA[
+/// 'S7F1'W                         // Host→设备，申请配方下载，请求应答
+/// <L [2]                          // PPID、LENGTH
+///     <A [9] 'DEMO-FAST'>          // PPID：ASCII 配方编号，保留前导零
+///     <U4 [1] 62>                 // LENGTH：PPBODY 实际字节数，不含 Item/HSMS 头
+/// >
+/// .
+/// 'S7F2'                          // 设备→Host，下载许可应答
+/// <B [1] 0x00>                    // PPGNT：0=允许；长度拒绝为 2
+/// .
+/// ]]></code>
+/// 类型 U4 为本例；当前 LENGTH 接受单个无符号数。启用容量策略时可预拒绝，获准后会话等待由宿主配置。
+/// </remarks>
 [SecsOrder("S7F1")]
 class S7F1 : SecsOrderBase
 {

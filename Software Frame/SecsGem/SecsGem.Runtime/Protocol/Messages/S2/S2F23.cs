@@ -58,6 +58,27 @@ namespace SecsGem.Runtime.Order.S2
     /// 现在改成直接调 TraceManager，去掉这条没有消费者的广播。
     /// </para>
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：TRID=1，每秒采样一次，共 10 次，每条报告一个采样，采集已配置 VID=1001、1002。
+    /// <code><![CDATA[
+    /// 'S2F23'W                        // Host→设备，启动/停止 Trace
+    /// <L [5]                          // 五个 Trace 参数
+    ///     <U4 [1] 1>                  // TRID：Trace 标识
+    ///     <A [6] '000001'>            // DSPER：hhmmss，此例每秒一次
+    ///     <U4 [1] 10>                 // TOTSMP：采样总数；0=停止该 TRID
+    ///     <U4 [1] 1>                  // REPGSZ：每个报告的采样数
+    ///     <L [2]                      // 待采集的两个 SVID，对应 S6F1 示例
+    ///         <U4 [1] 1001>           // SVID：第一个已有变量
+    ///         <U4 [1] 1002>           // SVID：第二个已有变量
+    ///     >
+    /// >
+    /// .
+    /// 'S2F24'                         // 设备→Host，Trace 初始化应答
+    /// <B [1] 0x00>                    // TIAACK：0=接受，其余见 TraceManager
+    /// .
+    /// ]]></code>
+    /// 五项为 TRID、DSPER、TOTSMP、REPGSZ、SVID 列表；TIAACK=0 接受。TOTSMP=0 终止对应 Trace，后续数据见 S6F1。
+    /// </remarks>
     [SecsOrder("S2F23")]
     class S2F23 : SecsOrderBase
     {

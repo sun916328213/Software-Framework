@@ -15,9 +15,31 @@ using System.Linq;
 namespace SecsGem.Runtime.Order.S2
 {
     /// <summary>  
-    /// 修改ReportID中的VID H->E  
+    /// 修改 CEID 关联的 ReportID（事件与报表链接），H→E。  
     /// </summary>  
-      [SecsOrder("S2F35")]
+      /// <remarks>
+    /// 指令格式示例：DATAID=1，将已有事件 CEID=101 链接到已有报告 RPTID=100；会修改并保存配置。
+    /// <code><![CDATA[
+    /// 'S2F35'W                        // Host→设备，修改事件与报告链接
+    /// <L [2]                          // DATAID、事件链接列表
+    ///     <U4 [1] 1>                  // DATAID：本次链接定义标识
+    ///     <L [1]                      // 一组事件链接
+    ///         <L [2]                  // CEID、RPTID 列表
+    ///             <U4 [1] 101>        // CEID：已有事件 ID
+    ///             <L [1]              // 关联一个已有报告
+    ///                 <U4 [1] 100>    // RPTID：报告 ID
+    ///             >
+    ///         >
+    ///     >
+    /// >
+    /// .
+    /// 'S2F36'                         // 设备→Host，链接应答
+    /// <B [1] 0x00>                    // LRACK：0=接受
+    /// .
+    /// ]]></code>
+    /// LRACK=0 接受；事件和报告必须存在。本指令链接 CEID→RPTID，S2F33 才是 RPTID→VID。
+    /// </remarks>
+    [SecsOrder("S2F35")]
     class S2F35 : SecsOrderBase
     {
      

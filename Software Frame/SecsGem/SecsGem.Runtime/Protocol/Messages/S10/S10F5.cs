@@ -16,6 +16,24 @@ namespace SecsGem.Runtime.Order.S10
     /// <summary>
     /// 显示Host信息 H->E
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：Host 向终端显示两行文本。
+    /// <code><![CDATA[
+    /// 'S10F5'W                        // Host→设备，多条终端显示
+    /// <L [2]                          // TID、文本行列表
+    ///     <B [1] 0x00>                // TID：终端标识，本例为 0
+    ///     <L [2]                      // 两行文本
+    ///         <A [5] 'Line1'>         // 第一行 TEXT
+    ///         <A [5] 'Line2'>         // 第二行 TEXT
+    ///     >
+    /// >
+    /// .
+    /// 'S10F6'                         // 设备→Host，终端确认
+    /// <B [1] 0x00>                    // ACKC10：当前处理成功为 0
+    /// .
+    /// ]]></code>
+    /// 当前与 S10F3 共用平铺显示逻辑，不承诺保留独立终端行布局；解析/显示失败返回 null，走 S9F7。
+    /// </remarks>
     [SecsOrder("S10F5")]
     class S10F5:SecsOrderBase
     {

@@ -18,6 +18,26 @@ namespace SecsGem.Runtime.Order.S1
     /// <summary>
     /// 状态变量名称列表请求 H->E
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：查询 VID=1001 的说明。
+    /// <code><![CDATA[
+    /// 'S1F11'W                        // Host→设备，请求变量名录
+    /// <L [1]                          // 请求一个变量；L[0] 为全部
+    ///     <U4 [1] 1001>               // VID：变量 ID
+    /// >
+    /// .
+    /// 'S1F12'                         // 设备→Host，变量名录应答
+    /// <L [1]                          // 一条变量说明
+    ///     <L [3]                      // 当前实现的三个字段
+    ///         <A [4] '1001'>          // ID：当前回复使用 ASCII
+    ///         <A [5] 'State'>         // Name：变量名称
+    ///         <A [2] 'U4'>            // DataTypeName：数据类型名，不是单位
+    ///     >
+    /// >
+    /// .
+    /// ]]></code>
+    /// 当前回复三项实际为 ASCII ID、Name、DataTypeName（不是 UNITS）；名字/类型依配置。L[0] 请求全部。
+    /// </remarks>
     [SecsOrder("S1F11")]
     class S1F11 : SecsOrderBase
     {

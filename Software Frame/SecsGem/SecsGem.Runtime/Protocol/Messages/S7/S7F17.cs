@@ -8,6 +8,21 @@ namespace SecsGem.Runtime.Order.S7;
 /// 方向：S7F17 H→E / S7F18 E→H。
 /// 请求：L[n] PPID；回复：ACKC7，0=接受、4=PPID 不存在且整批不删除。尚无生产删除保护。
 /// </summary>
+/// <remarks>
+/// 指令格式示例：删除两个指定配方，有删除副作用，仅作说明，不自动执行。
+/// <code><![CDATA[
+/// 'S7F17'W                        // Host→设备，请求删除配方
+/// <L [2]                          // 两个 PPID；警告：L[0] 表示删除全部
+///     <A [9] 'DEMO-FAST'>          // PPID：第一个配方
+///     <A [12] 'DEMO-PRECISE'>      // PPID：第二个配方
+/// >
+/// .
+/// 'S7F18'                         // 设备→Host，删除应答
+/// <B [1] 0x00>                    // ACKC7：0=整批接受，4=有未知 PPID 且整批不删
+/// .
+/// ]]></code>
+/// 仅删除内存协议表示及关联列表，不替换当前已应用快照；尚无生产删除权限保护。
+/// </remarks>
 [SecsOrder("S7F17")]
 class S7F17 : SecsOrderBase
 {

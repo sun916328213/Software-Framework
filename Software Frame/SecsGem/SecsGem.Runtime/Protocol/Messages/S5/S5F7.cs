@@ -16,6 +16,23 @@ namespace SecsGem.Runtime.Order.S5
     /// <summary>
     /// Enable报警信息集合 H->E
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：查询全部已启用报警，假设只启用 2001，且 Code=1。
+    /// <code><![CDATA[
+    /// 'S5F7'W                         // Host→设备，查询已启用报警
+    /// .                              // 无正文
+    /// 'S5F8'                          // 设备→Host，已启用报警列表
+    /// <L [1]                          // 本例一条；不等于当前发生的报警列表
+    ///     <L [3]                      // ALCD、ALID、ALTX
+    ///         <B [1] 0x80>            // ALCD：本实现将 Code 左移七位
+    ///         <A [4] '2001'>          // ALID：ASCII 报警 ID
+    ///         <A [9] 'Door open'>     // ALTX：报警描述
+    ///     >
+    /// >
+    /// .
+    /// ]]></code>
+    /// 过滤依据 Enable=true，不是 Code=1；当前无启用报警返回 null，走 S9F7，不伪装成成功空列表。
+    /// </remarks>
     [SecsOrder("S5F7")]
     class S5F7 : SecsOrderBase
     {

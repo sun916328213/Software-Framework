@@ -26,6 +26,18 @@ namespace SecsGem.Runtime.Order.S2
     /// ERROR_PRIVILEGE_NOT_HELD(1314) 失败——错误码记进 SEMILog，Host 侧只看到 TIACK=1。
     /// </para>
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：设置本机 Windows 时间，有系统级副作用，仅作报文说明，不自动执行。
+    /// <code><![CDATA[
+    /// 'S2F31'W                        // Host→设备，修改 Windows 本地时间
+    /// <A [16] '2026010212345600'>      // TIME：yyyyMMddHHmmssff，不套 List
+    /// .
+    /// 'S2F32'                         // 设备→Host，对时应答
+    /// <B [1] 0x00>                    // TIACK：0=成功，1=格式/权限/系统调用失败
+    /// .
+    /// ]]></code>
+    /// 请求为裸 ASCII TIME，不套 List；TIACK=0 设置成功、1 格式/权限/系统调用失败。实际支持的时间格式见 TimeFormats。
+    /// </remarks>
     [SecsOrder("S2F31")]
     class S2F31 : SecsOrderBase
     {

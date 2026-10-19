@@ -31,6 +31,17 @@ namespace SecsGem.Runtime.Order.S1
     /// <summary>
     /// 离线请求/离线请求确认 Offline H->E
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：Host 请求下线，无正文；OFLACK=0 表示接受。
+    /// <code><![CDATA[
+    /// 'S1F15'W                        // Host→设备，请求下线
+    /// .                              // 无正文
+    /// 'S1F16'                         // 设备→Host，下线应答
+    /// <B [1] 0x00>                    // OFLACK：0=接受
+    /// .
+    /// ]]></code>
+    /// 下线状态切换及关联事件在应答后由 ConnectManager 执行；示例有状态副作用，不自动执行。
+    /// </remarks>
     [SecsOrder("S1F15")]
     class S1F15 : SecsOrderBase
     {

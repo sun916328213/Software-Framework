@@ -3,7 +3,14 @@ using SecsGem.Runtime.Protocol.Building;
 
 namespace SecsGem.Runtime.Order.S9;
 
-/// <summary>S9F1/3/5/7/9/11 的原始十字节 MHEAD/SHEAD；不含四字节 HSMS 长度前缀。</summary>
+/// <summary>
+/// S9F1/3/5/7/9/11 的原始 B[10] MHEAD/SHEAD，不含四字节 HSMS 长度前缀。
+/// 字节 0–1：原 Device ID / Session ID，大端。
+/// 字节 2：原 W 位（最高位）与 Stream（低七位）；字节 3：原 Function。
+/// 字节 4–5：原 PType / SType，HSMS data message 均为 0。
+/// 字节 6–9：原 System Bytes，大端，保留全部 32 位。
+/// MHEAD 取自出错的接收消息；SHEAD 取自等待应答超时的发送消息，均不是 S9 自身的报头。
+/// </summary>
 public readonly record struct S9HeaderData(byte[] Header);
 
 internal static class S9ProtocolCodec

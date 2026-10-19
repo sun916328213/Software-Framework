@@ -8,6 +8,33 @@ namespace SecsGem.Runtime.Order.S7;
 /// 本接收方向：S7F25 H→E / S7F26 E→H（标准允许双向事务）。
 /// 请求：A PPID；回复：PPID、MDLN、SOFTREV、命令列表；未找到回复 L[0]。
 /// </summary>
+/// <remarks>
+/// 指令格式示例：读取已发布的工作台简单参数块配方；请求不能发送四字段空模板。
+/// <code><![CDATA[
+/// 'S7F25'W                        // Host→设备，读取格式化配方
+/// <A [9] 'DEMO-FAST'>              // PPID：裸 ASCII 编号，不套 L[1]
+/// .
+/// 'S7F26'                         // 设备→Host，格式化配方应答
+/// <L [4]                          // PPID、MDLN、SOFTREV、命令列表
+///     <A [9] 'DEMO-FAST'>          // PPID：实际返回的编号
+///     <A [9] 'WORKBENCH'>          // MDLN：关联机型
+///     <A [3] '1.0'>                // SOFTREV：关联版本
+///     <L [1]                      // 本例一条命令，实际数量随存储数据
+///         <L [2]                  // CCODE、PPARM 列表
+///             <U2 [1] 1>          // CCODE：本例为 U2；原始类型原样返回
+///             <L [4]              // 本例四个参数，不是协议固定四参数
+///                 <U4 [1] 1>      // Version：版本
+///                 <U4 [1] 5000>   // ExposureUs：曝光时间，微秒
+///                 <F8 [1] 1.5>    // Gain：增益
+///                 <F8 [1] 100>    // SpeedMmPerSec：速度，毫米/秒
+///             >
+///         >
+///     >
+/// >
+/// .
+/// ]]></code>
+/// 未找到时正文为 L[0]，不是内容留空的 L[4]。其他 Codec 的类型、向量长度和嵌套结构按存储快照返回，不切换配方。
+/// </remarks>
 [SecsOrder("S7F25")]
 class S7F25 : SecsOrderBase
 {

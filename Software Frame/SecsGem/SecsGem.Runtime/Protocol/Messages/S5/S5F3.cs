@@ -17,6 +17,23 @@ namespace SecsGem.Runtime.Order.S5
     /// <summary>
     /// 启用报警信息 H->E
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例（当前实现以数值 1 为启用，不把 0x80 解释为 1）：
+    /// <code><![CDATA[
+    /// 'S5F3'W                         // Host→设备，启用/禁用报警
+    /// <L [2]                          // 启用标记、报警 ID 列表
+    ///     <B [1] 0x01>                // ALED：当前 1=启用，其余=禁用
+    ///     <L [1]                      // 指定一条报警；空列表为全部
+    ///         <A [4] '2001'>          // ALID：已配置报警 ID
+    ///     >
+    /// >
+    /// .
+    /// 'S5F4'                          // 设备→Host，报警开关应答
+    /// <B [1] 0x00>                    // ACKC5：0=接受
+    /// .
+    /// ]]></code>
+    /// 会保存报警配置；支持列表及逗号分隔 ID 的兼容输入。这里展示现有行为，不将其宣称为所有 Host 的 ALED 规范。
+    /// </remarks>
     [SecsOrder("S5F3")]
     class S5F3 : SecsOrderBase
     {

@@ -36,6 +36,17 @@ namespace SecsGem.Runtime.Order.S1
     /// <summary>
     /// 在线请求/在线请求确认 Online H->E
     /// </summary>
+    /// <remarks>
+    /// 指令格式示例：Host 请求上线，无正文；下面示例为接受。
+    /// <code><![CDATA[
+    /// 'S1F17'W                        // Host→设备，请求上线
+    /// .                              // 无正文
+    /// 'S1F18'                         // 设备→Host，上线应答
+    /// <B [1] 0x00>                    // ONLACK：0=接受，1=已在线，2=不允许
+    /// .
+    /// ]]></code>
+    /// ONLACK：0=接受、1=已在线、2=当前不允许；只有接受后才由 ConnectManager 切换状态。
+    /// </remarks>
     [SecsOrder("S1F17")]
     class S1F17 : SecsOrderBase
     {
