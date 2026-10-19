@@ -8,7 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using WPFControls.Queries.Alarms;
-using WPFControls.Controls.Models.Charts;
+using WPFControls.Charts.Models;
 using WPFControls.ProgramControl.Models;
 
 namespace WPFControls.ProgramControl.ViewModels.Alarm;
@@ -21,8 +21,8 @@ internal class AlarmInfoQueryViewModel : ObservableObject
 {
     // Preserve existing XAML binding paths; state belongs to this page instance.
     public AlarmInfoQueryModel Datas { get; } = new();
-    private ObservableCollection<PieData> _pieData = new();
-    public ObservableCollection<PieData> PieData
+    private ObservableCollection<ChartPieData> _pieData = new();
+    public ObservableCollection<ChartPieData> PieData
     {
         get => _pieData;
         set => SetProperty(ref _pieData, value);
@@ -45,7 +45,7 @@ internal class AlarmInfoQueryViewModel : ObservableObject
             {
                 ID = row.ID, Info = row.Info, StartTime = row.StartTime, EndTime = row.EndTime, Duration = row.Duration
             }));
-            PieData = new ObservableCollection<PieData>(result.Summaries.Select(summary => new PieData
+            PieData = new ObservableCollection<ChartPieData>(result.Summaries.Select(summary => new ChartPieData
             {
                 Value = summary.Count, SeriesName = summary.Info
             }));

@@ -1,7 +1,7 @@
 ﻿// 【中文阅读说明】
-// WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
-// 本文件定义：ChartsPieType、ChartsPieService。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：WPFControls、WPFControls.Controls.Services、CommunityToolkit.Mvvm.ComponentModel、Extension.UI.Controls、LiveChartsCore、LiveChartsCore.Defaults。导入不代表所有类型都会在运行时加载。
+// WPFControls.Charts 模块：图表组件，本文件属于 LiveCharts 后端，输入转换与绘图状态归服务，业务查询与设备操作归宿主。
+// 本文件定义：ChartsPieType、ChartsPieService。原先由 ChartsPieModel 包装的 Series 集合改为服务私有持有。
+// 直接导入的协作命名空间包括：CommunityToolkit.Mvvm.ComponentModel、Extension.UI.Controls、LiveChartsCore、WPFControls.Charts.Models。
 using CommunityToolkit.Mvvm.ComponentModel;
 using Extension.UI.Controls;
 using LiveChartsCore;
@@ -10,104 +10,100 @@ using LiveChartsCore.Measure;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Extensions;
 using LiveChartsCore.SkiaSharpView.Painting;
-using LiveChartsCore.SkiaSharpView.WPF;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using WPFControls.Controls.Models.Charts;
+using WPFControls.Charts.Models;
 
 namespace WPFControls.Controls.Services.Charts
 {
     /// <summary>
-    /// ChartsPieType 的类型定义。WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
+    /// 饼图展示类型。
     /// </summary>
     public enum ChartsPieType
     {
         /// <summary>
-        ///    甜甜圈
+        /// 甜甜圈
         /// </summary>
         Doughnut,
-        
-       /// <summary>
-       /// 多个仪表盘
-       /// </summary>
+
+        /// <summary>
+        /// 多个仪表盘
+        /// </summary>
         MultipleGauge,
     }
 
     /// <summary>
-    /// ChartsPieService 的类型定义。WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
-    /// 继承或实现的契约：ObservableObject。具体约束按这些契约及各成员实现解释。
+    /// LiveCharts 饼图服务：负责输入转换、原生 Series 的创建，以及本后端直接相关的绘图状态。
+    /// 不负责查询数据库、连接设备、启动采集定时器或决定业务数据来源。
     /// </summary>
     public class ChartsPieService : ObservableObject
     {
-        /// <summary>
-        /// ChartsPie模型
-        /// </summary>
-        private ChartsPieModel Model { get; set; } = new ChartsPieModel();
-
+        // 原先由 ChartsPieModel 包装的 Series 集合，改为服务私有持有。
+        private ObservableCollection<ISeries> _series = new ObservableCollection<ISeries>();
 
         #region 暂时不使用
 
         /// <summary>
-        /// 添加Series
+        /// 添加Series。
         /// </summary>
-        /// <param name="pieCharts"></param>
-        /// <returns></returns>
-        internal void AddSeries(PieData pieCharts)
+        internal void AddSeries(ChartPieData pieCharts)
         {
-            Model.Series.Add(new PieSeries<double>
+            _series.Add(new PieSeries<double>
             {
                 Values = new List<double> { pieCharts.Value },
                 Name = pieCharts.SeriesName,
             });
         }
- 
+
         /// <summary>
-        /// 清除
+        /// 清除。
         /// </summary>
         public void Clear()
         {
-            Model.Series.Clear();
-
+            _series.Clear();
         }
         #endregion
 
         /// <summary>
-        /// 显示数据
+        /// 显示数据：清空当前 Series 后按指定类型重新生成。
         /// </summary>
-        /// <param name="pieCharts">PieSeries数据集合</param>
-        public ObservableCollection<ISeries> ShowData(PieData[] pieCharts, ChartsPieType chartsPieType = ChartsPieType.Doughnut)
+        /// <param name="pieCharts">输入数据，null 视为空数据</param>
+        public ObservableCollection<ISeries> ShowData(ChartPieData[] pieCharts, ChartsPieType chartsPieType = ChartsPieType.Doughnut)
         {
-
-            Model.Series.Clear();
+            _series.Clear();
             switch (chartsPieType)
             {
                 case ChartsPieType.Doughnut:
-                  return  Model.Series =SetDoughnutData(pieCharts);
+                    return _series = SetDoughnutData(pieCharts);
                 case ChartsPieType.MultipleGauge:
-                    return Model.Series = SetMultipleGaugeData(pieCharts);
+                    return _series = SetMultipleGaugeData(pieCharts);
                 default:
                     return null;
             }
         }
 
-
         #region 甜甜圈
-        public ObservableCollection<ISeries> SetDoughnutData(params PieData[] pieCharts)
+        /// <summary>
+        /// 生成甜甜圈数据；非正数与 null 项不参与绘制。
+        /// </summary>
+        public ObservableCollection<ISeries> SetDoughnutData(params ChartPieData[] pieCharts)
         {
             ObservableCollection<ISeries> series = new ObservableCollection<ISeries>();
-            pieCharts = pieCharts.Where(s => s.Value > 0).ToArray();
+            pieCharts = (pieCharts ?? Array.Empty<ChartPieData>())
+                .Where(s => s is not null && s.Value > 0)
+                .ToArray();
 
             var data = pieCharts.Select(s => s.Value);//纯数据
 
-            int index=0;
+            int index = 0;
             IEnumerable<ISeries> ser = data.AsPieSeries((value, item) =>
             {
                 // 设置饼状图属性
                 item.Name = pieCharts[index++].SeriesName;
-  
+
                 // 设置饼状图属性
                 item.MaxRadialColumnWidth = 120;
 
@@ -120,7 +116,7 @@ namespace WPFControls.Controls.Services.Charts
                 }
 
                 item.DataLabelsPosition = PolarLabelsPosition.Middle;
- 
+
                 // 设置饼状图标签
                 item.ToolTipLabelFormatter = point =>
                 {
@@ -146,39 +142,39 @@ namespace WPFControls.Controls.Services.Charts
         }
         #endregion
 
-
         #region 多个仪表盘
-        public ObservableCollection<ISeries> SetMultipleGaugeData(params PieData[] pieCharts)
+        /// <summary>
+        /// 生成多仪表盘数据；零值与 null 项不参与绘制。
+        /// </summary>
+        public ObservableCollection<ISeries> SetMultipleGaugeData(params ChartPieData[] pieCharts)
         {
             ObservableCollection<ISeries> series = new ObservableCollection<ISeries>();
-            pieCharts = pieCharts.Where(s => s.Value != 0).ToArray();
- 
-         
+            pieCharts = (pieCharts ?? Array.Empty<ChartPieData>())
+                .Where(s => s is not null && s.Value != 0)
+                .ToArray();
+
             /// 创建仪表盘
             List<GaugeItem> gaugeItems = new List<GaugeItem>();
             foreach (var item in pieCharts)
             {
                 var gaugeItem = new GaugeItem(item.Value, s => SetMultipleGaugeStyle(item, s));
-               
+
                 gaugeItems.Add(gaugeItem);
             }
             /// 设置背景颜色
-            gaugeItems.Add(new GaugeItem(GaugeItem.Background,s=>s.Fill=null));
-            
+            gaugeItems.Add(new GaugeItem(GaugeItem.Background, s => s.Fill = null));
 
             IEnumerable<ISeries> d = GaugeGenerator.BuildSolidGauge(gaugeItems.ToArray());
-            return series=new ObservableCollection<ISeries>(d);
+            return series = new ObservableCollection<ISeries>(d);
         }
 
-
         /// <summary>
-        /// 设置当前实现管理的值或状态；对应入口为 SetMultipleGaugeStyle。
+        /// 应用单个仪表盘的名称、标签与配色。
         /// </summary>
-        public static void SetMultipleGaugeStyle(PieData piedata, PieSeries<ObservableValue> series)
+        public static void SetMultipleGaugeStyle(ChartPieData piedata, PieSeries<ObservableValue> series)
         {
             series.Name = piedata.SeriesName;
             series.DataLabelsPosition = PolarLabelsPosition.Start;
-
 
             series.DataLabelsFormatter =
                     point => $"{point.Context.Series.Name}:{point.Coordinate.PrimaryValue} min";
@@ -188,7 +184,7 @@ namespace WPFControls.Controls.Services.Charts
 
             series.DataLabelsSize = 14;
             /// 数据标签颜色
-            series.DataLabelsPaint=  new LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint(new SKColor(0,0,0));
+            series.DataLabelsPaint = new LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint(new SKColor(0, 0, 0));
 
             //// 颜色
             if (piedata.Color != null)
@@ -198,25 +194,20 @@ namespace WPFControls.Controls.Services.Charts
                 series.Fill = new LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint(color);
             }
 
-
             series.RelativeInnerRadius = 2;// 内半径 间隔
 
             series.CornerRadius = 2;
 
             series.MaxRadialColumnWidth = 15;// 饼状图宽度
         }
-
         #endregion
 
-
-
         /// <summary>
-        /// 获取饼状图数据
+        /// 获取当前 Series 集合。
         /// </summary>
-        /// <returns></returns>
         public ObservableCollection<ISeries> GetSeries()
         {
-            return Model.Series;
+            return _series;
         }
     }
 }

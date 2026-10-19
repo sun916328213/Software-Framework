@@ -21,6 +21,7 @@ public sealed class ChartsPlatformHostTests(ProductionFixture fixture)
                 Series = new[] { new LineSeries<double> { Values = new[] { 1d, 3d, 2d } } },
                 AnimationsSpeed = TimeSpan.Zero
             };
+            Assert.Equal("WPFControls.Charts", chart.GetType().Assembly.GetName().Name);
             var window = new Window { Content = chart, Width = 600, Height = 400 };
             try
             {
@@ -44,6 +45,42 @@ public sealed class ChartsPlatformHostTests(ProductionFixture fixture)
                     .Cast<System.Runtime.Versioning.TargetFrameworkAttribute>().Single().FrameworkName);
             }
             finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void ExtractedChartXamlLoadsWithExistingDataProperties()
+    {
+        fixture.Invoke(_ =>
+        {
+            var line = new ChartsLineView
+            {
+                AxisX = new() { "A", "B" },
+                ItemSource = new()
+                {
+                    new WPFControls.Charts.Models.ChartLineData
+                    { SeriesName = "Output", Value = new() { 1, 2 } }
+                }
+            };
+            var pie = new ChartsPieView
+            {
+                ItemSource = new()
+                {
+                    new WPFControls.Charts.Models.ChartPieData { SeriesName = "Pass", Value = 3 }
+                }
+            };
+            var gauge = new ChartsMultipleGaugeView
+            {
+                ItemSource = new()
+                {
+                    new WPFControls.Charts.Models.ChartPieData { SeriesName = "Run", Value = 50 }
+                }
+            };
+            Assert.Equal("Output", Assert.Single(line.Series).Name);
+            Assert.Equal("Pass", Assert.Single(pie.Series).Name);
+            Assert.Contains(gauge.Series, series => series.Name == "Run");
+            foreach (var chart in new FrameworkElement[] { line, pie, gauge })
+                Assert.Equal("WPFControls.Charts", chart.GetType().Assembly.GetName().Name);
         });
     }
 

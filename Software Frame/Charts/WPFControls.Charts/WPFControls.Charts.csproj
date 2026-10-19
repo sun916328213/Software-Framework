@@ -1,3 +1,8 @@
+<!--
+中文阅读说明：项目构建声明。
+WPFControls.Charts 模块：一个程序集、两套绘图后端（LiveCharts / OxyPlot），共用输入模型。
+图表源码物理位于本工程目录，不再链接 WPFControls 的 Shared 源码；本工程不反向引用 WPFControls。
+-->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Platform>AnyCPU</Platform>
@@ -8,22 +13,16 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <AssemblyName>WPFControls.Charts</AssemblyName>
-    <RootNamespace>WPFControls.Controls</RootNamespace>
+    <RootNamespace>WPFControls.Charts</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="HarfBuzzSharp" Version="8.3.1.1" />
     <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0" />
+    <PackageReference Include="OxyPlot.Wpf" Version="2.2.0" />
   </ItemGroup>
   <ItemGroup>
     <!-- Preserve the existing application language selection used by pie labels. -->
     <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <!-- Single compilation owner; physical source relocation can be done separately. -->
-    <Compile Include="..\..\WPFControls\WPFControls\Shared\Models\Charts\*.cs" Link="Models\%(Filename)%(Extension)" />
-    <Compile Include="..\..\WPFControls\WPFControls\Shared\Services\Charts\*.cs" Link="Services\%(Filename)%(Extension)" />
-    <Compile Include="..\..\WPFControls\WPFControls\Shared\Views\Charts\*.xaml.cs" Link="Views\%(Filename)%(Extension)" />
-    <Page Include="..\..\WPFControls\WPFControls\Shared\Views\Charts\*.xaml" Link="Views\%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

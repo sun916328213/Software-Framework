@@ -27,11 +27,7 @@ WPFControls 模块：可复用业务界面及模块装配，页面可用性与�
     <PackageReference Include="System.Management" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Shared\Models\Charts\**\*.cs;Shared\Services\Charts\**\*.cs;Shared\Views\Charts\**\*.cs" />
-    <Page Remove="Shared\Views\Charts\**\*.xaml" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Charts\Charts.Controls\Charts.Controls.csproj" />
+    <ProjectReference Include="..\..\Charts\WPFControls.Charts\WPFControls.Charts.csproj" />
     <ProjectReference Include="..\..\FlowNodes\FlowNodes\FlowNodes.csproj" />
     <ProjectReference Include="..\..\FlowEditor\FlowEditor.DataManagerLogging\FlowEditor.DataManagerLogging.csproj" />
     <ProjectReference Include="..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj" />

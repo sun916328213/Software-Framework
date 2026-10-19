@@ -4,15 +4,17 @@
 
 WPFControls 是一个 WPF 程序集，包含通用业务页面、展示模型、ViewModel、查询和模块装配。原 WPFControl、WPFControl.Application、WPFControl.Controls 已合并，不保留旧 DLL、类型转发器或旧模块入口。查询与统计写入逻辑仍通过读写契约与页面分离，作为普通类存在，不再单独建立 Application 项目。
 
-目录按功能组织：`Features/Alarm`、`Log`、`Data`、`Flow`、`Device`、`Printer`、`Shell`、`User`、`Display`。功能内部放置 Models、Services、Queries、Presentation、Views、ViewModels。分页、用户输入等通用控件放在 `Shared`；图表由独立 `WPFControls.Charts` 程序集提供，当前链接编译 `Shared` 下的 Charts 源码，WPFControls 已排除相应 Compile/Page 项，源码目录尚未物理迁移。根命名空间统一为 `WPFControls`。`WPFCustomControls` 继续是独立基础控件库。
+目录按功能组织：`Features/Alarm`、`Log`、`Data`、`Flow`、`Device`、`Printer`、`Shell`、`User`、`Display`。功能内部放置 Models、Services、Queries、Presentation、Views、ViewModels。分页、用户输入等通用控件放在 `Shared`；图表由独立 `WPFControls.Charts` 程序集提供，源码物理位于 `Charts/WPFControls.Charts`，不再链接 `Shared` 源码，也没有对应的 Compile/Page 排除项。根命名空间统一为 `WPFControls`。`WPFCustomControls` 继续是独立基础控件库。
 
 MachineApp 只直接引用 WPFControls。其他模块的项目依赖与通用装配入口由 WPFControls 提供，宿主可以使用它公开组合的模块契约；该聚合不代表隐藏了底层运行时或厂商依赖。
 
 ## 图表边界
 
-`WPFControls → WPFControls.Charts → LiveCharts / SkiaSharp`。图表的 Models、Services、Views 均由 WPFControls.Charts 编译，不反向引用 WPFControls；业务查询与统计仍归 WPFControls。为保持现有应用语言选择，WPFControls.Charts 暂时保留对 Extension 的依赖。项目物理路径暂保留 `Charts/Charts.Controls/Charts.Controls.csproj`，程序集名已显式设置为 `WPFControls.Charts`。
+`WPFControls → WPFControls.Charts → LiveCharts / SkiaSharp + OxyPlot`。图表的 Models、Services、Views 均由 WPFControls.Charts 编译，不反向引用 WPFControls；业务查询与统计仍归 WPFControls。为保持现有应用语言选择，WPFControls.Charts 暂时保留对 Extension 的依赖。项目物理路径、项目文件名与程序集名统一为 `Charts/WPFControls.Charts/WPFControls.Charts.csproj`。
 
-图表沿用现有 CLR 命名空间，外部 XAML 需要 `assembly=WPFControls.Charts`。历史持久化类型通过 FrameworkTypeResolver 精确映射到新程序集，不提供旧 DLL 或类型转发器。详见 `../Charts/README.md`。
+后端控件与服务沿用现有 CLR 命名空间，共用输入使用 `WPFControls.Charts.Models`；外部 XAML 需要 `assembly=WPFControls.Charts`。历史持久化类型通过 FrameworkTypeResolver 精确映射到新程序集，不提供旧 DLL 或类型转发器。详见 `../Charts/README.md`。
+
+OxyPlot 折线、饼图/圆环图以独立控件与原有 LiveCharts 并存，源码直接放在图表项目内。输入复用共用模型 ChartLineData/ChartPieData，采用快照更新，不改变现有业务页面。原地修改数据时由宿主在 UI 线程显式调用 RefreshChart，不引入设备或定时采样。高级图表可直接使用 OxyPlotChartService 创建独立 PlotModel。详见图表 README 的后端列表与使用约定。
 
 ## 装配和导航
 

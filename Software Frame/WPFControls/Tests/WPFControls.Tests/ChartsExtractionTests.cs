@@ -1,6 +1,6 @@
 using Extension.Core.Reflection;
+using WPFControls.Charts.Models;
 using WPFControls.Controls.Diagnostics;
-using WPFControls.Controls.Models.Charts;
 using WPFControls.Controls.Services.Charts;
 using WPFControls.Controls.Views.Charts;
 using Xunit;
@@ -13,7 +13,7 @@ public sealed class ChartsExtractionTests
     {
         foreach (var type in new[]
         {
-            typeof(LineSeries), typeof(PieData), typeof(ChartsLineModel), typeof(ChartsPieModel),
+            typeof(ChartLineData), typeof(ChartPieData),
             typeof(ChartsLineService), typeof(ChartsLineType), typeof(ChartsPieService), typeof(ChartsPieType),
             typeof(ChartsLineView), typeof(ChartsPieView), typeof(ChartsMultipleGaugeView)
         })
@@ -44,11 +44,37 @@ public sealed class ChartsExtractionTests
             Assert.Same(type, FrameworkTypeResolver.ResolvePersistedType(identity));
     }
 
+    [Theory]
+    [InlineData("WPFControls.Controls.Models.Charts.LineSeries, WPFControls.Charts")]
+    [InlineData("WPFControl.CustomControl.Models.Charts.LineSeries, WPFControl")]
+    [InlineData("WPFControl.Controls.Models.Charts.LineSeries, WPFControl.Controls")]
+    public void LegacyLineSeriesIdentityResolvesToSharedModel(string identity)
+        => Assert.Same(typeof(ChartLineData), FrameworkTypeResolver.ResolvePersistedType(identity));
+
+    [Theory]
+    [InlineData("WPFControls.Controls.Models.Charts.PieData, WPFControls.Charts")]
+    [InlineData("WPFControl.CustomControl.Models.Charts.PieData, WPFControl")]
+    [InlineData("WPFControl.Controls.Models.Charts.PieData, WPFControl.Controls")]
+    public void LegacyPieDataIdentityResolvesToSharedModel(string identity)
+        => Assert.Same(typeof(ChartPieData), FrameworkTypeResolver.ResolvePersistedType(identity));
+
+    [Fact]
+    public void RemovedBackendModelsLeaveNoDanglingIdentity()
+    {
+        var assembly = typeof(ChartsLineService).Assembly;
+        Assert.Null(assembly.GetType("WPFControls.Controls.Models.Charts.ChartsLineModel"));
+        Assert.Null(assembly.GetType("WPFControls.Controls.Models.Charts.ChartsPieModel"));
+        Assert.Null(FrameworkTypeResolver.ResolvePersistedType(
+            "WPFControls.Controls.Models.Charts.ChartsLineModel, WPFControls.Charts"));
+        Assert.Null(FrameworkTypeResolver.ResolvePersistedType(
+            "WPFControls.Controls.Models.Charts.ChartsPieModel, WPFControls.Charts"));
+    }
+
     [Fact]
     public void LineServicePreservesSeriesDataAndAxisSettings()
     {
         var service = new ChartsLineService();
-        var data = new LineSeries { SeriesName = "Output", Value = new() { 1, 3, 2 } };
+        var data = new ChartLineData { SeriesName = "Output", Value = new() { 1, 3, 2 } };
         var series = Assert.IsType<LiveChartsCore.SkiaSharpView.LineSeries<double>>(
             Assert.Single(service.ShowData(new[] { data })));
         Assert.Equal("Output", series.Name);
@@ -62,6 +88,20 @@ public sealed class ChartsExtractionTests
         service.Clear();
         Assert.Empty(service.GetSeries());
         Assert.Empty(axis.Labels!);
+    }
+
+    [Fact]
+    public void NullAndEmptyInputClearSeriesInsteadOfThrowing()
+    {
+        var line = new ChartsLineService();
+        line.ShowData(new[] { new ChartLineData { SeriesName = "Output", Value = new() { 1 } } });
+        Assert.Empty(line.ShowData(null!));
+        Assert.Empty(line.ShowData(Array.Empty<ChartLineData>()));
+
+        var pie = new ChartsPieService();
+        pie.ShowData(new[] { new ChartPieData { SeriesName = "Pass", Value = 3 } });
+        Assert.Empty(pie.ShowData(null!));
+        Assert.Empty(pie.ShowData(new[] { new ChartPieData { Value = double.NaN } }));
     }
 
     [Fact]

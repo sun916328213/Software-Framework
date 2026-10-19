@@ -1,12 +1,12 @@
 ﻿// 【中文阅读说明】
 // WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
 // 本文件定义：CapacityStatisticsModel、CapacityStatisticsData、CapacityStatisticsRow。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：WPFControls、CommunityToolkit.Mvvm.ComponentModel、System.Collections.ObjectModel、System.ComponentModel、WPFControls.Controls.Models.Charts。导入不代表所有类型都会在运行时加载。
+// 直接导入的协作命名空间包括：WPFControls、CommunityToolkit.Mvvm.ComponentModel、System.Collections.ObjectModel、System.ComponentModel、WPFControls.Charts.Models。导入不代表所有类型都会在运行时加载。
 using WPFControls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using WPFControls.Controls.Models.Charts;
+using WPFControls.Charts.Models;
 
 namespace WPFControls.ProgramControl.Models
 {
@@ -33,17 +33,17 @@ namespace WPFControls.ProgramControl.Models
         /// <summary>
         /// 产量趋势折线图数据
         /// </summary>
-        public ObservableCollection<LineSeries> OutputTrend
+        public ObservableCollection<ChartLineData> OutputTrend
         {
             get => _outputTrend;
             set => SetProperty(ref _outputTrend, value);
         }
-        private ObservableCollection<LineSeries> _outputTrend = new ObservableCollection<LineSeries>();
+        private ObservableCollection<ChartLineData> _outputTrend = new ObservableCollection<ChartLineData>();
 
         /// <summary>
         /// 良品/不良品饼图数据
         /// </summary>
-        public ObservableCollection<PieData> PieData { get; set; } = new ObservableCollection<PieData>();
+        public ObservableCollection<ChartPieData> PieData { get; set; } = new ObservableCollection<ChartPieData>();
 
 
         int totalOutput, goodCount,defectCount;

@@ -1,13 +1,13 @@
 ﻿// 【中文阅读说明】
 // WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
 // 本文件定义：CapacityStatisticsPresentation。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：System.Collections.ObjectModel、Extension.UI.Controls、Extension.Core.Conversion、Extension.Integration.MiniExcel、WPFControls.Queries.Data、WPFControls.Controls.Models.Charts。导入不代表所有类型都会在运行时加载。
+// 直接导入的协作命名空间包括：System.Collections.ObjectModel、Extension.UI.Controls、Extension.Core.Conversion、Extension.Integration.MiniExcel、WPFControls.Queries.Data、WPFControls.Charts.Models。导入不代表所有类型都会在运行时加载。
 using System.Collections.ObjectModel;
 using Extension.UI.Controls;
 using Extension.Core.Conversion;
 using Extension.Integration.MiniExcel;
 using WPFControls.Queries.Data;
-using WPFControls.Controls.Models.Charts;
+using WPFControls.Charts.Models;
 using WPFControls.Controls.Resources;
 using WPFControls.ProgramControl.Models;
 
@@ -46,9 +46,9 @@ internal static class CapacityStatisticsPresentation
         model.YieldRate = result.YieldRate;
         model.RunTime = result.RunTime;
         model.UtilizationRate = result.UtilizationRate;
-        var good = new LineSeries { SeriesName = "OK", Color = ColorHelper.Color_Green };
-        var fail = new LineSeries { SeriesName = "NG", Color = ColorHelper.Color_Red };
-        var total = new LineSeries { SeriesName = "Total", Color = ColorHelper.Color_Blue };
+        var good = new ChartLineData { SeriesName = "OK", Color = ColorHelper.Color_Green };
+        var fail = new ChartLineData { SeriesName = "NG", Color = ColorHelper.Color_Red };
+        var total = new ChartLineData { SeriesName = "Total", Color = ColorHelper.Color_Blue };
         foreach (var point in result.Trend)
         {
             good.Value.Add(point.Good);
@@ -56,6 +56,6 @@ internal static class CapacityStatisticsPresentation
             total.Value.Add(point.Total);
         }
         model.AxisX = new ObservableCollection<string>(result.Trend.Select(point => point.Label));
-        model.OutputTrend = new ObservableCollection<LineSeries> { good, fail, total };
+        model.OutputTrend = new ObservableCollection<ChartLineData> { good, fail, total };
     }
 }

@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using WPFControls.Controls.Models.Charts;
+using WPFControls.Charts.Models;
 using WPFControls.Controls.Services.Charts;
 using WPFControls.Controls.Diagnostics;
 using WPFControls.Method;
@@ -73,7 +73,7 @@ namespace WPFControls.ProgramControl.Presentation.Log
                 //筛选出log中的报警 并在饼状图显示
                 var summaries = _query.Summarize(Model.LogDatas.ToList(),
                     row => row.Level != ELogLevel.Information && row.Level != ELogLevel.SysError, row => row.Info);
-                Service_PieCharts.ShowData(summaries.Select(row => new PieData { SeriesName = row.Info, Value = row.Count }).ToArray());
+                Service_PieCharts.ShowData(summaries.Select(row => new ChartPieData { SeriesName = row.Info, Value = row.Count }).ToArray());
                 return Model.LogInfos;
             });
         }

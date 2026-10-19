@@ -22,7 +22,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using WPFControls.Controls.Models.Charts;
+using WPFControls.Charts.Models;
 using WPFControls.Controls.Views.Charts;
 using WPFControls.Controls.Resources;
 
@@ -180,10 +180,10 @@ namespace WPFControls.Controls.Views.BulletinBoard
             double alarm = (double)view.GetValue(AlarmTimeProperty);
             double total = (double)view.GetValue(RunTimeProperty);
 
-            view.PieChart.ItemSource = new ObservableCollection<PieData>()
+            view.PieChart.ItemSource = new ObservableCollection<ChartPieData>()
             {
-                new  PieData{  SeriesName=LangSwitchEx.GetMessage(Message.报警时间) ,Value=alarm,Color=ColorHelper.Color_Red },
-                new  PieData{  SeriesName=LangSwitchEx.GetMessage(Message.运行时间) ,Value=total,Color=ColorHelper.Color_Green}
+                new  ChartPieData{  SeriesName=LangSwitchEx.GetMessage(Message.报警时间) ,Value=alarm,Color=ColorHelper.Color_Red },
+                new  ChartPieData{  SeriesName=LangSwitchEx.GetMessage(Message.运行时间) ,Value=total,Color=ColorHelper.Color_Green}
             };
         }
     }

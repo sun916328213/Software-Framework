@@ -21,7 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFCustomControls", "..\WPF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFCustomControls.PropertyGrid.Core", "..\WPFCustomControls\WPFCustomControls.PropertyGrid.Core\WPFCustomControls.PropertyGrid.Core.csproj", "{3321F409-6C12-430B-8454-6F6BA9F181AD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFControls.Charts", "..\Charts\Charts.Controls\Charts.Controls.csproj", "{5C3D94A1-4062-4D55-A1E9-37D062EC9C21}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFControls.Charts", "..\Charts\WPFControls.Charts\WPFControls.Charts.csproj", "{5C3D94A1-4062-4D55-A1E9-37D062EC9C21}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -16,7 +16,7 @@ using WPFControls.Controls.Models;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LiveChartsCore.SkiaSharpView;
-using WPFControls.Controls.Models.Charts;
+using WPFControls.Charts.Models;
 
 namespace WPFControls.ProgramControl.Services
 {
@@ -46,7 +46,7 @@ namespace WPFControls.ProgramControl.Services
         /// </summary>
         /// <param name="days"></param>
         /// <param name="datas"></param>
-        public void ShowData_Day(    List<LineSeries> datas)
+        public void ShowData_Day(    List<ChartLineData> datas)
         {
             List<string> axis = new List<string>();
 
@@ -58,14 +58,14 @@ namespace WPFControls.ProgramControl.Services
             }
 
             Model.AxisX_Day = new ObservableCollection<string>(axis);
-            Model.Data_Day = new ObservableCollection<LineSeries>(datas);
+            Model.Data_Day = new ObservableCollection<ChartLineData>(datas);
         }
 
         /// <summary>
         /// 显示一月的产能
         /// </summary>
         /// <param name="datas"></param>
-        public void ShowData_Month(  List<LineSeries> datas)
+        public void ShowData_Month(  List<ChartLineData> datas)
         {
             List<string> axis = new List<string>();
 
@@ -77,7 +77,7 @@ namespace WPFControls.ProgramControl.Services
             }
 
             Model.AxisX_Month = new ObservableCollection<string>(axis);
-            Model.Data_Month = new ObservableCollection<LineSeries>(datas);
+            Model.Data_Month = new ObservableCollection<ChartLineData>(datas);
         }
  
     }

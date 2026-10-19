@@ -12,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WPFControls.Controls.Models;
-using WPFControls.Controls.Models.Charts;
+using WPFControls.Charts.Models;
 
 namespace WPFControls.ProgramControl.Models
 {
@@ -33,11 +33,11 @@ namespace WPFControls.ProgramControl.Models
             set => SetProperty(ref _axisX_day, value);
         }
 
-        private ObservableCollection<LineSeries> _data_day = new ObservableCollection<LineSeries>();
+        private ObservableCollection<ChartLineData> _data_day = new ObservableCollection<ChartLineData>();
         /// <summary>
         /// 折线图数据 每天
         /// </summary>
-        public ObservableCollection<LineSeries> Data_Day
+        public ObservableCollection<ChartLineData> Data_Day
         {
             get => _data_day;
             set => SetProperty(ref _data_day, value);
@@ -55,11 +55,11 @@ namespace WPFControls.ProgramControl.Models
             set => SetProperty(ref _axisX_month, value);
         }
 
-        private ObservableCollection<LineSeries> _data_month= new ObservableCollection<LineSeries>();
+        private ObservableCollection<ChartLineData> _data_month= new ObservableCollection<ChartLineData>();
         /// <summary>
         /// 折线图数据 每月
         /// </summary>
-        public ObservableCollection<LineSeries> Data_Month
+        public ObservableCollection<ChartLineData> Data_Month
         {
             get => _data_month;
             set => SetProperty(ref _data_month, value);

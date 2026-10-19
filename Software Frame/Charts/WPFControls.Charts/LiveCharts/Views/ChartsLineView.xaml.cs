@@ -1,63 +1,52 @@
 ﻿// 【中文阅读说明】
-// WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
-// 本文件定义：ChartsLineView。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：WPFControls、WPFControls.Controls.Views、LiveChartsCore.SkiaSharpView、LiveChartsCore.SkiaSharpView.WPF、System、System.Collections.Generic。导入不代表所有类型都会在运行时加载。
-using LiveChartsCore.SkiaSharpView;
+// WPFControls.Charts 模块：图表组件，本文件是 LiveCharts 折线图控件，负责依赖属性、刷新入口、UI 线程与订阅生命周期。
+// 本文件定义：ChartsLineView。数据转换交给 ChartsLineService，控件不覆盖宿主 DataContext。
 using LiveChartsCore.SkiaSharpView.WPF;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using WPFControls.Controls.Models.Charts;
+using WPFControls.Charts.Models;
 using WPFControls.Controls.Services.Charts;
 
 namespace WPFControls.Controls.Views.Charts
 {
     /// <summary>
-    /// ChartsLineView.xaml 的交互逻辑
+    /// ChartsLineView.xaml 的交互逻辑。
     /// </summary>
     public partial class ChartsLineView : CartesianChart
     {
+        private readonly ChartsLineService chartsLineService = new ChartsLineService();
+
+        // 当前已订阅的集合；null 表示没有订阅。用于避免重复订阅和遗留订阅。
+        private ObservableCollection<ChartLineData>? subscribedSource;
+
+        // 卸载期间不保持订阅，重新加载时再恢复。
+        private bool isLoaded;
+
         /// <summary>
         /// 初始化 ChartsLineView 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
-        /// 正文中的关键协作调用包括 InitializeComponent；具体条件和先后次序见方法体。
         /// </summary>
         public ChartsLineView()
         {
             InitializeComponent();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
-        ChartsLineService chartsLineService = new ChartsLineService();
-
-  
         public static readonly DependencyProperty AxisXProperty = DependencyProperty.Register
         ("AxisX", typeof(ObservableCollection<string>), typeof(ChartsLineView),
          new PropertyMetadata(null, OnValueChanged));
 
         /// <summary>
-        /// 处理对应通知、事件或生命周期回调；对应入口为 OnValueChanged。
-        /// 正文中的关键协作调用包括 SetAxisX、ToList、GetAxisX；具体条件和先后次序见方法体。
+        /// 坐标标签源被替换时刷新；null 视为空标签。
         /// </summary>
         private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ChartsLineView view = (ChartsLineView)d;
-            view.chartsLineService.SetAxisX(view.AxisX.ToList());
+            view.chartsLineService.SetAxisX(view.AxisX?.ToList() ?? new List<string>());
             view.chats_CartesianChart.XAxes = view.chartsLineService.GetAxisX();
         }
-
 
         [Bindable(true)]
         [Category("自定义属性"), Description("折线图X轴信息"), DisplayName("折线图X轴信息")]
@@ -67,61 +56,72 @@ namespace WPFControls.Controls.Views.Charts
             set { SetValue(AxisXProperty, value); }
         }
 
-
         public static readonly DependencyProperty ItemSourceProperty = DependencyProperty.Register
-        ("ItemSource", typeof(ObservableCollection<LineSeries>), typeof(ChartsLineView),
+        ("ItemSource", typeof(ObservableCollection<ChartLineData>), typeof(ChartsLineView),
          new PropertyMetadata(null, OnValueChanged_Data));
 
         /// <summary>
-        /// 处理对应通知、事件或生命周期回调；对应入口为 OnValueChanged_Data。
-        /// 正文中的关键协作调用包括 RefreshChart；具体条件和先后次序见方法体。
+        /// 数据源被替换时解除旧订阅、订阅新源并刷新；null 表示清空显示。
         /// </summary>
         private static void OnValueChanged_Data(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ChartsLineView view = (ChartsLineView)d;
-          
-            // 1. 先移除旧集合的监听（防止内存泄漏）
-            if (e.OldValue is ObservableCollection<LineSeries> oldColl)
-            {
-                oldColl.CollectionChanged -= view.OnCollectionChanged;
-            }
-
-            // 2. 监听新集合
-            if (e.NewValue is ObservableCollection<LineSeries> newColl)
-            {
-                newColl.CollectionChanged += view.OnCollectionChanged;
-            }
-
-            // 3. 首次刷新
+            view.AttachCollection(view.ItemSource);
             view.RefreshChart();
         }
 
         /// <summary>
-        /// 集合 Add / Remove / Clear 时触发
+        /// 集合 Add / Remove / Clear 时触发。
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             RefreshChart();
         }
 
-        /// <summary>
-        /// 处理当前类型提供的操作；对应入口为 RefreshChart。
-        /// 正文中的关键协作调用包括 ShowData、ToArray；具体条件和先后次序见方法体。
-        /// </summary>
-        private void RefreshChart()
+        private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (ItemSource == null) return;
-            chats_CartesianChart.Series = chartsLineService.ShowData(ItemSource.ToArray());
+            isLoaded = true;
+            AttachCollection(ItemSource);
+            RefreshChart();
         }
 
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            isLoaded = false;
+            AttachCollection(null);
+        }
+
+        /// <summary>
+        /// 订阅目标集合：同一实例不重复订阅，替换时先解除旧订阅，未加载时不保持订阅。
+        /// </summary>
+        private void AttachCollection(ObservableCollection<ChartLineData>? source)
+        {
+            if (ReferenceEquals(subscribedSource, source)) return;
+
+            if (subscribedSource != null)
+                subscribedSource.CollectionChanged -= OnCollectionChanged;
+
+            subscribedSource = isLoaded ? source : null;
+
+            if (subscribedSource != null)
+                subscribedSource.CollectionChanged += OnCollectionChanged;
+        }
+
+        /// <summary>
+        /// 显式刷新入口：替换数据源后会自动调用；原地修改输入数据时由宿主在 UI 线程调用。
+        /// 数据源为 null 时清空显示，不保留旧图形。
+        /// </summary>
+        public void RefreshChart()
+        {
+            VerifyAccess();
+            chats_CartesianChart.Series = chartsLineService.ShowData(ItemSource?.ToArray() ?? Array.Empty<ChartLineData>());
+        }
 
         [Bindable(true)]
         [Category("自定义属性"), Description("折线图数据"), DisplayName("折线图数据")]
-        public ObservableCollection<LineSeries> ItemSource
+        public ObservableCollection<ChartLineData> ItemSource
         {
-            get { return (ObservableCollection<LineSeries>)GetValue(ItemSourceProperty); }
+            get { return (ObservableCollection<ChartLineData>)GetValue(ItemSourceProperty); }
             set { SetValue(ItemSourceProperty, value); }
         }
 
@@ -130,8 +130,7 @@ namespace WPFControls.Controls.Views.Charts
           new PropertyMetadata(14.0, OnAxisFontSizeChanged));
 
         /// <summary>
-        /// 处理对应通知、事件或生命周期回调；对应入口为 OnAxisFontSizeChanged。
-        /// 正文中的关键协作调用包括 SetAxisFontSize、GetAxisX；具体条件和先后次序见方法体。
+        /// 样式依赖属性变化时立即应用并刷新。
         /// </summary>
         private static void OnAxisFontSizeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -142,7 +141,7 @@ namespace WPFControls.Controls.Views.Charts
         }
 
         /// <summary>
-        /// X轴标签字体大小
+        /// X轴标签字体大小。
         /// </summary>
         [Bindable(true)]
         [Category("自定义属性"), Description("X轴标签字体大小")]

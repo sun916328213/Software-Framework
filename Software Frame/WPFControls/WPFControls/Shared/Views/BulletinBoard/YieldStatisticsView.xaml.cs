@@ -23,7 +23,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using WPFControls.Controls.Models;
-using WPFControls.Controls.Models.Charts;
+using WPFControls.Charts.Models;
 using WPFControls.Controls.Services;
 using WPFControls.Controls.Views.Charts;
 
@@ -70,7 +70,7 @@ namespace WPFControls.Controls.Views.BulletinBoard
 
 
         public static readonly DependencyProperty ItemsourceProperty = DependencyProperty.Register
-        ("ItemSource", typeof(ObservableCollection<LineSeries>), typeof(YieldStatisticsView),
+        ("ItemSource", typeof(ObservableCollection<ChartLineData>), typeof(YieldStatisticsView),
          new PropertyMetadata(null, OnValueChanged_Data));
 
         /// <summary>
@@ -86,9 +86,9 @@ namespace WPFControls.Controls.Views.BulletinBoard
 
         [Bindable(true)]
         [Category("自定义属性"), Description("折线图数据"), DisplayName("折线图数据")]
-        public ObservableCollection<LineSeries> ItemSource
+        public ObservableCollection<ChartLineData> ItemSource
         {
-            get { return (ObservableCollection<LineSeries>)GetValue(ItemsourceProperty); }
+            get { return (ObservableCollection<ChartLineData>)GetValue(ItemsourceProperty); }
             set { SetValue(ItemsourceProperty, value); }
         }
 

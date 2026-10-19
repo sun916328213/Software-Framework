@@ -2315,21 +2315,57 @@
     "Type": "WPFControls.Queries.Alarms.IAlarmHistoryReader",
     "Assembly": "WPFControls"
   },
-  "WPFControl.CustomControl.Models.Charts.ChartsLineModel": {
-    "Type": "WPFControls.Controls.Models.Charts.ChartsLineModel",
-    "Assembly": "WPFControls"
+  "WPFControls.Controls.Models.Charts.LineSeries": {
+    "Type": "WPFControls.Charts.Models.ChartLineData",
+    "Assembly": "WPFControls.Charts"
   },
-  "WPFControl.CustomControl.Models.Charts.ChartsPieModel": {
-    "Type": "WPFControls.Controls.Models.Charts.ChartsPieModel",
-    "Assembly": "WPFControls"
+  "WPFControls.Controls.Models.Charts.PieData": {
+    "Type": "WPFControls.Charts.Models.ChartPieData",
+    "Assembly": "WPFControls.Charts"
+  },
+  "WPFControls.Charts.Models.ChartLineData": {
+    "Type": "WPFControls.Charts.Models.ChartLineData",
+    "Assembly": "WPFControls.Charts"
+  },
+  "WPFControls.Charts.Models.ChartPieData": {
+    "Type": "WPFControls.Charts.Models.ChartPieData",
+    "Assembly": "WPFControls.Charts"
+  },
+  "WPFControls.Controls.Services.Charts.ChartsLineService": {
+    "Type": "WPFControls.Controls.Services.Charts.ChartsLineService",
+    "Assembly": "WPFControls.Charts"
+  },
+  "WPFControls.Controls.Services.Charts.ChartsLineType": {
+    "Type": "WPFControls.Controls.Services.Charts.ChartsLineType",
+    "Assembly": "WPFControls.Charts"
+  },
+  "WPFControls.Controls.Services.Charts.ChartsPieService": {
+    "Type": "WPFControls.Controls.Services.Charts.ChartsPieService",
+    "Assembly": "WPFControls.Charts"
+  },
+  "WPFControls.Controls.Services.Charts.ChartsPieType": {
+    "Type": "WPFControls.Controls.Services.Charts.ChartsPieType",
+    "Assembly": "WPFControls.Charts"
+  },
+  "WPFControls.Controls.Views.Charts.ChartsLineView": {
+    "Type": "WPFControls.Controls.Views.Charts.ChartsLineView",
+    "Assembly": "WPFControls.Charts"
+  },
+  "WPFControls.Controls.Views.Charts.ChartsMultipleGaugeView": {
+    "Type": "WPFControls.Controls.Views.Charts.ChartsMultipleGaugeView",
+    "Assembly": "WPFControls.Charts"
+  },
+  "WPFControls.Controls.Views.Charts.ChartsPieView": {
+    "Type": "WPFControls.Controls.Views.Charts.ChartsPieView",
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.CustomControl.Models.Charts.LineSeries": {
-    "Type": "WPFControls.Controls.Models.Charts.LineSeries",
-    "Assembly": "WPFControls"
+    "Type": "WPFControls.Charts.Models.ChartLineData",
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.CustomControl.Models.Charts.PieData": {
-    "Type": "WPFControls.Controls.Models.Charts.PieData",
-    "Assembly": "WPFControls"
+    "Type": "WPFControls.Charts.Models.ChartPieData",
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.CustomControl.Models.EUserLevel": {
     "Type": "WPFControls.Controls.Models.EUserLevel",
@@ -2349,19 +2385,19 @@
   },
   "WPFControl.CustomControl.Services.Charts.ChartsLineService": {
     "Type": "WPFControls.Controls.Services.Charts.ChartsLineService",
-    "Assembly": "WPFControls"
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.CustomControl.Services.Charts.ChartsLineType": {
     "Type": "WPFControls.Controls.Services.Charts.ChartsLineType",
-    "Assembly": "WPFControls"
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.CustomControl.Services.Charts.ChartsPieService": {
     "Type": "WPFControls.Controls.Services.Charts.ChartsPieService",
-    "Assembly": "WPFControls"
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.CustomControl.Services.Charts.ChartsPieType": {
     "Type": "WPFControls.Controls.Services.Charts.ChartsPieType",
-    "Assembly": "WPFControls"
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.CustomControl.Services.PrintService": {
     "Type": "WPFControls.ProgramControl.Services.Printer.PrintService",
@@ -2389,15 +2425,15 @@
   },
   "WPFControl.CustomControl.Views.Charts.ChartsLineView": {
     "Type": "WPFControls.Controls.Views.Charts.ChartsLineView",
-    "Assembly": "WPFControls"
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.CustomControl.Views.Charts.ChartsMultipleGaugeView": {
     "Type": "WPFControls.Controls.Views.Charts.ChartsMultipleGaugeView",
-    "Assembly": "WPFControls"
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.CustomControl.Views.Charts.ChartsPieView": {
     "Type": "WPFControls.Controls.Views.Charts.ChartsPieView",
-    "Assembly": "WPFControls"
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.CustomControl.Views.Display.DisplayQueryView": {
     "Type": "WPFControls.ProgramControl.Views.Display.DisplayQueryView",
@@ -3319,21 +3355,13 @@
     "Type": "WPFControls.Controls.Diagnostics.TryCatchHelper",
     "Assembly": "WPFControls"
   },
-  "WPFControl.Controls.Models.Charts.ChartsLineModel": {
-    "Type": "WPFControls.Controls.Models.Charts.ChartsLineModel",
-    "Assembly": "WPFControls"
-  },
-  "WPFControl.Controls.Models.Charts.ChartsPieModel": {
-    "Type": "WPFControls.Controls.Models.Charts.ChartsPieModel",
-    "Assembly": "WPFControls"
-  },
   "WPFControl.Controls.Models.Charts.LineSeries": {
-    "Type": "WPFControls.Controls.Models.Charts.LineSeries",
-    "Assembly": "WPFControls"
+    "Type": "WPFControls.Charts.Models.ChartLineData",
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.Controls.Models.Charts.PieData": {
-    "Type": "WPFControls.Controls.Models.Charts.PieData",
-    "Assembly": "WPFControls"
+    "Type": "WPFControls.Charts.Models.ChartPieData",
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.Controls.Models.EUserLevel": {
     "Type": "WPFControls.Controls.Models.EUserLevel",
@@ -3357,19 +3385,19 @@
   },
   "WPFControl.Controls.Services.Charts.ChartsLineService": {
     "Type": "WPFControls.Controls.Services.Charts.ChartsLineService",
-    "Assembly": "WPFControls"
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.Controls.Services.Charts.ChartsLineType": {
     "Type": "WPFControls.Controls.Services.Charts.ChartsLineType",
-    "Assembly": "WPFControls"
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.Controls.Services.Charts.ChartsPieService": {
     "Type": "WPFControls.Controls.Services.Charts.ChartsPieService",
-    "Assembly": "WPFControls"
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.Controls.Services.Charts.ChartsPieType": {
     "Type": "WPFControls.Controls.Services.Charts.ChartsPieType",
-    "Assembly": "WPFControls"
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.Controls.Views.BulletinBoard.ProductionCapacityView": {
     "Type": "WPFControls.Controls.Views.BulletinBoard.ProductionCapacityView",
@@ -3381,15 +3409,15 @@
   },
   "WPFControl.Controls.Views.Charts.ChartsLineView": {
     "Type": "WPFControls.Controls.Views.Charts.ChartsLineView",
-    "Assembly": "WPFControls"
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.Controls.Views.Charts.ChartsMultipleGaugeView": {
     "Type": "WPFControls.Controls.Views.Charts.ChartsMultipleGaugeView",
-    "Assembly": "WPFControls"
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.Controls.Views.Charts.ChartsPieView": {
     "Type": "WPFControls.Controls.Views.Charts.ChartsPieView",
-    "Assembly": "WPFControls"
+    "Assembly": "WPFControls.Charts"
   },
   "WPFControl.Controls.Views.PaginationView": {
     "Type": "WPFControls.Controls.Views.PaginationView",

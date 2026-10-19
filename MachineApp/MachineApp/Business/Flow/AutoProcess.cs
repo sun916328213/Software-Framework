@@ -199,19 +199,19 @@ namespace MachineApp.Business.Flow
                     //读取OK NG
                     ReadCount();
                     //更新每天统计信息
-                    _BulletinBoardService.ShowData_Day(new List<WPFControls.Controls.Models.Charts.LineSeries>
+                    _BulletinBoardService.ShowData_Day(new List<WPFControls.Charts.Models.ChartLineData>
                     {
-                        new WPFControls.Controls.Models.Charts.LineSeries {
+                        new WPFControls.Charts.Models.ChartLineData {
                             SeriesName="OK",
                             Value=new System.Collections.ObjectModel.ObservableCollection<double>{ 10},
                             Color= ColorHelper.Color_Green,
                         },
-                        new WPFControls.Controls.Models.Charts.LineSeries {
+                        new WPFControls.Charts.Models.ChartLineData {
                             SeriesName="NG",
                             Value=new System.Collections.ObjectModel.ObservableCollection<double>{ 20,20,30,40,130,20,0},
                             Color= ColorHelper.Color_Red,
                         },
-                        new WPFControls.Controls.Models.Charts.LineSeries {
+                        new WPFControls.Charts.Models.ChartLineData {
                             SeriesName="Total",
                             Value=new System.Collections.ObjectModel.ObservableCollection<double>{ 120,120,130,140,230,120,0},
                             Color= ColorHelper.Color_Blue,
@@ -221,14 +221,14 @@ namespace MachineApp.Business.Flow
                 else if (now.Hour == 0)
                 {
                     /// 更新每月统计信息
-                    _BulletinBoardService.ShowData_Month(new List<WPFControls.Controls.Models.Charts.LineSeries> {
-                    new WPFControls.Controls.Models.Charts.LineSeries
+                    _BulletinBoardService.ShowData_Month(new List<WPFControls.Charts.Models.ChartLineData> {
+                    new WPFControls.Charts.Models.ChartLineData
                     {
                         SeriesName = "OK",
                         Value = new System.Collections.ObjectModel.ObservableCollection<double> { 10, 120 },
                         Color = ColorHelper.Color_Blue,
                     },
-                    new WPFControls.Controls.Models.Charts.LineSeries
+                    new WPFControls.Charts.Models.ChartLineData
                     {
                         SeriesName = "NG",
                         Value = new System.Collections.ObjectModel.ObservableCollection<double> { 20, 20 },

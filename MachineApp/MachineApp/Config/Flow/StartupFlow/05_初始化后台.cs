@@ -145,12 +145,12 @@ public class Script
     /// <para>
     /// 用 WPFControls 已有的 <c>CapacityStatisticsService</c>：它内部的
     /// <c>CapacityStatisticsPresentation.Apply</c> 产出的正是 <c>OK</c> / <c>NG</c> / <c>Total</c>
-    /// 三条 <c>LineSeries</c>，且名称与配色（绿/红/蓝）和本看板一致 ——
+    /// 三条 <c>ChartLineData</c>，且名称与配色（绿/红/蓝）和本看板一致 ——
     /// 这正是这些硬编码数值的来处。所以不必自己去拼 <c>OKCOunt1..24</c> 那 24 个小时桶。
     /// </para>
     /// </summary>
     private void ReadCount(DateTime from, DateTime to,
-        Action<List<WPFControls.Controls.Models.Charts.LineSeries>> publish)
+        Action<List<WPFControls.Charts.Models.ChartLineData>> publish)
     {
         var statistics = ContainerManager.Resolve<CapacityStatisticsService>();
         statistics.Model.StartTime = from;
