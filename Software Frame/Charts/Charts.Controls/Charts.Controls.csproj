@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Platform>AnyCPU</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>WPFControls.Charts</AssemblyName>
+    <RootNamespace>WPFControls.Controls</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="HarfBuzzSharp" Version="8.3.1.1" />
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Preserve the existing application language selection used by pie labels. -->
+    <ProjectReference Include="..\..\Extension\Extension\Extension.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Single compilation owner; physical source relocation can be done separately. -->
+    <Compile Include="..\..\WPFControls\WPFControls\Shared\Models\Charts\*.cs" Link="Models\%(Filename)%(Extension)" />
+    <Compile Include="..\..\WPFControls\WPFControls\Shared\Services\Charts\*.cs" Link="Services\%(Filename)%(Extension)" />
+    <Compile Include="..\..\WPFControls\WPFControls\Shared\Views\Charts\*.xaml.cs" Link="Views\%(Filename)%(Extension)" />
+    <Page Include="..\..\WPFControls\WPFControls\Shared\Views\Charts\*.xaml" Link="Views\%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

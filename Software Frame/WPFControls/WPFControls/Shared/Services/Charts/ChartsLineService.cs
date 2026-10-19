@@ -2,8 +2,6 @@
 // WPFControls 模块：可复用业务界面及模块装配，页面可用性与机型实际选择分离，具体数据库实体和硬件启动归宿主。
 // 本文件定义：ChartsLineType、ChartsLineService。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：WPFControls、WPFControls.Controls.Services、LiveChartsCore、LiveChartsCore.Defaults、LiveChartsCore.Drawing、LiveChartsCore.Kernel.Sketches。导入不代表所有类型都会在运行时加载。
-using WPFControls;
-using WPFControls.Controls.Services;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
 using LiveChartsCore.Drawing;
@@ -17,9 +15,7 @@ using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
 using System.Xml.Linq;
-using WPFControls.Controls.Models;
 using WPFControls.Controls.Models.Charts;
-using WPFControls.Controls.Diagnostics;
 
 namespace WPFControls.Controls.Services.Charts
 {
@@ -40,7 +36,7 @@ namespace WPFControls.Controls.Services.Charts
     /// </summary>
     public class ChartsLineService
     {
-        private readonly TryCatchHelper _errors;
+        private readonly Action<Action> _execute;
 
         /// <summary>
         /// ChartsLine模型
@@ -51,14 +47,25 @@ namespace WPFControls.Controls.Services.Charts
         /// 初始化 ChartsLineService 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
         /// 正文中的关键协作调用包括 Add；具体条件和先后次序见方法体。
         /// </summary>
-        public ChartsLineService(TryCatchHelper? errors = null)
+        public ChartsLineService(Action<Action>? execute = null)
         {
-            _errors = errors ?? new();
+            _execute = execute ?? ExecuteWithDiagnostics;
 
             Model.Axis_X.Add(new Axis
             {
                 Labels = new List<string>(),
             });
+        }
+
+        // Hosts can supply their own error executor without a reference back to WPFControls.
+        private static void ExecuteWithDiagnostics(Action action)
+        {
+            try { action(); }
+            catch (Exception error)
+            {
+                try { System.Diagnostics.Trace.TraceError($"[Charts] {error.Message}"); }
+                catch { /* Diagnostics must not replace the original operation result. */ }
+            }
         }
 
         /// <summary>
@@ -110,7 +117,7 @@ namespace WPFControls.Controls.Services.Charts
         /// <returns></returns>
         public void AddSeries(LineSeries lineCharts)
         {
-            _errors.TryExecute(() =>
+            _execute(() =>
             {
                 // 创建一个新的CLineSeries对象并复制所有属性
                 var newSeries = new LineSeries()
@@ -137,7 +144,7 @@ namespace WPFControls.Controls.Services.Charts
         /// <param name="lineCharts">Series信息</param>
         public void AddXY(List<string> axisx, LineSeries lineCharts)
         {
-            _errors.TryExecute(() =>
+            _execute(() =>
             {
                 var ret = Model.Series.FirstOrDefault(s => s.Name == lineCharts.SeriesName);
                 if (ret == null) AddSeries(lineCharts);
@@ -160,7 +167,7 @@ namespace WPFControls.Controls.Services.Charts
         /// </summary>
         public void Clear()
         {
-            _errors.TryExecute(() =>
+            _execute(() =>
             {
                 Model.Series.Clear();
                 Model.Axis_X[0].Labels = new List<string>();

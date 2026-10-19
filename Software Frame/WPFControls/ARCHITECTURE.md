@@ -4,9 +4,15 @@
 
 WPFControls 是一个 WPF 程序集，包含通用业务页面、展示模型、ViewModel、查询和模块装配。原 WPFControl、WPFControl.Application、WPFControl.Controls 已合并，不保留旧 DLL、类型转发器或旧模块入口。查询与统计写入逻辑仍通过读写契约与页面分离，作为普通类存在，不再单独建立 Application 项目。
 
-目录按功能组织：`Features/Alarm`、`Log`、`Data`、`Flow`、`Device`、`Printer`、`Shell`、`User`、`Display`。功能内部放置 Models、Services、Queries、Presentation、Views、ViewModels。图表、分页、用户输入等通用控件放在 `Shared`；根命名空间统一为 `WPFControls`。`WPFCustomControls` 继续是独立基础控件库。
+目录按功能组织：`Features/Alarm`、`Log`、`Data`、`Flow`、`Device`、`Printer`、`Shell`、`User`、`Display`。功能内部放置 Models、Services、Queries、Presentation、Views、ViewModels。分页、用户输入等通用控件放在 `Shared`；图表由独立 `WPFControls.Charts` 程序集提供，当前链接编译 `Shared` 下的 Charts 源码，WPFControls 已排除相应 Compile/Page 项，源码目录尚未物理迁移。根命名空间统一为 `WPFControls`。`WPFCustomControls` 继续是独立基础控件库。
 
 MachineApp 只直接引用 WPFControls。其他模块的项目依赖与通用装配入口由 WPFControls 提供，宿主可以使用它公开组合的模块契约；该聚合不代表隐藏了底层运行时或厂商依赖。
+
+## 图表边界
+
+`WPFControls → WPFControls.Charts → LiveCharts / SkiaSharp`。图表的 Models、Services、Views 均由 WPFControls.Charts 编译，不反向引用 WPFControls；业务查询与统计仍归 WPFControls。为保持现有应用语言选择，WPFControls.Charts 暂时保留对 Extension 的依赖。项目物理路径暂保留 `Charts/Charts.Controls/Charts.Controls.csproj`，程序集名已显式设置为 `WPFControls.Charts`。
+
+图表沿用现有 CLR 命名空间，外部 XAML 需要 `assembly=WPFControls.Charts`。历史持久化类型通过 FrameworkTypeResolver 精确映射到新程序集，不提供旧 DLL 或类型转发器。详见 `../Charts/README.md`。
 
 ## 装配和导航
 

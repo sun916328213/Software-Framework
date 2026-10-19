@@ -21,14 +21,17 @@ WPFControls 模块：可复用业务界面及模块装配，页面可用性与�
   <ItemGroup>
     <InternalsVisibleTo Include="WPFControls.Tests" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="HarfBuzzSharp" Version="8.3.1.1" />
-    <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0" />
     <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
     <PackageReference Include="Prism.Core" Version="8.1.97" />
     <PackageReference Include="Prism.Wpf" Version="8.1.97" />
     <PackageReference Include="System.Management" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="Shared\Models\Charts\**\*.cs;Shared\Services\Charts\**\*.cs;Shared\Views\Charts\**\*.cs" />
+    <Page Remove="Shared\Views\Charts\**\*.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Charts\Charts.Controls\Charts.Controls.csproj" />
     <ProjectReference Include="..\..\FlowNodes\FlowNodes\FlowNodes.csproj" />
     <ProjectReference Include="..\..\FlowEditor\FlowEditor.DataManagerLogging\FlowEditor.DataManagerLogging.csproj" />
     <ProjectReference Include="..\..\DataManager\DataManager.Controls\DataManager.Controls.csproj" />
