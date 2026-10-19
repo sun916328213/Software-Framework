@@ -54,6 +54,19 @@ public sealed class VariableRecipeSchemaTests(WorkbenchAppFixture host)
         }
     }
 
+    [Theory]
+    [InlineData(121)]
+    [InlineData(1024)]
+    public void Generic_Controls_Do_Not_Reintroduce_A_Fixed_Ppid_Length_Limit(int length)
+    {
+        var ppid = "00042-" + new string('R', length);
+        ProcessProgramCommunication.ValidatePpid(ppid);
+        using var request = ProcessProgramCommunication.CreateRequest(2, ppid);
+        Assert.Equal(ppid, request.SecsItem!.GetString());
+        Assert.Throws<ArgumentException>(() => ProcessProgramCommunication.ValidatePpid(""));
+        Assert.Throws<ArgumentException>(() => ProcessProgramCommunication.ValidatePpid("中文"));
+    }
+
     private static SecsGemRuntime NewRuntime(InMemorySecsTransport transport)
     {
         var container = new DryIocContainerExtension();

@@ -99,8 +99,8 @@ public static class ProcessProgramCommunication
 
     public static void ValidatePpid(string ppid)
     {
-        if (string.IsNullOrEmpty(ppid) || ppid.Length > 120 || ppid.Any(c => c > 127))
-            throw new ArgumentException("PPID 必须为 1–120 个 ASCII 字符，数字编号也按文本编码。");
+        if (string.IsNullOrEmpty(ppid) || ppid.Any(c => c > 127))
+            throw new ArgumentException("PPID 必须为非空 ASCII 字符串，数字编号也按文本编码。");
     }
 
     /// <summary>只生成 H→E 模板，不发送、不删除；格式化正文由通信规格决定，不猜测业务字段映射。</summary>

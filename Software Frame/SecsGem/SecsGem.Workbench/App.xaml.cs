@@ -21,6 +21,7 @@ namespace SecsGem.Workbench;
 public partial class App : PrismApplication
 {
     private WorkbenchLifetime? _lifetime;
+    private SecsGem.Controls.Terminal.WpfTerminalDisplay? _terminalDisplay;
 
     /// <summary>
     /// 处理对应通知、事件或生命周期回调；对应入口为 OnStartup。
@@ -91,7 +92,8 @@ public partial class App : PrismApplication
         // 原 SecsWorkbenchView 构造函数里的两件事：独立工作台才启用 WPF 终端显示和示例 HCACK 远程命令处理器，
         // 通用 Controls 页面不替换宿主的远程命令处理器。
         var runtime = Container.Resolve<SecsGem.Runtime.SecsGemRuntime>();
-        runtime.TerminalDisplay = new SecsGem.Controls.Terminal.WpfTerminalDisplay();
+        _terminalDisplay = new SecsGem.Controls.Terminal.WpfTerminalDisplay(runtime);
+        runtime.TerminalDisplay = _terminalDisplay;
         // 独立工作台明确启用演示策略；生产宿主按自身通信规格配置。
         runtime.ConfigureProtocolScenarios(new SecsGem.Runtime.Protocol.SecsProtocolScenarioOptions
         {
@@ -120,6 +122,7 @@ public partial class App : PrismApplication
             {
                 var runtime = Container.Resolve<SecsGem.Runtime.SecsGemRuntime>();
                 Container.Resolve<SecsGem.Controls.Services.SecsWorkspace>().Dispose();
+                _terminalDisplay?.Dispose();
                 runtime.SetEventHandler(null);
                 try { await runtime.ShutdownAsync(TimeSpan.FromSeconds(5)); }
                 finally { runtime.Dispose(); }

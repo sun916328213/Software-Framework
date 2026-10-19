@@ -119,7 +119,11 @@ public sealed partial class SecsWorkspace : IDisposable
     /// 处理对应通知、事件或生命周期回调；对应入口为 OnReceive。
     /// 正文中的关键协作调用包括 LogMessageAsync；具体条件和先后次序见方法体。
     /// </summary>
-    private Task OnReceive(SecsMessage message, string data) => LogMessageAsync("接收", message, data);
+    private Task OnReceive(SecsMessage message, string data)
+    {
+        if (message.S == 10) Post(RefreshTerminalMessages);
+        return LogMessageAsync("接收", message, data);
+    }
     /// <summary>
     /// 处理对应通知、事件或生命周期回调；对应入口为 OnReply。
     /// 正文中的关键协作调用包括 LogMessageAsync；具体条件和先后次序见方法体。
@@ -209,6 +213,7 @@ public sealed partial class SecsWorkspace : IDisposable
     public void RefreshState()
     {
         if (_disposed) return;
+        RefreshTerminalMessages();
         var state = _runtime.GetState();
         Model.IsConnected = state.IsConnected;
         Model.ConnectionStatus = state.IsConnected ? "HSMS Selected" : "未连接";
@@ -968,7 +973,7 @@ public sealed partial class SecsWorkspace : IDisposable
     /// 处理当前类型提供的操作；对应入口为 PreviewTerminal。
     /// 正文中的关键协作调用包括 Show；具体条件和先后次序见方法体。
     /// </summary>
-    public void PreviewTerminal() { if (!_disposed) _runtime.TerminalDisplay.Show("S10 预览", "Host 终端消息显示预览"); }
+    public void PreviewTerminal() { if (!_disposed) _runtime.TerminalDisplay?.Show("S10 预览", "Host 终端消息显示预览"); }
 
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 ClearLog。

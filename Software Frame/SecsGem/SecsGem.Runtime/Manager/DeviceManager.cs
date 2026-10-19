@@ -109,8 +109,8 @@ namespace SecsGem.Runtime.Manager
 
             lock (_programGate)
             {
-                ProcessProgramDataStore[programData.PPID] = ProcessProgramCodec.ReadFormatted(
-                    ProcessProgramCodec.WriteFormatted(programData));
+                using var encoded = ProcessProgramCodec.WriteFormatted(programData);
+                ProcessProgramDataStore[programData.PPID] = ProcessProgramCodec.ReadFormatted(encoded);
                 ProcessProgramDataStore[programData.PPID].ReceivedTime = programData.ReceivedTime;
                 ProcessProgramDirectory[programData.PPID] = new ProcessProgramInfo { PPID = programData.PPID };
             }
@@ -151,7 +151,8 @@ namespace SecsGem.Runtime.Manager
             {
                 ProcessProgramDataStore.TryGetValue(ppid, out var data);
                 if (data == null) return null;
-                var snapshot = ProcessProgramCodec.ReadFormatted(ProcessProgramCodec.WriteFormatted(data));
+                using var encoded = ProcessProgramCodec.WriteFormatted(data);
+                var snapshot = ProcessProgramCodec.ReadFormatted(encoded);
                 snapshot.ReceivedTime = data.ReceivedTime;
                 return snapshot;
             }

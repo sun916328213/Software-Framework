@@ -50,11 +50,11 @@ namespace SecsGem.Runtime
         private CancellationTokenSource? _controlListenerCts;
         private Task? _controlListener;
 
-        /// <summary>S10 终端消息事件；宿主也可通过 TerminalDisplay 指定显示方式。</summary>
+        /// <summary>默认显示适配器在后台串行发布的终端文本；不含 TID，不在协议接收线程调用。</summary>
         public event Action<string, string>? TerminalMessageReceived;
 
-        /// <summary>S10 终端消息的显示服务，由 WPF 宿主或其他调用方注入。</summary>
-        public ITerminalDisplay TerminalDisplay { get; set; }
+        /// <summary>S10 显示服务由宿主拥有；null 显式停止接收，合法请求回 ACKC10=1。</summary>
+        public ITerminalDisplay? TerminalDisplay { get; set; }
 
         #endregion
 
@@ -71,7 +71,7 @@ namespace SecsGem.Runtime
         internal SecsGemRuntime(IContainerProvider container, ISecsTransport transport, TimeProvider? timeProvider = null)
         {
             _container = container;
-            TerminalDisplay = new TerminalMessageEventDisplay((title, message) => TerminalMessageReceived?.Invoke(title, message));
+            TerminalDisplay = new TerminalMessageEventDisplay((title, message) => { if (!_disposed) TerminalMessageReceived?.Invoke(title, message); });
             _transport = transport ?? throw new ArgumentNullException(nameof(transport));
             _statusManager = container.Resolve<StatusManager>();
             _vidManager = container.Resolve<VIDManager>();

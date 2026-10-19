@@ -20,6 +20,12 @@ public partial class SecsViewModel : ObservableObject, IDisposable
     protected SecsWorkspace Workspace { get; }
     public SecsPageModel Model => Workspace.Model;
     public ObservableCollection<LogRow> Messages => Model.Messages;
+
+    private bool CanAcknowledgeTerminal() => CanUseWorkspace() && Model.SelectedTerminalMessage is
+        { IsRead: false, State: SecsGem.Runtime.TerminalDeliveryState.Queued or SecsGem.Runtime.TerminalDeliveryState.Dispatched };
+
+    [RelayCommand(CanExecute = nameof(CanAcknowledgeTerminal))]
+    private void AcknowledgeTerminal() => Workspace.AcknowledgeTerminal();
     /// <summary>
     /// 初始化 SecsViewModel 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// 正文中的关键协作调用包括 AddHandler；具体条件和先后次序见方法体。
@@ -36,6 +42,7 @@ public partial class SecsViewModel : ObservableObject, IDisposable
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e)
     {
         OnPropertyChanged(e.PropertyName);
+        if (e.PropertyName == nameof(Model.SelectedTerminalMessage)) AcknowledgeTerminalCommand.NotifyCanExecuteChanged();
         // 选中行变化时回填输入框：新增与修改共用同一套框，不回填的话
         // 改一个 VID 列表得整段重打。ID 也带出来，好让"保存修改"能发现你把 ID 改了。
         if (e.PropertyName == nameof(Model.SelectedReport))
@@ -157,6 +164,7 @@ public partial class SecsViewModel : ObservableObject, IDisposable
         RaiseAlarmCommand.NotifyCanExecuteChanged();
         ResetAlarmCommand.NotifyCanExecuteChanged();
         PreviewTerminalCommand.NotifyCanExecuteChanged();
+        AcknowledgeTerminalCommand.NotifyCanExecuteChanged();
         ClearLogCommand.NotifyCanExecuteChanged();
         RefreshRecipeCommands();
     }

@@ -234,8 +234,8 @@ public sealed class S7ProcessProgramTests
     public static IEnumerable<object[]> InvalidFormatted()
     {
         yield return new object[] { Item.L(Item.A("R1"), Item.L()) };
-        yield return new object[] { Item.L(Item.A("R1"), Item.A(new string('M', 21)), Item.A("V"), Item.L()) };
-        yield return new object[] { Item.L(Item.A("R1"), Item.A("M"), Item.A("中文"), Item.L()) };
+        yield return new object[] { Item.L(Item.A("R1"), Item.U4(21), Item.A("V"), Item.L()) };
+        yield return new object[] { Item.L(Item.A("R1"), Item.A("M"), Item.B(1), Item.L()) };
         yield return new object[] { Item.L(Item.A("R1"), Item.A("M"), Item.A("V"), Item.A("body")) };
         yield return new object[] { Item.L(Item.A("R1"), Item.A("M"), Item.A("V"),
             Item.L(Item.L(Item.U2(12), Item.A("not-parameters")))) };
@@ -328,12 +328,76 @@ public sealed class S7ProcessProgramTests
         Assert.Equal(2, Reply(19).Count);
     }
 
-    [Fact]
-    public void Ppid_Length_Boundary_Is_120_Ascii_Characters()
+    [Theory]
+    [InlineData(120)]
+    [InlineData(121)]
+    [InlineData(1024)]
+    public void Ppid_Length_Is_Not_A_Fixed_Codec_Policy(int length)
     {
-        Ack(Reply(3, Item.L(Item.A(new string('R', 120)), Item.B(1))), 0);
-        Assert.Null(Reply(3, Item.L(Item.A(new string('R', 121)), Item.B(1))));
-        Assert.Single(Reply(19).Items);
+        var id = new string('R', length);
+        Ack(Reply(3, Item.L(Item.A(id), Item.B(1))), 0);
+        Assert.Equal(id, Assert.Single(Reply(19).Items).GetString());
+        Assert.Equal((byte)1, Reply(5, Item.A(id)).Items[1].GetMemory<byte>().Span[0]);
+        Ack(Reply(23, Formatted(id)), 0);
+        Assert.Equal(id, Reply(25, Item.A(id)).Items[0].GetString());
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void Metadata_Text_Length_And_Characters_Are_Not_Business_Validation_And_Formats_Are_Preserved(bool jisModel, bool jisRevision)
+    {
+        var model = "设备型号-" + new string('M', 128);
+        var revision = "版本-" + new string('V', 128);
+        string expected;
+        using (var incoming = new SecsMessage(7, 26)
+        {
+            SecsItem = Item.L(Item.A("00042"), jisModel ? Item.J(model) : Item.A(model),
+                jisRevision ? Item.J(revision) : Item.A(revision),
+                Item.L(Item.L(Item.A("CUSTOM"), Item.L(Item.U4(1, 2), Item.L(Item.A("嵌套"), Item.F8())))))
+        })
+        {
+            Ack(Reply(23, incoming.SecsItem), 0);
+            expected = incoming.ToSml(); // 直接使用手工源正文，不用被测转换/复制逻辑生成期望。
+            incoming.SecsItem!.Items[3].Items[0].Items[1].Items[0].GetMemory<uint>().Span[0] = 99;
+        } // 接收 Item 已释放，格式与值仍必须独立保留。
+        var snapshot = _device.GetProcessProgramData("00042");
+        Assert.Equal(model, snapshot.MDLN);
+        Assert.Equal(revision, snapshot.SOFTREV);
+        using (var rebuilt = new SecsMessage(7, 26) { SecsItem = Handler(23).GetSendItem(snapshot) })
+            Assert.Equal(expected, rebuilt.ToSml());
+        snapshot.MDLN = "caller-changed";
+        using var uploaded = new SecsMessage(7, 26) { SecsItem = Reply(25, Item.A("00042")) };
+        Assert.Equal(expected, uploaded.ToSml());
+        Assert.Equal(jisModel ? SecsFormat.JIS8 : SecsFormat.ASCII, uploaded.SecsItem!.Items[1].Format);
+        Assert.Equal(jisRevision ? SecsFormat.JIS8 : SecsFormat.ASCII, uploaded.SecsItem.Items[2].Format);
+    }
+
+    [Fact]
+    public void Local_Formatted_Data_Uses_Default_Text_Format_Without_Fixed_Metadata_Lengths()
+    {
+        var data = new ProcessProgramData
+        {
+            PPID = new string('R', 256), MDLN = new string('M', 256), SOFTREV = "版本-" + new string('V', 256)
+        };
+        using var outgoing = Handler(23).GetSendItem(data);
+        Assert.NotNull(outgoing);
+        Assert.Equal(data.MDLN, outgoing.Items[1].GetString());
+        Assert.Equal(data.SOFTREV, outgoing.Items[2].GetString());
+        Assert.All(outgoing.Items.Take(3), item => Assert.Equal(SecsFormat.ASCII, item.Format));
+        Ack(Reply(23, outgoing), 0);
+        Assert.Equal(data.SOFTREV, Reply(25, Item.A(data.PPID)).Items[2].GetString());
+    }
+
+    [Fact]
+    public void Rejected_Local_Conversion_Does_Not_Dispose_Or_Modify_Caller_Items()
+    {
+        using var source = Item.L(Item.U2(7), Item.L(Item.U4(1, 2)));
+        var invalid = new ProcessProgramData { PPID = "", PPBODY = new() { source } };
+        Assert.Throws<ArgumentException>(() => ProcessProgramCodec.WriteFormatted(invalid));
+        Assert.Equal(new uint[] { 1, 2 }, source.Items[1].Items[0].GetMemory<uint>().ToArray());
     }
 
     [Fact]

@@ -86,12 +86,14 @@ class S7F25 : SecsOrderBase
 /// <summary>S7F23/S7F26 格式化配方；PPBODY 每项为 L[2] CCODE Item、L[PPARM]，CCODE 不限定类型；不是二进制正文。</summary>
 public class ProcessProgramData
 {
-    /// <summary>配方标识符，当前实现为 1–120 个 ASCII 字符。</summary>
+    /// <summary>非空 ASCII 字符串标识符；保留前导零，长度由项目接收策略约定。</summary>
     public string PPID { get; set; } = string.Empty;
-    /// <summary>配方关联的设备型号，当前实现为最多 20 个 ASCII 字符；不代表已通过机型兼容校验。</summary>
+    /// <summary>配方关联的设备型号文本；不在协议转换器中限制长度或判断机型兼容性。</summary>
     public string MDLN { get; set; } = string.Empty;
-    /// <summary>配方关联的软件版本，当前实现为最多 20 个 ASCII 字符。</summary>
+    /// <summary>配方关联的软件版本文本；不在协议转换器中限制长度或判断版本兼容性。</summary>
     public string SOFTREV { get; set; } = string.Empty;
+    // 内部保留文本线上格式，避免 JIS8 接收后在存储/读取快照中悄悄变成 ASCII。
+    internal (SecsFormat Model, SecsFormat Revision) MetadataFormats { get; set; } = (SecsFormat.ASCII, SecsFormat.ASCII);
     /// <summary>结构化命令集合；CCODE 和 PPARM 的实际业务含义由双方通信规格约定。</summary>
     public List<object> PPBODY { get; set; } = new();
     /// <summary>本地接收时间元数据，不是 S7F23/S7F26 的线上字段。</summary>

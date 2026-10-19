@@ -683,7 +683,7 @@
                                 Style="{StaticResource CompactTextBox}"
                                 Text="{Binding Model.Hcack, UpdateSourceTrigger=PropertyChanged}" />
                         </WrapPanel>
-                        <TextBlock Margin="0,12,0,8" Text="S10 Terminal 将在收到 Host 消息时弹出提示窗。" />
+                        <TextBlock Margin="0,12,0,8" Text="S10 通知按序非模态显示；协议确认只表示接收，点击确定/下方按钮才标记本地已读。" TextWrapping="Wrap" />
                         <Button
                             Width="160"
                             MinHeight="32"
@@ -692,6 +692,23 @@
                             Command="{Binding PreviewTerminalCommand}"
                             Content="预览 S10 提示窗"
                             Style="{StaticResource CompactOutlinedButton}" />
+                        <DataGrid x:Name="TerminalHistoryGrid" Height="220" Margin="0,12,0,8"
+                                  AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                                  ItemsSource="{Binding Model.TerminalMessages}"
+                                  SelectedItem="{Binding Model.SelectedTerminalMessage}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="编号" Binding="{Binding Message.Id}" />
+                                <DataGridTextColumn Header="接收时间(UTC)" Binding="{Binding Message.ReceivedAt, StringFormat={}{0:HH:mm:ss}}" />
+                                <DataGridTextColumn Header="TID" Binding="{Binding Message.TerminalId}" />
+                                <DataGridTextColumn Header="指令" Binding="{Binding Message.Command}" />
+                                <DataGridTextColumn Header="文本" Width="*" Binding="{Binding Message.Text}" />
+                                <DataGridTextColumn Header="分发状态（非已读）" Binding="{Binding State}" />
+                                <DataGridCheckBoxColumn Header="本地已读" Binding="{Binding IsRead}" />
+                                <DataGridTextColumn Header="失败原因" Binding="{Binding Error}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <Button Content="标记选中通知已读" Command="{Binding AcknowledgeTerminalCommand}"
+                                HorizontalAlignment="Left" Style="{StaticResource CompactOutlinedButton}" />
                     </StackPanel>
                 </TabItem>
             </TabControl>

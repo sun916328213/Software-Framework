@@ -14,8 +14,8 @@ namespace SecsGem.Runtime.Order.S7;
 /// 'S7F23'W                        // Host→设备，下载格式化配方
 /// <L [4]                          // PPID、MDLN、SOFTREV、命令列表
 ///     <A [9] 'DEMO-FAST'>          // PPID：配方编号
-///     <A [9] 'WORKBENCH'>          // MDLN：配方关联机型，最多 20 个 ASCII 字符
-///     <A [3] '1.0'>                // SOFTREV：配方关联版本，最多 20 个 ASCII 字符
+///     <A [9] 'WORKBENCH'>          // MDLN：配方关联机型文本（此处以 ASCII 为例）
+///     <A [3] '1.0'>                // SOFTREV：配方关联版本文本（此处以 ASCII 为例）
 ///     <L [1]                      // 本例一条命令，实际可为任意条数
 ///         <L [2]                  // CCODE、PPARM 列表
 ///             <U2 [1] 1>          // CCODE：本例命令号；Runtime 不限定其类型

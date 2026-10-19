@@ -18,6 +18,8 @@ public partial class SecsPageModel : ObservableObject
     [ObservableProperty] private bool _isClosed;
     public ObservableCollection<LogRow> Messages { get; } = [];
     [ObservableProperty] private LogRow? _selectedLog;
+    [ObservableProperty] private IReadOnlyList<TerminalMessageEntry> _terminalMessages = [];
+    [ObservableProperty] private TerminalMessageEntry? _selectedTerminalMessage;
     [ObservableProperty] private int _connectionModeIndex = 0;
     [ObservableProperty] private string _address = "127.0.0.1";
     [ObservableProperty] private string _portText = "5000";

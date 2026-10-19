@@ -94,6 +94,14 @@ Runtime 的 `Different_Command_And_Parameter_Counts_Roundtrip_Without_Truncation
 
 实际 Host 操作步骤、流程状态、所有权表、测试入口及尚未取得的验证证据，见 [S9 业务使用与验收](../SecsGem.Runtime/Protocol/Messages/S9/README.md)。新增业务/回环用例尚未执行，不能视为真实设备验收。
 
+## S10 终端通知业务
+
+已接入可转换类型的 S10F3/F5 接收、有限队列和单窗口非模态提示；不把备注中的 B/ASCII 当作唯一允许类型。协议 ACK 表示接收入队，不等待操作员；TID 显示在标题，正文只含文本，F5 保留多行与空行。
+
+“远程命令与 S10”中可查看最近 200 条通知及失败原因，点击确定或已读按钮才设置本地阅读状态。断线保留已接受通知，重连不自动重放；应用关闭先释放显示服务，未读不会被伪造为已读。
+
+具体 SML、手工流程及 Runtime/localhost/STA 回归入口见 [S10 业务说明](../SecsGem.Runtime/Protocol/Messages/S10/README.md)。这些用例尚未执行，不能冒充测试通过或真实设备验收。
+
 ## 所有权与验证
 
 App 持有本地配方集合。Controls 借用集合并持有接收订阅，退订仅发生在 Workspace.Dispose，而非页面 Unloaded；回调使用独立字节副本，释放后丢弃排队通知。页面只释放自己的 VM，Runtime 由 App 关闭和释放。

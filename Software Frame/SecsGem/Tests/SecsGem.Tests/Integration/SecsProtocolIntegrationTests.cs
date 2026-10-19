@@ -126,7 +126,7 @@ namespace SecsGem.Tests.Integration
         [Theory]
         [InlineData("S10F3", 3)]
         [InlineData("S10F5", 5)]
-        public void Terminal_Message_Uses_Protocol_Parser_And_Display(string order, byte function)
+        public async Task Terminal_Message_Uses_Protocol_Parser_And_Display(string order, byte function)
         {
             using var control = CreateControl(out var container);
             var display = new TestTerminalDisplay();
@@ -134,14 +134,15 @@ namespace SecsGem.Tests.Integration
             var registry = (ProtocolRegistry)container.Resolve(typeof(ProtocolRegistry));
             var message = new SecsMessage(10, function, true)
             {
-                SecsItem = Item.L(Item.B(1), Item.A("Host message"))
+                SecsItem = Item.L(Item.B(1), function == 3 ? Item.A("Host message") : Item.L(Item.A("Host message")))
             };
 
             var reply = registry.GetHandler(order).GetReplyItem(message);
 
             Assert.Equal(SecsFormat.Binary, reply.Format);
+            await control.DrainTerminalMessagesAsync().WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Equal(order, display.Title);
-            Assert.Equal("1/r/nHost message", display.Message);
+            Assert.Equal("Host message", display.Message);
         }
 
         /// <summary>
@@ -149,7 +150,7 @@ namespace SecsGem.Tests.Integration
         /// 正文中的关键协作调用包括 CreateControl、Resolve、L、B、A；具体条件和先后次序见方法体。
         /// </summary>
         [Fact]
-        public void Terminal_Message_Is_Published_Without_A_Wpf_Display()
+        public async Task Terminal_Message_Is_Published_Without_A_Wpf_Display()
         {
             using var control = CreateControl(out var container);
             string? title = null;
@@ -168,8 +169,9 @@ namespace SecsGem.Tests.Integration
             var reply = registry.GetHandler("S10F3").GetReplyItem(message);
 
             Assert.Equal(SecsFormat.Binary, reply.Format);
+            await control.DrainTerminalMessagesAsync().WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Equal("S10F3", title);
-            Assert.Equal("1/r/nHeadless host", text);
+            Assert.Equal("Headless host", text);
         }
 
         /// <summary>

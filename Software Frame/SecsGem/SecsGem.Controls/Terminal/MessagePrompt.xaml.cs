@@ -13,6 +13,9 @@ namespace SecsGem.Controls.Terminal
     /// </summary>
     public partial class MessagePrompt : Window
     {
+        /// <summary>操作员点击确定；关闭窗口或服务释放不触发该事件。</summary>
+        public event EventHandler? Confirmed;
+
         public static new readonly DependencyProperty TitleProperty;
         public static readonly DependencyProperty MessageProperty;
         public static readonly DependencyProperty Visibility_CancelProperty;
@@ -118,6 +121,7 @@ namespace SecsGem.Controls.Terminal
         /// </summary>
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            Confirmed?.Invoke(this, EventArgs.Empty);
             // 只有当窗口以对话框模式显示时才设置DialogResult
             if (_isDialogMode)
             {

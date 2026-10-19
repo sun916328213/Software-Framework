@@ -241,6 +241,8 @@ public partial class SecsGemRuntime : ISecsGemLogger
         _disposed = true;
         if (!disposing) return;
 
+        StopTerminalMessages();
+        TerminalMessageReceived = null;
         _protocolScenarios.Dispose();
         _controlListenerCts?.Cancel();
         _controlListenerCts?.Dispose();

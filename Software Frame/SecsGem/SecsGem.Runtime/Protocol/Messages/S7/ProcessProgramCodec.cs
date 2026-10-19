@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace SecsGem.Runtime.Order.S7;
 
-/// <summary>SECS-II S7 的 ASCII PPID 配置：1–120 字符；不隐式转换或截断。</summary>
+/// <summary>S7 报文与配方数据的共用转换、结构读取和深复制；不校验具体配方业务内容。</summary>
 internal static class ProcessProgramCodec
 {
     private static string Describe(Item? item) => item is null ? "无正文" : $"{item.Format}[{item.Count}]";
@@ -12,8 +12,10 @@ internal static class ProcessProgramCodec
     {
         if (item?.Format != SecsFormat.ASCII) throw new ArgumentException($"PPID 要求 ASCII，实际 {Describe(item)}");
         var id = item.GetString();
-        if (id.Length is < 1 or > 120 || id.Any(c => c > 127))
-            throw new ArgumentException("PPID 必须为 1–120 个 ASCII 字符");
+        // PPID 保留已有 ASCII 字符串身份约定，避免数字转换、前导零丢失及 S9 会话标识不一致。
+        // 字符数量上限由项目接收策略决定，不在共用转换器中固定为 120。
+        if (id.Length == 0 || id.Any(c => c > 127))
+            throw new ArgumentException("PPID 必须为非空 ASCII 字符串");
         return id;
     }
 
@@ -25,17 +27,17 @@ internal static class ProcessProgramCodec
 
     internal static ProcessProgramData ReadFormatted(Item? item)
     {
-        ValidateFormatted(item);
-        var fields = item!.Items;
+        var fields = ReadFormattedFields(item);
         return new ProcessProgramData
         {
             PPID = fields[0].GetString(), MDLN = fields[1].GetString(), SOFTREV = fields[2].GetString(),
+            MetadataFormats = (fields[1].Format, fields[2].Format),
             PPBODY = fields[3].Items.Select(x => (object)Copy(x)).ToList(),
             ReceivedTime = DateTime.Now
         };
     }
 
-    private static void ValidateFormatted(Item? item)
+    private static Item[] ReadFormattedFields(Item? item)
     {
         RequireList(item, 4);
         var fields = item!.Items;
@@ -43,11 +45,8 @@ internal static class ProcessProgramCodec
         for (var i = 1; i <= 2; i++)
         {
             var name = i == 1 ? "MDLN" : "SOFTREV";
-            if (fields[i].Format != SecsFormat.ASCII)
-                throw new ArgumentException($"{name} 要求 ASCII，实际 {Describe(fields[i])}");
-            var text = fields[i].GetString();
-            if (text.Length > 20 || text.Any(c => c > 127))
-                throw new ArgumentException($"{name} 必须为最多 20 个 ASCII 字符，实际长度 {text.Length}");
+            if (fields[i].Format is not (SecsFormat.ASCII or SecsFormat.JIS8))
+                throw new ArgumentException($"{name} 需要文本项（ASCII/JIS8），实际 {Describe(fields[i])}");
         }
         if (fields[3].Format != SecsFormat.List)
             throw new ArgumentException($"命令列表要求 L[n]，实际 {Describe(fields[3])}");
@@ -60,17 +59,27 @@ internal static class ProcessProgramCodec
             if (command.Items[1].Format != SecsFormat.List)
                 throw new ArgumentException($"{path}.PPARM 要求 L[n]，实际 {Describe(command.Items[1])}");
         }
+        return fields;
     }
 
     internal static Item WriteFormatted(ProcessProgramData data)
     {
         if (data.PPBODY == null) throw new ArgumentException("缺少命令列表");
-        var item = Item.L(Item.A(data.PPID), Item.A(data.MDLN), Item.A(data.SOFTREV),
-            Item.L(data.PPBODY.Select(Value)));
-        // 同一验证器保护发包与收包；旧的 L[2] 私有结构不再发送。
-        ValidateFormatted(item);
-        return item;
+        var item = Item.L(Item.A(data.PPID), Text(data.MDLN, data.MetadataFormats.Model),
+            Text(data.SOFTREV, data.MetadataFormats.Revision), Item.L(data.PPBODY.Select(Value)));
+        try
+        {
+            ReadFormattedFields(item); // 只检查能否按现有数据模型读取，不判断机型、版本或参数业务含义。
+            return item;
+        }
+        catch
+        {
+            item.Dispose(); // 失败时释放本次创建的 Item 树，不释放调用方的数据。
+            throw;
+        }
     }
+
+    private static Item Text(string value, SecsFormat format) => format == SecsFormat.JIS8 ? Item.J(value) : Item.A(value);
 
     internal static Item Value(object value) => value switch
     {

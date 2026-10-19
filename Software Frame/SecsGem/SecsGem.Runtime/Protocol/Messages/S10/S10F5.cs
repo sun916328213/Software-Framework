@@ -29,10 +29,12 @@ namespace SecsGem.Runtime.Order.S10
     /// >
     /// .
     /// 'S10F6'                         // 设备→Host，终端确认
-    /// <B [1] 0x00>                    // ACKC10：当前处理成功为 0
+    /// <B [1] 0x00>                    // ACKC10：0=成功入队（非已读），1=不接受
     /// .
     /// ]]></code>
-    /// 当前与 S10F3 共用平铺显示逻辑，不承诺保留独立终端行布局；解析/显示失败返回 null，走 S9F7。
+    /// 上述 ASCII 行列表是常见示例，不是唯一类型；同样接受直接文本、数值、布尔和嵌套列表。
+    /// 列表按 CRLF 保留顺序/空行，数值向量以空格分隔；TID 不混入正文。ACKC10=0 表示入队，1 为不接受。
+    /// UI 异步显示，不等待操作员；格式非法走 S9F7，已入队后的显示失败记历史，不追发错误应答。
     /// </remarks>
     [SecsOrder("S10F5")]
     class S10F5:SecsOrderBase
@@ -43,7 +45,7 @@ namespace SecsGem.Runtime.Order.S10
         /// </summary>
         public override Item GetReplyItem(SecsMessage pSecsMessage  )
         {
-            return S10TerminalMessageProcessor.Process("S10F5", pSecsMessage.SecsItem, SecsGemRuntime.TerminalDisplay);
+            return S10TerminalMessageProcessor.Process("S10F5", pSecsMessage.SecsItem, SecsGemRuntime);
         }
     }
 }

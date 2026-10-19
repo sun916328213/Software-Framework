@@ -1,42 +1,50 @@
-// 【中文阅读说明】
-// SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。
-// 本文件定义：S10TerminalMessageProcessor。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：SecsGem.Core、SecsGem.Core.Order、SecsGem.Runtime、SecsGem.Runtime.Order、Secs4Net、SecsGem.Runtime.Protocol.Parsing。导入不代表所有类型都会在运行时加载。
-using SecsGem.Core;
-using SecsGem.Core.Order;
-using SecsGem.Runtime;
-using SecsGem.Runtime.Order;
+using System.Globalization;
 using Secs4Net;
-using SecsGem.Runtime.Protocol.Parsing;
 
 namespace SecsGem.Runtime.Order.S10;
 
-/// <summary>处理 S10F3/S10F5 终端消息，并生成终端确认应答。</summary>
+/// <summary>S10F3/F5 共用的轻量显示转换；不把示例 SECS 类型当成唯一允许的输入类型。</summary>
 internal static class S10TerminalMessageProcessor
 {
-    /// <summary>
-    /// 处理当前类型提供的操作；对应入口为 Process。
-    /// 正文中的关键协作调用包括 Flatten、Join、Show、B；具体条件和先后次序见方法体。
-    /// 此入口包含异常处理；失败时是上报、恢复还是继续抛出，请以 catch 分支为准。
-    /// </summary>
-    public static Item? Process(string command, Item? terminalText, ITerminalDisplay display)
+    internal static Item? Process(string command, Item? body, SecsGemRuntime runtime)
     {
         try
         {
-            if (terminalText is not null)
-            {
-                var lines = SecsItemParser.Flatten(terminalText);
-                var message = string.Join("/r/n", lines);
-                if (lines is not null)
-                    display.Show(command, message);
-            }
-
-            return Item.B(0);
+            if (body is not { Format: SecsFormat.List, Count: 2 }) throw new ArgumentException("正文需要终端标识和显示内容两项。");
+            var id = ReadValues(body.Items[0]);
+            if (id.Length != 1 || !byte.TryParse(id[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+                throw new ArgumentException("TID 需要可转换为 0–255 整数的单个值。");
+            return Item.B(runtime.EnqueueTerminalMessage(value, command, ReadText(body.Items[1])));
         }
-        catch
+        catch (ArgumentException ex)
         {
-            // 保留原有协议行为：解析或显示失败交给调用方触发 S9F7。
-            return null;
+            runtime.RaiseErrorPublic($"{command} 数据无法转换：{ex.Message}");
+            return null; // 不伪造终端编号或显示成功；由现有接收路径报告 S9F7。
         }
     }
+
+    private static string ReadText(Item item) => item.Format == SecsFormat.List
+        ? string.Join("\r\n", item.Items.Select(ReadText))
+        : string.Join(" ", ReadValues(item));
+
+    private static string[] ReadValues(Item item) => item.Format switch
+    {
+        SecsFormat.ASCII or SecsFormat.JIS8 => new[] { item.GetString() },
+        SecsFormat.Binary => Values(item.GetMemory<byte>()),
+        SecsFormat.U1 => Values(item.GetMemory<byte>()),
+        SecsFormat.U2 => Values(item.GetMemory<ushort>()),
+        SecsFormat.U4 => Values(item.GetMemory<uint>()),
+        SecsFormat.U8 => Values(item.GetMemory<ulong>()),
+        SecsFormat.I1 => Values(item.GetMemory<sbyte>()),
+        SecsFormat.I2 => Values(item.GetMemory<short>()),
+        SecsFormat.I4 => Values(item.GetMemory<int>()),
+        SecsFormat.I8 => Values(item.GetMemory<long>()),
+        SecsFormat.F4 => Values(item.GetMemory<float>()),
+        SecsFormat.F8 => Values(item.GetMemory<double>()),
+        SecsFormat.Boolean => Values(item.GetMemory<bool>()),
+        _ => throw new ArgumentException($"{item.Format} 不能直接转换为显示值。")
+    };
+
+    private static string[] Values<T>(Memory<T> values) where T : unmanaged, IEquatable<T> => values.ToArray()
+        .Select(value => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty).ToArray();
 }

@@ -25,10 +25,12 @@ namespace SecsGem.Runtime.Order.S10
     /// >
     /// .
     /// 'S10F4'                         // 设备→Host，终端确认
-    /// <B [1] 0x00>                    // ACKC10：当前处理成功为 0
+    /// <B [1] 0x00>                    // ACKC10：0=成功入队（非已读），1=不接受
     /// .
     /// ]]></code>
-    /// 当前处理器统一平铺全部叶子项交给 TerminalDisplay，包含 TID；不是仅抽取 TEXT。解析/显示失败返回 null，走 S9F7。
+    /// 上述 B/ASCII 是常见示例，不是唯一输入类型；TID 接受可转换为 byte 的单值，正文可为文本/数值/布尔/列表。
+    /// TID 单独保留，正文转换后复制入队；ACKC10=0 仅表示已接收，1 表示队列满/服务停止。
+    /// UI 异步显示，不等待操作员；格式非法走 S9F7，已入队后的显示失败记历史，不追发错误应答。
     /// </remarks>
     [SecsOrder("S10F3")]
     class S10F3:SecsOrderBase
@@ -40,7 +42,7 @@ namespace SecsGem.Runtime.Order.S10
         /// </summary>
         public override Item GetReplyItem(SecsMessage pSecsMessage )
         {
-            return S10TerminalMessageProcessor.Process("S10F3", pSecsMessage.SecsItem, SecsGemRuntime.TerminalDisplay);
+            return S10TerminalMessageProcessor.Process("S10F3", pSecsMessage.SecsItem, SecsGemRuntime);
         }
     }
 }

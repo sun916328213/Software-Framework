@@ -13,6 +13,14 @@ Workbench 直接导航到 `SecsView`，不再有 `SecsWorkbenchView` 包装层�
 
 背景、前景使用动态 Material Design 主题画刷，页头使用共享 `PageHeaderView`。命令随连接状态、输入及选中项刷新；端口为 1–65535，Device ID 为 0–32767。变量与配置可离线编辑，网络消息要求连接。VM 释放后禁止新操作；Workspace 释放后忽略后续操作和排队通知。
 
+## S10 终端通知
+
+“远程命令与 S10”区域提供最近 200 条终端历史和本地已读按钮；沿用页面状态轮询，不新增常驻订阅。Runtime 分离 TID 和 TEXT，不强制其 SECS 类型，按可转换值显示；列表保留 CRLF/空行；成功入队即回 ACK，不等待 Dispatcher 或操作员。
+
+Workbench 显式安装 `WpfTerminalDisplay(runtime)`，单窗口按序非模态显示，点击确定才标记阅读。Runtime 不拥有注入的显示服务；Workbench 关闭时先 Dispose 显示服务，停用自身注册、关闭窗口并记录丢弃项，再释放 Runtime。页面卸载不停止已接收消息。显示失败保留状态，不追改已返回的 ACK。
+
+详细容量策略、断线保留、已读/协议确认边界、格式及尚未执行的用例，见 [S10 业务说明](../SecsGem.Runtime/Protocol/Messages/S10/README.md)。
+
 ## S7 后台配方同步：无专用联调页签
 
 已移除“S7 配方联调”页签和导入/读取/模板测试按钮。Host 使用外部模拟器；配方列表和切换入口统一在 Workbench 的“配方管理”。通用 SML、通信日志及后台服务仍保留，不因页面移除或 Unloaded 而停止接收。
