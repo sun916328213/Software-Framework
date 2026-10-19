@@ -26,6 +26,7 @@ WPFControls 模块：可复用业务界面及模块装配，页面可用性与�
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\WPFControls\WPFControls.csproj" />
+    <ProjectReference Include="..\..\..\Charts\WPFControls.Charts.Workbench\WPFControls.Charts.Workbench.csproj" />
   </ItemGroup>
   <ItemGroup><ProjectReference Include="..\..\..\Extension\Extension.Core\Extension.Core.csproj" /></ItemGroup>
 </Project>

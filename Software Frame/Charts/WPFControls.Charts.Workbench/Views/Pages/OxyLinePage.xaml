@@ -1,0 +1,8 @@
+<local:ChartRefreshView x:Class="WPFControls.Charts.Workbench.Views.Pages.OxyLinePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:WPFControls.Charts.Workbench.Views"
+    xmlns:oxy="clr-namespace:WPFControls.Charts.Views.OxyPlot;assembly=WPFControls.Charts">
+    <oxy:OxyPlotLineView x:Name="Chart" Height="420" ItemSource="{Binding Lines}"
+        AxisX="{Binding Labels}" AxisFontSize="{Binding AxisFontSize}" />
+</local:ChartRefreshView>

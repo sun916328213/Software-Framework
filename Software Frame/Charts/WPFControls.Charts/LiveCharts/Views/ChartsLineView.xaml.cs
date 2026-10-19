@@ -46,6 +46,7 @@ namespace WPFControls.Controls.Views.Charts
             ChartsLineView view = (ChartsLineView)d;
             view.chartsLineService.SetAxisX(view.AxisX?.ToList() ?? new List<string>());
             view.chats_CartesianChart.XAxes = view.chartsLineService.GetAxisX();
+            WPFControls.Charts.Themes.ChartTheme.Apply(view);
         }
 
         [Bindable(true)]
@@ -115,6 +116,7 @@ namespace WPFControls.Controls.Views.Charts
         {
             VerifyAccess();
             chats_CartesianChart.Series = chartsLineService.ShowData(ItemSource?.ToArray() ?? Array.Empty<ChartLineData>());
+            WPFControls.Charts.Themes.ChartTheme.Apply(this);
         }
 
         [Bindable(true)]
@@ -138,6 +140,7 @@ namespace WPFControls.Controls.Views.Charts
             view.chartsLineService.SetAxisFontSize(view.AxisFontSize);
             // 重新赋值 XAxes 以触发图表刷新（LiveCharts 会响应内部 TextSize 属性变更）
             view.chats_CartesianChart.XAxes = view.chartsLineService.GetAxisX();
+            WPFControls.Charts.Themes.ChartTheme.Apply(view);
         }
 
         /// <summary>

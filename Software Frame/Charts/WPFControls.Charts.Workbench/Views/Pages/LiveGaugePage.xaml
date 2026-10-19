@@ -1,0 +1,11 @@
+<local:ChartRefreshView x:Class="WPFControls.Charts.Workbench.Views.Pages.LiveGaugePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:WPFControls.Charts.Workbench.Views"
+    xmlns:live="clr-namespace:WPFControls.Controls.Views.Charts;assembly=WPFControls.Charts">
+    <StackPanel>
+        <TextBlock Text="运行 / 待机 / 报警 · 模拟时长，单位 min" Margin="8" />
+        <live:ChartsMultipleGaugeView x:Name="Chart" Height="360" ItemSource="{Binding PieData, Mode=OneWay}"
+            AnimationsSpeed="{Binding AnimationDuration}" />
+    </StackPanel>
+</local:ChartRefreshView>

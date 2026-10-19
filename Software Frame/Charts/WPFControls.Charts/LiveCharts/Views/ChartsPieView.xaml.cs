@@ -46,6 +46,7 @@ namespace WPFControls.Controls.Views.Charts
             VerifyAccess();
             charts_PieChart.Series = chartsPieService.ShowData(
                 ItemSource?.ToArray() ?? Array.Empty<ChartPieData>(), ChartsPieType.Doughnut);
+            WPFControls.Charts.Themes.ChartTheme.Apply(this);
         }
 
         [Bindable(true)]

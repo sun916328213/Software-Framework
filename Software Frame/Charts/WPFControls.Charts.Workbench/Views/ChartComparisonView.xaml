@@ -1,0 +1,36 @@
+<local:ChartRefreshView x:Class="WPFControls.Charts.Workbench.Views.ChartComparisonView"
+    xmlns:local="clr-namespace:WPFControls.Charts.Workbench.Views"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:live="clr-namespace:WPFControls.Controls.Views.Charts;assembly=WPFControls.Charts"
+    xmlns:oxy="clr-namespace:WPFControls.Charts.Views.OxyPlot;assembly=WPFControls.Charts">
+    <Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /><RowDefinition Height="260" />
+            <RowDefinition Height="230" /><RowDefinition Height="190" />
+        </Grid.RowDefinitions>
+        <TextBlock Text="LiveCharts" FontSize="22" Margin="8" />
+        <TextBlock Grid.Column="1" Text="OxyPlot" FontSize="22" Margin="8" />
+        <GroupBox Grid.Row="1" Header="折线图 · 工位 A / B" Margin="4" Padding="4">
+            <live:ChartsLineView x:Name="LiveLine" ItemSource="{Binding Lines, Mode=OneWay}"
+                AxisX="{Binding Labels, Mode=OneWay}" AxisFontSize="{Binding AxisFontSize}" AnimationsSpeed="{Binding AnimationDuration}" />
+        </GroupBox>
+        <GroupBox Grid.Row="1" Grid.Column="1" Header="折线图 · 相同输入，独立模型" Margin="4" Padding="4">
+            <oxy:OxyPlotLineView x:Name="OxyLine" ItemSource="{Binding Lines}" AxisX="{Binding Labels}" AxisFontSize="{Binding AxisFontSize}" />
+        </GroupBox>
+        <GroupBox Grid.Row="2" Header="运行 / 待机 / 报警 · 圆环图" Margin="4" Padding="4">
+            <live:ChartsPieView x:Name="LivePie" ItemSource="{Binding PieData, Mode=OneWay}"
+                AnimationsSpeed="{Binding AnimationDuration}" />
+        </GroupBox>
+        <GroupBox Grid.Row="2" Grid.Column="1" Header="运行 / 待机 / 报警 · 圆环图" Margin="4" Padding="4">
+            <oxy:OxyPlotPieView x:Name="OxyPie" ItemSource="{Binding PieData}" InnerDiameter="0.6" />
+        </GroupBox>
+        <GroupBox Grid.Row="3" Header="LiveCharts 专有：多仪表盘（模拟时长 / min）" Margin="4" Padding="4">
+            <live:ChartsMultipleGaugeView x:Name="LiveGauge" ItemSource="{Binding PieData, Mode=OneWay}"
+                AnimationsSpeed="{Binding AnimationDuration}" />
+        </GroupBox>
+        <TextBlock Grid.Row="3" Grid.Column="1" Margin="16" TextWrapping="Wrap" VerticalAlignment="Center"
+            Text="OxyPlot 暂未封装多仪表盘，不伪造一一对应的功能。&#10;&#10;可在原生图表上尝试图例、提示、缩放和平移。深色模式只切换宿主主题，用于暴露图表自身尚未适配的文字和颜色问题。" />
+    </Grid>
+</local:ChartRefreshView>

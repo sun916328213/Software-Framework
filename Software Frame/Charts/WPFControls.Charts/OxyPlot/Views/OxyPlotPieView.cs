@@ -37,6 +37,7 @@ public sealed class OxyPlotPieView : PlotView
     {
         VerifyAccess();
         Model = OxyPlotChartService.CreatePie(ItemSource, InnerDiameter);
+        WPFControls.Charts.Themes.ChartTheme.Apply(this);
     }
 
     private static void OnInputChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)

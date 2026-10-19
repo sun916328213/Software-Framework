@@ -46,6 +46,7 @@ public sealed class OxyPlotLineView : PlotView
     {
         VerifyAccess();
         Model = OxyPlotChartService.CreateLine(ItemSource, AxisX, AxisFontSize);
+        WPFControls.Charts.Themes.ChartTheme.Apply(this);
     }
 
     private static void OnInputChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)

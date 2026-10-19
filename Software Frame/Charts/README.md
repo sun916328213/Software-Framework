@@ -6,7 +6,7 @@
 
 | 方案 | 定位 | 当前状态 |
 | --- | --- | --- |
-| LiveCharts 2 | 动画、统计展示、仪表盘 | 保留原有折线、甜甜圈、多仪表盘 |
+| LiveCharts 2 | 动画、统计展示、仪表盘 | 折线、分组柱状图、甜甜圈、多仪表盘 |
 | OxyPlot 2.2.0（MIT） | 常规统计、科学绘图，支持缩放和平移 | 折线、饼图/圆环图 |
 | ScottPlot | 大量采样点、信号与波形展示 | 可作为后续扩展，本次未引入，性能需按实际数据验证 |
 | SciChart | 商业高性能图表 | 本次未引入，需另行评估商业许可 |
@@ -18,9 +18,10 @@
 ```text
 Charts/WPFControls.Charts/
 ├─ Models/                   共用输入：ChartLineData、ChartPieData
-├─ LiveCharts/Services/      ChartsLineService、ChartsPieService
-├─ LiveCharts/Views/         ChartsLineView、ChartsPieView、ChartsMultipleGaugeView
-└─ OxyPlot/Services|Views/   OxyPlotChartService、OxyPlotLineView、OxyPlotPieView
+├─ LiveCharts/Services/      ChartsLineService、ChartsColumnService、ChartsPieService
+├─ LiveCharts/Views/         ChartsLineView、ChartsColumnView、ChartsPieView、ChartsMultipleGaugeView
+├─ OxyPlot/Services|Views/   OxyPlotChartService、OxyPlotLineView、OxyPlotPieView
+└─ Themes/                  ChartTheme 附加属性与 Tracker 主题资源
 ```
 
 - `MachineApp → WPFControls → WPFControls.Charts → LiveCharts / SkiaSharp + OxyPlot`。
@@ -72,7 +73,7 @@ xmlns:oxy="clr-namespace:WPFControls.Charts.Views.OxyPlot;assembly=WPFControls.C
 - 后台采集线程应先生成快照，再通过 Dispatcher 交给控件；不要在图表读取时并发修改输入集合。
 - 折线非有限值显示为断点；饼图忽略非有限值和小于等于零的值。null 数据源清空显示。轴字体大小必须为正有限数。
 - 高级用户可直接调用 `WPFControls.Charts.Services.OxyPlot.OxyPlotChartService.CreateLine/CreatePie` 获取模型，交给原生 `OxyPlot.Wpf.PlotView`，进一步配置标题、坐标轴和主题。不要将同一个 PlotModel 同时绑定到多个 PlotView。
-- 尚未提供 OxyPlot 多仪表盘或自动主题切换；字体、深浅主题、缩放和平移交互仍需 UI 验收。
+- 尚未提供 OxyPlot 多仪表盘。两套后端均可接入下方 ChartTheme；字体、深浅主题、缩放和平移交互仍需 UI 验收。
 
 ## 刷新与生命周期约定
 
@@ -84,10 +85,34 @@ xmlns:oxy="clr-namespace:WPFControls.Charts.Views.OxyPlot;assembly=WPFControls.C
 | `ItemSource` 设为 null | 清空显示，不残留旧图形 |
 | 原地修改输入数据 | 由宿主在 UI 线程调用 `RefreshChart()` |
 
-- 三个 LiveCharts 控件都提供公开的 `RefreshChart()`。
-- `ChartsLineView` 保留原有的集合变化自动刷新：替换数据源时解除旧订阅，同一实例不重复订阅，卸载时解除订阅，重新加载时恢复订阅并刷新当前数据。
+- 四个 LiveCharts 控件都提供公开的 `RefreshChart()`。
+- `ChartsLineView` 与 `ChartsColumnView` 支持外层集合变化自动刷新：替换数据源时解除旧订阅，同一实例不重复订阅，卸载时解除订阅，重新加载时恢复订阅并刷新当前数据。
 - 饼图与多仪表盘控件采用快照刷新，不额外增加订阅或空的生命周期代码。
 - 图表控件只管理自己创建的绘图对象与订阅；卸载不停止宿主采集、不释放宿主 ViewModel、不关闭设备。
+
+## 柱状图与主题
+
+`ChartsColumnView` 提供分组柱状图，每个 ChartLineData 是一个数据组，AxisX 为类别标签；仍复用共用输入，不引入第三方 Series 到输入模型。
+
+```xml
+xmlns:charts="clr-namespace:WPFControls.Controls.Views.Charts;assembly=WPFControls.Charts"
+xmlns:theme="clr-namespace:WPFControls.Charts.Themes;assembly=WPFControls.Charts"
+
+<charts:ChartsColumnView ItemSource="{Binding Groups}" AxisX="{Binding Categories}"
+                         theme:ChartTheme.IsDark="{Binding IsDarkTheme}" />
+```
+
+`ChartTheme.IsDark` 可设在容器上，由子图表继承。true/false 分别应用深/浅色；默认 null 不主动改写未接入主题的宿主。主题修改原生绘图颜色，不只是 WPF 外框：LiveCharts 的轴、图例、提示和标签 Paint，以及 OxyPlot 的 PlotModel、图例、轴和默认 Tracker 均会跟随。每次重建绘图数据后重新应用；输入指定的曲线/分类颜色不变。自定义 OxyPlot Tracker 模板保留，由宿主自行适配。
+
+## 独立人工验证宿主
+
+新增 `WPFControls.Charts.Workbench`，唯一直接项目引用为图表组件，不依赖 WPFControls 聚合项目或 MachineApp，不触发生产模块或设备启动。按“后端 × 图表类型”提供六个独立页面，包含新增的 LiveCharts 柱状图；对照页已退出导航和编译。各页拥有独立数据、按钮命令、参数、计数和模拟会话；支持数据替换/原地修改/增删、显式刷新、null 清空、卸载/重载和当前页 DataContext 重建。切页停止上一页模拟，宿主与图表深浅主题统一切换。常用数据操作默认自动刷新，诊断操作单独折叠；按钮按空数据、运行状态和数量上限禁用。
+
+```powershell
+dotnet run --project "Software Frame/Charts/WPFControls.Charts.Workbench/WPFControls.Charts.Workbench.csproj"
+```
+
+详见 [Workbench 运行说明与人工验收清单](WPFControls.Charts.Workbench/README.md)。本次新增宿主尚未在当前环境完成构建、自动测试或人工验收；图表组件此前的验证记录不代表 Workbench 已通过验证。
 
 ## 验证入口
 
