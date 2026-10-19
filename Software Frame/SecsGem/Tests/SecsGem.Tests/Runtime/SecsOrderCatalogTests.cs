@@ -89,7 +89,7 @@ namespace SecsGem.Tests
                 // S7 配方
                 "S7F1", "S7F3", "S7F5", "S7F17", "S7F19", "S7F23", "S7F25",
                 // S9 错误兜底 / S10 终端消息
-                "S9F9", "S9F13",
+                "S9F1", "S9F3", "S9F5", "S9F7", "S9F9", "S9F11", "S9F13",
                 "S10F3", "S10F5",
             };
 

@@ -92,6 +92,12 @@ public partial class App : PrismApplication
         // 通用 Controls 页面不替换宿主的远程命令处理器。
         var runtime = Container.Resolve<SecsGem.Runtime.SecsGemRuntime>();
         runtime.TerminalDisplay = new SecsGem.Controls.Terminal.WpfTerminalDisplay();
+        // 独立工作台明确启用演示策略；生产宿主按自身通信规格配置。
+        runtime.ConfigureProtocolScenarios(new SecsGem.Runtime.Protocol.SecsProtocolScenarioOptions
+        {
+            MaxMessageBodyBytes = 1024 * 1024,
+            ProcessProgramTransferTimeout = TimeSpan.FromSeconds(30)
+        });
         // 载入 Config\SecsJson 的 VID/ReportID/CEID，并绑定 StatusManager 的四个名字。
         // 必须在任何 Connect/上下线之前：S6F11 组包、Host 侧 S1F17 判定、控制状态上报全靠这张表，
         // 表空时这些路径静默跳过而不报错。工作台源码不带 Config 目录，走 DataBase.LoadDefaults 的打底项。

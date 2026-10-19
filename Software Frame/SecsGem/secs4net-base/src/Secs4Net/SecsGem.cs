@@ -146,7 +146,8 @@ public sealed class SecsGem : ISecsGem, IDisposable
 
         try
         {
-            if (header.DeviceId != DeviceId && header.S != 9 && header.F != 1)
+            // SxF1 也必须检查设备 ID；S9 不再次产生 S9F1，避免错误通知循环。
+            if (header.DeviceId != DeviceId && header.S != 9)
             {
                 _logger.MessageIn(msg, header.Id);
                 _logger.Warning("Received Unrecognized Device Id Message");
@@ -171,15 +172,25 @@ public sealed class SecsGem : ISecsGem, IDisposable
                     await _primaryMessageChannel.Writer.WriteAsync(new PrimaryMessageWrapper(this, msg, id), cancellation).ConfigureAwait(false);
                     return;
                 }
-                // Error message
-                if (rootItem is { Format: not (SecsFormat.List or SecsFormat.ASCII or SecsFormat.JIS8) } dataItem
-                    && dataItem.GetMemory<byte>() is { Length: >= 10 } headerBytes)
+                // S9F13 的 L[2] 不含事务报头，不得用它自身的 System Bytes 结束无关 T3 等待。
+                if (header.F == 13)
+                {
+                    _logger.MessageIn(msg, header.Id);
+                    msg.Dispose(); // 日志适配层已同步复制通知，未向发送等待者转移所有权。
+                    return;
+                }
+                // 只有合法 B[10] 才能提取原事务编号。
+                if (rootItem is { Format: SecsFormat.Binary, Count: 10 } dataItem
+                    && dataItem.GetMemory<byte>() is { Length: 10 } headerBytes)
                 {
                     id = BinaryPrimitives.ReadInt32BigEndian(headerBytes.Span.Slice(6, 4));
                 }
                 else
                 {
                     _logger.Warning("Received S9Fy message without primary message's header bytes.");
+                    _logger.MessageIn(msg, header.Id);
+                    msg.Dispose();
+                    return; // 畸形 S9 仅供诊断，不匹配或终止无关事务。
                 }
             }
 
@@ -193,6 +204,7 @@ public sealed class SecsGem : ISecsGem, IDisposable
             else
             {
                 _logger.Warning($"Received unexpected secondary message[0x{id:X8}]. Maybe T3 timeout.");
+                if (header.S == 9) msg.Dispose(); // 无事务接管的 S9 在日志复制后归还内存。
             }
         }
         catch (Exception ex)

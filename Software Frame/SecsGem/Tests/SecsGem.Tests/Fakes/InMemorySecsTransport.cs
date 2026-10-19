@@ -23,6 +23,7 @@ internal sealed class InMemorySecsTransport : ISecsTransport
     public string? LastSentOrder { get; private set; }
     public Item? LastSentItem { get; private set; }
     public Item? LastReplyItem { get; private set; }
+    public int ReplyAttempts { get; private set; }
     /// <summary>全部已发报文（含 order），用于断言一次操作里发了哪几条。</summary>
     public List<(string Order, Item Item)> Sent { get; } = new();
     /// <summary>设置后，匹配该 order 的 Send 永不完成（模拟 Host 不回 S6F12）。</summary>
@@ -32,6 +33,21 @@ internal sealed class InMemorySecsTransport : ISecsTransport
     /// <c>Secs4NetTransport.Send</c> 的行为：early-return null 而不是抛异常）。
     /// </summary>
     public string? NullOnOrder { get; set; }
+    public Func<string, Item, bool, SecsMessage>? SendOverride { get; set; }
+    private readonly Dictionary<SecsMessage, byte[]> _sentHeaders = new();
+
+    public bool TryGetReceivedHeader(SecsMessage message, out byte[] header)
+    {
+        header = SecsGem.Runtime.Protocol.Building.HsmsMessageHeaderBuilder.GetHeaderInfo(message, DeviceID, ID);
+        return true;
+    }
+
+    public bool TryGetSentHeader(SecsMessage message, out byte[] header)
+    {
+        if (_sentHeaders.TryGetValue(message, out var value)) { header = value.ToArray(); return true; }
+        header = Array.Empty<byte>();
+        return false;
+    }
 
     public event EventHandler<ConnectionState>? OnConnectChanged;
     public event SecsHandle? OnSend;
@@ -95,6 +111,7 @@ internal sealed class InMemorySecsTransport : ISecsTransport
         LastSentOrder = order;
         LastSentItem = items;
         Sent.Add((order, items));
+        if (SendOverride != null) return Task.FromResult(SendOverride(order, items, wait));
         if (HangOnOrder == order) return new TaskCompletionSource<SecsMessage>().Task;
         if (NullOnOrder == order) return Task.FromResult<SecsMessage>(null);
         return Task.FromResult(new SecsMessage(1, 2));
@@ -119,10 +136,17 @@ internal sealed class InMemorySecsTransport : ISecsTransport
     /// <summary>
     /// 对齐 secs4net 的 <c>PrimaryMessageWrapper.TryReplyAsync</c>：主消息没置 W 位时
     /// 它**抛异常**（不是返回 false），见 secs4net-base/src/Secs4Net/PrimaryMessageWrapper.cs:27。
-    /// 这个语义必须复刻，否则测不出"回包抛异常把事件触发一起带走"的回归。
+    /// 普通应答保留该语义；非法正文且 W=0 时对齐 Transport 的独立 S9F7 通知路径，S9 本身不应答。
     /// </summary>
     public Task ReplyAsync(SecsMessage message, Item items)
     {
+        ReplyAttempts++;
+        if (message?.S == 9) return Task.CompletedTask;
+        if (message != null && !message.ReplyExpected && items is null)
+        {
+            TryGetReceivedHeader(message, out var header);
+            return Send("S9F7", Item.B(header), false);
+        }
         if (message != null && !message.ReplyExpected)
             throw new InvalidOperationException("The message does not need to reply");
         LastReplyItem = items;
@@ -147,7 +171,12 @@ internal sealed class InMemorySecsTransport : ISecsTransport
     /// <summary>
     /// 测试相关入口 MessageOut；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
-    public void MessageOut(SecsMessage message, int systemByte) { }
+    public void MessageOut(SecsMessage message, int systemByte)
+    {
+        ID = systemByte;
+        if (message.ReplyExpected)
+            _sentHeaders[message] = SecsGem.Runtime.Protocol.Building.HsmsMessageHeaderBuilder.GetHeaderInfo(message, DeviceID, systemByte);
+    }
     /// <summary>
     /// 测试相关入口 Info；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>

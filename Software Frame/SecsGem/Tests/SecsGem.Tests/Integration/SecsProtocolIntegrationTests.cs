@@ -408,12 +408,14 @@ namespace SecsGem.Tests.Integration
         }
 
         /// <summary>
-        /// 测试相关入口 Unknown_Order_Should_Get_Auto_S9F7_Fallback_Instead_Of_T3_Timeout；准备条件、协作调用与结果检查以方法正文为准。
+        /// 未知 Stream / Function 分别产生 S9F3 / S9F5，不再统一用 S9F7。
         /// 正文中的关键协作调用包括 Start、FromSeconds、CreateControl、ConfigureAwait、ConnectAsync；具体条件和先后次序见方法体。
         /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
         /// </summary>
-        [Fact(Timeout = 30000)]
-        public async Task Unknown_Order_Should_Get_Auto_S9F7_Fallback_Instead_Of_T3_Timeout()
+        [Theory(Timeout = 30000)]
+        [InlineData(12, 1, 3)]
+        [InlineData(1, 251, 5)]
+        public async Task S9_Unknown_Stream_And_Function_Return_Their_Original_Header(byte stream, byte function, byte errorFunction)
         {
             using var host = HsmsHostSimulator.Start();
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
@@ -424,16 +426,16 @@ namespace SecsGem.Tests.Integration
             await host.CompleteSelectAsync(cts.Token).ConfigureAwait(false);
             await WaitUntilAsync(() => control.IsConnected, TimeSpan.FromSeconds(5), "设备进入 Selected").ConfigureAwait(false);
 
-            // 发送未实现的 S12F1（body=空列表）
-            host.SendDataMessage(12, 1, w: true, DeviceId, systemBytes: 0x0000_0303,
+            host.SendDataMessage(stream, function, w: true, DeviceId, systemBytes: 0x0000_0303,
                 new byte[] { 0x01, 0x00 }, cts.Token);
 
             var reply = await host.ReadMessageAsync(cts.Token).ConfigureAwait(false);
 
-            // 底层自动兜底 S9F7（Illegal Data），Host 无需等待 T3 超时
             Assert.Equal(HsmsHostSimulator.StypeData, reply.SType);
             Assert.Equal(9, reply.S);
-            Assert.Equal(7, reply.F);
+            Assert.Equal(errorFunction, reply.F);
+            Assert.False(reply.WBit);
+            Assert.Equal(new byte[] { 0x21, 10, 0, 0, (byte)(0x80 | stream), function, 0, 0, 0, 0, 3, 3 }, reply.Body);
         }
 
         /// <summary>

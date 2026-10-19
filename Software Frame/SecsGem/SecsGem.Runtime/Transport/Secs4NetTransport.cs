@@ -15,6 +15,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
+using SecsGem.Runtime.Protocol.Building;
 using ConnectionState = Secs4Net.ConnectionState;
 using DataManager.Runtime.Log.SeriLog;
 using SecsGem.Core;
@@ -30,6 +32,32 @@ namespace SecsGem.Runtime.Transport
     /// </summary>
     public class Secs4NetTransport : ISecsTransport, ISecsGemLogger
     {
+        private sealed class SentHeaderSnapshot { internal byte[] Header = Array.Empty<byte>(); }
+        private readonly ConditionalWeakTable<SecsMessage, SentHeaderSnapshot> _sentHeaders = new();
+
+        public bool TryGetReceivedHeader(SecsMessage message, out byte[] header)
+        {
+            var current = _currentPrimary;
+            if (current != null && ReferenceEquals(current.PrimaryMessage, message))
+            {
+                header = HsmsMessageHeaderBuilder.GetHeaderInfo(message, DeviceID, current.Id);
+                return true;
+            }
+            header = Array.Empty<byte>();
+            return false;
+        }
+
+        public bool TryGetSentHeader(SecsMessage message, out byte[] header)
+        {
+            if (_sentHeaders.TryGetValue(message, out var snapshot))
+            {
+                header = snapshot.Header.ToArray();
+                return header.Length == 10;
+            }
+            header = Array.Empty<byte>();
+            return false;
+        }
+
         #region 依赖注入属性
         internal LogManager _logManager;
         internal ILog log => _logManager["SEMILog"];
@@ -486,7 +514,7 @@ namespace SecsGem.Runtime.Transport
                 else
                 {
                     // 无订阅者：直接回 S9F7 兜底，避免 Host 等待 T3 超时
-                    await wrapper.TryReplyAsync(null).ConfigureAwait(false);
+                    await ReplyAsync(msg, null).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
@@ -495,7 +523,7 @@ namespace SecsGem.Runtime.Transport
                 RaiseError($"处理主消息 S{msg.S}F{msg.F} 异常: {ex.Message}");
                 try
                 {
-                    await wrapper.TryReplyAsync(null).ConfigureAwait(false); // replyMessage=null 自动触发 S9F7
+                    await ReplyAsync(msg, null).ConfigureAwait(false); // 支持非法数据主消息未置 W 位。
                 }
                 catch (Exception inner)
                 {
@@ -552,6 +580,7 @@ namespace SecsGem.Runtime.Transport
             {
                 SecsItem = pItems
             };
+            if (secsMessage.S == 9 && IsWait) throw new ArgumentException("S9 通知必须 W=0。", nameof(IsWait));
             return await _secsGem.SendAsync(secsMessage).ConfigureAwait(false);
         }
 
@@ -576,6 +605,7 @@ namespace SecsGem.Runtime.Transport
             {
                 SecsItem = pSecsMessage.SecsItem
             };
+            if (sendMsg.S == 9 && IsWait) throw new ArgumentException("S9 通知必须 W=0。", nameof(IsWait));
             return await _secsGem.SendAsync(sendMsg).ConfigureAwait(false);
         }
 
@@ -600,6 +630,7 @@ namespace SecsGem.Runtime.Transport
             {
                 SecsItem = parsed.SecsItem
             };
+            if (sendMsg.S == 9 && IsWait) throw new ArgumentException("S9 通知必须 W=0。", nameof(IsWait));
             return await _secsGem.SendAsync(sendMsg).ConfigureAwait(false);
         }
 
@@ -621,6 +652,13 @@ namespace SecsGem.Runtime.Transport
                 throw new TimeoutException("找不到对应的主消息（只能在接收处理上下文中调用 ReplyAsync）");
             }
 
+            if (pSecsMessage.S == 9) return; // S9 永不产生协议应答。
+            if (pItems == null && !pSecsMessage.ReplyExpected)
+            {
+                var header = HsmsMessageHeaderBuilder.GetHeaderInfo(pSecsMessage, DeviceID, recv.Id);
+                await Send(new SecsMessage(9, 7) { SecsItem = Item.B(header) }, false).ConfigureAwait(false);
+                return;
+            }
             SecsMessage replyMessage = null;
 
             // pItems=null 时传null给TryReplyAsync，底层自动触发S9F7错误指令
@@ -660,6 +698,28 @@ namespace SecsGem.Runtime.Transport
                 ID = systembyte;
                 log?.Add($"<-- [0x{systembyte:X8}] {msg.ToSml()}\n");
 
+                // secs4net 将 S9 作为错误/次消息处理，不投递主消息通道。
+                if (msg.S == 9)
+                {
+                    var handlers = OnReply;
+                    if (handlers != null)
+                    {
+                        var sml = msg.ToSml();
+                        var snapshot = sml.ToSecsMessage(); // 异步通知不能捕获 SDK 借用内存。
+                        TrackNotification(System.Threading.Tasks.Task.Run(async () =>
+                        {
+                            using (snapshot)
+                            {
+                                foreach (SecsHandle subscriber in handlers.GetInvocationList())
+                                {
+                                    try { await subscriber(snapshot, $"[0x{systembyte:X8}] {sml}\n").ConfigureAwait(false); }
+                                    catch (Exception ex) { RaiseError($"S9 通知处理异常: {ex.Message}"); }
+                                }
+                            }
+                        }));
+                    }
+                    return;
+                }
                 // 偶数F = Host 对设备主动消息的回复：仅通知，不影响协议处理
                 if (msg.F % 2 == 0)
                 {
@@ -687,6 +747,9 @@ namespace SecsGem.Runtime.Transport
             lock (obj_out)
             {
                 ID = systembyte;
+                if (msg.ReplyExpected && msg.S != 9)
+                    _sentHeaders.GetValue(msg, _ => new SentHeaderSnapshot()).Header =
+                        HsmsMessageHeaderBuilder.GetHeaderInfo(msg, DeviceID, systembyte);
                 string message = $"--> [0x{systembyte:X8}] {msg.ToSml()}\n";
                 SafeInvoke(OnSend, msg, message);
                 log?.Add(message);

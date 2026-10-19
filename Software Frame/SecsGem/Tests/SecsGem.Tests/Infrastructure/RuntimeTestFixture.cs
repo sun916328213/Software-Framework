@@ -25,10 +25,12 @@ internal static class RuntimeTestFixture
     /// 测试相关入口 Create；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 RegisterSingleton、RegisterTypes、RegisterInstance；具体条件和先后次序见方法体。
     /// </summary>
-    internal static SecsGemRuntime Create(InMemorySecsTransport transport)
+    internal static SecsGemRuntime Create(InMemorySecsTransport transport) => Create(transport, TimeProvider.System);
+
+    internal static SecsGemRuntime Create(InMemorySecsTransport transport, TimeProvider timeProvider)
     {
         var container = NewContainer();
-        var runtime = new SecsGemRuntime(container, transport);
+        var runtime = new SecsGemRuntime(container, transport, timeProvider);
         container.RegisterInstance(typeof(SecsGemRuntime), runtime);
         return runtime;
     }
@@ -40,11 +42,13 @@ internal static class RuntimeTestFixture
     /// 才能覆盖 secs4net 内部"报文在建通道之前被丢弃"的那段路径 —— 假传输把它整段绕开了。
     /// </para>
     /// </summary>
-    internal static SecsGemRuntime CreateReal()
+    internal static SecsGemRuntime CreateReal() => CreateReal(TimeProvider.System);
+
+    internal static SecsGemRuntime CreateReal(TimeProvider timeProvider)
     {
         var container = NewContainer();
         var transport = new Secs4NetTransport(container);
-        var runtime = new SecsGemRuntime(container, transport);
+        var runtime = new SecsGemRuntime(container, transport, timeProvider);
         container.RegisterInstance(typeof(SecsGemRuntime), runtime);
         return runtime;
     }

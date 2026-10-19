@@ -68,7 +68,7 @@ namespace SecsGem.Runtime
         /// 初始化 SecsGemRuntime 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
         /// 正文中的关键协作调用包括 nameof、Resolve、SetConnection、AutoRegisterHandlers；具体条件和先后次序见方法体。
         /// </summary>
-        internal SecsGemRuntime(IContainerProvider container, ISecsTransport transport)
+        internal SecsGemRuntime(IContainerProvider container, ISecsTransport transport, TimeProvider? timeProvider = null)
         {
             _container = container;
             TerminalDisplay = new TerminalMessageEventDisplay((title, message) => TerminalMessageReceived?.Invoke(title, message));
@@ -79,7 +79,8 @@ namespace SecsGem.Runtime
             _statusManager.SetConnection(_transport.IsConnected);
             _messageRegistry.AutoRegisterHandlers();
             _dataBinding = new SecsDataBinding(_vidManager, _statusManager);
-            _protocolEngine = new SecsProtocolEngine(_messageRegistry, _dataBinding, _transport, Send, ReplyAsync, RaiseError);
+            _protocolScenarios = new SecsProtocolScenarios(_transport, (order, data) => SendItem(order, false, data), Info, timeProvider ?? TimeProvider.System);
+            _protocolEngine = new SecsProtocolEngine(_messageRegistry, _dataBinding, _transport, Send, ReplyAsync, RaiseError, _protocolScenarios.ObserveResult, _protocolScenarios.PrepareReply);
             _transport.OnReceive += SecsBase_OnReceiveAsync;
             _transport.OnReply += SecsBase_OnReply;
             _transport.OnConnectChanged += SecsControl_OnConnectChanged;
@@ -95,6 +96,7 @@ namespace SecsGem.Runtime
             status.SetConnection(e == ConnectionState.Selected);
             if (e != ConnectionState.Selected)
             {
+                _protocolScenarios.Reset();
                 // 断线仍记录 Offline，待下一次联机再上报。
                 status.UpdateSEMIMode(status.Mode_VIDName, ESecsMode.Offline);
             }
@@ -364,6 +366,9 @@ namespace SecsGem.Runtime
         /// <param name="pData">SecsMessage转string数据</param>
         public async Task SecsBase_OnReceiveAsync(SecsMessage pSecsMessage, string pData)
         {
+            if (_disposed || pSecsMessage is null) return;
+            _protocolScenarios.ObserveArrival(pSecsMessage);
+            if (await _protocolScenarios.RejectOversizedAsync(pSecsMessage).ConfigureAwait(false)) return;
             var reply = await _protocolEngine.ReceiveAsync(pSecsMessage).ConfigureAwait(false);
             NotifyProcessProgramDeletion(pSecsMessage, reply);
             NotifyFormattedProcessProgramReceived(pSecsMessage, reply);
@@ -385,16 +390,17 @@ namespace SecsGem.Runtime
         /// 接收回复数据 Host被动->Device
         /// <para>
         /// 注意：偶数 F 的应答经 secs4net 内部的应答匹配直接回到发送处，不经过主消息通道，
-        /// 所以这个方法实际不会被调用到（<c>DispatchPrimaryAsync</c> 只处理奇数 F 的主消息）。
-        /// 保留空实现，不要在这里加逻辑。
+        /// MessageIn 日志钩子会提供诊断通知；普通应答不重复处理，S9 单向错误通知进入诊断路径。
         /// </para>
         /// </summary>
         /// <param name="pSecsMessage">SecsMessage格式数据</param>
         /// <param name="pData">SecsMessage转string数据</param>
         public Task SecsBase_OnReply(SecsMessage pSecsMessage, string pData)
         {
-            //不做处理
-            return Task.CompletedTask;
+            // S9 由底层次消息通道转入，只记录诊断，绝不生成应答。
+            return !_disposed && pSecsMessage?.S == 9
+                ? _protocolEngine.ReceiveAsync(pSecsMessage)
+                : Task.CompletedTask;
         }
         #endregion
 

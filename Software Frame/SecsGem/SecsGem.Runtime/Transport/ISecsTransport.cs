@@ -15,6 +15,10 @@ internal interface ISecsTransport : IDisposable
     ushort DeviceID { get; set; }
     int ID { get; set; }
 
+    /// <summary>按具体消息读取独立报头快照，避免用全局 ID 关联并发事务。</summary>
+    bool TryGetReceivedHeader(SecsMessage message, out byte[] header);
+    bool TryGetSentHeader(SecsMessage message, out byte[] header);
+
     event EventHandler<ConnectionState> OnConnectChanged;
     event SecsHandle OnSend;
     event SecsHandle OnReceive;

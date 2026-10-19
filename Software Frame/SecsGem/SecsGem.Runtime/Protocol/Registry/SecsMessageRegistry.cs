@@ -176,9 +176,17 @@ namespace SecsGem.Runtime.Protocol.Registry
         }
 
         /// <summary>
-        /// 获取所有已注册的处理器类型
+        /// 判断该 Stream 是否有已注册处理器，用于区分 S9F3 和 S9F5。
         /// </summary>
-        /// <returns>处理器类型列表</returns>
+        /// <returns>是否支持该 Stream</returns>
+        public bool IsStreamSupported(byte stream)
+        {
+            if (_disposed) throw new ObjectDisposedException(nameof(SecsMessageRegistry));
+            if (!_isInitialized) AutoRegisterHandlers();
+            return _handlerTypeCache.Keys.Any(name => name.StartsWith($"S{stream}F", StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>获取所有已注册的处理器类型。</summary>
         public IEnumerable<Type> GetRegisteredHandlers()
         {
             if (_disposed) throw new ObjectDisposedException(nameof(SecsMessageRegistry));

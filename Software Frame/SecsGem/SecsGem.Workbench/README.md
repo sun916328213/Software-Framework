@@ -80,6 +80,20 @@ Runtime 的 `Different_Command_And_Parameter_Counts_Roundtrip_Without_Truncation
 
 以上均为新增测试用例，当前环境缺 Bash，**尚未执行，不代表已通过**。
 
+## S9 业务场景
+
+工作台启动已启用完整 SECS-II 正文 **1 MiB** 上限和配方下载等待 **30 秒**，不只是暴露发送接口：
+
+- S7F1 声明的下载已超过容量：S7F2=2，不建立会话。
+- S7F2=0 成功发出：等待同 PPID 的 S7F3；正常到达后取消等待，继续原下载/转换流程。
+- 期限内未到达：自动 S9F13（MEXP=S7F3，EDID=PPID），不创建或切换配方；其他 PPID 不会误完成等待。
+- 实际消息超限：执行处理器前自动 S9F11，不覆盖旧配方；同 PPID 已到达但被拒绝，不再追加“未收到”的 S9F13。
+- 断线和宿主释放取消等待，重连不补发旧超时；迟到下载保持作为独立请求接收的兼容行为。
+
+普通生产宿主默认不启用这些演示策略，可在断线时通过 `ConfigureProtocolScenarios` 显式配置。会话等待不是 T3，不混发 S9F9；下载和超时都不自动应用工艺。
+
+实际 Host 操作步骤、流程状态、所有权表、测试入口及尚未取得的验证证据，见 [S9 业务使用与验收](../SecsGem.Runtime/Protocol/Messages/S9/README.md)。新增业务/回环用例尚未执行，不能视为真实设备验收。
+
 ## 所有权与验证
 
 App 持有本地配方集合。Controls 借用集合并持有接收订阅，退订仅发生在 Workspace.Dispose，而非页面 Unloaded；回调使用独立字节副本，释放后丢弃排队通知。页面只释放自己的 VM，Runtime 由 App 关闭和释放。

@@ -241,6 +241,7 @@ public partial class SecsGemRuntime : ISecsGemLogger
         _disposed = true;
         if (!disposing) return;
 
+        _protocolScenarios.Dispose();
         _controlListenerCts?.Cancel();
         _controlListenerCts?.Dispose();
         _transport.OnReceive -= SecsBase_OnReceiveAsync;

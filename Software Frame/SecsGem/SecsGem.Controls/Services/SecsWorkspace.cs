@@ -124,7 +124,7 @@ public sealed partial class SecsWorkspace : IDisposable
     /// 处理对应通知、事件或生命周期回调；对应入口为 OnReply。
     /// 正文中的关键协作调用包括 LogMessageAsync；具体条件和先后次序见方法体。
     /// </summary>
-    private Task OnReply(SecsMessage message, string data) => LogMessageAsync("应答", message, data);
+    private Task OnReply(SecsMessage message, string data) => LogMessageAsync(message.S == 9 ? "接收" : "应答", message, data);
     /// <summary>
     /// 处理对应通知、事件或生命周期回调；对应入口为 OnInfo。
     /// 正文中的关键协作调用包括 Post、AddLog；具体条件和先后次序见方法体。

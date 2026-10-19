@@ -21,6 +21,8 @@ internal sealed class SecsProtocolEngine
     private readonly Func<string, Item, bool, Task<SecsMessage>> _send;
     private readonly Func<SecsMessage, Item, Task> _reply;
     private readonly Action<string> _error;
+    private readonly Action<SecsMessage, Item?>? _replyCompleted;
+    private readonly Action<SecsMessage, Item?>? _prepareReply;
 
     /// <summary>
     /// 初始化 SecsProtocolEngine 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
@@ -31,7 +33,7 @@ internal sealed class SecsProtocolEngine
         ISecsTransport transport,
         Func<string, Item, bool, Task<SecsMessage>> send,
         Func<SecsMessage, Item, Task> reply,
-        Action<string> error = null)
+        Action<string> error = null, Action<SecsMessage, Item?>? replyCompleted = null, Action<SecsMessage, Item?>? prepareReply = null)
     {
         _registry = registry;
         _binding = binding;
@@ -39,6 +41,8 @@ internal sealed class SecsProtocolEngine
         _send = send;
         _reply = reply;
         _error = error;
+        _replyCompleted = replyCompleted;
+        _prepareReply = prepareReply;
     }
 
     /// <summary>
@@ -51,14 +55,29 @@ internal sealed class SecsProtocolEngine
         if (message == null) return null;
 
         var order = $"S{message.S}F{message.F}";
+        if (message.S == 9)
+        {
+            // S9 是单向通知；错误 W 位或畸形正文也不能引发 S9 应答循环。
+            try { _error?.Invoke($"收到 {order}{(message.ReplyExpected ? "（忽略非法 W 位）" : "")}：{S9ProtocolCodec.Describe(message)}"); }
+            catch (ArgumentException ex) { _error?.Invoke($"收到非法 {order}，仅记录、不回包：{ex.Message}"); }
+            return null;
+        }
         if (order is "S1F3" or "S1F11")
         {
             _binding.Refresh();
         }
 
-        var handler = _registry.GetHandler(order)
-            ?? throw new InvalidOperationException($"未找到对应的处理器: {order}");
+        var handler = _registry.GetHandler(order);
+        if (handler is null)
+        {
+            var errorOrder = _registry.IsStreamSupported(message.S) ? "S9F5" : "S9F3";
+            if (!_transport.TryGetReceivedHeader(message, out var header))
+                throw new InvalidOperationException($"{order} 无法取得原始事务报头。");
+            await _send(errorOrder, S9ProtocolCodec.Header(new S9HeaderData(header)), false).ConfigureAwait(false);
+            return null;
+        }
         var item = await handler.GetReplyItemAsync(message).ConfigureAwait(false);
+        _prepareReply?.Invoke(message, item);
 
         // 回包失败绝不能吞掉事件。
         // Host 的主消息没带 W 位时，secs4net 的 TryReplyAsync 直接抛
@@ -70,6 +89,7 @@ internal sealed class SecsProtocolEngine
         try
         {
             await _reply(message, item).ConfigureAwait(false);
+            _replyCompleted?.Invoke(message, item);
         }
         catch (Exception ex)
         {
@@ -91,6 +111,8 @@ internal sealed class SecsProtocolEngine
     internal async Task SendItemAsync(string order, bool wait, params object[] data)
     {
         if (string.IsNullOrEmpty(order)) return;
+        if (wait && order.StartsWith("S9F", StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("S9 是单向通知，不能请求应答。", nameof(wait));
 
         var handler = _registry.GetHandler(order)
             ?? throw new InvalidOperationException($"未找到对应的处理器: {order}");
@@ -127,15 +149,17 @@ internal sealed class SecsProtocolEngine
         }
         catch (SecsException ex)
         {
-            if (ex.Message.Contains("T3 Timeout", StringComparison.Ordinal))
+            if (ex.SecsMessage is { S: not 9, ReplyExpected: true } timedOut
+                && ex.Message.Contains("T3", StringComparison.OrdinalIgnoreCase)
+                && ex.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase))
             {
-                var timeout = new SS9F9
+                try
                 {
-                    SecsMessage = ex.SecsMessage,
-                    DeviceID = _transport.DeviceID,
-                    ID = _transport.ID
-                };
-                await SendItemAsync("S9F9", false, timeout).ConfigureAwait(false);
+                    if (_transport.TryGetSentHeader(timedOut, out var header))
+                        await SendItemAsync("S9F9", false, new S9HeaderData(header)).ConfigureAwait(false);
+                    else _error?.Invoke("T3 超时但缺少对应发送报头，不以全局最后消息编号伪造 S9F9。");
+                }
+                catch (Exception reportError) { _error?.Invoke($"T3 超时后的 S9F9 通知失败：{reportError.Message}"); }
                 throw new Exception($"T3超时: {ex.Message}", ex);
             }
 
