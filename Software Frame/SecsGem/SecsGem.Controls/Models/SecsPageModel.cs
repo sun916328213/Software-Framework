@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using SecsGem.Runtime.Variable;
 using Secs4Net;
+using SecsGem.Runtime;
 using System.Collections.Generic;
 
 namespace SecsGem.Controls.Models;
@@ -54,6 +55,30 @@ public partial class SecsPageModel : ObservableObject
     [ObservableProperty] private CEIDInfo? _selectedEvent = null;
     [ObservableProperty] private ReportInfo? _selectedReport = null;
     [ObservableProperty] private AlarmInfo? _selectedAlarm = null;
+
+    // S7 是协议诊断视图，不在此持有或编辑 MachineApp 的业务配方。
+    [ObservableProperty] private IReadOnlyList<SecsGemProcessProgramSummary> _processPrograms = [];
+    [ObservableProperty] private SecsGemProcessProgramSummary? _selectedProcessProgram;
+    [ObservableProperty] private string _processProgramPreview = "请选择目录项查看只读 SML。";
+    [ObservableProperty] private bool _hasRecipeSource;
+    [ObservableProperty] private string _hostCurrentPpid = "未选择";
+    [ObservableProperty] private string _recipePpid = "";
+    [ObservableProperty] private int _recipeRequestIndex = 4;
+    [ObservableProperty] private string _recipeRequestSml = "";
+    [ObservableProperty] private string _recipeJsonPreview = "";
+    [ObservableProperty] private string _recipeFormattedSml = "";
+    [ObservableProperty] private string _recipeStatus = "当前配方由宿主手动切换；本页只负责通信联调。";
+    public IReadOnlyList<string> RecipeRequestNames { get; } =
+    [
+        "S7F1 H→E / S7F2 E→H · 加载询问",
+        "S7F3 H→E / S7F4 E→H · 二进制下载",
+        "S7F5 H→E / S7F6 E→H · 二进制读取",
+        "S7F17 H→E / S7F18 E→H · 删除指定配方",
+        "S7F19 H→E / S7F20 E→H · 查询 PPID 列表",
+        "S7F23 H→E / S7F24 E→H · 使用输入的格式化 SML",
+        "S7F25 H→E / S7F26 E→H · 格式化读取",
+        "S7F17 H→E / S7F18 E→H · 删除全部（危险）"
+    ];
 }
 
 /// <summary>

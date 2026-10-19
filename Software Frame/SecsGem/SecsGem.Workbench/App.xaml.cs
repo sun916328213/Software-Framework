@@ -43,6 +43,8 @@ public partial class App : PrismApplication
     protected override void RegisterTypes(IContainerRegistry registry)
     {
         registry.RegisterSingleton<ThemeService>();
+        registry.RegisterSingleton<Services.RecipeTestWorkspace>();
+        registry.Register(typeof(object), typeof(RecipeTestView), nameof(RecipeTestView));
     }
     /// <summary>
     /// 配置当前对象或组合入口；对应入口为 ConfigureModuleCatalog。
@@ -95,7 +97,15 @@ public partial class App : PrismApplication
         // 表空时这些路径静默跳过而不报错。工作台源码不带 Config 目录，走 DataBase.LoadDefaults 的打底项。
         try { runtime.Config(); }
         catch (Exception ex) { Console.Error.WriteLine($"GEM 配置加载失败（继续启动）：{ex.Message}"); }
-        Container.Resolve<SecsGem.Controls.Services.SecsWorkspace>().EnableWorkbenchCommandHandler();
+        var workspace = Container.Resolve<SecsGem.Controls.Services.SecsWorkspace>();
+        workspace.EnableWorkbenchCommandHandler();
+        var recipes = Container.Resolve<Services.RecipeTestWorkspace>().Model;
+        workspace.ConfigureRecipeSource(recipes.Recipes, () => recipes.CurrentPpid, recipes.NotifyRecipesChanged,
+            recipes.NotifyRecipeReceived, recipes.NotifyRecipesDeleted, recipes.NotifyFormattedRecipeReceived,
+            formattedCodec: new SecsGem.Controls.Services.ParameterBlockRecipeCodec<Models.WorkbenchRecipe>(
+                Models.WorkbenchRecipe.FormattedParameterNames, model: "WORKBENCH", softwareRevision: "1.0"));
+        // 独立模拟宿主：启动时把示例写入同一个协议内存库，使 Host 的查询/读取立即可用。
+        workspace.ImportHostRecipes();
         _lifetime = new WorkbenchLifetime(MainWindow,
             () => { (MainWindow.DataContext as IDisposable)?.Dispose(); return ValueTask.CompletedTask; },
             () => WorkbenchLifetime.CloseRegionAsync(Container.Resolve<IRegionManager>(), ViewModels.MainWindowViewModel.MainRegion),

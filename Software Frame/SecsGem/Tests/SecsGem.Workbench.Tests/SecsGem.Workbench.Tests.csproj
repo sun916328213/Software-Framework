@@ -38,5 +38,7 @@ SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和
 
   <ItemGroup>
     <Compile Include="../../../../Build/TestSupport/WorkbenchTestLifetime.cs" Link="TestSupport/WorkbenchTestLifetime.cs" />
+    <Compile Include="../SecsGem.Tests/Fakes/InMemorySecsTransport.cs" Link="Fakes/InMemorySecsTransport.cs" />
+    <Compile Include="../SecsGem.Tests/Infrastructure/HsmsHostSimulator.cs" Link="Infrastructure/HsmsHostSimulator.cs" />
   </ItemGroup>
 </Project>

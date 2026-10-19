@@ -15,7 +15,7 @@ using Secs4Net;
 namespace SecsGem.Controls.Services;
 
 /// <summary>SECS 页面流程、事件订阅和状态刷新；不拥有注入的运行时。</summary>
-public sealed class SecsWorkspace : IDisposable
+public sealed partial class SecsWorkspace : IDisposable
 {
     private readonly SecsGemRuntime _runtime;
     private readonly VIDManager _catalog;
@@ -44,6 +44,8 @@ public sealed class SecsWorkspace : IDisposable
         _catalog = catalog;
         _dispatcher = dispatcher;
 
+        _runtime.ProcessProgramsDeleted += OnProcessProgramsDeleted;
+        _runtime.FormattedProcessProgramReceived += OnFormattedProcessProgramReceived;
         _runtime.OnConnectChanged += OnConnectChanged;
         _runtime.OnSend += OnSend;
         _runtime.OnReceive += OnReceive;
@@ -62,6 +64,7 @@ public sealed class SecsWorkspace : IDisposable
 
         RefreshState();
         RefreshCatalog();
+        RefreshProcessPrograms();
     }
 
     /// <summary>
@@ -77,7 +80,7 @@ public sealed class SecsWorkspace : IDisposable
     public IDisposable Subscribe()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        if (++_subscriptions == 1) { RefreshState(); _stateTimer.Start(); }
+        if (++_subscriptions == 1) { RefreshState(); RefreshProcessPrograms(); _stateTimer.Start(); }
         return new Lease(this);
     }
     /// <summary>
@@ -144,7 +147,36 @@ public sealed class SecsWorkspace : IDisposable
     /// </summary>
     private Task LogMessageAsync(string direction, SecsMessage message, string data)
     {
-        Post(() => AddLog(direction, $"S{message.S}F{message.F} {data}"));
+        var text = $"S{message.S}F{message.F} {data}";
+        if (direction == "发送" && message.S == 7 && message.F == 26
+            && message.SecsItem is { Format: SecsFormat.List } reply)
+        {
+            var ppid = reply.Count == 4 && reply.Items[0].Format == SecsFormat.ASCII
+                ? reply.Items[0].GetString() : "<无 ASCII PPID>";
+            var summary = reply.Count == 0 ? "L[0]：没有该 PPID 的格式化正文"
+                : reply.Count == 4 ? $"L[4]：PPID={ppid}，MDLN长度={reply.Items[1].Count}，SOFTREV长度={reply.Items[2].Count}，命令数={reply.Items[3].Count}"
+                : $"非预期 L[{reply.Count}]";
+            text = $"S7F26 {summary}\n{data}"; // 在传输 Item 释放前记录实际回包，而不是 Host 模板。
+        }
+        var refreshRecipes = direction == "接收" && message.S == 7;
+        string? downloadedId = null;
+        byte[]? downloadedBody = null;
+        if (refreshRecipes && message.F == 3
+            && message.SecsItem is { Format: SecsFormat.List, Count: 2 } program
+            && program.Items[0].Format == SecsFormat.ASCII && program.Items[1].Format == SecsFormat.Binary)
+        {
+            // Dispatcher 回调前报文可能已释放，只保留独立快照，不捕获借用 Item。
+            downloadedId = program.Items[0].GetString();
+            downloadedBody = program.Items[1].GetMemory<byte>().ToArray();
+        }
+        Post(() =>
+        {
+            AddLog(direction, text);
+            if (downloadedId != null && downloadedBody != null)
+                SyncDownloadedRecipe(downloadedId, downloadedBody);
+            // Runtime 先处理主消息，Workspace 后收到通知。
+            if (refreshRecipes) RefreshProcessPrograms();
+        });
         return Task.CompletedTask;
     }
 
@@ -953,12 +985,15 @@ public sealed class SecsWorkspace : IDisposable
         if (_disposed) return;
         _disposed = true;
         Model.IsClosed = true;
+        ClearRecipeSource();
         Model.IsConnected = false;
         _stateTimer.Stop();
         _stateTimer.Tick -= OnStateTick;
         EventHelper.UnregisterEvent("S2F33", _onHostConfigChanged);
         EventHelper.UnregisterEvent("S2F35", _onHostConfigChanged);
         EventHelper.UnregisterEvent("S2F37", _onHostConfigChanged);
+        _runtime.ProcessProgramsDeleted -= OnProcessProgramsDeleted;
+        _runtime.FormattedProcessProgramReceived -= OnFormattedProcessProgramReceived;
         _runtime.OnConnectChanged -= OnConnectChanged;
         _runtime.OnSend -= OnSend;
         _runtime.OnReceive -= OnReceive;

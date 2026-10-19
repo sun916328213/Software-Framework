@@ -46,9 +46,9 @@ internal sealed class SecsProtocolEngine
     /// 正文中的关键协作调用包括 Refresh、GetHandler、ConfigureAwait、GetReplyItemAsync、_reply；具体条件和先后次序见方法体。
     /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
     /// </summary>
-    internal async Task ReceiveAsync(SecsMessage message)
+    internal async Task<Item?> ReceiveAsync(SecsMessage message)
     {
-        if (message == null) return;
+        if (message == null) return null;
 
         var order = $"S{message.S}F{message.F}";
         if (order is "S1F3" or "S1F11")
@@ -79,6 +79,7 @@ internal sealed class SecsProtocolEngine
         // 把回包 item 一并带出：监听方（如 ConnectManager.Online_HtoE）需要区分
         // "收到请求"与"接受请求"——ONLACK=2(NOT_READY) 被拒时不得切控制状态。
         EventHelper.TriggerEvent(order, item);
+        return item;
     }
 
     /// <summary>

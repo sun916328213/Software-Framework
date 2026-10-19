@@ -14,27 +14,20 @@ using System.Collections.Generic;
 namespace SecsGem.Runtime.Order.S7
 {
     /// <summary>
-    /// S7F19 - Current EPPD Request (Host → Equipment)
-    /// 请求当前有效的设备过程程序目录 (Equipment Process Program Directory)
-    /// SEMI E30 GEM Standard
-    /// 设备端收到 S7F19 请求，回复 S7F20
+    /// S7F19：查询设备内存目录的 PPID 列表，不含参数、不切换配方。
+    /// 方向：S7F19 H→E / S7F20 E→H。
+    /// 请求无正文；回复 L[n] A PPID，空目录为 L[0]。不会自动读取 MachineApp 配方库。
     /// </summary>
     [SecsOrder("S7F19")]
     class S7F19 : SecsOrderBase
     {
-        /// <summary>
-        /// 收到 S7F19 请求，生成 S7F20 回复 - Current EPPD Data
-        /// S7F19 请求体为空，直接返回当前过程程序目录
-        /// S7F20 结构: L, n
-        ///   1. <L, 2> Process Program List
-        ///      1. <A> PPID (Process Program ID)
-        ///      2. <A> PPBODY (可选, 格式化过程程序本体)
-        /// </summary>
+        /// <summary>读取 PPID 列表并回复 S7F20；请求带正文或组包失败时返回 null，走 S9F7。</summary>
         public override Item GetReplyItem(SecsMessage pSecsMessage)
         {
             try
             {
-                // S7F19 请求体为空，忽略 pSecsMessage.SecsItem
+                // S7F19 是 header-only，L[0] 也不是合法正文。
+                if (pSecsMessage.SecsItem != null) return null;
                 // 直接从 DeviceManager 获取当前过程程序目录并构建 S7F20 回复
                 
                 var ppList = DeviceManager?.GetProcessProgramDirectory() ?? new List<ProcessProgramInfo>();
@@ -44,12 +37,7 @@ namespace SecsGem.Runtime.Order.S7
                 {
                     if (!string.IsNullOrEmpty(pp.PPID))
                     {
-                        // 每个过程程序: L, 2  (PPID, PPBODY)
-                        var ppItem = Item.L(
-                            Item.A(pp.PPID),
-                            Item.A(pp.PPBODY ?? string.Empty)
-                        );
-                        items.Add(ppItem);
+                        items.Add(Item.A(pp.PPID));
                     }
                 }
 
@@ -59,24 +47,24 @@ namespace SecsGem.Runtime.Order.S7
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"S7F19 生成 S7F20 失败: {ex.Message}");
-                // 出错返回空列表
-                return Item.L();
+                // 不把内部错误伪装成“目录为空”；由传输层走 S9F7。
+                return null;
             }
         }
     }
 
     /// <summary>
-    /// 过程程序信息
+    /// 内存目录中的过程程序信息；不是机台当前选中配方或完整业务配方模型。
     /// </summary>
     public class ProcessProgramInfo
     {
         /// <summary>
-        /// 过程程序 ID
+        /// 配方标识符，当前实现使用 ASCII 字符串；数字形式的编号也保留前导零。
         /// </summary>
         public string PPID { get; set; } = string.Empty;
 
         /// <summary>
-        /// 过程程序本体 (可选)
+        /// 兼容旧调用保留的可选文本字段，不进入 S7F20，也不是 S7F3 的二进制 PPBODY 存储。
         /// </summary>
         public string PPBODY { get; set; } = string.Empty;
     }

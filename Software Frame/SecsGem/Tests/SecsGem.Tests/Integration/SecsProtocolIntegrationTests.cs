@@ -223,11 +223,77 @@ namespace SecsGem.Tests.Integration
             Assert.Equal(ESecsMode.Offline, control.GetDeviceMode());
         }
 
-        /// <summary>
-        /// 测试相关入口 WaitUntilAsync；准备条件、协作调用与结果检查以方法正文为准。
-        /// 正文中的关键协作调用包括 condition、ConfigureAwait、Delay；具体条件和先后次序见方法体。
-        /// 此入口等待异步协作完成；await 本身不保证切换到后台线程，界面线程要求仍由调用上下文决定。
-        /// </summary>
+        /// <summary>本机回环上的 S7 独立字节契约测试，不连接真实设备。</summary>
+        [Fact(Timeout = 30000)]
+        public async Task S7_Golden_Wire_Messages_Preserve_Function_Wbit_And_SystemBytes()
+        {
+            // 只连接本测试创建的 Loopback Host。报文和期望均为手工 SECS-II 字节，
+            // 不用生产 Item 编码器生成 golden，避免同一个编码错误自证正确。
+            using var host = HsmsHostSimulator.Start();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+            using var control = CreateControl();
+            await control.ConnectAsync(true, "127.0.0.1", host.Port, DeviceId);
+            await host.WaitForDeviceAsync(cts.Token);
+            await host.CompleteSelectAsync(cts.Token);
+            await WaitUntilAsync(() => control.IsConnected, TimeSpan.FromSeconds(5), "设备进入 Selected");
+
+            var cases = new (byte Function, byte[] Request, byte[] Response)[]
+            {
+                (1, new byte[] { 0x01, 2, 0x41, 2, 0x52, 0x31, 0xB1, 4, 0, 0, 0, 2 },
+                    new byte[] { 0x21, 1, 0 }),
+                (3, new byte[] { 0x01, 2, 0x41, 2, 0x52, 0x31, 0x21, 2, 0, 255 },
+                    new byte[] { 0x21, 1, 0 }),
+                (5, new byte[] { 0x41, 2, 0x52, 0x31 },
+                    new byte[] { 0x01, 2, 0x41, 2, 0x52, 0x31, 0x21, 2, 0, 255 }),
+                (19, Array.Empty<byte>(), new byte[] { 0x01, 1, 0x41, 2, 0x52, 0x31 }),
+                (23, new byte[] { 0x01, 4, 0x41, 2, 0x46, 0x31, 0x41, 1, 0x4D, 0x41, 1, 0x56,
+                    0x01, 1, 0x01, 2, 0xA9, 2, 0, 12, 0x01, 1, 0x91, 4, 0x3F, 0xA0, 0, 0 },
+                    new byte[] { 0x21, 1, 0 }),
+                (25, new byte[] { 0x41, 2, 0x46, 0x31 },
+                    new byte[] { 0x01, 4, 0x41, 2, 0x46, 0x31, 0x41, 1, 0x4D, 0x41, 1, 0x56,
+                    0x01, 1, 0x01, 2, 0xA9, 2, 0, 12, 0x01, 1, 0x91, 4, 0x3F, 0xA0, 0, 0 }),
+                // 兼容扩展：ASCII CCODE 不转成 U2，S7F26 必须原样返回。
+                (23, new byte[] { 0x01, 4, 0x41, 2, 0x46, 0x32, 0x41, 1, 0x4D, 0x41, 1, 0x56,
+                    0x01, 1, 0x01, 2, 0x41, 1, 0x31, 0x01, 1, 0x41, 1, 0x50 },
+                    new byte[] { 0x21, 1, 0 }),
+                (25, new byte[] { 0x41, 2, 0x46, 0x32 },
+                    new byte[] { 0x01, 4, 0x41, 2, 0x46, 0x32, 0x41, 1, 0x4D, 0x41, 1, 0x56,
+                    0x01, 1, 0x01, 2, 0x41, 1, 0x31, 0x01, 1, 0x41, 1, 0x50 }),
+                (17, new byte[] { 0x01, 0 }, new byte[] { 0x21, 1, 0 }),
+                (19, Array.Empty<byte>(), new byte[] { 0x01, 0 }),
+            };
+            uint systemBytes = 0x7000;
+            foreach (var test in cases)
+            {
+                host.SendDataMessage(7, test.Function, true, DeviceId, ++systemBytes, test.Request, cts.Token);
+                var reply = await host.ReadMessageAsync(cts.Token);
+                Assert.Equal((byte)7, reply.S);
+                Assert.Equal((byte)(test.Function + 1), reply.F);
+                Assert.False(reply.WBit);
+                Assert.Equal((byte)0, reply.PType);
+                Assert.Equal(HsmsHostSimulator.StypeData, reply.SType);
+                Assert.Equal(systemBytes, reply.SystemBytes);
+                Assert.Equal(test.Response, reply.Body);
+            }
+
+            // 旧私有 S7F23 L[2] 必须走 S9F7，随后同一连接仍可接收合法请求。
+            host.SendDataMessage(7, 23, true, DeviceId, ++systemBytes,
+                new byte[] { 0x01, 2, 0x41, 2, 0x52, 0x31, 0x01, 0 }, cts.Token);
+            var error = await host.ReadMessageAsync(cts.Token);
+            Assert.Equal((byte)9, error.S);
+            Assert.Equal((byte)7, error.F);
+            Assert.False(error.WBit);
+            Assert.Equal(12, error.Body.Length); // B[10] 原始 MHEAD
+            Assert.Equal((byte)0x21, error.Body[0]);
+            Assert.Equal((byte)10, error.Body[1]);
+            Assert.Equal((byte)23, error.Body[5]);
+            host.SendDataMessage(7, 19, true, DeviceId, ++systemBytes, Array.Empty<byte>(), cts.Token);
+            var directory = await host.ReadMessageAsync(cts.Token);
+            Assert.Equal((byte)20, directory.F);
+            Assert.Equal(systemBytes, directory.SystemBytes);
+            Assert.Equal(new byte[] { 0x01, 0 }, directory.Body);
+        }
+
         private static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout, string description)
         {
             var deadline = DateTime.UtcNow + timeout;

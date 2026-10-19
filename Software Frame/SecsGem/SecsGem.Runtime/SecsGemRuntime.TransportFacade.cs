@@ -244,6 +244,8 @@ public partial class SecsGemRuntime : ISecsGemLogger
         _controlListenerCts?.Cancel();
         _controlListenerCts?.Dispose();
         _transport.OnReceive -= SecsBase_OnReceiveAsync;
+        ProcessProgramsDeleted = null;
+        FormattedProcessProgramReceived = null;
         _transport.OnReply -= SecsBase_OnReply;
         _transport.OnConnectChanged -= SecsControl_OnConnectChanged;
         _transport.Dispose();

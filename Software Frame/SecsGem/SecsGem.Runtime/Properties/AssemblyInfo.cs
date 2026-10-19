@@ -4,3 +4,4 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SecsGem.Tests")]
+[assembly: InternalsVisibleTo("SecsGem.Workbench.Tests")]

@@ -132,8 +132,13 @@ internal sealed class InMemorySecsTransport : ISecsTransport
     /// <summary>
     /// 测试相关入口 EmitReceivedAsync；准备条件、协作调用与结果检查以方法正文为准。
     /// </summary>
-    public Task EmitReceivedAsync(SecsMessage message) =>
-        OnReceive?.Invoke(message, string.Empty) ?? Task.CompletedTask;
+    public async Task EmitReceivedAsync(SecsMessage message)
+    {
+        // 与真实传输一致：先等待 Runtime 完成处理，再通知 Controls 等后续订阅者。
+        if (OnReceive is not { } handlers) return;
+        foreach (SecsHandle handler in handlers.GetInvocationList())
+            await handler(message, string.Empty);
+    }
 
     /// <summary>
     /// 测试相关入口 MessageIn；准备条件、协作调用与结果检查以方法正文为准。

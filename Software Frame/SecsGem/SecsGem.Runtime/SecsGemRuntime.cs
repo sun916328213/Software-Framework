@@ -364,7 +364,9 @@ namespace SecsGem.Runtime
         /// <param name="pData">SecsMessage转string数据</param>
         public async Task SecsBase_OnReceiveAsync(SecsMessage pSecsMessage, string pData)
         {
-            await _protocolEngine.ReceiveAsync(pSecsMessage).ConfigureAwait(false);
+            var reply = await _protocolEngine.ReceiveAsync(pSecsMessage).ConfigureAwait(false);
+            NotifyProcessProgramDeletion(pSecsMessage, reply);
+            NotifyFormattedProcessProgramReceived(pSecsMessage, reply);
         }
 
         /// <summary>

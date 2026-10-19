@@ -15,7 +15,7 @@ namespace SecsGem.Runtime.Manager
     /// <summary>
     /// 设备信息管理
     /// </summary>
-    public class DeviceManager : ManagerBase
+    public partial class DeviceManager : ManagerBase
     {
         /// <summary>
         /// 初始化 DeviceManager 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
@@ -88,13 +88,13 @@ namespace SecsGem.Runtime.Manager
         {
             if (ppList == null) return;
 
-            ProcessProgramDirectory.Clear();
-            foreach (var pp in ppList)
+            var snapshot = ppList.Where(pp => !string.IsNullOrEmpty(pp.PPID))
+                .Select(pp => new ProcessProgramInfo { PPID = pp.PPID, PPBODY = pp.PPBODY }).ToArray();
+            foreach (var pp in snapshot) ProcessProgramCodec.ReadId(Secs4Net.Item.A(pp.PPID));
+            lock (_programGate)
             {
-                if (!string.IsNullOrEmpty(pp.PPID))
-                {
-                    ProcessProgramDirectory[pp.PPID] = pp;
-                }
+                ProcessProgramDirectory.Clear();
+                foreach (var pp in snapshot) ProcessProgramDirectory[pp.PPID] = pp;
             }
 
             System.Diagnostics.Debug.WriteLine($"设备过程程序目录已更新，共 {ProcessProgramDirectory.Count} 个程序");
@@ -107,7 +107,13 @@ namespace SecsGem.Runtime.Manager
         {
             if (programData == null || string.IsNullOrEmpty(programData.PPID)) return;
 
-            ProcessProgramDataStore[programData.PPID] = programData;
+            lock (_programGate)
+            {
+                ProcessProgramDataStore[programData.PPID] = ProcessProgramCodec.ReadFormatted(
+                    ProcessProgramCodec.WriteFormatted(programData));
+                ProcessProgramDataStore[programData.PPID].ReceivedTime = programData.ReceivedTime;
+                ProcessProgramDirectory[programData.PPID] = new ProcessProgramInfo { PPID = programData.PPID };
+            }
 
             System.Diagnostics.Debug.WriteLine($"过程程序数据已更新: PPID={programData.PPID}, Body项数={programData.PPBODY?.Count ?? 0}");
         }
@@ -117,7 +123,9 @@ namespace SecsGem.Runtime.Manager
         /// </summary>
         public List<ProcessProgramInfo> GetProcessProgramDirectory()
         {
-            return new List<ProcessProgramInfo>(ProcessProgramDirectory.Values);
+            lock (_programGate)
+                return ProcessProgramDirectory.Values
+                    .Select(pp => new ProcessProgramInfo { PPID = pp.PPID, PPBODY = pp.PPBODY }).ToList();
         }
 
         /// <summary>
@@ -126,8 +134,11 @@ namespace SecsGem.Runtime.Manager
         public ProcessProgramInfo GetProcessProgramInfo(string ppid)
         {
             if (string.IsNullOrEmpty(ppid)) return null;
-            ProcessProgramDirectory.TryGetValue(ppid, out var info);
-            return info;
+            lock (_programGate)
+            {
+                ProcessProgramDirectory.TryGetValue(ppid, out var info);
+                return info == null ? null : new ProcessProgramInfo { PPID = info.PPID, PPBODY = info.PPBODY };
+            }
         }
 
         /// <summary>
@@ -136,8 +147,14 @@ namespace SecsGem.Runtime.Manager
         public ProcessProgramData GetProcessProgramData(string ppid)
         {
             if (string.IsNullOrEmpty(ppid)) return null;
-            ProcessProgramDataStore.TryGetValue(ppid, out var data);
-            return data;
+            lock (_programGate)
+            {
+                ProcessProgramDataStore.TryGetValue(ppid, out var data);
+                if (data == null) return null;
+                var snapshot = ProcessProgramCodec.ReadFormatted(ProcessProgramCodec.WriteFormatted(data));
+                snapshot.ReceivedTime = data.ReceivedTime;
+                return snapshot;
+            }
         }
 
         /// <summary>
@@ -162,8 +179,12 @@ namespace SecsGem.Runtime.Manager
         /// </summary>
         public void ClearProcessProgramDirectory()
         {
-            ProcessProgramDirectory.Clear();
-            ProcessProgramDataStore.Clear();
+            lock (_programGate)
+            {
+                ProcessProgramDirectory.Clear();
+                ProcessProgramDataStore.Clear();
+                _unformattedPrograms.Clear();
+            }
         }
     }
 }

@@ -172,6 +172,7 @@ public sealed class WorkbenchCompositionTests
     /// </summary>
     [Theory]
     [InlineData("pack://application:,,,/SecsGem.Workbench;component/Views/MainWindow.xaml")]
+    [InlineData("pack://application:,,,/SecsGem.Workbench;component/Views/RecipeTestView.xaml")]
     [InlineData("pack://application:,,,/SecsGem.Controls;component/Views/SecsOverviewView.xaml")]
     [InlineData("pack://application:,,,/SecsGem.Controls;component/Terminal/MessagePrompt.xaml")]
     public void PackUri_ResolvesBaml_FromForeignEntryAssembly(string packUri)

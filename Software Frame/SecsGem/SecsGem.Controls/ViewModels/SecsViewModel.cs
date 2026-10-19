@@ -57,6 +57,16 @@ public partial class SecsViewModel : ObservableObject, IDisposable
             Model.NewAlarmDescription = Model.SelectedAlarm?.Description ?? "";
             Model.NewAlarmEnable = Model.SelectedAlarm?.Enable ?? true;
         }
+        if (e.PropertyName == nameof(Model.SelectedProcessProgram))
+            Workspace.PreviewProcessProgram();
+        if (e.PropertyName is nameof(Model.RecipePpid) or nameof(Model.RecipeRequestIndex) or nameof(Model.RecipeFormattedSml))
+        {
+            Model.RecipeRequestSml = "";
+            Model.RecipeJsonPreview = "";
+            if (e.PropertyName == nameof(Model.RecipePpid)) Workspace.PreviewProcessProgram();
+        }
+        if (e.PropertyName is nameof(Model.HasRecipeSource) or nameof(Model.RecipeRequestSml))
+            RefreshRecipeCommands();
         if (e.PropertyName is nameof(Model.IsConnected) or nameof(Model.IsClosed) or
             nameof(Model.Address) or nameof(Model.PortText) or nameof(Model.DeviceIdText) or
             nameof(Model.ConnectionModeIndex) or nameof(Model.Sml) or nameof(Model.SelectedVariable) or
@@ -148,6 +158,7 @@ public partial class SecsViewModel : ObservableObject, IDisposable
         ResetAlarmCommand.NotifyCanExecuteChanged();
         PreviewTerminalCommand.NotifyCanExecuteChanged();
         ClearLogCommand.NotifyCanExecuteChanged();
+        RefreshRecipeCommands();
     }
     public int ConnectionModeIndex { get => Model.ConnectionModeIndex; set => Model.ConnectionModeIndex = value; }
     public string Address { get => Model.Address; set => Model.Address = value; }

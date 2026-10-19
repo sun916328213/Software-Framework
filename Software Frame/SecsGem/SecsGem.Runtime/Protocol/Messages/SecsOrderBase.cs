@@ -114,7 +114,19 @@ namespace SecsGem.Runtime.Order
         /// </summary>
         protected Item Fail(Exception ex)
         {
-            SecsGemRuntime?.RaiseErrorPublic($"组包失败，本条回 S9F7: {ex.Message}");
+            var message = $"{GetType().Name} 组包失败，本条回 S9F7: {ex.Message}";
+            try
+            {
+                // 纯处理器测试可以不装配 Runtime；诊断不能隐式构造运行时或改变回包行为。
+                if (ContainerProvider is IContainerRegistry registry && !registry.IsRegistered<SecsGemRuntime>())
+                    System.Diagnostics.Trace.WriteLine(message);
+                else
+                    SecsGemRuntime?.RaiseErrorPublic(message);
+            }
+            catch (Exception logError)
+            {
+                System.Diagnostics.Trace.WriteLine($"{message}；日志输出失败：{logError.Message}");
+            }
             return null;
         }
 
