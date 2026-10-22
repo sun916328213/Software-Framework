@@ -114,6 +114,49 @@ namespace SecsGem.Tests
             Assert.Empty(item.Items);
         }
 
+        [Theory]
+        [InlineData(SecsFormat.Binary)]
+        [InlineData(SecsFormat.U1)]
+        [InlineData(SecsFormat.U2)]
+        [InlineData(SecsFormat.U4)]
+        [InlineData(SecsFormat.U8)]
+        [InlineData(SecsFormat.I1)]
+        [InlineData(SecsFormat.I2)]
+        [InlineData(SecsFormat.I4)]
+        [InlineData(SecsFormat.I8)]
+        [InlineData(SecsFormat.Boolean)]
+        public void AddData_NullScalar_Preserves_Format_And_Empty_Count(SecsFormat format)
+        {
+            using var item = _order.AddData(null, format);
+            Assert.Equal(format, item.Format);
+            Assert.Equal(0, item.Count);
+        }
+
+        [Theory]
+        [InlineData(SecsFormat.F4)]
+        [InlineData(SecsFormat.F8)]
+        [InlineData(SecsFormat.JIS8)]
+        [InlineData(SecsFormat.List)]
+        public void AddData_Unsupported_Format_Or_List_Shape_Remains_Null(SecsFormat format)
+        {
+            Assert.Null(_order.AddData(new object(), format));
+        }
+
+        [Fact]
+        public void AddData_Invalid_Numeric_Conversions_Are_Not_Silently_Coerced()
+        {
+            Assert.Throws<OverflowException>(() => _order.AddData(256, SecsFormat.U1));
+            Assert.Throws<FormatException>(() => _order.AddData("not-a-number", SecsFormat.U2));
+        }
+
+        [Fact]
+        public void SecsItemToList_Preserves_Legacy_First_Value_And_Unsupported_Format_Behavior()
+        {
+            using var data = Item.L(Item.A(""), Item.U2(4, 5), Item.U1(),
+                Item.L(Item.B(8, 9), Item.Boolean(false, true)), Item.I4(-1), Item.F8(1.5), Item.J("ignored"));
+            Assert.Equal(new[] { "", "4", "8", "False" }, _order.SecsItemToList(data));
+        }
+
         // ── SecsItemToList 解析 ──
 
         [Fact]

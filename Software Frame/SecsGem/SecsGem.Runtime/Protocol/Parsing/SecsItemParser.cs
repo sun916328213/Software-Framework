@@ -1,92 +1,42 @@
-// 【中文阅读说明】
-// SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。
-// 本文件定义：SecsItemParser。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：SecsGem.Runtime、SecsGem.Runtime.Protocol、Secs4Net、System、System.Collections.Generic。导入不代表所有类型都会在运行时加载。
-using SecsGem.Runtime;
-using SecsGem.Runtime.Protocol;
 using Secs4Net;
-using System;
-using System.Collections.Generic;
 
 namespace SecsGem.Runtime.Protocol.Parsing;
 
-/// <summary>
-/// SecsItemParser 的类型定义。SecsGem 模块：SECS/GEM 契约、协议运行及界面适配；状态变化和报文处理以协议实现及配置为准。
-/// </summary>
+/// <summary>旧字符串列表接口；只取受支持数值项的首元素，不替代配方的原类型深复制或 S10 的向量显示转换。</summary>
 internal static class SecsItemParser
 {
-    /// <summary>
-    /// 处理当前类型提供的操作；对应入口为 Flatten。
-    /// 正文中的关键协作调用包括 L、ReadFirstValue、GetString、Flatten、AddRange；具体条件和先后次序见方法体。
-    /// </summary>
-    internal static List<string> Flatten(Item Data)
+    internal static List<string>? Flatten(Item? data)
+    {
+        if (data is null) return null;
+
+        var strings = new List<string>();
+        var items = data.Format == SecsFormat.List ? data.Items : new[] { data };
+        foreach (var item in items)
         {
-            Item[] Items = null;
-            if (Data == null) return null;
-            
-            // 使用Capacity预分配以减少内存重新分配
-            List<string> strings = new List<string>();
-            if (Data.Format != SecsFormat.List)
+            if (item.Format == SecsFormat.List)
             {
-                Items = Item.L(Data).Items;
+                strings.AddRange(Flatten(item)!); // item 非空，递归结果不会走 null 输入分支。
+                continue;
             }
-            else
-                Items = Data.Items;
 
-            foreach (Item item in Items)
+            var value = item.Format switch
             {
-                //格式  
-                var format = item.Format;
-
-                string data = null;
-                switch (format)
-                {
-                    case SecsFormat.U1:
-                        data = ReadFirstValue<byte>(item);
-                        break;
-                    case SecsFormat.U2:
-                        data = ReadFirstValue<UInt16>(item);
-                        break;
-                    case SecsFormat.U4:
-                        data = ReadFirstValue<UInt32>(item);
-                        break;
-                    case SecsFormat.U8:
-                        data = ReadFirstValue<UInt64>(item);
-                        break;
-                    case SecsFormat.Binary:
-                        data = ReadFirstValue<byte>(item);
-                        break;
-                    case SecsFormat.ASCII:
-                        data = item.GetString();
-                        break;
-                    case SecsFormat.List:
-                        var list = Flatten(item);
-                        if (list != null)
-                            strings.AddRange(list);
-                        else
-                            return list;
-                        break;
-                    case SecsFormat.Boolean:
-                        data = ReadFirstValue<bool>(item);
-                        break;
-                }
-                if (data != null) strings.Add(data);
-            }
-            return strings;
+                SecsFormat.U1 or SecsFormat.Binary => ReadFirstValue<byte>(item),
+                SecsFormat.U2 => ReadFirstValue<ushort>(item),
+                SecsFormat.U4 => ReadFirstValue<uint>(item),
+                SecsFormat.U8 => ReadFirstValue<ulong>(item),
+                SecsFormat.ASCII => item.GetString(),
+                SecsFormat.Boolean => ReadFirstValue<bool>(item),
+                _ => null
+            };
+            if (value is not null) strings.Add(value);
         }
+        return strings;
+    }
 
-    /// <summary>
-    /// 读取当前实现提供的数据；对应入口为 ReadFirstValue。
-    /// 正文中的关键协作调用包括 GetMemory、ToString；具体条件和先后次序见方法体。
-    /// </summary>
-    internal static string ReadFirstValue<T>(Item pItem) where T : unmanaged, IEquatable<T>
-        {
-            var u1 = pItem.GetMemory<T>();
-            if (!u1.IsEmpty)
-            {
-                // 使用Span直接访问数据，避免不必要的内存分配
-                return u1.Span[0].ToString();
-            }
-            else return null;
-        }
+    internal static string? ReadFirstValue<T>(Item item) where T : unmanaged, IEquatable<T>
+    {
+        var values = item.GetMemory<T>();
+        return values.IsEmpty ? null : values.Span[0].ToString();
+    }
 }

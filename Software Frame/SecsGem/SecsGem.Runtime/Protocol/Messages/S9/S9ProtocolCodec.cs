@@ -18,15 +18,15 @@ internal static class S9ProtocolCodec
     internal static Item Header(params object[] data)
     {
         if (data.Length != 1) throw new ArgumentException("S9 报头通知需要一个参数。");
-        var bytes = data[0] switch
+        ReadOnlyMemory<byte> bytes = data[0] switch
         {
             S9HeaderData value => value.Header,
             byte[] value => value,
-            Item { Format: SecsFormat.Binary, Count: 10 } value => value.GetMemory<byte>().ToArray(),
+            Item { Format: SecsFormat.Binary, Count: 10 } value => value.GetMemory<byte>(),
             SS9F9 value when value.SecsMessage != null => HsmsMessageHeaderBuilder.GetHeaderInfo(value.SecsMessage, value.DeviceID, value.ID),
             _ => throw new ArgumentException("需要原始 B[10] 报头或 S9HeaderData。")
         };
-        if (bytes is not { Length: 10 }) throw new ArgumentException("MHEAD/SHEAD 必须为十字节。");
+        if (bytes.Length != 10) throw new ArgumentException("MHEAD/SHEAD 必须为十字节。");
         return Item.B(bytes.ToArray());
     }
 
