@@ -16,7 +16,7 @@
 ## 目录与边界
 
 ```text
-Charts/WPFControls.Charts/
+WPFControls/WPFControls.Charts/
 ├─ Models/                   共用输入：ChartLineData、ChartPieData
 ├─ LiveCharts/Services/      ChartsLineService、ChartsColumnService、ChartsPieService
 ├─ LiveCharts/Views/         ChartsLineView、ChartsColumnView、ChartsPieView、ChartsMultipleGaugeView
@@ -109,15 +109,15 @@ xmlns:theme="clr-namespace:WPFControls.Charts.Themes;assembly=WPFControls.Charts
 新增 `WPFControls.Charts.Workbench`，唯一直接项目引用为图表组件，不依赖 WPFControls 聚合项目或 MachineApp，不触发生产模块或设备启动。按“后端 × 图表类型”提供六个独立页面，包含新增的 LiveCharts 柱状图；对照页已退出导航和编译。各页拥有独立数据、按钮命令、参数、计数和模拟会话；支持数据替换/原地修改/增删、显式刷新、null 清空、卸载/重载和当前页 DataContext 重建。切页停止上一页模拟，宿主与图表深浅主题统一切换。常用数据操作默认自动刷新，诊断操作单独折叠；按钮按空数据、运行状态和数量上限禁用。
 
 ```powershell
-dotnet run --project "Software Frame/Charts/WPFControls.Charts.Workbench/WPFControls.Charts.Workbench.csproj"
+dotnet run --project "Software Frame/WPFControls/WPFControls.Charts.Workbench/WPFControls.Charts.Workbench.csproj"
 ```
 
-详见 [Workbench 运行说明与人工验收清单](WPFControls.Charts.Workbench/README.md)。本次新增宿主尚未在当前环境完成构建、自动测试或人工验收；图表组件此前的验证记录不代表 Workbench 已通过验证。
+详见 [Workbench 运行说明与人工验收清单](../WPFControls.Charts.Workbench/README.md)。迁移到 WPFControls 目录后，Workbench（含图表组件）构建通过；专项测试在依赖构建阶段因 Communication.Runtime.dll 被其他进程占用而阻塞，尚未执行测试用例。人工界面验收未执行。
 
 ## 验证入口
 
 ```powershell
-dotnet build "Software Frame/Charts/WPFControls.Charts/WPFControls.Charts.csproj"
+dotnet build "Software Frame/WPFControls/WPFControls.Charts/WPFControls.Charts.csproj"
 dotnet test "Software Frame/WPFControls/Tests/WPFControls.Tests/WPFControls.Tests.csproj"
 dotnet test "MachineApp/Tests/MachineApp.Host.Tests/MachineApp.Host.Tests.csproj" --filter "FullyQualifiedName~ChartsPlatformHostTests|FullyQualifiedName~OxyPlotPlatformHostTests"
 dotnet build "MachineApp/MachineApp/MachineApp.csproj"

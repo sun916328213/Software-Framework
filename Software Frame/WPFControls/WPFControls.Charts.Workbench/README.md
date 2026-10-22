@@ -7,7 +7,7 @@
 在仓库根目录执行：
 
 ```powershell
-dotnet run --project "Software Frame/Charts/WPFControls.Charts.Workbench/WPFControls.Charts.Workbench.csproj"
+dotnet run --project "Software Frame/WPFControls/WPFControls.Charts.Workbench/WPFControls.Charts.Workbench.csproj"
 ```
 
 也可在根解决方案或 WPFControls 模块解决方案中设为启动项目。需要 Windows、.NET 9/WPF 及已有 NuGet/传递依赖。
@@ -99,10 +99,10 @@ MainWindowViewModel 管理页面列表、切页停止、重建当前页与统一
 ## 自动验证
 
 ```powershell
-dotnet build "Software Frame/Charts/WPFControls.Charts.Workbench/WPFControls.Charts.Workbench.csproj"
+dotnet build "Software Frame/WPFControls/WPFControls.Charts.Workbench/WPFControls.Charts.Workbench.csproj"
 dotnet test "Software Frame/WPFControls/Tests/WPFControls.Tests/WPFControls.Tests.csproj" --filter "FullyQualifiedName~ChartsWorkbenchTests|FullyQualifiedName~ChartThemeAndColumnTests"
 ```
 
 新增回归代码覆盖六种图表的原生主题颜色、刷新后保持主题、深浅回切、无主题时不覆盖宿主样式、柱状数据转换、按钮状态与页面生命周期。
 
-当前环境缺少 Bash，命令在启动 shell 前阻塞，尚未运行本轮构建、测试或人工 UI 验收；未取得红/绿回归证据。
+目录迁移复核：已通过 PowerShell 在新路径构建 Workbench（包含图表组件），退出码 0。专项测试在构建依赖时被 Communication.Runtime.dll 文件占用错误 CS2012 阻塞，测试用例尚未执行；未终止占用进程。人工 UI 验收未执行，不能以构建通过替代视觉或行为验证。

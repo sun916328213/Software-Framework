@@ -120,6 +120,19 @@ public partial class ThemePickerViewModel : ObservableObject
     /// <summary>主题在别处被改（如宿主/测试直调 ThemeService）时，把选中项与黑白态拉回一致。</summary>
     private void OnThemeChanged(object? sender, EventArgs e) => PullFromTheme();
 
+    // 弹出式宿主在收起/卸载时退订借用服务，重开时回灌；不释放 ThemeService。
+    internal void SuspendThemeNotifications()
+    {
+        if (_theme != null) _theme.ThemeChanged -= OnThemeChanged;
+    }
+    internal void ResumeThemeNotifications()
+    {
+        if (_theme == null) return;
+        _theme.ThemeChanged -= OnThemeChanged;
+        _theme.ThemeChanged += OnThemeChanged;
+        PullFromTheme();
+    }
+
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 PullFromTheme。
     /// 正文中的关键协作调用包括 OnPropertyChanged、nameof；具体条件和先后次序见方法体。
