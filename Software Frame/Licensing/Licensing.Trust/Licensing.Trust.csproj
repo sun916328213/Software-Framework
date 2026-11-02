@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Licensing.Trust</AssemblyName>
+    <Description>全仓唯一的信任锚：签发方公钥与产品标识，编译期嵌入。</Description>
+  </PropertyGroup>
+  <Import Project="..\Build\ClientProduct.targets" />
+  <ItemGroup>
+    <InternalsVisibleTo Include="Licensing.Wpf.Tests" />
+  </ItemGroup>
+</Project>

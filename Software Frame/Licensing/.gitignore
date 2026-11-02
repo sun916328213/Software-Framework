@@ -1,0 +1,8 @@
+# Local developer public-key/product build settings; never a customer runtime trust source.
+.local/
+IssuerData/
+# Issuer credentials/backups must not be committed if saved inside the module by mistake.
+*.sfib
+issuer.bin
+issuer.identity
+issuer.lock

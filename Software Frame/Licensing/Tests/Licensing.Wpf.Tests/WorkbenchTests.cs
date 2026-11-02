@@ -1,0 +1,159 @@
+using System.Diagnostics;
+using System.IO;
+using System.Windows.Controls;
+using Extension.Security.Cryptography;
+using Extension.Security.Licensing;
+using Licensing.Native.Client;
+using Xunit;
+using HostWindow = Licensing.Workbench.MainWindow;
+
+namespace Licensing.Wpf.Tests;
+
+public sealed class WorkbenchTests
+{
+    [Fact]
+    public Task MissingConfigurationCannotStartTasks() => WpfLicenseSessionTests.RunSta(async () =>
+    {
+        var window = new HostWindow(null, null);
+        try
+        {
+            window.Show();
+            await WaitUntil(() => window.IsLoaded);
+            Assert.False(((Button)window.FindName("StartTask")).IsEnabled);
+            Assert.False(await window.RunSimulationAsync(TimeSpan.Zero));
+            Assert.Equal(0, window.StartedTasks);
+        }
+        finally { window.Close(); }
+    });
+
+    [Fact]
+    public Task ExpiryDoesNotInterruptAnAdmittedTaskButRejectsTheNextOne() => WpfLicenseSessionTests.RunSta(async () =>
+    {
+        using var installed = new InstalledLicense();
+        installed.Import(DateTime.UtcNow.AddSeconds(4));
+        var window = new HostWindow(installed.PublicKey, installed.Product, TimeSpan.FromMilliseconds(40));
+        try
+        {
+            window.Show();
+            await WaitUntil(() => ((Button)window.FindName("StartTask")).IsEnabled);
+            var task = window.RunSimulationAsync(TimeSpan.FromSeconds(6));
+            await WaitUntil(() => window.StartedTasks == 1);
+            await WaitUntil(() => ((TextBlock)window.FindName("Authorization")).Text.Contains("期限已到期"), TimeSpan.FromSeconds(7));
+            Assert.True(window.TaskInProgress);
+            Assert.False(((Button)window.FindName("StartTask")).IsEnabled);
+            Assert.True(await task.WaitAsync(TimeSpan.FromSeconds(8)));
+            Assert.Equal(1, window.CompletedTasks);
+            Assert.False(await window.RunSimulationAsync(TimeSpan.Zero));
+            Assert.Equal(1, window.StartedTasks);
+        }
+        finally
+        {
+            window.Close();
+            if (window.MonitorCompletion != null) await window.MonitorCompletion.WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    });
+
+    [Fact]
+    public Task ClosingHostCancelsOnlyItsSimulationAndReleasesMonitoring() => WpfLicenseSessionTests.RunSta(async () =>
+    {
+        using var installed = new InstalledLicense();
+        installed.Import(DateTime.MaxValue);
+        var window = new HostWindow(installed.PublicKey, installed.Product, TimeSpan.FromMilliseconds(40));
+        try
+        {
+            window.Show();
+            await WaitUntil(() => ((Button)window.FindName("StartTask")).IsEnabled);
+            var task = window.RunSimulationAsync(TimeSpan.FromMinutes(1));
+            await WaitUntil(() => window.StartedTasks == 1);
+            window.Close();
+            Assert.False(await task.WaitAsync(TimeSpan.FromSeconds(10)));
+            await window.MonitorCompletion!.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(0, window.CompletedTasks);
+        }
+        finally
+        {
+            if (window.IsVisible) window.Close();
+            if (window.MonitorCompletion != null) await window.MonitorCompletion.WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    });
+
+    [Fact]
+    public void PublishDirectoryCreatesChildFolderInsteadOfRefusingOrOverwriting()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "PublishDir-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            File.WriteAllText(Path.Combine(root, "keep.txt"), "keep");
+            // 非空目录：不报错、不删文件，改为在其下新建带时间戳的子目录。
+            string resolved = Licensing.Authorization.MainWindow.ResolvePublishDirectory(root, "Probe.Product");
+            Assert.NotEqual(root, resolved);
+            Assert.True(Directory.Exists(resolved));
+            Assert.Empty(Directory.EnumerateFileSystemEntries(resolved));
+            Assert.Equal("keep", File.ReadAllText(Path.Combine(root, "keep.txt")));
+            // 空目录：直接用，不额外套一层。
+            string empty = Path.Combine(root, "empty");
+            Directory.CreateDirectory(empty);
+            Assert.Equal(empty, Licensing.Authorization.MainWindow.ResolvePublishDirectory(empty, "Probe.Product"));
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, recursive: true); }
+    }
+
+    [Fact]
+    public Task VendorWindowDoesNotExposeRawCredentialsOrAutomaticallyCreateThem() => WpfLicenseSessionTests.RunSta(() =>
+    {
+        string root = Path.Combine(Path.GetTempPath(), "IssuerUi-" + Guid.NewGuid().ToString("N"));
+        var environment = new Licensing.Authorization.IssuerEnvironment(root);
+        var window = new Licensing.Authorization.MainWindow(environment);
+        try
+        {
+            Assert.Null(window.FindName("TxtPrivateKey"));
+            Assert.Null(window.FindName("TxtPublicKey"));
+            Assert.False(File.Exists(environment.CredentialPath));
+            Assert.Contains("尚未创建签发身份", ((TextBlock)window.FindName("EnvironmentStatus")).Text);
+        }
+        finally { window.Close(); if (Directory.Exists(root)) Directory.Delete(root, true); }
+        return Task.CompletedTask;
+    });
+
+    private static async Task WaitUntil(Func<bool> condition, TimeSpan? timeout = null)
+    {
+        var timer = Stopwatch.StartNew();
+        while (!condition())
+        {
+            Assert.True(timer.Elapsed < (timeout ?? TimeSpan.FromSeconds(6)), "Expected UI state was not reached.");
+            await Task.Delay(20);
+        }
+    }
+
+    private sealed class InstalledLicense : IDisposable
+    {
+        private readonly string _privateKey;
+        private readonly string _temporary = Path.Combine(Path.GetTempPath(), "WorkbenchLicense-" + Guid.NewGuid().ToString("N"));
+        private readonly string _scope;
+        internal string PublicKey { get; }
+        internal string Product { get; } = "Workbench.Test." + Guid.NewGuid().ToString("N");
+        internal InstalledLicense()
+        {
+            (_privateKey, PublicKey) = RsaEx.GenerateKeyPair();
+            Directory.CreateDirectory(_temporary);
+            _scope = Path.GetDirectoryName(new LicenseFileStore(PublicKey, productId: Product).LicensePath)!;
+        }
+        internal void Import(DateTime expiry)
+        {
+            string file = Path.Combine(_temporary, "test.lic");
+            File.WriteAllText(file, LicenseManagerEx.CreateBound(new LicenseInfo
+            {
+                ProductId = Product, Customer = "Workbench test", MachineCode = MachineCodeEx.GetMachineCode(), ExpireAtUtc = expiry
+            }, _privateKey));
+            using var activation = new NativeLicenseSession(PublicKey, Product);
+            var result = activation.ImportFile(file);
+            Assert.True(result.Ok, result.Message);
+        }
+        public void Dispose()
+        {
+            if (Directory.Exists(_scope)) Directory.Delete(_scope, true);
+            if (Directory.Exists(_temporary)) Directory.Delete(_temporary, true);
+        }
+    }
+}

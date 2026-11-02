@@ -1,0 +1,48 @@
+<Window x:Class="Licensing.Activation.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="激活" Width="720" Height="600" MinWidth="560" MinHeight="520">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock Text="本机机器码（发送给供应商申请授权）" />
+        <TextBox x:Name="MachineCode" Grid.Row="1" Margin="0,8,0,10" IsReadOnly="True" FontSize="20" />
+        <TextBlock x:Name="LicenseSummary" Grid.Row="2" Margin="0,0,0,10" FontSize="14" FontWeight="SemiBold"
+                   TextWrapping="Wrap" Text="● 正在读取授权状态…" />
+        <WrapPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,12">
+            <Button x:Name="CopyButton" Content="复制机器码" Padding="12,6" Click="Copy_Click" />
+            <Button x:Name="ExportButton" Content="导出申请单" Padding="12,6" Margin="12,0,0,0"
+                    Click="Export_Click"
+                    ToolTip="保存成 .sfreq 文件发给供应商。比复制机器码更适合邮件、微信传输；远程桌面或隔离网络下剪贴板不可用时也走这里。生成过时间恢复请求时会一并写入。" />
+            <Button x:Name="ActivateButton" Content="激活" Padding="24,6" Margin="12,0,0,0" FontWeight="SemiBold"
+                    Click="Activate_Click"
+                    ToolTip="输入框有内容时，按粘贴的授权激活；输入框为空时，打开文件选择 .lic。" />
+            <Button Content="刷新状态" Padding="12,6" Margin="12,0,0,0" Click="Refresh_Click" />
+        </WrapPanel>
+        <TextBlock Grid.Row="4" Text="把供应商发来的授权内容粘贴到这里后点「激活」；留空点「激活」则选择 .lic 文件（换行和空格会自动忽略）" />
+        <TextBox x:Name="LicenseInput" Grid.Row="5" Margin="0,8,0,12" Height="64" AcceptsReturn="True"
+                 FontFamily="Consolas" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                 HorizontalScrollBarVisibility="Disabled" />
+        <TextBox x:Name="Status" Grid.Row="6" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
+        <DockPanel Grid.Row="7" Margin="0,12,0,0" LastChildFill="True">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button x:Name="RecoveryButton" Content="时间异常恢复" IsEnabled="False" Padding="10,4" Margin="12,0,0,0"
+                        Click="Recovery_Click"
+                        ToolTip="仅在系统时间被改过、授权报时间异常时使用：生成请求发给供应商，供应商签发恢复授权后重新激活。" />
+                <Button x:Name="ClearButton" Content="清除本机授权" IsEnabled="False" Padding="10,4" Margin="12,0,0,0"
+                        Click="Clear_Click"
+                        ToolTip="只删除本机授权文件，不退还授权、不解除机器绑定；重新使用需要再次导入供应商提供的授权。" />
+            </StackPanel>
+            <TextBlock TextWrapping="Wrap" VerticalAlignment="Center"
+                       Text="本工具负责导出申请单、导入授权，不签发授权。" />
+        </DockPanel>
+    </Grid>
+</Window>

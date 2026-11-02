@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net9.0-windows</TargetFramework><UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Licensing.Client\Licensing.Client.csproj" />
+    <!-- 公钥与产品标识统一由 Licensing.Trust 提供，本程序不再各自嵌入。 -->
+    <ProjectReference Include="..\Licensing.Trust\Licensing.Trust.csproj" />
+    <InternalsVisibleTo Include="Licensing.Wpf.Tests" />
+  </ItemGroup>
+</Project>

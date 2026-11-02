@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" PrivateAssets="all" />
+    <ProjectReference Include="..\..\Licensing.Client\Licensing.Client.csproj" />
+    <ProjectReference Include="..\..\Licensing.Activation\Licensing.Activation.csproj" />
+    <ProjectReference Include="..\..\Licensing.Authorization\Licensing.Authorization.csproj" />
+    <ProjectReference Include="..\..\Licensing.Workbench\Licensing.Workbench.csproj" />
+    <ProjectReference Include="..\..\Licensing.Core\Licensing.Core.csproj" />
+  </ItemGroup>
+</Project>
