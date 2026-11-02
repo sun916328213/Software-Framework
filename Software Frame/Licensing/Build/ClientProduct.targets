@@ -1,28 +1,25 @@
 <Project>
-  <!-- 仅在编译时读本机开发配置；客户运行时不接收外部信任配置。 -->
+  <!-- 覆盖层先导入：它是本机开发期的临时身份，后导入的入库默认值只在它没有给定时才生效。 -->
   <Import Project="$(MSBuildThisFileDirectory)..\.local\client.props"
           Condition="'$(Configuration)' == 'Debug' and Exists('$(MSBuildThisFileDirectory)..\.local\client.props')" />
+  <!-- 入库的信任锚（公钥 + 指纹硬钉）；命令行显式给定时全局属性优先，发布流程照旧可控。 -->
+  <Import Project="$(MSBuildThisFileDirectory)Trust.props" />
   <Target Name="ValidateLicensePublicKey" BeforeTargets="PrepareForBuild">
     <Error Condition="'$(Configuration)' == 'Release' and '$(LicenseProductId)' == ''" Text="发布客户端必须指定 LicenseProductId。" />
     <Error Condition="'$(Configuration)' == 'Release' and '$(LicenseProductId)' == 'SoftwareFrame.Default'" Text="发布客户端不能使用默认测试产品标识。" />
     <Error Condition="'$(LicenseProductId)' != '' and !$([System.Text.RegularExpressions.Regex]::IsMatch('$(LicenseProductId)', '\A[A-Za-z0-9][A-Za-z0-9._-]{0,63}\z'))" Text="LicenseProductId 格式错误。" />
     <Error Condition="'$(Configuration)' == 'Release' and '$(LicensePublicKeyFile)' == ''" Text="发布客户端必须配置供应商验证凭据。" />
     <Error Condition="'$(LicensePublicKeyFile)' != '' and !Exists('$(LicensePublicKeyFile)')" Text="配置的验证凭据文件不存在。" />
+    <Error Condition="'$(LicensePublicKeyFile)' != '' and '$(LicenseExpectedPublicKeyFingerprint)' == ''" Text="验证凭据必须同时提供 LicenseExpectedPublicKeyFingerprint，禁止只校验格式不校验身份。" />
     <Exec Condition="'$(LicensePublicKeyFile)' != ''" WorkingDirectory="$(MSBuildProjectDirectory)"
-          Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)Validate-PublicKey.ps1&quot; -PublicKeyFile &quot;$(LicensePublicKeyFile)&quot;" />
+          Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)Validate-PublicKey.ps1&quot; -PublicKeyFile &quot;$(LicensePublicKeyFile)&quot; -ExpectedFingerprint &quot;$(LicenseExpectedPublicKeyFingerprint)&quot;" />
   </Target>
   <ItemGroup>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(LicenseProductId)' != ''">
       <_Parameter1>LicenseProductId</_Parameter1><_Parameter2>$(LicenseProductId)</_Parameter2>
     </AssemblyAttribute>
     <EmbeddedResource Include="$(LicensePublicKeyFile)" LogicalName="$(MSBuildProjectName).PublicKey" Condition="'$(LicensePublicKeyFile)' != ''" />
-    <!-- 仅 Debug：记下开发配置路径。Workbench 这类不交付的开发宿主可在运行时读取它，
-         改 .local/client.props 后重启即生效，不必每次重建。Release 不嵌入此路径，
-         发行包的公钥与产品标识仍是编译期固化，客户无法替换。 -->
-    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"
-                       Condition="'$(Configuration)' == 'Debug' and Exists('$(MSBuildThisFileDirectory)..\.local\client.props')">
-      <_Parameter1>LicenseDevProfile</_Parameter1>
-      <_Parameter2>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\.local\client.props'))</_Parameter2>
-    </AssemblyAttribute>
+    <!-- 不再向程序集写开发配置的绝对路径：Workbench 也走编译期嵌入，三个宿主的信任来源同一条通道，
+         改身份后统一重建，不存在「某个宿主重启即生效、另一个必须重建」的分叉。 -->
   </ItemGroup>
 </Project>

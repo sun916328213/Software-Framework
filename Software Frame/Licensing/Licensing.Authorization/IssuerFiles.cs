@@ -48,11 +48,16 @@ internal static class IssuerFiles
         byte[] canonical = rsa.ExportRSAPublicKey();
         string directory = Path.Combine(moduleRoot, ".local");
         Directory.CreateDirectory(directory);
-        string keyFile = "public-" + Convert.ToHexString(SHA256.HashData(canonical)) + ".key";
+        string fingerprint = Convert.ToHexString(SHA256.HashData(canonical));
+        string keyFile = "public-" + fingerprint + ".key";
         WriteAtomic(Path.Combine(directory, keyFile), Convert.ToBase64String(canonical), overwrite: true);
         var document = new XDocument(new XElement("Project", new XElement("PropertyGroup",
             new XElement("LicensePublicKeyFile", new XAttribute("Condition", "'$(LicensePublicKeyFile)' == ''"),
                 "$(MSBuildThisFileDirectory)" + keyFile),
+            // 覆盖层的钥匙和它的钉必须成对写出：只给钥匙不给指纹会被构建拦死，
+            // 那等于把「用临时身份自测」这条路堵掉，只剩下改入库指纹这一种绕法。
+            new XElement("LicenseExpectedPublicKeyFingerprint",
+                new XAttribute("Condition", "'$(LicenseExpectedPublicKeyFingerprint)' == ''"), fingerprint),
             new XElement("LicenseProductId", new XAttribute("Condition", "'$(LicenseProductId)' == ''"), productId))));
         string configuration = Path.Combine(directory, "client.props");
         WriteAtomic(configuration, document.ToString(), overwrite: true);

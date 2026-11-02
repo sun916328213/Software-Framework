@@ -1,0 +1,20 @@
+<Project>
+  <!--
+    入库的信任锚。公钥本来就是公开数据，跟着仓库走之后，
+    「让 Licensing.Trust 用上正确的签发公钥」不再是每次都要人工对齐的动作：
+    克隆下来直接编译就拿到正确的验证凭据。
+
+    本机覆盖层仍是 ..\.local\client.props（Debug 才有，后导入所以它的值胜出），
+    只用来放开发期的产品标识和临时身份。
+
+    LicenseExpectedPublicKeyFingerprint 是硬钉：构建期校验的不再是「这把钥格式对不对」，
+    而是「这把钥是不是仓库里钉住的那把」。换签发身份必须同时改 Keys\ 下的文件和这里的指纹，
+    于是轮换在 git diff 里一眼可见，而不是一次静默的本地覆盖。
+  -->
+  <PropertyGroup Condition="'$(LicensePublicKeyFile)' == ''">
+    <LicensePublicKeyFile>$(MSBuildThisFileDirectory)Keys\public-11C279F58514ED6845E68E577E0C08E1B9332EEA9EA8C8DE389F5F90DD57C2B1.key</LicensePublicKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(LicenseExpectedPublicKeyFingerprint)' == ''">
+    <LicenseExpectedPublicKeyFingerprint>11C279F58514ED6845E68E577E0C08E1B9332EEA9EA8C8DE389F5F90DD57C2B1</LicenseExpectedPublicKeyFingerprint>
+  </PropertyGroup>
+</Project>

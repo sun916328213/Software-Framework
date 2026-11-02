@@ -21,7 +21,7 @@ public sealed class ClientPublishTests
         try
         {
             await File.WriteAllTextAsync(keyFile, publicKey);
-            var first = await Publish(keyFile, output);
+            var first = await Publish(keyFile, output, Fingerprint(publicKey));
             Assert.DoesNotContain(privateKey, first.Output);
             Assert.True(first.ExitCode == 0, first.Output);
             foreach (string file in new[] { "Licensing.Activation.exe", "Licensing.Activation.dll", "Licensing.Trust.dll", "coreclr.dll", "PresentationFramework.dll", "Licensing.Client.dll", "Licensing.Core.dll", "DEPLOYMENT.txt" })
@@ -49,14 +49,32 @@ public sealed class ClientPublishTests
 
             string executable = Path.Combine(output, "Licensing.Activation.exe");
             byte[] before = SHA256.HashData(await File.ReadAllBytesAsync(executable));
-            var second = await Publish(keyFile, output);
+            var second = await Publish(keyFile, output, Fingerprint(publicKey));
             Assert.NotEqual(0, second.ExitCode);
             Assert.Equal(before, SHA256.HashData(await File.ReadAllBytesAsync(executable)));
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
     }
 
-    private static async Task<(int ExitCode, string Output)> Publish(string keyFile, string output,
+    /// <summary>格式完全合法但不属于仓库钉住的签发身份：不能静默发成客户包。</summary>
+    [Fact]
+    public async Task PublishRefusesATrustAnchorThatIsNotPinnedInTheRepository()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "PublishPin-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            string keyFile = Path.Combine(root, "public.key");
+            var (_, publicKey) = RsaEx.GenerateKeyPair();
+            await File.WriteAllTextAsync(keyFile, publicKey);
+            var run = await Publish(keyFile, Path.Combine(root, "out"), string.Empty);
+            Assert.NotEqual(0, run.ExitCode);
+            Assert.Contains("is not the expected trust anchor", run.Output);
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
+    private static async Task<(int ExitCode, string Output)> Publish(string keyFile, string output, string overrideFingerprint,
         [CallerFilePath] string source = "")
     {
         string script = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(source)!, "..", "..", "Build", "Publish-Client.ps1"));
@@ -65,8 +83,12 @@ public sealed class ClientPublishTests
             UseShellExecute = false, CreateNoWindow = true,
             RedirectStandardOutput = true, RedirectStandardError = true
         };
-        foreach (string argument in new[] { "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", script,
-                     "-PublicKeyFile", keyFile, "-ProductId", "tests.package", "-OutputDirectory", output })
+        var arguments = new List<string> { "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", script,
+                     "-PublicKeyFile", keyFile, "-ProductId", "tests.package", "-OutputDirectory", output };
+        // 打包用例测的是交付内容，不是指纹钉；钉本身由下面的用例单独验证。
+        if (overrideFingerprint.Length > 0)
+            arguments.AddRange(new[] { "-OverrideExpectedFingerprint", overrideFingerprint });
+        foreach (string argument in arguments)
             info.ArgumentList.Add(argument);
         using var process = Process.Start(info)!;
         var stdout = process.StandardOutput.ReadToEndAsync();
@@ -75,4 +97,7 @@ public sealed class ClientPublishTests
         catch { if (!process.HasExited) process.Kill(entireProcessTree: true); throw; }
         return (process.ExitCode, await stdout + await stderr);
     }
+
+    private static string Fingerprint(string publicKeyBase64) =>
+        Convert.ToHexString(SHA256.HashData(Convert.FromBase64String(publicKeyBase64)));
 }

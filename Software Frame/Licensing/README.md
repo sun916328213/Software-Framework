@@ -46,7 +46,7 @@
 | 需要知道的 | 产品标识、身份密码、历史记录 | 什么都不需要 |
 | 看不到的 | — | 厂商工具、签发身份、备份、托管授权核心 |
 
-产品标识与公钥在**编译期**嵌入 `Licensing.Trust.dll`（见 `Build/ClientProduct.targets`），因此客户不需要、也无法选择它们；换身份或换产品必须重新生成客户包，不能靠改配置文件。**所有程序共用这一份定义**，不需要为每个程序单独填公钥。
+产品标识与公钥在**编译期**嵌入 `Licensing.Trust.dll`（见 `Build/ClientProduct.targets` 与 `Build/Trust.props`），因此客户不需要、也无法选择它们；换身份或换产品必须重新生成客户包，不能靠改配置文件。**所有程序共用这一份定义**，公钥随仓库提交，不需要为每个程序单独填。
 
 源码目录 `bin/Debug` 下的 `Licensing.Activation.exe` 是**开发构建**，未嵌入发行身份，运行时显示"开发构建 · 未嵌入发行身份"属正常状态，不是故障。它只用于本机自测或对照排查；生产上这台机器不需要运行它。开发构建下 **导出申请单** 仍然可用（没有产品标识就只写机器码）—— 客户第一件事是把机器码发出来，与能不能激活无关。
 
@@ -90,7 +90,16 @@
 & 'Software Frame/Licensing/Build/Test-ProtectedDeployment.ps1' -Directory 'C:\deployment\client-win-x64' -RequireManagedAdapter
 ```
 
-这里的公钥参数仅供构建自动化，不是客户运行时可选信任配置。校验只接受 >=2048 位完整 Base64 PKCS#1 DER 公钥，拒绝私钥、PEM、损坏及尾随数据。发布目录必须为空，不自动清理用户文件。审计只读：要求 `Licensing.Core.dll`、`Licensing.Trust.dll` 与 `Licensing.Client.dll` 存在，检查隐藏文件、拒绝链接，并拒绝厂商工具、签发身份（`issuer.bin` / `issuer.identity`）、备份（`.sfib`）、调试符号（`.pdb`）、密钥（`.key` / `.pem` / `.pfx` / `.p12`）以及残留的 `Licensing.Native*`。不是完整依赖或防篡改证明。
+这里的公钥参数仅供构建自动化，不是客户运行时可选信任配置。校验有两道：格式上只接受 >=2048 位完整 Base64 PKCS#1 DER 公钥，拒绝私钥、PEM、损坏及尾随数据；身份上还必须是 `Build/Trust.props` 钉住的那把指纹，格式合法但不认识的公钥同样被拒。发布目录必须为空，不自动清理用户文件。审计只读：要求 `Licensing.Core.dll`、`Licensing.Trust.dll` 与 `Licensing.Client.dll` 存在，检查隐藏文件、拒绝链接，并拒绝厂商工具、签发身份（`issuer.bin` / `issuer.identity`）、备份（`.sfib`）、调试符号（`.pdb`）、密钥（`.key` / `.pem` / `.pfx` / `.p12`）以及残留的 `Licensing.Native*`。不是完整依赖或防篡改证明。
+
+## 信任锚放在仓库里
+
+公钥是公开数据，因此随仓库提交：`Build/Keys/public-<SHA256>.key` 是验证凭据本体，`Build/Trust.props` 给出它的路径和硬钉指纹。克隆下来直接编译就拿到正确的公钥，不再需要「手工让授权工具和 Trust 对齐」这一步。
+
+- 构建守卫校验的是**身份**，不只是格式：换一个自管公钥去编译会直接失败，除非同时改 `Trust.props` —— 于是信任锚的变更必然出现在 git diff 里，可评审。
+- 换签发身份：新公钥写进 `Build/Keys/`，更新 `Trust.props` 的文件名与指纹，提交，然后重新构建并重新发布所有宿主。
+- 临时身份只允许在不交付的构建里用，且必须自己带上指纹：`.local/client.props` 同时写 `LicensePublicKeyFile` 和 `LicenseExpectedPublicKeyFingerprint`（`IssuerFiles.SaveDebugClientConfiguration` 成对写出）。发布脚本的 `-OverrideExpectedFingerprint` 同理，仅用于测试。
+- 命令行 `-p:` 是 MSBuild 全局属性，优先于以上两层，发布流程仍由厂商显式掌控。
 
 ## 本机开发与 Workbench
 
@@ -100,17 +109,17 @@
 4. 打开 Workbench。它独立每秒检查；新任务入口仍即时复查，不只信任按钮或缓存。
 5. 可签发今天、几秒/几分钟后的明确截止时间，验证非模态提醒、运行中到期、拒绝下一任务。已获准的 10 秒模拟任务完成；关闭宿主只取消自己的模拟任务并释放监控。
 
-`.local/client.props` 是 Debug 配置入口，需要时手工创建（`IssuerFiles.SaveDebugClientConfiguration` 仍保留该能力，界面不提供按钮）。三种宿主对它的处理**不同**：
+`.local/client.props` 只剩下**本机覆盖层**这一层用途：放开发期的产品标识，或临时身份。公钥已由仓库提供，不再需要每个开发者手工准备。三个宿主的身份来源**完全相同**：
 
-| 宿主 | 身份来源 | 改配置后 |
+| 宿主 | 身份来源 | 换身份后 |
 |---|---|---|
-| **Workbench** | 运行时读取 `.local/client.props` | **重启即生效，不用重建** |
-| Debug 版 Activation | 编译期嵌入 | 必须重建 |
-| Release / 客户包 | 编译期嵌入（构建参数） | 必须重新发布 |
+| **Workbench** | 编译期嵌入 `Licensing.Trust` | 重建 |
+| Debug 版 Activation | 编译期嵌入 `Licensing.Trust` | 重建 |
+| Release / 客户包 | 编译期嵌入（构建参数） | 重新发布 |
 
-Workbench 之所以能免重建：Debug 构建会把 `.local/client.props` 的**绝对路径**写进程序集元数据（`LicenseDevProfile`），Workbench 启动时按该路径重新解析公钥和产品标识，读不到才退回编译期嵌入值。界面日志首行会打印「身份来源」，一眼能看出当前用的是运行时配置还是嵌入值。
+Workbench 以前会在运行时读 `.local/client.props` 以省去重建，该特例已删除：Workbench 只是体量小的生产宿主，和 MachineApp 走同一条路径。三个宿主一旦来源不同，验证语义就会分叉 —— 开发机上「重启即生效」的通过，并不代表发行包里编译进的是同一把锚。
 
-**Activation 不能这么做**：它是交付客户的程序，公钥必须在编译期固化。若改成运行时读配置，客户只要把公钥换成自己的、再用自己签的授权，就能完全绕过 —— 这正是当前设计要防的事。Release 构建同样不嵌入开发配置路径。
+**任何宿主都不能在运行时读信任配置**：交付客户的程序若允许换公钥，客户只要换成自己的、再用自己签的授权，就能完全绕过 —— 这正是当前设计要防的事。
 
 不要分发 Debug 文件夹。
 

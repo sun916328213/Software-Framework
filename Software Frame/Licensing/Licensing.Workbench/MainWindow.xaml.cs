@@ -29,20 +29,11 @@ public partial class MainWindow : Window
         {
             if (readEmbedded)
             {
-                // Debug 构建优先用运行时读到的 .local/client.props：改完配置重启即生效，不必重建。
-                // Release 不嵌入开发配置路径，发行包仍只认编译期固化的公钥。
-                if (DevIdentityProfile.Read() is { } identity)
-                {
-                    publicKey = identity.PublicKey;
-                    productId = identity.ProductId;
-                    _identitySource = "开发配置（运行时读取，改 .local/client.props 后重启即生效）";
-                }
-                else
-                {
-                    publicKey = EmbeddedPublicKey();
-                    productId = EmbeddedProductId();
-                    _identitySource = "编译期嵌入";
-                }
+                // Workbench 只是体量小的生产宿主：信任锚和生产程序、激活工具走同一条编译期通道，
+                // 不在运行时读任何外部配置，否则三个宿主的验证语义会分叉。
+                publicKey = EmbeddedPublicKey();
+                productId = EmbeddedProductId();
+                _identitySource = "编译期嵌入（与激活工具、生产程序同一来源）";
             }
             Machine.Text = NativeLicenseSession.GetMachineCode();
         }
@@ -61,7 +52,7 @@ public partial class MainWindow : Window
         Loaded -= OnLoaded;
         if (string.IsNullOrWhiteSpace(_key) || string.IsNullOrWhiteSpace(_product))
         {
-            Authorization.Text = "未配置发行身份：缺少 .local/client.props，或编译时没有传入公钥与产品标识。";
+            Authorization.Text = "未配置发行身份：编译期没有嵌入公钥或产品标识。";
             return;
         }
         if (_identitySource.Length > 0) Append("身份来源：" + _identitySource + "，产品：" + _product);
