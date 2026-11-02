@@ -53,4 +53,14 @@ public class LicenseTimePolicyTests
         var license = new LicenseInfo { ExpireAtUtc = DateTime.SpecifyKind(Now.DateTime.AddDays(1), DateTimeKind.Unspecified) };
         Assert.Throws<ArgumentException>(() => LicenseTimePolicy.Evaluate(license, Now, null, null));
     }
+
+    [Fact]
+    public void RemainingDays_CountsAPartialDayAsOneDay()
+    {
+        // 剩 1 天零 3 小时：截断除法的 1 与向上取整的 2 曾让界面和日志各显示一个剩余时间。
+        Assert.Equal(2, LicenseTimePolicy.RemainingDays(Now.UtcDateTime.AddDays(1).AddHours(3), Now.UtcDateTime));
+        Assert.Equal(1, LicenseTimePolicy.RemainingDays(Now.UtcDateTime.AddSeconds(30), Now.UtcDateTime));
+        Assert.Equal(0, LicenseTimePolicy.RemainingDays(Now.UtcDateTime, Now.UtcDateTime));
+        Assert.Equal(0, LicenseTimePolicy.RemainingDays(Now.UtcDateTime.AddDays(1), Now.UtcDateTime.AddDays(2)));
+    }
 }

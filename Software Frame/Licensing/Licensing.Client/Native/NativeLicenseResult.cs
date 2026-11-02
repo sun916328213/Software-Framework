@@ -21,6 +21,11 @@ public sealed record NativeLicenseInfo
     public string MachineCode { get; init; } = string.Empty;
     public DateTime ExpireAtUtc { get; init; }
     public bool IsPermanent => ExpireAtUtc >= DateTime.MaxValue.AddDays(-1);
+
+    /// <summary>剩余整天数（不足一天按一天计）。沿用核心的算法，宿主不再自行换算，两处显示才不会打架。</summary>
+    public int RemainingDays => IsPermanent
+        ? int.MaxValue
+        : LicenseTimePolicy.RemainingDays(ExpireAtUtc, DateTime.UtcNow);
 }
 
 public sealed record NativeVerifyResult

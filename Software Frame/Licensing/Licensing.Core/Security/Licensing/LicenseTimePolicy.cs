@@ -50,4 +50,14 @@ public static class LicenseTimePolicy
                             (!lastReminderLocalDate.HasValue || localDate > lastReminderLocalDate.Value);
         return new(LicenseTimeStatus.Valid, nowUtc, shouldRemind);
     }
+
+    /// <summary>
+    /// 剩余整天数，不足一天按一天计；已到期返回 0。
+    /// 界面摘要和校验日志必须走这一个算法 —— 两处各算一遍就会出现同一张授权显示两个剩余时间。
+    /// </summary>
+    public static int RemainingDays(DateTime expireAtUtc, DateTime nowUtc)
+    {
+        TimeSpan left = expireAtUtc - nowUtc;
+        return left <= TimeSpan.Zero ? 0 : (int)Math.Ceiling(left.TotalDays);
+    }
 }

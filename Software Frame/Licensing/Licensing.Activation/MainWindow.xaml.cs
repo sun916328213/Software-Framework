@@ -231,7 +231,7 @@ public partial class MainWindow : Window
             LicenseSummary.Foreground = ValidBrush;
             LicenseSummary.Text = info.IsPermanent
                 ? $"● 授权有效 · 永久 · 客户：{info.Customer}"
-                : $"● 授权有效 · 到期 {info.ExpireAtUtc.ToLocalTime():yyyy-MM-dd HH:mm}{Remaining(info.ExpireAtUtc)} · 客户：{info.Customer}";
+                : $"● 授权有效 · 到期 {info.ExpireAtUtc.ToLocalTime():yyyy-MM-dd HH:mm}{Remaining(info)} · 客户：{info.Customer}";
             return;
         }
         if (info != null && result.Status == NativeLicenseStatus.Expired)
@@ -244,11 +244,9 @@ public partial class MainWindow : Window
         LicenseSummary.Text = "● 尚未激活：" + result.Message;
     }
 
-    private static string Remaining(DateTime expireUtc)
-    {
-        TimeSpan left = expireUtc.ToLocalTime() - DateTime.Now;
-        return left <= TimeSpan.Zero ? "（已到期）" : $"（剩余 {Math.Ceiling(left.TotalDays):0} 天）";
-    }
+    /// <summary>天数直接取授权对象算出的剩余值，与校验日志同一口径；这里只负责文案。</summary>
+    private static string Remaining(NativeLicenseInfo info) =>
+        info.RemainingDays <= 0 ? "（已到期）" : $"（剩余 {info.RemainingDays} 天）";
 
     // 剪贴板可能被其他进程短暂占用，重试几次比直接报错更符合预期。
     private static bool TrySetClipboard(string text)
