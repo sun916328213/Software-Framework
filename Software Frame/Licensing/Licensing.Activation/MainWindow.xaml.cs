@@ -41,12 +41,14 @@ public partial class MainWindow : Window
             }
             if (string.IsNullOrWhiteSpace(key))
             {
-                ShowUnavailable("这是开发构建：编译时没有嵌入供应商公钥，不能激活客户授权。");
+                ShowUnavailable("这是开发构建：编译时没有嵌入供应商公钥，不能激活客户授权。",
+                    "● 开发构建 · 缺少供应商公钥，仅供本机调试");
                 return;
             }
             if (string.IsNullOrWhiteSpace(productId))
             {
-                ShowUnavailable("这是开发构建：编译时没有嵌入产品标识，不能激活客户授权。");
+                ShowUnavailable("这是开发构建：编译时没有嵌入产品标识，不能激活客户授权。",
+                    "● 开发构建 · 缺少产品标识，仅供本机调试");
                 return;
             }
             _store = new NativeLicenseSession(key, productId);
@@ -58,19 +60,20 @@ public partial class MainWindow : Window
         catch (Exception ex) when (IsExpectedFailure(ex))
         {
             CopyButton.IsEnabled = !string.IsNullOrEmpty(MachineCode.Text);
-            ShowUnavailable($"初始化失败：{ex.Message}");
+            ShowUnavailable($"初始化失败：{ex.Message}", "● 本机授权组件不可用");
         }
     }
 
-    private void ShowUnavailable(string reason)
+    /// <summary>顶部摘要与下方原因必须说同一种缺失：笼统写「未嵌入发行身份」会在只缺产品标识时自相矛盾。</summary>
+    private void ShowUnavailable(string reason, string summary)
     {
         _initializationFailure = reason +
             "\n\n这是源码目录里的 Debug 构建，不是给客户的发行包；客户机器上运行的包由厂商工具“生成客户工具包”产出，已内置发行身份，不会出现本提示。" +
             "\n本机自测（可选）：在授权工具完成签发环境初始化、填写产品标识，点击“生成客户工具包”产出发行包，运行该目录里的激活工具即为已配置版本。" +
-            "\n若提示原生组件加载失败，请供应商检查构建环境并提供完整 Windows x64 客户包。";
+            "\n若提示组件加载失败：客户包必须整目录交付，只复制 EXE 会缺 Licensing.Core/Licensing.Trust 等 DLL，请供应商重新提供完整 Windows x64 客户包。";
         // 主按钮保持可点：变灰会让人以为是程序坏了，点一下能直接看到该怎么做。
         LicenseSummary.Foreground = NeutralBrush;
-        LicenseSummary.Text = "● 开发构建 · 未嵌入发行身份，仅供本机调试";
+        LicenseSummary.Text = summary;
         Status.Text = _initializationFailure;
     }
 

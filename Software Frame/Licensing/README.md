@@ -48,7 +48,7 @@
 
 产品标识与公钥在**编译期**嵌入 `Licensing.Trust.dll`（见 `Build/ClientProduct.targets` 与 `Build/Trust.props`），因此客户不需要、也无法选择它们；换身份或换产品必须重新生成客户包，不能靠改配置文件。**所有程序共用这一份定义**，公钥随仓库提交，不需要为每个程序单独填。
 
-源码目录 `bin/Debug` 下的 `Licensing.Activation.exe` 是**开发构建**，未嵌入发行身份，运行时显示"开发构建 · 未嵌入发行身份"属正常状态，不是故障。它只用于本机自测或对照排查；生产上这台机器不需要运行它。开发构建下 **导出申请单** 仍然可用（没有产品标识就只写机器码）—— 客户第一件事是把机器码发出来，与能不能激活无关。
+源码目录 `bin/Debug` 下的 `Licensing.Activation.exe` 是**开发构建**：公钥已经随 `Build/Trust.props` 一起编进程序集，但产品标识只来自不入库的 `.local/client.props`，所以运行时显示"开发构建 · 缺少产品标识"属正常状态，不是故障。它只用于本机自测或对照排查；生产上这台机器不需要运行它。开发构建下 **导出申请单** 仍然可用（没有产品标识就只写机器码）—— 客户第一件事是把机器码发出来，与能不能激活无关。
 
 ## 签发身份：密码加密，随工具文件夹便携
 
@@ -97,6 +97,7 @@
 公钥是公开数据，因此随仓库提交：`Build/Keys/public-<SHA256>.key` 是验证凭据本体，`Build/Trust.props` 给出它的路径和硬钉指纹。克隆下来直接编译就拿到正确的公钥，不再需要「手工让授权工具和 Trust 对齐」这一步。
 
 - 构建守卫校验的是**身份**，不只是格式：换一个自管公钥去编译会直接失败，除非同时改 `Trust.props` —— 于是信任锚的变更必然出现在 git diff 里，可评审。
+- 授权工具解锁签发身份后，状态栏立即给出**发布预检**：本机身份与仓库钉住的指纹是否同一把、`Build/Keys/` 里的公钥文件是否还在。对不上时生成客户包一定会被拒，先在界面讲清楚，不用等完几分钟 `dotnet publish` 才知道原因。
 - 换签发身份：新公钥写进 `Build/Keys/`，更新 `Trust.props` 的文件名与指纹，提交，然后重新构建并重新发布所有宿主。
 - 临时身份只允许在不交付的构建里用，且必须自己带上指纹：`.local/client.props` 同时写 `LicensePublicKeyFile` 和 `LicenseExpectedPublicKeyFingerprint`（`IssuerFiles.SaveDebugClientConfiguration` 成对写出）。发布脚本的 `-OverrideExpectedFingerprint` 同理，仅用于测试。
 - 命令行 `-p:` 是 MSBuild 全局属性，优先于以上两层，发布流程仍由厂商显式掌控。

@@ -100,6 +100,44 @@ public sealed class WorkbenchTests
     }
 
     [Fact]
+    public void TrustAnchorPreflightSaysWhyTheCustomerPackageWouldBeRefused()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "TrustPreflight-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(root, "Build"));
+        string props = Path.Combine(root, "Build", "Trust.props");
+        const string pinned = "1111111111222222222233333333334444444444555555555566666666667777";
+        try
+        {
+            Assert.Contains("仓库信任锚缺失",
+                Licensing.Authorization.MainWindow.TrustAnchorStatus(root, pinned));
+
+            File.WriteAllText(props, """
+                <Project>
+                  <PropertyGroup><LicenseExpectedPublicKeyFingerprint>abc</LicenseExpectedPublicKeyFingerprint></PropertyGroup>
+                </Project>
+                """);
+            Assert.Contains("未钉指纹", Licensing.Authorization.MainWindow.TrustAnchorStatus(root, pinned));
+
+            File.WriteAllText(props, $"""
+                <Project>
+                  <PropertyGroup>
+                    <LicensePublicKeyFile>$(MSBuildThisFileDirectory)Keys\public-{pinned}.key</LicensePublicKeyFile>
+                    <LicenseExpectedPublicKeyFingerprint>{pinned}</LicenseExpectedPublicKeyFingerprint>
+                  </PropertyGroup>
+                </Project>
+                """);
+            // 指纹对得上却少了钥匙文件，同样会在发布时被拦下，这里要提前讲出来。
+            Assert.Contains("缺文件", Licensing.Authorization.MainWindow.TrustAnchorStatus(root, pinned));
+            Directory.CreateDirectory(Path.Combine(root, "Build", "Keys"));
+            File.WriteAllText(Path.Combine(root, "Build", "Keys", $"public-{pinned}.key"), "placeholder");
+            Assert.Contains("可以生成客户包", Licensing.Authorization.MainWindow.TrustAnchorStatus(root, pinned));
+            Assert.Contains("信任锚不一致",
+                Licensing.Authorization.MainWindow.TrustAnchorStatus(root, "9".PadRight(64, '9')));
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, recursive: true); }
+    }
+
+    [Fact]
     public Task VendorWindowDoesNotExposeRawCredentialsOrAutomaticallyCreateThem() => WpfLicenseSessionTests.RunSta(() =>
     {
         string root = Path.Combine(Path.GetTempPath(), "IssuerUi-" + Guid.NewGuid().ToString("N"));

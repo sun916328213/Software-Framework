@@ -35,13 +35,13 @@ namespace Extension.Security.Licensing
             ArgumentNullException.ThrowIfNull(info);
             LicenseProduct.Validate(info.ProductId);
             string payloadJson = JsonSerializer.Serialize(info, JsonContext.LicenseInfo);
-            string signedText = $"SF2.{Base64Url(Encoding.UTF8.GetBytes(payloadJson))}";
+            string signedText = $"SF2.{Base64Url.Encode(Encoding.UTF8.GetBytes(payloadJson))}";
             byte[] sig;
             using (var rsa = RsaEx.FromPrivateKey(privateKeyBase64))
             {
                 sig = rsa.SignData(Encoding.ASCII.GetBytes(signedText), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             }
-            return $"{signedText}.{Base64Url(sig)}";
+            return $"{signedText}.{Base64Url.Encode(sig)}";
         }
 
         /// <summary>正式签发入口：明确产品、强制 V2 机器绑定。底层 Create 仅供受信任调用方和测试使用。</summary>
@@ -112,8 +112,8 @@ namespace Extension.Security.Licensing
             byte[] payload, sig;
             try
             {
-                payload = FromBase64Url(parts[1]);
-                sig = FromBase64Url(parts[2]);
+                payload = Base64Url.Decode(parts[1]);
+                sig = Base64Url.Decode(parts[2]);
             }
             catch (Exception ex) when (ex is FormatException
                                           or ArgumentException
@@ -194,27 +194,5 @@ namespace Extension.Security.Licensing
         /// </summary>
         private static LicenseVerifyResult Fail(LicenseStatus s, string msg, LicenseInfo? lic = null)
             => new() { Status = s, Message = msg, License = lic };
-
-        /// <summary>
-        /// 处理当前类型提供的操作；对应入口为 Base64Url。
-        /// 正文中的关键协作调用包括 Replace、TrimEnd、ToBase64String；具体条件和先后次序见方法体。
-        /// </summary>
-        private static string Base64Url(byte[] data)
-            => Convert.ToBase64String(data).TrimEnd('=').Replace('+', '-').Replace('/', '_');
-
-        /// <summary>
-        /// 处理当前类型提供的操作；对应入口为 FromBase64Url。
-        /// 正文中的关键协作调用包括 Replace、FromBase64String；具体条件和先后次序见方法体。
-        /// </summary>
-        private static byte[] FromBase64Url(string s)
-        {
-            string t = s.Replace('-', '+').Replace('_', '/');
-            switch (t.Length % 4)
-            {
-                case 2: t += "=="; break;
-                case 3: t += "="; break;
-            }
-            return Convert.FromBase64String(t);
-        }
     }
 }

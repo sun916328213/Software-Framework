@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Xml;
+using System.Xml.Linq;
 using Extension.Security.Licensing;
 using Microsoft.Win32;
 
@@ -54,11 +56,8 @@ public partial class MainWindow : Window
                 Product.Text = File.ReadAllText(settings).Trim();
             EnvironmentStatus.Text = _identity == null
                 ? "尚未创建签发身份：点右上角「签发身份」，设置密码即可创建。"
-                : "签发身份已解锁 · " + _identity.Fingerprint[..12] + " · 数据目录：" + _environment.DirectoryPath;
-            // 身份就绪但还没生成开发配置时，明确给出下一步，避免 Licensing.Activation 一直是未配置状态。
-            if (_identity != null && !File.Exists(Path.Combine(SourceModuleRoot(), ".local", "client.props")))
-                EnvironmentStatus.Text += "\n下一步：填写产品标识后点“生成客户工具包”产出发行包，运行该目录里的激活工具即为已配置版本；"
-                    + "本机开发也可用客户包验证完整流程。";
+                : "签发身份已解锁 · " + _identity.Fingerprint[..12] + " · 数据目录：" + _environment.DirectoryPath
+                    + "\n" + TrustAnchorStatus(SourceModuleRoot(), _identity.Fingerprint);
             RefreshRecords();
         }
         catch (Exception ex)
@@ -69,6 +68,40 @@ public partial class MainWindow : Window
     }
 
     private IssuerIdentity RequireIdentity() => _identity ?? throw new InvalidOperationException("请先解锁签发身份（右上角「签发身份」）。");
+
+    /// <summary>
+    /// 发布前的信任锚预检：客户包只允许钉仓库里那把公钥，本机身份对不上必然被发布脚本拒绝。
+    /// 在界面先讲清楚，免得用户等完几分钟 dotnet publish 才看到真正原因。
+    /// </summary>
+    internal static string TrustAnchorStatus(string moduleRoot, string identityFingerprint)
+    {
+        try
+        {
+            string path = Path.Combine(moduleRoot, "Build", "Trust.props");
+            if (!File.Exists(path)) return "仓库信任锚缺失：没有 Build\\Trust.props，这份源码不能生成客户包。";
+            var document = XDocument.Load(path);
+            string pinned = (((string?)document.Descendants("LicenseExpectedPublicKeyFingerprint").FirstOrDefault()) ?? string.Empty).Trim();
+            if (pinned.Length != 64) return "仓库信任锚未钉指纹：Build\\Trust.props 缺少 LicenseExpectedPublicKeyFingerprint。";
+
+            const string variable = "$(MSBuildThisFileDirectory)";
+            string declared = (((string?)document.Descendants("LicensePublicKeyFile").FirstOrDefault()) ?? string.Empty).Trim();
+            if (declared.StartsWith(variable, StringComparison.Ordinal))
+            {
+                string keyPath = Path.Combine(moduleRoot, "Build",
+                    declared[variable.Length..].Replace('\\', Path.DirectorySeparatorChar));
+                if (!File.Exists(keyPath)) return "仓库信任锚缺文件：Build\\Trust.props 指向的公钥不在，请检查 git 状态。";
+            }
+
+            return string.Equals(pinned, identityFingerprint, StringComparison.OrdinalIgnoreCase)
+                ? $"信任锚一致：本机身份就是仓库钉住的签发公钥（{pinned[..12]}…），可以生成客户包。"
+                : $"信任锚不一致：仓库钉 {pinned[..12]}…，本机签发身份 {identityFingerprint[..12]}…\n"
+                    + "生成客户包会被拒绝。换签发身份要把新公钥写进 Build\\Keys\\，更新 Build\\Trust.props 并提交，再重新发布。";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or XmlException)
+        {
+            return "信任锚状态读取失败：" + ex.Message;
+        }
+    }
 
     private string RequireProduct()
     {

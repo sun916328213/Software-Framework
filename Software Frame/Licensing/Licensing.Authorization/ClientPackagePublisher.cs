@@ -73,15 +73,17 @@ internal static class ClientPackagePublisher
             }
             string log = await stdout + await stderr;
             if (process.ExitCode == 0) return;
-            if (log.Contains("Platform linker not found", StringComparison.Ordinal))
+            // 交付前最常见的真实失败：本机签发身份与仓库钉住的信任锚不是同一把。
+            // 必须原样顶出来并给出下一步，否则这行英文会被下面的通用文案淹掉，让人以为是工具链坏了。
+            if (log.Contains("is not the expected trust anchor", StringComparison.Ordinal))
                 throw new InvalidOperationException(
-                    "客户包生成失败：找不到 Native AOT 链接器（link.exe）。\n" +
-                    "工具已尝试直接定位 MSVC 与 Windows SDK（见上方 diagnostics 行）。仍然失败通常是这两种情况：\n" +
-                    "  · 没装「使用 C++ 的桌面开发」工作负载（含 MSVC 生成工具与 Windows SDK）\n" +
-                    "  · Visual Studio 安装已损坏：Installer 里提示需要修复，vswhere 查不到 C++ 组件\n" +
-                    "请在 Visual Studio Installer 里修复或补装该工作负载，再重新打开本工具。\n\n" + log);
-            throw new InvalidOperationException("客户包生成失败，该目录不可交付。\n" + log +
-                "\n\n常见原因：输出目录非空；NuGet 包源不可用；缺少 Native AOT C++ 工具链。");
+                    "客户包生成被拒绝：本机签发身份的公钥与仓库钉住的信任锚不是同一把。\n" +
+                    "这是设计如此 —— 不允许发布一把「没人评审过」的验证凭据。\n" +
+                    "换身份后的正确顺序：把新公钥写入 Build\\Keys\\public-<指纹>.key，更新 Build\\Trust.props 的文件名与指纹，提交，再重新生成客户包。\n" +
+                    "只想用临时身份自测：改 .local\\client.props 并同时提供 LicenseExpectedPublicKeyFingerprint（该配置不会被发布）。\n\n" + log);
+            throw new InvalidOperationException(
+                "客户包生成失败，该目录不可交付。\n" + log +
+                "\n\n常见原因：输出目录非空；NuGet 包源不可用；产品标识或公钥参数不合法。");
         }
         finally { if (Directory.Exists(temporary)) Directory.Delete(temporary, recursive: true); }
     }
