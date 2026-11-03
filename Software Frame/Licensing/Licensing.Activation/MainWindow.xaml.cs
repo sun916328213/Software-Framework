@@ -4,18 +4,15 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Cryptography;
 using System.Windows;
-using System.Windows.Media;
 using Licensing.Native.Client;
 using Licensing.Trust;
+using Licensing.Wpf;
 using Microsoft.Win32;
 
 namespace Licensing.Activation;
 
 public partial class MainWindow : Window
 {
-    private static readonly Brush ValidBrush = new SolidColorBrush(Color.FromRgb(0x10, 0x7C, 0x10));
-    private static readonly Brush InvalidBrush = new SolidColorBrush(Color.FromRgb(0xC4, 0x2B, 0x1C));
-    private static readonly Brush NeutralBrush = new SolidColorBrush(Color.FromRgb(0x60, 0x60, 0x60));
     private NativeLicenseSession? _store;
     private string _initializationFailure = string.Empty;
     /// <summary>编译期嵌入的产品标识；开发构建下为空。导出申请单时写进文件，供供应商核对没签错产品。</summary>
@@ -73,7 +70,7 @@ public partial class MainWindow : Window
             "\n本机自测（可选）：在授权工具完成签发环境初始化、填写产品标识，点击“生成客户工具包”产出发行包，运行该目录里的激活工具即为已配置版本。" +
             "\n若提示组件加载失败：客户包必须整目录交付，只复制 EXE 会缺 Licensing.Core/Licensing.Trust 等 DLL，请供应商重新提供完整 Windows x64 客户包。";
         // 主按钮保持可点：变灰会让人以为是程序坏了，点一下能直接看到该怎么做。
-        LicenseSummary.Foreground = NeutralBrush;
+        LicenseSummary.Foreground = LicenseStatusBrushes.NotActivated;
         LicenseSummary.Text = summary;
         Status.Text = _initializationFailure;
     }
@@ -229,28 +226,10 @@ public partial class MainWindow : Window
     /// <summary>常驻摘要：打开界面就能看到是否有效、何时到期、还剩多少天，不用去读下面的日志。</summary>
     private void UpdateSummary(NativeVerifyResult result)
     {
-        var info = result.License;
-        if (result.Ok && info != null)
-        {
-            LicenseSummary.Foreground = ValidBrush;
-            LicenseSummary.Text = info.IsPermanent
-                ? $"● 授权有效 · 永久 · 客户：{info.Customer}"
-                : $"● 授权有效 · 到期 {info.ExpireAtUtc.ToLocalTime():yyyy-MM-dd HH:mm}{Remaining(info)} · 客户：{info.Customer}";
-            return;
-        }
-        if (info != null && result.Status == NativeLicenseStatus.Expired)
-        {
-            LicenseSummary.Foreground = InvalidBrush;
-            LicenseSummary.Text = $"● 授权已到期（{info.ExpireAtUtc.ToLocalTime():yyyy-MM-dd HH:mm}）· 客户：{info.Customer}，请联系供应商续期。";
-            return;
-        }
-        LicenseSummary.Foreground = result.Status == NativeLicenseStatus.Malformed ? NeutralBrush : InvalidBrush;
-        LicenseSummary.Text = "● 尚未激活：" + result.Message;
+        var banner = LicenseBanner.For(result);
+        LicenseSummary.Foreground = LicenseStatusBrushes.Of(banner.State);
+        LicenseSummary.Text = banner.Text;
     }
-
-    /// <summary>天数直接取授权对象算出的剩余值，与校验日志同一口径；这里只负责文案。</summary>
-    private static string Remaining(NativeLicenseInfo info) =>
-        info.RemainingDays <= 0 ? "（已到期）" : $"（剩余 {info.RemainingDays} 天）";
 
     /// <summary>客户包由 dotnet publish 现编，界面直接标出验签组件的构建时间，省得靠文件属性猜自己跑的是哪一份。</summary>
     private static string CoreBuildStamp()

@@ -52,6 +52,7 @@ public partial class MainWindow : Window
         Loaded -= OnLoaded;
         if (string.IsNullOrWhiteSpace(_key) || string.IsNullOrWhiteSpace(_product))
         {
+            Authorization.Foreground = LicenseStatusBrushes.Denied;
             Authorization.Text = "未配置发行身份：编译期没有嵌入公钥或产品标识。";
             return;
         }
@@ -71,14 +72,17 @@ public partial class MainWindow : Window
         if (_closing) return;
         _authorized = result.Ok;
         StartTask.IsEnabled = _authorized && !_running;
-        Authorization.Text = result.Message + (result.License == null ? "" : $"\n产品：{result.License.ProductId}　客户：{result.License.Customer}");
+        var banner = LicenseBanner.For(result);
+        Authorization.Foreground = LicenseStatusBrushes.Of(banner.State);
+        Authorization.Text = banner.Text;
         Append(result.Ok ? "授权有效，可申请新任务。" : "禁止新任务：" + result.Message);
         // 不取消已获准的模拟任务；真实设备安全策略属于未来的 MachineApp。
     }
 
     private void Deny(string message)
     {
-        _authorized = false; StartTask.IsEnabled = false; Authorization.Text = message; Append(message);
+        _authorized = false; StartTask.IsEnabled = false;
+        Authorization.Foreground = LicenseStatusBrushes.Denied; Authorization.Text = message; Append(message);
     }
 
     private async Task ObserveCompletionAsync(WpfLicenseSession session)
