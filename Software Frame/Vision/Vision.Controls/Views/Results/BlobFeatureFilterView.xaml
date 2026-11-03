@@ -1,0 +1,58 @@
+<UserControl x:Class="Vision.Controls.View.BlobFeatureFilterView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Name="Root">
+    <StackPanel Margin="0,0,0,8">
+        <StackPanel.Style>
+            <Style TargetType="StackPanel">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Rows.Count, ElementName=Root}" Value="0">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </StackPanel.Style>
+        <TextBlock
+            Margin="2,0,0,6"
+            FontWeight="SemiBold"
+            Text="已勾选特征（限定本次筛选范围）" />
+        <DataGrid
+            x:Name="FeatureGrid"
+            MaxHeight="150"
+            AutoGenerateColumns="False"
+            AutomationProperties.Name="已勾选特征范围"
+            CanUserAddRows="False"
+            CanUserDeleteRows="False"
+            IsReadOnly="False"
+            ItemsSource="{Binding Rows, ElementName=Root}"
+            SelectionMode="Single"
+            SelectionUnit="FullRow">
+            <DataGrid.Resources>
+                <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                    <Setter Property="Padding" Value="3,2" />
+                </Style>
+                <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                    <Setter Property="Padding" Value="3,4" />
+                </Style>
+                <Style x:Key="FeatureValueText" TargetType="TextBlock">
+                    <Setter Property="Margin" Value="0" />
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                    <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                </Style>
+            </DataGrid.Resources>
+            <DataGrid.Columns>
+                <DataGridTextColumn ElementStyle="{StaticResource FeatureValueText}" Width="1.5*" Header="特征" Binding="{Binding Feature}" IsReadOnly="True" />
+                <DataGridTextColumn ElementStyle="{StaticResource FeatureValueText}" Width="*" Header="下限" Binding="{Binding Min, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True}" />
+                <DataGridTextColumn ElementStyle="{StaticResource FeatureValueText}" Width="*" Header="上限" Binding="{Binding Max, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True}" />
+                <DataGridTextColumn ElementStyle="{StaticResource FeatureValueText}" Width="*" Header="本次最小" Binding="{Binding ObservedMin, StringFormat=0.###, TargetNullValue=—}" IsReadOnly="True" />
+                <DataGridTextColumn ElementStyle="{StaticResource FeatureValueText}" Width="*" Header="本次最大" Binding="{Binding ObservedMax, StringFormat=0.###, TargetNullValue=—}" IsReadOnly="True" />
+            </DataGrid.Columns>
+        </DataGrid>
+        <TextBlock
+            Margin="2,4,0,0"
+            Opacity="0.7"
+            Text="下限/上限 与参数页的范围表格为同一份数据；修改后需重新执行才生效。“本次最小/最大”是通过筛选的区域的实测范围，无结果时显示 —。"
+            TextWrapping="Wrap" />
+    </StackPanel>
+</UserControl>

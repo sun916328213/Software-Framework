@@ -12,6 +12,7 @@ using System.Windows.Threading;
 using Vision.Controls;
 using Vision.Controls.Converters;
 using Vision.Controls.Presentation;
+using Vision.Controls.View;
 using Vision.Core;
 using Vision.Core.Geometry;
 using Vision.Core.Tools;
@@ -76,7 +77,7 @@ public sealed class S6PresentationAdapterTests(WorkbenchAppFixture host)
         host.Invoke(() =>
         {
             var tool = new ProbeTool { Name = "S6 工具" };
-            var panel = new Ctr_PropertyPanel { TargetObject = tool };
+            var panel = new VisionPropertyPanel { TargetObject = tool };
             panel.Measure(new Size(600, 600));
             panel.Arrange(new Rect(0, 0, 600, 600));
             panel.UpdateLayout();

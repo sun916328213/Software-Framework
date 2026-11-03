@@ -31,9 +31,8 @@ public sealed class VisionControlsModule : IModule
         ArgumentNullException.ThrowIfNull(registry);
         if (!registry.IsRegistered<IToolPresentation>())
             registry.RegisterSingleton<IToolPresentation>(_ => new WpfToolPresentation());
-        RegisterControl<VisionBrowserView>(registry);
+        RegisterControl<VisionToolEditorView>(registry);
         RegisterControl<ToolEditorView>(registry);
-        RegisterControl<ToolCardView>(registry);
         RegisterControl<RoiEditorView>(registry);
     }
 

@@ -95,7 +95,13 @@ public partial class FlowChartViewModel : ObservableObject
         UndoRedo.StackChanged += NotifyCanExecuteChanged;
         Model.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is nameof(FlowChartModel.IsRunning) or nameof(FlowChartModel.IsLoopRunning))
+            if (e.PropertyName == nameof(FlowChartModel.SupportsDocumentEditing))
+            {
+                SaveCommand.NotifyCanExecuteChanged(); SaveAsCommand.NotifyCanExecuteChanged(); LoadCommand.NotifyCanExecuteChanged();
+                CopyCommand.NotifyCanExecuteChanged(); PasteCommand.NotifyCanExecuteChanged(); CopyNodeCommand.NotifyCanExecuteChanged();
+                UndoCommand.NotifyCanExecuteChanged(); RedoCommand.NotifyCanExecuteChanged();
+            }
+            else if (e.PropertyName is nameof(FlowChartModel.IsRunning) or nameof(FlowChartModel.IsLoopRunning))
                 NotifyCanExecuteChanged();
             else if (e.PropertyName == nameof(FlowChartModel.TabTitle))
             {
@@ -165,6 +171,7 @@ public partial class FlowChartViewModel : ObservableObject
     /// 从持久化文档加载节点，跳过名称唯一性检查（节点名称在保存时已唯一）。
     /// 属于还原操作，不写入撤销历史。
     /// </summary>
+    /// <summary>附加已物化的节点，不触发算法或文档恢复。</summary>
     public NodeViewModel LoadNodeModel(NodeModel node)
     {
         _canvas.AddNode(node);

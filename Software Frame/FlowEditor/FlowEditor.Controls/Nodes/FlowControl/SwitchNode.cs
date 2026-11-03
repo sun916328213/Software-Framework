@@ -47,6 +47,21 @@ public class SwitchNode : NodeModel
         set => SetProperty(ref _inputValue, value);
     }
 
+    private bool _requireInputConnection;
+    /// <summary>可选严格输入：断线后不使用面板常量或上次输入；旧图默认false。</summary>
+    [NodeProperty(DisplayName = "要求输入连接", Group = "2.分发配置", Order = 5, PortConfigurable = false,
+        Description = "启用后必须连接输入值端口；断线不能回退面板常量或旧输入。旧工程默认关闭。")]
+    public bool RequireInputConnection
+    {
+        get => _requireInputConnection;
+        set
+        {
+            if (Service?.Model.IsRunning == true || Service?.Model.IsLoopRunning == true)
+                throw new InvalidOperationException("流程执行中，不能修改输入连接约束。");
+            SetProperty(ref _requireInputConnection, value);
+        }
+    }
+
     private string _rulesText = "1=OUT1\n2=OUT2";
 
     /// <summary>
@@ -161,6 +176,15 @@ public class SwitchNode : NodeModel
     /// </remarks>
     public override Task ExecuteAsync(CancellationToken ct)
     {
+        if (RequireInputConnection)
+        {
+            var input = CustomInputPorts.Single(p => p.PropertyName == nameof(InputValue));
+            if (Service?.Connections.Any(e => e.TargetNodeId == Id && e.TargetPortId == input.Id) != true)
+            {
+                LastMatchedBranch = "(错误：缺少输入连接)";
+                throw new InvalidOperationException($"条件分发节点 [{Name}] 要求输入连接，不能使用面板常量或旧值。");
+            }
+        }
         // 规则右侧写了新分支名时自动补端口，保证 ActivateOutput 的目标端口真实存在
         EnsurePortsFromRules();
 
@@ -296,6 +320,8 @@ public class SwitchNode : NodeModel
         bool ignoreCase,
         bool trimInput)
     {
+        if (Service?.Model.IsRunning == true || Service?.Model.IsLoopRunning == true)
+            throw new InvalidOperationException("流程执行中，不能修改分发规则。");
         UseDefaultBranch = false;
         IgnoreCase = ignoreCase;
         TrimInput = trimInput;

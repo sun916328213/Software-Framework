@@ -86,10 +86,11 @@ internal sealed class FlowDocumentSession
         try
         {
             var document = _store.Load<FlowChartDocumentModel>(filePath);
+            var prepared = PrepareNodes(document);
             _connections.Clear();
             _clearNodes();
             _undoRedo.Clear();
-            RestoreDocument(document);
+            CommitDocument(document, prepared);
             _model.CurrentFilePath = filePath;
             _model.IsModified = false;
             _model.StatusText = $"已加载：{filePath}";
@@ -114,9 +115,10 @@ internal sealed class FlowDocumentSession
         var document = JsonSerializer.Deserialize<FlowChartDocumentModel>(json, FlowDocumentJson.Options);
         if (document == null) return;
 
+        var prepared = PrepareNodes(document);
         _connections.Clear();
         _clearNodes();
-        RestoreDocument(document);
+        CommitDocument(document, prepared);
         _model.IsModified = true;
     }
 
@@ -146,13 +148,50 @@ internal sealed class FlowDocumentSession
     private IReadOnlyList<NodeModel> GetNodes() => _nodeSnapshot();
 
     /// <summary>从文档重建节点、连线和画布配置。</summary>
-    private void RestoreDocument(FlowChartDocumentModel document)
+    private IReadOnlyList<NodeModel> PrepareNodes(FlowChartDocumentModel document)
     {
-        foreach (var nodeDocument in document.Nodes)
-            _addNode(_mapper.ToNode(nodeDocument));
+        var prepared = new List<NodeModel>();
+        try
+        {
+            if (document.Nodes == null || document.Connections == null ||
+                document.Nodes.Any(n => string.IsNullOrWhiteSpace(n.Id)) ||
+                document.Nodes.Select(n => n.Id).Distinct().Count() != document.Nodes.Count)
+                throw new InvalidOperationException("流程节点集合或实例ID无效。");
+            foreach (var descriptor in document.Nodes) prepared.Add(_mapper.ToNode(descriptor));
+            var accepted = new List<ConnectionModel>();
+            var connections = new ConnectionService();
+            foreach (var edge in document.Connections)
+            {
+                var source = prepared.SingleOrDefault(n => n.Id == edge.SourceNodeId);
+                var target = prepared.SingleOrDefault(n => n.Id == edge.TargetNodeId);
+                var output = source?.OutputPorts.SingleOrDefault(p => p.Id == edge.SourcePortId);
+                var input = target?.InputPorts.SingleOrDefault(p => p.Id == edge.TargetPortId);
+                if (output == null || input == null) throw new InvalidOperationException("流程连接引用了不存在的节点或端口。");
+                var rejection = connections.GetRejectionReason(output, input, accepted, prepared);
+                if (rejection != null) throw new InvalidOperationException(rejection);
+                accepted.Add(edge);
+            }
+            return prepared;
+        }
+        catch (Exception original)
+        {
+            var errors = new List<Exception> { original };
+            foreach (var candidate in prepared)
+                try { (candidate as IDisposable)?.Dispose(); } catch (Exception cleanup) { errors.Add(cleanup); }
+            if (errors.Count > 1) throw new AggregateException("流程候选准备及清理失败。", errors);
+            throw;
+        }
+    }
+
+    /// <summary>提交已经完整准备的节点、连接和画布状态；准备失败不会到达此入口。</summary>
+    private void CommitDocument(FlowChartDocumentModel document, IReadOnlyList<NodeModel> prepared)
+    {
+        foreach (var node in prepared)
+            _addNode(node);
         foreach (var connectionDocument in document.Connections)
             _connections.Add(_mapper.ToConnection(connectionDocument));
         _model.ZoomLevel = document.ZoomLevel;
         _model.TabTitle = document.Name;
+        _model.DocumentProperties = new(document.DocumentProperties ?? new());
     }
 }

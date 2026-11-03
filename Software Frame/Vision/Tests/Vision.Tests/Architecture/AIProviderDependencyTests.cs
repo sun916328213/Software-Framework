@@ -41,7 +41,7 @@ public sealed class AIProviderDependencyTests
     // ── 2. csproj：只认 Core + Extension ────────────────────────────
 
     [Fact]
-    public void ProviderProjects_ReferenceOnlyCoreAndExtension()
+    public void ProviderProjects_ReferenceOnlyCoreExtensionAndDeclaredSharedRuntime()
     {
         foreach (var project in ProviderProjects)
         {
@@ -59,8 +59,8 @@ public sealed class AIProviderDependencyTests
                 var file = Path.GetFileNameWithoutExtension(reference);
                 var extension = project == "Vision.AI.Invi" ? "Extension.Core" : "Extension";
                 Assert.True(
-                    file == "Vision.Core" || file == extension,
-                    $"{project} 引用了非允许工程：{reference}（只允许 Vision.Core + {extension}）。");
+                    file == "Vision.Core" || file == extension || (project == "Vision.AI.Halcon" && file == "Vision.Tools"),
+                    $"{project} 引用了非允许工程：{reference}（Core、{extension}及HALCON声明的共享Tools）。");
             }
 
             var packages = Regex

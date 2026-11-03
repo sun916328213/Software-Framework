@@ -2,7 +2,7 @@
 // Vision 模块：视觉工具模型、算法适配和编辑展示；厂商能力与界面转换应在对应边界内协作。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
 // 本文件定义：ToolResultTextTests。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：Vision.Workbench、Vision.Workbench.Tests、Vision.Controls.Presentation、Vision.Core.AI、Vision.Core.Geometry。导入不代表所有类型都会在运行时加载。
-using Vision.Workbench;
+
 using Vision.Workbench.Tests;
 // ─────────────────────────────────────────────────────────────────────────────
 // P8 测试 —— ToolResultText 摘要（已知类型按域语义，未知回退 ToString）.

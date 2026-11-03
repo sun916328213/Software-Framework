@@ -5,6 +5,8 @@
 using WPFControls;
 using WPFControls.Controls.Views;
 using HalconDotNet;
+using Vision.Controls.View;
+using Vision.Tools.Halcon.Internal;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,7 +21,9 @@ namespace WPFControls.ProgramControl.Views.Display
     {
         public static readonly DependencyProperty DisplayImageProperty;
         public static readonly DependencyProperty TitleProperty;
-        public static readonly DependencyProperty HandleProperty;
+
+        /// <summary>共享托管显示区；可直接设置 ImageViewport.Image，输入仍由调用方拥有。</summary>
+        public VisionImagePanel ImageDisplay => ManagedDisplay;
 
         /// <summary>
         /// 显示图像
@@ -38,21 +42,16 @@ namespace WPFControls.ProgramControl.Views.Display
         private static void OnDisplayImage(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var control = (DisplaySingleView)d;
-            HObject image = e.NewValue as HObject;
-            control.HalconWindow.Image=(image);
+            var viewport = control.ImageDisplay.ImageViewport;
+            viewport.ReportImageError(null);
+            if (e.NewValue is HObject image)
+            {
+                try { viewport.Image = HalconImageConverter.ToVisionImage(image); }
+                catch (NotSupportedException error) { viewport.ReportImageError(error.Message); }
+            }
         }
 
 
-        /// <summary>
-        /// 显示图像
-        /// </summary>
-        [Bindable(true)]
-        [Category("自定义属性"), Description("显示控件句柄"), DisplayName("显示控件句柄")]
-        public HObject Handle
-        {
-            get { return (HObject)GetValue(HandleProperty); }
-            set { SetValue(HandleProperty, value); }
-        }
  
 
         /// <summary>
@@ -73,6 +72,7 @@ namespace WPFControls.ProgramControl.Views.Display
         public DisplaySingleView()
         {
             InitializeComponent();
+            ImageDisplay.ImageViewport.IsRoiEditingEnabled = false;
 
         }
 
@@ -84,7 +84,6 @@ namespace WPFControls.ProgramControl.Views.Display
         {
             DisplayImageProperty = DependencyProperty.Register("DisplayImage", typeof(HObject), typeof(DisplaySingleView), new FrameworkPropertyMetadata(null, OnDisplayImage));
             TitleProperty = DependencyProperty.Register("Title", typeof(string), typeof(DisplaySingleView), new FrameworkPropertyMetadata(null));
-            HandleProperty = DependencyProperty.Register("Handle", typeof(HWindow), typeof(DisplaySingleView), new FrameworkPropertyMetadata(null));
         }
 
 

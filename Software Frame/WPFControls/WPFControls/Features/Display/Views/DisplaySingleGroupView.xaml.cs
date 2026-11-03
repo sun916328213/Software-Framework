@@ -8,6 +8,8 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using HalconDotNet;
+using Vision.Controls.View;
+using Vision.Tools.Halcon.Internal;
 
 
 namespace WPFControls.ProgramControl.Views.Display
@@ -19,6 +21,9 @@ namespace WPFControls.ProgramControl.Views.Display
     {
         public static readonly DependencyProperty DisplayImageProperty;
         public static readonly DependencyProperty TitleProperty;
+
+        /// <summary>共享托管显示区；可直接设置 ImageViewport.Image，输入仍由调用方拥有。</summary>
+        public VisionImagePanel ImageDisplay => ManagedDisplay;
 
         /// <summary>
         /// 显示图像
@@ -37,8 +42,13 @@ namespace WPFControls.ProgramControl.Views.Display
         private static void OnDisplayImage(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var control = (DisplaySingleGroupView)d;
-            HObject image = e.NewValue as HObject;
-            control.HalconWindow.Image =(image);
+            var viewport = control.ImageDisplay.ImageViewport;
+            viewport.ReportImageError(null);
+            if (e.NewValue is HObject image)
+            {
+                try { viewport.Image = HalconImageConverter.ToVisionImage(image); }
+                catch (NotSupportedException error) { viewport.ReportImageError(error.Message); }
+            }
  
         }
 
@@ -61,6 +71,7 @@ namespace WPFControls.ProgramControl.Views.Display
         public DisplaySingleGroupView()
         {
             InitializeComponent();
+            ImageDisplay.ImageViewport.IsRoiEditingEnabled = false;
 
         }
 

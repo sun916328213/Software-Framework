@@ -47,7 +47,7 @@ public partial class FlowChartContainerViewModel : ObservableObject, IAsyncDispo
     private readonly IDialogService _dialogService;
     private readonly IFlowTabFactory _tabFactory;
     private readonly FlowChartContainerDocumentService _containerDocumentService;
-    private readonly ToolboxService _toolboxService;
+    private ToolboxService _toolboxService;
 
     private FlowChartViewModel? _activeTab;
     /// <summary>当前活动流程标签页。</summary>
@@ -291,9 +291,15 @@ public partial class FlowChartContainerViewModel : ObservableObject, IAsyncDispo
 
     // ═══════════════════ 多流程持久化 ═══════════════════
 
+    /// <summary>流程组文件操作不得绕过单页运行/宿主编辑锁。</summary>
+    private bool CanEditDocumentGroup() => !_shuttingDown &&
+        Tabs.All(tab => tab.Model.SupportsDocumentEditing && !tab.Model.IsRunning && !tab.Model.IsLoopRunning);
+
+
     /// <summary>保存所有流程到一个文件。</summary>
     private void SaveAll()
     {
+        if (!CanEditDocumentGroup()) return;
         if (!string.IsNullOrEmpty(_containerFilePath))
         {
             SaveAllInternal(_containerFilePath);
@@ -305,6 +311,7 @@ public partial class FlowChartContainerViewModel : ObservableObject, IAsyncDispo
     /// <summary>将所有流程另存为。</summary>
     private void SaveAllAs()
     {
+        if (!CanEditDocumentGroup()) return;
         var path = _dialogService.ShowSaveFileDialog(
             "多流程文件 (*.flows)|*.flows|所有文件 (*.*)|*.*",
             "流程图组.flows",
@@ -319,6 +326,7 @@ public partial class FlowChartContainerViewModel : ObservableObject, IAsyncDispo
     /// <summary>保存已关联文件的修改，并把全部标签页写入流程组文件。</summary>
     private void SaveAllInternal(string path)
     {
+        if (!CanEditDocumentGroup()) return;
         try
         {
             // 先保存单个标签页（确保文件路径更新）
@@ -340,6 +348,7 @@ public partial class FlowChartContainerViewModel : ObservableObject, IAsyncDispo
     /// <summary>从文件加载多个流程。</summary>
     private async Task LoadAllAsync()
     {
+        if (!CanEditDocumentGroup()) return;
         var path = _dialogService.ShowOpenFileDialog("多流程文件 (*.flows)|*.flows|所有文件 (*.*)|*.*");
         if (path == null) return;
         try
@@ -348,7 +357,7 @@ public partial class FlowChartContainerViewModel : ObservableObject, IAsyncDispo
         }
         catch (Exception ex)
         {
-            _dialogService.ShowError($"加载多流程失败：{ex.Message}");
+            if (!_shuttingDown) _dialogService.ShowError($"加载多流程失败：{ex.Message}");
         }
     }
 
@@ -364,16 +373,32 @@ public partial class FlowChartContainerViewModel : ObservableObject, IAsyncDispo
         var containerDoc = await Task.Run(() => _containerDocumentService.Load(path));
         if (containerDoc.Flows.Count == 0) return;
 
-        // 关闭所有现有标签页（不弹确认框）
-        foreach (var tab in Tabs.ToList())
-            RemoveTab(tab);
-
-        // 加载每个流程
-        foreach (var flowDoc in containerDoc.Flows)
+        if (!CanEditDocumentGroup()) throw new InvalidOperationException("流程运行中或文档被锁定，不能替换流程组。");
+        var candidates = new List<FlowChartViewModel>();
+        try
         {
-            var vm = _containerDocumentService.CreateTabFromFlow(flowDoc);
-            vm.SetProcessName(ProcessName);
-            Tabs.Add(vm);
+            foreach (var flowDoc in containerDoc.Flows)
+                candidates.Add(await _containerDocumentService.CreateTabFromFlowAsync(flowDoc));
+            if (!CanEditDocumentGroup()) throw new InvalidOperationException("候选准备期间流程已运行或容器已关闭；当前任务保留。");
+        }
+        catch (Exception original)
+        {
+            List<Exception> errors = [original];
+            foreach (var candidate in candidates)
+            {
+                try { await FlowChartContainerDocumentService.ReleaseCandidateTabAsync(candidate); }
+                catch (Exception cleanup) { errors.Add(cleanup); }
+            }
+            if (errors.Count > 1) throw new AggregateException("流程组候选准备与清理失败；当前流程保留。", errors);
+            throw;
+        }
+
+        // 所有候选已成功，才提交替换；不让损坏的后续页清走当前可用任务。
+        foreach (var tab in Tabs.ToList()) RemoveTab(tab);
+        foreach (var candidate in candidates)
+        {
+            candidate.SetProcessName(ProcessName);
+            Tabs.Add(candidate);
         }
 
         _containerFilePath = path;
@@ -381,6 +406,27 @@ public partial class FlowChartContainerViewModel : ObservableObject, IAsyncDispo
     }
 
     // ═══════════════════ 工具箱 ═══════════════════
+
+    /// <summary>借用宿主已组合的工具箱服务，页面与宿主共享分类、搜索和同一批延迟工厂。</summary>
+    public async Task UseToolboxAsync(ToolboxService toolbox)
+    {
+        ArgumentNullException.ThrowIfNull(toolbox);
+        await toolbox.RefreshAsync();
+        _toolboxService = toolbox;
+        OnPropertyChanged(nameof(ToolboxCategories));
+        OnPropertyChanged(nameof(ToolboxSearchText));
+    }
+
+    /// <summary>显式替换工具箱快照；模块扩展应组合发现服务或使用UseToolboxAsync，不覆盖基础条目。</summary>
+    public async Task SetToolboxItemsAsync(IEnumerable<NodePaletteItem> items)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        var snapshot = items.ToArray();
+        await _toolboxService.RefreshAsync();
+        _toolboxService.Items.Clear();
+        foreach (var item in snapshot) _toolboxService.Items.Add(item);
+        _toolboxService.RebuildCategories();
+    }
 
     /// <summary>从工具箱中排除指定名称的工具（用于 ToolBlock 内部编辑器排除自身）。</summary>
     public void ExcludeToolByName(string toolName)

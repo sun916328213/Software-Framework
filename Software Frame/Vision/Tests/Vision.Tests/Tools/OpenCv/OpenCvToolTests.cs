@@ -252,6 +252,7 @@ public sealed class OpenCvToolTests
         // y=100 水平线（20..180）：拟合 y 应贴近 100，x 覆盖大部。
         var image = SyntheticImages.HorizontalLine(200, 200, 100, 20, 180);
         using var tool = new FindLineTool();
+        tool.Parameters.SearchMode = Vision.Core.Geometry.LineSearchKind.EdgeBand; // 保留该旧Canny回归及其点数口径。
         tool.Parameters.LineStart = new Vision.Core.Geometry.Point2D(20, 100);
         tool.Parameters.LineEnd = new Vision.Core.Geometry.Point2D(180, 100);
         var result = tool.Run(image);

@@ -133,7 +133,7 @@ public sealed class PluginContractTests
         var outputDirectory = new DirectoryInfo(AppContext.BaseDirectory.TrimEnd(
             Path.DirectorySeparatorChar,
             Path.AltDirectorySeparatorChar));
-        var configuration = outputDirectory.Parent?.Name
+        var configuration = typeof(PluginContractTests).Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration
                             ?? throw new InvalidOperationException("无法确定测试构建配置。");
         var solutionDirectory = TestModulePaths.ModuleDirectory;
         var assemblyPath = Path.Combine(
@@ -144,7 +144,11 @@ public sealed class PluginContractTests
             "net9.0-windows7.0",
             $"{PluginAssemblyName}.dll");
 
-        Assert.True(File.Exists(assemblyPath), $"插件契约产物不存在: {assemblyPath}");
+        // dotnet --artifacts-path 将独立夹具放在相邻项目目录；不再把项目名误当Configuration。
+        var artifactsPath = Path.GetFullPath(Path.Combine(outputDirectory.FullName, "..", "..",
+            PluginAssemblyName, outputDirectory.Name, $"{PluginAssemblyName}.dll"));
+        if (!File.Exists(assemblyPath) && File.Exists(artifactsPath)) assemblyPath = artifactsPath;
+        Assert.True(File.Exists(assemblyPath), $"插件契约产物不存在: {assemblyPath}；隔离产物: {artifactsPath}");
         var assembly = Assembly.LoadFrom(assemblyPath);
         return assembly.GetType(PluginTypeName.Split(',')[0], throwOnError: true)!;
     }

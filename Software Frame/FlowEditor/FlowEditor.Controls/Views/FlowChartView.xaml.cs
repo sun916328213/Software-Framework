@@ -316,8 +316,11 @@ public partial class FlowChartView : UserControl
             return;
         }
 
-        ShowCanvasContextMenu();
+        // 必须先结束连线手势、再打开菜单：Cancel 会释放鼠标捕获，
+        // 而 ContextMenu 依赖自身的弹出层捕获来判断“点击外部”。捕获被抢走时菜单会立刻关闭，
+        // 表现为右键一闪即逝。顺序颠倒即复现该缺陷。
         _connectionDrag.Cancel();
+        ShowCanvasContextMenu();
     }
 
     /// <summary>使用当前节点和画布命令上下文打开节点菜单。</summary>
@@ -353,13 +356,13 @@ public partial class FlowChartView : UserControl
     {
         if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key == Key.C)
         {
-            ViewModel.CopyCommand.Execute(null);
+            if (ViewModel.CopyCommand.CanExecute(null)) ViewModel.CopyCommand.Execute(null);
             e.Handled = true;
             return;
         }
         if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key == Key.V)
         {
-            ViewModel.PasteCommand.Execute(null);
+            if (ViewModel.PasteCommand.CanExecute(null)) ViewModel.PasteCommand.Execute(null);
             e.Handled = true;
             return;
         }

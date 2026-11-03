@@ -54,7 +54,7 @@
         <Setter Property="MinHeight" Value="28" />
         <Setter Property="Padding" Value="8,2" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="md:HintAssist.FloatingOffset" Value="0,-15" />
     </Style>
     <Style

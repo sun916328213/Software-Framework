@@ -28,6 +28,10 @@ internal sealed class PropertyValueAccessor
 
     private readonly object _target;
     private readonly PropertyInfo _property;
+    private readonly string? _visibilityMember;
+    private readonly IReadOnlyList<EnumOption>? _enumOptions;
+    public string? ItemsSourceMember { get; }
+    public string? VisibilityMember => _visibilityMember;
 
     /// <summary>
     /// 初始化 PropertyValueAccessor 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
@@ -37,6 +41,8 @@ internal sealed class PropertyValueAccessor
     {
         _target = target;
         _property = property;
+        _visibilityMember = attribute?.IsVisibleProperty;
+        ItemsSourceMember = attribute?.ItemsSource;
 
         PropertyType = property.PropertyType;
         IsNullable = Nullable.GetUnderlyingType(PropertyType) != null;
@@ -60,9 +66,7 @@ internal sealed class PropertyValueAccessor
             : IsFloatingPoint(UnderlyingType) ? 0.01 : 1;
 
         if (UnderlyingType.IsEnum)
-            Options = BuildEnumOptions(UnderlyingType, IsNullable);
-        else if (!string.IsNullOrEmpty(attribute?.ItemsSource))
-            Options = ResolveItemsSource(target, attribute.ItemsSource);
+            _enumOptions = BuildEnumOptions(UnderlyingType, IsNullable);
     }
 
     public string PropertyName => _property.Name;
@@ -78,7 +82,10 @@ internal sealed class PropertyValueAccessor
     public double? Minimum { get; }
     public double? Maximum { get; }
     public double Step { get; }
-    public IReadOnlyList<EnumOption>? Options { get; }
+    public bool IsVisible => string.IsNullOrEmpty(_visibilityMember) ||
+        _target.GetType().GetProperty(_visibilityMember)?.GetValue(_target) is true;
+    public IReadOnlyList<EnumOption>? Options => UnderlyingType.IsEnum || string.IsNullOrEmpty(ItemsSourceMember)
+        ? _enumOptions : ResolveItemsSource(_target, ItemsSourceMember);
     public bool HasRange => Minimum.HasValue || Maximum.HasValue;
     public object? Value => _property.GetValue(_target);
     public IEnumerable? CollectionSource => IsCollection ? Value as IEnumerable : null;
@@ -259,9 +266,13 @@ internal sealed class PropertyValueAccessor
     /// 正文中的关键协作调用包括 GetProperty、GetType、ToList、Select；具体条件和先后次序见方法体。
     /// </summary>
     private static IReadOnlyList<EnumOption>? ResolveItemsSource(object target, string memberName) =>
-        target.GetType().GetProperty(memberName)?.GetValue(target) is IEnumerable<string> values
-            ? values.Select(value => new EnumOption(value, value)).ToList()
-            : null;
+        target.GetType().GetProperty(memberName)?.GetValue(target) switch
+        {
+            // WPF可能在SelectedValuePath尚未应用时用原始值调用IList.IndexOf；List容许类型不匹配查询。
+            IReadOnlyList<EnumOption> options => options.ToList(),
+            IEnumerable<string> values => values.Select(value => new EnumOption(value, value)).ToList(),
+            _ => null
+        };
 
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 IsFloatingPoint。

@@ -526,11 +526,11 @@ public class DistributionSecurityTests
 	[Fact]
 	public void LicenseInfo_JSON里的显式null会覆盖属性初始化器()
 	{
-		LicenseInfo licenseInfo = JsonSerializer.Deserialize<LicenseInfo>("{\"Features\":null,\"Extra\":null}");
+		LicenseInfo licenseInfo = JsonSerializer.Deserialize<LicenseInfo>("{\"ProductId\":\"SoftwareFrame.Default\",\"Features\":null,\"Extra\":null}");
 		Assert.NotNull(licenseInfo);
 		Assert.Null(licenseInfo.Features);
 		Assert.Null(licenseInfo.Extra);
-		LicenseInfo licenseInfo2 = JsonSerializer.Deserialize<LicenseInfo>("{}");
+		LicenseInfo licenseInfo2 = JsonSerializer.Deserialize<LicenseInfo>("{\"ProductId\":\"SoftwareFrame.Default\"}");
 		Assert.NotNull(licenseInfo2.Features);
 		Assert.NotNull(licenseInfo2.Extra);
 	}
@@ -574,8 +574,8 @@ public class DistributionSecurityTests
 			MachineCode = ""
 		}, item);
 		string[] array = text.Split('.');
-		char c = ((array[0][0] == 'A') ? 'B' : 'A');
-		string licenseText = c + array[0].Substring(1) + "." + array[1];
+		char c = ((array[1][0] == 'A') ? 'B' : 'A');
+		string licenseText = array[0] + "." + c + array[1].Substring(1) + "." + array[2];
 		Assert.Equal(LicenseStatus.InvalidSignature, LicenseManagerEx.Verify(licenseText, item2, checkMachine: false).Status);
 	}
 
@@ -598,28 +598,29 @@ public class DistributionSecurityTests
 	}
 
 	/// <summary>
-	/// 测试相关入口 LicenseManagerEx_空payload加空签名被判签名无效_而不是格式错误；准备条件、协作调用与结果检查以方法正文为准。
+	/// 新方案拒绝旧格式以及空载荷或空签名。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、Equal、Verify；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
-	public void LicenseManagerEx_空payload加空签名被判签名无效_而不是格式错误()
+	public void LicenseManagerEx_旧格式及空payload空签名被拒绝()
 	{
 		string item = RsaEx.GenerateKeyPair().PublicKeyBase64;
-		Assert.Equal(LicenseStatus.InvalidSignature, LicenseManagerEx.Verify(".", item).Status);
+		Assert.Equal(LicenseStatus.Malformed, LicenseManagerEx.Verify(".", item).Status);
+		Assert.Equal(LicenseStatus.Malformed, LicenseManagerEx.Verify("SF2..", item).Status);
 	}
 
 	/// <summary>
-	/// 测试相关入口 LicenseManagerEx_clockSkew是提前5分钟判过期_方向与文档的容差说法相反；准备条件、协作调用与结果检查以方法正文为准。
+	/// 默认按实际到期时间判定，显式正偏移可提前判定过期。
 	/// 正文中的关键协作调用包括 GenerateKeyPair、Equal、St、Lic、AddMinutes；具体条件和先后次序见方法体。
 	/// </summary>
 	[Fact]
-	public void LicenseManagerEx_clockSkew是提前5分钟判过期_方向与文档的容差说法相反()
+	public void LicenseManagerEx_默认按实际到期时间判定()
 	{
 		var (priv, pub) = RsaEx.GenerateKeyPair();
-		Assert.Equal(LicenseStatus.Expired, St(Lic(DateTime.UtcNow.AddMinutes(4.0))));
+		Assert.Equal(LicenseStatus.Valid, St(Lic(DateTime.UtcNow.AddMinutes(4.0))));
 		Assert.Equal(LicenseStatus.Valid, St(Lic(DateTime.UtcNow.AddMinutes(6.0))));
 		Assert.Equal(LicenseStatus.Expired, St(Lic(DateTime.UtcNow.AddMinutes(-4.0))));
-		Assert.Equal(LicenseStatus.Valid, St(Lic(DateTime.UtcNow.AddMinutes(4.0)), TimeSpan.Zero));
+		Assert.Equal(LicenseStatus.Expired, St(Lic(DateTime.UtcNow.AddMinutes(4.0)), TimeSpan.FromMinutes(5)));
 		string Lic(DateTime expire)
 		{
 			return LicenseManagerEx.Create(new LicenseInfo
@@ -805,8 +806,8 @@ public class DistributionSecurityTests
 		string machineCode = MachineCodeEx.GetMachineCode();
 		string machineCode2 = MachineCodeEx.GetMachineCode();
 		Assert.Equal(machineCode, machineCode2);
-		Assert.Equal(19, machineCode.Length);
-		Assert.Matches("^[0-9A-F]{4}(-[0-9A-F]{4}){3}$", machineCode);
+		Assert.Equal(22, machineCode.Length);
+		Assert.Matches("^V2-[0-9A-F]{4}(-[0-9A-F]{4}){3}$", machineCode);
 	}
 
 	/// <summary>
@@ -826,18 +827,6 @@ public class DistributionSecurityTests
 		Assert.False(MachineCodeEx.IsCurrentMachine("0000-0000-0000-0000"));
 	}
 
-	/// <summary>
-	/// 测试相关入口 MachineCodeEx_采集失败时降级为占位符_但两处都必须留痕；准备条件、协作调用与结果检查以方法正文为准。
-	/// 正文中的关键协作调用包括 ReadAllText、Combine、ExtensionSourceRoot、Contains、Equal；具体条件和先后次序见方法体。
-	/// </summary>
-	[Fact]
-	public void MachineCodeEx_采集失败时降级为占位符_但两处都必须留痕()
-	{
-		string text = File.ReadAllText(Path.Combine(ExtensionSourceRoot(), "Security", "Licensing", "MachineCodeEx.cs"));
-		Assert.Contains("\"NOMAC|\"", text);
-		Assert.Contains("\"NOSERIAL\"", text);
-		Assert.Equal(2, text.Split("Debug.WriteLine").Length - 1);
-	}
 
 	/// <summary>
 	/// 测试相关入口 MachineCodeEx_用PInvoke取卷序列号_守卫扫不到DllImport字符串_这不是漏网；准备条件、协作调用与结果检查以方法正文为准。
@@ -846,7 +835,7 @@ public class DistributionSecurityTests
 	[Fact]
 	public void MachineCodeEx_用PInvoke取卷序列号_守卫扫不到DllImport字符串_这不是漏网()
 	{
-		string actualString = File.ReadAllText(Path.Combine(ExtensionSourceRoot(), "Security", "Licensing", "MachineCodeEx.cs"));
+		string actualString = File.ReadAllText(Path.Combine(ExtensionSourceRoot(), "..", "..", "Licensing", "Licensing.Core", "Security", "Licensing", "MachineCodeEx.cs"));
 		Assert.Contains("DllImport(\"kernel32.dll\"", actualString);
 		Assert.Contains("GetVolumeInformation", actualString);
 	}

@@ -1,0 +1,147 @@
+<UserControl
+    x:Class="Vision.Controls.View.VisionImagePanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:view="clr-namespace:Vision.Controls.View"
+    x:Name="Root"
+    d:DesignHeight="700"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Vision.Controls;component/Themes/VisionBrowserStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <view:VisionImageViewport
+            x:Name="Viewport"
+            AutomationProperties.Name="视觉图像画布"
+            ContextMenuOpening="ImageMenuOpening"
+            Editor="{Binding RoiEditor}"
+            ExecutionRoi="{Binding ExecutionSearchRoi}"
+            Image="{Binding InputImage}"
+            IsRoiEditingEnabled="{Binding IsEditingEnabled}"
+            LineSearch="{Binding LineSearch}"
+            LineSearchEdited="LineSearchEdited"
+            Result="{Binding CurrentCard.LastResult}"
+            Results="{Binding CurrentCard.Results}"
+            ShowOutput="{Binding ShowOutputImage}"
+            ShowResultBounds="{Binding ShowResultBounds}"
+            ShowResultCenters="{Binding ShowResultCenters}"
+            ShowResults="{Binding ShowResults}"
+            ShowRoiImage="{Binding ShowRoiImage}"
+            ShowRois="{Binding ShowRois}"
+            ShowTraining="{Binding ShowTrainingImage}"
+            TrainingImage="{Binding TrainingImage}">
+            <view:VisionImageViewport.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Click="ZoomIn" Header="放大" />
+                    <MenuItem Click="ZoomOut" Header="缩小" />
+                    <MenuItem Click="ActualPixels" Header="实际像素 1:1" />
+                    <MenuItem Click="FitImage" Header="适应图像" />
+                    <Separator />
+                    <MenuItem Click="PanImage" Header="平移" />
+                    <MenuItem Click="SelectCanvas" Header="选择 / 编辑" />
+                    <Separator />
+                    <MenuItem
+                        Click="SaveImageAs"
+                        Header="另存为图像…"
+                        ToolTip="保存当前底图的原始尺寸，不包含标注或视口缩放" />
+                </ContextMenu>
+            </view:VisionImageViewport.ContextMenu>
+        </view:VisionImageViewport>
+        <Grid Grid.Row="1" MinHeight="34">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding DataContext, ElementName=Root}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            <TextBlock
+                x:Name="ImageRecordStatus"
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                Text="{Binding ImageRecordText}"
+                TextTrimming="CharacterEllipsis"
+                ToolTip="{Binding ImageRecordText}">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsDrawing, ElementName=Viewport}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+            <TextBlock
+                x:Name="ExecutionStatus"
+                VerticalAlignment="Center"
+                AutomationProperties.Name="图像状态"
+                ClipToBounds="True"
+                Text="{Binding CurrentOperationText, Mode=OneWay}"
+                TextTrimming="CharacterEllipsis"
+                TextWrapping="NoWrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsDrawing, ElementName=Viewport}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+                <TextBlock.ToolTip>
+                    <ToolTip MaxWidth="780">
+                        <TextBlock Text="{Binding PlacementTarget.Text, RelativeSource={RelativeSource AncestorType={x:Type ToolTip}}}" TextWrapping="Wrap" />
+                    </ToolTip>
+                </TextBlock.ToolTip>
+            </TextBlock>
+            <DockPanel
+                x:Name="DrawingActions"
+                Grid.ColumnSpan="2"
+                Visibility="{Binding IsDrawing, ElementName=Viewport, Converter={StaticResource CapabilityVisibility}}">
+                <WrapPanel DockPanel.Dock="Right">
+                    <Button
+                        x:Name="CompleteDrawingButton"
+                        Margin="2"
+                        Click="CompleteRoiDrawing"
+                        Content="完成"
+                        Style="{StaticResource VisionRunButton}"
+                        ToolTip="确认当前草稿（Enter / 右键）；多边形至少三个不共线顶点" />
+                    <Button
+                        Margin="2"
+                        Click="CancelRoiDrawing"
+                        Content="取消"
+                        Style="{StaticResource VisionCommandButton}"
+                        ToolTip="取消草稿并保留原 ROI（Esc）" />
+                </WrapPanel>
+                <TextBlock
+                    MaxHeight="22"
+                    VerticalAlignment="Center"
+                    Text="{Binding DrawingHint, ElementName=Viewport}"
+                    TextTrimming="CharacterEllipsis"
+                    TextWrapping="NoWrap"
+                    ToolTip="{Binding DrawingHint, ElementName=Viewport}" />
+            </DockPanel>
+        </Grid>
+
+    </Grid>
+
+</UserControl>

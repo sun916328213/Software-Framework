@@ -88,7 +88,8 @@ namespace FlowEditor.Controls
             // ── 服务层（IoC 管理生命周期） ──
             // 工具箱节点发现服务：单例，全局共享
             if (!containerRegistry.IsRegistered<IFlowToolDiscoveryService>())
-                containerRegistry.RegisterSingleton<IFlowToolDiscoveryService, FlowToolDiscoveryService>();
+                containerRegistry.RegisterSingleton<IFlowToolDiscoveryService>(provider =>
+                    new FlowToolDiscoveryService(provider.Resolve<IFlowNodeCatalog>()));
             // 对话框服务：单例，封装消息框与文件对话框
             if (!containerRegistry.IsRegistered<IDialogService>())
                 containerRegistry.RegisterSingleton<IDialogService, DialogService>();

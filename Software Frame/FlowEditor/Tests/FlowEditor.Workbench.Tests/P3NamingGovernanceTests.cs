@@ -71,13 +71,13 @@ public sealed class P3NamingGovernanceTests
         Assert.False(File.Exists(Path.Combine(solutionDirectory, "FlowEditor.Tests", "FlowEditor.Test.csproj")));
     }
 
-    /// <summary>集中维护的架构文档必须存在，并可从模块解决方案访问。</summary>
+    /// <summary>当前维护的实际模块架构文档及所有解决方案文档引用必须存在；不复造缺失历史报告。</summary>
     [Fact]
     public void ArchitectureDocuments_ReferenceCentralDocumentation()
     {
         var solutionDirectory = FlowEditorDirectory();
         var solution = File.ReadAllText(Path.Combine(solutionDirectory, "FlowEditor.sln"));
-        const string document = @"..\..\Documentation\Refactoring\Software-Architecture-Analysis-and-Refactoring-Plan-2026-10-03.md";
+        const string document = "ARCHITECTURE.md";
         Assert.True(File.Exists(Path.GetFullPath(document, solutionDirectory)), $"架构文档缺失: {document}");
         Assert.Contains($"\t\t{document} = {document}", solution, StringComparison.Ordinal);
         foreach (Match section in Regex.Matches(solution, @"ProjectSection\(SolutionItems\)[^\r\n]*\r?\n(?<items>[\s\S]*?)EndProjectSection"))
@@ -96,7 +96,7 @@ public sealed class P3NamingGovernanceTests
         foreach (var sln in new[]
                  {
                      Path.Combine(FlowEditorDirectory(), "FlowEditor.sln"),
-                     Path.Combine(WorkspaceDirectory(), "..", "Software-Framework.sln")
+                     Path.Combine(WorkspaceDirectory(), "..", "Software Frame.sln")
                  })
         {
             var baseDir = Path.GetDirectoryName(sln)!;
@@ -133,7 +133,7 @@ public sealed class P3NamingGovernanceTests
         foreach (var sln in new[]
                  {
                      Path.Combine(FlowEditorDirectory(), "FlowEditor.sln"),
-                     Path.Combine(WorkspaceDirectory(), "..", "Software-Framework.sln")
+                     Path.Combine(WorkspaceDirectory(), "..", "Software Frame.sln")
                  })
         {
             Assert.DoesNotContain("FlowNodes.Infrastructure", File.ReadAllText(sln), StringComparison.OrdinalIgnoreCase);

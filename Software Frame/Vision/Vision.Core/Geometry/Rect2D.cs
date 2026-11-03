@@ -1,9 +1,3 @@
-// 【中文阅读说明】
-// Vision 模块：视觉工具模型、算法适配和编辑展示；厂商能力与界面转换应在对应边界内协作。
-// 本文件定义：Rect2D。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：Vision.Core。导入不代表所有类型都会在运行时加载。
-using Vision.Core;
-// P2 契约骨架（《Vision_Architecture_Optimization_Plan v1.2》§5.1「Vision.Core / Geometry」）。
 namespace Vision.Core.Geometry
 {
     /// <summary>
@@ -12,19 +6,45 @@ namespace Vision.Core.Geometry
     /// </summary>
     public struct Rect2D : IEquatable<Rect2D>
     {
-        /// <summary>左上角 X。</summary>
-        public double X { get; set; }
+        /// <summary>
+        /// 左上角 X。
+        /// </summary>
+        public double X
+        {
+            get;
+            set;
+        }
 
-        /// <summary>左上角 Y。</summary>
-        public double Y { get; set; }
+        /// <summary>
+        /// 左上角 Y。
+        /// </summary>
+        public double Y
+        {
+            get;
+            set;
+        }
 
-        /// <summary>宽。</summary>
-        public double Width { get; set; }
+        /// <summary>
+        /// 宽。
+        /// </summary>
+        public double Width
+        {
+            get;
+            set;
+        }
 
-        /// <summary>高。</summary>
-        public double Height { get; set; }
+        /// <summary>
+        /// 高。
+        /// </summary>
+        public double Height
+        {
+            get;
+            set;
+        }
 
-        /// <summary>构造一个矩形。</summary>
+        /// <summary>
+        /// 构造一个矩形。
+        /// </summary>
         /// <param name="x">左上角 X。</param>
         /// <param name="y">左上角 Y。</param>
         /// <param name="width">宽。</param>
@@ -37,37 +57,59 @@ namespace Vision.Core.Geometry
             Height = height;
         }
 
-        /// <summary>空矩形（默认值）。</summary>
+        /// <summary>
+        /// 空矩形（默认值）。
+        /// </summary>
         public static Rect2D Empty => default;
 
-        /// <summary>左边界。</summary>
+        /// <summary>
+        /// 左边界。
+        /// </summary>
         public double Left => X;
 
-        /// <summary>上边界。</summary>
+        /// <summary>
+        /// 上边界。
+        /// </summary>
         public double Top => Y;
 
-        /// <summary>右边界。</summary>
+        /// <summary>
+        /// 右边界。
+        /// </summary>
         public double Right => X + Width;
 
-        /// <summary>下边界。</summary>
+        /// <summary>
+        /// 下边界。
+        /// </summary>
         public double Bottom => Y + Height;
 
-        /// <summary>中心点。</summary>
+        /// <summary>
+        /// 中心点。
+        /// </summary>
         public Point2D Center => new Point2D(X + Width * 0.5, Y + Height * 0.5);
 
-        /// <summary>左上角。</summary>
+        /// <summary>
+        /// 左上角。
+        /// </summary>
         public Point2D TopLeft => new Point2D(X, Y);
 
-        /// <summary>尺寸。</summary>
+        /// <summary>
+        /// 尺寸。
+        /// </summary>
         public Size2D Size => new Size2D(Width, Height);
 
-        /// <summary>面积。</summary>
+        /// <summary>
+        /// 面积。
+        /// </summary>
         public double Area => Width * Height;
 
-        /// <summary>任一维非正即为空。</summary>
+        /// <summary>
+        /// 任一维非正即为空。
+        /// </summary>
         public bool IsEmpty => Width <= 0 || Height <= 0;
 
-        /// <summary>用四条边界构造（右下为开区间边界，与 <see cref="Right"/>/<see cref="Bottom"/> 同义）。</summary>
+        /// <summary>
+        /// 用四条边界构造（右下为开区间边界，与 <see cref="Right"/>/<see cref="Bottom"/> 同义）。
+        /// </summary>
         /// <param name="left">左边界。</param>
         /// <param name="top">上边界。</param>
         /// <param name="right">右边界。</param>
@@ -76,26 +118,34 @@ namespace Vision.Core.Geometry
         public static Rect2D FromLTRB(double left, double top, double right, double bottom) =>
             new Rect2D(left, top, right - left, bottom - top);
 
-        /// <summary>点是否落在矩形内（含边界）。</summary>
+        /// <summary>
+        /// 点是否落在矩形内（含边界）。
+        /// </summary>
         /// <param name="point">待判定点。</param>
         /// <returns>在内时为 true。</returns>
         public bool Contains(Point2D point) => Contains(point.X, point.Y);
 
-        /// <summary>点是否落在矩形内（含边界）。</summary>
+        /// <summary>
+        /// 点是否落在矩形内（含边界）。
+        /// </summary>
         /// <param name="x">X 分量。</param>
         /// <param name="y">Y 分量。</param>
         /// <returns>在内时为 true。</returns>
         public bool Contains(double x, double y) =>
             !IsEmpty && x >= Left && x <= Right && y >= Top && y <= Bottom;
 
-        /// <summary>四周同时扩张（负值为收缩）。</summary>
+        /// <summary>
+        /// 四周同时扩张（负值为收缩）。
+        /// </summary>
         /// <param name="dx">左右各扩张量。</param>
         /// <param name="dy">上下各扩张量。</param>
         /// <returns>新矩形。</returns>
         public Rect2D Inflate(double dx, double dy) =>
             new Rect2D(X - dx, Y - dy, Width + dx * 2, Height + dy * 2);
 
-        /// <summary>与另一矩形是否相交（边贴边算相交）。</summary>
+        /// <summary>
+        /// 与另一矩形是否相交（边贴边算相交）。
+        /// </summary>
         /// <param name="other">另一矩形。</param>
         /// <returns>相交时为 true。</returns>
         public bool IntersectsWith(Rect2D other) =>
@@ -103,13 +153,17 @@ namespace Vision.Core.Geometry
             other.Left <= Right && other.Right >= Left &&
             other.Top <= Bottom && other.Bottom >= Top;
 
-        /// <summary>求交集；不相交时返回 <see cref="Empty"/>。</summary>
+        /// <summary>
+        /// 求交集；不相交时返回 <see cref="Empty"/>。
+        /// </summary>
         /// <param name="other">另一矩形。</param>
         /// <returns>交集矩形。</returns>
         public Rect2D Intersect(Rect2D other)
         {
             if (!IntersectsWith(other))
+            {
                 return Empty;
+            }
 
             var left = Math.Max(Left, other.Left);
             var top = Math.Max(Top, other.Top);
@@ -119,43 +173,32 @@ namespace Vision.Core.Geometry
         }
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// 处理当前类型提供的操作；对应入口为 Equals。
-        /// 正文中的关键协作调用包括 Equals；具体条件和先后次序见方法体。
-        /// </remarks>
         public bool Equals(Rect2D other) =>
             X.Equals(other.X) && Y.Equals(other.Y) &&
             Width.Equals(other.Width) && Height.Equals(other.Height);
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// 处理当前类型提供的操作；对应入口为 Equals。
-        /// 正文中的关键协作调用包括 Equals；具体条件和先后次序见方法体。
-        /// </remarks>
         public override bool Equals(object obj) => obj is Rect2D other && Equals(other);
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// 获取当前实现提供的值或对象；对应入口为 GetHashCode。
-        /// 正文中的关键协作调用包括 GetHashCode；具体条件和先后次序见方法体。
-        /// </remarks>
         public override int GetHashCode() =>
             (((X.GetHashCode() * 397) ^ Y.GetHashCode()) * 397 ^ Width.GetHashCode()) * 397 ^ Height.GetHashCode();
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// 处理当前类型提供的操作；对应入口为 ToString。
-        /// </remarks>
         public override string ToString() =>
             IsEmpty ? "Rect2D(empty)" : $"Rect2D({X:0.####}, {Y:0.####}, {Width:0.####}×{Height:0.####})";
 
-        /// <summary>值相等。</summary>
+        /// <summary>
+        /// 值相等。
+        /// </summary>
         /// <param name="left">左操作数。</param>
         /// <param name="right">右操作数。</param>
         /// <returns>相等时为 true。</returns>
         public static bool operator ==(Rect2D left, Rect2D right) => left.Equals(right);
 
-        /// <summary>值不等。</summary>
+        /// <summary>
+        /// 值不等。
+        /// </summary>
         /// <param name="left">左操作数。</param>
         /// <param name="right">右操作数。</param>
         /// <returns>不等时为 true。</returns>

@@ -1,0 +1,154 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Vision.Controls"
+    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:view="clr-namespace:Vision.Controls.View">
+    <!--  Vision 独立外观；不修改通用 PropertyGridHost。动态资源允许替换样式而不重建参数对象。  -->
+    <GridLength x:Key="Vision.PropertyPanel.LabelWidth">160</GridLength>
+    <Style
+        x:Key="Vision.PropertyPanel.Group"
+        BasedOn="{StaticResource {x:Type md:Card}}"
+        TargetType="md:Card">
+        <!--  圆角同时裁剪子内容，避免 Expander 背景盖住卡片圆角。  -->
+        <Setter Property="UniformCornerRadius" Value="12" />
+        <Setter Property="ClipContent" Value="True" />
+        <Setter Property="Margin" Value="0,5" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+    </Style>
+    <Style
+        x:Key="Vision.PropertyPanel.Expander"
+        BasedOn="{StaticResource {x:Type Expander}}"
+        TargetType="Expander">
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="md:ExpanderAssist.HorizontalHeaderPadding" Value="12" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding GroupName}" Value="">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Expander">
+                            <ContentPresenter Content="{TemplateBinding Content}" />
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+
+            </DataTrigger>
+        </Style.Triggers>
+
+    </Style>
+    <Style x:Key="Vision.PropertyPanel.Label" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="10,4,4,4" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+    </Style>
+    <Style
+        x:Key="Vision.PropertyPanel.Help"
+        BasedOn="{StaticResource Vision.PropertyPanel.Label}"
+        TargetType="TextBlock">
+        <Setter Property="MaxWidth" Value="300" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+    <Style x:Key="Vision.PropertyPanel.Editor" TargetType="ContentControl">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Grid.Column" Value="1" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsFullWidth}" Value="True">
+                <Setter Property="Grid.Column" Value="0" />
+                <Setter Property="Grid.ColumnSpan" Value="2" />
+                <Setter Property="Grid.Row" Value="1" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style
+        x:Key="Vision.PropertyPanel.Text"
+        BasedOn="{StaticResource {x:Type TextBox}}"
+        TargetType="TextBox">
+        <Setter Property="Margin" Value="5" />
+    </Style>
+    <Style x:Key="Vision.PropertyPanel.Integer" TargetType="md:NumericUpDown">
+        <Setter Property="Margin" Value="5" />
+    </Style>
+    <Style x:Key="Vision.PropertyPanel.Decimal" TargetType="md:DecimalUpDown">
+        <Setter Property="Margin" Value="5" />
+    </Style>
+    <Style
+        x:Key="Vision.PropertyPanel.Select"
+        BasedOn="{StaticResource {x:Type ComboBox}}"
+        TargetType="ComboBox">
+        <Setter Property="Margin" Value="5" />
+    </Style>
+    <Style
+        x:Key="Vision.PropertyPanel.MultiSelect"
+        BasedOn="{StaticResource Vision.PropertyPanel.Select}"
+        TargetType="controls:VisionMultiSelectComboBox" />
+    <Style
+        x:Key="Vision.PropertyPanel.Check"
+        BasedOn="{StaticResource {x:Type CheckBox}}"
+        TargetType="CheckBox">
+        <Setter Property="Margin" Value="5" />
+    </Style>
+    <Style
+        x:Key="Vision.PropertyPanel.Button"
+        BasedOn="{StaticResource {x:Type Button}}"
+        TargetType="Button">
+        <Setter Property="Margin" Value="5" />
+    </Style>
+    <Style
+        x:Key="Vision.PropertyPanel.ReadOnly"
+        BasedOn="{StaticResource Vision.PropertyPanel.Label}"
+        TargetType="TextBlock">
+        <Setter Property="Margin" Value="5" />
+        <Setter Property="Padding" Value="6,3" />
+        <Setter Property="Opacity" Value="0.7" />
+    </Style>
+    <Style
+        x:Key="Vision.PropertyPanel.CoordinateLabel"
+        BasedOn="{StaticResource Vision.PropertyPanel.Label}"
+        TargetType="TextBlock">
+        <Setter Property="Margin" Value="5,0,0,0" />
+    </Style>
+    <Style
+        x:Key="Vision.PropertyPanel.Table"
+        BasedOn="{StaticResource {x:Type DataGrid}}"
+        TargetType="DataGrid">
+        <Setter Property="Margin" Value="5" />
+        <Setter Property="MinHeight" Value="100" />
+        <Setter Property="MaxHeight" Value="280" />
+        <Setter Property="CanUserResizeColumns" Value="False" />
+        <Setter Property="CanUserSortColumns" Value="False" />
+        <Setter Property="CanUserReorderColumns" Value="False" />
+        <Setter Property="HeadersVisibility" Value="All" />
+    </Style>
+    <Style
+        x:Key="Vision.PropertyPanel.ClassTable"
+        BasedOn="{StaticResource Vision.PropertyPanel.Table}"
+        TargetType="DataGrid">
+        <Setter Property="MaxHeight" Value="400" />
+        <Setter Property="EnableRowVirtualization" Value="True" />
+        <Setter Property="RowDetailsVisibilityMode" Value="VisibleWhenSelected" />
+    </Style>
+    <Style BasedOn="{StaticResource MaterialDesignScrollBar}" TargetType="ScrollBar">
+        <Setter Property="md:ScrollBarAssist.ButtonsVisibility" Value="Collapsed" />
+        <Setter Property="md:ScrollBarAssist.ThumbCornerRadius" Value="4" />
+        <Setter Property="md:ScrollBarAssist.ThumbHeight" Value="12" />
+        <Setter Property="md:ScrollBarAssist.ThumbWidth" Value="8" />
+    </Style>
+    <DataTemplate x:Key="Vision.PropertyPanel.RowDetails">
+        <view:VisionPropertyPanel
+            AutoGenerateProperties="{Binding AutoGenerateProperties, RelativeSource={RelativeSource AncestorType=view:VisionPropertyPanel}}"
+            ExpandGroups="True"
+            TargetObject="{Binding}">
+            <view:VisionPropertyPanel.Style>
+                <Style TargetType="view:VisionPropertyPanel">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=DataGrid}}" Value="True">
+                            <Setter Property="IsEnabled" Value="False" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </view:VisionPropertyPanel.Style>
+        </view:VisionPropertyPanel>
+    </DataTemplate>
+</ResourceDictionary>

@@ -1,0 +1,156 @@
+<UserControl
+    x:Class="Vision.Controls.View.VisionToolEditorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:view="clr-namespace:Vision.Controls.View"
+    x:Name="Root"
+    d:DesignHeight="700"
+    d:DesignWidth="800"
+    Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Vision.Controls;component/Themes/VisionBrowserStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <Style x:Key="ProjectFileButton" BasedOn="{StaticResource VisionProjectButton}" TargetType="Button">
+                <Setter Property="IsEnabled" Value="{Binding HasProjectCommands, FallbackValue=False, TargetNullValue=False}" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid DataContext="{Binding Session, ElementName=Root}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid
+            x:Name="TopMenuBar"
+            Margin="0,0,0,1"
+            ToolTip="{Binding ProjectCommands.CurrentProjectPath}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <WrapPanel Margin="8,0" IsEnabled="{Binding IsSessionActive}">
+
+                <Button
+                    x:Name="OpenProjectButton"
+                    AutomationProperties.Name="打开工程"
+                    Command="{Binding ProjectCommands.ImportProjectCommand}"
+                    Style="{StaticResource ProjectFileButton}"
+                    ToolTip="打开工程包或旧版JSON配置；不自动执行算法">
+                    <StackPanel Orientation="Horizontal">
+                        <md:PackIcon
+                            Width="24"
+                            Height="24"
+                            Margin="0,0,6,0"
+                            Kind="FolderOpen" />
+                        <TextBlock VerticalAlignment="Center" Text="打开工程" />
+                    </StackPanel>
+                </Button>
+                <Button
+                    x:Name="SaveProjectButton"
+                    AutomationProperties.Name="保存工程"
+                    Command="{Binding ProjectCommands.SaveProjectCommand}"
+                    Style="{StaticResource ProjectFileButton}"
+                    ToolTip="保存到当前工程；首次保存或旧版升级时选择新工程包位置">
+                    <StackPanel Orientation="Horizontal">
+                        <md:PackIcon
+                            Width="24"
+                            Height="24"
+                            Margin="0,0,6,0"
+                            Kind="ContentSaveOutline" />
+                        <TextBlock VerticalAlignment="Center" Text="保存" />
+                    </StackPanel>
+                </Button>
+                <Button
+                    x:Name="SaveProjectAsButton"
+                    AutomationProperties.Name="另存为"
+                    Command="{Binding ProjectCommands.SaveProjectAsCommand}"
+                    Style="{StaticResource ProjectFileButton}"
+                    ToolTip="选择新路径另存工程包，包含当前输入像素快照">
+                    <StackPanel Orientation="Horizontal">
+                        <md:PackIcon
+                            Width="24"
+                            Height="24"
+                            Margin="0,0,6,0"
+                            Kind="ContentSaveEditOutline" />
+                        <TextBlock VerticalAlignment="Center" Text="另存为" />
+                    </StackPanel>
+                </Button>
+
+                <Button
+                    x:Name="LoadImageButton"
+                    AutomationProperties.Name="加载图像"
+                    Command="{Binding ProjectCommands.LoadImageCommand}"
+                    Style="{StaticResource ProjectFileButton}"
+                    ToolTip="导入当前工具的输入图像">
+                    <StackPanel Orientation="Horizontal">
+                        <md:PackIcon
+                            Width="24"
+                            Height="24"
+                            Margin="0,0,6,0"
+                            Kind="ImageOutline" />
+                        <TextBlock VerticalAlignment="Center" Text="导入图像" />
+                    </StackPanel>
+                </Button>
+
+                <Button
+                    x:Name="RunButton"
+                    AutomationProperties.Name="执行"
+                    Command="{Binding CurrentCard.RunCommand}"
+                    IsEnabled="{Binding HasCurrentTool, FallbackValue=False, TargetNullValue=False}"
+                    Style="{StaticResource VisionProjectButton}"
+                    ToolTip="执行当前工具；执行前自动验证参数">
+                    <StackPanel Orientation="Horizontal">
+                        <md:PackIcon
+                            Width="24"
+                            Height="24"
+                            Margin="0,0,6,0"
+                            Kind="PlayArrow" />
+                        <TextBlock VerticalAlignment="Center" Text="执行" />
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
+            <ContentPresenter
+                Grid.Column="1"
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                Content="{Binding ToolbarAccessory, ElementName=Root}" />
+        </Grid>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="260" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="340" MinWidth="300" />
+            </Grid.ColumnDefinitions>
+            <Grid Margin="8,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <view:VisionImageToolbarView x:Name="ImageToolbarArea" ImagePanel="{Binding ElementName=ImageArea}" />
+                <view:VisionImagePanel
+                    x:Name="ImageArea"
+                    Grid.Row="1"
+                    ParametersRefreshRequested="ParametersRefreshRequested"
+                    ResultSelectionActive="{Binding IsResultsSelected, ElementName=DetailsArea}" />
+            </Grid>
+            <GridSplitter
+                Grid.Column="1"
+                Width="4"
+                HorizontalAlignment="Stretch" />
+            <view:ToolDetailsView
+                x:Name="DetailsArea"
+                Grid.Column="2"
+                Margin="8,0"
+                DrawRoiRequested="DrawRoiRequested"
+                ParametersEditing="ParametersEditing"
+                ResultPickingRequested="ResultPickingRequested" />
+        </Grid>
+    </Grid>
+</UserControl>

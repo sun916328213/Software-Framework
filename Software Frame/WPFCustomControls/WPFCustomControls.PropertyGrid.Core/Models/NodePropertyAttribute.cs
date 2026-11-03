@@ -25,6 +25,15 @@ public class NodePropertyAttribute : Attribute
     /// <summary>是否在面板中显示此属性。默认 true。</summary>
     public bool IsDisplay { get; set; } = true;
 
+    /// <summary>目标对象上bool属性名；为false时不展示该行，空表示始终可见。</summary>
+    public string IsVisibleProperty { get; set; } = string.Empty;
+
+    /// <summary>字符串路径的系统选文件过滤器；空时仍使用原文本编辑器。</summary>
+    public string FileDialogFilter { get; set; } = string.Empty;
+
+    /// <summary>值/显示名分离的动态候选显式保留选中项；禁用按显示文本猜选，避免重名误写稳定ID。</summary>
+    public bool KeepOptionSelection { get; set; }
+
     /// <summary>
     /// 是否为只读属性。
     /// 0 = 自动判断（根据 setter 是否公开），1 = 强制只读，-1 = 强制可编辑。
@@ -50,7 +59,7 @@ public class NodePropertyAttribute : Attribute
     public bool PortConfigurable { get; set; } = true;
 
     /// <summary>
-    /// 下拉选项数据源成员名：目标对象上返回 string 集合（如 List&lt;string&gt;）的属性名。
+    /// 下拉选项数据源成员名：目标对象上返回 string 集合或 IReadOnlyList&lt;EnumOption&gt; 的属性名。
     /// 声明后，该非枚举属性渲染为 ComboBox，选项动态取自该集合。
     /// 每个下拉属性各自声明一个数据源成员，互不干扰（多下拉无需 switch 分发）。
     /// </summary>

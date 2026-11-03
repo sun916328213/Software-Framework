@@ -381,6 +381,11 @@ FodyWeavers.xsd
 
 # Integration scripts are shared build entry points.
 !Build/*.ps1
+!Software Frame/Vision/Tests/Verify-EditorRefinement.ps1
+!Software Frame/Vision/Tests/Verify-FlowNodeEngine.ps1
+!Software Frame/Vision/Tests/Remove-RetiredEditors.ps1
+# Licensing 交付自动化：打包、公钥校验、部署审计和验证入口，缺任何一个都克隆不出可发布的客户端。
+!Software Frame/Licensing/Build/*.ps1
 /Dll/
 
 # Parent-root repository layout: keep SDKs and local tooling out of source control.
@@ -405,3 +410,4 @@ FodyWeavers.xsd
 /Build/_recovery/
 /.agents
 /.pi
+/Build/TestSupport

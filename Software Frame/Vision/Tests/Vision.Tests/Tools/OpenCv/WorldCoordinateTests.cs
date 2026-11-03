@@ -68,5 +68,13 @@ public sealed class WorldCoordinateTests
         var machine = ResultCoordinates.ToMachine(pixel, TestChain());
         Assert.Equal(new Point2D(50, 50), machine.Start);
         Assert.Equal(new Point2D(100, 100), machine.End);
+        Assert.Equal(CoordinateSpace.Machine, machine.CoordinateSpace);
+        Assert.False(machine.TryGetLineField("Line", out _));
+        Assert.False(machine.TryGetPointField("Start", out _));
+        var world = ResultCoordinates.ToWorld(pixel, TestChain());
+        Assert.Equal(CoordinateSpace.Calibration, world.CoordinateSpace);
+        Assert.False(world.TryGetLineField("Line", out _));
+        Assert.False(world.TryGetPointField("End", out _));
+        Assert.True(pixel.TryGetLineField("Line", out _));
     }
 }

@@ -1,0 +1,13 @@
+# AI 是算法实现层；不放入界面状态或旧 Provider 兼容层。
+[*.cs]
+charset = utf-8
+indent_style = space
+indent_size = 4
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+csharp_new_line_before_open_brace = all
+csharp_preserve_single_line_blocks = false
+csharp_preserve_single_line_statements = false
+csharp_prefer_braces = true:warning
+dotnet_diagnostic.IDE0011.severity = warning

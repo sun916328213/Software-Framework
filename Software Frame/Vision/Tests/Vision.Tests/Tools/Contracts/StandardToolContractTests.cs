@@ -4,7 +4,7 @@
 // 直接导入的协作命名空间包括：Vision.Tests.Tools、Vision.Core.Results、Xunit。导入不代表所有类型都会在运行时加载。
 using Vision.Tests.Tools;
 // ─────────────────────────────────────────────────────────────────────────────
-// P10 —— 标准 Tool 统一契约套件（14 个 P3/P4 传统 Tool × 同一断言形状）。
+// P10 —— 标准 Tool 统一契约套件（24 个传统/公共数学 Tool，含独立 Crop × 同一断言形状）。
 // AI 四 Tool 由 P5 套件覆盖（需 Provider 注入，不在本表）；
 // HALCON/OpenCV 语义对比由 Comparison 覆盖（业务容差口径）。
 // 全程无 Runtime 依赖（Run(null) 只走校验失败路径）。
@@ -30,6 +30,12 @@ public sealed class StandardToolContractTests
 
     private static readonly IReadOnlyList<Case> Cases = new List<Case>
     {
+        new("Common.Tolerance",
+            () => { var t = new Vision.Core.Tools.ToleranceTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Core.Tools.ToleranceResult)); },
+            true, p => { var x = (Vision.Core.Tools.ToleranceParameters)p; x.Minimum = 10; x.Maximum = 0; }),
+        new("Common.Geometry",
+            () => { var t = new Vision.Tools.Halcon.Measurement.GeometryTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Tools.Halcon.Measurement.GeometryResult)); },
+            true, p => ((Vision.Tools.Halcon.Measurement.GeometryParameters)p).FirstStart = new(double.NaN, 0)),
         new("Halcon.Blob",
             () => { var t = new Vision.Tools.Halcon.Inspection.BlobTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Tools.Halcon.Inspection.BlobResult)); },
             true,
@@ -60,6 +66,9 @@ public sealed class StandardToolContractTests
             () => { var t = new Vision.Tools.Halcon.Acquisition.ImageFileTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Tools.Halcon.Acquisition.ImageFileResult)); },
             false, // 默认空路径（PATH_EMPTY）。
             null),
+        new("OpenCv.ImageFile",
+            () => { var t = new Vision.Tools.OpenCv.Acquisition.ImageFileTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Tools.OpenCv.Acquisition.ImageFileResult)); },
+            false, null),
         new("OpenCv.Threshold",
             () => { var t = new Vision.Tools.OpenCv.Processing.ThresholdTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Tools.OpenCv.Processing.ThresholdResult)); },
             true,
@@ -72,6 +81,28 @@ public sealed class StandardToolContractTests
             () => { var t = new Vision.Tools.OpenCv.Inspection.BlobTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Tools.OpenCv.Inspection.BlobResult)); },
             true,
             p => { var x = (Vision.Tools.OpenCv.Inspection.BlobParameters)p; x.MinGray = 200; x.MaxGray = 100; }),
+        new("OpenCv.IntensityTransform",
+            () => { var t = new Vision.Tools.OpenCv.Processing.IntensityTransformTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Tools.OpenCv.Processing.IntensityTransformResult)); },
+            true, p => ((Vision.Tools.OpenCv.Processing.IntensityTransformParameters)p).Gamma = 0),
+        new("OpenCv.AdaptiveThreshold",
+            () => { var t = new Vision.Tools.OpenCv.Processing.AdaptiveThresholdTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Tools.OpenCv.Processing.AdaptiveThresholdResult)); },
+            true, p => ((Vision.Tools.OpenCv.Processing.AdaptiveThresholdParameters)p).BlockSize = 4),
+        new("OpenCv.ColorSegment",
+            () => { var t = new Vision.Tools.OpenCv.Processing.ColorSegmentTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Tools.OpenCv.Processing.ColorSegmentResult)); },
+            true, p => ((Vision.Tools.OpenCv.Processing.ColorSegmentParameters)p).SecondMinimum = 256),
+        new("OpenCv.ImageConvert",
+            () => { var t = new Vision.Tools.OpenCv.Processing.ImageConvertTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Tools.OpenCv.Processing.ImageConvertResult)); },
+            true, p => ((Vision.Tools.OpenCv.Processing.ImageConvertParameters)p).Mono16Maximum = 0),
+        new("OpenCv.ImageFilter",
+            () => { var t = new Vision.Tools.OpenCv.Processing.ImageFilterTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Tools.OpenCv.Processing.ImageFilterResult)); },
+            true, p => ((Vision.Tools.OpenCv.Processing.ImageFilterParameters)p).KernelSize = 4),
+        new("OpenCv.GrayStatistics",
+            () => { var t = new Vision.Tools.OpenCv.Inspection.GrayStatisticsTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Tools.OpenCv.Inspection.GrayStatisticsResult)); },
+            true, p => ((Vision.Tools.OpenCv.Inspection.GrayStatisticsParameters)p).HistogramBinWidth = 0),
+        new("OpenCv.Crop",
+            () => { var t = new Vision.Tools.OpenCv.Processing.CropTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Core.Imaging.CropResult)); },
+            true,
+            p => ((Vision.Tools.OpenCv.Processing.CropParameters)p).Width = 0),
         new("OpenCv.TemplateMatch",
             () => { var t = new Vision.Tools.OpenCv.Matching.TemplateMatchTool(); return ((IDisposable)t, (Func<ValidationResult>)(() => t.Validate()), (Func<ToolResult>)(() => t.Run(null)), (Func<object>)(() => t.Parameters), typeof(Vision.Tools.OpenCv.Matching.TemplateMatchResult)); },
             false, // 默认空模板（TEMPLATE_EMPTY）。
@@ -93,6 +124,25 @@ public sealed class StandardToolContractTests
     /// 正文中的关键协作调用包括 First；具体条件和先后次序见方法体。
     /// </summary>
     private static Case Find(string name) => Cases.First(c => c.Name == name);
+
+    [Theory]
+    [MemberData(nameof(AllCases))]
+    public void CommonImageContract_PreservesTypedToolValidationAndResult(string name)
+    {
+        var entry = Find(name);
+        var created = entry.Create();
+        using (created.Tool)
+        {
+            var runtime = Assert.IsAssignableFrom<Vision.Core.Tools.IImageTool>(created.Tool);
+            Assert.Equal(entry.DefaultValid, runtime.Validate().IsValid);
+            if (entry.MakeInvalid == null) return; // 不以有效 HALCON 参数触发 Runtime。
+            entry.MakeInvalid(created.Params());
+            using var result = runtime.Run(null);
+            Assert.False(result.Success);
+            Assert.Equal(created.ResultType, result.GetType());
+            Assert.Equal(0, runtime.LastElapsedMs);
+        }
+    }
 
     /// <summary>
     /// 测试相关入口 DefaultValidation_MatchesExpectation；准备条件、协作调用与结果检查以方法正文为准。
@@ -166,12 +216,12 @@ public sealed class StandardToolContractTests
     }
 
     /// <summary>
-    /// 测试相关入口 CaseTable_CoversFourteenTools；准备条件、协作调用与结果检查以方法正文为准。
+    /// 测试相关入口 CaseTable_CoversTwentyOneTools；准备条件、协作调用与结果检查以方法正文为准。
     /// 正文中的关键协作调用包括 Equal；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
-    public void CaseTable_CoversFourteenTools()
+    public void CaseTable_CoversTwentyOneTools()
     {
-        Assert.Equal(14, Cases.Count);
+        Assert.Equal(24, Cases.Count);
     }
 }

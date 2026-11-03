@@ -61,6 +61,38 @@ public sealed class HalconOpenCvParityTests
     }
 
     /// <summary>
+    /// 最小面积默认值双边一致：新建参数默认预筛 10 像素以下的噪点。
+    /// </summary>
+    [Fact]
+    public void Blob_DefaultMinArea_IsTenForBothBackends()
+    {
+        using var halcon = new HalconBlob();
+        using var openCv = new OpenCvBlob();
+        Assert.Equal(10, halcon.Parameters.MinArea);
+        Assert.Equal(10, openCv.Parameters.MinArea);
+    }
+
+    /// <summary>
+    /// 最小面积校验双边一致：负值在运行前被拒绝，错误码相同。
+    /// </summary>
+    [Fact]
+    public void Blob_NegativeMinArea_RejectedByBothBackends()
+    {
+        using var halcon = new HalconBlob();
+        halcon.Parameters.MinArea = -1;
+        var halconResult = halcon.Validate();
+
+        using var openCv = new OpenCvBlob();
+        openCv.Parameters.MinArea = -1;
+        var openCvResult = openCv.Validate();
+
+        Assert.False(halconResult.IsValid);
+        Assert.False(openCvResult.IsValid);
+        Assert.Equal("MIN_AREA_RANGE", halconResult.Issues[0].Code);
+        Assert.Equal("MIN_AREA_RANGE", openCvResult.Issues[0].Code);
+    }
+
+    /// <summary>
     /// 退化线段双边一致：起点 == 终点时两边都报 LINE_DEGENERATE。
     /// </summary>
     [Fact]
@@ -81,33 +113,53 @@ public sealed class HalconOpenCvParityTests
     }
 
     /// <summary>
-    /// 已知能力差（非 1:1 的诚实记录，计划 §1）：HALCON 接受任意 SelectShape
-    /// 特征名（含 circularity），OpenCV P4 仅支持 area/width/height。
+    /// 特征覆盖对齐：OpenCV 与 HALCON select_shape 共用同一组 10 个特征名，
+    /// 两边 Validate 均接受（数值口径为近似实现，见 BlobTool 头部注释）。
     /// </summary>
     [Fact]
-    public void Blob_FeatureCoverage_DivergenceIsExplicit()
+    public void Blob_SharedFeatureNames_AreAcceptedByBothBackends()
     {
+        string[] shared =
+        [
+            "area", "row", "column", "width", "height",
+            "phi", "circularity", "rectangularity", "outer_radius", "inner_radius",
+        ];
+        Assert.Equal(shared, OpenCvBlob.SupportedFeatures);
+
         using var halcon = new HalconBlob();
-        halcon.Parameters.Features.Clear();
-        halcon.Parameters.Features.Add(new Vision.Tools.Halcon.Inspection.BlobFeatureRange
+        halcon.Parameters.Features = shared.Select(name => new Vision.Tools.Halcon.Inspection.BlobFeatureRange
         {
-            Feature = "circularity",
+            Feature = name,
             Min = 0,
-            Max = 1,
-        });
+            Max = 1e9,
+        }).ToList();
         Assert.True(halcon.Validate().IsValid);
 
         using var openCv = new OpenCvBlob();
-        openCv.Parameters.Features.Clear();
-        openCv.Parameters.Features.Add(new Vision.Tools.OpenCv.Inspection.BlobFeatureRange
+        openCv.Parameters.Features = shared.Select(name => new Vision.Tools.OpenCv.Inspection.BlobFeatureRange
         {
-            Feature = "circularity",
+            Feature = name,
             Min = 0,
-            Max = 1,
-        });
-        var openCvResult = openCv.Validate();
-        Assert.False(openCvResult.IsValid);
-        Assert.Contains(openCvResult.Issues, i => i.Code == "FEATURE_UNSUPPORTED");
+            Max = 1e9,
+        }).ToList();
+        Assert.True(openCv.Validate().IsValid);
+    }
+
+    /// <summary>
+    /// 超出共享集合的特征名：OpenCV 在 Validate 阶段拒绝；
+    /// HALCON 不枚举 SelectShape 名称，交由运行时报告，此处只锁定 OpenCV 的错误码。
+    /// </summary>
+    [Fact]
+    public void Blob_UnknownFeature_OpenCvRejectsAtValidation()
+    {
+        using var openCv = new OpenCvBlob();
+        openCv.Parameters.Features =
+        [
+            new Vision.Tools.OpenCv.Inspection.BlobFeatureRange { Feature = "defects", Min = 0, Max = 1 },
+        ];
+        var result = openCv.Validate();
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Code == "FEATURE_UNSUPPORTED");
     }
 
     /// <summary>

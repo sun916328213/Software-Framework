@@ -25,6 +25,7 @@ public partial class PropertyItemViewModel : ObservableObject, IDisposable
     private readonly IPortConfigurable? _portConfigurable;
     private readonly INotifyPropertyChanged? _notifier;
     private bool _disposed;
+    private bool _isVisible;
 
     /// <summary>
     /// 初始化 PropertyItemViewModel 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
@@ -54,6 +55,9 @@ public partial class PropertyItemViewModel : ObservableObject, IDisposable
         ArgumentNullException.ThrowIfNull(dispatcher);
 
         _accessor = new PropertyValueAccessor(target, propertyInfo, attribute);
+        _isVisible = _accessor.IsVisible;
+        FileDialogFilter = propertyInfo.PropertyType == typeof(string) ? attribute?.FileDialogFilter ?? "" : "";
+        KeepOptionSelection = attribute?.KeepOptionSelection == true;
         _dispatcher = dispatcher;
         _portConfigurable = portConfigurable;
         IsPortConfigurable = attribute?.PortConfigurable == true && portConfigurable != null;
@@ -67,6 +71,9 @@ public partial class PropertyItemViewModel : ObservableObject, IDisposable
         }
     }
 
+    public string FileDialogFilter { get; }
+    public bool IsFilePath => !string.IsNullOrWhiteSpace(FileDialogFilter);
+    public bool KeepOptionSelection { get; }
     public string DisplayName => _accessor.DisplayName;
     public string PropertyName => _accessor.PropertyName;
     public Type PropertyType => _accessor.PropertyType;
@@ -74,6 +81,7 @@ public partial class PropertyItemViewModel : ObservableObject, IDisposable
     public string? Description => _accessor.Description;
     public bool IsReadOnly => _accessor.IsReadOnly;
     public bool IsEditable => !IsReadOnly;
+    public bool IsVisible => _isVisible;
     public bool IsCollection => _accessor.IsCollection;
     public bool IsNullable => _accessor.IsNullable;
     public bool IsBoolean => _accessor.IsBoolean;
@@ -83,6 +91,8 @@ public partial class PropertyItemViewModel : ObservableObject, IDisposable
     public double NumericStep => _accessor.Step;
     public bool HasNumericRange => _accessor.HasRange;
     public IReadOnlyList<EnumOption>? EnumOptions => _accessor.Options;
+    /// <summary>以稳定Value重找当前候选对象，候选改名/替换后不会只剩SelectedValue而显示空白。</summary>
+    public EnumOption? SelectedOption => EnumOptions?.FirstOrDefault(option => Equals(option.Value, Value));
     public IEnumerable? CollectionSource => _accessor.CollectionSource;
     public int CollectionCount => CollectionSource is ICollection collection ? collection.Count : 0;
     public bool IsPortConfigurable { get; }
@@ -93,7 +103,10 @@ public partial class PropertyItemViewModel : ObservableObject, IDisposable
         set
         {
             if (_accessor.TrySetValue(value))
+            {
                 OnPropertyChanged();
+                if (KeepOptionSelection) OnPropertyChanged(nameof(SelectedOption));
+            }
         }
     }
 
@@ -142,7 +155,16 @@ public partial class PropertyItemViewModel : ObservableObject, IDisposable
     /// 处理当前类型提供的操作；对应入口为 NotifyValueChanged。
     /// 正文中的关键协作调用包括 OnPropertyChanged、nameof；具体条件和先后次序见方法体。
     /// </summary>
-    public void NotifyValueChanged() => OnPropertyChanged(nameof(Value));
+    public void NotifyValueChanged()
+    {
+        if (_disposed) return;
+        RefreshVisibility();
+        OnPropertyChanged(nameof(Value));
+        if (KeepOptionSelection) OnPropertyChanged(nameof(SelectedOption));
+    }
+
+    /// <summary>只在谓词实际改变时通知分组，避免普通数值刷新重建编辑控件。</summary>
+    private void RefreshVisibility() => SetProperty(ref _isVisible, _accessor.IsVisible, nameof(IsVisible));
 
     /// <summary>
     /// 处理当前类型提供的操作；对应入口为 NotifyCollectionChanged。
@@ -184,9 +206,20 @@ public partial class PropertyItemViewModel : ObservableObject, IDisposable
     /// </summary>
     private void OnTargetPropertyChanged(object? sender, PropertyChangedEventArgs args)
     {
-        if (!string.IsNullOrEmpty(args.PropertyName) && args.PropertyName != PropertyName)
-            return;
-        Dispatch(NotifyTargetValueChanged);
+        if (!string.IsNullOrEmpty(args.PropertyName) && args.PropertyName != PropertyName &&
+            args.PropertyName != _accessor.ItemsSourceMember && args.PropertyName != _accessor.VisibilityMember) return;
+        Dispatch(() =>
+        {
+            if (_disposed) return;
+            RefreshVisibility();
+            if (string.IsNullOrEmpty(args.PropertyName) || args.PropertyName == _accessor.ItemsSourceMember)
+            {
+                OnPropertyChanged(nameof(EnumOptions));
+                if (KeepOptionSelection) OnPropertyChanged(nameof(SelectedOption));
+            }
+            if (string.IsNullOrEmpty(args.PropertyName) || args.PropertyName == PropertyName)
+                NotifyTargetValueChanged();
+        });
     }
 
     /// <summary>

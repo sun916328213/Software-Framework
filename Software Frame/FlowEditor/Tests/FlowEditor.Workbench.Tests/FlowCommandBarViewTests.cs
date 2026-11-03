@@ -19,6 +19,7 @@ using Xunit;
 namespace FlowEditor.Workbench.Tests;
 
 /// <summary>验证流程表现层子视图、路由命令和附加行为。</summary>
+[Collection("FlowEditorWpf")]
 public class FlowCommandBarViewTests
 {
     /// <summary>验证命令栏在应用资源就绪时可以完成 XAML 初始化。</summary>

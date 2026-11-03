@@ -29,14 +29,14 @@ public sealed class BrowserWorkspaceTests
             new ToolEntry("First", "Test", () => (firstTool, new object(), null)),
             new ToolEntry("Second", "Test", () => (secondTool, new object(), null))
         };
-        using var workspace = new VisionBrowserWorkspace(new(entries, [], _ => throw new InvalidOperationException(), () => null, _ => "Compared"));
+        using var workspace = new VisionBrowserWorkspace(new(entries, [], _ => throw new InvalidOperationException(), TestBrowserViewModel.CreateInput));
         using var first = new VisionBrowserViewModel(workspace);
         using var second = new VisionBrowserViewModel(workspace);
         Assert.Same(first.Model, second.Model);
         first.Dispose();
         Assert.Equal(0, firstTool.DisposeCount);
-        second.UseDemoImage();
-        Assert.Contains("合成图", second.ImageInfoText);
+        second.LoadImage();
+        Assert.Contains("synthetic-rect", second.ImageInfoText);
         second.SelectedEntry = entries[1];
         Assert.Equal(1, firstTool.DisposeCount);
         Assert.Same(entries[1], workspace.Model.SelectedEntry);
@@ -56,24 +56,26 @@ public sealed class BrowserWorkspaceTests
     {
         var tool = new CountingTool();
         var entries = new[] { new ToolEntry("Test", "Test", () => (tool, new object(), null)) };
-        using var workspace = new VisionBrowserWorkspace(new(entries, [], _ => throw new InvalidOperationException(), () => null, _ => "Compared"));
+        using var workspace = new VisionBrowserWorkspace(new(entries, [], _ => throw new InvalidOperationException(), TestBrowserViewModel.CreateInput));
         using var first = new VisionBrowserViewModel(workspace);
         using var second = new VisionBrowserViewModel(workspace);
-        Assert.False(first.CompareBlobCommand.CanExecute(null));
-        Assert.True(first.RunBenchmarkCommand.CanExecute(null));
-        first.UseDemoImageCommand.Execute(null);
-        Assert.True(second.CompareBlobCommand.CanExecute(null));
+        Assert.True(first.LoadImageCommand.CanExecute(null));
+        Assert.True(first.SaveProjectCommand.CanExecute(null)); // 配方可在尚无图像时保存。
+        first.LoadImageCommand.Execute(null);
+        Assert.Same(first.InputImage, second.InputImage);
         first.Dispose();
         Assert.False(first.LoadImageCommand.CanExecute(null));
-        Assert.False(first.UseDemoImageCommand.CanExecute(null));
-        Assert.False(first.CompareBlobCommand.CanExecute(null));
-        Assert.False(first.RunBenchmarkCommand.CanExecute(null));
-        first.RunBenchmarkCommand.Execute(null); // ICommand.Execute 不自动检查 CanExecute。
+        Assert.False(first.SaveProjectCommand.CanExecute(null));
+        Assert.False(first.ImportProjectCommand.CanExecute(null));
+        var input = second.InputImage;
+        first.LoadImageCommand.Execute(null); // ICommand.Execute 不自动检查 CanExecute。
+        Assert.Same(input, second.InputImage);
         Assert.Equal(0, tool.RunCount);
-        Assert.True(second.RunBenchmarkCommand.CanExecute(null));
+        Assert.True(second.LoadImageCommand.CanExecute(null));
+        Assert.True(second.SaveProjectCommand.CanExecute(null));
         var oldCard = second.CurrentCard!;
         second.SelectedEntry = null;
-        Assert.False(second.RunBenchmarkCommand.CanExecute(null));
+        Assert.False(second.SaveProjectCommand.CanExecute(null));
         Assert.False(oldCard.RunCommand.CanExecute(null));
         Assert.False(oldCard.RefreshValidationCommand.CanExecute(null));
         Assert.False(oldCard.EnsureLoadedCommand.CanExecute(null));
@@ -86,9 +88,10 @@ public sealed class BrowserWorkspaceTests
         Assert.Equal(1, tool.DisposeCount);
         workspace.Dispose();
         Assert.False(second.LoadImageCommand.CanExecute(null));
-        Assert.False(second.CompareBlobCommand.CanExecute(null));
+        Assert.False(second.SaveProjectCommand.CanExecute(null));
+        Assert.False(second.ImportProjectCommand.CanExecute(null));
         Assert.Null(workspace.Model.CurrentParameters);
-        Assert.Throws<ObjectDisposedException>(workspace.UseDemoImage);
+        Assert.Throws<ObjectDisposedException>(workspace.LoadImage);
     }
 
     /// <summary>

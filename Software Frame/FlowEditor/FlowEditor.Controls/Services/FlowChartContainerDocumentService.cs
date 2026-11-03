@@ -66,27 +66,50 @@ public class FlowChartContainerDocumentService
     public FlowChartViewModel CreateTabFromFlow(FlowChartDocumentModel flowDoc)
     {
         var vm = _tabFactory.Create();
+        PopulateTab(vm, flowDoc);
+        return vm;
+    }
 
-        // 还原标题与全局配置
+    /// <summary>候选页完整物化后返回；失败时等待候选节点清理，不污染当前容器。</summary>
+    public async Task<FlowChartViewModel> CreateTabFromFlowAsync(FlowChartDocumentModel flowDoc)
+    {
+        var vm = _tabFactory.Create();
+        try { PopulateTab(vm, flowDoc); return vm; }
+        catch (Exception original)
+        {
+            try { await ReleaseCandidateTabAsync(vm); }
+            catch (Exception cleanup) { throw new AggregateException("流程候选物化与清理失败。", original, cleanup); }
+            throw;
+        }
+    }
+
+    /// <summary>恢复原流程状态与连接，不执行节点、不加载模型。</summary>
+    private void PopulateTab(FlowChartViewModel vm, FlowChartDocumentModel flowDoc)
+    {
         vm.SetTabTitle(flowDoc.Name, markModified: false);
         vm.Model.ZoomLevel = flowDoc.ZoomLevel;
-        vm.Model.IsModified = false;
+        vm.Model.DocumentProperties = new(flowDoc.DocumentProperties ?? new());
         vm.Model.StatusText = "已加载";
+        foreach (var nodeDoc in flowDoc.Nodes) vm.LoadNodeModel(_documentMapper.ToNode(nodeDoc));
+        foreach (var connDoc in flowDoc.Connections) vm.Connections.Add(_documentMapper.ToConnection(connDoc));
+        vm.Model.IsModified = false;
+    }
 
-        // 重建节点
-        foreach (var nodeDoc in flowDoc.Nodes)
+    /// <summary>只释放尚未提交给容器的候选节点；异步资源不阻塞UI等待。</summary>
+    internal static async Task ReleaseCandidateTabAsync(FlowChartViewModel vm)
+    {
+        List<Exception> errors = [];
+        foreach (var node in vm.Nodes.Select(n => n.Model).ToArray())
         {
-            var node = _documentMapper.ToNode(nodeDoc);
-            vm.LoadNodeModel(node);
+            try
+            {
+                if (node is IAsyncDisposable asyncDisposable) await asyncDisposable.DisposeAsync();
+                else if (node is IDisposable disposable) disposable.Dispose();
+            }
+            catch (Exception error) { errors.Add(error); }
         }
-
-        // 还原连线
-        foreach (var connDoc in flowDoc.Connections)
-        {
-            vm.Connections.Add(_documentMapper.ToConnection(connDoc));
-        }
-
-        return vm;
+        vm.Nodes.Clear(); vm.Connections.Clear(); vm.ReleaseLogRoute();
+        if (errors.Count > 0) throw new AggregateException("流程候选资源清理失败。", errors);
     }
 
     /// <summary>构建单个流程文档（用于 ToolBlock 内部数据保存等场景）。</summary>

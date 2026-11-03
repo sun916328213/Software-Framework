@@ -16,6 +16,23 @@ MachineApp 只直接引用 WPFControls。其他模块的项目依赖与通用装
 
 OxyPlot 折线、饼图/圆环图以独立控件与原有 LiveCharts 并存，源码直接放在图表项目内。输入复用共用模型 ChartLineData/ChartPieData，采用快照更新，不改变现有业务页面。原地修改数据时由宿主在 UI 线程显式调用 RefreshChart，不引入设备或定时采样。高级图表可直接使用 OxyPlotChartService 创建独立 PlotModel。详见图表 README 的后端列表与使用约定。
 
+## 图像显示
+
+Features/Display的DisplaySingleView、DisplaySingleView_DP、DisplaySingleGroupView直接组合VisionImagePanel，不再嵌入HSmartWindowView/HSmartWindowControlWPF，也不创建工具编辑器或会话。标题布局及旧DisplayImage（HObject）输入保留；ImageDisplay公开共享显示区，可直接设置其ImageViewport.Image或在该DP上绑定VisionImage。显示区拥有右键缩放/平移/适应/另存为，操作栏按需由宿主另外组合。无编辑DataContext时不预留状态栏高度，画布随宿主分配空间缩放。
+
+旧HObject输入通过Tools.Halcon.Internal.HalconImageConverter.ToVisionImage复制为托管快照，支持Mono8、Mono16与字节RGB；不使用错误的彩色单指针连续拷贝，不隐式降位深。原图必须在同步转换期间有效；页面不释放原图，卸载/重载不重新访问原生图像。空输入清屏。公共快照仅接受完整矩形domain；三显示页对NotSupportedException沿原显示区ReportImageError清旧图/旧结果并绘制诊断，不把预期域/格式拒绝抛入WPF调度器，也不静默保留旧画面；其余非预期异常保留调用方处理。ReportImageError使用SetCurrentValue保留Image/Result绑定，不Dispose借用对象，重载保留诊断，清屏或新图恢复。原生domain精确检查与三个页面的Native输入正向仍待授权；离线错误绘制/绑定/重载及清屏测试不抵扣SDK验收。线程亲和性沿用WPF依赖属性约定，宿主应在UI线程更新，不增加后台调度或设备锁。
+
+| 对象 | 创建/所有权 | 页面行为 |
+|---|---|---|
+| 输入HObject | 采集/调用方 | 仅借用同步读取，不Dispose |
+| VisionImage显示快照 | 转换边界创建，显示区持有 | 托管缓冲，卸载不释放调用方对象 |
+| CaptureViewport位图 | 显示页创建，调用方使用 | 冻结的当前视口物理像素截图，不含标题/菜单 |
+| GetDisplayImage返回HObject | 显示页创建，调用方拥有 | 调用方Dispose；仍为视口截图，不是原图 |
+
+DisplaySingleView_DP.Clear只清显示，不清源集合/输入DP、不破坏绑定。CaptureViewport不调用HALCON；未布局时返回null。旧GetDisplayImage仍返回当前视口（含缩放/平移）的独立HALCON截图，通过FromDisplaySnapshot转换；此接口仍需要Runtime。算法FromVisionImage入口继续只接受Mono8，显示支持更多格式不意味着算法新增能力。新渲染器不生成HWindow；无仓库消费者且CLR/DP类型不一致的DisplaySingleView.Handle、HandleProperty及其注册已删除，不返回假句柄或继续保留空占位。外部源码插件如曾引用Handle需改用ImageDisplay.ImageViewport；图像DP、标题、截图及清屏契约不变。
+
+无仓库消费者的Vision.Controls/Compatibility/Halcon旧显示实现、Ctr_ROI及两个控件URI已退役删除；外部插件如引用这些旧公开类型需重新迁移。保留宿主仍使用的Ctr_Halcon/View/ResourceDic .xaml主题入口及其转发/合并层级；Tools/Halcon算法与SDK边界不删除，不趁清理改算法或主题作用域。
+
 ## 装配和导航
 
 宿主在 `App.RegisterTypes` 中调用 `WPFControlsComposition.RegisterServices(registry)`，在其他页面模块注册前固定节点目录；已有宿主替换不被覆盖。在 `ConfigureModuleCatalog` 调用 `WPFControlsComposition.ConfigureModules<SqlConfigEntity, ExcelConfigEntity>(catalog)` 装配模块。WPFControlsModule 统一注册业务页面和 Shared 控件，幂等合并资源字典。

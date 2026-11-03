@@ -81,28 +81,28 @@ public partial class FlowChartViewModel
         StopCommand = new RelayCommand(Stop, CanStop);
         LoopRunCommand = new AsyncRelayCommand(LoopRunAsync, CanLoopRun);
         LoopStopCommand = new RelayCommand(LoopStop, CanLoopStop);
-        SaveCommand = new RelayCommand(Save);
-        SaveAsCommand = new RelayCommand(SaveAs);
-        LoadCommand = new RelayCommand(Load);
+        SaveCommand = new RelayCommand(Save, () => Model.SupportsDocumentEditing);
+        SaveAsCommand = new RelayCommand(SaveAs, () => Model.SupportsDocumentEditing);
+        LoadCommand = new RelayCommand(Load, () => Model.SupportsDocumentEditing);
         ClearAllCommand = new RelayCommand(ClearAll);
         ClearOutputCommand = new RelayCommand(_output.Clear);
         ZoomInCommand = new RelayCommand(_canvas.ZoomIn);
         ZoomOutCommand = new RelayCommand(_canvas.ZoomOut);
         ZoomToFitCommand = new RelayCommand(_canvas.ZoomToFit);
         DeleteSelectedCommand = new RelayCommand(DeleteSelected);
-        UndoCommand = new RelayCommand(Undo, () => UndoRedo.CanUndo);
-        RedoCommand = new RelayCommand(Redo, () => UndoRedo.CanRedo);
+        UndoCommand = new RelayCommand(Undo, () => Model.SupportsDocumentEditing && UndoRedo.CanUndo);
+        RedoCommand = new RelayCommand(Redo, () => Model.SupportsDocumentEditing && UndoRedo.CanRedo);
         StepContinueCommand = new AsyncRelayCommand(StepContinueSelectedAsync, CanStepContinue);
         ContinueFromNodeCommand = new AsyncRelayCommand<NodeViewModel>(
             ContinueFromNodeAsync,
             CanContinueFromNode);
         ExportSvgCommand = new RelayCommand<FrameworkElement?>(ExportSvg);
-        CopyCommand = new RelayCommand(CopySelected);
-        PasteCommand = new RelayCommand(PasteAtCenter);
+        CopyCommand = new RelayCommand(CopySelected, () => Model.SupportsDocumentEditing);
+        PasteCommand = new RelayCommand(PasteAtCenter, () => Model.SupportsDocumentEditing);
         DeleteConnectionCommand = new RelayCommand<ConnectionModel?>(DeleteConnection);
         AddInputPortCommand = new RelayCommand<NodeViewModel>(AddInputPort);
         AddOutputPortCommand = new RelayCommand<NodeViewModel>(AddOutputPort);
-        CopyNodeCommand = new RelayCommand<NodeViewModel>(node => { SelectedNode = node; CopySelected(); });
+        CopyNodeCommand = new RelayCommand<NodeViewModel>(node => { SelectedNode = node; CopySelected(); }, _ => Model.SupportsDocumentEditing);
         DeleteNodeCommand = new RelayCommand<NodeViewModel>(node => { SelectedNode = node; DeleteSelected(); });
         SetNormalPermissionCommand = new RelayCommand<NodeViewModel>(node => SetPermission(node, NodePermission.Normal));
         SetReadOnlyPermissionCommand = new RelayCommand<NodeViewModel>(node => SetPermission(node, NodePermission.ReadOnly));

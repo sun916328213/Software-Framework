@@ -23,10 +23,14 @@ WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，
     RowHeight="{Binding RowHeight, ElementName=dataGrid}"
     ScrollViewer.CanContentScroll="True"
     ScrollViewer.IsDeferredScrollingEnabled="True"
-    SelectionMode="Extended"
-    Style="{StaticResource MaterialDesignDataGrid}"
     Validation.ErrorTemplate="{x:Null}"
     VerticalScrollBarVisibility="Auto"
     VirtualizingPanel.IsVirtualizing="True"
-    VirtualizingPanel.VirtualizationMode="Standard"
-    mc:Ignorable="d" />
+    mc:Ignorable="d">
+    <DataGrid.Style>
+        <Style BasedOn="{StaticResource MaterialDesignDataGrid}" TargetType="DataGrid">
+            <Setter Property="SelectionMode" Value="Extended" />
+            <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Standard" />
+        </Style>
+    </DataGrid.Style>
+</DataGrid>

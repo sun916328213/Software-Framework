@@ -11,6 +11,12 @@ namespace FlowEditor.Controls.ViewModels;
 /// <summary>包含流程文档交互及撤销/重做事务编排。</summary>
 public partial class FlowChartViewModel
 {
+    /// <summary>使用既有文档事务保存；宿主可提供路径，失败保持原文件与当前状态。</summary>
+    public bool SaveDocument(string path) => Model.SupportsDocumentEditing && _documents.Save(path);
+
+    /// <summary>使用既有文档事务恢复；所有候选及连线准备成功才提交。</summary>
+    public bool LoadDocument(string path) => Model.SupportsDocumentEditing && _documents.Load(path);
+
     /// <summary>保存流程图。</summary>
     private void Save()
     {

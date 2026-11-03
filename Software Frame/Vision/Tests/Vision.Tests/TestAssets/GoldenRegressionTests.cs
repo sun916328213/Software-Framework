@@ -1,120 +1,132 @@
-// 【中文阅读说明】
-// Vision 模块：视觉工具模型、算法适配和编辑展示；厂商能力与界面转换应在对应边界内协作。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
-// 本文件定义：GoldenRegressionTests。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：Xunit。导入不代表所有类型都会在运行时加载。
-// ─────────────────────────────────────────────────────────────────────────────
-// P10 —— Golden 回归测试（Trait=Regression，与普通 Unit 分开执行、分开看）。
-// 锁 OpenCV 后端在黄金上的输出；HALCON 侧对比见 Comparison（业务容差口径）。
-// 普通 CI 跑稳定子集 = 本文件全部（无 Runtime 依赖，CPU 纯算子）。
-// ─────────────────────────────────────────────────────────────────────────────
-
+using Vision.Core.Geometry;
+using Vision.Core.Imaging;
+using Vision.Core.Models;
+using Vision.Core.Operations;
+using Vision.Core.Results;
+using Vision.Tools;
 using Xunit;
 
 namespace Vision.Tests.TestAssets;
 
-/// <summary>Golden 回归（OpenCV 后端输出锁）。</summary>
+/// <summary>六项原Golden需求迁至唯一引擎；保留解析像素/容差，不用fake替代真实OpenCV。</summary>
 [Trait("Category", "Regression")]
 public sealed class GoldenRegressionTests
 {
-    /// <summary>
-    /// 测试相关入口 Threshold_Rect600_CountIsLocked；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Run、Rect600、True、Rect600Expected、Equal；具体条件和先后次序见方法体。
-    /// </summary>
     [Fact]
-    public void Threshold_Rect600_CountIsLocked()
+    public async Task Threshold_Rect600_CountIsLocked()
     {
-        using var tool = new Vision.Tools.OpenCv.Processing.ThresholdTool();
-        tool.Parameters.MinGray = 128;
-        var result = tool.Run(GoldenImages.Rect600());
-        Assert.True(result.Success, result.Message);
-        var (area, _, _) = GoldenImages.Rect600Expected();
-        Assert.Equal(area, result.WhitePixelCount);
+        await using var engine = VisionEngineFactory.Create(new("opencv"));
+        var context = await engine.CreateContextAsync(default);
+        var image = GoldenImages.Rect600();
+        var result = await engine.ExecuteAsync(context, new ThresholdRangeOperation(image, 128, 255), default);
+        Assert.Equal(VisionExecutionStatus.Success, result.Status);
+        Assert.Equal(GoldenImages.Rect600Expected().Area, WhitePixelCount(result.Value!.Image));
+        Assert.Equal(image.FrameId, result.Value.FrameId);
+        await engine.ReleaseContextAsync(context, default);
     }
 
-    /// <summary>
-    /// 测试相关入口 Blob_Rect600_CenterAndAreaAreLocked；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Run、Rect600、True、Single、Rect600Expected；具体条件和先后次序见方法体。
-    /// </summary>
     [Fact]
-    public void Blob_Rect600_CenterAndAreaAreLocked()
+    public async Task Blob_Rect600_CenterAndAreaAreLocked()
     {
-        using var tool = new Vision.Tools.OpenCv.Inspection.BlobTool();
-        tool.Parameters.MinGray = 128;
-        tool.Parameters.Features = [];
-        var result = tool.Run(GoldenImages.Rect600());
-        Assert.True(result.Success, result.Message);
-        var item = Assert.Single(result.Items);
+        await using var engine = VisionEngineFactory.Create(new("opencv"));
+        var context = await engine.CreateContextAsync(default);
+        var result = await engine.ExecuteAsync(context, new BlobOperation(GoldenImages.Rect600(), 128, 255), default);
+        Assert.Equal(VisionExecutionStatus.Success, result.Status);
+        var item = Assert.Single(result.Value!.Items);
         var (area, cx, cy) = GoldenImages.Rect600Expected();
         Assert.Equal(area, item.Area);
         Assert.Equal(cx, item.Center.X, 1);
         Assert.Equal(cy, item.Center.Y, 1);
+        Assert.Equal(new Rect2D(20, 30, 20, 30), item.Bounds);
+        await engine.ReleaseContextAsync(context, default);
     }
 
-    /// <summary>
-    /// 测试相关入口 Morphology_Erode_Rect600_AreaIsLocked；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Run、Rect600、True、Equal；具体条件和先后次序见方法体。
-    /// </summary>
     [Fact]
-    public void Morphology_Erode_Rect600_AreaIsLocked()
+    public async Task Morphology_Erode_Rect600_AreaIsLocked()
     {
-        using var tool = new Vision.Tools.OpenCv.Processing.MorphologyTool();
-        tool.Parameters.Operation = Vision.Tools.OpenCv.Processing.MorphologyOperation.Erode;
-        tool.Parameters.KernelSize = 3;
-        var result = tool.Run(GoldenImages.Rect600());
-        Assert.True(result.Success, result.Message);
-        Assert.Equal(504, result.WhitePixelCount);
+        await using var engine = VisionEngineFactory.Create(new("opencv"));
+        var context = await engine.CreateContextAsync(default);
+        var result = await engine.ExecuteAsync(context, new MorphologyOperation(GoldenImages.Rect600(),
+            MorphologyKind.Erode, MorphologyKernelShape.Rectangle, 3, 3, ImageBorderMode.ConstantZero), default);
+        Assert.Equal(VisionExecutionStatus.Success, result.Status);
+        // 原20×30实心矩形被中心3×3核各侧腐蚀1px，解析面积18×28=504。
+        Assert.Equal(504, WhitePixelCount(result.Value!.Image));
+        await engine.ReleaseContextAsync(context, default);
     }
 
-    /// <summary>
-    /// 测试相关入口 TemplateMatch_PastePattern_LocationIsLocked；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 PatternTemplate、Run、PastePattern、True、Single；具体条件和先后次序见方法体。
-    /// </summary>
     [Fact]
-    public void TemplateMatch_PastePattern_LocationIsLocked()
+    public async Task TemplateMatch_PastePattern_LocationIsLocked()
     {
-        using var tool = new Vision.Tools.OpenCv.Matching.TemplateMatchTool();
-        tool.Parameters.Template = Vision.Tests.Tools.SyntheticImages.PatternTemplate();
-        tool.Parameters.MinScore = 0.9;
-        var result = tool.Run(GoldenImages.PastePattern());
-        Assert.True(result.Success, result.Message);
-        var match = Assert.Single(result.Matches);
+        await using var engine = VisionEngineFactory.Create(new("opencv"));
+        var context = await engine.CreateContextAsync(default);
+        var model = await engine.PrepareModelAsync(context,
+            new TemplateModelDefinition(GoldenImages.PatternTemplate(), new(0, 0), new()), 1, default);
+        var result = await engine.ExecuteAsync(context,
+            new TemplateMatchOperation(GoldenImages.PastePattern(), model, new(), 0.9), default);
+        Assert.Equal(VisionExecutionStatus.Success, result.Status);
+        var match = Assert.Single(result.Value!.Matches);
         var (x, y) = GoldenImages.PastePatternExpected();
-        Assert.InRange(match.Bounds.X, x - 1, x + 1);
-        Assert.InRange(match.Bounds.Y, y - 1, y + 1);
+        // 新结果没有旧Bounds；明确锚点(0,0)代表原模板左上像素中心。
+        var topLeft = match.TemplateToImage.Transform(new(0, 0));
+        Assert.InRange(topLeft.X, x - 1, x + 1);
+        Assert.InRange(topLeft.Y, y - 1, y + 1);
+        Assert.Equal(new Point2D(0, 0), match.ModelOrigin);
+        Assert.InRange(match.Score, 0.99, 1);
+        await engine.ReleaseContextAsync(context, default);
     }
 
-    /// <summary>
-    /// 测试相关入口 FindLine_HLine200_RowIsLocked；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Run、HLine200、True、HLine200Expected、InRange；具体条件和先后次序见方法体。
-    /// </summary>
     [Fact]
-    public void FindLine_HLine200_RowIsLocked()
+    public async Task FindLine_HLine200_RowIsLocked()
     {
-        using var tool = new Vision.Tools.OpenCv.Measurement.FindLineTool();
-        tool.Parameters.LineStart = new Vision.Core.Geometry.Point2D(20, 100);
-        tool.Parameters.LineEnd = new Vision.Core.Geometry.Point2D(180, 100);
-        var result = tool.Run(GoldenImages.HLine200());
-        Assert.True(result.Success, result.Message);
-        var (y, _, _) = GoldenImages.HLine200Expected();
-        Assert.InRange(result.Start.Y, y - 2.5, y + 2.5);
-        Assert.InRange(result.End.Y, y - 2.5, y + 2.5);
+        await using var engine = VisionEngineFactory.Create(new("opencv"));
+        var context = await engine.CreateContextAsync(default);
+        var (y, x0, x1) = GoldenImages.HLine200Expected();
+        var result = await engine.ExecuteAsync(context, new CaliperLineOperation(GoldenImages.HLine200(),
+            new(x0, y), new(x1, y), normalHalfLength: 8, tangentHalfWidth: 0,
+            polarity: CaliperEdgePolarity.DarkToLight, selection: CaliperEdgeSelection.First,
+            gaussianSigmaPixels: 0), default);
+        Assert.Equal(VisionExecutionStatus.Success, result.Status);
+        var line = Assert.IsType<CaliperLineFit>(result.Value!.Line);
+        // 保留旧黄金的带中心±2.5px容差；新卡尺明确测下侧边缘，不冒充带中心线。
+        Assert.InRange(line.Start.Y, y - 2.5, y + 2.5);
+        Assert.InRange(line.End.Y, y - 2.5, y + 2.5);
+        Assert.Equal(101.5, line.Start.Y, 6);
+        Assert.Equal(101.5, line.End.Y, 6);
+        await engine.ReleaseContextAsync(context, default);
     }
 
-    /// <summary>
-    /// 测试相关入口 FindCircle_Disc30_CenterAndRadiusAreLocked；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Run、Disc30、True、Disc30Expected、DistanceTo；具体条件和先后次序见方法体。
-    /// </summary>
     [Fact]
-    public void FindCircle_Disc30_CenterAndRadiusAreLocked()
+    public async Task FindCircle_Disc30_CenterAndRadiusAreLocked()
     {
-        using var tool = new Vision.Tools.OpenCv.Measurement.FindCircleTool();
-        tool.Parameters.ExpectedCenter = new Vision.Core.Geometry.Point2D(100, 120);
-        tool.Parameters.RadiusMin = 20;
-        tool.Parameters.RadiusMax = 40;
-        var result = tool.Run(GoldenImages.Disc30());
-        Assert.True(result.Success, result.Message);
-        var (cx, cy, r) = GoldenImages.Disc30Expected();
-        Assert.True(result.Center.DistanceTo(new Vision.Core.Geometry.Point2D(cx, cy)) <= 4);
-        Assert.InRange(result.Radius, r - 3, r + 3);
+        await using var engine = VisionEngineFactory.Create(new("opencv"));
+        var context = await engine.CreateContextAsync(default);
+        var (cx, cy, radius) = GoldenImages.Disc30Expected();
+        var result = await engine.ExecuteAsync(context, new CaliperCircleOperation(GoldenImages.Disc30(),
+            new(cx, cy), radius, caliperCount: 64, tangentHalfWidth: 0,
+            polarity: CaliperEdgePolarity.LightToDark, gaussianSigmaPixels: 0,
+            minimumPoints: 48, maximumRadialResidualPixels: 1.2, minimumCoverageDegrees: 300), default);
+        Assert.Equal(VisionExecutionStatus.Success, result.Status);
+        var circle = Assert.IsType<CaliperCircleFit>(result.Value!.Circle);
+        Assert.InRange(circle.Center.DistanceTo(new(cx, cy)), 0, 4);
+        Assert.InRange(circle.RadiusPixels, radius - 3, radius + 3);
+        Assert.True(circle.CoverageDegrees >= 300);
+        await engine.ReleaseContextAsync(context, default);
+    }
+
+    private static int WhitePixelCount(VisionFrame image)
+    {
+        var count = 0;
+        for (var y = 0; y < image.Height; y++)
+        {
+            foreach (var pixel in image.Pixels.Slice(y * image.Stride, image.Width))
+            {
+                if (pixel == 255)
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
     }
 }

@@ -5,6 +5,11 @@
 using WPFControls;
 using WPFControls.Controls.Views;
 using HalconDotNet;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using Vision.Controls.View;
+using Vision.Core.Imaging;
+using Vision.Tools.Halcon.Internal;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,6 +24,9 @@ namespace WPFControls.ProgramControl.Views.Display
     {
         public static readonly DependencyProperty DisplayImageProperty;
         public static readonly DependencyProperty TitleProperty;
+
+        /// <summary>共享托管显示区；不创建或拥有编辑会话。</summary>
+        public VisionImagePanel ImageDisplay => ManagedDisplay;
 
 
         /// <summary>
@@ -52,6 +60,7 @@ namespace WPFControls.ProgramControl.Views.Display
         public DisplaySingleView_DP()
         {
             InitializeComponent();
+            ImageDisplay.ImageViewport.IsRoiEditingEnabled = false;
 
         }
 
@@ -61,8 +70,20 @@ namespace WPFControls.ProgramControl.Views.Display
         /// </summary>
         static DisplaySingleView_DP()
         {
-            DisplayImageProperty = DependencyProperty.Register("DisplayImage", typeof(HObject), typeof(DisplaySingleView_DP), new FrameworkPropertyMetadata(null));
+            DisplayImageProperty = DependencyProperty.Register("DisplayImage", typeof(HObject), typeof(DisplaySingleView_DP), new FrameworkPropertyMetadata(null, OnDisplayImage));
             TitleProperty = DependencyProperty.Register("Title", typeof(string), typeof(DisplaySingleView_DP), new FrameworkPropertyMetadata(null));
+        }
+
+        private static void OnDisplayImage(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var control = (DisplaySingleView_DP)d;
+            var viewport = control.ImageDisplay.ImageViewport;
+            viewport.ReportImageError(null);
+            if (e.NewValue is HObject image)
+            {
+                try { viewport.Image = HalconImageConverter.ToVisionImage(image); }
+                catch (NotSupportedException error) { viewport.ReportImageError(error.Message); }
+            }
         }
 
         /// <summary>
@@ -71,12 +92,31 @@ namespace WPFControls.ProgramControl.Views.Display
         /// <returns></returns>
         public HObject GetDisplayImage()
         {
-            using var raw = HalconWindow.HSmart?.HalconWindow?.DumpWindowImage();
-            if (raw == null)
-            {
-                return null;
-            }
-            return raw.Clone();
+            var bitmap = CaptureViewport();
+            if (bitmap == null) return null;
+            var stride = checked(bitmap.PixelWidth * 3);
+            var pixels = new byte[checked(stride * bitmap.PixelHeight)];
+            bitmap.CopyPixels(pixels, stride, 0);
+            // 仍返回当前视口（含缩放/平移）的独立截图，不能用原始输入替代。
+            return HalconImageConverter.FromDisplaySnapshot(VisionImage.FromBuffer(
+                bitmap.PixelWidth, bitmap.PixelHeight, Vision.Core.Imaging.PixelFormat.Bgr24, pixels));
+        }
+
+        /// <summary>捕获当前视口的物理像素，不含标题/菜单；不调用HALCON。未布局时返回null。</summary>
+        public BitmapSource CaptureViewport()
+        {
+            var viewport = ImageDisplay.ImageViewport;
+            viewport.VerifyAccess();
+            if (viewport.ActualWidth <= 0 || viewport.ActualHeight <= 0) return null;
+            var dpi = VisualTreeHelper.GetDpi(viewport);
+            var bitmap = new RenderTargetBitmap(
+                checked((int)Math.Ceiling(viewport.ActualWidth * dpi.DpiScaleX)),
+                checked((int)Math.Ceiling(viewport.ActualHeight * dpi.DpiScaleY)),
+                dpi.PixelsPerInchX, dpi.PixelsPerInchY, PixelFormats.Pbgra32);
+            bitmap.Render(viewport);
+            var result = new FormatConvertedBitmap(bitmap, PixelFormats.Bgr24, null, 0);
+            result.Freeze();
+            return result;
         }
 
         /// <summary>
@@ -85,7 +125,7 @@ namespace WPFControls.ProgramControl.Views.Display
         /// <returns></returns>
         public void  Clear()
         {
-              HalconWindow.HSmart?.HalconWindow?.ClearWindow();
+            ImageDisplay.ImageViewport.ReportImageError(null);
         }
     }
 }

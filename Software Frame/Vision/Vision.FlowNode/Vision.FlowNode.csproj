@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13.0</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Vision.Core\Vision.Core.csproj" />
+    <ProjectReference Include="..\..\WPFCustomControls\WPFCustomControls.PropertyGrid.Core\WPFCustomControls.PropertyGrid.Core.csproj" />
+    <ProjectReference Include="..\..\FlowEditor\FlowEditor.Controls\FlowEditor.Controls.csproj" />
+    <ProjectReference Include="..\..\FlowEditor\FlowEditor.Runtime\FlowEditor.Runtime.csproj" />
+  </ItemGroup>
+</Project>

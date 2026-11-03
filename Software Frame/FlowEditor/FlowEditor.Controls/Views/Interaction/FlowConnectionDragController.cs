@@ -63,9 +63,16 @@ internal sealed class FlowConnectionDragController
     /// <summary>取消当前连线手势并清理候选高亮与鼠标捕获。</summary>
     public void Cancel()
     {
+        // 先取状态：CancelConnection 会把 IsDrawingConnection 置回 false。
+        var wasDrawing = _viewModel?.IsDrawingConnection == true;
         _viewModel?.CancelConnection();
         ResetVisualState();
-        Mouse.Capture(null);
+
+        // 只释放连线手势自己（端口控件）持有的捕获。
+        // 无差别调用 Mouse.Capture(null) 会连带释放刚打开的 ContextMenu 弹出层捕获，
+        // 使右键菜单瞬间关闭（画布右键“一闪就消失”）。
+        if (wasDrawing && Mouse.Captured is PortConnectorView)
+            Mouse.Capture(null);
     }
 
     /// <summary>节点视觉树变化后使端口坐标缓存失效。</summary>

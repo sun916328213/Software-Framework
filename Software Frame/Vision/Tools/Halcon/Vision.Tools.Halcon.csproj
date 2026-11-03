@@ -1,8 +1,3 @@
-﻿<!--
-中文阅读说明：项目构建声明。
-Vision 模块：视觉工具模型、算法适配和编辑展示；厂商能力与界面转换应在对应边界内协作。
-目标框架、项目引用、包引用及复制规则保持原有声明；依赖边界以这些声明和实际构建结果为准。
--->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Platform>AnyCPU</Platform>
@@ -15,9 +10,12 @@ Vision 模块：视觉工具模型、算法适配和编辑展示；厂商能力�
     <RootNamespace>Vision.Tools.Halcon</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Vision.Core\Vision.Core.csproj" />
-    <!-- P3（2026-09-28）：传统 HALCON Tool 迁移与标准化。
-         HalconDotNet 唯一入口是 Extension（仓库硬规则 12），不得直引 halcondotnet。 -->
-    <ProjectReference Include="..\..\..\Extension\Extension\Extension.csproj" />
+    <ProjectReference Include="../../Vision.Core/Vision.Core.csproj" />
+    <ProjectReference Include="../Runtime/Vision.Tools.csproj" />
+    <!-- HALCON 仍通过仓库现有 Extension 获取，不另引 SDK 或更改版本。 -->
+    <ProjectReference Include="../../../Extension/Extension/Extension.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Vision.Tests" />
   </ItemGroup>
 </Project>

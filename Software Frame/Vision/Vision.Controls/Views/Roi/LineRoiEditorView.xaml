@@ -1,0 +1,38 @@
+<UserControl
+    x:Class="Vision.Controls.View.LineRoiEditorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:core="clr-namespace:Vision.Core;assembly=Vision.Core"
+    xmlns:view="clr-namespace:Vision.Controls.View"
+    x:Name="Root">
+    <DockPanel>
+        <StackPanel Margin="0,0,0,8" DockPanel.Dock="Top">
+            <TextBlock
+                FontSize="14"
+                FontWeight="SemiBold"
+                Text="搜索 ROI（1）" />
+            <TextBlock
+                Margin="0,4,0,0"
+                Opacity="0.7"
+                Text="原图像素坐标 · 端点 / 移动 / 四角缩放 / 旋转"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Margin="0,8,0,0" DockPanel.Dock="Bottom">
+            <TextBlock
+                Opacity="0.7"
+                Text="黄色方柄调整端点、半宽及四角；橙色圆柄旋转，内部拖动整体移动。Esc 回滚；ROI 图像下无需切换右侧页签即可编辑。"
+                TextWrapping="Wrap" />
+            <TextBlock
+                Margin="0,6,0,0"
+                Opacity="0.7"
+                Text="{Binding Description, ElementName=Root}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        <view:VisionPropertyPanel
+            x:Name="GeometryPanel"
+            ExpandGroups="True"
+            ParametersChanged="GeometryChanged"
+            PropertyArea="{x:Static core:ToolPropertyArea.Roi}"
+            TargetObject="{Binding Parameters, ElementName=Root}" />
+    </DockPanel>
+</UserControl>

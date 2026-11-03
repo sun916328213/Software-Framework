@@ -29,6 +29,7 @@ using Xunit;
 namespace FlowEditor.Workbench.Tests;
 
 /// <summary>验证完整流程容器在无宿主窗口环境中的视图与 ViewModel 组合。</summary>
+[Collection("FlowEditorWpf")]
 public sealed class FlowChartContainerAcceptanceTests
 {
     /// <summary>确保容器、默认标签页、活动画布和三个独立面板能够在 STA 中共同完成布局。</summary>

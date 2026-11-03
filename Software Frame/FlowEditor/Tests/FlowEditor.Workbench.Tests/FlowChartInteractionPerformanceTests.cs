@@ -23,6 +23,7 @@ namespace FlowEditor.Workbench.Tests;
 /// <summary>
 /// FlowChartInteractionPerformanceTests 的类型定义。FlowEditor 模块：流程模型、执行和编辑器协作；Core、Runtime 与 Controls 分别承担模型契约、执行能力和界面职责。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
 /// </summary>
+[Collection("FlowEditorWpf")]
 public class FlowChartInteractionPerformanceTests
 {
     /// <summary>

@@ -1,0 +1,15 @@
+<UserControl
+    x:Class="Vision.Controls.View.VisionPropertyTableEditor"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Loaded="Editor_Loaded"
+    Unloaded="Editor_Unloaded">
+    <!--  表格视觉集中在此；列与绑定仍按运行时属性元数据生成。  -->
+    <DataGrid
+        x:Name="Table"
+        AutoGenerateColumns="False"
+        AutoGeneratingColumn="Table_AutoGeneratingColumn"
+        LoadingRow="Table_LoadingRow"
+        RowDetailsTemplate="{DynamicResource Vision.PropertyPanel.RowDetails}"
+        Style="{DynamicResource Vision.PropertyPanel.Table}" />
+</UserControl>

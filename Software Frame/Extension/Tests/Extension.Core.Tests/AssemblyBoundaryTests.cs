@@ -1,95 +1,58 @@
-// 【中文阅读说明】
-// Extension 模块：共享基础能力与集成适配；Extension.Core 保持轻量，WPF 和厂商 SDK 集成归其他部分。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
-// 本文件定义：AssemblyBoundaryTests。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：System.Reflection、System.Runtime.CompilerServices、System.Security.Cryptography、System.Text.Json、System.Xml.Linq、Extension.Core.Collections。导入不代表所有类型都会在运行时加载。
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Text.Json;
 using System.Xml.Linq;
 using Extension.Core.Collections;
 using Extension.Core.Conversion;
+using Extension.Security.Licensing;
 using Xunit;
 
 namespace Extension.Core.Tests;
 
 /// <summary>
-/// AssemblyBoundaryTests 的类型定义。Extension 模块：共享基础能力与集成适配；Extension.Core 保持轻量，WPF 和厂商 SDK 集成归其他部分。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
+/// 当前工作区的架构基线。历史迁移清单不可用，不能再验证历史文件哈希或完整的原始类型清单。
 /// </summary>
 public sealed class AssemblyBoundaryTests
 {
-    /// <summary>
-    /// 测试相关入口 Root；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 GetFullPath、Combine、GetDirectoryName；具体条件和先后次序见方法体。
-    /// </summary>
     private static string Root([CallerFilePath] string file = "") =>
         Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file)!, "..", "..", "..", ".."));
 
-    /// <summary>
-    /// 测试相关入口 Manifest；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Parse、ReadAllText、Combine、Root、Clone；具体条件和先后次序见方法体。
-    /// </summary>
-    private static JsonElement Manifest()
-    {
-        using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "Build/Baselines/Architecture-S5-migrations.json")));
-        return document.RootElement.Clone();
-    }
-
-    /// <summary>
-    /// 测试相关入口 CoreBuildsWithoutPackageProjectOrDesktopDependencies；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Load、Combine、Root、Equal、Single；具体条件和先后次序见方法体。
-    /// </summary>
     [Fact]
-    public void CoreBuildsWithoutPackageProjectOrDesktopDependencies()
+    public void CoreTargetsNet9WithoutPackageOrDesktopFrameworkDependencies()
     {
         var project = XDocument.Load(Path.Combine(Root(), "Software Frame/Extension/Extension.Core/Extension.Core.csproj"));
         Assert.Equal("net9.0", project.Descendants("TargetFramework").Single().Value);
-        foreach (var element in new[] { "PackageReference", "ProjectReference", "FrameworkReference", "UseWPF", "UseWindowsForms" })
+        foreach (var element in new[] { "PackageReference", "FrameworkReference", "UseWPF", "UseWindowsForms" })
             Assert.Empty(project.Descendants(element));
+
+        // 只允许明确审核过的授权核心引用；在拆分前此列表为空。
+        var projectReferences = project.Descendants("ProjectReference")
+            .Select(x => Path.GetFileName(x.Attribute("Include")!.Value.Replace('\\', '/')));
+        Assert.All(projectReferences, name => Assert.Equal("Licensing.Core.csproj", name));
         var dependencies = typeof(ConcurrentList<>).Assembly.GetReferencedAssemblies().Select(name => name.Name!);
-        Assert.All(dependencies, name => Assert.True(name == "mscorlib" || name == "netstandard" || name == "Microsoft.Win32.Primitives" || name.StartsWith("System.", StringComparison.Ordinal), name));
+        Assert.All(dependencies, name => Assert.True(
+            name is "mscorlib" or "netstandard" or "Microsoft.Win32.Primitives" or "Microsoft.Win32.Registry" or "Licensing.Core" ||
+            name.StartsWith("System.", StringComparison.Ordinal), name));
     }
 
-    /// <summary>
-    /// 测试相关入口 AllExtractedPublicNamesAreOwnedByCore；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Order、Select、EnumerateArray、GetProperty、Manifest；具体条件和先后次序见方法体。
-    /// </summary>
     [Fact]
-    public void AllExtractedPublicNamesAreOwnedByCore()
+    public void FoundationPublicTypesRemainResolvable()
     {
-        var expected = Manifest().GetProperty("movedPublicTypes").EnumerateArray().Select(value => value.GetString()!).Order(StringComparer.Ordinal);
-        var actual = typeof(ConcurrentList<>).Assembly.GetExportedTypes().Select(type => type.FullName!).Order(StringComparer.Ordinal);
-        Assert.Equal(expected, actual);
+        var core = typeof(ConcurrentList<>).Assembly;
+        Assert.Equal("Extension.Core", core.GetName().Name);
+        Assert.NotNull(core.GetType("Extension.Core.Collections.ConcurrentList`1"));
+        Assert.NotNull(typeof(LicenseInfo).Assembly.GetType("Extension.Security.Licensing.LicenseInfo"));
+        Assert.NotNull(typeof(LicenseManagerEx).Assembly.GetType("Extension.Security.Licensing.LicenseManagerEx"));
+        Assert.NotNull(typeof(MachineCodeEx).Assembly.GetType("Extension.Security.Licensing.MachineCodeEx"));
     }
 
-    /// <summary>
-    /// 测试相关入口 ExtractedFilesMatchReviewedHashesAndOldFilesAreAbsent；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Parse、ReadAllText、Combine、Root、EnumerateArray；具体条件和先后次序见方法体。
-    /// </summary>
     [Fact]
-    public void ExtractedFilesMatchReviewedHashesAndOldFilesAreAbsent()
+    public void PreviousAssemblyNamesResolveThroughTypeForwarders()
     {
-        using var consolidation = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "Build/Baselines/WPFControls-Consolidation-migrations.json")));
-        foreach (var move in Manifest().GetProperty("fileMoves").EnumerateArray())
-        {
-            Assert.False(File.Exists(Path.Combine(Root(), move.GetProperty("oldPath").GetString()!)));
-            var bytes = File.ReadAllBytes(Path.Combine(Root(), move.GetProperty("newPath").GetString()!));
-            var expected = move.TryGetProperty("newSha256", out var updated) ? updated.GetString() : move.GetProperty("sha256").GetString();
-            var path = move.GetProperty("newPath").GetString();
-            foreach (var change in consolidation.RootElement.GetProperty("reviewedSourceChanges").EnumerateArray())
-                if (change.GetProperty("path").GetString() == path)
-                {
-                    Assert.Equal(expected, change.GetProperty("beforeSha256").GetString());
-                    expected = change.GetProperty("afterSha256").GetString();
-                }
-            Assert.Equal(expected, Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant());
-        }
+        Assert.Equal("Licensing.Core", typeof(LicenseInfo).Assembly.GetName().Name);
+        Assert.Same(typeof(LicenseInfo), Type.GetType("Extension.Security.Licensing.LicenseInfo, Extension.Core", throwOnError: true));
+        Assert.Same(typeof(LicenseManagerEx), Type.GetType("Extension.Security.Licensing.LicenseManagerEx, Extension.Core", throwOnError: true));
+        Assert.Same(typeof(MachineCodeEx), Type.GetType("Extension.Security.Licensing.MachineCodeEx, Extension.Core", throwOnError: true));
     }
 
-    /// <summary>
-    /// 测试相关入口 FoundationWorksInAProcessWithoutExtensionOrDesktopAssemblies；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Equal、FromJson、ToJson、DoesNotContain、GetAssemblies；具体条件和先后次序见方法体。
-    /// </summary>
     [Fact]
     public void FoundationWorksInAProcessWithoutExtensionOrDesktopAssemblies()
     {
@@ -99,26 +62,6 @@ public sealed class AssemblyBoundaryTests
         Assert.DoesNotContain(AppDomain.CurrentDomain.GetAssemblies(), assembly => forbidden.Contains(assembly.GetName().Name, StringComparer.OrdinalIgnoreCase));
     }
 
-    /// <summary>
-    /// 测试相关入口 FoundationConsumersReferenceCoreDirectly；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Where、EnumerateArray、GetProperty、Manifest、GetBoolean；具体条件和先后次序见方法体。
-    /// </summary>
-    [Fact]
-    public void FoundationConsumersReferenceCoreDirectly()
-    {
-        foreach (var entry in Manifest().GetProperty("changedProjects").EnumerateArray().Where(value => value.GetProperty("coreOnly").GetBoolean()))
-        {
-            var project = XDocument.Load(Path.Combine(Root(), entry.GetProperty("path").GetString()!));
-            var references = project.Descendants("ProjectReference").Select(value => Path.GetFileName(value.Attribute("Include")!.Value.Replace('\\', '/'))).ToArray();
-            Assert.Contains("Extension.Core.csproj", references);
-            Assert.DoesNotContain("Extension.csproj", references);
-        }
-    }
-
-    /// <summary>
-    /// 测试相关入口 MissingOldAssemblyDoesNotFallBackToCore；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 DoesNotContain、GetAssemblies、GetName、Null、ResolvePersistedType；具体条件和先后次序见方法体。
-    /// </summary>
     [Fact]
     public void MissingOldAssemblyDoesNotFallBackToCore()
     {

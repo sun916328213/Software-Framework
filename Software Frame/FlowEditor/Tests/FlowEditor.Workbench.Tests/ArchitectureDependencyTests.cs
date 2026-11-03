@@ -167,6 +167,7 @@ public sealed class ArchitectureDependencyTests
     private static readonly string[] WpfFlavouredTestFiles =
     {
         "FlowChartContainerAcceptanceTests.cs",
+        "FlowChartContextMenuTests.cs",
         "FlowChartInteractionPerformanceTests.cs",
         "FlowCommandBarViewTests.cs",
         "InactiveContainerInteractionTests.cs",

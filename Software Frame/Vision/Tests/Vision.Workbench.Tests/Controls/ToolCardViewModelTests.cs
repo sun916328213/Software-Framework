@@ -4,7 +4,7 @@
 // 直接导入的协作命名空间包括：Vision.Tests.Tools、Vision.Tests.Tools.AI、Vision.Workbench、Vision.Workbench.Tests、Vision.Controls.ViewModels。导入不代表所有类型都会在运行时加载。
 using Vision.Tests.Tools;
 using Vision.Tests.Tools.AI;
-using Vision.Workbench;
+
 using Vision.Workbench.Tests;
 // ─────────────────────────────────────────────────────────────────────────────
 // P8 测试 —— ToolCardViewModel（计划 §P8「关键 ViewModel 逻辑测试」）。
@@ -28,7 +28,7 @@ public sealed class ToolCardViewModelTests
     /// 正文中的关键协作调用包括 Equal、Execute、True、SetImage、WhiteRectangle；具体条件和先后次序见方法体。
     /// </summary>
     [Fact]
-    public void OpenCvThreshold_RefreshRun_ShowsRealResult()
+    public async Task OpenCvThreshold_RefreshRun_ShowsRealResult()
     {
         var tool = new Vision.Tools.OpenCv.Processing.ThresholdTool();
         using var adapter = new OpenCvToolCardAdapter<
@@ -43,7 +43,7 @@ public sealed class ToolCardViewModelTests
 
         card.SetImage(SyntheticImages.WhiteRectangle(100, 100, 20, 30, 40, 60));
         tool.Parameters.MinGray = 128;
-        card.RunCommand.Execute(null);
+        await card.RunCommand.ExecuteAsync(null);
         Assert.Equal("执行成功", card.StatusText);
         Assert.True(card.ElapsedMs >= 0);
         Assert.Contains("600", card.ResultSummary);

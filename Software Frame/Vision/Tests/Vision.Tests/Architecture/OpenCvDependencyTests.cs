@@ -31,7 +31,7 @@ public sealed class OpenCvDependencyTests
     // ── 1. OpenCV 后端独立：只认 Core + OpenCvSharp ───────────────────
 
     [Fact]
-    public void OpenCvProject_ReferencesOnlyCore_AndOpenCvSharp()
+    public void OpenCvProject_ReferencesOnlyCoreAndSharedTools_AndOpenCvSharp()
     {
         var csproj = VisionLayout.ProjectFile(VisionDirectory, "Vision.Tools.OpenCv");
         Assert.True(File.Exists(csproj), $"OpenCV 后端工程不存在：{csproj}");
@@ -41,9 +41,8 @@ public sealed class OpenCvDependencyTests
             .Matches(text, "<ProjectReference\\s+Include=\"(?<path>[^\"]+)\"")
             .Select(m => m.Groups["path"].Value)
             .ToArray();
-        // 防假绿 + 独立性：恰好只引用 Vision.Core。
-        Assert.Single(projects);
-        Assert.Contains("Vision.Core", projects[0], StringComparison.OrdinalIgnoreCase);
+        // 共享执行项目只依赖Core；允许同层实现协议，不引入HALCON/Controls/Workbench。
+        Assert.Equal(new[] { "Vision.Core", "Vision.Tools" }, projects.Select(path => Path.GetFileNameWithoutExtension(path.Replace('\\', '/'))).OrderBy(name => name, StringComparer.Ordinal));
 
         var packages = Regex
             .Matches(text, "<PackageReference\\s+Include=\"(?<name>[^\"]+)\"")

@@ -1,92 +1,95 @@
-// 【中文阅读说明】
-// Vision 模块：视觉工具模型、算法适配和编辑展示；厂商能力与界面转换应在对应边界内协作。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
-// 本文件定义：WorkbenchCompositionTests。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：Vision.Workbench、System.Windows、System.Linq、Extension.UI.Theme、MaterialDesignThemes.Wpf。导入不代表所有类型都会在运行时加载。
-using Vision.Workbench;
 using System.Windows;
-using System.Linq;
+using System.Windows.Controls;
+using System.Windows.Threading;
 using Extension.UI.Theme;
 using MaterialDesignThemes.Wpf;
+using Prism.Ioc;
+using Prism.Regions;
+using Vision.Controls.View;
+using Vision.Controls.ViewModels;
 
 namespace Vision.Workbench.Tests;
 
-/// <summary>
-/// 宿主装配冒烟测试：App.xaml 的资源合并（含 <c>Vision.Controls</c> 的 ResourceDic）能跨程序集解析，
-/// 主窗 / ToolBrowser 的 BAML 在「入口程序集不是 Vision.Workbench」时依然找得到。
-/// <para>
-/// 为什么必须在这条测试线上：Vision.Workbench 的 App.xaml 原先写的是相对 <c>StartupUri="MainWindow.xaml"</c>，
-/// 相对 URI 会绑到**入口程序集**（生产是 Vision.Workbench.exe，vstest 下是 testhost.exe）
-/// ⇒ 宿主换成测试进程后立刻报「找不到资源 views/mainwindow.xaml」。
-/// 这类装配问题在编译期完全不报错，只有真正把宿主拉起来才暴露。
-/// </para>
-/// </summary>
+/// <summary>在独立Vision薄宿主中验证Controls流程导航与资源；不合并FlowNodes宿主。</summary>
 [Collection("WorkbenchAppBoot")]
 public sealed class WorkbenchCompositionTests(WorkbenchAppFixture host)
 {
-    private readonly WorkbenchAppFixture _host = host;
-
-    /// <summary>
-    /// App 启动按 StartupUri 真正拉起了 MainWindow —— 2026-09-29 删掉旧 HALCON 页签后，
-    /// 主窗构造不再需要 HALCON Runtime，宿主装配这一环终于可以端到端验。
-    /// </summary>
     [Fact]
-    public void AppBoot_ShowsMainWindow_WithoutHalconRuntime()
+    public void AppBoot_ShowsIndependentVisionMainWindow_WithoutStartingHardware()
     {
-        _host.Invoke(() =>
+        host.Invoke(() =>
         {
-            var window = Application.Current!.MainWindow;
-            Assert.NotNull(window);
-            Assert.Equal(typeof(Vision.Workbench.MainWindow), window!.GetType());
+            Assert.IsType<MainWindow>(Application.Current.MainWindow);
+            Assert.True(System.IO.File.Exists(System.IO.Path.Combine(AppContext.BaseDirectory, VisionEngineConfiguration.FileName)));
+            Assert.True(((IContainerRegistry)ContainerLocator.Container).IsRegistered<Vision.Core.IVisionEngine>());
+            // 这里只检查注册，不解析新引擎，实际启动/关闭不会因此初始化SDK。
         });
     }
 
-    /// <summary>
-    /// 测试相关入口 ThemeService_UsesHostThemeBeforeNestedControlsTheme；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Invoke、Single、OfType、Same、FindBundledTheme；具体条件和先后次序见方法体。
-    /// </summary>
+    [Fact]
+    public void FlowPageAndViewModel_AreOwnedByControls_WithoutRetiredHostReferences()
+    {
+        host.Invoke(() =>
+        {
+            var controls = typeof(VisionToolEditorView).Assembly;
+            Assert.Same(controls, typeof(VisionFlowView).Assembly);
+            Assert.Same(controls, typeof(VisionFlowViewModel).Assembly);
+            Assert.DoesNotContain(controls.GetReferencedAssemblies(), a => a.Name == "Vision.Workbench");
+            Assert.Equal("Vision.Workbench", typeof(App).Assembly.GetName().Name);
+            Assert.DoesNotContain(typeof(App).Assembly.GetReferencedAssemblies(), a => a.Name == "FlowNodes.Workbench");
+            Assert.Null(controls.GetType("Vision.Workbench.Views.VisionFlowView"));
+            Assert.IsType<VisionFlowView>(Application.LoadComponent(
+                new Uri("/Vision.Controls;component/Views/Flow/VisionFlowView.xaml", UriKind.Relative)));
+        });
+    }
+
+    [Fact]
+    public void Navigation_DirectlyHostsFlowPage_AndReusesPageAndSession()
+    {
+        host.Invoke(() =>
+        {
+            var regions = ContainerLocator.Container.Resolve<IRegionManager>();
+            var region = regions.Regions["VisionRegion"];
+            regions.RequestNavigate("VisionRegion", nameof(VisionFlowView));
+            var page = Assert.IsType<VisionFlowView>(Assert.Single(region.ActiveViews));
+            var flow = Assert.IsType<VisionFlowViewModel>(page.DataContext);
+            page.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+            var model = flow.Chart.Model;
+            region.Deactivate(page);
+            Assert.Empty(region.ActiveViews);
+            NavigationResult? result = null;
+            regions.RequestNavigate("VisionRegion", nameof(VisionFlowView), value => result = value);
+            page.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+            Assert.NotNull(result); Assert.Null(result.Error); Assert.True(result.Result);
+            Assert.Same(page, Assert.Single(region.ActiveViews));
+            Assert.Same(flow, page.DataContext); Assert.Same(model, flow.Chart.Model);
+            Assert.Same(flow.Editor, Assert.IsAssignableFrom<Control>(page.FindName("FlowHost")).DataContext);
+            Assert.True(flow.IsEditingEnabled);
+        });
+    }
+
     [Fact]
     public void ThemeService_UsesHostThemeBeforeNestedControlsTheme()
     {
-        _host.Invoke(() =>
+        host.Invoke(() =>
         {
-            var hostTheme = Assert.Single(Application.Current!.Resources.MergedDictionaries.OfType<BundledTheme>());
-            Assert.Same(hostTheme, ThemeService.FindBundledTheme());
+            var theme = Assert.Single(Application.Current.Resources.MergedDictionaries.OfType<BundledTheme>());
+            Assert.Same(theme, ThemeService.FindBundledTheme());
         });
     }
 
-    /// <summary>
-    /// 测试相关入口 AppBoot_MergesWorkbenchAndControlsResources；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Invoke、NotNull、True；具体条件和先后次序见方法体。
-    /// </summary>
     [Fact]
-    public void AppBoot_MergesWorkbenchAndControlsResources()
+    public void AppBoot_MergesHostAndControlsResources()
     {
-        _host.Invoke(() =>
-        {
-            Assert.NotNull(Application.Current);
-
-            // App.xaml 合并了三条：Vision.Controls 的 ResourceDic、MaterialDesign BundledTheme、MaterialDesign3 Defaults。
-            var merged = Application.Current!.Resources.MergedDictionaries.Count;
-            Assert.True(merged >= 3, $"App.xaml 的 MergedDictionaries 只解析出 {merged} 条，资源合并疑似失败。");
-        });
+        host.Invoke(() => Assert.True(Application.Current.Resources.MergedDictionaries.Count >= 3));
     }
 
-    /// <summary>
-    /// 测试相关入口 PackUri_ResolvesBaml_FromForeignEntryAssembly；准备条件、协作调用与结果检查以方法正文为准。
-    /// 正文中的关键协作调用包括 Invoke、GetResourceStream、NotNull；具体条件和先后次序见方法体。
-    /// </summary>
     [Theory]
     [InlineData("pack://application:,,,/Vision.Workbench;component/MainWindow.xaml")]
-    [InlineData("pack://application:,,,/Vision.Workbench;component/ToolBrowserView.xaml")]
-    [InlineData("pack://application:,,,/Vision.Controls;component/Ctr_Halcon/View/ResourceDic .xaml")]
-    public void PackUri_ResolvesBaml_FromForeignEntryAssembly(string uri)
-    {
-        _host.Invoke(() =>
-        {
-            // ⛔ 只解析资源流、不实例化：pack URI 的可解析性单独钉住，
-            //    与 MainWindow 的实例化（AppBoot_ShowsMainWindow_WithoutHalconRuntime）解耦。
-            var resource = Application.GetResourceStream(new Uri(uri, UriKind.Absolute));
-            Assert.NotNull(resource);
-        });
-    }
+    [InlineData("pack://application:,,,/Vision.Workbench;component/App.xaml")]
+    [InlineData("pack://application:,,,/Vision.Controls;component/Views/Flow/VisionFlowView.xaml")]
+    [InlineData("pack://application:,,,/Vision.Controls;component/Views/Editor/VisionToolEditorView.xaml")]
+    [InlineData("pack://application:,,,/Vision.Controls;component/Themes/LegacyHalconResources.xaml")]
+    public void PackUri_ResolvesResources_FromForeignEntryAssembly(string uri)
+        => host.Invoke(() => Assert.NotNull(Application.GetResourceStream(new Uri(uri, UriKind.Absolute))));
 }

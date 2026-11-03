@@ -35,6 +35,22 @@ public partial class FlowChartModel : ObservableObject
     /// <summary>当前文件路径（用于保存/另存为区分）。</summary>
     public string? CurrentFilePath { get; set; }
 
+    private Dictionary<string, object?> _documentProperties = new();
+    /// <summary>由宿主解释的文档状态；替换时通知宿主，允许无节点文档保留独立输入。</summary>
+    public Dictionary<string, object?> DocumentProperties
+    {
+        get => _documentProperties;
+        set => SetProperty(ref _documentProperties, value);
+    }
+
+    private bool _supportsDocumentEditing = true;
+    /// <summary>宿主尚未提供节点文档适配时，关闭保存、恢复、复制粘贴及依赖快照恢复的撤销命令；默认保留原能力。</summary>
+    public bool SupportsDocumentEditing
+    {
+        get => _supportsDocumentEditing;
+        set => SetProperty(ref _supportsDocumentEditing, value);
+    }
+
     #region 缩放
 
     private double _zoomLevel = 1.0;

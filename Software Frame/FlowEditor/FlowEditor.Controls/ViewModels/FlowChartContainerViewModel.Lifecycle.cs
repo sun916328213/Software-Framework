@@ -74,8 +74,8 @@ public partial class FlowChartContainerViewModel
     /// <summary>标签运行或循环状态变化时更新关闭命令。</summary>
     private void OnTabModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(FlowChartModel.IsRunning) or nameof(FlowChartModel.IsLoopRunning))
-            CloseTabCommand.NotifyCanExecuteChanged();
+        if (e.PropertyName is nameof(FlowChartModel.IsRunning) or nameof(FlowChartModel.IsLoopRunning) or nameof(FlowChartModel.SupportsDocumentEditing))
+            NotifyContainerCommands();
     }
 
     /// <summary>子流程命令状态变化时刷新容器级命令。</summary>
@@ -91,6 +91,7 @@ public partial class FlowChartContainerViewModel
         LoopStopAllCommand.NotifyCanExecuteChanged();
         SaveAllCommand.NotifyCanExecuteChanged();
         SaveAllAsCommand.NotifyCanExecuteChanged();
+        LoadAllCommand.NotifyCanExecuteChanged();
         NewFlowCommand.NotifyCanExecuteChanged();
         CloseTabCommand.NotifyCanExecuteChanged();
     }
@@ -116,7 +117,11 @@ public partial class FlowChartContainerViewModel
         StopAll();
         var tabs = Tabs.ToArray();
         var tasks = tabs.Select(WPFCustomControls.Workbench.WorkbenchLifetime.WaitForCommandsAsync).ToArray();
-        try { await Task.WhenAll(tasks); }
+        try
+        {
+            await WPFCustomControls.Workbench.WorkbenchLifetime.WaitForCommandsAsync(this);
+            await Task.WhenAll(tasks);
+        }
         finally
         {
             foreach (var tab in tabs) RemoveTab(tab);

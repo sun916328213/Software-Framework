@@ -58,6 +58,7 @@ public sealed class FlowDocumentMapper
         {
             Name = name,
             Version = "1.0",
+            DocumentProperties = new Dictionary<string, object?>(model.DocumentProperties),
             ZoomLevel = model.ZoomLevel,
             Nodes = nodes.Select(ToNodeDocument).ToList(),
             Connections = connections.Select(ToConnectionDocument).ToList()
@@ -163,6 +164,7 @@ public sealed class FlowDocumentMapper
         // P2：占位节点直接回写捕获的原始配置，不反射占位类自身的簿记属性。
         if (node is MissingNode missing)
             return new Dictionary<string, object?>(missing.RawProperties);
+        if (node is INodeDocumentState explicitState) return explicitState.CaptureDocumentState();
         var properties = new Dictionary<string, object?>();
         var baseProperties = typeof(NodeModel).GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Select(property => property.Name)

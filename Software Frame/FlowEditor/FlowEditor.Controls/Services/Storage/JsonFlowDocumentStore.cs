@@ -30,7 +30,23 @@ public sealed class JsonFlowDocumentStore : IFlowDocumentStore
         if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             Directory.CreateDirectory(directory);
 
-        File.WriteAllText(path, JsonSerializer.Serialize(document, FlowDocumentJson.Options));
+        var json = JsonSerializer.Serialize(document, FlowDocumentJson.Options); // 序列化失败不得截断旧文件。
+        var fullPath = Path.GetFullPath(path);
+        var temporary = fullPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            using (var writer = new StreamWriter(stream))
+            {
+                writer.Write(json); writer.Flush(); stream.Flush(flushToDisk: true);
+            }
+            File.Move(temporary, fullPath, overwrite: true);
+        }
+        finally
+        {
+            try { if (File.Exists(temporary)) File.Delete(temporary); }
+            catch (Exception error) { System.Diagnostics.Trace.TraceWarning("流程临时文件清理失败：{0}", error.Message); }
+        }
     }
 
     /// <inheritdoc />
@@ -45,6 +61,12 @@ public sealed class JsonFlowDocumentStore : IFlowDocumentStore
             throw new FileNotFoundException("流程文档不存在", path);
 
         var json = File.ReadAllText(path);
+        if (typeof(TDocument) == typeof(FlowEditor.Core.Models.FlowChartDocumentModel))
+        {
+            using var shape = JsonDocument.Parse(json);
+            if (shape.RootElement.ValueKind != JsonValueKind.Object || !shape.RootElement.TryGetProperty("nodes", out _))
+                throw new InvalidDataException("不是流程文档；单工具工程请从原单工具入口打开。");
+        }
         return JsonSerializer.Deserialize<TDocument>(json, FlowDocumentJson.Options)
                ?? throw new InvalidDataException("流程文档内容为空");
     }

@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Threading;
 using MaterialDesignColors;
 using MaterialDesignThemes.Wpf;
+using Xunit;
 
 namespace FlowEditor.Workbench.Tests;
 
@@ -20,12 +21,18 @@ internal static class WpfTestHost
     /// </summary>
     public static void Run(Action action) => SharedHost.Value.Dispatcher.Invoke(action);
 
+    internal static void Shutdown()
+    {
+        if (SharedHost.IsValueCreated) SharedHost.Value.Dispose();
+    }
+
     /// <summary>
     /// Host 的类型定义。FlowEditor 模块：流程模型、执行和编辑器协作；Core、Runtime 与 Controls 分别承担模型契约、执行能力和界面职责。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
     /// </summary>
-    private sealed class Host
+    private sealed class Host : IDisposable
     {
         public Dispatcher Dispatcher { get; }
+        private readonly Thread _thread;
 
         /// <summary>
         /// 初始化 Host 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
@@ -35,7 +42,7 @@ internal static class WpfTestHost
         {
             using var ready = new ManualResetEventSlim();
             Dispatcher? dispatcher = null;
-            var thread = new Thread(() =>
+            _thread = new Thread(() =>
             {
                 var application = Application.Current ?? new Application();
                 EnsureResources(application);
@@ -47,10 +54,25 @@ internal static class WpfTestHost
                 IsBackground = true,
                 Name = "FlowEditor WPF test host"
             };
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
+            _thread.SetApartmentState(ApartmentState.STA);
+            _thread.Start();
             ready.Wait();
             Dispatcher = dispatcher!;
+        }
+
+        public void Dispose()
+        {
+            // 在xUnit集合收尾（不是ProcessExit）于原STA清理弱事件表。
+            // BeginInvoke使发起退出的调度操作先完成，避免同步Shutdown取消其自身Task。
+            if (!Dispatcher.HasShutdownStarted)
+            {
+                var cleanup = Dispatcher.InvokeAsync(() => Dispatcher.BeginInvokeShutdown(DispatcherPriority.Background), DispatcherPriority.Send);
+                if (!cleanup.Task.Wait(TimeSpan.FromSeconds(10)))
+                    throw new TimeoutException("FlowEditor测试STA未处理退出请求。");
+                cleanup.Task.GetAwaiter().GetResult();
+            }
+            if (!_thread.Join(TimeSpan.FromSeconds(10)))
+                throw new TimeoutException("FlowEditor测试STA未正常退出。");
         }
     }
 

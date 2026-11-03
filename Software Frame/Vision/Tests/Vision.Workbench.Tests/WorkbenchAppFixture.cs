@@ -3,7 +3,7 @@
 // 本文件定义：WorkbenchAppBootCollection、WorkbenchAppFixture。成员说明可结合下方具体实现阅读。
 // 直接导入的协作命名空间包括：Vision.Workbench、System.Windows、System.Windows.Threading。导入不代表所有类型都会在运行时加载。
 using Workbench.TestSupport;
-using Vision.Workbench;
+using Prism.Ioc;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -16,11 +16,9 @@ public sealed class WorkbenchAppBootCollection : ICollectionFixture<WorkbenchApp
 /// <summary>
 /// STA 应用宿主夹具（WPF 单 Application 实例约束，各测各 new App 必挂）。
 /// <para>
-/// 走生产入口：<c>new App()</c> + <c>InitializeComponent()</c> 载入 App.xaml
-/// （含 Vision.Controls 的 ResourceDic 合并），再 <c>Run()</c> 由 StartupUri 拉起 MainWindow。
-/// 2026-09-29 起 MainWindow 只挂 ToolBrowser —— 旧的 <c>ViewModelT</c> 与 HALCON 页签
-/// 已随迁移源退场删除，主窗构造不再需要 HALCON Runtime，测试宿主可以直接把它跑起来
-/// （这正是「宿主可无 HALCON Runtime 启动」的验收点）。
+/// 走生产Prism入口：载入App.xaml、创建Shell与模块，再由OnInitialized选择默认任务页。
+/// 在其他测试导航前记录实际初始视图，避免依赖用例顺序或通过事后导航假装验证默认页。
+/// 全集合共享一个Application；局部关闭测试不得关闭这个主窗口，也不启动生产硬件。
 /// </para>
 /// </summary>
 public sealed class WorkbenchAppFixture : IDisposable
@@ -29,6 +27,7 @@ public sealed class WorkbenchAppFixture : IDisposable
     private readonly ManualResetEventSlim _ready = new(false);
     private int _disposed;
     private WorkbenchTestLifetime? _lifetime;
+    public Type? InitialActiveViewType { get; private set; }
 
     /// <summary>
     /// 初始化 WorkbenchAppFixture 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
@@ -42,7 +41,13 @@ public sealed class WorkbenchAppFixture : IDisposable
             _lifetime = new WorkbenchTestLifetime(app);
             app.InitializeComponent(); // 等价于生产入口：先载 App.xaml（含 Vision.Controls 的 ResourceDic 合并）
             app.Startup += (_, _) => app.Dispatcher.BeginInvoke(
-                new Action(() => { _lifetime.ObserveMainWindow(); _ready.Set(); }), DispatcherPriority.ApplicationIdle);
+                new Action(() =>
+                {
+                    _lifetime.ObserveMainWindow();
+                    var regions = Prism.Ioc.ContainerLocator.Container.Resolve<Prism.Regions.IRegionManager>();
+                    InitialActiveViewType = regions.Regions[global::Vision.Workbench.ViewModels.MainWindowViewModel.MainRegion].ActiveViews.Single().GetType();
+                    _ready.Set();
+                }), DispatcherPriority.ApplicationIdle);
             app.Run();
         });
         _thread.SetApartmentState(ApartmentState.STA);

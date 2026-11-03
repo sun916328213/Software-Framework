@@ -21,6 +21,8 @@ public class NodePaletteItem
 
     /// <summary>工具箱中显示的节点名称。</summary>
     public string DisplayName { get; }
+    /// <summary>目录工具身份；旧式直接创建条目允许为空，不参与文件格式。</summary>
+    public string ToolId { get; }
     /// <summary>一级工具分类。</summary>
     public string Category { get; }
     /// <summary>二级工具分类。</summary>
@@ -43,8 +45,13 @@ public class NodePaletteItem
         string subCategory,
         PackIconKind iconKind,
         string description,
-        Func<NodeModel> factory)
+        Func<NodeModel> factory) : this(displayName, category, subCategory, iconKind, description, factory, string.Empty) { }
+
+    /// <summary>从统一目录创建带稳定身份的工具箱描述；工厂延迟到用户添加时执行。</summary>
+    public NodePaletteItem(string displayName, string category, string subCategory, PackIconKind iconKind,
+        string description, Func<NodeModel> factory, string toolId)
     {
+        ToolId = toolId;
         DisplayName = displayName;
         Category = category;
         SubCategory = subCategory;

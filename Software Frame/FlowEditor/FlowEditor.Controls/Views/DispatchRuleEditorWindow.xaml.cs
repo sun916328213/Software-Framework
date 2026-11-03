@@ -23,6 +23,12 @@ public partial class DispatchRuleEditorWindow : Window
     {
         InitializeComponent();
         _node = node;
+        if (node.Service?.Model.IsRunning == true || node.Service?.Model.IsLoopRunning == true)
+        {
+            // Window基类已经向Application注册；失败构造也须撤销，不能留下无引用窗口。
+            Close();
+            throw new InvalidOperationException("流程执行中，不能打开分发规则编辑器。");
+        }
         foreach (var (match, branch) in SwitchNode.ParseRules(node.RulesText))
             Rules.Add(new DispatchRuleRow { Match = match, Branch = branch });
 
@@ -50,6 +56,11 @@ public partial class DispatchRuleEditorWindow : Window
     /// <summary>提交表格编辑，验证规则并写回条件分发节点。</summary>
     private void Save_Click(object sender, RoutedEventArgs e)
     {
+        if (_node.Service?.Model.IsRunning == true || _node.Service?.Model.IsLoopRunning == true)
+        {
+            ValidationText.Text = "流程执行中，不能保存分发规则。";
+            return;
+        }
         RulesGrid.CommitEdit();
         RulesGrid.CommitEdit();
 

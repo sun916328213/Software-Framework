@@ -1,47 +1,76 @@
-// 【中文阅读说明】
-// Vision 模块：视觉工具模型、算法适配和编辑展示；厂商能力与界面转换应在对应边界内协作。 本文件属于测试，构造条件与断言不代表真实硬件或生产环境已验收。
-// 本文件定义：GoldenImages。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：Vision.Core.Imaging。导入不代表所有类型都会在运行时加载。
-// ─────────────────────────────────────────────────────────────────────────────
-// P10 —— Golden 回归集（计划 §P10「建立 Golden Image / Golden Result 回归集」）。
-//
-// 黄金 = 合成图 + 解析期望（构造即真值，非录制输出）：
-//   · Rect600：100×100，[20,40)×[30,60) 白块 ⇒ 面积 600、质心 (29.5,44.5)；
-//   · HLine200：200×200，y=100 三像素粗水平线（20..180）；
-//   · Disc30：200×200，实心圆盘 r=30 @ (100,120)；
-//   · PastePattern：100×100 黑底 + 16×16 模板（[3,13) 白方块）粘于 (50,60)。
-// 回归测试断言黄金恒成立；算法改动导致黄金变化时必须同步更新本文件注释（显式评审）。
-// ─────────────────────────────────────────────────────────────────────────────
-
 using Vision.Core.Imaging;
 
 namespace Vision.Tests.TestAssets;
 
-/// <summary>Golden 图像与解析期望（回归锁）。</summary>
+/// <summary>
+/// 独立合成图及解析真值，不录制算法输出。全为紧凑Mono8，每次创建独立帧/空间。
+/// 不依赖已退役的SyntheticImages/VisionImage，黄金像素及原期望保持不变。
+/// </summary>
 public static class GoldenImages
 {
-    /// <summary>Rect600 图像。</summary>
-    public static VisionImage Rect600() => Tools.SyntheticImages.WhiteRectangle(100, 100, 20, 30, 40, 60);
-
-    /// <summary>Rect600 期望：面积 600，质心 (29.5, 44.5)。</summary>
+    /// <summary>100×100，列[20,40)、行[30,60)为255：面积600、质心(29.5,44.5)。</summary>
+    public static VisionFrame Rect600() => Rectangle(100, 100, 20, 30, 40, 60);
     public static (int Area, double CenterX, double CenterY) Rect600Expected() => (600, 29.5, 44.5);
 
-    /// <summary>HLine200 图像。</summary>
-    public static VisionImage HLine200() => Tools.SyntheticImages.HorizontalLine(200, 200, 100, 20, 180);
-
-    /// <summary>HLine200 期望：y=100 直线，x 覆盖 20..180。</summary>
+    /// <summary>200×200，行99..101、列20..180为255；带中心y=100，下侧差分边缘y=101.5。</summary>
+    public static VisionFrame HLine200() => Rectangle(200, 200, 20, 99, 181, 102);
     public static (double Y, double X0, double X1) HLine200Expected() => (100, 20, 180);
 
-    /// <summary>Disc30 图像。</summary>
-    public static VisionImage Disc30() => Tools.SyntheticImages.FilledDisc(200, 100, 120, 30);
+    /// <summary>200×200，整数像素中心到(100,120)的距离≤30为255；不是亚像素圆轮廓真值。</summary>
+    public static VisionFrame Disc30()
+    {
+        var pixels = new byte[200 * 200];
+        for (var y = 0; y < 200; y++)
+        {
+            for (var x = 0; x < 200; x++)
+            {
+                var dx = x - 100;
+                var dy = y - 120;
+                if (dx * dx + dy * dy <= 30 * 30)
+                {
+                    pixels[y * 200 + x] = 255;
+                }
+            }
+        }
 
-    /// <summary>Disc30 期望：圆心 (100,120)，半径 30。</summary>
+        return Frame(200, 200, pixels);
+    }
+
     public static (double CenterX, double CenterY, double Radius) Disc30Expected() => (100, 120, 30);
 
-    /// <summary>PastePattern 搜索图（模板粘于 (50,60)）。</summary>
-    public static VisionImage PastePattern() =>
-        Tools.SyntheticImages.PasteTemplate(100, 100, Tools.SyntheticImages.PatternTemplate(), 50, 60);
+    /// <summary>16×16，列/行[3,13)为255，其余0；有方差的灰度相关模板。</summary>
+    public static VisionFrame PatternTemplate() => Rectangle(16, 16, 3, 3, 13, 13);
 
-    /// <summary>PastePattern 期望：左上 (50,60)，归一化相关峰 ≈1。</summary>
+    /// <summary>100×100黑底，把完整16×16模板原样粘到左上(50,60)，不执行匹配反算位置。</summary>
+    public static VisionFrame PastePattern()
+    {
+        var template = PatternTemplate();
+        var pixels = new byte[100 * 100];
+        for (var y = 0; y < template.Height; y++)
+        {
+            template.Pixels.Slice(y * template.Stride, template.Width)
+                .CopyTo(pixels.AsSpan((60 + y) * 100 + 50, template.Width));
+        }
+
+        return Frame(100, 100, pixels);
+    }
+
     public static (int X, int Y) PastePatternExpected() => (50, 60);
+
+    private static VisionFrame Rectangle(int width, int height, int x0, int y0, int x1, int y1)
+    {
+        var pixels = new byte[width * height];
+        for (var y = y0; y < y1; y++)
+        {
+            for (var x = x0; x < x1; x++)
+            {
+                pixels[y * width + x] = 255;
+            }
+        }
+
+        return Frame(width, height, pixels);
+    }
+
+    private static VisionFrame Frame(int width, int height, byte[] pixels) =>
+        new(Guid.NewGuid(), Guid.NewGuid(), width, height, PixelFormat.Mono8, pixels);
 }

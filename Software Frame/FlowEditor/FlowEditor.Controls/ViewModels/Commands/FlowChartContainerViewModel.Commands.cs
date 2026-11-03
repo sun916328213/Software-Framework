@@ -43,9 +43,9 @@ public partial class FlowChartContainerViewModel
         LoopStopAllCommand = new RelayCommand(LoopStopAll, () => !_shuttingDown && Tabs.Any(tab => tab.LoopStopCommand.CanExecute(null)));
         NewFlowCommand = new RelayCommand(AddNewTab, CanAddNewTab);
         CloseTabCommand = new RelayCommand<FlowChartViewModel>(CloseTab, CanCloseTab);
-        SaveAllCommand = new RelayCommand(SaveAll, () => !_shuttingDown && Tabs.Count > 0);
-        SaveAllAsCommand = new RelayCommand(SaveAllAs, () => !_shuttingDown && Tabs.Count > 0);
-        LoadAllCommand = new AsyncRelayCommand(LoadAllAsync, () => !_shuttingDown);
+        SaveAllCommand = new RelayCommand(SaveAll, () => CanEditDocumentGroup() && Tabs.Count > 0);
+        SaveAllAsCommand = new RelayCommand(SaveAllAs, () => CanEditDocumentGroup() && Tabs.Count > 0);
+        LoadAllCommand = new AsyncRelayCommand(LoadAllAsync, CanEditDocumentGroup);
         ShowShortcutHelpCommand = new RelayCommand(ShowShortcutHelp, () => !_shuttingDown);
     }
 }

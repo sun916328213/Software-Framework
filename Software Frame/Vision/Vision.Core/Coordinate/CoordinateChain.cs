@@ -1,21 +1,3 @@
-// 【中文阅读说明】
-// Vision 模块：视觉工具模型、算法适配和编辑展示；厂商能力与界面转换应在对应边界内协作。
-// 本文件定义：RigidTransform、AffineTransform、CoordinateChain。成员说明可结合下方具体实现阅读。
-// 直接导入的协作命名空间包括：Vision.Core。导入不代表所有类型都会在运行时加载。
-using Vision.Core;
-// ─────────────────────────────────────────────────────────────────────────────
-// P7 —— ICoordinateTransform 的两种实现 + 标准坐标链
-// （计划 §P7「建立 Image -> Fixture -> Calibration -> Machine 坐标链」；
-// P2 在 ICoordinateTransform 注释里预告的“可逆刚体便捷实现”即 RigidTransform）。
-//
-// 链的装配语义（务必先读再改）：
-//   · Link1 Image→Fixture：fixture 姿态 F 以“fixture→image”给出（FixtureTool 的产出），
-//     正向（像素→fixture）用其逆；
-//   · Link2 Fixture→Calibration：标定仿射（像素当量/轴不正交；N 点最小二乘见
-//     AffineTransform2D.FromPointPairs，与 HALCON vector_to_hom_mat2d 同语义）；
-//   · Link3 Calibration→Machine：机台安装位姿（world→machine，刚体）。
-// 链只走正/反两个方向；中间系的点用 Transform 分段取（见 PixelToWorld）。
-// ─────────────────────────────────────────────────────────────────────────────
 
 namespace Vision.Core.Coordinate
 {
@@ -26,7 +8,9 @@ namespace Vision.Core.Coordinate
     /// </summary>
     public sealed class RigidTransform : ICoordinateTransform
     {
-        /// <summary>构造一个刚体变换。</summary>
+        /// <summary>
+        /// 构造一个刚体变换。
+        /// </summary>
         public RigidTransform(CoordinateSpace source, CoordinateSpace target, Geometry.Pose2D pose)
         {
             Source = source;
@@ -35,29 +19,35 @@ namespace Vision.Core.Coordinate
         }
 
         /// <inheritdoc/>
-        public CoordinateSpace Source { get; set; }
+        public CoordinateSpace Source
+        {
+            get;
+            set;
+        }
 
         /// <inheritdoc/>
-        public CoordinateSpace Target { get; set; }
+        public CoordinateSpace Target
+        {
+            get;
+            set;
+        }
 
-        /// <summary>刚体位姿（源→目标）。</summary>
-        public Geometry.Pose2D Pose { get; set; }
+        /// <summary>
+        /// 刚体位姿（源→目标）。
+        /// </summary>
+        public Geometry.Pose2D Pose
+        {
+            get;
+            set;
+        }
 
         /// <inheritdoc/>
         public bool IsInvertible => true;
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// 处理当前类型提供的操作；对应入口为 Transform。
-        /// 正文中的关键协作调用包括 Transform；具体条件和先后次序见方法体。
-        /// </remarks>
         public Geometry.Point2D Transform(Geometry.Point2D point) => Pose.Transform(point);
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// 处理当前类型提供的操作；对应入口为 TransformInverse。
-        /// 正文中的关键协作调用包括 InverseTransform；具体条件和先后次序见方法体。
-        /// </remarks>
         public Geometry.Point2D TransformInverse(Geometry.Point2D point) => Pose.InverseTransform(point);
     }
 
@@ -66,7 +56,9 @@ namespace Vision.Core.Coordinate
     /// </summary>
     public sealed class AffineTransform : ICoordinateTransform
     {
-        /// <summary>构造一个仿射变换。</summary>
+        /// <summary>
+        /// 构造一个仿射变换。
+        /// </summary>
         public AffineTransform(CoordinateSpace source, CoordinateSpace target, AffineTransform2D affine)
         {
             Source = source;
@@ -75,29 +67,35 @@ namespace Vision.Core.Coordinate
         }
 
         /// <inheritdoc/>
-        public CoordinateSpace Source { get; set; }
+        public CoordinateSpace Source
+        {
+            get;
+            set;
+        }
 
         /// <inheritdoc/>
-        public CoordinateSpace Target { get; set; }
+        public CoordinateSpace Target
+        {
+            get;
+            set;
+        }
 
-        /// <summary>仿射（源→目标）。</summary>
-        public AffineTransform2D Affine { get; set; }
+        /// <summary>
+        /// 仿射（源→目标）。
+        /// </summary>
+        public AffineTransform2D Affine
+        {
+            get;
+            set;
+        }
 
         /// <inheritdoc/>
         public bool IsInvertible => Affine.IsInvertible;
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// 处理当前类型提供的操作；对应入口为 Transform。
-        /// 正文中的关键协作调用包括 Transform；具体条件和先后次序见方法体。
-        /// </remarks>
         public Geometry.Point2D Transform(Geometry.Point2D point) => Affine.Transform(point);
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// 处理当前类型提供的操作；对应入口为 TransformInverse。
-        /// 正文中的关键协作调用包括 TransformInverse；具体条件和先后次序见方法体。
-        /// </remarks>
         public Geometry.Point2D TransformInverse(Geometry.Point2D point) => Affine.TransformInverse(point);
     }
 
@@ -107,7 +105,9 @@ namespace Vision.Core.Coordinate
     /// </summary>
     public sealed class CoordinateChain
     {
-        /// <summary>用三段标准环节装配（见文件头语义说明）。</summary>
+        /// <summary>
+        /// 用三段标准环节装配（见文件头语义说明）。
+        /// </summary>
         /// <param name="fixtureInImage">fixture 在图像中的位姿（fixture→image）。</param>
         /// <param name="fixtureToWorld">fixture→world 标定仿射。</param>
         /// <param name="worldToMachine">world→machine 安装位姿。</param>
@@ -124,60 +124,95 @@ namespace Vision.Core.Coordinate
             };
         }
 
-        /// <summary>由调用方给定的环节装配（必须首尾衔接且至少一段）。</summary>
+        /// <summary>
+        /// 由调用方给定的环节装配（必须首尾衔接且至少一段）。
+        /// </summary>
         public CoordinateChain(System.Collections.Generic.IReadOnlyList<ICoordinateTransform> links)
         {
             ArgumentNullException.ThrowIfNull(links);
             if (links.Count == 0)
+            {
                 throw new ArgumentException("坐标链至少需要一段变换。", nameof(links));
+            }
+
             for (var i = 0; i < links.Count - 1; i++)
             {
                 if (links[i] == null || links[i + 1] == null)
+                {
                     throw new ArgumentException($"第 {i + 1} 段变换为 null。", nameof(links));
+                }
+
                 if (links[i].Target != links[i + 1].Source)
+                {
                     throw new ArgumentException(
                         $"第 {i + 1} 段目标 {links[i].Target} 与第 {i + 2} 段源 {links[i + 1].Source} 不衔接。",
                         nameof(links));
+                }
             }
 
             Links = links;
         }
 
-        /// <summary>各段变换（源→目标有序）。</summary>
-        public System.Collections.Generic.IReadOnlyList<ICoordinateTransform> Links { get; }
+        /// <summary>
+        /// 各段变换（源→目标有序）。
+        /// </summary>
+        public System.Collections.Generic.IReadOnlyList<ICoordinateTransform> Links
+        {
+            get;
+        }
 
-        /// <summary>链源坐标系。</summary>
+        /// <summary>
+        /// 链源坐标系。
+        /// </summary>
         public CoordinateSpace Source => Links[0].Source;
 
-        /// <summary>链目标坐标系。</summary>
+        /// <summary>
+        /// 链目标坐标系。
+        /// </summary>
         public CoordinateSpace Target => Links[Links.Count - 1].Target;
 
-        /// <summary>正向映射（源→目标）。</summary>
+        /// <summary>
+        /// 正向映射（源→目标）。
+        /// </summary>
         public Geometry.Point2D Transform(Geometry.Point2D point)
         {
             var current = point;
             foreach (var link in Links)
+            {
                 current = link.Transform(current);
+            }
+
             return current;
         }
 
-        /// <summary>反映射（目标→源）；任一段不可逆时抛异常。</summary>
+        /// <summary>
+        /// 反映射（目标→源）；任一段不可逆时抛异常。
+        /// </summary>
         public Geometry.Point2D TransformInverse(Geometry.Point2D point)
         {
             var current = point;
             for (var i = Links.Count - 1; i >= 0; i--)
+            {
                 current = Links[i].TransformInverse(current);
+            }
+
             return current;
         }
 
-        /// <summary>像素→world（前两段；标准链专用）。</summary>
+        /// <summary>
+        /// 像素→world（前两段；标准链专用）。
+        /// </summary>
         public Geometry.Point2D PixelToWorld(Geometry.Point2D pixel) =>
             Links[1].Transform(Links[0].Transform(pixel));
 
-        /// <summary>像素→机台（整链；标准链专用）。</summary>
+        /// <summary>
+        /// 像素→机台（整链；标准链专用）。
+        /// </summary>
         public Geometry.Point2D PixelToMachine(Geometry.Point2D pixel) => Transform(pixel);
 
-        /// <summary>world→像素（前两段逆；标准链专用）。</summary>
+        /// <summary>
+        /// world→像素（前两段逆；标准链专用）。
+        /// </summary>
         public Geometry.Point2D WorldToPixel(Geometry.Point2D world) =>
             Links[0].TransformInverse(Links[1].TransformInverse(world));
 
@@ -193,7 +228,10 @@ namespace Vision.Core.Coordinate
         public AffineTransform2D ToAffine(int linkCount)
         {
             if (linkCount < 1 || linkCount > Links.Count)
+            {
                 throw new ArgumentOutOfRangeException(nameof(linkCount), $"须在 1..{Links.Count} 之间。");
+            }
+
             var total = AffineTransform2D.Identity;
             for (var i = 0; i < linkCount; i++)
             {

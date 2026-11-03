@@ -18,6 +18,9 @@ public class FlowChartDocumentModel
     /// <summary>文件格式版本号。</summary>
     public string Version { get; set; } = "1.0";
 
+    /// <summary>宿主拥有的版本化文档状态；通用编辑器只保留，不推断其领域语义。</summary>
+    public Dictionary<string, object?> DocumentProperties { get; set; } = new();
+
     /// <summary>画布全局缩放比例。</summary>
     public double ZoomLevel { get; set; } = 1.0;
 

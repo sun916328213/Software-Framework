@@ -13,6 +13,7 @@ namespace WPFCustomControls.PropertyGrid.Core.ViewModels;
 /// </summary>
 public partial class PropertyGroupViewModel : ObservableObject, IDisposable
 {
+    private string? _keyword;
     public string GroupName { get; }
 
     /// <summary>本组全部属性行（搜索过滤的母版，生命周期内复用，避免重复订阅/释放）。</summary>
@@ -39,27 +40,20 @@ public partial class PropertyGroupViewModel : ObservableObject, IDisposable
     public void AddItem(PropertyItemViewModel item)
     {
         AllItems.Add(item);
-        Items.Add(item);
+        item.PropertyChanged += ItemChanged;
+        if (item.IsVisible) Items.Add(item);
     }
 
     /// <summary>按关键字过滤属性行（匹配显示名或属性名）；空关键字显示全部。</summary>
     public void ApplyFilter(string? keyword)
     {
+        _keyword = keyword;
+        var visible = AllItems.Where(item => item.IsVisible &&
+            (string.IsNullOrWhiteSpace(keyword) || item.DisplayName.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                || item.PropertyName.Contains(keyword, StringComparison.OrdinalIgnoreCase))).ToArray();
+        if (Items.SequenceEqual(visible)) return;
         Items.Clear();
-        if (string.IsNullOrWhiteSpace(keyword))
-        {
-            foreach (var item in AllItems)
-                Items.Add(item);
-        }
-        else
-        {
-            foreach (var item in AllItems)
-            {
-                if (item.DisplayName.Contains(keyword, StringComparison.OrdinalIgnoreCase)
-                    || item.PropertyName.Contains(keyword, StringComparison.OrdinalIgnoreCase))
-                    Items.Add(item);
-            }
-        }
+        foreach (var item in visible) Items.Add(item);
         OnPropertyChanged(nameof(ItemCount));
         OnPropertyChanged(nameof(HasPortConfigurable));
     }
@@ -68,10 +62,18 @@ public partial class PropertyGroupViewModel : ObservableObject, IDisposable
     /// 执行资源释放步骤；对应入口为 Dispose。
     /// 正文中的关键协作调用包括 Dispose、Clear；具体条件和先后次序见方法体。
     /// </summary>
+    private void ItemChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PropertyItemViewModel.IsVisible)) ApplyFilter(_keyword);
+    }
+
     public void Dispose()
     {
         foreach (var item in AllItems)
+        {
+            item.PropertyChanged -= ItemChanged;
             item.Dispose();
+        }
         AllItems.Clear();
         Items.Clear();
     }

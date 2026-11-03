@@ -172,7 +172,7 @@ WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，
             Grid.Row="1"
             VerticalScrollBarVisibility="Auto"
             Visibility="{Binding HasSelection, Converter={StaticResource PG_BoolToVis}}">
-            <StackPanel>
+            <StackPanel IsEnabled="{Binding IsEditingEnabled, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}">
                 <ItemsControl
                     ItemTemplate="{StaticResource PG_GroupTemplate}"
                     ItemsSource="{Binding Groups}"

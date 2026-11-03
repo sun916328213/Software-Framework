@@ -1,7 +1,7 @@
 <!--
-中文阅读说明：界面与资源声明。
-WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，供业务界面与工作台复用。
-绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
+    中文阅读说明：界面与资源声明。
+    WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，供业务界面与工作台复用。
+    绑定路径、命令、资源键和事件处理器与对应代码协作；请同步核对 DataContext 和资源字典来源。
 -->
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -9,6 +9,7 @@ WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，
     xmlns:conv="clr-namespace:WPFCustomControls.ValueConvert"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:svc="clr-namespace:WPFCustomControls.PropertyGrid.Services"
+    xmlns:views="clr-namespace:WPFCustomControls.PropertyGrid.Views"
     xmlns:vm="clr-namespace:WPFCustomControls.PropertyGrid.Core.ViewModels;assembly=WPFCustomControls.PropertyGrid.Core">
 
     <BooleanToVisibilityConverter x:Key="PG_BoolToVis" />
@@ -24,9 +25,9 @@ WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，
         <Setter Property="FontSize" Value="12" />
         <Setter Property="MinWidth" Value="80" />
         <Setter Property="Padding" Value="0,4,6,4" />
-        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
     </Style>
@@ -38,6 +39,7 @@ WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，
         <Setter Property="FontSize" Value="12" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="Margin" Value="0,0,8,0" />
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
         <Setter Property="ToolTip" Value="{Binding Description}" />
         <Setter Property="ToolTip.Placement" Value="Right" />
@@ -512,13 +514,31 @@ WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，
         </Border>
     </DataTemplate>
 
+    <DataTemplate x:Key="PG_FilePathEditorTemplate">
+        <Grid Margin="8,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                VerticalAlignment="Center"
+                Style="{StaticResource LabelStyle}"
+                Text="{Binding DisplayName}" />
+            <views:FilePathEditor
+                Grid.Column="1"
+                Filter="{Binding FileDialogFilter}"
+                IsReadOnly="{Binding IsReadOnly}"
+                Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+    </DataTemplate>
+
     <DataTemplate x:Key="PG_TextEditorTemplate">
         <Grid Margin="8,4,8,4">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="36" />
-                <ColumnDefinition Width="36" />
+                <ColumnDefinition Width="30" />
+                <ColumnDefinition Width="30" />
             </Grid.ColumnDefinitions>
             <StackPanel
                 Grid.Column="0"
@@ -587,10 +607,10 @@ WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，
     <DataTemplate x:Key="PG_EnumEditorTemplate">
         <Grid Margin="8,4,8,4">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="36" />
-                <ColumnDefinition Width="36" />
+                <ColumnDefinition Width="30" />
+                <ColumnDefinition Width="30" />
             </Grid.ColumnDefinitions>
             <StackPanel
                 Grid.Column="0"
@@ -604,12 +624,25 @@ WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，
             </StackPanel>
             <ComboBox
                 Grid.Column="1"
+                Margin="0,0,6,0"
                 DisplayMemberPath="DisplayName"
                 IsEnabled="{Binding IsEditable}"
                 ItemsSource="{Binding EnumOptions}"
                 SelectedValue="{Binding Value, Mode=TwoWay}"
-                SelectedValuePath="Value"
-                Style="{StaticResource ComboBoxStyle}" />
+                SelectedValuePath="Value">
+                <ComboBox.Style>
+                    <Style BasedOn="{StaticResource ComboBoxStyle}" TargetType="ComboBox">
+                        <Setter Property="HorizontalAlignment" Value="Stretch" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding KeepOptionSelection}" Value="True">
+                                <Setter Property="SelectedItem" Value="{Binding SelectedOption, Mode=OneWay}" />
+                                <Setter Property="Text" Value="{Binding SelectedOption.DisplayName, Mode=OneWay}" />
+                                <Setter Property="IsTextSearchEnabled" Value="False" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ComboBox.Style>
+            </ComboBox>
             <CheckBox
                 Grid.Column="2"
                 IsChecked="{Binding IsInputPort}"
@@ -626,10 +659,10 @@ WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，
     <DataTemplate x:Key="PG_NumericEditorTemplate">
         <Grid Margin="8,4,8,4">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="36" />
-                <ColumnDefinition Width="36" />
+                <ColumnDefinition Width="30" />
+                <ColumnDefinition Width="30" />
             </Grid.ColumnDefinitions>
             <StackPanel
                 Grid.Column="0"
@@ -780,6 +813,7 @@ WPFCustomControls 模块：基础 WPF 控件、属性编辑器及主题资源，
         BoolTemplate="{StaticResource PG_BoolEditorTemplate}"
         CollectionTemplate="{StaticResource PG_CollectionEditorTemplate}"
         EnumTemplate="{StaticResource PG_EnumEditorTemplate}"
+        FilePathTemplate="{StaticResource PG_FilePathEditorTemplate}"
         NumericTemplate="{StaticResource PG_NumericEditorTemplate}"
         TextTemplate="{StaticResource PG_TextEditorTemplate}" />
 

@@ -53,7 +53,7 @@ public sealed class AIToolTests
         tool.LoadModel();
         Assert.True(tool.IsModelLoaded);
 
-        var result = tool.Run(TestImage());
+        using var result = ((Vision.Core.Tools.IImageTool)tool).Run(TestImage());
         Assert.True(result.Success, result.Message);
         var typed = Assert.IsType<AIClassificationResult>(result);
         Assert.Equal("OK", typed.TopLabel);
@@ -100,7 +100,7 @@ public sealed class AIToolTests
         tool.Parameters.ModelPath = "det.model";
         tool.LoadModel();
 
-        var result = tool.Run(TestImage());
+        using var result = ((Vision.Core.Tools.IImageTool)tool).Run(TestImage());
         Assert.True(result.Success, result.Message);
         var typed = Assert.IsType<AIDetectionResult>(result);
         Assert.Equal(2, typed.Boxes.Count);
@@ -119,7 +119,7 @@ public sealed class AIToolTests
         tool.Parameters.ModelPath = "seg.model";
         tool.LoadModel();
 
-        var result = tool.Run(TestImage());
+        using var result = ((Vision.Core.Tools.IImageTool)tool).Run(TestImage());
         Assert.True(result.Success, result.Message);
         var typed = Assert.IsType<AISegmentationResult>(result);
         Assert.Equal(2, typed.Items.Count);
@@ -137,7 +137,7 @@ public sealed class AIToolTests
         tool.Parameters.ModelPath = "anomaly.model";
         tool.LoadModel();
 
-        var result = tool.Run(TestImage());
+        using var result = ((Vision.Core.Tools.IImageTool)tool).Run(TestImage());
         Assert.True(result.Success, result.Message);
         var typed = Assert.IsType<AIAnomalyResult>(result);
         Assert.True(typed.IsAnomaly);

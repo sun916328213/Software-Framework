@@ -11,6 +11,7 @@ using FlowEditor.Controls.Discovery;
 using FlowEditor.Controls.Interfaces;
 using FlowEditor.Controls.Nodes;
 using FlowEditor.Controls.Nodes.FlowControl;
+using FlowEditor.Controls.Services;
 using FlowEditor.Core;
 using FlowEditor.Core.Models;
 using MaterialDesignThemes.Wpf;
@@ -197,6 +198,55 @@ public sealed class FlowNodeCatalogTests
         var failure = Assert.Throws<InvalidOperationException>(() => catalog.Discover());
         Assert.Contains("Duplicate node identity 'flow.loop'", failure.Message);
         Assert.Contains("CollisionProbe", failure.Message);
+    }
+
+    [Fact]
+    public void ConfiguredToolsMergeWithReflection_WithoutInstantiationOrClrTypeDeduplication()
+    {
+        var created = 0;
+        var catalog = new FlowNodeCatalog([typeof(VisibleProbe).Assembly], _ => [typeof(VisibleProbe)], true);
+        ToolMetadata Tool(string id) => new()
+        {
+            ToolId = id, ToolType = typeof(ProbeNode), DisplayName = "Same translated name", ToolGroup = "Configured",
+            Factory = () => { created++; return new VisibleProbe { Name = id }; }
+        };
+        var first = Tool("configured.first"); var second = Tool("configured.second");
+        var discovery = new FlowToolDiscoveryService(catalog, [first, second, first]);
+        var toolbox = new ToolboxService(discovery, new ReflectionNodeFactory(null, catalog));
+        toolbox.Refresh(); toolbox.Refresh();
+        Assert.Equal(0, created);
+        Assert.Equal(3, toolbox.Items.Count);
+        Assert.Equal(3, discovery.Discover());
+        toolbox.SearchText = " configured ";
+        Assert.Equal(2, Assert.Single(toolbox.Categories).TotalCount);
+        var item = toolbox.Items.Single(item => item.ToolId == "configured.first");
+        Assert.NotSame(item.CreateNode(), item.CreateNode());
+        Assert.Equal(2, created);
+        Assert.Contains(toolbox.Items, item => item.ToolId == "s2.visible-probe");
+    }
+
+    [Fact]
+    public void ConflictingToolIdentityFailsBeforePublishingMetadata()
+    {
+        var catalog = new FlowNodeCatalog([typeof(VisibleProbe).Assembly], _ => [typeof(VisibleProbe)], true);
+        var discovery = new FlowToolDiscoveryService(catalog,
+            [new ToolMetadata { ToolId = "s2.visible-probe", ToolType = typeof(HiddenProbe), DisplayName = "Collision" }]);
+        var error = Assert.Throws<InvalidOperationException>(() => discovery.Discover());
+        Assert.Contains("s2.visible-probe", error.Message);
+        Assert.Empty(discovery.DiscoveredTools);
+    }
+
+    [Fact]
+    public void HostToolboxVisibilityDoesNotRemovePersistedTypes()
+    {
+        var catalog = new FlowNodeCatalog([typeof(VisibleProbe).Assembly], _ => [typeof(VisibleProbe), typeof(HiddenProbe)], true);
+        var discovery = new FlowToolDiscoveryService(catalog, [], _ => false);
+        Assert.Equal(0, discovery.Discover());
+        Assert.Equal(2, catalog.Nodes.Count);
+        Assert.IsType<VisibleProbe>(new ReflectionNodeFactory(null, catalog).Create(new NodeDocumentModel
+        {
+            NodeTypeId = "s2.visible-probe", TypeName = "Unavailable.Type, RemovedAssembly", Id = "still-readable"
+        }));
     }
 
     /// <summary>

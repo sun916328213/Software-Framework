@@ -102,24 +102,39 @@ public partial class PropertyGridHostViewModel : ObservableObject
     /// <summary>根据搜索关键字重建可见分组列表。</summary>
     private void ApplyFilter()
     {
-        Groups.Clear();
-        if (_targetObject == null) return;
-
-        var keyword = SearchText?.Trim();
-        foreach (var group in _allGroups)
-        {
-            group.ApplyFilter(keyword);
-            if (group.ItemCount > 0)
-                Groups.Add(group);
-        }
+        if (_targetObject == null) { Groups.Clear(); return; }
+        foreach (var group in _allGroups) group.ApplyFilter(SearchText?.Trim());
+        RefreshVisibleGroups();
         OnPropertyChanged(nameof(HasSearchText));
+    }
+
+    /// <summary>刷新全部原属性行（包括搜索隐藏行），不替换目标或行对象。</summary>
+    public void RefreshValues()
+    {
+        foreach (var row in _allGroups.SelectMany(group => group.AllItems).ToArray()) row.NotifyValueChanged();
+    }
+
+    private void GroupChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PropertyGroupViewModel.ItemCount)) RefreshVisibleGroups();
+    }
+
+    private void RefreshVisibleGroups()
+    {
+        var visible = _allGroups.Where(group => group.ItemCount > 0).ToArray();
+        if (Groups.SequenceEqual(visible)) return;
+        Groups.Clear();
+        foreach (var group in visible) Groups.Add(group);
     }
 
     /// <summary>根据 TargetObject 重建属性分组与自定义端口管理区。</summary>
     private void RebuildContent()
     {
         foreach (var group in _allGroups)
+        {
+            group.PropertyChanged -= GroupChanged;
             group.Dispose();
+        }
         _allGroups.Clear();
         Groups.Clear();
         PortManagement?.Dispose();
@@ -129,7 +144,10 @@ public partial class PropertyGridHostViewModel : ObservableObject
 
         var portConfig = _targetObject as IPortConfigurable;
         foreach (var group in _builderService.BuildGroups(_targetObject, portConfig))
+        {
             _allGroups.Add(group);
+            group.PropertyChanged += GroupChanged;
+        }
 
         if (_targetObject is IPortManageable manageable)
         {

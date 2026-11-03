@@ -326,6 +326,7 @@ public sealed class HalconToolContractTests
     {
         using var tool = new BlobTool();
         tool.Parameters.MinGray = 200;
+        tool.Parameters.MinArea = 0; // 合成目标是 2×2，关闭默认面积预筛。
         tool.Parameters.Features.Clear();
         var image = Mono8BlobImage();
 
@@ -347,6 +348,7 @@ public sealed class HalconToolContractTests
     {
         using var tool = new BlobTool();
         tool.Parameters.MinGray = 200;
+        tool.Parameters.MinArea = 0; // 合成目标是 2×2，关闭默认面积预筛。
         tool.Parameters.Features.Clear();
         var image = Mono8BlobImage();
         var originalPixels = (byte[])image.Pixels.Clone();

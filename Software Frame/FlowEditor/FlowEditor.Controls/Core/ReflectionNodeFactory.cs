@@ -132,12 +132,20 @@ public sealed class ReflectionNodeFactory : INodeFactory
 
         var node = Create(type);
 
-        RestoreNodeState(node, descriptor);
-
-        // 附加属性
-        ApplyProperties(node, descriptor.Properties);
-
-        return node;
+        try
+        {
+            RestoreNodeState(node, descriptor);
+            if (node is INodeDocumentState explicitState) explicitState.RestoreDocumentState(descriptor.Properties);
+            else ApplyProperties(node, descriptor.Properties);
+            return node;
+        }
+        catch (Exception original)
+        {
+            // 物化失败的候选尚未进入画布；不能泄漏其独占资源或掩盖原始错误。
+            try { if (node is IDisposable disposable) disposable.Dispose(); }
+            catch (Exception cleanup) { throw new AggregateException("节点恢复及候选清理失败。", original, cleanup); }
+            throw;
+        }
     }
 
     /// <summary>

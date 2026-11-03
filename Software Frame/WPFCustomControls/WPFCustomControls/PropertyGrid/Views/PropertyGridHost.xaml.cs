@@ -14,6 +14,16 @@ namespace WPFCustomControls.PropertyGrid.Views;
 /// </summary>
 public partial class PropertyGridHost : UserControl
 {
+    /// <summary>仅锁定属性及端口修改，保留搜索、滚动和专用编辑器入口。</summary>
+    public static readonly System.Windows.DependencyProperty IsEditingEnabledProperty =
+        System.Windows.DependencyProperty.Register(nameof(IsEditingEnabled), typeof(bool), typeof(PropertyGridHost),
+            new System.Windows.PropertyMetadata(true));
+    public bool IsEditingEnabled
+    {
+        get => (bool)GetValue(IsEditingEnabledProperty);
+        set => SetValue(IsEditingEnabledProperty, value);
+    }
+
     /// <summary>
     /// 初始化 PropertyGridHost 实例及其协作对象；保持下方赋值、订阅和初始化调用的顺序。
     /// 正文中的关键协作调用包括 InitializeComponent；具体条件和先后次序见方法体。

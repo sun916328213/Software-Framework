@@ -55,18 +55,9 @@ public partial class ToolboxService : ObservableObject
     public void Refresh()
     {
         Items.Clear();
-        _discovery.Discover();
-        foreach (var tool in _discovery.DiscoveredTools)
-        {
-            Items.Add(new NodePaletteItem(
-                tool.DisplayName,
-                tool.ToolGroup,
-                tool.ToolSubGroup,
-                tool.IconKind,
-                tool.Description,
-                () => _nodeFactory.Create(tool.ToolType)));
-        }
+        foreach (var item in CreateItems()) Items.Add(item);
         RebuildCategories();
+        _loaded = true;
     }
 
     // 异步加载：首次扫描在后台线程完成，页面立即渲染、工具箱随后填充，不阻塞 UI。
@@ -88,22 +79,7 @@ public partial class ToolboxService : ObservableObject
     {
         // 后台：工具发现（若缓存未预热，全程序集反射也在这里完成）+ 构建条目。
         // NodePaletteItem 构造仅保存引用与工厂，不涉及 UI，可安全在后台执行。
-        var items = await Task.Run(() =>
-        {
-            _discovery.Discover();
-            var list = new List<NodePaletteItem>();
-            foreach (var tool in _discovery.DiscoveredTools)
-            {
-                list.Add(new NodePaletteItem(
-                    tool.DisplayName,
-                    tool.ToolGroup,
-                    tool.ToolSubGroup,
-                    tool.IconKind,
-                    tool.Description,
-                    () => _nodeFactory.Create(tool.ToolType)));
-            }
-            return list;
-        });
+        var items = await Task.Run(CreateItems);
 
         // 回到 UI 线程后填充集合并重建分类视图。
         Items.Clear();
@@ -111,6 +87,15 @@ public partial class ToolboxService : ObservableObject
             Items.Add(item);
         RebuildCategories();
         _loaded = true;
+    }
+
+    /// <summary>从同一发现快照投影延迟工厂；同步和异步加载不分别维护工具构造逻辑。</summary>
+    private List<NodePaletteItem> CreateItems()
+    {
+        _discovery.Discover();
+        return _discovery.DiscoveredTools.Select(tool => new NodePaletteItem(
+            tool.DisplayName, tool.ToolGroup, tool.ToolSubGroup, tool.IconKind, tool.Description,
+            tool.Factory ?? (() => _nodeFactory.Create(tool.ToolType)), tool.ToolId)).ToList();
     }
 
     /// <summary>从工具箱中排除指定名称的工具（用于 ToolBlock 内部编辑器排除自身）。</summary>
@@ -131,8 +116,10 @@ public partial class ToolboxService : ObservableObject
             ? Items
             : new ObservableCollection<NodePaletteItem>(
                 Items.Where(p =>
-                    p.DisplayName.ToLower().Contains(SearchText.ToLower()) ||
-                    p.Description.ToLower().Contains(SearchText.ToLower())));
+                    p.DisplayName.Contains(SearchText.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                    p.Category.Contains(SearchText.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                    p.SubCategory.Contains(SearchText.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                    p.Description.Contains(SearchText.Trim(), StringComparison.OrdinalIgnoreCase)));
 
         foreach (var group in source.GroupBy(p => p.Category))
         {

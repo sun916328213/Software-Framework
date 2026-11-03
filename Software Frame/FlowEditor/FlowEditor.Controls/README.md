@@ -2,6 +2,16 @@
 
 流程编辑器的可复用 WPF 页面，使用 CommunityToolkit.Mvvm。宿主通过 Prism 导航到 `FlowChartContainerView`，并负责工具发现、对话框适配及 ProcessName 日志路由配置。
 
+## 工具注册与宿主组合
+
+FlowNodeCatalog集中反射读取允许的程序集，仍负责稳定类型身份与文档解析。FlowToolDiscoveryService可额外接收模块提供的ToolMetadata，合并而非覆盖反射条目；ToolId区分同一CLR契约下的不同配置工具，Factory只在用户添加时执行。相同描述引用可重复提供，身份冲突在发布前拒绝；宿主的反射可见性策略不删除文档解析类型。
+
+ToolboxService的同步/异步路径共用同一投影，保留原分类、图标、排序及搜索，并支持分类/子分类/描述匹配。FlowChartContainerViewModel.UseToolboxAsync可借用宿主已组合的服务，共享同一分类集合及搜索状态；SetToolboxItemsAsync只保留为显式替换快照入口，模块扩展不应靠它覆盖默认工具。
+
+默认Prism注册显式选择仅含IFlowNodeCatalog的构造入口，避免DI将配置工具集合或可见性委托自动当成可解析服务。未选择额外描述的宿主行为保持不变；未实现运行时插件热加载/来源刷新。
+
+本次共享测试419通过；命令及宿主回归见Vision/Tests/EDITOR_REFINEMENT.md的统一注册记录。
+
 - Models 保存流程页面及多流程文档数据。
 - Services 协调标签页创建、文档读写、工具箱、连接和导出；Core/Runtime 保持既有领域与执行边界。
 - ViewModels 管理活动标签、节点选择和命令状态，服务通过构造器注入。

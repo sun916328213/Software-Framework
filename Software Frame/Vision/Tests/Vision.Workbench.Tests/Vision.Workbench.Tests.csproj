@@ -36,7 +36,11 @@ Vision 模块：视觉工具模型、算法适配和编辑展示；厂商能力�
          Tools.* 提供 VM 测试里真实执行的算子实现。 -->
     <ProjectReference Include="..\..\..\Extension\Extension\Extension.csproj" />
     <ProjectReference Include="..\..\Vision.Core\Vision.Core.csproj" />
+    <ProjectReference Include="..\..\Vision.FlowNode\Vision.FlowNode.csproj" />
+    <ProjectReference Include="..\..\..\FlowEditor\FlowEditor.Controls\FlowEditor.Controls.csproj" />
+    <ProjectReference Include="..\..\..\FlowEditor\FlowEditor.Runtime\FlowEditor.Runtime.csproj" />
     <ProjectReference Include="..\..\Vision.Controls\Vision.Controls.csproj" />
+    <ProjectReference Include="..\..\..\WPFCustomControls\WPFCustomControls.PropertyGrid.Core\WPFCustomControls.PropertyGrid.Core.csproj" />
     <ProjectReference Include="..\..\Vision.Workbench\Vision.Workbench.csproj" />
     <ProjectReference Include="..\..\Tools\Halcon\Vision.Tools.Halcon.csproj" />
     <ProjectReference Include="..\..\Tools\OpenCv\Vision.Tools.OpenCv.csproj" />

@@ -20,6 +20,9 @@ public class PropertyEditorSelector : DataTemplateSelector
     /// <summary>文本/数值类型编辑器模板（TextBox）。</summary>
     public DataTemplate? TextTemplate { get; set; }
 
+    /// <summary>显式路径元数据使用同行选文件模板，其他字符串仍沿用TextTemplate。</summary>
+    public DataTemplate? FilePathTemplate { get; set; }
+
     /// <summary>布尔类型编辑器模板（CheckBox，可空时三态）。</summary>
     public DataTemplate? BoolTemplate { get; set; }
 
@@ -40,6 +43,8 @@ public class PropertyEditorSelector : DataTemplateSelector
     {
         if (item is PropertyItemViewModel vm)
         {
+            if (vm.IsFilePath && FilePathTemplate != null) return FilePathTemplate;
+
             // 集合类型用集合模板
             if (vm.IsCollection)
                 return CollectionTemplate;

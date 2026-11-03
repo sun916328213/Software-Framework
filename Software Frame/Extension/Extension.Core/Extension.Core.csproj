@@ -15,6 +15,9 @@ Extension 模块：共享基础能力与集成适配；Extension.Core 保持轻�
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Licensing\Licensing.Core\Licensing.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Core\Reflection\FrameworkTypeAliases.json" LogicalName="Framework.TypeAliases.json" />
   </ItemGroup>
 </Project>

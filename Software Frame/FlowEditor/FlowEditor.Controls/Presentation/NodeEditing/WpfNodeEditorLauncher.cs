@@ -44,6 +44,11 @@ public sealed class WpfNodeEditorLauncher : INodeEditorLauncher
     public void Open(NodeModel node)
     {
         ArgumentNullException.ThrowIfNull(node);
+        if (node is SwitchNode && node.Service is { } service && (service.Model.IsRunning || service.Model.IsLoopRunning))
+        {
+            service.Model.StatusText = "流程执行中，不能打开分发规则编辑器。";
+            return; // UI双击/动作按钮是可观察拒绝，不向WPF调度器抛异常。
+        }
 
         foreach (var handler in _handlers)
             if (handler.TryOpen(node)) return;
