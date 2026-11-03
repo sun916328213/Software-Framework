@@ -42,7 +42,21 @@ if (-not $?) { throw 'Protected deployment audit failed. Do not deploy this outp
 foreach ($name in @('Licensing.Activation.exe', 'Licensing.Client.dll', 'Licensing.Core.dll', 'Licensing.Trust.dll')) {
     if (-not (Test-Path -LiteralPath (Join-Path $output $name))) { throw "Missing client component: $name" }
 }
-@'
+# 交付目录必须能自证来源：现场出问题时，先判断这份包出自哪个源码状态，而不是靠人回忆。
+$origin = 'Built ' + (Get-Date -Format 'yyyy-MM-dd HH:mm') + ' from ' + $moduleRoot
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    $head = (& git -C $moduleRoot rev-parse --short HEAD 2>$null | Out-String).Trim()
+    if ($LASTEXITCODE -eq 0 -and $head -ne '') {
+        $dirty = (& git -C $moduleRoot status --porcelain 2>$null | Out-String).Trim()
+        $origin += ' at commit ' + $head + $(if ($dirty -eq '') { '' } else { ' + uncommitted changes' })
+    }
+}
+$body = @(
+    "Provenance : $origin",
+    "Product    : $ProductId",
+    "Trust anchor: $expected",
+    ''
+) + @'
 Offline activation tool for Windows x64.
 Copy the complete folder, not only the EXE. A separate .NET installation is not required.
 This package does NOT include the issuer tool or private key.
@@ -50,5 +64,6 @@ Authorization checks run in Licensing.Core.dll (managed, not obfuscated).
 Decompiling these assemblies reveals the verification logic, but forging a license still requires
 the vendor private key, which never leaves the issuer environment.
 Your production application must independently integrate authorization checks and safe device handling.
-'@ | Set-Content -LiteralPath (Join-Path $output 'DEPLOYMENT.txt') -Encoding ASCII
+'@
+$body | Set-Content -LiteralPath (Join-Path $output 'DEPLOYMENT.txt') -Encoding ASCII
 Write-Output "Client publish completed: $output"

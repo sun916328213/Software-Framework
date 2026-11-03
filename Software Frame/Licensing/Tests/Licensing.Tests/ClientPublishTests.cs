@@ -35,6 +35,12 @@ public sealed class ClientPublishTests
             Assert.False(File.Exists(Path.Combine(output, "Licensing.Native.dll")));
             Assert.False(File.Exists(Path.Combine(output, "Extension.Core.dll")));
 
+            // 交付目录要自证来源：现场出问题时先判断这份包出自哪个源码状态，不靠人回忆。
+            string deployment = await File.ReadAllTextAsync(Path.Combine(output, "DEPLOYMENT.txt"));
+            Assert.Contains("Provenance : Built", deployment);
+            Assert.Contains("Product    : tests.package", deployment);
+            Assert.Contains(Fingerprint(publicKey), deployment);
+
             // 不加载程序集：测试宿主已引用同名程序集，Assembly.Load 第二份副本会让宿主挂起。
             // 嵌入资源是原样存储的，公钥与产品标识在字节里就是明文，直接查即可。
             byte[] trustBytes = await File.ReadAllBytesAsync(Path.Combine(output, "Licensing.Trust.dll"));

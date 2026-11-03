@@ -28,6 +28,7 @@ public partial class MainWindow : Window
     internal MainWindow(string? key, string? productId, bool readEmbeddedConfiguration = false)
     {
         InitializeComponent();
+        FooterHint.Text += CoreBuildStamp();
         _productId = productId;
         try
         {
@@ -250,6 +251,15 @@ public partial class MainWindow : Window
     /// <summary>天数直接取授权对象算出的剩余值，与校验日志同一口径；这里只负责文案。</summary>
     private static string Remaining(NativeLicenseInfo info) =>
         info.RemainingDays <= 0 ? "（已到期）" : $"（剩余 {info.RemainingDays} 天）";
+
+    /// <summary>客户包由 dotnet publish 现编，界面直接标出验签组件的构建时间，省得靠文件属性猜自己跑的是哪一份。</summary>
+    private static string CoreBuildStamp()
+    {
+        string path = typeof(Extension.Security.Licensing.LicenseInfo).Assembly.Location;
+        return path.Length == 0 || !File.Exists(path)
+            ? string.Empty
+            : $"\n验签组件 Licensing.Core.dll 构建于 {new FileInfo(path).LastWriteTime:yyyy-MM-dd HH:mm}。";
+    }
 
     // 剪贴板可能被其他进程短暂占用，重试几次比直接报错更符合预期。
     private static bool TrySetClipboard(string text)
