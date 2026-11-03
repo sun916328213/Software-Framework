@@ -154,6 +154,36 @@ public sealed class WorkbenchTests
         return Task.CompletedTask;
     });
 
+    [Fact]
+    public Task VendorWindowLaysOutFourPagesWithVisibleIssueFields() => WpfLicenseSessionTests.RunSta(async () =>
+    {
+        string root = Path.Combine(Path.GetTempPath(), "IssuerLayout-" + Guid.NewGuid().ToString("N"));
+        var environment = new Licensing.Authorization.IssuerEnvironment(root);
+        var window = new Licensing.Authorization.MainWindow(environment);
+        try
+        {
+            var loaded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            window.Loaded += (_, _) => loaded.TrySetResult();
+            window.Show();
+            await loaded.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+            var tabs = (TabControl)window.FindName("Tabs");
+            Assert.Equal(4, tabs.Items.Count);
+            Assert.Contains("客户工具包", tabs.Items.Cast<TabItem>().Select(tab => (string)tab.Header));
+            // 发布从签发页的折叠区移到独立分页：取消按钮若还留在原页，RunAsync 会找不到它。
+            Assert.NotNull(window.FindName("CancelOperation"));
+            // 紧凑样式改由窗口自己合并：字典没带上时控件会塌成 0 高，只看 x:Name 发现不了。
+            foreach (string name in new[] { "Product", "Customer", "Machine", "ExpiryDays" })
+                Assert.True(((TextBox)window.FindName(name)).ActualHeight > 0, name);
+            Assert.True(((TextBox)window.FindName("StatusText")).ActualHeight > 0);
+        }
+        finally
+        {
+            window.Close();
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    });
+
     private static async Task WaitUntil(Func<bool> condition, TimeSpan? timeout = null)
     {
         var timer = Stopwatch.StartNew();
