@@ -5,17 +5,21 @@ using Extension.Security.Licensing;
 
 namespace Licensing.Authorization;
 
-/// <summary>密码加密的便携签发身份；会话仅缓存派生密钥，不保存密码，不绑定电脑或 Windows 账户。</summary>
+/// <summary>
+/// 密码加密的便携签发身份；会话与本机缓存里都只有派生密钥，从不保存密码本身。
+/// 身份仍不绑定电脑或 Windows 账户（复制工具目录 + 同一密码即可换机），本机自动解锁缓存只是这台机器的便利层。
+/// </summary>
 internal sealed class IssuerEnvironment : IDisposable
 {
     private static readonly byte[] BackupMagic = "SFIB1"u8.ToArray();
+    private static readonly byte[] UnlockMagic = "SFUC1"u8.ToArray();
     private const int Iterations = 600_000;
     private byte[]? _sessionKey, _sessionSalt;
     private bool _disposed;
     private readonly bool _defaultLocation;
     internal string DirectoryPath { get; }
     internal string CredentialPath => Path.Combine(DirectoryPath, "issuer.bin");
-    private string IdentityPath => Path.Combine(DirectoryPath, "issuer.identity");
+    internal string IdentityPath => Path.Combine(DirectoryPath, "issuer.identity");
     internal string ArchiveDirectory => Path.Combine(DirectoryPath, "Issued");
     internal bool IsUnlocked => _sessionKey != null;
     /// <summary>凭据文件存在即视为已初始化；不尝试解密，避免为了刷新界面而做一次 PBKDF2。</summary>
@@ -25,6 +29,18 @@ internal sealed class IssuerEnvironment : IDisposable
     private static string LegacyDirectory => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SoftwareFrame", "LicensingIssuer");
     internal bool HasLegacyLocalIdentity => _defaultLocation && File.Exists(Path.Combine(LegacyDirectory, "issuer.bin"));
+    /// <summary>本机自动解锁缓存是否已存在；缓存按身份目录分文件，放在工具目录之外，复制文件夹不会带上。</summary>
+    internal bool IsAutoUnlockRemembered => File.Exists(CachePath);
+
+    /// <summary>
+    /// 本机自动解锁缓存位置。密码仍是 <c>issuer.bin</c> 的静态秘密，这里只缓存派生密钥，
+    /// 用 DPAPI 绑定当前 Windows 账户：%LOCALAPPDATA% 不属于工具目录，换电脑或改账户都解不开。
+    /// </summary>
+    private static string CacheDirectory => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SoftwareFrame", "LicensingIssuer", "unlock");
+
+    private string CachePath => Path.Combine(CacheDirectory,
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(DirectoryPath.ToUpperInvariant())))[..16] + ".sfunlock");
 
     internal IssuerEnvironment(string? directory = null)
     {
@@ -32,7 +48,7 @@ internal sealed class IssuerEnvironment : IDisposable
         DirectoryPath = Path.GetFullPath(directory ?? Path.Combine(AppContext.BaseDirectory, "IssuerData"));
     }
 
-    internal IssuerIdentity? Load(string? password = null)
+    internal IssuerIdentity? Load(string? password = null, bool rememberUnlock = false)
     {
         using var gate = Lock();
         if (!File.Exists(CredentialPath))
@@ -47,7 +63,7 @@ internal sealed class IssuerEnvironment : IDisposable
             ? Derive(password, salt)
             : _sessionKey != null && _sessionSalt!.AsSpan().SequenceEqual(salt)
                 ? _sessionKey.ToArray()
-                : throw new InvalidOperationException("签发身份已锁定，请输入密码解锁。");
+                : ReadCachedKey(salt) ?? throw new InvalidOperationException("签发身份已锁定，请输入密码解锁。");
         byte[] plain = new byte[envelope.Length - 49];
         IssuerIdentity? identity = null;
         try
@@ -56,6 +72,7 @@ internal sealed class IssuerEnvironment : IDisposable
             identity = IssuerIdentity.FromDer(plain);
             CheckIdentity(identity);
             RememberKey(key, salt);
+            if (password != null && rememberUnlock) WriteCachedKey(key, salt);
             return identity;
         }
         catch { identity?.Dispose(); throw; }
@@ -174,7 +191,7 @@ internal sealed class IssuerEnvironment : IDisposable
                 WriteAtomic(IdentityPath, Encoding.ASCII.GetBytes(identity.Fingerprint), overwrite: replaceExistingIdentity);
             WriteAtomic(CredentialPath, envelope, overwrite);
             byte[] key = Derive(password, envelope.AsSpan(5, 16));
-            try { RememberKey(key, envelope.AsSpan(5, 16)); }
+            try { RememberKey(key, envelope.AsSpan(5, 16)); WriteCachedKey(key, envelope.AsSpan(5, 16)); }
             finally { CryptographicOperations.ZeroMemory(key); }
             return identity;
         }
@@ -217,6 +234,53 @@ internal sealed class IssuerEnvironment : IDisposable
     {
         if (_sessionKey != null) CryptographicOperations.ZeroMemory(_sessionKey);
         _sessionKey = key.ToArray(); _sessionSalt = salt.ToArray();
+    }
+
+    /// <summary>读取本机缓存的派生密钥。盐与当前凭据不一致（换过密码、被备份替换过）就当没有，不会拿旧密钥去撞新凭据。</summary>
+    private byte[]? ReadCachedKey(ReadOnlySpan<byte> salt)
+    {
+        try
+        {
+            byte[] blob = ProtectedData.Unprotect(File.ReadAllBytes(CachePath), UnlockEntropy(salt), DataProtectionScope.CurrentUser);
+            try
+            {
+                if (blob.Length != 53 || !blob.AsSpan(0, 5).SequenceEqual(UnlockMagic) || !blob.AsSpan(5, 16).SequenceEqual(salt)) return null;
+                return blob.AsSpan(21, 32).ToArray();
+            }
+            finally { CryptographicOperations.ZeroMemory(blob); }
+        }
+        // 缓存缺失、被删、换账户、文件损坏都只意味着"这次要输密码"，不是错误。
+        catch (Exception ex) when (ex is CryptographicException or IOException or UnauthorizedAccessException) { return null; }
+    }
+
+    private void WriteCachedKey(byte[] key, ReadOnlySpan<byte> salt)
+    {
+        byte[] blob = [.. UnlockMagic, .. salt.ToArray(), .. key];
+        try
+        {
+            Directory.CreateDirectory(CacheDirectory);
+            File.WriteAllBytes(CachePath, ProtectedData.Protect(blob, UnlockEntropy(salt), DataProtectionScope.CurrentUser));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* 写失败下次照常要密码 */ }
+        finally { CryptographicOperations.ZeroMemory(blob); }
+    }
+
+    /// <summary>关闭本机自动解锁：只删缓存，不动凭据；下次启动要密码，密码本身没变。</summary>
+    internal void ClearAutoUnlock()
+    {
+        try { if (File.Exists(CachePath)) File.Delete(CachePath); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        { throw new InvalidOperationException("自动解锁缓存删除失败：" + ex.Message, ex); }
+    }
+
+    private byte[] UnlockEntropy(ReadOnlySpan<byte> salt)
+    {
+        // 绑到具体身份目录：同一台机器上并存的多个 IssuerData 副本不能互用缓存。
+        byte[] path = Encoding.UTF8.GetBytes(DirectoryPath.ToUpperInvariant() + "|SFUC1|");
+        byte[] seed = new byte[path.Length + salt.Length];
+        path.CopyTo(seed, 0);
+        salt.CopyTo(seed.AsSpan(path.Length));
+        return SHA256.HashData(seed);
     }
 
     private void CheckIdentity(IssuerIdentity identity, bool replaceExisting = false)

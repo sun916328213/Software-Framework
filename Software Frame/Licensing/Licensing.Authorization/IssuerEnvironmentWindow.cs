@@ -19,6 +19,18 @@ internal sealed class IssuerEnvironmentWindow : Window
     private readonly PasswordBox _backupPassword = new() { Name = "BackupPassword", Margin = new Thickness(0, 4, 0, 8) };
     private readonly PasswordBox _restorePassword = new() { Name = "RestorePassword", Margin = new Thickness(0, 4, 0, 8) };
     private readonly PasswordBox _confirmation = new() { Margin = new Thickness(0, 4, 0, 8) };
+    // 默认勾选：日常零输入就是选这个方向的目的；取消勾选就回到"每次启动都要密码"。
+    private readonly CheckBox _autoUnlock = new()
+    {
+        Name = "RememberUnlock",
+        Content = new TextBlock
+        {
+            Text = "在这台电脑上自动解锁：下次启动不再要密码。缓存写在 %LOCALAPPDATA%，只对本机当前 Windows 账户有效，不随工具目录复制。",
+            TextWrapping = TextWrapping.Wrap
+        },
+        IsChecked = true,
+        Margin = new Thickness(0, 2, 0, 10)
+    };
     private readonly StackPanel _body = new();
     private bool _busy, _closeWhenDone;
     // 冻结后才能跨 STA 线程共享：测试会在另一个 STA 线程直接构造本窗口，未冻结的静态画刷会在那里抛异常。
@@ -82,6 +94,7 @@ internal sealed class IssuerEnvironmentWindow : Window
         Inform("签发身份已存在，尚未解锁。密码不会保存到磁盘。");
         _body.Children.Add(Label("解锁密码"));
         _body.Children.Add(_password);
+        _body.Children.Add(_autoUnlock);
         var unlock = PrimaryButton("解锁", "UnlockIdentity");
         unlock.Click += Unlock_Click;
         _body.Children.Add(unlock);
@@ -95,7 +108,10 @@ internal sealed class IssuerEnvironmentWindow : Window
         Inform("签发身份已解锁，本次会话可以继续签发。关闭工具会清除会话密钥。");
         _body.Children.Add(KeyValue("指纹", identity?.Fingerprint[..16] ?? "—"));
         _body.Children.Add(KeyValue("数据目录", _environment.DirectoryPath));
-        _body.Children.Add(Note("换电脑请复制整个工具文件夹（含 IssuerData），输入同一密码即可，无需原 Windows 账户。不要把工具或身份目录交给客户。"));
+        _body.Children.Add(KeyValue("本机自动解锁", _environment.IsAutoUnlockRemembered ? "已开启（只对本机当前 Windows 账户有效）" : "未开启（下次启动要密码）"));
+        if (_environment.IsAutoUnlockRemembered)
+            _body.Children.Add(SecondaryButton("关闭本机自动解锁", "ClearAutoUnlockButton", ClearAutoUnlock_Click));
+        _body.Children.Add(Note("换电脑请复制整个工具文件夹（含 IssuerData），输入同一密码即可，无需原 Windows 账户。自动解锁缓存不在工具目录里，也不会跟着复制。不要把工具或身份目录交给客户。"));
         _body.Children.Add(Label("新备份密码（至少 12 字符，可与解锁密码不同）"));
         _body.Children.Add(_backupPassword);
         _body.Children.Add(Label("确认备份密码"));
@@ -150,9 +166,18 @@ internal sealed class IssuerEnvironmentWindow : Window
     {
         if (_busy) return;
         string password = _password.Password;
-        await RunAsync(() => { using var identity = _environment.Load(password) ?? throw new InvalidOperationException("尚未创建签发身份。"); });
+        bool remember = _autoUnlock.IsChecked == true;
+        await RunAsync(() => { using var identity = _environment.Load(password, rememberUnlock: remember) ?? throw new InvalidOperationException("尚未创建签发身份。"); });
         // 解锁成功即关闭，让主窗口立刻刷新；失败时留在窗口里继续试。
         if (_environment.IsUnlocked) Close();
+    }
+
+    private void ClearAutoUnlock_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        _environment.ClearAutoUnlock();
+        Rebuild();
+        Inform("已关闭本机自动解锁：身份和密码都没变，只是下次启动要重新输密码。");
     }
 
     private async void MigrateLocal_Click(object sender, RoutedEventArgs e)

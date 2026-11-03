@@ -3,6 +3,8 @@
 IssuerData/
 # Issuer credentials/backups must not be committed if saved inside the module by mistake.
 *.sfib
+# Per-machine auto-unlock cache; normally lives in %LOCALAPPDATA%, never in the repo.
+*.sfunlock
 issuer.bin
 issuer.identity
 issuer.lock

@@ -38,7 +38,7 @@ $forbidden = @($files | Where-Object {
     $_.Name -like 'Licensing.Authorization*' -or
     $_.Name -like 'Licensing.Workbench*' -or
     $_.Name -like 'Licensing.Native*' -or
-    $_.Extension -in '.pdb', '.key', '.pem', '.snk', '.pfx', '.p12', '.sfib'
+    $_.Extension -in '.pdb', '.key', '.pem', '.snk', '.pfx', '.p12', '.sfib', '.sfunlock'
 })
 if ($forbidden.Count -gt 0) {
     $names = ($forbidden | ForEach-Object { $_.FullName }) -join [Environment]::NewLine

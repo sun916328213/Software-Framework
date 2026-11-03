@@ -43,6 +43,84 @@ public sealed class PortableIdentityWindowTests
         finally
         {
             if (window?.IsVisible == true) window.Close();
+            Forget(original); Forget(reopened);
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    });
+
+    [Fact]
+    public Task UnlockDialogRemembersThisMachineAndSkipsThePasswordOnNextStart() => WpfLicenseSessionTests.RunSta(async () =>
+    {
+        string root = Path.Combine(Path.GetTempPath(), "PortableIdentityUi-" + Guid.NewGuid().ToString("N"));
+        using var original = new IssuerEnvironment(root);
+        using var restarted = new IssuerEnvironment(root);
+        IssuerEnvironmentWindow? window = null;
+        try
+        {
+            using var identity = original.Initialize("correct-portable-password");
+            original.ClearAutoUnlock();
+            Assert.False(restarted.IsAutoUnlockRemembered);
+            window = new IssuerEnvironmentWindow(restarted);
+            window.Show();
+            var password = (PasswordBox)LogicalTreeHelper.FindLogicalNode(window, "IdentityPassword");
+            var remember = (CheckBox)LogicalTreeHelper.FindLogicalNode(window, "RememberUnlock");
+            var unlock = (Button)LogicalTreeHelper.FindLogicalNode(window, "UnlockIdentity");
+            // 日常零输入是默认；不勾选就维持"每次启动都要密码"的旧行为。
+            Assert.True(remember.IsChecked);
+            password.Password = "correct-portable-password";
+            unlock.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await Until(() => !window.IsVisible);
+            Assert.True(restarted.IsAutoUnlockRemembered);
+            using var nextStart = new IssuerEnvironment(root);
+            using var auto = nextStart.Load();
+            Assert.Equal(identity.PublicKey, auto!.PublicKey);
+
+            // 取消勾选就是原来的行为：这次输入正确密码也不写缓存，下次启动照样要密码。
+            restarted.ClearAutoUnlock();
+            window.Close();
+            using var declined = new IssuerEnvironment(root);
+            window = new IssuerEnvironmentWindow(declined);
+            window.Show();
+            var secondRemember = (CheckBox)LogicalTreeHelper.FindLogicalNode(window, "RememberUnlock");
+            var secondUnlock = (Button)LogicalTreeHelper.FindLogicalNode(window, "UnlockIdentity");
+            var secondPassword = (PasswordBox)LogicalTreeHelper.FindLogicalNode(window, "IdentityPassword");
+            secondRemember.IsChecked = false;
+            secondPassword.Password = "correct-portable-password";
+            secondUnlock.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await Until(() => !window.IsVisible);
+            Assert.False(declined.IsAutoUnlockRemembered);
+        }
+        finally
+        {
+            if (window?.IsVisible == true) window.Close();
+            Forget(original); Forget(restarted);
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    });
+
+    [Fact]
+    public Task UnlockedWindowTurnsAutoUnlockOffWithoutTouchingTheIdentity() => WpfLicenseSessionTests.RunSta(async () =>
+    {
+        string root = Path.Combine(Path.GetTempPath(), "PortableIdentityUi-" + Guid.NewGuid().ToString("N"));
+        IssuerEnvironmentWindow? window = null;
+        try
+        {
+            using var environment = new IssuerEnvironment(root);
+            using var identity = environment.Initialize("correct-portable-password");
+            window = new IssuerEnvironmentWindow(environment);
+            window.Show();
+            var status = (TextBlock)LogicalTreeHelper.FindLogicalNode(window, "IdentityStatus");
+            var clear = (Button)LogicalTreeHelper.FindLogicalNode(window, "ClearAutoUnlockButton");
+            clear.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await Until(() => status.Text.Contains("已关闭本机自动解锁"));
+            Assert.False(environment.IsAutoUnlockRemembered);
+            Assert.Null(LogicalTreeHelper.FindLogicalNode(window, "ClearAutoUnlockButton"));
+            // 关的是这台机器的免密入口，不是身份本身：本次会话照样能签发。
+            Assert.True(environment.IsUnlocked);
+        }
+        finally
+        {
+            if (window?.IsVisible == true) window.Close();
             if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
         }
     });
@@ -84,6 +162,7 @@ public sealed class PortableIdentityWindowTests
         finally
         {
             if (window?.IsVisible == true) window.Close();
+            Forget(original); Forget(reopened);
             if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
         }
     });
@@ -119,9 +198,9 @@ public sealed class PortableIdentityWindowTests
     {
         string root = Path.Combine(Path.GetTempPath(), "PortableIdentityUi-" + Guid.NewGuid().ToString("N"));
         IssuerEnvironmentWindow? window = null;
+        using var environment = new IssuerEnvironment(root);
         try
         {
-            using var environment = new IssuerEnvironment(root);
             using (environment.Initialize("correct-portable-password")) { }
             window = new IssuerEnvironmentWindow(environment);
             window.Show();
@@ -129,15 +208,25 @@ public sealed class PortableIdentityWindowTests
             Assert.NotNull(LogicalTreeHelper.FindLogicalNode(window, "BackupButton"));
             Assert.Null(LogicalTreeHelper.FindLogicalNode(window, "InitializeButton"));
             Assert.Null(LogicalTreeHelper.FindLogicalNode(window, "UnlockIdentity"));
+            // 自动解锁开着时给出显式关闭入口，用户能看到这台机器记住了什么。
+            Assert.NotNull(LogicalTreeHelper.FindLogicalNode(window, "ClearAutoUnlockButton"));
             Assert.Contains("已解锁", status.Text);
         }
         finally
         {
             if (window?.IsVisible == true) window.Close();
+            Forget(environment);
             if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
         }
         return Task.CompletedTask;
     });
+
+    /// <summary>自动解锁缓存写在 %LOCALAPPDATA%，不随测试临时目录删除；不清就会在开发机上越堆越多。</summary>
+    private static void Forget(IssuerEnvironment environment)
+    {
+        try { environment.ClearAutoUnlock(); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+    }
 
     private static async Task Until(Func<bool> condition)
     {

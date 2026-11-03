@@ -20,12 +20,15 @@ public sealed class IssuerEnvironmentTests : IDisposable
     }
 
     [Fact]
-    public void FirstLoadDoesNotGenerateCredentialsAndRestartRequiresPassword()
+    public void RestartUnlocksFromTheMachineCacheAndFallsBackToThePasswordOnceItIsCleared()
     {
         var store = Store();
         Assert.Null(store.Load());
         using var identity = store.Initialize(Password);
         var restarted = Store();
+        // 创建身份就是在这台机器上做的，重启自动解锁；清掉缓存才回到"每次启动都要密码"。
+        Assert.True(restarted.IsAutoUnlockRemembered);
+        restarted.ClearAutoUnlock();
         Assert.Throws<InvalidOperationException>(() => restarted.Load());
         Assert.ThrowsAny<CryptographicException>(() => restarted.Load("wrong-password"));
         Assert.False(restarted.IsUnlocked);
@@ -200,10 +203,53 @@ public sealed class IssuerEnvironmentTests : IDisposable
         Assert.Throws<ObjectDisposedException>(() => store.Load(Password));
     }
 
+    [Fact]
+    public void RememberedUnlockSkipsThePasswordOnThisMachineUntilItIsTurnedOff()
+    {
+        var store = Store();
+        using var identity = store.Initialize(Password);
+        // 创建/恢复都发生在这台机器上，直接就带上自动解锁；下次启动主窗口不再弹解锁框。
+        Assert.True(store.IsAutoUnlockRemembered);
+        var restarted = Store();
+        using var auto = restarted.Load();
+        Assert.Equal(identity.PublicKey, auto!.PublicKey);
+
+        restarted.ClearAutoUnlock();
+        var lockedAgain = Store();
+        Assert.Throws<InvalidOperationException>(() => lockedAgain.Load());
+        using var typed = lockedAgain.Load(Password);
+        Assert.Equal(identity.PublicKey, typed!.PublicKey);
+        Assert.False(lockedAgain.IsAutoUnlockRemembered);
+    }
+
+    [Fact]
+    public void ReplacingTheCredentialUnderTheSamePathDiscardsTheOldRememberedKey()
+    {
+        var store = Store();
+        using var first = store.Initialize(Password);
+        var foreign = Store("foreign");
+        using var other = foreign.Initialize("another-vendor-password");
+
+        // 有人手工把另一份凭据放回同一目录（从别的备份目录拷回来）时，缓存里的密钥属于旧盐值，
+        // 必须退回"要密码"，不能拿旧密钥去撞新凭据、也不能自动解锁成另一把身份。
+        File.Copy(foreign.CredentialPath, store.CredentialPath, overwrite: true);
+        File.Copy(foreign.IdentityPath, store.IdentityPath, overwrite: true);
+        var restarted = Store();
+        Assert.True(restarted.IsAutoUnlockRemembered);
+        Assert.Throws<InvalidOperationException>(() => restarted.Load());
+        using var typed = restarted.Load("another-vendor-password");
+        Assert.Equal(other.PublicKey, typed!.PublicKey);
+    }
+
     private static LicenseInfo Info() => new() { ProductId = "Test.Product", Customer = "客户", MachineCode = "V2-1111-2222-3333-4444", ExpireAtUtc = DateTime.MaxValue };
     public void Dispose()
     {
-        foreach (var store in _stores) store.Dispose();
+        foreach (var store in _stores)
+        {
+            // 自动解锁缓存落在 %LOCALAPPDATA%，按身份目录分文件：测试用完就清掉，不给开发机堆垃圾。
+            try { store.ClearAutoUnlock(); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+            store.Dispose();
+        }
         if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true);
     }
 }
