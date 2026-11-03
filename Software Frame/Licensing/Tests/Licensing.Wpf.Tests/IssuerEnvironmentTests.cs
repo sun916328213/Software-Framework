@@ -130,6 +130,31 @@ public sealed class IssuerEnvironmentTests : IDisposable
     }
 
     [Fact]
+    public void ReplacingTheLocalIdentityIsOptInAndRewritesTheFingerprintMarker()
+    {
+        var firstStore = Store(); var secondStore = Store("second");
+        using var first = firstStore.Initialize(Password);
+        using var second = secondStore.Initialize(Password);
+        string backup = Path.Combine(_root, "other.sfib");
+        secondStore.Backup(backup, BackupPassword);
+
+        // 界面要先拿到两把指纹才能问人，核对本身不能写盘。
+        Assert.Equal(first.Fingerprint, firstStore.LocalFingerprint);
+        Assert.Equal(second.Fingerprint, secondStore.PeekBackupFingerprint(backup, BackupPassword));
+        Assert.ThrowsAny<CryptographicException>(() => firstStore.PeekBackupFingerprint(backup, "wrong-password"));
+        Assert.Throws<InvalidDataException>(() => firstStore.Restore(backup, BackupPassword));
+
+        // 确认替换后必须同步改写身份标记，否则 Load() 会拿旧指纹拒绝新凭据，这台机器直接锁死。
+        using var replaced = firstStore.Restore(backup, BackupPassword, replaceExistingIdentity: true);
+        Assert.Equal(second.Fingerprint, replaced.Fingerprint);
+        Assert.Equal(second.Fingerprint, firstStore.LocalFingerprint);
+        using var reopened = Store("source").Load(BackupPassword);
+        Assert.Equal(second.PublicKey, reopened!.PublicKey);
+        string license = reopened.Sign(Info());
+        Assert.True(LicenseManagerEx.Verify(license, reopened.PublicKey, checkMachine: false, expectedProductId: "Test.Product").Ok);
+    }
+
+    [Fact]
     public void HistoricalRecordsBlockAccidentalReinitialization()
     {
         var store = Store(); Directory.CreateDirectory(store.ArchiveDirectory);

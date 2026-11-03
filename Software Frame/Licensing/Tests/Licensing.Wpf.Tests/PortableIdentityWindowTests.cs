@@ -48,6 +48,47 @@ public sealed class PortableIdentityWindowTests
     });
 
     [Fact]
+    public Task RestoreHasItsOwnBackupPasswordAndStopsBeforeTheFileDialogWithoutIt() => WpfLicenseSessionTests.RunSta(async () =>
+    {
+        string root = Path.Combine(Path.GetTempPath(), "PortableIdentityUi-" + Guid.NewGuid().ToString("N"));
+        using var original = new IssuerEnvironment(root);
+        using var reopened = new IssuerEnvironment(root);
+        IssuerEnvironmentWindow? window = null;
+        try
+        {
+            using var identity = original.Initialize("correct-portable-password");
+            window = new IssuerEnvironmentWindow(reopened);
+            window.Show();
+            var unlock = (PasswordBox)LogicalTreeHelper.FindLogicalNode(window, "IdentityPassword");
+            var backupBox = (PasswordBox)LogicalTreeHelper.FindLogicalNode(window, "RestorePassword");
+            var status = (TextBlock)LogicalTreeHelper.FindLogicalNode(window, "IdentityStatus");
+            var restore = (Button)LogicalTreeHelper.FindLogicalNode(window, "RestoreButton");
+            await Task.Delay(300);
+            // 原报告是"按钮不能使用"：恢复入口必须不滚动就完整可见、能命中测试，否则再怎么解释逻辑都对不上用户看到的界面。
+            var scroll = (ScrollViewer)window.Content;
+            double top = restore.TransformToVisual(scroll).Transform(new Point(0, 0)).Y;
+            Assert.True(top >= 0 && top + restore.ActualHeight <= scroll.ActualHeight,
+                $"restoreTop={top} height={restore.ActualHeight} viewport={scroll.ActualHeight} scrollable={scroll.ScrollableHeight}");
+            Assert.True(restore.IsHitTestVisible);
+
+            // 解锁密码填对也替不了备份密码：恢复要的是这份 .sfib 自己的密码，两者共用一个框时用户只会看到"按钮没反应"。
+            unlock.Password = "correct-portable-password";
+            restore.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await Until(() => status.Text.Contains("备份密码"));
+            // 走到这里说明没弹文件选择框（弹了会在这里阻塞），也没顺手解锁身份。
+            Assert.Contains("解锁密码解不开备份", status.Text);
+            Assert.False(reopened.IsUnlocked);
+            Assert.NotNull(backupBox);
+            Assert.Null(LogicalTreeHelper.FindLogicalNode(window, "BackupPassword"));
+        }
+        finally
+        {
+            if (window?.IsVisible == true) window.Close();
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    });
+
+    [Fact]
     public Task UninitializedWindowOffersOnlyCreation() => WpfLicenseSessionTests.RunSta(() =>
     {
         string root = Path.Combine(Path.GetTempPath(), "PortableIdentityUi-" + Guid.NewGuid().ToString("N"));

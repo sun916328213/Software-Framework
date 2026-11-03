@@ -20,6 +20,8 @@ internal sealed class IssuerEnvironment : IDisposable
     internal bool IsUnlocked => _sessionKey != null;
     /// <summary>凭据文件存在即视为已初始化；不尝试解密，避免为了刷新界面而做一次 PBKDF2。</summary>
     internal bool IsInitialized => File.Exists(CredentialPath);
+    /// <summary>本机身份标记里的公钥指纹；只读文本，不做 PBKDF2，界面用它与备份指纹当面核对。</summary>
+    internal string? LocalFingerprint => File.Exists(IdentityPath) ? ReadFingerprintMarker() : null;
     private static string LegacyDirectory => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SoftwareFrame", "LicensingIssuer");
     internal bool HasLegacyLocalIdentity => _defaultLocation && File.Exists(Path.Combine(LegacyDirectory, "issuer.bin"));
@@ -120,36 +122,56 @@ internal sealed class IssuerEnvironment : IDisposable
         finally { CryptographicOperations.ZeroMemory(plain); }
     }
 
-    internal IssuerIdentity Restore(string path, string password)
+    internal IssuerIdentity Restore(string path, string password, bool replaceExistingIdentity = false)
     {
         // SFIB1 旧加密备份可直接恢复。原备份密码成为便携身份的解锁密码。
         ValidatePassword(password);
+        byte[] plain = DecryptBackup(path, password);
+        try
+        {
+            using var gate = Lock();
+            using var candidate = IssuerIdentity.FromDer(plain);
+            CheckIdentity(candidate, replaceExistingIdentity);
+            if (File.Exists(CredentialPath) && !File.Exists(IdentityPath))
+                throw new InvalidDataException("签发身份标记丢失，不能覆盖原凭据，请由管理员核实。");
+            return StoreNew(plain.ToArray(), password, overwrite: true, replaceExistingIdentity);
+        }
+        finally { CryptographicOperations.ZeroMemory(plain); }
+    }
+
+    /// <summary>只解密核对备份、不写盘：界面要先把本机与备份两把指纹摊开给人确认，再决定要不要替换。</summary>
+    internal string PeekBackupFingerprint(string path, string password)
+    {
+        byte[] plain = DecryptBackup(path, password);
+        try
+        {
+            using var candidate = IssuerIdentity.FromDer(plain);
+            return candidate.Fingerprint;
+        }
+        finally { CryptographicOperations.ZeroMemory(plain); }
+    }
+
+    private static byte[] DecryptBackup(string path, string password)
+    {
         byte[] envelope = ReadBounded(path);
         ValidateEnvelope(envelope);
         byte[] key = Derive(password, envelope.AsSpan(5, 16));
         byte[] plain = new byte[envelope.Length - 49];
-        try
-        {
-            Decrypt(envelope, key, plain);
-            using var gate = Lock();
-            using var candidate = IssuerIdentity.FromDer(plain);
-            CheckIdentity(candidate);
-            if (File.Exists(CredentialPath) && !File.Exists(IdentityPath))
-                throw new InvalidDataException("签发身份标记丢失，不能覆盖原凭据，请由管理员核实。");
-            return StoreNew(plain.ToArray(), password, overwrite: true);
-        }
-        finally { CryptographicOperations.ZeroMemory(key); CryptographicOperations.ZeroMemory(plain); }
+        try { Decrypt(envelope, key, plain); return plain; }
+        finally { CryptographicOperations.ZeroMemory(key); }
     }
 
-    private IssuerIdentity StoreNew(byte[] plain, string password, bool overwrite)
+    private IssuerIdentity StoreNew(byte[] plain, string password, bool overwrite, bool replaceExistingIdentity = false)
     {
         IssuerIdentity? identity = null;
         try
         {
             identity = IssuerIdentity.FromDer(plain);
-            CheckIdentity(identity);
+            CheckIdentity(identity, replaceExistingIdentity);
             byte[] envelope = Encrypt(plain, password);
-            if (!File.Exists(IdentityPath)) WriteAtomic(IdentityPath, Encoding.ASCII.GetBytes(identity.Fingerprint), overwrite: false);
+            // 替换身份时必须同步改写标记，否则 Load() 会拿旧指纹拒绝新凭据，本机身份直接锁死。
+            if (!File.Exists(IdentityPath) || replaceExistingIdentity)
+                WriteAtomic(IdentityPath, Encoding.ASCII.GetBytes(identity.Fingerprint), overwrite: replaceExistingIdentity);
             WriteAtomic(CredentialPath, envelope, overwrite);
             byte[] key = Derive(password, envelope.AsSpan(5, 16));
             try { RememberKey(key, envelope.AsSpan(5, 16)); }
@@ -197,11 +219,12 @@ internal sealed class IssuerEnvironment : IDisposable
         _sessionKey = key.ToArray(); _sessionSalt = salt.ToArray();
     }
 
-    private void CheckIdentity(IssuerIdentity identity)
+    private void CheckIdentity(IssuerIdentity identity, bool replaceExisting = false)
     {
-        if (File.Exists(IdentityPath) && Encoding.ASCII.GetString(ReadBounded(IdentityPath)).Trim() != identity.Fingerprint)
+        if (!replaceExisting && File.Exists(IdentityPath) && ReadFingerprintMarker() != identity.Fingerprint)
             throw new InvalidDataException("备份或凭据不属于当前签发身份，不能覆盖现有身份。");
     }
+    private string ReadFingerprintMarker() => Encoding.ASCII.GetString(ReadBounded(IdentityPath)).Trim();
     private void EnsureUninitialized()
     {
         if (File.Exists(CredentialPath) || File.Exists(IdentityPath))
