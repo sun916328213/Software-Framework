@@ -75,6 +75,10 @@ namespace Extension.Security.Licensing
         public LicenseStatus Status { get; init; }
         public LicenseInfo? License { get; init; }
         public string Message { get; init; } = string.Empty;
+
+        /// <summary>本次校验认定的剩余整天数，与 Message 出自同一次时间读取；宿主只显示它，不要再自行换算。</summary>
+        public int RemainingDays { get; init; }
+
         public bool Ok => Status == LicenseStatus.Valid;
     }
 }

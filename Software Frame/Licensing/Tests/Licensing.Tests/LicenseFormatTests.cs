@@ -42,9 +42,9 @@ public sealed class LicenseFormatTests
         Assert.Equal(LicenseStatus.Malformed, LicenseManagerEx.Verify("sf2." + current[4..], publicKey).Status);
     }
 
-    /// <summary>校验日志里的剩余天数必须等于宿主界面取的那个值，两处各自换算就会显示两个剩余时间。</summary>
+    /// <summary>界面摘要显示 result.RemainingDays，日志文案必须引用同一个数，两处才不可能各说一个剩余时间。</summary>
     [Fact]
-    public void VerifyMessage_UsesTheSharedRemainingDayCount()
+    public void VerifyMessage_AndTheDisplayedDayCountComeFromOneReading()
     {
         var (privateKey, publicKey) = RsaEx.GenerateKeyPair();
         DateTime expireAt = DateTime.UtcNow.AddDays(1).AddHours(6);
@@ -53,8 +53,8 @@ public sealed class LicenseFormatTests
         var result = LicenseManagerEx.Verify(text, publicKey);
 
         Assert.True(result.Ok);
-        int expected = LicenseTimePolicy.RemainingDays(expireAt, DateTime.UtcNow);
-        Assert.Equal($"License 有效，剩余约 {expected} 天。", result.Message);
+        Assert.Equal(2, result.RemainingDays);
+        Assert.Equal($"License 有效，剩余约 {result.RemainingDays} 天。", result.Message);
     }
 
     private static string Base64Url(byte[] bytes) =>

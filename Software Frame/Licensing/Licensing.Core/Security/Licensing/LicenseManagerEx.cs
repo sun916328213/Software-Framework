@@ -173,7 +173,7 @@ namespace Extension.Security.Licensing
 
             int daysLeft = info.IsPermanent ? int.MaxValue : LicenseTimePolicy.RemainingDays(info.ExpireAtUtc, now);
             string msg = info.IsPermanent ? "License 有效（永久）。" : $"License 有效，剩余约 {daysLeft} 天。";
-            return new LicenseVerifyResult { Status = LicenseStatus.Valid, License = info, Message = msg };
+            return new LicenseVerifyResult { Status = LicenseStatus.Valid, License = info, Message = msg, RemainingDays = daysLeft };
         }
 
         /// <summary>

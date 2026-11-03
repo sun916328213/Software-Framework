@@ -22,10 +22,8 @@ public sealed record NativeLicenseInfo
     public DateTime ExpireAtUtc { get; init; }
     public bool IsPermanent => ExpireAtUtc >= DateTime.MaxValue.AddDays(-1);
 
-    /// <summary>剩余整天数（不足一天按一天计）。沿用核心的算法，宿主不再自行换算，两处显示才不会打架。</summary>
-    public int RemainingDays => IsPermanent
-        ? int.MaxValue
-        : LicenseTimePolicy.RemainingDays(ExpireAtUtc, DateTime.UtcNow);
+    /// <summary>剩余整天数（不足一天按一天计），由核心在本次校验中一次算出并带出；永久授权为 int.MaxValue。</summary>
+    public int RemainingDays { get; init; }
 }
 
 public sealed record NativeVerifyResult
@@ -45,7 +43,8 @@ public sealed record NativeVerifyResult
             ProductId = result.License.ProductId,
             Customer = result.License.Customer,
             MachineCode = result.License.MachineCode,
-            ExpireAtUtc = result.License.ExpireAtUtc
+            ExpireAtUtc = result.License.ExpireAtUtc,
+            RemainingDays = result.RemainingDays
         },
         Message = result.Message
     };
