@@ -3,51 +3,66 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="授权" Width="1000" Height="660" MinWidth="800" MinHeight="580">
     <Window.Resources>
-        <Style TargetType="Button"><Setter Property="Padding" Value="12,6"/><Setter Property="Margin" Value="0,4,8,4"/></Style>
-        <Style TargetType="TextBox"><Setter Property="Padding" Value="6"/><Setter Property="Margin" Value="0,4"/></Style>
-        <Style TargetType="TextBlock"><Setter Property="Margin" Value="0,4"/><Setter Property="TextWrapping" Value="Wrap"/></Style>
-        <Style x:Key="FieldLabel" TargetType="TextBlock">
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Margin" Value="0,14,0,0"/>
-        </Style>
-        <Style x:Key="Hint" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="Gray"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Margin" Value="0,0,0,2"/>
-        </Style>
+        <ResourceDictionary>
+            <!--
+                紧凑样式在本窗口内合并，而不是只放在 App.xaml：主窗口必须能被独立构建，
+                测试宿主和未来的装配入口都没有 App.xaml 的资源，StaticResource 找不到就直接抛 XamlParseException。
+                App.xaml 继续负责 BundledTheme 与 MD 隐式样式（签发身份对话框只依赖它们）。
+            -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Licensing.Authorization;component/Resources/CompactControlStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <!-- 不写 Button/TextBox/TextBlock 的隐式样式：隐式样式会把控件从应用层主题里摘出来，
+                 变成「主窗口经典 WPF、签发身份对话框是 MD」两套长相。控件统一用上面字典里的紧凑命名样式。 -->
+            <Style x:Key="FieldLabel" TargetType="TextBlock">
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Margin" Value="0,14,0,0"/>
+            </Style>
+            <Style x:Key="Hint" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="Gray"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="Margin" Value="0,0,0,2"/>
+            </Style>
+        </ResourceDictionary>
     </Window.Resources>
     <DockPanel Margin="16">
-        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-            <Button DockPanel.Dock="Right" Content="签发身份" Click="Environment_Click"
-                    ToolTip="初始化、解锁、备份或恢复签发身份。没有它不能签发授权。" />
-            <TextBlock x:Name="EnvironmentStatus" VerticalAlignment="Center" />
-        </DockPanel>
-        <TextBox x:Name="StatusText" DockPanel.Dock="Bottom" Text="就绪" IsReadOnly="True"
+        <!-- 身份与信任锚是所有操作的前提，做成常驻状态条，而不是散落在按钮旁的提示文字。 -->
+        <Border DockPanel.Dock="Top" Background="#F5F6F7" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="4"
+                Padding="12,6" Margin="0,0,0,10">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="签发身份" Style="{StaticResource CompactOutlinedButton}" Click="Environment_Click"
+                        ToolTip="初始化、解锁、备份或恢复签发身份。没有它不能签发授权。" />
+                <TextBlock x:Name="EnvironmentStatus" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,12,0" />
+            </DockPanel>
+        </Border>
+        <TextBox x:Name="StatusText" DockPanel.Dock="Bottom" Text="就绪" IsReadOnly="True" Style="{StaticResource CompactMultilineTextBox}"
                  TextWrapping="Wrap" MaxHeight="130" VerticalScrollBarVisibility="Auto"
-                 BorderThickness="1" BorderBrush="#DDDDDD" Background="#FAFAFA" Padding="6" Margin="0,8,0,0" />
+                 BorderThickness="1" BorderBrush="#DDDDDD" Background="#FAFAFA" Padding="8,6" Margin="0,8,0,0" />
         <TabControl x:Name="Tabs">
             <TabItem Header="签发授权">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="16,8,16,16" MaxWidth="720" HorizontalAlignment="Left">
                         <TextBlock Style="{StaticResource FieldLabel}" Text="产品标识" />
                         <TextBlock Style="{StaticResource Hint}" Text="必须与客户程序内嵌的值完全一致，区分大小写；签发后不要再改。" />
-                        <TextBox x:Name="Product"
+                        <TextBox x:Name="Product" Style="{StaticResource CompactTextBox}"
                                  ToolTip="1–64 个字符，首字符为英文字母或数字，仅允许英文字母、数字、点和下划线、短横线；区分大小写。示例：SoftwareFrame.MachineApp。签发后不要再改，否则已发出的授权在客户机上会提示产品不匹配。" />
 
                         <TextBlock Style="{StaticResource FieldLabel}" Text="客户名称" />
-                        <TextBox x:Name="Customer" />
+                        <TextBox x:Name="Customer" Style="{StaticResource CompactTextBox}" />
 
                         <TextBlock Style="{StaticResource FieldLabel}" Text="客户机器码" />
                         <TextBlock Style="{StaticResource Hint}" Text="客户在激活工具里点「导出申请单」发给你，形如 V2-XXXX-XXXX-XXXX-XXXX；也可以直接粘贴。" />
-                        <DockPanel Margin="0,4,0,0">
-                            <Button DockPanel.Dock="Right" Content="从申请单读取" Click="ReadRequest_Click" Margin="8,0,0,0" Padding="10,4"
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="从申请单读取" Click="ReadRequest_Click"
+                                    Style="{StaticResource CompactOutlinedButton}" Margin="8,2,0,2"
                                     ToolTip="读取客户发来的 .sfreq：自动填好机器码；带时间恢复请求时一并填入。" />
-                            <TextBox x:Name="Machine" FontFamily="Consolas" Margin="0" />
+                            <TextBox x:Name="Machine" Style="{StaticResource CompactTextBox}" FontFamily="Consolas" Margin="0,2" />
                         </DockPanel>
 
                         <TextBlock Style="{StaticResource FieldLabel}" Text="授权期限" />
-                        <WrapPanel Margin="0,2,0,0">
-                            <TextBox x:Name="ExpiryDays" Text="365" Width="70" Margin="0,2,8,2" TextChanged="ExpiryDays_Changed"
+                        <WrapPanel>
+                            <TextBox x:Name="ExpiryDays" Style="{StaticResource CompactTextBox}" Text="365" Width="70" Margin="0,2,8,2" TextChanged="ExpiryDays_Changed"
                                      ToolTip="从今天算起的天数，到期时刻为第 N 天的 23:59:59（本地时间）。" />
                             <TextBlock Text="天" VerticalAlignment="Center" Margin="0,0,16,0" />
                             <CheckBox x:Name="Permanent" Content="永久授权" Margin="0,4,16,4" VerticalAlignment="Center"
@@ -56,31 +71,20 @@
                         </WrapPanel>
                         <TextBlock x:Name="ExpiryPreview" Style="{StaticResource Hint}" Text="" />
 
-                        <Button Content="生成授权文件" Click="Issue_Click" FontWeight="SemiBold"
-                                Padding="28,8" Margin="0,24,0,0" HorizontalAlignment="Left" />
-
-                        <Expander Header="高级选项：功能点、扩展字段、时间恢复" Margin="0,20,0,0">
+                        <Expander Header="高级选项：功能点、扩展字段、时间恢复" Margin="0,10,0,0">
                             <StackPanel Margin="4,8,0,0">
                                 <TextBlock Style="{StaticResource Hint}" Text="功能点（逗号分隔，留空代表全部功能）" />
-                                <TextBox x:Name="Features" />
+                                <TextBox x:Name="Features" Style="{StaticResource CompactTextBox}" />
                                 <TextBlock Style="{StaticResource Hint}" Text="扩展字段（每行 key=value）" />
-                                <TextBox x:Name="Extra" AcceptsReturn="True" Height="80" />
+                                <TextBox x:Name="Extra" Style="{StaticResource CompactMultilineTextBox}" AcceptsReturn="True" Height="80" />
                                 <TextBlock Style="{StaticResource Hint}" Text="时间恢复请求：先审核客户身份和异常原因；普通续期留空" />
-                                <TextBox x:Name="RecoveryRequest" />
+                                <TextBox x:Name="RecoveryRequest" Style="{StaticResource CompactTextBox}" />
                             </StackPanel>
                         </Expander>
 
-                        <Expander Header="工具与发布：生成客户包" Margin="0,4,0,0">
-                            <StackPanel Margin="4,8,0,0">
-                                <TextBlock Style="{StaticResource Hint}" Text="生成客户工具包：交给客户的就是这个目录，已内置发行身份和产品标识，客户无需任何配置。所选位置已有内容时会自动新建子目录，不会覆盖或删除任何文件。" />
-                                <WrapPanel>
-                                    <Button Content="生成客户工具包" Click="Publish_Click" />
-                                    <Button x:Name="CancelOperation" Content="取消发布" IsEnabled="False" Click="Cancel_Click" />
-                                </WrapPanel>
-                            </StackPanel>
-                        </Expander>
-
-                        <TextBlock x:Name="GeneratedFile" Margin="0,16,0,0" />
+                        <Button Content="生成授权文件" Click="Issue_Click" Style="{StaticResource CompactPrimaryButton}"
+                                MinWidth="180" Margin="0,20,0,4" HorizontalAlignment="Left" />
+                        <TextBlock x:Name="GeneratedFile" TextWrapping="Wrap" Margin="0,4,0,0" />
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -88,12 +92,13 @@
                 <DockPanel Margin="16,8,16,16">
                     <StackPanel DockPanel.Dock="Top">
                         <TextBlock Style="{StaticResource Hint}" Text="每次签发自动保留完整 .lic；续期生成新记录，不覆盖旧文件。" />
-                        <TextBox x:Name="RecordSearch" TextChanged="Search_Changed" ToolTip="按客户、机器码或产品筛选" />
-                        <WrapPanel>
-                            <Button Content="刷新记录" Click="RefreshRecords_Click" />
-                            <Button Content="选择记录续期" Click="Renew_Click" />
-                            <Button Content="打开记录目录" Click="OpenRecords_Click" />
-                        </WrapPanel>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="打开记录目录" Click="OpenRecords_Click" Style="{StaticResource CompactFlatButton}" Margin="0,4,0,4" />
+                            <Button DockPanel.Dock="Right" Content="选择记录续期" Click="Renew_Click" Style="{StaticResource CompactPrimaryButton}" Margin="0,4,4,4" />
+                            <Button DockPanel.Dock="Right" Content="刷新记录" Click="RefreshRecords_Click" Style="{StaticResource CompactOutlinedButton}" Margin="0,4,4,4" />
+                            <TextBox x:Name="RecordSearch" Style="{StaticResource CompactTextBox}" Margin="0,4,8,4" TextChanged="Search_Changed"
+                                     ToolTip="按客户、机器码或产品筛选" />
+                        </DockPanel>
                     </StackPanel>
                     <DataGrid x:Name="Records" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
                         <DataGrid.Columns>
@@ -112,14 +117,30 @@
                     <StackPanel Margin="16,8,16,16" MaxWidth="720" HorizontalAlignment="Left">
                         <TextBlock Style="{StaticResource Hint}" Text="用当前签发身份验证：检查签名、所选产品和期限；不要求厂商电脑与客户机器码一致。" />
                         <WrapPanel Margin="0,4,0,0">
-                            <Button Content="选择 .lic 验证" Click="Verify_Click" />
-                            <Button Content="验证粘贴的授权内容" Click="VerifyPaste_Click" />
+                            <Button Content="选择 .lic 验证" Click="Verify_Click" Style="{StaticResource CompactOutlinedButton}" Margin="0,4,8,4" />
+                            <Button Content="验证粘贴的授权内容" Click="VerifyPaste_Click" Style="{StaticResource CompactOutlinedButton}" Margin="0,4,8,4" />
                         </WrapPanel>
                         <TextBlock Style="{StaticResource Hint}" Text="客户只发来一段文本时，直接粘贴到这里（换行、空格、全角空格会自动忽略）" Margin="0,10,0,2" />
-                        <TextBox x:Name="VerifyInput" AcceptsReturn="True" Height="80" FontFamily="Consolas"
+                        <TextBox x:Name="VerifyInput" Style="{StaticResource CompactMultilineTextBox}" AcceptsReturn="True" Height="80" FontFamily="Consolas"
                                  TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
-                        <TextBox x:Name="Verification" IsReadOnly="True" TextWrapping="Wrap" Height="220" Margin="0,8,0,0"
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="验证结果" />
+                        <TextBox x:Name="Verification" Style="{StaticResource CompactMultilineTextBox}" IsReadOnly="True" TextWrapping="Wrap" Height="220" Margin="0,2,0,0"
                                  VerticalScrollBarVisibility="Auto" />
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="客户工具包">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16,8,16,16" MaxWidth="720" HorizontalAlignment="Left">
+                        <TextBlock Style="{StaticResource Hint}" Text="生成客户工具包：交给客户的就是这个目录，已内置发行身份和产品标识，客户无需任何配置。" />
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="交付方式" />
+                        <TextBlock Style="{StaticResource Hint}" Text="整目录复制给客户，只发 EXE 会缺 Licensing.Core/Licensing.Trust 等 DLL。所选位置已有内容时自动新建子目录，不会覆盖或删除任何文件。发布耗时 1–3 分钟，可取消；取消后的目录不可交付。" />
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="信任锚" />
+                        <TextBlock Style="{StaticResource Hint}" Text="顶部状态条会先告诉你能不能生成客户包：本机签发身份必须就是仓库 Build\Trust.props 钉住的公钥，不一致时发布会被拒绝。" />
+                        <WrapPanel Margin="0,10,0,0">
+                            <Button Content="生成客户工具包" Click="Publish_Click" Style="{StaticResource CompactPrimaryButton}" MinWidth="180" Margin="0,0,8,0" />
+                            <Button x:Name="CancelOperation" Content="取消发布" IsEnabled="False" Click="Cancel_Click" Style="{StaticResource CompactOutlinedButton}" />
+                        </WrapPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

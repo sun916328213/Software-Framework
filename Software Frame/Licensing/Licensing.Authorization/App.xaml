@@ -14,7 +14,8 @@ Extension 模块：共享基础能力与集成适配；Extension.Core 保持轻�
             <ResourceDictionary.MergedDictionaries>
                 <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Teal" SecondaryColor="Amber" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/Licensing.Authorization;component/Resources/CompactControlStyles.xaml" />
+                <!-- 紧凑命名样式由各窗口自行合并（见 MainWindow.xaml）：主窗口要能被独立构建，
+                     不能依赖启动壳先把资源准备好。 -->
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
